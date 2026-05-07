@@ -1,14 +1,10 @@
-// NOTE: Using JWT sessions (Option B) instead of PrismaAdapter for two reasons:
-// 1. @auth/prisma-adapter imports PrismaClient from "@prisma/client", but this project
-//    uses Prisma 7's TypeScript generator with output to lib/generated/prisma — the types
-//    are not compatible without unsafe casting.
-// 2. The User model uses Int IDs (@id @default(autoincrement())), while Auth.js adapters
-//    expect string IDs. Migrating to string IDs is a separate schema change.
-// TODO: Switch to PrismaAdapter once User.id is migrated to String and adapter types align.
 import NextAuth from 'next-auth'
 import Resend from 'next-auth/providers/resend'
+import { PurseAdapter } from './lib/auth-adapter'
+import { db } from './lib/db'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PurseAdapter(),
   providers: [
     Resend({
       from: 'Purseinator <noreply@purseinator.app>',
@@ -18,5 +14,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: '/login',
     verifyRequest: '/login?verify=true',
+  },
+  callbacks: {
+    async signIn({ user }) {
+      if (!user.email) return false
+      const dbUser = await db.user.findUnique({ where: { email: user.email } })
+      return !!dbUser
+    },
+    async jwt({ token, user }) {
+      if (user?.email) {
+        const dbUser = await db.user.findUnique({ where: { email: user.email } })
+        if (dbUser) {
+          token.id = String(dbUser.id)
+          token.role = dbUser.role
+        }
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (token.id) session.user.id = token.id as string
+      if (token.role) (session.user as { role?: string }).role = token.role as string
+      return session
+    },
   },
 })
