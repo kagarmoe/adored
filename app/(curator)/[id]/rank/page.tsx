@@ -41,7 +41,7 @@ export default function SessionPicker({ params }: { params: Promise<{ id: string
 
         <button
           onClick={startSession}
-          className="bg-accent text-cream font-display text-label uppercase tracking-widest px-8 py-3 rounded hover:opacity-90 transition-opacity w-full"
+          className="bg-accent text-ground font-display text-label uppercase tracking-widest px-8 py-3 rounded hover:opacity-90 transition-opacity w-full"
         >
           Start sorting
         </button>

@@ -2,12 +2,10 @@
 
 @theme {
   --color-ground: hsl(38 20% 97%);
-  --color-surface: hsl(38 15% 93%);
+  --color-surface: hsl(38 18% 89%);
   --color-text-primary: hsl(20 20% 12%);
   --color-text-muted: hsl(20 12% 52%);
-  --color-accent: hsl(14 55% 52%);
-  --color-accent-light: hsl(14 55% 95%);
-  --color-cream: hsl(40 45% 96%);
+  --color-accent: hsl(14 82% 48%);
 
   --text-display: clamp(2.5rem, 6vw, 5rem);
   --text-display--line-height: 1.0;
@@ -26,6 +24,16 @@
   html {
     background-color: var(--color-ground);
     color: var(--color-text-primary);
+  }
+
+  /* Grain — signals the surface has a body, not a screen default */
+  html::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.035'/></svg>");
+    pointer-events: none;
+    z-index: 9999;
   }
 
   body {

@@ -39,7 +39,7 @@ export default function NewCollectionPage() {
         </label>
         <button
           type="submit"
-          className="bg-accent text-cream font-display text-label uppercase tracking-widest px-6 py-3 rounded hover:opacity-90 transition-opacity self-start"
+          className="bg-accent text-ground font-display text-label uppercase tracking-widest px-6 py-3 rounded hover:opacity-90 transition-opacity self-start"
         >
           Create
         </button>
