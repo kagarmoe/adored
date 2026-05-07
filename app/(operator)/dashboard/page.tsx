@@ -18,8 +18,18 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-10">
-        <h1 className="font-display text-heading text-text-primary">Collections</h1>
+      <div className="mb-12">
+        <h1
+          className="font-display text-text-primary leading-none mb-1"
+          style={{ fontSize: 'clamp(3rem, 8vw, 6rem)' }}
+        >
+          Collections
+        </h1>
+        <p className="font-body text-sm italic text-text-muted">
+          {collections.length} {collections.length === 1 ? 'collection' : 'collections'}
+        </p>
+      </div>
+      <div className="flex justify-end mb-6">
         <Link
           href="/collections/new"
           className="font-display text-label uppercase tracking-widest text-accent no-underline"
