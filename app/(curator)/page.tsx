@@ -10,6 +10,9 @@ export default async function CuratorHome() {
   const session = await auth()
   if (!session) redirect('/login')
 
+  const role = (session.user as { role?: string }).role
+  if (role === 'operator') redirect('/dashboard')
+
   const collections = await getUserCollections()
 
   return (
