@@ -7,14 +7,20 @@ export default async function CuratorLayout({ children }: { children: React.Reac
 
   return (
     <div className="min-h-screen bg-ground">
-      <header className="px-6 py-5 border-b border-surface">
-        <p className="font-display text-sm text-text-muted">
+      <header className="px-8 py-6 flex items-baseline gap-6">
+        <span
+          className="font-display text-text-primary leading-none"
+          style={{ fontSize: 'clamp(1.75rem, 4vw, 3rem)' }}
+        >
+          Purseinator
+        </span>
+        <span className="font-body text-sm italic text-text-muted">
           {session.user?.name ?? session.user?.email}
-        </p>
+        </span>
       </header>
-      <div className="max-w-2xl mx-auto px-6 py-10">
+      <main className="max-w-2xl mx-auto px-8 py-8">
         {children}
-      </div>
+      </main>
     </div>
   )
 }
