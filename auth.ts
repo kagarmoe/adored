@@ -7,7 +7,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PurseAdapter(),
   providers: [
     Resend({
-      from: 'Purseinator <noreply@purseinator.app>',
+      from: 'Purseinator <onboarding@resend.dev>',
     }),
   ],
   session: { strategy: 'jwt' },
