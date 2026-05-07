@@ -8,9 +8,9 @@ export default function LoginPage() {
       <div className="flex items-end">
         <h1
           className="font-display text-text-primary leading-none"
-          style={{ fontSize: 'clamp(5rem, 20vw, 16rem)' }}
+          style={{ fontSize: 'clamp(3.5rem, 11vw, 9rem)' }}
         >
-          Purse-<br />inator
+          Purseinator
         </h1>
       </div>
       <div className="border-t border-text-primary/20 pt-8 max-w-xs">
