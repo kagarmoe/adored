@@ -2,21 +2,17 @@ import { describe, it, expect } from 'vitest'
 import { selectNextPair } from '@/lib/pairing'
 
 const makeItems = (n: number) =>
-  Array.from({ length: n }, (_, i) => ({
-    id: i + 1,
-    eloRating: 1000 + i * 10,
-  }))
+  Array.from({ length: n }, (_, i) => ({ id: i + 1, eloRating: 1000 + i * 10 }))
 
-const makeComparison = (aId: number, bId: number) => ({
-  itemAId: aId,
-  itemBId: bId,
-  winnerId: aId,
-})
+const makeComp = (aId: number, bId: number) => ({ itemAId: aId, itemBId: bId, winnerId: aId })
 
 describe('selectNextPair', () => {
-  it('returns null when fewer than 2 items', () => {
+  it('returns null for empty items', () => {
     expect(selectNextPair([], [])).toBeNull()
-    expect(selectNextPair([makeItems(1)[0]], [])).toBeNull()
+  })
+
+  it('returns null for single item', () => {
+    expect(selectNextPair([{ id: 1, eloRating: 1000 }], [])).toBeNull()
   })
 
   it('returns a pair of different items', () => {
@@ -25,15 +21,23 @@ describe('selectNextPair', () => {
     expect(pair!.itemA.id).not.toBe(pair!.itemB.id)
   })
 
+  it('returns valid items from the input list', () => {
+    const items = makeItems(4)
+    const pair = selectNextPair(items, [])
+    const ids = items.map(i => i.id)
+    expect(ids).toContain(pair!.itemA.id)
+    expect(ids).toContain(pair!.itemB.id)
+  })
+
   it('prefers items with fewer comparisons', () => {
     const items = makeItems(5)
-    const comparisons = Array.from({ length: 10 }, () => makeComparison(1, 2))
+    const comparisons = Array.from({ length: 10 }, () => makeComp(1, 2))
     const pair = selectNextPair(items, comparisons)
     const ids = new Set([pair!.itemA.id, pair!.itemB.id])
     expect(ids.has(1) && ids.has(2)).toBe(false)
   })
 
-  it('returns items with close elo ratings when possible', () => {
+  it('returns close elo ratings when possible', () => {
     const items = [
       { id: 1, eloRating: 1000 },
       { id: 2, eloRating: 1001 },
@@ -42,5 +46,44 @@ describe('selectNextPair', () => {
     const pair = selectNextPair(items, [])
     const ids = new Set([pair!.itemA.id, pair!.itemB.id])
     expect(ids.has(1) && ids.has(2)).toBe(true)
+  })
+
+  it('works with exactly 2 items', () => {
+    const items = [{ id: 1, eloRating: 1000 }, { id: 2, eloRating: 1100 }]
+    const pair = selectNextPair(items, [])
+    expect(pair).not.toBeNull()
+    expect(new Set([pair!.itemA.id, pair!.itemB.id]).size).toBe(2)
+  })
+
+  it('deprioritizes already-compared pairs', () => {
+    const items = makeItems(3) // ids 1,2,3
+    const comparisons = [makeComp(1, 2)]
+    const pair = selectNextPair(items, comparisons)
+    // Should prefer a pair that hasn't been compared yet
+    const ids = new Set([pair!.itemA.id, pair!.itemB.id])
+    const alreadyDone = ids.has(1) && ids.has(2)
+    expect(alreadyDone).toBe(false)
+  })
+
+  it('still returns a pair when all pairs have been compared', () => {
+    const items = [{ id: 1, eloRating: 1000 }, { id: 2, eloRating: 1000 }]
+    const comparisons = [makeComp(1, 2)]
+    const pair = selectNextPair(items, comparisons)
+    expect(pair).not.toBeNull()
+  })
+
+  it('pair scoring favors low comparison count over close elo', () => {
+    // items 1&2 are close in elo but both have many comparisons
+    // items 1&3 are further apart but have no comparisons — should prefer this
+    const items = [
+      { id: 1, eloRating: 1000 },
+      { id: 2, eloRating: 1001 },
+      { id: 3, eloRating: 1100 },
+    ]
+    const manyComps = Array.from({ length: 5 }, () => makeComp(1, 2))
+    const pair = selectNextPair(items, manyComps)
+    // 1&2 have high totalComps penalty → 1&3 or 2&3 preferred
+    const ids = new Set([pair!.itemA.id, pair!.itemB.id])
+    expect(ids.has(1) && ids.has(2)).toBe(false)
   })
 })
