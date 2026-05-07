@@ -34,5 +34,6 @@ export async function uploadPhoto(itemId: number, formData: FormData) {
   })
 
   revalidatePath(`/collections/${item.collectionId}`)
+  revalidatePath(`/collections/${item.collectionId}/upload`)
   return photo
 }

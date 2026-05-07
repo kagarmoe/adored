@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import { PhotoUploader } from '@/components/operator/PhotoUploader'
 import { createItem } from '@/actions/items'
+import { revalidatePath } from 'next/cache'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -24,6 +25,7 @@ export default async function UploadPage({ params }: Props) {
       <form action={async () => {
         'use server'
         await createItem(collectionId, {})
+        revalidatePath(`/collections/${collectionId}/upload`)
       }}>
         <button
           type="submit"
