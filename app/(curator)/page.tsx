@@ -1,9 +1,15 @@
+import { auth } from '@/auth'
+import { redirect } from 'next/navigation'
 import { getUserCollections } from '@/actions/collections'
 import { CollectionCard } from '@/components/curator/CollectionCard'
 
+export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Your collections — Purseinator' }
 
 export default async function CuratorHome() {
+  const session = await auth()
+  if (!session) redirect('/login')
+
   const collections = await getUserCollections()
 
   return (
