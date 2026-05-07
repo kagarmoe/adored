@@ -1,26 +1,40 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-ground: hsl(38 20% 97%);
+  --color-surface: hsl(38 15% 93%);
+  --color-text-primary: hsl(20 20% 12%);
+  --color-text-muted: hsl(20 12% 52%);
+  --color-accent: hsl(14 55% 52%);
+  --color-accent-light: hsl(14 55% 95%);
+  --color-cream: hsl(40 45% 96%);
+
+  --text-display: clamp(2.5rem, 6vw, 5rem);
+  --text-display--line-height: 1.0;
+  --text-heading: clamp(1.5rem, 3vw, 2.5rem);
+  --text-heading--line-height: 1.1;
+  --text-label: 0.6875rem;
+  --text-label--letter-spacing: 0.1em;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-lora);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    background-color: var(--color-ground);
+    color: var(--color-text-primary);
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    font-family: var(--font-lora), serif;
+    font-size: clamp(0.9375rem, 1.5vw, 1.0625rem);
+    line-height: 1.6;
+  }
+
+  a {
+    color: var(--color-accent);
+  }
 }
