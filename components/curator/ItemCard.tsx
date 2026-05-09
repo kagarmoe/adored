@@ -18,6 +18,7 @@ export function ItemCard({ id, brand, style, heroUrl }: Props) {
             width={80}
             height={80}
             className="object-cover w-full h-full"
+            data-testid="item-image"
           />
         ) : (
           <div className="w-full h-full bg-surface" />
