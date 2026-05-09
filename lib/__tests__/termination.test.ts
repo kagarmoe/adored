@@ -3,6 +3,8 @@ import {
   aboveLineConfidence,
   checkTermination,
   defaultHardFloor,
+  estimateComparisonsNeeded,
+  estimateSessionsRemaining,
   initialTerminationState,
 } from '@/lib/termination'
 
@@ -155,5 +157,59 @@ describe('aboveLineConfidence', () => {
     // N=20, threshold=10. Streak of 5 is below; 10 meets it.
     expect(aboveLineConfidence(5, 100, itemCount, { stableComparisons: 20 })).toBe('low')
     expect(aboveLineConfidence(10, 100, itemCount, { stableComparisons: 20 })).toBe('medium')
+  })
+})
+
+describe('estimateComparisonsNeeded', () => {
+  it('returns 0 for collections with fewer than 2 items', () => {
+    expect(estimateComparisonsNeeded(0, 'favorites')).toBe(0)
+    expect(estimateComparisonsNeeded(1, 'maybeKeeps')).toBe(0)
+  })
+
+  it('grows with broader tiers (favorites ≤ strongKeeps ≤ maybeKeeps)', () => {
+    const n = 20
+    const fav = estimateComparisonsNeeded(n, 'favorites')
+    const strong = estimateComparisonsNeeded(n, 'strongKeeps')
+    const maybe = estimateComparisonsNeeded(n, 'maybeKeeps')
+    expect(fav).toBeLessThanOrEqual(strong)
+    expect(strong).toBeLessThanOrEqual(maybe)
+  })
+
+  it('scales with item count', () => {
+    expect(estimateComparisonsNeeded(50, 'favorites')).toBeGreaterThan(
+      estimateComparisonsNeeded(20, 'favorites'),
+    )
+  })
+
+  it('anchors favorites at the hard floor', () => {
+    expect(estimateComparisonsNeeded(20, 'favorites')).toBe(defaultHardFloor(20))
+  })
+})
+
+describe('estimateSessionsRemaining', () => {
+  it('returns the cap when this session yielded 0 comparisons (cannot extrapolate)', () => {
+    expect(estimateSessionsRemaining(20, 0, 'favorites')).toBe(9)
+    expect(estimateSessionsRemaining(20, 0, 'favorites', 5)).toBe(5)
+  })
+
+  it('returns 0 when the target is already met', () => {
+    expect(estimateSessionsRemaining(20, 10_000, 'favorites')).toBe(0)
+  })
+
+  it('returns at least 1 session when there is any work left', () => {
+    // A target with just 1 comparison short — should round up to 1 session.
+    const target = estimateComparisonsNeeded(20, 'favorites')
+    expect(estimateSessionsRemaining(20, target - 1, 'favorites')).toBe(1)
+  })
+
+  it('grows with broader tiers (more sessions for maybeKeeps than favorites)', () => {
+    const fav = estimateSessionsRemaining(20, 5, 'favorites')
+    const maybe = estimateSessionsRemaining(20, 5, 'maybeKeeps')
+    expect(fav).toBeLessThanOrEqual(maybe)
+  })
+
+  it('respects the cap so users do not see alarming numbers', () => {
+    // Tiny per-session yield against a large target → capped.
+    expect(estimateSessionsRemaining(50, 1, 'maybeKeeps', 5)).toBe(5)
   })
 })

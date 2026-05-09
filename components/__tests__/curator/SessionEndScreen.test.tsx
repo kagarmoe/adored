@@ -109,7 +109,7 @@ describe('SessionEndScreen', () => {
   })
 
   describe('confidence: low (above-the-line unstable)', () => {
-    it('does NOT render the tier breakdown', () => {
+    it('does NOT render the tier breakdown (no "Top picks/Strong keeps/Below the line")', () => {
       render(
         <SessionEndScreen
           tiered={tiered}
@@ -118,11 +118,10 @@ describe('SessionEndScreen', () => {
           onContinue={() => {}}
         />,
       )
-      expect(screen.queryByRole('list')).not.toBeInTheDocument()
       expect(screen.queryByText(/top picks/i)).not.toBeInTheDocument()
       expect(screen.queryByText(/strong keeps/i)).not.toBeInTheDocument()
-      expect(screen.queryByText(/maybe keeps/i)).not.toBeInTheDocument()
       expect(screen.queryByText(/below the line/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/where things stand/i)).not.toBeInTheDocument()
     })
 
     it('shows the comparison count in the headline', () => {
@@ -137,7 +136,7 @@ describe('SessionEndScreen', () => {
       expect(screen.getByText(/ranked 7 comparisons/i)).toBeInTheDocument()
     })
 
-    it('encourages a longer session to lock in tiers', () => {
+    it('suggests another session of the same length (NOT a longer one — timer max is 5 min)', () => {
       render(
         <SessionEndScreen
           tiered={tiered}
@@ -146,20 +145,50 @@ describe('SessionEndScreen', () => {
           onContinue={() => {}}
         />,
       )
-      expect(screen.getByText(/longer session next time/i)).toBeInTheDocument()
+      expect(screen.getByText(/another session of the same length/i)).toBeInTheDocument()
+      expect(screen.queryByText(/longer session/i)).not.toBeInTheDocument()
     })
 
-    it('does not claim tier-correct results', () => {
+    it('shows per-tier session-count estimates (favorites / likely keeps / maybe keeps)', () => {
       render(
         <SessionEndScreen
           tiered={tiered}
           comparisonCount={5}
           confidence="low"
+          itemCount={20}
           onContinue={() => {}}
         />,
       )
-      // The breakdown copy ("Where things stand") implies stable tiers; suppressed at low confidence.
-      expect(screen.queryByRole('list')).not.toBeInTheDocument()
+      const estimates = screen.getByTestId('session-estimates')
+      expect(estimates).toBeInTheDocument()
+      expect(estimates).toHaveTextContent(/favorites/i)
+      expect(estimates).toHaveTextContent(/likely keeps/i)
+      expect(estimates).toHaveTextContent(/maybe keeps/i)
+      // Each row should mention a session count.
+      expect(estimates.textContent).toMatch(/session/i)
+    })
+
+    it('estimates require more sessions for broader tiers (favorites <= likely keeps <= maybe keeps)', () => {
+      render(
+        <SessionEndScreen
+          tiered={tiered}
+          comparisonCount={5}
+          confidence="low"
+          itemCount={20}
+          onContinue={() => {}}
+        />,
+      )
+      const rows = screen.getByTestId('session-estimates').querySelectorAll('li')
+      expect(rows).toHaveLength(3)
+      const numFor = (row: Element): number => {
+        const m = row.textContent?.match(/~(\d+)/)
+        return m ? parseInt(m[1], 10) : 0
+      }
+      const fav = numFor(rows[0])
+      const likely = numFor(rows[1])
+      const maybe = numFor(rows[2])
+      expect(fav).toBeLessThanOrEqual(likely)
+      expect(likely).toBeLessThanOrEqual(maybe)
     })
   })
 })

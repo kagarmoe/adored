@@ -100,3 +100,37 @@ export function aboveLineConfidence(
   if (stableStreak >= partialThreshold && comparisonCount >= hardFloor) return 'medium'
   return 'low'
 }
+
+export type EstimableTier = 'favorites' | 'strongKeeps' | 'maybeKeeps'
+
+// Heuristic estimate of total comparisons needed for a tier's membership to
+// stabilize. Anchored at n*log2(n) (the hard floor for full above-line stability)
+// and scaled per tier — favorites converge fastest, maybeKeeps slowest, because
+// the boundary near the middle of the rating distribution churns longer.
+const TIER_DIFFICULTY: Record<EstimableTier, number> = {
+  favorites: 1.0,
+  strongKeeps: 1.5,
+  maybeKeeps: 2.0,
+}
+
+export function estimateComparisonsNeeded(itemCount: number, tier: EstimableTier): number {
+  if (itemCount < 2) return 0
+  return Math.ceil(defaultHardFloor(itemCount) * TIER_DIFFICULTY[tier])
+}
+
+// Convert a remaining-comparison estimate into "additional sessions of the
+// same length", using this session's pace as the per-session yield. Always
+// returns at least 1 when there's any work left, and clamps to `cap` to
+// avoid showing alarming numbers like "47 sessions".
+export function estimateSessionsRemaining(
+  itemCount: number,
+  comparisonsThisSession: number,
+  tier: EstimableTier,
+  cap = 9,
+): number {
+  if (comparisonsThisSession <= 0) return cap
+  const target = estimateComparisonsNeeded(itemCount, tier)
+  const remaining = Math.max(0, target - comparisonsThisSession)
+  if (remaining === 0) return 0
+  return Math.min(cap, Math.max(1, Math.ceil(remaining / comparisonsThisSession)))
+}

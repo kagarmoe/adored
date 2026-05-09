@@ -1,7 +1,11 @@
 'use client'
 
 import type { Tier, TieredItem } from '@/lib/elo'
-import type { AboveLineConfidence } from '@/lib/termination'
+import {
+  estimateSessionsRemaining,
+  type AboveLineConfidence,
+  type EstimableTier,
+} from '@/lib/termination'
 
 interface Props {
   tiered: TieredItem[]
@@ -9,6 +13,10 @@ interface Props {
   // 'medium' renders the partial tier breakdown with a hedge; 'low' suppresses
   // the breakdown so users aren't shown results the algorithm hasn't stabilized.
   confidence: AboveLineConfidence
+  // Total items being ranked in the collection. Used at low confidence to
+  // estimate how many additional sessions would lock in each tier. Defaults
+  // to tiered.length when not supplied.
+  itemCount?: number
   onContinue: () => void
 }
 
@@ -21,13 +29,26 @@ const TIER_LABELS: Record<Tier, string> = {
 
 const TIER_ORDER: Tier[] = ['favorites', 'strongKeeps', 'maybeKeeps', 'belowTheLine']
 
+const ESTIMATE_TIERS: { tier: EstimableTier; label: string }[] = [
+  { tier: 'favorites', label: 'favorites' },
+  { tier: 'strongKeeps', label: 'likely keeps' },
+  { tier: 'maybeKeeps', label: 'maybe keeps' },
+]
+
+function formatSessions(n: number): string {
+  if (n <= 0) return 'this session'
+  return `~${n} session${n === 1 ? '' : 's'}`
+}
+
 export function SessionEndScreen({
   tiered,
   comparisonCount,
   confidence,
+  itemCount,
   onContinue,
 }: Props) {
   const itemsRanked = tiered.length
+  const totalItems = itemCount ?? tiered.length
   const showTiers = confidence === 'medium'
 
   const headline = showTiers
@@ -36,7 +57,13 @@ export function SessionEndScreen({
 
   const note = showTiers
     ? "Here's where things stand — a few more rounds would lock it in."
-    : 'Try a longer session next time to lock in the tiers.'
+    : 'Try another session of the same length to lock in the tiers.'
+
+  const estimates = ESTIMATE_TIERS.map(({ tier, label }) => ({
+    tier,
+    label,
+    sessions: estimateSessionsRemaining(totalItems, comparisonCount, tier),
+  }))
 
   return (
     <div
@@ -72,6 +99,30 @@ export function SessionEndScreen({
             <p className="font-body text-text-muted text-small mb-8">
               {comparisonCount} comparison{comparisonCount === 1 ? '' : 's'} so far.
             </p>
+          </>
+        )}
+
+        {!showTiers && (
+          <>
+            <p className="font-display text-label uppercase tracking-widest text-text-muted mb-3">
+              Estimated effort to lock in
+            </p>
+            <ul
+              data-testid="session-estimates"
+              className="text-left space-y-2 mb-8"
+            >
+              {estimates.map(({ tier, label, sessions }) => (
+                <li
+                  key={tier}
+                  className="flex justify-between font-body text-text-primary border-b border-border pb-1"
+                >
+                  <span>{label}</span>
+                  <span className="text-text-muted">
+                    {formatSessions(sessions)}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </>
         )}
 

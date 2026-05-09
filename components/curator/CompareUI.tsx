@@ -243,6 +243,7 @@ function CompareInner({ collectionId, demoItems }: Props) {
           tiered={tiered}
           comparisonCount={comparisonCount}
           confidence={confidence}
+          itemCount={tiered.length}
           onContinue={goToResults}
         />
       )
