@@ -45,12 +45,14 @@ model Item {
 }
 
 model Photo {
-  id         Int      @id @default(autoincrement())
-  item       Item     @relation(fields: [itemId], references: [id])
-  itemId     Int
-  blobKey    String   @unique
-  isHero     Boolean  @default(false)
-  uploadedAt DateTime @default(now())
+  id              Int      @id @default(autoincrement())
+  item            Item     @relation(fields: [itemId], references: [id])
+  itemId          Int
+  blobKey         String   @unique
+  originalBlobKey String   @unique
+  bgRemoved       Boolean  @default(false)
+  isHero          Boolean  @default(false)
+  uploadedAt      DateTime @default(now())
 }
 
 model Comparison {

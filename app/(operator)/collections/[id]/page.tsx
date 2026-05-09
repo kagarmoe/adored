@@ -3,6 +3,7 @@ import { auth } from '@/auth'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { displayPhotoUrl } from '@/lib/photo'
 
 export const dynamic = 'force-dynamic'
 
@@ -54,7 +55,7 @@ export default async function CollectionPage({ params }: Props) {
                 {hero ? (
                   <div className="aspect-square relative">
                     <Image
-                      src={`/api/photos/${encodeURIComponent(hero.blobKey)}`}
+                      src={`/api/photos/${encodeURIComponent(displayPhotoUrl(hero))}`}
                       alt={item.brand || 'Bag'}
                       fill
                       className="object-cover"

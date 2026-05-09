@@ -3,6 +3,7 @@ import { getCollection } from '@/actions/collections'
 import { computeTiers } from '@/lib/elo'
 import type { Tier } from '@/lib/elo'
 import { TierSection } from '@/components/curator/TierSection'
+import { displayPhotoUrl } from '@/lib/photo'
 import Link from 'next/link'
 
 type Props = { params: Promise<{ id: string }> }
@@ -20,7 +21,7 @@ export default async function CollectionPage({ params }: Props) {
       ...tiered,
       brand: item.brand,
       style: item.style,
-      heroUrl: item.photos[0]?.blobKey ?? null,
+      heroUrl: item.photos[0] ? displayPhotoUrl(item.photos[0]) : null,
     }
   })
 

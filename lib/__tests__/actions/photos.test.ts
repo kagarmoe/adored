@@ -4,7 +4,7 @@ const mockAuth = vi.hoisted(() => vi.fn())
 const mockPut = vi.hoisted(() => vi.fn())
 const mockDb = vi.hoisted(() => ({
   item: { findUnique: vi.fn() },
-  photo: { findFirst: vi.fn(), create: vi.fn() },
+  photo: { findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
 }))
 
 vi.mock('@/auth', () => ({ auth: () => mockAuth() }))
@@ -12,14 +12,17 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@vercel/blob', () => ({ put: (...args: unknown[]) => mockPut(...args) }))
 vi.mock('@/lib/db', () => ({ db: mockDb }))
 
-import { uploadPhoto } from '@/actions/photos'
+import { uploadPhoto, togglePhotoBackground } from '@/actions/photos'
 
 const session = { user: { id: '1' } }
 const item = { id: 1, collectionId: 10 }
+const itemWithCollection = { id: 1, collectionId: 10, collection: { id: 10, ownerId: 1 } }
 
-function makeFormData(name = 'bag.jpg') {
+function makeFormData(opts: { name?: string; processed?: boolean; processedName?: string } = {}) {
+  const { name = 'bag.jpg', processed = false, processedName = 'bag.png' } = opts
   const fd = new FormData()
   fd.append('file', new File(['data'], name, { type: 'image/jpeg' }))
+  if (processed) fd.append('processed', new File(['png'], processedName, { type: 'image/png' }))
   return fd
 }
 
@@ -29,8 +32,13 @@ describe('uploadPhoto', () => {
     mockAuth.mockResolvedValue(session)
     mockDb.item.findUnique.mockResolvedValue(item)
     mockDb.photo.findFirst.mockResolvedValue(null)
-    mockPut.mockResolvedValue({ url: 'https://blob.vercel.app/collections/10/items/1/bag.jpg' })
-    mockDb.photo.create.mockResolvedValue({ id: 1, itemId: 1, blobKey: 'https://blob.vercel.app/...', isHero: true })
+    mockPut.mockImplementation(async (path: string) => ({
+      url: `https://blob.vercel.app/${path}`,
+    }))
+    mockDb.photo.create.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
+      id: 1,
+      ...data,
+    }))
   })
 
   it('throws when not authenticated', async () => {
@@ -47,12 +55,12 @@ describe('uploadPhoto', () => {
     await expect(uploadPhoto(999, makeFormData())).rejects.toThrow('Item not found')
   })
 
-  it('uploads to correct blob path', async () => {
-    await uploadPhoto(1, makeFormData('my-bag.jpg'))
+  it('uploads original file to correct blob path', async () => {
+    await uploadPhoto(1, makeFormData({ name: 'my-bag.jpg' }))
     expect(mockPut).toHaveBeenCalledWith(
       'collections/10/items/1/my-bag.jpg',
       expect.any(File),
-      expect.objectContaining({ access: 'public' })
+      expect.objectContaining({ access: 'public' }),
     )
   })
 
@@ -60,7 +68,7 @@ describe('uploadPhoto', () => {
     mockDb.photo.findFirst.mockResolvedValue(null)
     await uploadPhoto(1, makeFormData())
     expect(mockDb.photo.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ isHero: true }) })
+      expect.objectContaining({ data: expect.objectContaining({ isHero: true }) }),
     )
   })
 
@@ -68,22 +76,141 @@ describe('uploadPhoto', () => {
     mockDb.photo.findFirst.mockResolvedValue({ id: 1, isHero: true })
     await uploadPhoto(1, makeFormData())
     expect(mockDb.photo.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ isHero: false }) })
-    )
-  })
-
-  it('stores blob URL as blobKey', async () => {
-    const url = 'https://blob.vercel.app/x.jpg'
-    mockPut.mockResolvedValue({ url })
-    await uploadPhoto(1, makeFormData())
-    expect(mockDb.photo.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ blobKey: url }) })
+      expect.objectContaining({ data: expect.objectContaining({ isHero: false }) }),
     )
   })
 
   it('returns the created photo', async () => {
-    const photo = { id: 5, itemId: 1, blobKey: 'url', isHero: true }
+    const photo = { id: 5, itemId: 1, blobKey: 'url', originalBlobKey: 'url', bgRemoved: false, isHero: true }
     mockDb.photo.create.mockResolvedValue(photo)
     expect(await uploadPhoto(1, makeFormData())).toEqual(photo)
+  })
+
+  describe('without processed file (fallback)', () => {
+    it('stores blobKey == originalBlobKey and bgRemoved=false', async () => {
+      const url = 'https://blob.vercel.app/collections/10/items/1/bag.jpg'
+      mockPut.mockResolvedValue({ url })
+      await uploadPhoto(1, makeFormData())
+      const data = mockDb.photo.create.mock.calls[0][0].data
+      expect(data.blobKey).toBe(url)
+      expect(data.originalBlobKey).toBe(url)
+      expect(data.bgRemoved).toBe(false)
+    })
+
+    it('only puts once (only the original)', async () => {
+      await uploadPhoto(1, makeFormData())
+      expect(mockPut).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('with processed file', () => {
+    it('puts both original and processed', async () => {
+      await uploadPhoto(1, makeFormData({ processed: true }))
+      expect(mockPut).toHaveBeenCalledTimes(2)
+    })
+
+    it('stores distinct blobKey (processed) and originalBlobKey (original) with bgRemoved=true', async () => {
+      mockPut
+        .mockResolvedValueOnce({ url: 'https://blob.vercel.app/orig.jpg' })
+        .mockResolvedValueOnce({ url: 'https://blob.vercel.app/proc.png' })
+      await uploadPhoto(1, makeFormData({ processed: true }))
+      const data = mockDb.photo.create.mock.calls[0][0].data
+      expect(data.originalBlobKey).toBe('https://blob.vercel.app/orig.jpg')
+      expect(data.blobKey).toBe('https://blob.vercel.app/proc.png')
+      expect(data.bgRemoved).toBe(true)
+    })
+
+    it('uploads processed file to a .png path under the same item dir', async () => {
+      await uploadPhoto(1, makeFormData({ name: 'bag.jpg', processed: true, processedName: 'bag.png' }))
+      const paths = mockPut.mock.calls.map(c => c[0])
+      expect(paths[0]).toBe('collections/10/items/1/bag.jpg')
+      expect(paths[1]).toMatch(/^collections\/10\/items\/1\/.+\.png$/)
+    })
+  })
+})
+
+describe('togglePhotoBackground', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockAuth.mockResolvedValue(session)
+    mockDb.item.findUnique.mockResolvedValue(item)
+  })
+
+  it('throws when not authenticated', async () => {
+    mockAuth.mockResolvedValue(null)
+    await expect(togglePhotoBackground(1)).rejects.toThrow('Unauthorized')
+  })
+
+  it('throws when photo not found', async () => {
+    mockDb.photo.findUnique.mockResolvedValue(null)
+    await expect(togglePhotoBackground(999)).rejects.toThrow('Photo not found')
+  })
+
+  it('throws Unauthorized when photo belongs to another user', async () => {
+    mockDb.photo.findUnique.mockResolvedValue({
+      id: 1,
+      itemId: 1,
+      blobKey: 'https://blob/proc.png',
+      originalBlobKey: 'https://blob/orig.jpg',
+      bgRemoved: true,
+      item: { id: 1, collectionId: 10, collection: { id: 10, ownerId: 999 } },
+    })
+    await expect(togglePhotoBackground(1)).rejects.toThrow('Unauthorized')
+    expect(mockDb.photo.update).not.toHaveBeenCalled()
+  })
+
+  it('does nothing when no processed version exists (blobKey == originalBlobKey)', async () => {
+    mockDb.photo.findUnique.mockResolvedValue({
+      id: 1,
+      itemId: 1,
+      blobKey: 'https://blob/x.jpg',
+      originalBlobKey: 'https://blob/x.jpg',
+      bgRemoved: false,
+      item: itemWithCollection,
+    })
+    await togglePhotoBackground(1)
+    expect(mockDb.photo.update).not.toHaveBeenCalled()
+  })
+
+  it('toggles processed → original: swaps blobKey/originalBlobKey, flips bgRemoved', async () => {
+    mockDb.photo.findUnique.mockResolvedValue({
+      id: 1,
+      itemId: 1,
+      blobKey: 'https://blob/proc.png',
+      originalBlobKey: 'https://blob/orig.jpg',
+      bgRemoved: true,
+      item: itemWithCollection,
+    })
+    mockDb.photo.update.mockResolvedValue({})
+    await togglePhotoBackground(1)
+    expect(mockDb.photo.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: {
+        blobKey: 'https://blob/orig.jpg',
+        originalBlobKey: 'https://blob/proc.png',
+        bgRemoved: false,
+      },
+    })
+  })
+
+  it('toggles original → processed: swaps blobKey/originalBlobKey, flips bgRemoved', async () => {
+    mockDb.photo.findUnique.mockResolvedValue({
+      id: 1,
+      itemId: 1,
+      blobKey: 'https://blob/orig.jpg',
+      originalBlobKey: 'https://blob/proc.png',
+      bgRemoved: false,
+      item: itemWithCollection,
+    })
+    mockDb.photo.update.mockResolvedValue({})
+    await togglePhotoBackground(1)
+    expect(mockDb.photo.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: {
+        blobKey: 'https://blob/proc.png',
+        originalBlobKey: 'https://blob/orig.jpg',
+        bgRemoved: true,
+      },
+    })
   })
 })

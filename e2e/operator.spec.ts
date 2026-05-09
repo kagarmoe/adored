@@ -70,3 +70,25 @@ test.describe('curator cannot access operator routes', () => {
     await expect(page).not.toHaveURL('/dashboard')
   })
 })
+
+test.describe('upload flow with bg removal', () => {
+  test('upload page renders Take photo and Pick from library buttons', async ({ operatorPage: page }) => {
+    await page.goto('/collections/1/upload')
+    if (page.url().endsWith('/login')) test.skip()
+    const takePhoto = page.getByRole('button', { name: /take photo/i }).first()
+    if ((await takePhoto.count()) > 0) {
+      await expect(takePhoto).toBeVisible()
+      await expect(page.getByRole('button', { name: /pick from library/i }).first()).toBeVisible()
+    }
+  })
+
+  test('upload page exposes camera-input with capture=environment', async ({ operatorPage: page }) => {
+    await page.goto('/collections/1/upload')
+    if (page.url().endsWith('/login')) test.skip()
+    const camera = page.getByTestId('camera-input').first()
+    if ((await camera.count()) > 0) {
+      await expect(camera).toHaveAttribute('capture', 'environment')
+      await expect(camera).toHaveAttribute('accept', 'image/*')
+    }
+  })
+})

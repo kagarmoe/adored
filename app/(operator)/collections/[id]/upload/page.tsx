@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import { PhotoUploader } from '@/components/operator/PhotoUploader'
+import { PhotoCard } from '@/components/operator/PhotoCard'
 import { createItem } from '@/actions/items'
 import { revalidatePath } from 'next/cache'
 
@@ -40,6 +41,15 @@ export default async function UploadPage({ params }: Props) {
             <p className="font-display text-text-primary mb-4">
               Item #{item.id}
             </p>
+            {item.photos.length > 0 && (
+              <ul className="mb-5 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
+                {item.photos.map(photo => (
+                  <li key={photo.id}>
+                    <PhotoCard photo={photo} />
+                  </li>
+                ))}
+              </ul>
+            )}
             <PhotoUploader itemId={item.id} onUploaded={() => {}} />
           </div>
         ))}
