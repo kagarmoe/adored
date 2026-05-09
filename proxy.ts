@@ -1,11 +1,24 @@
 import { auth } from '@/auth'
 import { NextResponse } from 'next/server'
+import { isDemoHost } from '@/lib/demo'
 
 export default auth((req) => {
   const { pathname } = req.nextUrl
+  const host = req.headers.get('host')
+  const isDemo = isDemoHost(host)
   const isAuth = !!req.auth
 
   if (pathname === '/login' || pathname.startsWith('/api/auth')) {
+    if (isDemo && pathname === '/login') {
+      return NextResponse.redirect(new URL('/', req.url))
+    }
+    return NextResponse.next()
+  }
+
+  if (isDemo) {
+    if (pathname.startsWith('/dashboard') || pathname.startsWith('/collections')) {
+      return NextResponse.redirect(new URL('/', req.url))
+    }
     return NextResponse.next()
   }
 

@@ -24,6 +24,7 @@ model Collection {
   ownerId     Int
   name        String
   description String   @default("")
+  isDemo      Boolean  @default(false)
   createdAt   DateTime @default(now())
   items       Item[]
 }
