@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isDemoHost, DEMO_HOST } from '@/lib/demo'
+import { isDemoHost, isDemoAllowedPath, DEMO_HOST } from '@/lib/demo'
 
 describe('isDemoHost', () => {
   it('returns true for the canonical demo host', () => {
@@ -38,5 +38,46 @@ describe('isDemoHost', () => {
 
   it('does not match a host that just contains the substring', () => {
     expect(isDemoHost('not-purseinator-demo.example.com')).toBe(false)
+  })
+})
+
+describe('isDemoAllowedPath', () => {
+  it('allows the demo home', () => {
+    expect(isDemoAllowedPath('/')).toBe(true)
+  })
+
+  it('allows the curator collection view for any numeric id', () => {
+    expect(isDemoAllowedPath('/1')).toBe(true)
+    expect(isDemoAllowedPath('/42')).toBe(true)
+    expect(isDemoAllowedPath('/12345')).toBe(true)
+  })
+
+  it('allows the rank session picker', () => {
+    expect(isDemoAllowedPath('/1/rank')).toBe(true)
+  })
+
+  it('allows the compare page', () => {
+    expect(isDemoAllowedPath('/1/rank/compare')).toBe(true)
+  })
+
+  it('rejects arbitrary paths so default-deny applies', () => {
+    expect(isDemoAllowedPath('/foo')).toBe(false)
+    expect(isDemoAllowedPath('/api/whatever')).toBe(false)
+    expect(isDemoAllowedPath('/dashboard')).toBe(false)
+    expect(isDemoAllowedPath('/collections')).toBe(false)
+    expect(isDemoAllowedPath('/login')).toBe(false)
+    expect(isDemoAllowedPath('/1/extra')).toBe(false)
+    expect(isDemoAllowedPath('/1/rank/extra')).toBe(false)
+    expect(isDemoAllowedPath('/1/rank/compare/extra')).toBe(false)
+  })
+
+  it('rejects non-numeric ids', () => {
+    expect(isDemoAllowedPath('/abc')).toBe(false)
+    expect(isDemoAllowedPath('/abc/rank')).toBe(false)
+  })
+
+  it('rejects trailing slash variants to keep the matcher tight', () => {
+    expect(isDemoAllowedPath('/1/')).toBe(false)
+    expect(isDemoAllowedPath('/1/rank/')).toBe(false)
   })
 })

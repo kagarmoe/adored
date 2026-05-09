@@ -39,6 +39,10 @@ function CompareInner({ collectionId, demoItems }: Props) {
   const [done, setDone] = useState(false)
   const [loading, setLoading] = useState(true)
   const [exhausted, setExhausted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  // A ref backs the guard so synchronous double-clicks (which fire before
+  // React's next render flushes `submitting` state) still take the early-return.
+  const submittingRef = useRef(false)
 
   // Initialize demo state from localStorage on mount.
   useEffect(() => {
@@ -94,28 +98,41 @@ function CompareInner({ collectionId, demoItems }: Props) {
 
   async function pick(winnerId: number) {
     if (!pair) return
-    if (isDemo) {
-      const loserId = winnerId === pair.itemA.id ? pair.itemB.id : pair.itemA.id
-      const wr = ratingsRef.current.get(winnerId) ?? 1000
-      const lr = ratingsRef.current.get(loserId) ?? 1000
-      const { winnerNew, loserNew } = updateElo(wr, lr)
-      ratingsRef.current.set(winnerId, winnerNew)
-      ratingsRef.current.set(loserId, loserNew)
-      appendDemoComparison(collectionId, {
-        itemAId: pair.itemA.id,
-        itemBId: pair.itemB.id,
-        winnerId,
-      })
-    } else {
-      await submitComparison(
-        collectionId,
-        pair.itemA.id,
-        pair.itemB.id,
-        winnerId,
-        'photo_only',
-      )
+    // In-flight guard: a double-click would otherwise produce two
+    // submitComparison calls (duplicate DB row) or two appendDemoComparison
+    // entries (corrupt localStorage history) and double-apply ELO updates.
+    // The ref check catches synchronous double-clicks; the state mirror drives
+    // visual disabled feedback.
+    if (submittingRef.current) return
+    submittingRef.current = true
+    setSubmitting(true)
+    try {
+      if (isDemo) {
+        const loserId = winnerId === pair.itemA.id ? pair.itemB.id : pair.itemA.id
+        const wr = ratingsRef.current.get(winnerId) ?? 1000
+        const lr = ratingsRef.current.get(loserId) ?? 1000
+        const { winnerNew, loserNew } = updateElo(wr, lr)
+        ratingsRef.current.set(winnerId, winnerNew)
+        ratingsRef.current.set(loserId, loserNew)
+        appendDemoComparison(collectionId, {
+          itemAId: pair.itemA.id,
+          itemBId: pair.itemB.id,
+          winnerId,
+        })
+      } else {
+        await submitComparison(
+          collectionId,
+          pair.itemA.id,
+          pair.itemB.id,
+          winnerId,
+          'photo_only',
+        )
+      }
+      await loadPair()
+    } finally {
+      submittingRef.current = false
+      setSubmitting(false)
     }
-    await loadPair()
   }
 
   const finishedCopy = useMemo(
@@ -145,6 +162,17 @@ function CompareInner({ collectionId, demoItems }: Props) {
     )
   }
 
+  // Defensive: a degenerate demo collection (0 or 1 items) should not even
+  // attempt pair selection. The seed always inserts 20, so this is belt-and-
+  // suspenders, but it produces a clearer message than "no more pairs".
+  if (isDemo && (demoItems?.length ?? 0) < 2) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6 text-center">
+        <p className="font-body text-text-muted">Not enough items to rank.</p>
+      </div>
+    )
+  }
+
   if (loading) return null
 
   if (!pair || exhausted) {
@@ -161,9 +189,20 @@ function CompareInner({ collectionId, demoItems }: Props) {
       <p className="font-display text-label uppercase tracking-widest text-text-muted text-center mb-8">
         Which one?
       </p>
-      <div className="flex gap-4 sm:gap-6 md:gap-10 flex-1 max-w-2xl md:max-w-4xl lg:max-w-5xl mx-auto w-full">
-        <ComparisonCard {...pair.itemA} onPick={() => pick(pair.itemA.id)} />
-        <ComparisonCard {...pair.itemB} onPick={() => pick(pair.itemB.id)} />
+      <div
+        className="flex gap-4 sm:gap-6 md:gap-10 flex-1 max-w-2xl md:max-w-4xl lg:max-w-5xl mx-auto w-full"
+        aria-busy={submitting}
+      >
+        <ComparisonCard
+          {...pair.itemA}
+          disabled={submitting}
+          onPick={() => pick(pair.itemA.id)}
+        />
+        <ComparisonCard
+          {...pair.itemB}
+          disabled={submitting}
+          onPick={() => pick(pair.itemB.id)}
+        />
       </div>
     </div>
   )

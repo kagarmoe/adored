@@ -1,6 +1,6 @@
 import { auth } from '@/auth'
 import { NextResponse } from 'next/server'
-import { isDemoHost } from '@/lib/demo'
+import { isDemoHost, isDemoAllowedPath } from '@/lib/demo'
 
 export default auth((req) => {
   const { pathname } = req.nextUrl
@@ -16,7 +16,9 @@ export default auth((req) => {
   }
 
   if (isDemo) {
-    if (pathname.startsWith('/dashboard') || pathname.startsWith('/collections')) {
+    // Default-deny: only the explicit allowlist of demo URL shapes pass.
+    // Any new authenticated route added later is silently safe by default.
+    if (!isDemoAllowedPath(pathname)) {
       return NextResponse.redirect(new URL('/', req.url))
     }
     return NextResponse.next()

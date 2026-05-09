@@ -30,7 +30,9 @@ interface DemoItem {
 
 // 20 cute animals — 7 cats, 7 dogs, 6 hamsters.
 // Brand/style fields are repurposed in the demo to hold the animal's "name" / breed.
-const DEMO_ITEMS: DemoItem[] = [
+// Each photoUrl must be globally unique — Photo.originalBlobKey has @unique,
+// so reusing a CDN URL across two items would fail at insert time.
+export const DEMO_ITEMS: DemoItem[] = [
   // Cats — Unsplash
   { brand: 'Mochi', style: 'Tabby cat', photoUrl: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&q=80' },
   { brand: 'Pepper', style: 'Black cat', photoUrl: 'https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=800&q=80' },
@@ -57,6 +59,77 @@ const DEMO_ITEMS: DemoItem[] = [
   { brand: 'Crouton', style: 'Hamster portrait', photoUrl: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800&q=80' },
   { brand: 'Marshmallow', style: 'Tiny hamster', photoUrl: 'https://images.unsplash.com/photo-1626151407839-1a47a98a2092?w=800&q=80' },
 ]
+
+// Minimal contract on the prisma client we need — lets the seed be unit-tested
+// without spinning up a real Postgres.
+export interface SeedDb {
+  photo: {
+    findUnique: (args: { where: { originalBlobKey: string } }) => Promise<{ itemId: number } | null>
+    create: (args: {
+      data: {
+        itemId: number
+        blobKey: string
+        originalBlobKey: string
+        bgRemoved: boolean
+        isHero: boolean
+      }
+    }) => Promise<unknown>
+  }
+  item: {
+    create: (args: {
+      data: { collectionId: number; brand: string; style: string }
+    }) => Promise<{ id: number }>
+  }
+}
+
+/**
+ * Idempotently insert DEMO_ITEMS into `collectionId`.
+ *
+ * The previous implementation used a count-based guard
+ * (`if (collection.items.length >= DEMO_ITEMS.length) skip`) which allowed a
+ * partial-failure re-run to insert duplicates (e.g. 10 → 30 items).
+ *
+ * This per-item approach keys off `Photo.originalBlobKey @unique` (the photoUrl
+ * is unique per demo entry, and the schema already enforces global uniqueness).
+ * If a Photo with the same originalBlobKey exists, we skip — otherwise we
+ * create the Item and its hero Photo.
+ *
+ * Why not a unique index on (collectionId, brand, style)? Real (non-demo)
+ * collections may legitimately hold multiple items with the same brand/style
+ * (two black totes, etc.). Adding that constraint would break real uploads.
+ */
+export async function seedDemoItems(
+  db: SeedDb,
+  collectionId: number,
+  items: DemoItem[] = DEMO_ITEMS,
+): Promise<{ created: number; skipped: number }> {
+  let created = 0
+  let skipped = 0
+  for (const data of items) {
+    const existing = await db.photo.findUnique({
+      where: { originalBlobKey: data.photoUrl },
+    })
+    if (existing) {
+      skipped++
+      continue
+    }
+    const item = await db.item.create({
+      data: { collectionId, brand: data.brand, style: data.style },
+    })
+    await db.photo.create({
+      data: {
+        itemId: item.id,
+        // blobKey is consumed by displayPhotoUrl(); any reachable URL works.
+        blobKey: data.photoUrl,
+        originalBlobKey: data.photoUrl,
+        bgRemoved: false,
+        isHero: true,
+      },
+    })
+    created++
+  }
+  return { created, skipped }
+}
 
 async function main() {
   if (DEMO_ITEMS.length !== 20) {
@@ -98,37 +171,20 @@ async function main() {
       console.log(`Found existing demo collection id=${collection.id} (${collection.items.length} items)`)
     }
 
-    if (collection.items.length >= DEMO_ITEMS.length) {
-      console.log('Demo collection already populated — skipping item seed.')
-      return
-    }
-
-    for (const data of DEMO_ITEMS) {
-      const item = await db.item.create({
-        data: {
-          collectionId: collection.id,
-          brand: data.brand,
-          style: data.style,
-        },
-      })
-      await db.photo.create({
-        data: {
-          itemId: item.id,
-          // blobKey is consumed by displayPhotoUrl(); any reachable URL works.
-          blobKey: data.photoUrl,
-          originalBlobKey: data.photoUrl,
-          bgRemoved: false,
-          isHero: true,
-        },
-      })
-    }
-    console.log(`Seeded ${DEMO_ITEMS.length} demo items into collection ${collection.id}.`)
+    const { created, skipped } = await seedDemoItems(db, collection.id)
+    console.log(
+      `Seeded demo collection ${collection.id}: ${created} created, ${skipped} already present.`,
+    )
   } finally {
     await db.$disconnect()
   }
 }
 
-main().catch((err) => {
-  console.error('seed-demo failed:', err)
-  process.exit(1)
-})
+// Auto-run when executed as a script (`npx tsx prisma/seed-demo.ts`). Skip
+// under vitest so tests can import the helpers without launching prisma.
+if (!process.env.VITEST) {
+  main().catch((err) => {
+    console.error('seed-demo failed:', err)
+    process.exit(1)
+  })
+}

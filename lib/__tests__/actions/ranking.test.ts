@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockAuth = vi.hoisted(() => vi.fn())
 const mockDb = vi.hoisted(() => ({
+  collection: {
+    findUnique: vi.fn(),
+  },
   item: {
     findMany: vi.fn(),
     findUniqueOrThrow: vi.fn(),
@@ -28,6 +31,7 @@ describe('getNextPair', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockAuth.mockResolvedValue(session)
+    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 1 })
     mockDb.item.findMany.mockResolvedValue([itemA, itemB])
     mockDb.comparison.findMany.mockResolvedValue([])
   })
@@ -35,6 +39,22 @@ describe('getNextPair', () => {
   it('throws when not authenticated', async () => {
     mockAuth.mockResolvedValue(null)
     await expect(getNextPair(10)).rejects.toThrow('Unauthorized')
+  })
+
+  it('throws when the collection does not exist', async () => {
+    mockDb.collection.findUnique.mockResolvedValue(null)
+    await expect(getNextPair(10)).rejects.toThrow('Unauthorized')
+  })
+
+  it('throws when the collection belongs to another user', async () => {
+    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 99 })
+    await expect(getNextPair(10)).rejects.toThrow('Unauthorized')
+  })
+
+  it('does not query items when ownership check fails', async () => {
+    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 99 })
+    await expect(getNextPair(10)).rejects.toThrow('Unauthorized')
+    expect(mockDb.item.findMany).not.toHaveBeenCalled()
   })
 
   it('fetches items and comparisons for the collection', async () => {
@@ -60,6 +80,7 @@ describe('submitComparison', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockAuth.mockResolvedValue(session)
+    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 1 })
     mockDb.item.findUniqueOrThrow.mockImplementation(({ where }: { where: { id: number } }) =>
       Promise.resolve(where.id === 1 ? itemA : itemB)
     )
@@ -69,6 +90,17 @@ describe('submitComparison', () => {
   it('throws when not authenticated', async () => {
     mockAuth.mockResolvedValue(null)
     await expect(submitComparison(10, 1, 2, 1, 'shown')).rejects.toThrow('Unauthorized')
+  })
+
+  it('throws when the collection does not exist', async () => {
+    mockDb.collection.findUnique.mockResolvedValue(null)
+    await expect(submitComparison(10, 1, 2, 1, 'shown')).rejects.toThrow('Unauthorized')
+  })
+
+  it('throws when the collection belongs to another user', async () => {
+    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 99 })
+    await expect(submitComparison(10, 1, 2, 1, 'shown')).rejects.toThrow('Unauthorized')
+    expect(mockDb.$transaction).not.toHaveBeenCalled()
   })
 
   it('throws when winner is not one of the two items', async () => {
