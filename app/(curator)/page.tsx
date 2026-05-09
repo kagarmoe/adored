@@ -25,7 +25,7 @@ export default async function CuratorHome() {
           No collections yet. Ask your operator to get you set up.
         </p>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {collections.map(c => (
             <CollectionCard
               key={c.id}
