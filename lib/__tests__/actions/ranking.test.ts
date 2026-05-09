@@ -24,8 +24,8 @@ vi.mock('@/lib/db', () => ({ db: mockDb }))
 import { getNextPair, submitComparison } from '@/actions/ranking'
 
 const session = { user: { id: '1' } }
-const itemA = { id: 1, eloRating: 1000, collectionId: 10 }
-const itemB = { id: 2, eloRating: 1000, collectionId: 10 }
+const itemA = { id: 1, eloRating: 1000, collectionId: 10, brand: 'A', style: 'a' }
+const itemB = { id: 2, eloRating: 1000, collectionId: 10, brand: 'B', style: 'b' }
 
 describe('getNextPair', () => {
   beforeEach(() => {
@@ -65,14 +65,30 @@ describe('getNextPair', () => {
 
   it('returns a pair when items exist', async () => {
     const result = await getNextPair(10)
-    expect(result).not.toBeNull()
-    expect(result!.itemA).toBeDefined()
-    expect(result!.itemB).toBeDefined()
+    expect(result.pair).not.toBeNull()
+    expect(result.pair!.itemA).toBeDefined()
+    expect(result.pair!.itemB).toBeDefined()
   })
 
-  it('returns null when fewer than 2 items', async () => {
+  it('returns null pair when fewer than 2 items', async () => {
     mockDb.item.findMany.mockResolvedValue([itemA])
-    expect(await getNextPair(10)).toBeNull()
+    const result = await getNextPair(10)
+    expect(result.pair).toBeNull()
+  })
+
+  it('returns items array and comparison count', async () => {
+    mockDb.comparison.findMany.mockResolvedValue([
+      { itemAId: 1, itemBId: 2, winnerId: 1 },
+    ])
+    const result = await getNextPair(10)
+    expect(result.items).toHaveLength(2)
+    expect(result.comparisonCount).toBe(1)
+  })
+
+  it('preserves brand and style on the returned pair', async () => {
+    const result = await getNextPair(10)
+    expect(result.pair!.itemA.brand).toBeDefined()
+    expect(result.pair!.itemA.style).toBeDefined()
   })
 })
 

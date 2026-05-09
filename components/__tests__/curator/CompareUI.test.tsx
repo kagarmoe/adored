@@ -18,15 +18,24 @@ vi.mock('next/navigation', () => ({
 import { CompareUI } from '@/components/curator/CompareUI'
 
 const PAIR = {
-  itemA: { id: 1, brand: 'Mochi', style: 'Tabby', heroUrl: null },
-  itemB: { id: 2, brand: 'Pepper', style: 'Black cat', heroUrl: null },
+  itemA: { id: 1, eloRating: 1000, brand: 'Mochi', style: 'Tabby', heroUrl: null },
+  itemB: { id: 2, eloRating: 1000, brand: 'Pepper', style: 'Black cat', heroUrl: null },
+}
+
+const RANKING_STATE = {
+  pair: PAIR,
+  items: [
+    { id: 1, eloRating: 1000 },
+    { id: 2, eloRating: 1000 },
+  ],
+  comparisonCount: 0,
 }
 
 describe('CompareUI (non-demo)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockUseSearchParams.mockReturnValue(new URLSearchParams('duration=300'))
-    mockGetNextPair.mockResolvedValue(PAIR)
+    mockGetNextPair.mockResolvedValue(RANKING_STATE)
     mockSubmitComparison.mockResolvedValue(undefined)
   })
 

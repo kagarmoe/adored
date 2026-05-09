@@ -5,8 +5,16 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { getNextPair, submitComparison } from '@/actions/ranking'
 import { ComparisonTimer } from '@/components/curator/ComparisonTimer'
 import { ComparisonCard } from '@/components/curator/ComparisonCard'
+import { SortCompleteScreen } from '@/components/curator/SortCompleteScreen'
+import { SessionEndScreen } from '@/components/curator/SessionEndScreen'
 import { selectNextPair } from '@/lib/pairing'
-import { updateElo } from '@/lib/elo'
+import { computeTiers, updateElo, type TieredItem } from '@/lib/elo'
+import {
+  checkTermination,
+  initialTerminationState,
+  defaultHardFloor,
+  type TerminationState,
+} from '@/lib/termination'
 import { appendDemoComparison, loadDemoComparisons } from '@/lib/demo-store'
 
 export interface CompareItem {
@@ -26,6 +34,11 @@ interface Props {
   demoItems?: CompareItem[]
 }
 
+// "Close to completion" means the stable streak has reached at least this
+// fraction of the required streak. Used to soften the SessionEndScreen copy.
+const CLOSE_TO_COMPLETION_RATIO = 0.5
+const STABLE_COMPARISONS = 10
+
 function CompareInner({ collectionId, demoItems }: Props) {
   const searchParams = useSearchParams()
   const duration = parseInt(searchParams.get('duration') ?? '300')
@@ -34,12 +47,17 @@ function CompareInner({ collectionId, demoItems }: Props) {
   const isDemo = !!demoItems
   const itemsRef = useRef<CompareItem[]>(demoItems ?? [])
   const ratingsRef = useRef<Map<number, number>>(new Map())
+  const terminationStateRef = useRef<TerminationState>(initialTerminationState())
 
   const [pair, setPair] = useState<Pair | null>(null)
   const [done, setDone] = useState(false)
+  const [completed, setCompleted] = useState(false)
   const [loading, setLoading] = useState(true)
   const [exhausted, setExhausted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [tiered, setTiered] = useState<TieredItem[]>([])
+  const [comparisonCount, setComparisonCount] = useState(0)
+  const [stableStreak, setStableStreak] = useState(0)
   // A ref backs the guard so synchronous double-clicks (which fire before
   // React's next render flushes `submitting` state) still take the early-return.
   const submittingRef = useRef(false)
@@ -63,6 +81,27 @@ function CompareInner({ collectionId, demoItems }: Props) {
     ratingsRef.current = ratings
   }, [isDemo, collectionId])
 
+  const updateTerminationFromRatings = useCallback(
+    (
+      ratedItems: { id: number; eloRating: number }[],
+      compCount: number,
+    ): { terminated: boolean; tiered: TieredItem[]; stableStreak: number } => {
+      const result = checkTermination(
+        ratedItems,
+        compCount,
+        terminationStateRef.current,
+        { stableComparisons: STABLE_COMPARISONS },
+      )
+      terminationStateRef.current = result.state
+      const newTiered = computeTiers(ratedItems)
+      setTiered(newTiered)
+      setComparisonCount(compCount)
+      setStableStreak(result.stableStreak)
+      return { terminated: result.terminated, tiered: newTiered, stableStreak: result.stableStreak }
+    },
+    [],
+  )
+
   const loadPair = useCallback(async () => {
     setLoading(true)
     if (isDemo) {
@@ -72,7 +111,19 @@ function CompareInner({ collectionId, demoItems }: Props) {
         id: i.id,
         eloRating: ratingsRef.current.get(i.id) ?? 1000,
       }))
-      const next = selectNextPair(ratedItems, comps)
+      const { terminated, tiered: newTiered } = updateTerminationFromRatings(
+        ratedItems,
+        comps.length,
+      )
+      if (terminated) {
+        setPair(null)
+        setCompleted(true)
+        setLoading(false)
+        return
+      }
+      const tierById = new Map(newTiered.map(t => [t.id, t.tier]))
+      const pairingItems = ratedItems.map(i => ({ ...i, tier: tierById.get(i.id) }))
+      const next = selectNextPair(pairingItems, comps)
       if (!next) {
         setPair(null)
         setExhausted(true)
@@ -82,12 +133,39 @@ function CompareInner({ collectionId, demoItems }: Props) {
         setPair({ itemA, itemB })
       }
     } else {
-      const next = await getNextPair(collectionId)
-      setPair(next as Pair | null)
-      if (!next) setExhausted(true)
+      const state = await getNextPair(collectionId)
+      const { terminated } = updateTerminationFromRatings(
+        state.items,
+        state.comparisonCount,
+      )
+      if (terminated) {
+        setPair(null)
+        setCompleted(true)
+        setLoading(false)
+        return
+      }
+      if (!state.pair) {
+        setPair(null)
+        setExhausted(true)
+      } else {
+        setPair({
+          itemA: {
+            id: state.pair.itemA.id,
+            brand: state.pair.itemA.brand,
+            style: state.pair.itemA.style,
+            heroUrl: state.pair.itemA.heroUrl,
+          },
+          itemB: {
+            id: state.pair.itemB.id,
+            brand: state.pair.itemB.brand,
+            style: state.pair.itemB.style,
+            heroUrl: state.pair.itemB.heroUrl,
+          },
+        })
+      }
     }
     setLoading(false)
-  }, [isDemo, collectionId])
+  }, [isDemo, collectionId, updateTerminationFromRatings])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -143,16 +221,44 @@ function CompareInner({ collectionId, demoItems }: Props) {
     [isDemo],
   )
 
+  const goToResults = useCallback(
+    () => router.push(`/${collectionId}`),
+    [router, collectionId],
+  )
+
+  if (completed) {
+    return (
+      <SortCompleteScreen
+        tiered={tiered}
+        comparisonCount={comparisonCount}
+        onContinue={goToResults}
+      />
+    )
+  }
+
   if (done) {
+    if (tiered.length > 0) {
+      const closeToCompletion =
+        stableStreak >= Math.ceil(STABLE_COMPARISONS * CLOSE_TO_COMPLETION_RATIO) &&
+        comparisonCount >= defaultHardFloor(tiered.length)
+      return (
+        <SessionEndScreen
+          tiered={tiered}
+          comparisonCount={comparisonCount}
+          closeToCompletion={closeToCompletion}
+          onContinue={goToResults}
+        />
+      )
+    }
     return (
       <div className="min-h-screen flex items-center justify-center px-6 text-center">
         <div>
           <p className="font-display text-heading text-text-primary mb-3">
-            That&apos;s enough for today.
+            Good job — that&apos;s enough for today.
           </p>
           <p className="font-body text-text-muted mb-8">{finishedCopy}</p>
           <button
-            onClick={() => router.push(`/${collectionId}`)}
+            onClick={goToResults}
             className="font-display text-label uppercase tracking-widest text-accent"
           >
             See results →
