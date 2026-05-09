@@ -19,7 +19,7 @@ export default function SessionPicker({ params }: { params: Promise<{ id: string
           How long?
         </h1>
         <p className="font-body text-text-muted mb-10">
-          Pick a length that feels comfortable. Past 15 minutes it stops being useful.
+          Pick a length that feels comfortable. Past 5 minutes it stops being useful.
         </p>
 
         <div className="mb-10">
@@ -28,14 +28,14 @@ export default function SessionPicker({ params }: { params: Promise<{ id: string
           <input
             type="range"
             min={1}
-            max={15}
+            max={5}
             value={minutes}
             onChange={e => setMinutes(Number(e.target.value))}
             className="w-full accent-accent"
           />
           <div className="flex justify-between text-label text-text-muted font-display uppercase tracking-widest mt-1">
             <span>1</span>
-            <span>15</span>
+            <span>5</span>
           </div>
         </div>
 
