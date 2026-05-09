@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createCollection } from '@/actions/collections'
 
-export const metadata = { title: 'New Collection — Purseinator' }
+export const metadata = { title: 'New Collection — PurseInator' }
 
 export default function NewCollectionPage() {
   async function handleCreate(formData: FormData) {

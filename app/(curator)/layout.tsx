@@ -12,7 +12,7 @@ export default async function CuratorLayout({ children }: { children: React.Reac
           className="font-display text-text-primary leading-none"
           style={{ fontSize: 'clamp(1.75rem, 4vw, 3rem)' }}
         >
-          Purseinator
+          PurseInator
         </span>
         <span className="font-body text-sm italic text-text-muted">
           {session.user?.name ?? session.user?.email} · curator

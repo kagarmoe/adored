@@ -4,7 +4,7 @@ import { getUserCollections } from '@/actions/collections'
 import { CollectionCard } from '@/components/curator/CollectionCard'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Your collections — Purseinator' }
+export const metadata = { title: 'Your collections — PurseInator' }
 
 export default async function CuratorHome() {
   const session = await auth()

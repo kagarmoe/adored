@@ -16,7 +16,7 @@ const bodyFont = Lora({
 })
 
 export const metadata: Metadata = {
-  title: 'Purseinator',
+  title: 'PurseInator',
   description: 'Curate your collection.',
 }
 

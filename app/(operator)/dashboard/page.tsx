@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { CollectionRow } from '@/components/operator/CollectionRow'
 import Link from 'next/link'
 
-export const metadata = { title: 'Dashboard — Purseinator' }
+export const metadata = { title: 'Dashboard — PurseInator' }
 
 export default async function DashboardPage() {
   const session = await auth()
