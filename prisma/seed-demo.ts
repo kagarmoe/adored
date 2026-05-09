@@ -57,7 +57,7 @@ export const DEMO_ITEMS: DemoItem[] = [
   { brand: 'Hazel', style: 'Roborovski', photoUrl: 'https://images.unsplash.com/photo-1606214174585-fe31582dc6ee?w=800&q=80' },
   { brand: 'Pip', style: 'Hamster cheek-pouch', photoUrl: 'https://images.unsplash.com/photo-1535241749838-299277b6305f?w=800&q=80' },
   { brand: 'Crouton', style: 'Hamster portrait', photoUrl: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800&q=80' },
-  { brand: 'Marshmallow', style: 'Tiny hamster', photoUrl: 'https://images.unsplash.com/photo-1626151407839-1a47a98a2092?w=800&q=80' },
+  { brand: 'Marshmallow', style: 'Tiny hamster', photoUrl: 'https://images.unsplash.com/photo-1721327900409-5e445c1ed119?w=800&q=80' },
 ]
 
 // Minimal contract on the prisma client we need — lets the seed be unit-tested

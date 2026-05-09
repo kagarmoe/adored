@@ -92,3 +92,21 @@ describe('seedDemoItems', () => {
     expect(state.items[0].collectionId).toBe(99)
   })
 })
+
+// Network-dependent: hits Unsplash CDN to verify each seed photoUrl is still
+// reachable. Catches the regression class where Unsplash removes a source image
+// (as happened with the Marshmallow URL — see purses-13k). The CDN is stable
+// enough to run in the default suite; opt out by setting SKIP_NETWORK_TESTS=1
+// if it ever becomes flaky in CI.
+describe('DEMO_ITEMS photoUrl liveness', () => {
+  const skip = process.env.SKIP_NETWORK_TESTS === '1'
+
+  it.skipIf(skip).each(DEMO_ITEMS)(
+    '$brand ($style) — $photoUrl returns 200',
+    { timeout: 15_000 },
+    async ({ photoUrl }) => {
+      const res = await fetch(photoUrl, { method: 'HEAD', redirect: 'follow' })
+      expect(res.status, `${photoUrl} returned ${res.status}`).toBe(200)
+    },
+  )
+})
