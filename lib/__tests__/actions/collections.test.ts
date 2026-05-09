@@ -98,9 +98,10 @@ describe('getCollection', () => {
     mockAuth.mockResolvedValue(session)
   })
 
-  it('throws when not authenticated', async () => {
+  it('returns null when not authenticated (the curator layout redirects to /login)', async () => {
     mockAuth.mockResolvedValue(null)
-    await expect(getCollection(1)).rejects.toThrow('Unauthorized')
+    expect(await getCollection(1)).toBeNull()
+    expect(mockDb.collection.findFirst).not.toHaveBeenCalled()
   })
 
   it('returns null for non-existent or unowned collection', async () => {

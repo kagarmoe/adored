@@ -1,9 +1,11 @@
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
+import { isDemoRequest } from '@/lib/demo-server'
 
 export default async function CuratorLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth()
-  if (!session) redirect('/login')
+  const isDemo = await isDemoRequest()
+  const session = isDemo ? null : await auth()
+  if (!isDemo && !session) redirect('/login')
 
   return (
     <div className="min-h-screen bg-ground">
@@ -14,9 +16,18 @@ export default async function CuratorLayout({ children }: { children: React.Reac
         >
           PurseInator
         </span>
-        <span className="font-body text-sm italic text-text-muted">
-          {session.user?.name ?? session.user?.email} · curator
-        </span>
+        {isDemo ? (
+          <span
+            data-testid="demo-badge"
+            className="font-display text-label uppercase tracking-widest bg-accent text-ground px-2 py-0.5 rounded"
+          >
+            Demo
+          </span>
+        ) : (
+          <span className="font-body text-sm italic text-text-muted">
+            {session!.user?.name ?? session!.user?.email} · curator
+          </span>
+        )}
       </header>
       <main className="max-w-2xl md:max-w-4xl lg:max-w-5xl mx-auto px-6 sm:px-8 md:px-10 py-8 md:py-10">
         {children}

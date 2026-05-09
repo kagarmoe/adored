@@ -2,11 +2,24 @@ import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import { getUserCollections } from '@/actions/collections'
 import { CollectionCard } from '@/components/curator/CollectionCard'
+import { getDemoCollection, isDemoRequest } from '@/lib/demo-server'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Your collections — PurseInator' }
 
 export default async function CuratorHome() {
+  if (await isDemoRequest()) {
+    const demo = await getDemoCollection()
+    if (!demo) {
+      return (
+        <p className="font-body text-text-muted">
+          Demo data has not been seeded yet. Run <code>npx tsx prisma/seed-demo.ts</code>.
+        </p>
+      )
+    }
+    redirect(`/${demo.id}`)
+  }
+
   const session = await auth()
   if (!session) redirect('/login')
 

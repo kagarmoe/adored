@@ -3,13 +3,15 @@ interface Props {
   style: string
   heroUrl: string | null
   onPick: () => void
+  disabled?: boolean
 }
 
-export function ComparisonCard({ brand, style, heroUrl, onPick }: Props) {
+export function ComparisonCard({ brand, style, heroUrl, onPick, disabled }: Props) {
   return (
     <button
       onClick={onPick}
-      className="flex-1 flex flex-col bg-surface rounded-xl overflow-hidden hover:ring-2 hover:ring-accent transition-all text-left"
+      disabled={disabled}
+      className="flex-1 flex flex-col bg-surface rounded-xl overflow-hidden hover:ring-2 hover:ring-accent transition-all text-left disabled:opacity-60 disabled:cursor-not-allowed"
     >
       <div className="aspect-[3/4] w-full bg-ground">
         {heroUrl && (

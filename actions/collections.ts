@@ -32,8 +32,13 @@ export async function getUserCollections() {
 }
 
 export async function getCollection(id: number) {
+  // The (curator) layout already redirects unauthenticated, non-demo requests
+  // to /login, so by the time a page calls this helper, a session SHOULD
+  // exist. We return null on a missing session instead of throwing — pages
+  // already treat null as "not found", and this gives us a single, clean
+  // contract: pages assume `session OR isDemo`, the layout guarantees it.
   const session = await auth()
-  if (!session?.user?.id) throw new Error('Unauthorized')
+  if (!session?.user?.id) return null
 
   return db.collection.findFirst({
     where: { id, ownerId: parseInt(session.user.id) },

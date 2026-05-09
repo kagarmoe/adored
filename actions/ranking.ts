@@ -6,9 +6,17 @@ import { updateElo } from '@/lib/elo'
 import { selectNextPair } from '@/lib/pairing'
 import { revalidatePath } from 'next/cache'
 
+async function assertCollectionOwner(collectionId: number, userId: string) {
+  const collection = await db.collection.findUnique({ where: { id: collectionId } })
+  if (!collection || collection.ownerId !== Number(userId)) {
+    throw new Error('Unauthorized')
+  }
+}
+
 export async function getNextPair(collectionId: number) {
   const session = await auth()
   if (!session?.user?.id) throw new Error('Unauthorized')
+  await assertCollectionOwner(collectionId, session.user.id)
 
   const [items, comparisons] = await Promise.all([
     db.item.findMany({ where: { collectionId } }),
@@ -27,6 +35,7 @@ export async function submitComparison(
 ) {
   const session = await auth()
   if (!session?.user?.id) throw new Error('Unauthorized')
+  await assertCollectionOwner(collectionId, session.user.id)
 
   if (winnerId !== itemAId && winnerId !== itemBId) {
     throw new Error('Winner must be one of the two items')
