@@ -1,0 +1,215 @@
+import { describe, it, expect } from 'vitest'
+import {
+  aboveLineConfidence,
+  checkTermination,
+  defaultHardFloor,
+  estimateComparisonsNeeded,
+  estimateSessionsRemaining,
+  initialTerminationState,
+} from '@/lib/termination'
+
+const mkItems = (n: number, ratings?: number[]) =>
+  Array.from({ length: n }, (_, i) => ({
+    id: i + 1,
+    eloRating: ratings?.[i] ?? 1000 - i * 10,
+  }))
+
+function runStableStreak(
+  items: { id: number; eloRating: number }[],
+  count: number,
+  startCompCount: number,
+  options?: { stableComparisons?: number; hardFloor?: number },
+) {
+  let state = initialTerminationState()
+  let last = { state, terminated: false, stableStreak: 0 }
+  for (let i = 0; i < count; i++) {
+    last = checkTermination(items, startCompCount + i, state, options)
+    state = last.state
+  }
+  return last
+}
+
+describe('defaultHardFloor', () => {
+  it('returns 0 for fewer than 2 items', () => {
+    expect(defaultHardFloor(0)).toBe(0)
+    expect(defaultHardFloor(1)).toBe(0)
+  })
+
+  it('scales as n*log2(n)', () => {
+    expect(defaultHardFloor(8)).toBe(Math.ceil(8 * 3))
+    expect(defaultHardFloor(20)).toBe(Math.ceil(20 * Math.log2(20)))
+  })
+})
+
+describe('checkTermination', () => {
+  it('does not terminate before the hard floor', () => {
+    const items = mkItems(20)
+    const result = runStableStreak(items, 50, 0, { stableComparisons: 3, hardFloor: 1000 })
+    expect(result.terminated).toBe(false)
+  })
+
+  it('does not terminate before reaching the stable streak length', () => {
+    const items = mkItems(20)
+    const result = runStableStreak(items, 5, 1000, { stableComparisons: 10, hardFloor: 0 })
+    expect(result.terminated).toBe(false)
+  })
+
+  it('terminates when both hard floor and stable streak are met', () => {
+    const items = mkItems(20)
+    const result = runStableStreak(items, 11, 1000, { stableComparisons: 10, hardFloor: 0 })
+    expect(result.terminated).toBe(true)
+  })
+
+  it('first observation never counts as stable', () => {
+    const items = mkItems(20)
+    const r = checkTermination(items, 1000, initialTerminationState(), {
+      stableComparisons: 1,
+      hardFloor: 0,
+    })
+    expect(r.stableStreak).toBe(0)
+    expect(r.terminated).toBe(false)
+  })
+
+  it('resets stable streak when favorites set changes', () => {
+    const itemsA = mkItems(20)
+    let state = initialTerminationState()
+    // Build a streak.
+    for (let i = 0; i < 5; i++) {
+      const r = checkTermination(itemsA, 1000 + i, state, { stableComparisons: 100, hardFloor: 0 })
+      state = r.state
+    }
+    expect(state.stableStreak).toBe(4) // 5 calls, first doesn't count
+    // Now swap the top item to change the favorites set.
+    const itemsB = itemsA.map(i => (i.id === 1 ? { ...i, eloRating: 0 } : i))
+    const r = checkTermination(itemsB, 2000, state, { stableComparisons: 100, hardFloor: 0 })
+    expect(r.stableStreak).toBe(0)
+  })
+
+  it('resets when only the above-the-line set changes', () => {
+    // 20 items: top 25% (5) is favorites; above-the-line (favorites+strongKeeps+maybeKeeps) is the top 45% (9).
+    // We'll swap an item between maybeKeeps and belowTheLine so favorites is unchanged but aboveLine changes.
+    const items = mkItems(20)
+    let state = initialTerminationState()
+    for (let i = 0; i < 5; i++) {
+      const r = checkTermination(items, 1000 + i, state, { stableComparisons: 100, hardFloor: 0 })
+      state = r.state
+    }
+    expect(state.stableStreak).toBe(4)
+    // Item at position 8 (id 9) is currently maybeKeeps; item at 9 (id 10) is belowTheLine.
+    // Swap their ratings to flip them.
+    const swapped = items.map(i => {
+      if (i.id === 9) return { ...i, eloRating: items.find(x => x.id === 10)!.eloRating }
+      if (i.id === 10) return { ...i, eloRating: items.find(x => x.id === 9)!.eloRating }
+      return i
+    })
+    const r = checkTermination(swapped, 2000, state, { stableComparisons: 100, hardFloor: 0 })
+    expect(r.stableStreak).toBe(0)
+  })
+
+  it('does not terminate when items.length < 2', () => {
+    const r = checkTermination([], 9999, initialTerminationState(), {
+      stableComparisons: 0,
+      hardFloor: 0,
+    })
+    expect(r.terminated).toBe(false)
+  })
+
+  it('uses default hard floor of n*log2(n) when not provided', () => {
+    const items = mkItems(8) // hardFloor = 24
+    // With stableComparisons=2 and only 10 comparisons, hard floor (24) blocks termination.
+    const r = runStableStreak(items, 5, 10, { stableComparisons: 2 })
+    expect(r.terminated).toBe(false)
+    // With 100 comparisons (well above 24) and 5 stable observations, terminates.
+    const r2 = runStableStreak(items, 5, 100, { stableComparisons: 2 })
+    expect(r2.terminated).toBe(true)
+  })
+})
+
+describe('aboveLineConfidence', () => {
+  // 8 items → defaultHardFloor = 24. N=10, partialFraction=0.5 → threshold=5.
+  const itemCount = 8
+
+  it('is low when stable streak is below the partial threshold', () => {
+    expect(aboveLineConfidence(4, 100, itemCount)).toBe('low')
+  })
+
+  it('is low when hard floor has not been reached', () => {
+    // streak meets threshold but only 10 comparisons (< 24 floor)
+    expect(aboveLineConfidence(5, 10, itemCount)).toBe('low')
+  })
+
+  it('is medium when both partial threshold and hard floor are met', () => {
+    expect(aboveLineConfidence(5, 24, itemCount)).toBe('medium')
+    expect(aboveLineConfidence(9, 100, itemCount)).toBe('medium')
+  })
+
+  it('respects custom partialFraction', () => {
+    // With partialFraction=0.8, threshold=8 — streak of 5 no longer counts.
+    expect(aboveLineConfidence(5, 100, itemCount, { partialFraction: 0.8 })).toBe('low')
+    expect(aboveLineConfidence(8, 100, itemCount, { partialFraction: 0.8 })).toBe('medium')
+  })
+
+  it('respects custom hardFloor override', () => {
+    expect(aboveLineConfidence(5, 5, itemCount, { hardFloor: 0 })).toBe('medium')
+  })
+
+  it('respects custom stableComparisons (changes derived threshold)', () => {
+    // N=20, threshold=10. Streak of 5 is below; 10 meets it.
+    expect(aboveLineConfidence(5, 100, itemCount, { stableComparisons: 20 })).toBe('low')
+    expect(aboveLineConfidence(10, 100, itemCount, { stableComparisons: 20 })).toBe('medium')
+  })
+})
+
+describe('estimateComparisonsNeeded', () => {
+  it('returns 0 for collections with fewer than 2 items', () => {
+    expect(estimateComparisonsNeeded(0, 'favorites')).toBe(0)
+    expect(estimateComparisonsNeeded(1, 'maybeKeeps')).toBe(0)
+  })
+
+  it('grows with broader tiers (favorites ≤ strongKeeps ≤ maybeKeeps)', () => {
+    const n = 20
+    const fav = estimateComparisonsNeeded(n, 'favorites')
+    const strong = estimateComparisonsNeeded(n, 'strongKeeps')
+    const maybe = estimateComparisonsNeeded(n, 'maybeKeeps')
+    expect(fav).toBeLessThanOrEqual(strong)
+    expect(strong).toBeLessThanOrEqual(maybe)
+  })
+
+  it('scales with item count', () => {
+    expect(estimateComparisonsNeeded(50, 'favorites')).toBeGreaterThan(
+      estimateComparisonsNeeded(20, 'favorites'),
+    )
+  })
+
+  it('anchors favorites at the hard floor', () => {
+    expect(estimateComparisonsNeeded(20, 'favorites')).toBe(defaultHardFloor(20))
+  })
+})
+
+describe('estimateSessionsRemaining', () => {
+  it('returns the cap when this session yielded 0 comparisons (cannot extrapolate)', () => {
+    expect(estimateSessionsRemaining(20, 0, 'favorites')).toBe(9)
+    expect(estimateSessionsRemaining(20, 0, 'favorites', 5)).toBe(5)
+  })
+
+  it('returns 0 when the target is already met', () => {
+    expect(estimateSessionsRemaining(20, 10_000, 'favorites')).toBe(0)
+  })
+
+  it('returns at least 1 session when there is any work left', () => {
+    // A target with just 1 comparison short — should round up to 1 session.
+    const target = estimateComparisonsNeeded(20, 'favorites')
+    expect(estimateSessionsRemaining(20, target - 1, 'favorites')).toBe(1)
+  })
+
+  it('grows with broader tiers (more sessions for maybeKeeps than favorites)', () => {
+    const fav = estimateSessionsRemaining(20, 5, 'favorites')
+    const maybe = estimateSessionsRemaining(20, 5, 'maybeKeeps')
+    expect(fav).toBeLessThanOrEqual(maybe)
+  })
+
+  it('respects the cap so users do not see alarming numbers', () => {
+    // Tiny per-session yield against a large target → capped.
+    expect(estimateSessionsRemaining(50, 1, 'maybeKeeps', 5)).toBe(5)
+  })
+})
