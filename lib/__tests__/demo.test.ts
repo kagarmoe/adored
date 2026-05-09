@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import { isDemoHost, isDemoAllowedPath, DEMO_HOST } from '@/lib/demo'
 
 describe('isDemoHost', () => {
@@ -75,6 +75,18 @@ describe('isDemoHost', () => {
     it('an empty override is treated as unset (no localhost match)', () => {
       process.env.DEMO_HOST_TEST_OVERRIDE = ''
       expect(isDemoHost('localhost:3000')).toBe(false)
+    })
+
+    it('is ignored when NODE_ENV is "production" (production safety net)', () => {
+      // NODE_ENV is typed read-only on ProcessEnv, so go through vi.stubEnv;
+      // it auto-restores between tests via vitest unstubAllEnvs config.
+      vi.stubEnv('NODE_ENV', 'production')
+      try {
+        process.env.DEMO_HOST_TEST_OVERRIDE = 'localhost:3000'
+        expect(isDemoHost('localhost:3000')).toBe(false)
+      } finally {
+        vi.unstubAllEnvs()
+      }
     })
   })
 })

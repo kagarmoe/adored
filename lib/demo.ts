@@ -7,7 +7,10 @@ export const DEMO_COLLECTION_NAME = 'Cute Animals — Demo'
 // edge before the request reaches Next.js. If this app is ever deployed off
 // Vercel, place a host-validating reverse proxy in front, OR rely on the
 // proxy.ts default-deny (which neutralizes most Host-spoofing risk on the demo
-// branch by allowlisting only the demo's own URL shape).
+// branch by allowlisting only the demo's own URL shape). The
+// DEMO_HOST_TEST_OVERRIDE escape hatch below is gated on
+// NODE_ENV !== 'production', so it is dead code in production builds even if
+// the env var leaks (committed .env, copied Vercel config, CI secret bleed).
 export function isDemoHost(host: string | null | undefined): boolean {
   if (!host) return false
   const bare = host.split(':')[0].toLowerCase()
@@ -16,15 +19,20 @@ export function isDemoHost(host: string | null | undefined): boolean {
   // Production preview URLs look like `purseinator-demo-<hash>-<scope>.vercel.app`.
   if (bare.startsWith('purseinator-demo-') && bare.endsWith('.vercel.app')) return true
   // Test-only escape hatch: comma-separated list of hosts (with optional port)
-  // that should be treated as the demo host. Empty/unset disables the override
-  // entirely, so production behavior is unchanged unless the env var is set.
-  const override = process.env.DEMO_HOST_TEST_OVERRIDE
-  if (override) {
-    const needle = host.toLowerCase()
-    for (const raw of override.split(',')) {
-      const entry = raw.trim().toLowerCase()
-      if (!entry) continue
-      if (entry === needle || entry === bare) return true
+  // that should be treated as the demo host. Gated on NODE_ENV !== 'production'
+  // so the var is never even read in deployed environments — the override
+  // covers both vitest (NODE_ENV='test') and `next dev` for playwright
+  // (NODE_ENV='development'); production builds (`next build`/`next start`)
+  // skip this branch entirely.
+  if (process.env.NODE_ENV !== 'production') {
+    const override = process.env.DEMO_HOST_TEST_OVERRIDE
+    if (override) {
+      const needle = host.toLowerCase()
+      for (const raw of override.split(',')) {
+        const entry = raw.trim().toLowerCase()
+        if (!entry) continue
+        if (entry === needle || entry === bare) return true
+      }
     }
   }
   return false

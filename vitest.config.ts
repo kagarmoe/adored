@@ -8,7 +8,10 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     globals: true,
-    exclude: ['**/node_modules/**', 'e2e/**'],
+    // Exclude playwright specs (they run via `playwright test`, not vitest)
+    // but keep e2e/**/*.test.ts available for unit-testing helpers like
+    // global-setup's seed guard.
+    exclude: ['**/node_modules/**', 'e2e/**/*.spec.ts'],
   },
   resolve: {
     alias: {

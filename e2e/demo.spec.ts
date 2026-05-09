@@ -24,10 +24,12 @@ test.describe('demo home', () => {
   // means <img> elements report `naturalWidth === 0`, even though the DOM and
   // CSS look fine. Unit tests can't catch this — the optimizer doesn't run in
   // jsdom — so this assertion is the only line of defense.
+  // Scoped to data-testid="item-image" so a future header logo / favicon / avatar
+  // <img> can't accidentally satisfy this assertion and mask a real regression.
   test('at least one item image actually rendered (naturalWidth > 0)', async ({ page }) => {
     await page.goto('/')
     await page.waitForLoadState('networkidle')
-    const firstImage = page.locator('img').first()
+    const firstImage = page.locator('[data-testid="item-image"]').first()
     await expect(firstImage).toBeVisible()
     const naturalWidth = await firstImage.evaluate(
       (el) => (el as HTMLImageElement).naturalWidth,
