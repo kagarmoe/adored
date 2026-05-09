@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { seedDemoItems, DEMO_ITEMS, type SeedDb } from '../seed-demo'
+import { seedDemoItems, DEMO_ITEMS, RETIRED_URLS, type SeedDb } from '../seed-demo'
 
 function makeDb(seedExisting: { itemId: number; originalBlobKey: string }[] = []): {
   db: SeedDb
@@ -26,6 +26,12 @@ function makeDb(seedExisting: { itemId: number; originalBlobKey: string }[] = []
           originalBlobKey: data.originalBlobKey,
         })
         return data
+      }),
+      update: vi.fn(async ({ where, data }) => {
+        const row = state.photos.find(p => p.originalBlobKey === where.originalBlobKey)
+        if (!row) throw new Error(`update: no photo with originalBlobKey=${where.originalBlobKey}`)
+        row.originalBlobKey = data.originalBlobKey
+        return row
       }),
     },
     item: {
@@ -91,4 +97,65 @@ describe('seedDemoItems', () => {
     await seedDemoItems(db, 99, [DEMO_ITEMS[0]])
     expect(state.items[0].collectionId).toBe(99)
   })
+
+  // Regression for the duplicate-row bug surfaced in PR #7 review (purses-jml).
+  // When a DEMO_ITEMS photoUrl is changed (e.g. Marshmallow refresh in c951657),
+  // any DB seeded under the OLD URL would miss the originalBlobKey lookup on
+  // re-seed and insert a second Marshmallow row. seedDemoItems now consults
+  // RETIRED_URLS and rewrites stale rows in place instead of duplicating.
+  it('rewrites a row stored under a retired URL instead of inserting a duplicate', async () => {
+    expect(Object.keys(RETIRED_URLS).length).toBeGreaterThan(0)
+    const [retiredUrl, currentUrl] = Object.entries(RETIRED_URLS)[0]
+    // The retired URL must map to a real DEMO_ITEMS entry, otherwise the
+    // RETIRED_URLS map is stale.
+    const retiredItem = DEMO_ITEMS.find(d => d.photoUrl === currentUrl)
+    expect(retiredItem, `RETIRED_URLS target ${currentUrl} not found in DEMO_ITEMS`).toBeDefined()
+
+    // Pre-populate the DB as if it were seeded BEFORE the URL was refreshed:
+    // every other item at its current URL, this one row still under the retired URL.
+    const seeded = DEMO_ITEMS.map((d, i) => ({
+      itemId: i + 1,
+      originalBlobKey: d.photoUrl === currentUrl ? retiredUrl : d.photoUrl,
+    }))
+    const { db, state } = makeDb(seeded)
+
+    const result = await seedDemoItems(db, 1)
+
+    expect(result.created).toBe(0)
+    expect(result.skipped).toBe(DEMO_ITEMS.length)
+    // No duplicate Item row.
+    expect(state.items).toHaveLength(0)
+    // Still 20 photos — the stale row was updated in place, not joined by a duplicate.
+    expect(state.photos).toHaveLength(DEMO_ITEMS.length)
+    // The stale row now points at the current URL; the retired URL is gone.
+    expect(state.photos.some(p => p.originalBlobKey === currentUrl)).toBe(true)
+    expect(state.photos.some(p => p.originalBlobKey === retiredUrl)).toBe(false)
+  })
 })
+
+// Network-dependent: hits the Unsplash CDN to verify each seed photoUrl is
+// still reachable. Catches the regression class where Unsplash removes a
+// source image (as happened with the Marshmallow URL — see purses-13k).
+//
+// Opt-IN: this block is skipped by default to keep CI hermetic and avoid
+// hammering Unsplash with 20 simultaneous HEADs on every push. Run locally
+// with:
+//
+//   RUN_NETWORK_TESTS=1 npx vitest run prisma/__tests__/seed-demo.test.ts
+//
+// We rely on vitest's default sequential it.each (no .concurrent) so the 20
+// requests fan out one at a time — adds a few seconds but avoids rate-limit
+// flake against Unsplash.
+describe.skipIf(process.env.RUN_NETWORK_TESTS !== '1')(
+  'DEMO_ITEMS photoUrl liveness (network)',
+  () => {
+    it.each(DEMO_ITEMS)(
+      '$brand ($style) — $photoUrl returns 200',
+      { timeout: 15_000 },
+      async ({ photoUrl }) => {
+        const res = await fetch(photoUrl, { method: 'HEAD', redirect: 'follow' })
+        expect(res.status, `${photoUrl} returned ${res.status}`).toBe(200)
+      },
+    )
+  },
+)

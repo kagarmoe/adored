@@ -57,8 +57,25 @@ export const DEMO_ITEMS: DemoItem[] = [
   { brand: 'Hazel', style: 'Roborovski', photoUrl: 'https://images.unsplash.com/photo-1606214174585-fe31582dc6ee?w=800&q=80' },
   { brand: 'Pip', style: 'Hamster cheek-pouch', photoUrl: 'https://images.unsplash.com/photo-1535241749838-299277b6305f?w=800&q=80' },
   { brand: 'Crouton', style: 'Hamster portrait', photoUrl: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800&q=80' },
-  { brand: 'Marshmallow', style: 'Tiny hamster', photoUrl: 'https://images.unsplash.com/photo-1626151407839-1a47a98a2092?w=800&q=80' },
+  { brand: 'Marshmallow', style: 'Tiny hamster', photoUrl: 'https://images.unsplash.com/photo-1721327900409-5e445c1ed119?w=800&q=80' },
 ]
+
+// Map of retired DEMO_ITEMS photoUrls → their current replacement.
+//
+// When a DEMO_ITEMS photoUrl is changed (because Unsplash removed the source
+// image, etc.) any production database seeded under the OLD URL would miss
+// the originalBlobKey lookup on the next re-seed and insert a duplicate row.
+// Listing the retirement here lets seedDemoItems detect rows stored under
+// the old URL and rewrite them in place instead of duplicating.
+//
+// Add an entry whenever you change a photoUrl in DEMO_ITEMS. Entries can be
+// removed once you're confident no live DB still holds the old URL.
+export const RETIRED_URLS: Record<string, string> = {
+  // Marshmallow's original Unsplash photo (1626151407839-1a47a98a2092) was
+  // removed by Unsplash; the URL began returning 404. Refreshed in c951657.
+  'https://images.unsplash.com/photo-1626151407839-1a47a98a2092?w=800&q=80':
+    'https://images.unsplash.com/photo-1721327900409-5e445c1ed119?w=800&q=80',
+}
 
 // Minimal contract on the prisma client we need — lets the seed be unit-tested
 // without spinning up a real Postgres.
@@ -73,6 +90,10 @@ export interface SeedDb {
         bgRemoved: boolean
         isHero: boolean
       }
+    }) => Promise<unknown>
+    update: (args: {
+      where: { originalBlobKey: string }
+      data: { blobKey: string; originalBlobKey: string }
     }) => Promise<unknown>
   }
   item: {
@@ -106,9 +127,25 @@ export async function seedDemoItems(
   let created = 0
   let skipped = 0
   for (const data of items) {
-    const existing = await db.photo.findUnique({
+    let existing = await db.photo.findUnique({
       where: { originalBlobKey: data.photoUrl },
     })
+    if (!existing) {
+      // The row may exist under a retired URL — rewrite it in place rather
+      // than inserting a duplicate. Photo.originalBlobKey is @unique, so
+      // the new URL is guaranteed free (we just confirmed nothing matched).
+      const retiredKey = retiredKeyFor(data.photoUrl)
+      if (retiredKey) {
+        const stale = await db.photo.findUnique({ where: { originalBlobKey: retiredKey } })
+        if (stale) {
+          await db.photo.update({
+            where: { originalBlobKey: retiredKey },
+            data: { blobKey: data.photoUrl, originalBlobKey: data.photoUrl },
+          })
+          existing = stale
+        }
+      }
+    }
     if (existing) {
       skipped++
       continue
@@ -129,6 +166,13 @@ export async function seedDemoItems(
     created++
   }
   return { created, skipped }
+}
+
+function retiredKeyFor(currentUrl: string): string | undefined {
+  for (const [retired, current] of Object.entries(RETIRED_URLS)) {
+    if (current === currentUrl) return retired
+  }
+  return undefined
 }
 
 async function main() {
