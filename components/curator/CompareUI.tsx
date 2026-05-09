@@ -10,9 +10,9 @@ import { SessionEndScreen } from '@/components/curator/SessionEndScreen'
 import { selectNextPair } from '@/lib/pairing'
 import { computeTiers, updateElo, type TieredItem } from '@/lib/elo'
 import {
+  aboveLineConfidence,
   checkTermination,
   initialTerminationState,
-  defaultHardFloor,
   type TerminationState,
 } from '@/lib/termination'
 import { appendDemoComparison, loadDemoComparisons } from '@/lib/demo-store'
@@ -34,9 +34,6 @@ interface Props {
   demoItems?: CompareItem[]
 }
 
-// "Close to completion" means the stable streak has reached at least this
-// fraction of the required streak. Used to soften the SessionEndScreen copy.
-const CLOSE_TO_COMPLETION_RATIO = 0.5
 const STABLE_COMPARISONS = 10
 
 function CompareInner({ collectionId, demoItems }: Props) {
@@ -238,14 +235,14 @@ function CompareInner({ collectionId, demoItems }: Props) {
 
   if (done) {
     if (tiered.length > 0) {
-      const closeToCompletion =
-        stableStreak >= Math.ceil(STABLE_COMPARISONS * CLOSE_TO_COMPLETION_RATIO) &&
-        comparisonCount >= defaultHardFloor(tiered.length)
+      const confidence = aboveLineConfidence(stableStreak, comparisonCount, tiered.length, {
+        stableComparisons: STABLE_COMPARISONS,
+      })
       return (
         <SessionEndScreen
           tiered={tiered}
           comparisonCount={comparisonCount}
-          closeToCompletion={closeToCompletion}
+          confidence={confidence}
           onContinue={goToResults}
         />
       )

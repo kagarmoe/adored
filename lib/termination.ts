@@ -74,3 +74,29 @@ export function checkTermination(
 
   return { state: newState, terminated, stableStreak }
 }
+
+export type AboveLineConfidence = 'medium' | 'low'
+
+export interface AboveLineConfidenceOptions {
+  stableComparisons?: number
+  partialFraction?: number
+  hardFloor?: number
+}
+
+// Confidence in the above-the-line set at session-end time.
+//   'medium' — stable for at least partialFraction*N observations AND past the hard floor.
+//   'low'    — anything else; the tier breakdown should not be shown to the user.
+// The 'high' case (terminated == true) is handled by SortCompleteScreen, not SessionEndScreen.
+export function aboveLineConfidence(
+  stableStreak: number,
+  comparisonCount: number,
+  itemCount: number,
+  options: AboveLineConfidenceOptions = {},
+): AboveLineConfidence {
+  const stableN = options.stableComparisons ?? 10
+  const partialFraction = options.partialFraction ?? 0.5
+  const hardFloor = options.hardFloor ?? defaultHardFloor(itemCount)
+  const partialThreshold = Math.ceil(stableN * partialFraction)
+  if (stableStreak >= partialThreshold && comparisonCount >= hardFloor) return 'medium'
+  return 'low'
+}

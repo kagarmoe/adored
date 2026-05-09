@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  aboveLineConfidence,
   checkTermination,
   defaultHardFloor,
   initialTerminationState,
@@ -119,5 +120,40 @@ describe('checkTermination', () => {
     // With 100 comparisons (well above 24) and 5 stable observations, terminates.
     const r2 = runStableStreak(items, 5, 100, { stableComparisons: 2 })
     expect(r2.terminated).toBe(true)
+  })
+})
+
+describe('aboveLineConfidence', () => {
+  // 8 items → defaultHardFloor = 24. N=10, partialFraction=0.5 → threshold=5.
+  const itemCount = 8
+
+  it('is low when stable streak is below the partial threshold', () => {
+    expect(aboveLineConfidence(4, 100, itemCount)).toBe('low')
+  })
+
+  it('is low when hard floor has not been reached', () => {
+    // streak meets threshold but only 10 comparisons (< 24 floor)
+    expect(aboveLineConfidence(5, 10, itemCount)).toBe('low')
+  })
+
+  it('is medium when both partial threshold and hard floor are met', () => {
+    expect(aboveLineConfidence(5, 24, itemCount)).toBe('medium')
+    expect(aboveLineConfidence(9, 100, itemCount)).toBe('medium')
+  })
+
+  it('respects custom partialFraction', () => {
+    // With partialFraction=0.8, threshold=8 — streak of 5 no longer counts.
+    expect(aboveLineConfidence(5, 100, itemCount, { partialFraction: 0.8 })).toBe('low')
+    expect(aboveLineConfidence(8, 100, itemCount, { partialFraction: 0.8 })).toBe('medium')
+  })
+
+  it('respects custom hardFloor override', () => {
+    expect(aboveLineConfidence(5, 5, itemCount, { hardFloor: 0 })).toBe('medium')
+  })
+
+  it('respects custom stableComparisons (changes derived threshold)', () => {
+    // N=20, threshold=10. Streak of 5 is below; 10 meets it.
+    expect(aboveLineConfidence(5, 100, itemCount, { stableComparisons: 20 })).toBe('low')
+    expect(aboveLineConfidence(10, 100, itemCount, { stableComparisons: 20 })).toBe('medium')
   })
 })
