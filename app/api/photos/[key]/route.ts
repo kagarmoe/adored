@@ -19,7 +19,8 @@ export async function GET(req: NextRequest, { params }: Props) {
 
   if (!photo) return new NextResponse('Not found', { status: 404 })
 
-  const blobInfo = await head(decoded, {
+  // Use the canonical key from the DB (not caller input) for the signed-URL fetch.
+  const blobInfo = await head(photo.blobKey, {
     token: process.env.BLOB_READ_WRITE_TOKEN,
   })
 

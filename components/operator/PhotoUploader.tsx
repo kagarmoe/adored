@@ -16,12 +16,19 @@ interface Preview {
 
 export function PhotoUploader({ itemId, onUploaded }: Props) {
   const [previews, setPreviews] = useState<Preview[]>([])
-  const [busy, setBusy] = useState(false)
   const cameraRef = useRef<HTMLInputElement>(null)
   const libraryRef = useRef<HTMLInputElement>(null)
 
+  const anyProcessing = previews.some(p => p.status === 'processing')
+  const anyUploading = previews.some(p => p.status === 'uploading')
+  const busy = anyProcessing || anyUploading
+  const cameraLabel = anyUploading
+    ? 'Uploading…'
+    : anyProcessing
+      ? 'Processing…'
+      : 'Take photo'
+
   async function handleFiles(files: FileList) {
-    setBusy(true)
     const arr = Array.from(files)
     const queued: Preview[] = arr.map((f, i) => ({
       key: `${Date.now()}-${i}-${f.name}`,
@@ -30,6 +37,7 @@ export function PhotoUploader({ itemId, onUploaded }: Props) {
     }))
     setPreviews(prev => [...prev, ...queued])
 
+    let anySucceeded = false
     for (let i = 0; i < arr.length; i++) {
       const file = arr[i]
       const key = queued[i].key
@@ -55,6 +63,7 @@ export function PhotoUploader({ itemId, onUploaded }: Props) {
 
       try {
         await uploadPhoto(itemId, formData)
+        anySucceeded = true
         setPreviews(prev =>
           prev.map(p => (p.key === key ? { ...p, status: 'done' } : p)),
         )
@@ -64,8 +73,7 @@ export function PhotoUploader({ itemId, onUploaded }: Props) {
         )
       }
     }
-    setBusy(false)
-    onUploaded()
+    if (anySucceeded) onUploaded()
   }
 
   function handleDrop(e: React.DragEvent) {
@@ -102,7 +110,7 @@ export function PhotoUploader({ itemId, onUploaded }: Props) {
           disabled={busy}
           className="flex-1 bg-accent text-ground font-display text-label uppercase tracking-widest px-6 py-5 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60"
         >
-          {busy ? 'Uploading…' : 'Take photo'}
+          {cameraLabel}
         </button>
         <button
           type="button"

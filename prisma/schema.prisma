@@ -49,7 +49,7 @@ model Photo {
   item            Item     @relation(fields: [itemId], references: [id])
   itemId          Int
   blobKey         String   @unique
-  originalBlobKey String   @default("")
+  originalBlobKey String   @unique
   bgRemoved       Boolean  @default(false)
   isHero          Boolean  @default(false)
   uploadedAt      DateTime @default(now())

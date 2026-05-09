@@ -63,15 +63,22 @@ export async function togglePhotoBackground(photoId: number) {
 
   const photo = await db.photo.findUnique({
     where: { id: photoId },
-    include: { item: true },
+    include: { item: { include: { collection: true } } },
   })
   if (!photo) throw new Error('Photo not found')
+  if (photo.item.collection.ownerId !== Number(session.user.id)) {
+    throw new Error('Unauthorized')
+  }
 
-  if (!photo.originalBlobKey) return
+  if (photo.blobKey === photo.originalBlobKey) return
 
   await db.photo.update({
     where: { id: photoId },
-    data: { bgRemoved: !photo.bgRemoved },
+    data: {
+      blobKey: photo.originalBlobKey,
+      originalBlobKey: photo.blobKey,
+      bgRemoved: !photo.bgRemoved,
+    },
   })
 
   revalidatePath(`/collections/${photo.item.collectionId}`)

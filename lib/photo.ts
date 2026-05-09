@@ -5,7 +5,6 @@ export interface PhotoLike {
 }
 
 export function displayPhotoUrl(photo: PhotoLike): string {
-  if (!photo.bgRemoved && photo.originalBlobKey) return photo.originalBlobKey
   return photo.blobKey
 }
 

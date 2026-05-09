@@ -147,6 +147,41 @@ describe('PhotoUploader', () => {
     expect(fd.get('file')).toBeInstanceOf(File)
   })
 
+  it('shows "Processing…" while bg-removal is in flight (before upload)', async () => {
+    let resolveBg!: (value: Blob) => void
+    mockRemovePhotoBackground.mockReturnValue(new Promise<Blob>(r => { resolveBg = r }))
+    render(<PhotoUploader itemId={1} onUploaded={vi.fn()} />)
+    const input = screen.getByTestId('library-input') as HTMLInputElement
+    Object.defineProperty(input, 'files', { value: [makeFile()], configurable: true })
+    fireEvent.change(input)
+    expect(await screen.findByRole('button', { name: /processing/i })).toBeInTheDocument()
+    resolveBg(new Blob(['png'], { type: 'image/png' }))
+  })
+
+  it('does not call onUploaded if every file fails to upload', async () => {
+    const onUploaded = vi.fn()
+    mockUploadPhoto.mockRejectedValue(new Error('upload failed'))
+    render(<PhotoUploader itemId={1} onUploaded={onUploaded} />)
+    const input = screen.getByTestId('library-input') as HTMLInputElement
+    Object.defineProperty(input, 'files', { value: [makeFile('a.jpg'), makeFile('b.jpg')], configurable: true })
+    fireEvent.change(input)
+    await waitFor(() => expect(mockUploadPhoto).toHaveBeenCalledTimes(2))
+    expect(onUploaded).not.toHaveBeenCalled()
+  })
+
+  it('calls onUploaded if at least one file succeeds (mixed)', async () => {
+    const onUploaded = vi.fn()
+    mockUploadPhoto
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValueOnce({ id: 1 })
+    render(<PhotoUploader itemId={1} onUploaded={onUploaded} />)
+    const input = screen.getByTestId('library-input') as HTMLInputElement
+    Object.defineProperty(input, 'files', { value: [makeFile('a.jpg'), makeFile('b.jpg')], configurable: true })
+    fireEvent.change(input)
+    await waitFor(() => expect(mockUploadPhoto).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(onUploaded).toHaveBeenCalledOnce())
+  })
+
   it('always sends the original file under "file"', async () => {
     render(<PhotoUploader itemId={1} onUploaded={vi.fn()} />)
     const input = screen.getByTestId('library-input') as HTMLInputElement

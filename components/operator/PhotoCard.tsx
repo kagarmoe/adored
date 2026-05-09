@@ -20,12 +20,22 @@ export function PhotoCard({ photo }: Props) {
   const showingOriginal = !optimistic.bgRemoved
 
   function onToggle() {
-    setOptimistic(p => ({ ...p, bgRemoved: !p.bgRemoved }))
+    setOptimistic(p => ({
+      ...p,
+      blobKey: p.originalBlobKey,
+      originalBlobKey: p.blobKey,
+      bgRemoved: !p.bgRemoved,
+    }))
     startTransition(async () => {
       try {
         await togglePhotoBackground(optimistic.id)
       } catch {
-        setOptimistic(p => ({ ...p, bgRemoved: !p.bgRemoved }))
+        setOptimistic(p => ({
+          ...p,
+          blobKey: p.originalBlobKey,
+          originalBlobKey: p.blobKey,
+          bgRemoved: !p.bgRemoved,
+        }))
       }
     })
   }

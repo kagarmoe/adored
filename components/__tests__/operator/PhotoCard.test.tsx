@@ -28,13 +28,13 @@ describe('PhotoCard', () => {
     expect(img.src).toContain(encodeURIComponent('https://x/proc.png'))
   })
 
-  it('shows the original image when bgRemoved=false', () => {
+  it('shows the original image when bgRemoved=false (blobKey == original)', () => {
     render(
       <PhotoCard
         photo={{
           id: 1,
-          blobKey: 'https://x/proc.png',
-          originalBlobKey: 'https://x/orig.jpg',
+          blobKey: 'https://x/orig.jpg',
+          originalBlobKey: 'https://x/proc.png',
           bgRemoved: false,
         }}
       />,

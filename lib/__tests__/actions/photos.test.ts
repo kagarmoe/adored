@@ -16,6 +16,7 @@ import { uploadPhoto, togglePhotoBackground } from '@/actions/photos'
 
 const session = { user: { id: '1' } }
 const item = { id: 1, collectionId: 10 }
+const itemWithCollection = { id: 1, collectionId: 10, collection: { id: 10, ownerId: 1 } }
 
 function makeFormData(opts: { name?: string; processed?: boolean; processedName?: string } = {}) {
   const { name = 'bag.jpg', processed = false, processedName = 'bag.png' } = opts
@@ -145,50 +146,71 @@ describe('togglePhotoBackground', () => {
     await expect(togglePhotoBackground(999)).rejects.toThrow('Photo not found')
   })
 
-  it('does nothing when photo has no originalBlobKey (legacy/no-op)', async () => {
-    mockDb.photo.findUnique.mockResolvedValue({
-      id: 1,
-      itemId: 1,
-      blobKey: 'https://blob/x.jpg',
-      originalBlobKey: '',
-      bgRemoved: false,
-      item,
-    })
-    await togglePhotoBackground(1)
-    expect(mockDb.photo.update).not.toHaveBeenCalled()
-  })
-
-  it('flips bgRemoved=true → false', async () => {
+  it('throws Unauthorized when photo belongs to another user', async () => {
     mockDb.photo.findUnique.mockResolvedValue({
       id: 1,
       itemId: 1,
       blobKey: 'https://blob/proc.png',
       originalBlobKey: 'https://blob/orig.jpg',
       bgRemoved: true,
-      item,
+      item: { id: 1, collectionId: 10, collection: { id: 10, ownerId: 999 } },
+    })
+    await expect(togglePhotoBackground(1)).rejects.toThrow('Unauthorized')
+    expect(mockDb.photo.update).not.toHaveBeenCalled()
+  })
+
+  it('does nothing when no processed version exists (blobKey == originalBlobKey)', async () => {
+    mockDb.photo.findUnique.mockResolvedValue({
+      id: 1,
+      itemId: 1,
+      blobKey: 'https://blob/x.jpg',
+      originalBlobKey: 'https://blob/x.jpg',
+      bgRemoved: false,
+      item: itemWithCollection,
+    })
+    await togglePhotoBackground(1)
+    expect(mockDb.photo.update).not.toHaveBeenCalled()
+  })
+
+  it('toggles processed → original: swaps blobKey/originalBlobKey, flips bgRemoved', async () => {
+    mockDb.photo.findUnique.mockResolvedValue({
+      id: 1,
+      itemId: 1,
+      blobKey: 'https://blob/proc.png',
+      originalBlobKey: 'https://blob/orig.jpg',
+      bgRemoved: true,
+      item: itemWithCollection,
     })
     mockDb.photo.update.mockResolvedValue({})
     await togglePhotoBackground(1)
     expect(mockDb.photo.update).toHaveBeenCalledWith({
       where: { id: 1 },
-      data: { bgRemoved: false },
+      data: {
+        blobKey: 'https://blob/orig.jpg',
+        originalBlobKey: 'https://blob/proc.png',
+        bgRemoved: false,
+      },
     })
   })
 
-  it('flips bgRemoved=false → true when a processed version exists', async () => {
+  it('toggles original → processed: swaps blobKey/originalBlobKey, flips bgRemoved', async () => {
     mockDb.photo.findUnique.mockResolvedValue({
       id: 1,
       itemId: 1,
       blobKey: 'https://blob/orig.jpg',
-      originalBlobKey: 'https://blob/orig.jpg',
+      originalBlobKey: 'https://blob/proc.png',
       bgRemoved: false,
-      item,
+      item: itemWithCollection,
     })
     mockDb.photo.update.mockResolvedValue({})
     await togglePhotoBackground(1)
     expect(mockDb.photo.update).toHaveBeenCalledWith({
       where: { id: 1 },
-      data: { bgRemoved: true },
+      data: {
+        blobKey: 'https://blob/proc.png',
+        originalBlobKey: 'https://blob/orig.jpg',
+        bgRemoved: true,
+      },
     })
   })
 })
