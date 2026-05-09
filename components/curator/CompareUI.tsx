@@ -54,6 +54,11 @@ function CompareInner({ collectionId, demoItems }: Props) {
   const [submitting, setSubmitting] = useState(false)
   const [tiered, setTiered] = useState<TieredItem[]>([])
   const [comparisonCount, setComparisonCount] = useState(0)
+  // Distinct from comparisonCount: this counts only what *this session* did,
+  // starting fresh on mount. The session-end estimate divides remaining work
+  // by per-session pace, so feeding it cumulative history would understate
+  // sessions-remaining for returning curators (PR #9 re-review).
+  const [comparisonsThisSession, setComparisonsThisSession] = useState(0)
   const [stableStreak, setStableStreak] = useState(0)
   // A ref backs the guard so synchronous double-clicks (which fire before
   // React's next render flushes `submitting` state) still take the early-return.
@@ -203,6 +208,7 @@ function CompareInner({ collectionId, demoItems }: Props) {
           'photo_only',
         )
       }
+      setComparisonsThisSession(c => c + 1)
       await loadPair()
     } finally {
       submittingRef.current = false
@@ -242,6 +248,7 @@ function CompareInner({ collectionId, demoItems }: Props) {
         <SessionEndScreen
           tiered={tiered}
           comparisonCount={comparisonCount}
+          comparisonsThisSession={comparisonsThisSession}
           confidence={confidence}
           itemCount={tiered.length}
           onContinue={goToResults}

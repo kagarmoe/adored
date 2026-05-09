@@ -190,5 +190,49 @@ describe('SessionEndScreen', () => {
       expect(fav).toBeLessThanOrEqual(likely)
       expect(likely).toBeLessThanOrEqual(maybe)
     })
+
+    it('divides remaining work by per-session count, not by cumulative comparisonCount', () => {
+      // Returning curator: 50 cumulative comparisons in DB, only 5 fresh this session.
+      // The estimate must extrapolate from the 5 (per-session pace), not the 50.
+      // For n=20, favorites target ≈ 87; with 5/session, remaining 82 → ceil(82/5)=17, capped to 9.
+      // If the bug is present (using 50), favorites estimate would be ceil(37/50) = 1.
+      render(
+        <SessionEndScreen
+          tiered={tiered}
+          comparisonCount={50}
+          comparisonsThisSession={5}
+          confidence="low"
+          itemCount={20}
+          onContinue={() => {}}
+        />,
+      )
+      const rows = screen.getByTestId('session-estimates').querySelectorAll('li')
+      const numFor = (row: Element): number => {
+        const m = row.textContent?.match(/~(\d+)/)
+        return m ? parseInt(m[1], 10) : 0
+      }
+      // Favorites row should reflect the slow per-session pace, not the cumulative.
+      expect(numFor(rows[0])).toBeGreaterThanOrEqual(5)
+    })
+
+    it('shows the cap when this session yielded zero comparisons regardless of cumulative history', () => {
+      // Returning curator with prior history but a zero-comparison session
+      // (e.g. timer ran out instantly): cannot extrapolate, so cap.
+      render(
+        <SessionEndScreen
+          tiered={tiered}
+          comparisonCount={50}
+          comparisonsThisSession={0}
+          confidence="low"
+          itemCount={20}
+          onContinue={() => {}}
+        />,
+      )
+      const rows = screen.getByTestId('session-estimates').querySelectorAll('li')
+      // All three rows should show ~9 (the default cap).
+      for (const row of Array.from(rows)) {
+        expect(row.textContent).toMatch(/~9 sessions/)
+      }
+    })
   })
 })

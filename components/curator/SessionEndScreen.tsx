@@ -9,7 +9,18 @@ import {
 
 interface Props {
   tiered: TieredItem[]
+  // Cumulative lifetime comparison count (from the DB / persisted store).
+  // Used for display ("N comparisons so far"), NOT for the session estimate.
   comparisonCount: number
+  // Number of comparisons the user submitted *in this session only*. This is
+  // what feeds the per-tier session-count estimate, because the estimate
+  // extrapolates from this session's pace. Mixing in cumulative history
+  // wildly underestimates remaining work for returning curators (their
+  // lifetime count makes "remaining" look small even when this session
+  // contributed only a handful of rounds). Defaults to comparisonCount for
+  // backward compatibility with the demo path / first-time users where the
+  // two numbers are the same.
+  comparisonsThisSession?: number
   // 'medium' renders the partial tier breakdown with a hedge; 'low' suppresses
   // the breakdown so users aren't shown results the algorithm hasn't stabilized.
   confidence: AboveLineConfidence
@@ -43,6 +54,7 @@ function formatSessions(n: number): string {
 export function SessionEndScreen({
   tiered,
   comparisonCount,
+  comparisonsThisSession,
   confidence,
   itemCount,
   onContinue,
@@ -50,7 +62,13 @@ export function SessionEndScreen({
   const itemsRanked = tiered.length
   const totalItems = itemCount ?? tiered.length
   const showTiers = confidence === 'medium'
+  const sessionComparisons = comparisonsThisSession ?? comparisonCount
 
+  // Headline copy: medium frames the work as "items ranked" (the curation
+  // outcome — fits the tier breakdown shown below). Low frames it as
+  // "comparisons" (the algorithm progress — fits the per-tier session-count
+  // estimates shown below, which are denominated in rounds). The asymmetry
+  // is intentional design, not an oversight; do not unify without a UX call.
   const headline = showTiers
     ? `Good job — you ranked ${itemsRanked} item${itemsRanked === 1 ? '' : 's'} in this session.`
     : `Good job! You ranked ${comparisonCount} comparison${comparisonCount === 1 ? '' : 's'}.`
@@ -62,7 +80,7 @@ export function SessionEndScreen({
   const estimates = ESTIMATE_TIERS.map(({ tier, label }) => ({
     tier,
     label,
-    sessions: estimateSessionsRemaining(totalItems, comparisonCount, tier),
+    sessions: estimateSessionsRemaining(totalItems, sessionComparisons, tier),
   }))
 
   return (
