@@ -33,7 +33,7 @@ export function TierSection({ tier, items }: Props) {
         </p>
         <div className="flex-1 border-t border-surface" />
       </div>
-      <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {items.map(item => (
           <ItemCard key={item.id} {...item} />
         ))}

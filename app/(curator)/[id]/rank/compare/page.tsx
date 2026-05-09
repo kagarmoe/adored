@@ -76,12 +76,12 @@ function CompareInner({ collectionId }: { collectionId: number }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col px-4 py-10">
+    <div className="min-h-screen flex flex-col px-4 sm:px-6 md:px-10 py-8 md:py-12">
       <ComparisonTimer durationSeconds={duration} onExpire={handleExpire} />
       <p className="font-display text-label uppercase tracking-widest text-text-muted text-center mb-8">
         Which one?
       </p>
-      <div className="flex gap-4 flex-1 max-w-2xl mx-auto w-full">
+      <div className="flex gap-4 sm:gap-6 md:gap-10 flex-1 max-w-2xl md:max-w-4xl lg:max-w-5xl mx-auto w-full">
         <ComparisonCard {...pair.itemA} onPick={() => pick(pair.itemA.id)} />
         <ComparisonCard {...pair.itemB} onPick={() => pick(pair.itemB.id)} />
       </div>
