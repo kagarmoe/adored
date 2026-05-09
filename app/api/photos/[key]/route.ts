@@ -10,17 +10,16 @@ export async function GET(req: NextRequest, { params }: Props) {
   if (!session) return new NextResponse('Unauthorized', { status: 401 })
 
   const { key } = await params
-  // blobKey stored in DB is just the pathname; reconstruct the full blob URL
-  // Vercel Blob keys are stored as the full pathname like "photos/filename.jpg"
-  // We need to find the photo by blobKey
+  const decoded = decodeURIComponent(key)
+  // The requested key may be either the processed (blobKey) or the raw
+  // (originalBlobKey) variant of a photo — both are valid display URLs.
   const photo = await db.photo.findFirst({
-    where: { blobKey: decodeURIComponent(key) },
+    where: { OR: [{ blobKey: decoded }, { originalBlobKey: decoded }] },
   })
 
   if (!photo) return new NextResponse('Not found', { status: 404 })
 
-  // For private blobs, head() returns a downloadUrl with a short-lived signed token
-  const blobInfo = await head(photo.blobKey, {
+  const blobInfo = await head(decoded, {
     token: process.env.BLOB_READ_WRITE_TOKEN,
   })
 

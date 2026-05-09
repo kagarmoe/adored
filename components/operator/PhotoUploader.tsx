@@ -11,42 +11,60 @@ interface Props {
 interface Preview {
   key: string
   url: string
-  status: 'uploading' | 'done' | 'error'
+  status: 'processing' | 'uploading' | 'done' | 'error'
 }
 
 export function PhotoUploader({ itemId, onUploaded }: Props) {
   const [previews, setPreviews] = useState<Preview[]>([])
-  const [uploading, setUploading] = useState(false)
+  const [busy, setBusy] = useState(false)
   const cameraRef = useRef<HTMLInputElement>(null)
   const libraryRef = useRef<HTMLInputElement>(null)
 
   async function handleFiles(files: FileList) {
-    setUploading(true)
+    setBusy(true)
     const arr = Array.from(files)
     const queued: Preview[] = arr.map((f, i) => ({
       key: `${Date.now()}-${i}-${f.name}`,
       url: URL.createObjectURL(f),
-      status: 'uploading',
+      status: 'processing',
     }))
     setPreviews(prev => [...prev, ...queued])
 
     for (let i = 0; i < arr.length; i++) {
       const file = arr[i]
       const key = queued[i].key
+
+      let processed: Blob | null = null
+      try {
+        const { removePhotoBackground } = await import('@/lib/bg-remove')
+        processed = await removePhotoBackground(file)
+      } catch {
+        processed = null
+      }
+
+      setPreviews(prev =>
+        prev.map(p => (p.key === key ? { ...p, status: 'uploading' } : p)),
+      )
+
       const formData = new FormData()
       formData.append('file', file)
+      if (processed) {
+        const stem = file.name.replace(/\.[^.]+$/, '')
+        formData.append('processed', new File([processed], `${stem}.png`, { type: 'image/png' }))
+      }
+
       try {
         await uploadPhoto(itemId, formData)
         setPreviews(prev =>
-          prev.map(p => (p.key === key ? { ...p, status: 'done' } : p))
+          prev.map(p => (p.key === key ? { ...p, status: 'done' } : p)),
         )
       } catch {
         setPreviews(prev =>
-          prev.map(p => (p.key === key ? { ...p, status: 'error' } : p))
+          prev.map(p => (p.key === key ? { ...p, status: 'error' } : p)),
         )
       }
     }
-    setUploading(false)
+    setBusy(false)
     onUploaded()
   }
 
@@ -81,15 +99,15 @@ export function PhotoUploader({ itemId, onUploaded }: Props) {
         <button
           type="button"
           onClick={() => cameraRef.current?.click()}
-          disabled={uploading}
+          disabled={busy}
           className="flex-1 bg-accent text-ground font-display text-label uppercase tracking-widest px-6 py-5 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-60"
         >
-          {uploading ? 'Uploading…' : 'Take photo'}
+          {busy ? 'Uploading…' : 'Take photo'}
         </button>
         <button
           type="button"
           onClick={() => libraryRef.current?.click()}
-          disabled={uploading}
+          disabled={busy}
           className="flex-1 border-2 border-text-primary/20 text-text-primary font-display text-label uppercase tracking-widest px-6 py-5 rounded-lg hover:border-accent transition-colors disabled:opacity-60"
         >
           Pick from library
@@ -105,6 +123,13 @@ export function PhotoUploader({ itemId, onUploaded }: Props) {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.url} alt="" className="w-full h-full object-cover" />
+              {p.status === 'processing' && (
+                <div className="absolute inset-0 bg-text-primary/40 flex items-center justify-center">
+                  <span className="font-display text-label uppercase tracking-widest text-ground">
+                    BG…
+                  </span>
+                </div>
+              )}
               {p.status === 'uploading' && (
                 <div className="absolute inset-0 bg-text-primary/40 flex items-center justify-center">
                   <span className="font-display text-label uppercase tracking-widest text-ground">
