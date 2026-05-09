@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { isDemoHost, isDemoAllowedPath, DEMO_HOST } from '@/lib/demo'
 
 describe('isDemoHost', () => {
@@ -38,6 +38,44 @@ describe('isDemoHost', () => {
 
   it('does not match a host that just contains the substring', () => {
     expect(isDemoHost('not-purseinator-demo.example.com')).toBe(false)
+  })
+
+  describe('DEMO_HOST_TEST_OVERRIDE env var', () => {
+    afterEach(() => {
+      delete process.env.DEMO_HOST_TEST_OVERRIDE
+    })
+
+    it('treats an overridden host as a demo host', () => {
+      process.env.DEMO_HOST_TEST_OVERRIDE = 'localhost:3000'
+      expect(isDemoHost('localhost:3000')).toBe(true)
+    })
+
+    it('matches the bare hostname when the override has no port', () => {
+      process.env.DEMO_HOST_TEST_OVERRIDE = 'localhost'
+      expect(isDemoHost('localhost:3000')).toBe(true)
+    })
+
+    it('accepts a comma-separated list of overrides', () => {
+      process.env.DEMO_HOST_TEST_OVERRIDE = '127.0.0.1:4000, localhost:3000'
+      expect(isDemoHost('localhost:3000')).toBe(true)
+      expect(isDemoHost('127.0.0.1:4000')).toBe(true)
+    })
+
+    it('is case-insensitive', () => {
+      process.env.DEMO_HOST_TEST_OVERRIDE = 'LOCALHOST:3000'
+      expect(isDemoHost('localhost:3000')).toBe(true)
+    })
+
+    it('does not match hosts outside the override list', () => {
+      process.env.DEMO_HOST_TEST_OVERRIDE = 'localhost:3000'
+      expect(isDemoHost('example.com')).toBe(false)
+      expect(isDemoHost('localhost:9999')).toBe(false)
+    })
+
+    it('an empty override is treated as unset (no localhost match)', () => {
+      process.env.DEMO_HOST_TEST_OVERRIDE = ''
+      expect(isDemoHost('localhost:3000')).toBe(false)
+    })
   })
 })
 

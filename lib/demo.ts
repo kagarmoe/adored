@@ -15,6 +15,18 @@ export function isDemoHost(host: string | null | undefined): boolean {
   // Allow Vercel preview deployments that include the demo prefix in the hostname.
   // Production preview URLs look like `purseinator-demo-<hash>-<scope>.vercel.app`.
   if (bare.startsWith('purseinator-demo-') && bare.endsWith('.vercel.app')) return true
+  // Test-only escape hatch: comma-separated list of hosts (with optional port)
+  // that should be treated as the demo host. Empty/unset disables the override
+  // entirely, so production behavior is unchanged unless the env var is set.
+  const override = process.env.DEMO_HOST_TEST_OVERRIDE
+  if (override) {
+    const needle = host.toLowerCase()
+    for (const raw of override.split(',')) {
+      const entry = raw.trim().toLowerCase()
+      if (!entry) continue
+      if (entry === needle || entry === bare) return true
+    }
+  }
   return false
 }
 
