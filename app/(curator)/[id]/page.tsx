@@ -58,7 +58,7 @@ export default async function CollectionPage({ params }: Props) {
         </h1>
         <Link
           href={`/${id}/rank`}
-          className="font-display text-label uppercase tracking-widest text-accent no-underline hover:opacity-75"
+          className="font-display text-label uppercase tracking-widest bg-accent text-white rounded-full px-4 py-1.5 no-underline hover:opacity-75 transition-opacity"
         >
           Sort →
         </Link>

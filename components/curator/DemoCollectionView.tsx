@@ -81,7 +81,7 @@ export function DemoCollectionView({ collectionId, collectionName, items }: Prop
           </button>
           <Link
             href={`/${collectionId}/rank`}
-            className="font-display text-label uppercase tracking-widest text-accent no-underline hover:opacity-75"
+            className="font-display text-label uppercase tracking-widest bg-accent text-white rounded-full px-4 py-1.5 no-underline hover:opacity-75 transition-opacity"
           >
             Sort →
           </Link>
