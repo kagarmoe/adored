@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Fraunces, Lora } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 const displayFont = Fraunces({
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={`${displayFont.variable} ${bodyFont.variable}`}>
         {children}
+        <Analytics />
       </body>
     </html>
   )
