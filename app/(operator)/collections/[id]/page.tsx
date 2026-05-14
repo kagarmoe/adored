@@ -4,6 +4,9 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { displayPhotoUrl } from '@/lib/photo'
+import { assertCollectionRole } from '@/lib/authz'
+import { addCuratorByEmail } from '@/actions/curators'
+import { AddCuratorForm } from '@/components/operator/AddCuratorForm'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,8 +19,17 @@ export default async function CollectionPage({ params }: Props) {
   const session = await auth()
   if (!session?.user?.id) redirect('/login')
 
-  const collection = await db.collection.findFirst({
-    where: { id: collectionId, ownerId: Number(session.user.id) },
+  // Managing a collection requires operator-level access — a curator-member
+  // satisfies it too (curator ⊇ operator). A missing membership 404s rather
+  // than leaking whether the collection exists.
+  try {
+    await assertCollectionRole(collectionId, session.user.id, 'operator')
+  } catch {
+    notFound()
+  }
+
+  const collection = await db.collection.findUnique({
+    where: { id: collectionId },
     include: {
       items: {
         include: { photos: { where: { isHero: true }, take: 1 } },
@@ -75,6 +87,14 @@ export default async function CollectionPage({ params }: Props) {
           })}
         </div>
       )}
+
+      <section className="mt-12 max-w-md bg-surface rounded-xl p-6">
+        <p className="font-display text-text-primary mb-1">Add a curator</p>
+        <p className="font-body text-sm text-text-muted mb-4">
+          Invite someone by email to rank this collection.
+        </p>
+        <AddCuratorForm collectionId={collectionId} onAdd={addCuratorByEmail} />
+      </section>
     </div>
   )
 }

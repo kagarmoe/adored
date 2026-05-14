@@ -3,7 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockAuth = vi.hoisted(() => vi.fn())
 const mockDb = vi.hoisted(() => ({
-  collection: { findFirst: vi.fn() },
+  collection: { findUnique: vi.fn() },
+  collectionMembership: { findUnique: vi.fn() },
 }))
 const mockRedirect = vi.hoisted(() => vi.fn((): never => {
   throw new Error('NEXT_REDIRECT')
@@ -39,7 +40,8 @@ describe('UploadPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockAuth.mockResolvedValue({ user: { id: '1' } })
-    mockDb.collection.findFirst.mockResolvedValue({ id: 2, name: 'Bags', items: [] })
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'operator' })
+    mockDb.collection.findUnique.mockResolvedValue({ id: 2, name: 'Bags', items: [] })
   })
 
   it('redirects to /login when there is no session', async () => {
@@ -48,17 +50,14 @@ describe('UploadPage', () => {
     expect(mockRedirect).toHaveBeenCalledWith('/login')
   })
 
-  it('scopes the collection lookup to the signed-in user', async () => {
-    await UploadPage({ params })
-    expect(mockDb.collection.findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ id: 2, ownerId: 1 }),
-      }),
-    )
+  it('calls notFound() when the caller has no membership on the collection', async () => {
+    mockDb.collectionMembership.findUnique.mockResolvedValue(null)
+    await expect(UploadPage({ params })).rejects.toThrow('NEXT_NOT_FOUND')
+    expect(mockNotFound).toHaveBeenCalled()
   })
 
-  it('calls notFound() when the collection is not owned by the caller', async () => {
-    mockDb.collection.findFirst.mockResolvedValue(null)
+  it('calls notFound() when the collection row is missing', async () => {
+    mockDb.collection.findUnique.mockResolvedValue(null)
     await expect(UploadPage({ params })).rejects.toThrow('NEXT_NOT_FOUND')
     expect(mockNotFound).toHaveBeenCalled()
   })
