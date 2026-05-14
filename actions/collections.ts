@@ -35,22 +35,6 @@ export async function createCollection(
 }
 
 /**
- * Owner-based collection listing. Retained for the legacy curator home
- * (`app/(curator)/page.tsx`) until the onboarding router replaces it; new code
- * should use `getUserMemberships`.
- */
-export async function getUserCollections() {
-  const session = await auth()
-  if (!session?.user?.id) throw new Error('Unauthorized')
-
-  return db.collection.findMany({
-    where: { ownerId: parseInt(session.user.id) },
-    include: { items: { select: { id: true } } },
-    orderBy: { createdAt: 'desc' },
-  })
-}
-
-/**
  * Every collection the current user is a member of, with their per-collection
  * role and the collection's item ids. This is the membership-aware replacement
  * for `getUserCollections` — a curator sees collections they were invited to,

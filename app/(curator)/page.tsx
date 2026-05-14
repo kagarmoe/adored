@@ -1,15 +1,21 @@
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
-import { getUserCollections } from '@/actions/collections'
-import { CollectionCard } from '@/components/curator/CollectionCard'
+import { db } from '@/lib/db'
+import { getUserMemberships } from '@/actions/collections'
+import { OnboardingScreen } from '@/components/onboarding/OnboardingScreen'
+import { CollectionPicker } from '@/components/onboarding/CollectionPicker'
 import { getDemoCollection, isDemoRequest } from '@/lib/demo-server'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Your collections — PurseInator' }
 
-type Props = { searchParams: Promise<{ denied?: string }> }
-
-export default async function CuratorHome({ searchParams }: Props) {
+/**
+ * The post-auth router. A signed-in user with no collection memberships lands
+ * on the onboarding screen (create a collection, or join a pending invite);
+ * everyone else gets the role-badged collection picker. Demo-host requests are
+ * still redirected straight into the demo collection.
+ */
+export default async function CuratorHome() {
   if (await isDemoRequest()) {
     const demo = await getDemoCollection()
     if (!demo) {
@@ -23,45 +29,36 @@ export default async function CuratorHome({ searchParams }: Props) {
   }
 
   const session = await auth()
-  if (!session) redirect('/login')
+  if (!session?.user?.id) redirect('/login')
 
-  const role = (session.user as { role?: string }).role
-  if (role === 'operator') redirect('/dashboard')
+  const memberships = await getUserMemberships()
 
-  const collections = await getUserCollections()
-  const { denied } = await searchParams
+  if (memberships.length === 0) {
+    // Pending invites are auto-claimed at sign-in; this covers the edge case of
+    // an invite that arrived (or failed to claim) within the current session.
+    const invites = await db.collectionInvite.findMany({
+      where: { email: session.user.email ?? '', acceptedAt: null },
+      include: { collection: { select: { name: true } } },
+    })
+    return (
+      <OnboardingScreen
+        invites={invites.map(i => ({
+          collectionId: i.collectionId,
+          collectionName: i.collection.name,
+          role: i.role,
+        }))}
+      />
+    )
+  }
 
   return (
-    <>
-      {denied === 'operator' && (
-        <div
-          role="alert"
-          className="mb-8 rounded-xl bg-surface px-5 py-4 font-body text-sm text-text-primary"
-        >
-          That area is for operators only. Ask your operator if you need access
-          to manage collections.
-        </div>
-      )}
-      <h1 className="font-display text-heading text-text-primary mb-8">
-        Your collections
-      </h1>
-      {collections.length === 0 ? (
-        <p className="font-body text-text-muted">
-          No collections yet. Ask your operator to get you set up.
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {collections.map(c => (
-            <CollectionCard
-              key={c.id}
-              id={c.id}
-              name={c.name}
-              description={c.description}
-              itemCount={c.items.length}
-            />
-          ))}
-        </div>
-      )}
-    </>
+    <CollectionPicker
+      memberships={memberships.map(m => ({
+        collectionId: m.collectionId,
+        collectionName: m.collection.name,
+        role: m.role,
+        itemCount: m.collection.items.length,
+      }))}
+    />
   )
 }

@@ -20,7 +20,6 @@ vi.mock('@/lib/db', () => ({ db: mockDb }))
 
 import {
   createCollection,
-  getUserCollections,
   getUserMemberships,
   getCollection,
 } from '@/actions/collections'
@@ -69,28 +68,6 @@ describe('createCollection', () => {
     await createCollection('X')
     expect(mockDb.collectionMembership.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ role: 'operator' }) })
-    )
-  })
-})
-
-describe('getUserCollections', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    mockAuth.mockResolvedValue(session)
-  })
-
-  it('throws when not authenticated', async () => {
-    mockAuth.mockResolvedValue(null)
-    await expect(getUserCollections()).rejects.toThrow('Unauthorized')
-  })
-
-  it('returns collections owned by the current user', async () => {
-    const collections = [{ id: 1, name: 'A', items: [] }]
-    mockDb.collection.findMany.mockResolvedValue(collections)
-    const result = await getUserCollections()
-    expect(result).toEqual(collections)
-    expect(mockDb.collection.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { ownerId: 1 } })
     )
   })
 })
