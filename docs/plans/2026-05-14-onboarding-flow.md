@@ -10,24 +10,128 @@
 
 ---
 
+## Amendment — Approved, with Changes (2026-05-14)
+
+Kimberly **approved** Phase 4 (mayor/ hq-wisp-6npw). Her answers to the four
+design Open Questions revise this plan. The **revised task list** below
+supersedes the original 15-task numbering. See the design doc's "Amendment"
+section for the rationale.
+
+**What changed vs. the original plan:**
+- **Hierarchical roles (Q3).** `assertCollectionRole` is hierarchical: `'operator'`
+  required-level passes for `operator` *or* `curator`; `'curator'` passes for
+  `curator` only. purses-90i is **merged**, so `lib/authz.ts` already exists with
+  `assertCollectionOwner`/`assertItemOwner` — Phase 4 *replaces* them with
+  `assertCollectionRole`/`assertItemRole` and retargets every caller
+  (`actions/ranking.ts` → `'curator'`; `actions/items.ts`, `actions/photos.ts`,
+  operator pages → `'operator'`).
+- **Invite email (Q2).** New task: `lib/email.ts` `sendInviteEmail`, called
+  best-effort from `addCuratorByEmail`.
+- **Migration (Q4).** Append one migration after the existing three; backfill
+  *all* owner memberships before dropping `User.role` (guarantees demo survival).
+- **proxy.ts.** purses-90i added role-gating + `__tests__/proxy.test.ts` +
+  `?denied=operator` handling in `app/(curator)/page.tsx`. Phase 4 removes the
+  role-gating (proxy.ts → auth-only), rewrites `__tests__/proxy.test.ts`, and the
+  `denied` handling disappears when `app/(curator)/page.tsx` is rewritten as the
+  router.
+
+**Revised task list (this is the authoritative order):**
+
+| # | Task | Batch |
+|---|---|---|
+| 1 | Schema models + migration (`CollectionMembership`, `CollectionInvite`, drop `User.role`, `name` default, backfill) | 1 — Schema |
+| 2 | Demo seed `ensureDemoMembership` | 1 — Schema |
+| 3 | Adapter `createUser` inserts a row | 2 — Self-signup |
+| 4 | Extract NextAuth callbacks, drop role, `signIn` claims invites | 2 — Self-signup |
+| 5 | Hierarchical `assertCollectionRole` / `assertItemRole` in `lib/authz.ts` | 3 — Authz |
+| 6 | Retarget callers: `ranking.ts` → `'curator'`, `items.ts`/`photos.ts` → `'operator'`; remove `assertCollectionOwner`/`assertItemOwner` | 3 — Authz |
+| 7 | `claimInvites` helper | 3 — Authz |
+| 8 | `createCollection(name, desc, role)` records creator membership | 3 — Actions |
+| 9 | Membership-based queries: `getUserMemberships`, `getCollection` | 3 — Actions |
+| 10 | `addCuratorByEmail` server action | 3 — Actions |
+| 11 | `lib/email.ts` `sendInviteEmail` + wire into `addCuratorByEmail` | 3 — Actions |
+| 12 | `OnboardingScreen` component | 4 — UI |
+| 13 | `CollectionPicker` component + `/` router rewrite | 4 — UI |
+| 14 | New-collection role picker + post-create redirect | 4 — UI |
+| 15 | `AddCuratorForm` + wire into operator collection page | 4 — UI |
+| 16 | `proxy.ts` → auth-only; rewrite `__tests__/proxy.test.ts` | 5 — Gating |
+| 17 | Operator/curator pages use `assertCollectionRole`; update 90i page tests | 5 — Gating |
+| 18 | Rework `e2e/fixtures.ts` (seed memberships) + affected e2e specs | 5 — Cleanup |
+| 19 | Full gate suite — tsc, lint, vitest, e2e, build | 5 — Cleanup |
+
+The detailed task bodies below remain accurate for the substance of each task;
+follow the revised numbering/targeting above where they differ. Hierarchical
+authz semantics (Task 5/6) and the email task (11) are detailed inline here:
+
+**Task 5 — `assertCollectionRole` (hierarchical):**
+```ts
+// lib/authz.ts — replaces assertCollectionOwner/assertItemOwner
+import { db } from '@/lib/db'
+import type { Role } from '@/lib/generated/prisma/client'
+
+export type RequiredRole = 'operator' | 'curator'
+
+/** curator ⊇ operator: a curator membership satisfies an 'operator' requirement. */
+function satisfies(have: Role, required: RequiredRole): boolean {
+  if (required === 'operator') return have === 'operator' || have === 'curator'
+  return have === 'curator'
+}
+
+export async function assertCollectionRole(
+  collectionId: number, userId: string, required: RequiredRole,
+): Promise<Role> {
+  const m = await db.collectionMembership.findUnique({
+    where: { collectionId_userId: { collectionId, userId: Number(userId) } },
+  })
+  if (!m || !satisfies(m.role, required)) throw new Error('Unauthorized')
+  return m.role
+}
+
+export async function assertItemRole(
+  itemId: number, userId: string, required: RequiredRole,
+) {
+  const item = await db.item.findUnique({
+    where: { id: itemId }, include: { collection: true },
+  })
+  if (!item) throw new Error('Unauthorized')
+  await assertCollectionRole(item.collectionId, userId, required)
+  return item
+}
+```
+Tests cover: operator-role satisfies `'operator'` but not `'curator'`;
+curator-role satisfies both; non-member throws; missing item throws.
+
+**Task 11 — `lib/email.ts`:**
+```ts
+import { Resend } from 'resend'
+
+export async function sendInviteEmail(
+  to: string, collectionName: string, inviterName: string,
+): Promise<void> {
+  const key = process.env.AUTH_RESEND_KEY
+  if (!key) return // no key in dev/test — silently skip
+  const resend = new Resend(key)
+  await resend.emails.send({
+    from: 'PurseInator <onboarding@resend.dev>',
+    to,
+    subject: `${inviterName} added you to "${collectionName}" on PurseInator`,
+    html: `<p>${inviterName} added you as a curator of <strong>${collectionName}</strong>.</p>
+           <p>Sign in with this email address to start ranking.</p>`,
+  })
+}
+```
+`addCuratorByEmail` calls it inside a `try/catch` — a Resend failure is logged,
+not thrown (the invite/membership is already persisted). Tests mock `@/lib/email`.
+
+---
+
 ## Status & Prerequisites
 
-**This plan is Phase 4 of bead purses-72e and is gated:**
+**Phase 4 is APPROVED (2026-05-14) and IN PROGRESS.** Original gating cleared:
 
-1. **Awaiting Kimberly's approval** of this plan + the design doc
-   (`docs/plans/2026-05-14-onboarding-flow-design.md`). The four Open Questions
-   in the design doc may change Tasks 9–12. Do not start until approved.
-2. **Rebase first.** Phase 4 rebases onto the merged work of the sibling beads
-   before starting:
-   - **purses-90i** — adds `assertCollectionOwner` ownership checks to
-     `actions/items.ts`, `actions/photos.ts`, and the operator collection/upload
-     pages, and makes `/collections/*` operator-gating non-silent.
-   - **purses-0zq** — fixes magic-link session persistence; touches `auth.ts`.
-   ```bash
-   git fetch origin main
-   git rebase origin/main
-   ```
-   If either sibling renamed/moved the files below, re-target the edits.
+1. ~~Awaiting Kimberly's approval~~ — **approved** with the changes above.
+2. **Rebased** onto current `origin/main` (includes merged purses-90i). purses-0zq
+   is environmental-only — not a code dependency.
 
 ---
 

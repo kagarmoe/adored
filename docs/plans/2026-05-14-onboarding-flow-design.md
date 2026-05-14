@@ -2,7 +2,53 @@
 
 Date: 2026-05-14
 Bead: purses-72e
-Author: polecat nux (autonomous design pass — **awaiting Kimberly's approval**)
+Author: polecat nux
+Status: **APPROVED with changes — 2026-05-14 (Kimberly, via mayor/ hq-wisp-6npw)**
+
+## Amendment — Approved with Changes (2026-05-14)
+
+Kimberly approved Phase 4 implementation. Her answers to the four Open Questions
+amend the design below. Where this section conflicts with the original text, **this
+section wins**.
+
+- **Q1 — confirmed as recommended.** Invites only; no join-by-code / global
+  directory. A brand-new user with no pending invites sees a create-only
+  onboarding screen.
+- **Q2 — changed: send the invite email in v1.** When an operator adds a curator
+  by email, the app sends that person a templated Resend invite email. Adds
+  `lib/email.ts` (`sendInviteEmail`) to scope; `addCuratorByEmail` calls it
+  best-effort (a Resend failure is logged, not fatal — the membership/invite is
+  the source of truth).
+- **Q3 — roles are HIERARCHICAL, not parallel.** "operators are not curators,
+  but curators are operators." A **curator** membership has *all* operator
+  capabilities (manage content) **plus** ranking/curating — curator is the
+  higher privilege. An **operator** membership can manage content only and
+  **cannot rank**. The authz helper is hierarchical:
+  - `assertCollectionRole(c, u, 'operator')` → passes if the membership role is
+    `operator` **or** `curator`.
+  - `assertCollectionRole(c, u, 'curator')` → passes **only** if the role is
+    `curator`.
+  Capability → required level:
+  - Manage content (create/update item, upload/toggle photo, the
+    `/collections/*` pages, `addCuratorByEmail`, create collection) → `'operator'`.
+  - Rank (`getNextPair`, `submitComparison`, the `/[id]` ranked view + `/[id]/rank*`)
+    → `'curator'`.
+  Route groups map cleanly: `(operator)` pages = operator-level, `(curator)`
+  pages = curator-level; a curator can reach both, an operator only the former.
+- **Q4 — demo-only preservation + migration latitude.** Only the demo user
+  (`demo-owner@purseinator.local`) and the `isDemo` collection must survive.
+  Migrations were hand-applied to Neon. **Decision:** keep appending — add one
+  new migration after the existing three (they are already applied on prod;
+  squashing risks divergence with no upside on a hand-managed DB). The migration
+  still backfills *all* collections' owner memberships before dropping
+  `User.role` — it is one deterministic `INSERT…SELECT`, costs nothing, and
+  guarantees demo survival without depending on a post-deploy seed run.
+
+**Gating update:** purses-90i is **merged** — `lib/authz.ts` already exists with
+`assertCollectionOwner` / `assertItemOwner`. Phase 4 *replaces* those with the
+hierarchical `assertCollectionRole` / `assertItemRole`. purses-0zq concluded the
+`auth.ts` bug is environmental (AUTH_SECRET/domain), not code — Phase 4 does not
+block on it.
 
 ## What We're Building
 
