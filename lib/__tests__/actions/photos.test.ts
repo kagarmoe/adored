@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const mockAuth = vi.hoisted(() => vi.fn())
 const mockPut = vi.hoisted(() => vi.fn())
 const mockDb = vi.hoisted(() => ({
-  collection: { findUnique: vi.fn() },
+  collectionMembership: { findUnique: vi.fn() },
   item: { findUnique: vi.fn() },
   photo: { findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
 }))
@@ -17,7 +17,6 @@ import { uploadPhoto, togglePhotoBackground } from '@/actions/photos'
 
 const session = { user: { id: '1' } }
 const item = { id: 1, collectionId: 10 }
-const itemWithCollection = { id: 1, collectionId: 10, collection: { id: 10, ownerId: 1 } }
 
 function makeFormData(opts: { name?: string; processed?: boolean; processedName?: string } = {}) {
   const { name = 'bag.jpg', processed = false, processedName = 'bag.png' } = opts
@@ -32,7 +31,8 @@ describe('uploadPhoto', () => {
     vi.clearAllMocks()
     mockAuth.mockResolvedValue(session)
     mockDb.item.findUnique.mockResolvedValue(item)
-    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 1 })
+    // Caller is an operator-member of the item's collection.
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'operator' })
     mockDb.photo.findFirst.mockResolvedValue(null)
     mockPut.mockImplementation(async (path: string) => ({
       url: `https://blob.vercel.app/${path}`,
@@ -57,16 +57,21 @@ describe('uploadPhoto', () => {
     await expect(uploadPhoto(999, makeFormData())).rejects.toThrow('Item not found')
   })
 
-  it("throws Unauthorized when the item's collection belongs to another user", async () => {
-    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 99 })
+  it("throws Unauthorized when the caller has no membership on the item's collection", async () => {
+    mockDb.collectionMembership.findUnique.mockResolvedValue(null)
     await expect(uploadPhoto(1, makeFormData())).rejects.toThrow('Unauthorized')
   })
 
-  it('does not upload or create a photo when the ownership check fails', async () => {
-    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 99 })
+  it('does not upload or create a photo when the authorization check fails', async () => {
+    mockDb.collectionMembership.findUnique.mockResolvedValue(null)
     await expect(uploadPhoto(1, makeFormData())).rejects.toThrow('Unauthorized')
     expect(mockPut).not.toHaveBeenCalled()
     expect(mockDb.photo.create).not.toHaveBeenCalled()
+  })
+
+  it('allows a curator-member (curator ⊇ operator) to upload', async () => {
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'curator' })
+    await expect(uploadPhoto(1, makeFormData())).resolves.toBeDefined()
   })
 
   it('uploads original file to correct blob path', async () => {
@@ -147,7 +152,7 @@ describe('togglePhotoBackground', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockAuth.mockResolvedValue(session)
-    mockDb.item.findUnique.mockResolvedValue(item)
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'operator' })
   })
 
   it('throws when not authenticated', async () => {
@@ -160,15 +165,16 @@ describe('togglePhotoBackground', () => {
     await expect(togglePhotoBackground(999)).rejects.toThrow('Photo not found')
   })
 
-  it('throws Unauthorized when photo belongs to another user', async () => {
+  it('throws Unauthorized when the caller has no membership on the photo collection', async () => {
     mockDb.photo.findUnique.mockResolvedValue({
       id: 1,
       itemId: 1,
       blobKey: 'https://blob/proc.png',
       originalBlobKey: 'https://blob/orig.jpg',
       bgRemoved: true,
-      item: { id: 1, collectionId: 10, collection: { id: 10, ownerId: 999 } },
+      item: { id: 1, collectionId: 10 },
     })
+    mockDb.collectionMembership.findUnique.mockResolvedValue(null)
     await expect(togglePhotoBackground(1)).rejects.toThrow('Unauthorized')
     expect(mockDb.photo.update).not.toHaveBeenCalled()
   })
@@ -180,7 +186,7 @@ describe('togglePhotoBackground', () => {
       blobKey: 'https://blob/x.jpg',
       originalBlobKey: 'https://blob/x.jpg',
       bgRemoved: false,
-      item: itemWithCollection,
+      item,
     })
     await togglePhotoBackground(1)
     expect(mockDb.photo.update).not.toHaveBeenCalled()
@@ -193,7 +199,7 @@ describe('togglePhotoBackground', () => {
       blobKey: 'https://blob/proc.png',
       originalBlobKey: 'https://blob/orig.jpg',
       bgRemoved: true,
-      item: itemWithCollection,
+      item,
     })
     mockDb.photo.update.mockResolvedValue({})
     await togglePhotoBackground(1)
@@ -214,7 +220,7 @@ describe('togglePhotoBackground', () => {
       blobKey: 'https://blob/orig.jpg',
       originalBlobKey: 'https://blob/proc.png',
       bgRemoved: false,
-      item: itemWithCollection,
+      item,
     })
     mockDb.photo.update.mockResolvedValue({})
     await togglePhotoBackground(1)
