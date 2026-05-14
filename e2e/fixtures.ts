@@ -36,7 +36,10 @@ type Fixtures = {
 // the demo owner an operator membership). The `operatorPage` / `curatorPage`
 // names are kept for spec readability — both are just "an authenticated user".
 export const test = base.extend<Fixtures>({
-  operatorPage: async ({ page }, use) => {
+  // The second fixture arg is Playwright's positional "provide" callback; it is
+  // named `runTest` (not `use`) so eslint's react-hooks rule does not mistake it
+  // for React 19's `use` hook.
+  operatorPage: async ({ page }, runTest) => {
     await page.goto('/')
     await setSessionCookie(page, {
       sub: '1',
@@ -44,10 +47,10 @@ export const test = base.extend<Fixtures>({
       email: 'operator@test.local',
       name: 'Test Operator',
     })
-    await use(page)
+    await runTest(page)
   },
 
-  curatorPage: async ({ page }, use) => {
+  curatorPage: async ({ page }, runTest) => {
     await page.goto('/')
     await setSessionCookie(page, {
       sub: '2',
@@ -55,7 +58,7 @@ export const test = base.extend<Fixtures>({
       email: 'curator@test.local',
       name: 'Test Curator',
     })
-    await use(page)
+    await runTest(page)
   },
 })
 
