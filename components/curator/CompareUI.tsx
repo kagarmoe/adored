@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { getNextPair, submitComparison } from '@/actions/ranking'
+import { getNextPair, submitComparison, markRankingCompleted } from '@/actions/ranking'
 import { ComparisonTimer } from '@/components/curator/ComparisonTimer'
 import { ComparisonCard } from '@/components/curator/ComparisonCard'
 import { SortCompleteScreen } from '@/components/curator/SortCompleteScreen'
@@ -141,6 +141,14 @@ function CompareInner({ collectionId, demoItems }: Props) {
         state.comparisonCount,
       )
       if (terminated) {
+        // Persist completion so operators can view the ranked results.
+        // Best-effort: a failure here must not block the curator's
+        // SortCompleteScreen.
+        try {
+          await markRankingCompleted(collectionId)
+        } catch (err) {
+          console.error('markRankingCompleted failed (non-fatal):', err)
+        }
         setPair(null)
         setCompleted(true)
         setLoading(false)

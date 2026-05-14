@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockAuth = vi.hoisted(() => vi.fn())
 const mockDb = vi.hoisted(() => ({
+  collection: {
+    update: vi.fn(),
+  },
   collectionMembership: {
     findUnique: vi.fn(),
   },
@@ -21,7 +24,7 @@ vi.mock('@/auth', () => ({ auth: () => mockAuth() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/lib/db', () => ({ db: mockDb }))
 
-import { getNextPair, submitComparison } from '@/actions/ranking'
+import { getNextPair, submitComparison, markRankingCompleted } from '@/actions/ranking'
 
 const session = { user: { id: '1' } }
 const itemA = { id: 1, eloRating: 1000, collectionId: 10, brand: 'A', style: 'a' }
@@ -143,5 +146,33 @@ describe('submitComparison', () => {
     await submitComparison(10, 1, 2, 1, 'shown')
     const txArgs = mockDb.$transaction.mock.calls[0][0] as unknown[]
     expect(txArgs).toHaveLength(3)
+  })
+})
+
+describe('markRankingCompleted', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockAuth.mockResolvedValue(session)
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'curator' })
+    mockDb.collection.update.mockResolvedValue({})
+  })
+
+  it('throws when not authenticated', async () => {
+    mockAuth.mockResolvedValue(null)
+    await expect(markRankingCompleted(10)).rejects.toThrow('Unauthorized')
+  })
+
+  it('throws when the caller is only an operator (operators cannot complete a ranking)', async () => {
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'operator' })
+    await expect(markRankingCompleted(10)).rejects.toThrow('Unauthorized')
+    expect(mockDb.collection.update).not.toHaveBeenCalled()
+  })
+
+  it('stamps rankingCompletedAt on the collection when the caller is a curator', async () => {
+    await markRankingCompleted(10)
+    expect(mockDb.collection.update).toHaveBeenCalledWith({
+      where: { id: 10 },
+      data: { rankingCompletedAt: expect.any(Date) },
+    })
   })
 })

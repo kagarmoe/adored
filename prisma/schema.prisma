@@ -20,16 +20,19 @@ model User {
 }
 
 model Collection {
-  id          Int                    @id @default(autoincrement())
-  owner       User                   @relation(fields: [ownerId], references: [id])
-  ownerId     Int
-  name        String
-  description String                 @default("")
-  isDemo      Boolean                @default(false)
-  createdAt   DateTime               @default(now())
-  items       Item[]
-  memberships CollectionMembership[]
-  invites     CollectionInvite[]
+  id                 Int                    @id @default(autoincrement())
+  owner              User                   @relation(fields: [ownerId], references: [id])
+  ownerId            Int
+  name               String
+  description        String                 @default("")
+  isDemo             Boolean                @default(false)
+  createdAt          DateTime               @default(now())
+  // Set when a curator drives the ranking to termination (SortCompleteScreen).
+  // Operators may view the ranked-tier results only once this is non-null.
+  rankingCompletedAt DateTime?
+  items              Item[]
+  memberships        CollectionMembership[]
+  invites            CollectionInvite[]
 }
 
 model CollectionMembership {

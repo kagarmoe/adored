@@ -53,3 +53,7 @@ JOIN "User" u ON u."id" = c."ownerId";
 -- role is now per-collection, so the global column is dropped.
 ALTER TABLE "User" ALTER COLUMN "name" SET DEFAULT '';
 ALTER TABLE "User" DROP COLUMN "role";
+
+-- AlterTable: rankingCompletedAt is stamped when a curator drives the ranking
+-- to termination; operators may view ranked-tier results only once it is set.
+ALTER TABLE "Collection" ADD COLUMN "rankingCompletedAt" TIMESTAMP(3);

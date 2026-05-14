@@ -97,3 +97,22 @@ export async function submitComparison(
 
   revalidatePath(`/${collectionId}`)
 }
+
+/**
+ * Stamp a collection's ranking as completed — called by CompareUI when the
+ * curator drives the ranking to termination (SortCompleteScreen). Curator-level
+ * only: operators cannot rank, so they cannot complete a ranking. Once set,
+ * operators may view the ranked-tier results.
+ */
+export async function markRankingCompleted(collectionId: number) {
+  const session = await auth()
+  if (!session?.user?.id) throw new Error('Unauthorized')
+  await assertCollectionRole(collectionId, session.user.id, 'curator')
+
+  await db.collection.update({
+    where: { id: collectionId },
+    data: { rankingCompletedAt: new Date() },
+  })
+
+  revalidatePath(`/${collectionId}`)
+}

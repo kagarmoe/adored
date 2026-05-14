@@ -120,10 +120,10 @@ describe('getCollection', () => {
     expect(mockDb.collection.findFirst).not.toHaveBeenCalled()
   })
 
-  it('returns the collection for an operator member (operators can view rankings)', async () => {
+  it('returns the collection with viewerRole for an operator member (operators can view rankings)', async () => {
     mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'operator' })
     mockDb.collection.findFirst.mockResolvedValue({ id: 1, items: [] })
-    expect(await getCollection(1)).toEqual({ id: 1, items: [] })
+    expect(await getCollection(1)).toEqual({ id: 1, items: [], viewerRole: 'operator' })
   })
 
   it('looks the membership up by the collection+user composite key', async () => {
@@ -135,12 +135,18 @@ describe('getCollection', () => {
     })
   })
 
-  it('returns the collection (with hero photos) when the user is a curator', async () => {
+  it('returns the collection (with hero photos + viewerRole) when the user is a curator', async () => {
     mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'curator' })
     mockDb.collection.findFirst.mockResolvedValue({ id: 1, items: [] })
-    expect(await getCollection(1)).toEqual({ id: 1, items: [] })
+    expect(await getCollection(1)).toEqual({ id: 1, items: [], viewerRole: 'curator' })
     const call = mockDb.collection.findFirst.mock.calls[0][0]
     expect(call.where).toEqual({ id: 1 })
     expect(call.include.items.include.photos).toBeDefined()
+  })
+
+  it('returns null when the membership exists but the collection row is gone', async () => {
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'curator' })
+    mockDb.collection.findFirst.mockResolvedValue(null)
+    expect(await getCollection(1)).toBeNull()
   })
 })

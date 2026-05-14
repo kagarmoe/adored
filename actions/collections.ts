@@ -57,7 +57,9 @@ export async function getCollection(id: number) {
   // Returns null on a missing session or missing membership. This feeds the
   // ranked-tier VIEW, which is operator-level: any member (operator OR curator)
   // can view rankings — only the ranking *actions* (actions/ranking.ts) are
-  // curator-level. Pages already treat null as "not found".
+  // curator-level. The returned `viewerRole` lets the page decide whether to
+  // gate in-progress results (operators see results only once the ranking is
+  // completed). Pages already treat null as "not found".
   const session = await auth()
   if (!session?.user?.id) return null
 
@@ -68,7 +70,7 @@ export async function getCollection(id: number) {
   })
   if (!membership) return null
 
-  return db.collection.findFirst({
+  const collection = await db.collection.findFirst({
     where: { id },
     include: {
       items: {
@@ -81,4 +83,7 @@ export async function getCollection(id: number) {
       },
     },
   })
+  if (!collection) return null
+
+  return { ...collection, viewerRole: membership.role }
 }
