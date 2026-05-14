@@ -31,10 +31,14 @@ section wins**.
   Capability → required level:
   - Manage content (create/update item, upload/toggle photo, the
     `/collections/*` pages, `addCuratorByEmail`, create collection) → `'operator'`.
-  - Rank (`getNextPair`, `submitComparison`, the `/[id]` ranked view + `/[id]/rank*`)
-    → `'curator'`.
-  Route groups map cleanly: `(operator)` pages = operator-level, `(curator)`
-  pages = curator-level; a curator can reach both, an operator only the former.
+  - **View** rankings (the `/[id]` ranked-tier view via `getCollection`) →
+    `'operator'`. Operators CAN see rankings — confirmed by Kimberly on PR #12
+    review (mayor/ hq-wisp-0lin, 2026-05-14).
+  - **Rank** — the ranking *actions* `getNextPair` / `submitComparison`
+    (`actions/ranking.ts`) → `'curator'`. Operators cannot submit comparisons.
+  So the only thing gated to `'curator'` is the act of ranking; everything else
+  (content management and viewing results) is `'operator'`-level, which a
+  curator also satisfies via the hierarchy.
 - **Q4 — demo-only preservation + migration latitude.** Only the demo user
   (`demo-owner@purseinator.local`) and the `isDemo` collection must survive.
   Migrations were hand-applied to Neon. **Decision:** keep appending — add one
