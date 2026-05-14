@@ -2,7 +2,7 @@
 
 import { auth } from '@/auth'
 import { db } from '@/lib/db'
-import { assertCollectionOwner } from '@/lib/authz'
+import { assertCollectionRole } from '@/lib/authz'
 import { put } from '@vercel/blob'
 import { revalidatePath } from 'next/cache'
 
@@ -22,7 +22,7 @@ export async function uploadPhoto(itemId: number, formData: FormData) {
 
   const item = await db.item.findUnique({ where: { id: itemId } })
   if (!item) throw new Error('Item not found')
-  await assertCollectionOwner(item.collectionId, session.user.id)
+  await assertCollectionRole(item.collectionId, session.user.id, 'operator')
 
   const dir = `collections/${item.collectionId}/items/${itemId}`
 
@@ -65,12 +65,10 @@ export async function togglePhotoBackground(photoId: number) {
 
   const photo = await db.photo.findUnique({
     where: { id: photoId },
-    include: { item: { include: { collection: true } } },
+    include: { item: true },
   })
   if (!photo) throw new Error('Photo not found')
-  if (photo.item.collection.ownerId !== Number(session.user.id)) {
-    throw new Error('Unauthorized')
-  }
+  await assertCollectionRole(photo.item.collectionId, session.user.id, 'operator')
 
   if (photo.blobKey === photo.originalBlobKey) return
 

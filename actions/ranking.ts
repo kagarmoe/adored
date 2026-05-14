@@ -2,7 +2,7 @@
 
 import { auth } from '@/auth'
 import { db } from '@/lib/db'
-import { assertCollectionOwner } from '@/lib/authz'
+import { assertCollectionRole } from '@/lib/authz'
 import { computeTiers, updateElo } from '@/lib/elo'
 import { selectNextPair } from '@/lib/pairing'
 import { revalidatePath } from 'next/cache'
@@ -24,7 +24,8 @@ export interface RankingState {
 export async function getNextPair(collectionId: number): Promise<RankingState> {
   const session = await auth()
   if (!session?.user?.id) throw new Error('Unauthorized')
-  await assertCollectionOwner(collectionId, session.user.id)
+  // Ranking requires curator-level access (operators manage content but cannot rank).
+  await assertCollectionRole(collectionId, session.user.id, 'curator')
 
   const [items, comparisons] = await Promise.all([
     db.item.findMany({ where: { collectionId } }),
@@ -70,7 +71,8 @@ export async function submitComparison(
 ) {
   const session = await auth()
   if (!session?.user?.id) throw new Error('Unauthorized')
-  await assertCollectionOwner(collectionId, session.user.id)
+  // Ranking requires curator-level access (operators manage content but cannot rank).
+  await assertCollectionRole(collectionId, session.user.id, 'curator')
 
   if (winnerId !== itemAId && winnerId !== itemBId) {
     throw new Error('Winner must be one of the two items')
