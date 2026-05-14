@@ -4,6 +4,7 @@ const mockDb = vi.hoisted(() => ({
   user: {
     findUnique: vi.fn(),
     update: vi.fn(),
+    create: vi.fn(),
   },
   verificationToken: {
     create: vi.fn(),
@@ -15,7 +16,7 @@ vi.mock('@/lib/db', () => ({ db: mockDb }))
 
 import { PurseAdapter } from '@/lib/auth-adapter'
 
-const dbUser = { id: 1, email: 'test@example.com', name: 'Tester', role: 'curator' }
+const dbUser = { id: 1, email: 'test@example.com', name: 'Tester' }
 const adapterUser = { id: '1', email: 'test@example.com', name: 'Tester', emailVerified: null, image: null }
 
 describe('PurseAdapter', () => {
@@ -27,8 +28,25 @@ describe('PurseAdapter', () => {
   })
 
   describe('createUser', () => {
-    it('throws — no self-signup allowed', async () => {
-      await expect(adapter.createUser!({} as never)).rejects.toThrow()
+    it('creates a user row from email + name and returns the adapter user', async () => {
+      mockDb.user.create.mockResolvedValue({ id: 5, email: 'new@example.com', name: 'New' })
+      const result = await adapter.createUser!({
+        id: '', email: 'new@example.com', name: 'New', emailVerified: null,
+      })
+      expect(mockDb.user.create).toHaveBeenCalledWith({
+        data: { email: 'new@example.com', name: 'New' },
+      })
+      expect(result).toEqual({
+        id: '5', email: 'new@example.com', name: 'New', emailVerified: null, image: null,
+      })
+    })
+
+    it('defaults name to empty string when none is supplied', async () => {
+      mockDb.user.create.mockResolvedValue({ id: 6, email: 'x@y.com', name: '' })
+      await adapter.createUser!({ id: '', email: 'x@y.com', emailVerified: null } as never)
+      expect(mockDb.user.create).toHaveBeenCalledWith({
+        data: { email: 'x@y.com', name: '' },
+      })
     })
   })
 
