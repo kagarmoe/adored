@@ -11,16 +11,23 @@ import type { JWT } from 'next-auth/jwt'
  * resolved per-collection, server-side, via lib/authz.ts.
  */
 
-/** Allow sign-in for any verified email; claim any pending invites for it. */
+/**
+ * Allow sign-in only when a backing DB user row exists, then claim any pending
+ * invites for it. For legitimate new users the adapter's `createUser` has
+ * already inserted the row by the time this runs, so `dbUser` is non-null.
+ * Returning `true` without a row would mint a session whose JWT has no `id`
+ * (jwtCallback skips a null dbUser), and every downstream `session.user.id`
+ * guard would then throw "Unauthorized".
+ */
 export async function signInCallback({
   user,
 }: {
   user: { email?: string | null }
 }): Promise<boolean> {
   if (!user.email) return false
-  // The adapter has created the row by now (getUserByEmail -> createUser).
   const dbUser = await db.user.findUnique({ where: { email: user.email } })
-  if (dbUser) await claimInvites(dbUser.id, dbUser.email)
+  if (!dbUser) return false
+  await claimInvites(dbUser.id, dbUser.email)
   return true
 }
 

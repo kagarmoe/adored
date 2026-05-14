@@ -31,4 +31,24 @@ describe('AddCuratorForm', () => {
     fireEvent.submit(screen.getByRole('button', { name: /add curator/i }).closest('form')!)
     expect(onAdd).not.toHaveBeenCalled()
   })
+
+  it('ignores a concurrent double-submit — onAdd fires once (synchronous ref guard)', async () => {
+    // A rapid double-submit fires handleSubmit twice before the state-based
+    // `loading` re-render lands; without a synchronous ref guard the second
+    // call proceeds and the curator gets a duplicate invite email.
+    let resolveOnAdd: () => void = () => {}
+    const onAdd = vi.fn().mockReturnValue(
+      new Promise<void>(r => {
+        resolveOnAdd = r
+      }),
+    )
+    render(<AddCuratorForm collectionId={7} onAdd={onAdd} />)
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'c@d.com' } })
+    const form = screen.getByRole('button', { name: /add curator/i }).closest('form')!
+    fireEvent.submit(form)
+    fireEvent.submit(form) // second submit before the first resolves
+    expect(onAdd).toHaveBeenCalledTimes(1)
+    resolveOnAdd()
+    await waitFor(() => expect(screen.getByText(/invited c@d\.com/i)).toBeInTheDocument())
+  })
 })

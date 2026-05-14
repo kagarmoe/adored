@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 interface Props {
   collectionId: number
@@ -17,16 +17,27 @@ export function AddCuratorForm({ collectionId, onAdd }: Props) {
   const [email, setEmail] = useState('')
   const [invited, setInvited] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  // A ref backs the in-flight guard so a synchronous double-submit (Enter key /
+  // fast clicks) takes the early-return before React flushes `loading` state —
+  // otherwise the second call would fire `onAdd` again and `sendInviteEmail` is
+  // not idempotent (duplicate curator emails). Same pattern as CompareUI.pick().
+  const submittingRef = useRef(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const trimmed = email.trim()
     if (!trimmed) return
+    if (submittingRef.current) return
+    submittingRef.current = true
     setLoading(true)
-    await onAdd(collectionId, trimmed)
-    setInvited(trimmed)
-    setEmail('')
-    setLoading(false)
+    try {
+      await onAdd(collectionId, trimmed)
+      setInvited(trimmed)
+      setEmail('')
+    } finally {
+      submittingRef.current = false
+      setLoading(false)
+    }
   }
 
   return (

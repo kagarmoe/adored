@@ -1,4 +1,6 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
+import { auth } from '@/auth'
+import { assertCollectionRole } from '@/lib/authz'
 import { CompareUI } from '@/components/curator/CompareUI'
 import { displayPhotoUrl } from '@/lib/photo'
 import { getDemoCollection, isDemoRequest } from '@/lib/demo-server'
@@ -23,6 +25,17 @@ export default async function ComparePage({ params }: { params: Promise<{ id: st
         }))}
       />
     )
+  }
+
+  // The interactive comparison flow is curator-level only. An operator-only
+  // member is redirected to the read-only results view rather than getting a
+  // silent Unauthorized from getNextPair/submitComparison inside CompareUI.
+  const session = await auth()
+  if (!session?.user?.id) redirect('/login')
+  try {
+    await assertCollectionRole(collectionId, session.user.id, 'curator')
+  } catch {
+    redirect(`/${id}`)
   }
 
   return <CompareUI collectionId={collectionId} />

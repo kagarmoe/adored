@@ -12,7 +12,7 @@ import { signInCallback, jwtCallback, sessionCallback } from '@/lib/auth-callbac
 describe('signInCallback', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('allows sign-in for any verified email and claims pending invites', async () => {
+  it('allows sign-in when a DB user row exists and claims pending invites', async () => {
     mockDb.user.findUnique.mockResolvedValue({ id: 7, email: 'a@b.com' })
     const ok = await signInCallback({ user: { email: 'a@b.com' } })
     expect(ok).toBe(true)
@@ -21,6 +21,13 @@ describe('signInCallback', () => {
 
   it('rejects sign-in when there is no email', async () => {
     expect(await signInCallback({ user: {} })).toBe(false)
+    expect(mockClaimInvites).not.toHaveBeenCalled()
+  })
+
+  it('rejects sign-in when no DB user row exists (never mint a session without an id)', async () => {
+    mockDb.user.findUnique.mockResolvedValue(null)
+    const ok = await signInCallback({ user: { email: 'ghost@b.com' } })
+    expect(ok).toBe(false)
     expect(mockClaimInvites).not.toHaveBeenCalled()
   })
 })
