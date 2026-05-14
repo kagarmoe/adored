@@ -120,6 +120,12 @@ describe('getCollection', () => {
     expect(mockDb.collection.findFirst).not.toHaveBeenCalled()
   })
 
+  it('returns null when the user is only an operator (the ranked view is curator-level)', async () => {
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'operator' })
+    expect(await getCollection(1)).toBeNull()
+    expect(mockDb.collection.findFirst).not.toHaveBeenCalled()
+  })
+
   it('looks the membership up by the collection+user composite key', async () => {
     mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'curator' })
     mockDb.collection.findFirst.mockResolvedValue({ id: 1, items: [] })
@@ -129,8 +135,8 @@ describe('getCollection', () => {
     })
   })
 
-  it('returns the collection (with hero photos) when the user is a member', async () => {
-    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'operator' })
+  it('returns the collection (with hero photos) when the user is a curator', async () => {
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'curator' })
     mockDb.collection.findFirst.mockResolvedValue({ id: 1, items: [] })
     expect(await getCollection(1)).toEqual({ id: 1, items: [] })
     const call = mockDb.collection.findFirst.mock.calls[0][0]

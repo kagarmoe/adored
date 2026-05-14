@@ -54,8 +54,10 @@ export async function getUserMemberships() {
 export async function getCollection(id: number) {
   // The (curator) layout already redirects unauthenticated, non-demo requests
   // to /login, so by the time a page calls this helper a session SHOULD exist.
-  // We return null on a missing session OR missing membership — pages already
-  // treat null as "not found".
+  // Returns null on a missing session, missing membership, or an operator-only
+  // membership — the ranked tier view this feeds is a curator-level page
+  // (curator ⊇ operator, so operators cannot rank or see rankings). Pages
+  // already treat null as "not found".
   const session = await auth()
   if (!session?.user?.id) return null
 
@@ -64,7 +66,7 @@ export async function getCollection(id: number) {
       collectionId_userId: { collectionId: id, userId: parseInt(session.user.id) },
     },
   })
-  if (!membership) return null
+  if (!membership || membership.role !== 'curator') return null
 
   return db.collection.findFirst({
     where: { id },
