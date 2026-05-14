@@ -2,6 +2,7 @@
 
 import { auth } from '@/auth'
 import { db } from '@/lib/db'
+import { assertCollectionOwner } from '@/lib/authz'
 import { put } from '@vercel/blob'
 import { revalidatePath } from 'next/cache'
 
@@ -21,6 +22,7 @@ export async function uploadPhoto(itemId: number, formData: FormData) {
 
   const item = await db.item.findUnique({ where: { id: itemId } })
   if (!item) throw new Error('Item not found')
+  await assertCollectionOwner(item.collectionId, session.user.id)
 
   const dir = `collections/${item.collectionId}/items/${itemId}`
 

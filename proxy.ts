@@ -31,7 +31,9 @@ export default auth((req) => {
   const role = (req.auth?.user as { role?: string })?.role
   if (pathname.startsWith('/dashboard') || pathname.startsWith('/collections')) {
     if (role !== 'operator') {
-      return NextResponse.redirect(new URL('/', req.url))
+      // Non-silent: carry a marker so the curator home can explain the bounce
+      // instead of leaving the user staring at an unexplained redirect.
+      return NextResponse.redirect(new URL('/?denied=operator', req.url))
     }
   }
 

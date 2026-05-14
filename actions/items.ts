@@ -2,6 +2,7 @@
 
 import { auth } from '@/auth'
 import { db } from '@/lib/db'
+import { assertCollectionOwner, assertItemOwner } from '@/lib/authz'
 import { revalidatePath } from 'next/cache'
 
 export async function createItem(
@@ -10,6 +11,7 @@ export async function createItem(
 ) {
   const session = await auth()
   if (!session?.user?.id) throw new Error('Unauthorized')
+  await assertCollectionOwner(collectionId, session.user.id)
 
   const item = await db.item.create({
     data: {
@@ -28,6 +30,7 @@ export async function updateItem(
 ) {
   const session = await auth()
   if (!session?.user?.id) throw new Error('Unauthorized')
+  await assertItemOwner(itemId, session.user.id)
 
   const item = await db.item.update({
     where: { id: itemId },

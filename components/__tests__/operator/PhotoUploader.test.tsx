@@ -182,6 +182,33 @@ describe('PhotoUploader', () => {
     await waitFor(() => expect(onUploaded).toHaveBeenCalledOnce())
   })
 
+  it('resolves a function itemId once per batch and uploads to the resolved id', async () => {
+    const resolveItemId = vi.fn().mockResolvedValue(42)
+    render(<PhotoUploader itemId={resolveItemId} onUploaded={vi.fn()} />)
+    const input = screen.getByTestId('library-input') as HTMLInputElement
+    Object.defineProperty(input, 'files', {
+      value: [makeFile('a.jpg'), makeFile('b.jpg')],
+      configurable: true,
+    })
+    fireEvent.change(input)
+    await waitFor(() => expect(mockUploadPhoto).toHaveBeenCalledTimes(2))
+    expect(resolveItemId).toHaveBeenCalledTimes(1)
+    expect(mockUploadPhoto).toHaveBeenCalledWith(42, expect.any(FormData))
+  })
+
+  it('marks files as errored and skips upload when the itemId resolver throws', async () => {
+    const resolveItemId = vi.fn().mockRejectedValue(new Error('create failed'))
+    render(<PhotoUploader itemId={resolveItemId} onUploaded={vi.fn()} />)
+    const input = screen.getByTestId('library-input') as HTMLInputElement
+    Object.defineProperty(input, 'files', { value: [makeFile()], configurable: true })
+    fireEvent.change(input)
+    await waitFor(() => expect(resolveItemId).toHaveBeenCalled())
+    expect(mockUploadPhoto).not.toHaveBeenCalled()
+    await waitFor(() => {
+      expect(document.querySelector('ul li .bg-accent\\/70')).toBeTruthy()
+    })
+  })
+
   it('always sends the original file under "file"', async () => {
     render(<PhotoUploader itemId={1} onUploaded={vi.fn()} />)
     const input = screen.getByTestId('library-input') as HTMLInputElement

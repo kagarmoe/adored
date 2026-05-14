@@ -2,16 +2,10 @@
 
 import { auth } from '@/auth'
 import { db } from '@/lib/db'
+import { assertCollectionOwner } from '@/lib/authz'
 import { computeTiers, updateElo } from '@/lib/elo'
 import { selectNextPair } from '@/lib/pairing'
 import { revalidatePath } from 'next/cache'
-
-async function assertCollectionOwner(collectionId: number, userId: string) {
-  const collection = await db.collection.findUnique({ where: { id: collectionId } })
-  if (!collection || collection.ownerId !== Number(userId)) {
-    throw new Error('Unauthorized')
-  }
-}
 
 export interface PairItem {
   id: number

@@ -4,7 +4,12 @@ import { useState, useRef } from 'react'
 import { uploadPhoto } from '@/actions/photos'
 
 interface Props {
-  itemId: number
+  /**
+   * The item to attach photos to. Pass a number for an existing item, or a
+   * resolver that creates one on demand — the resolver runs once per batch,
+   * so a batch of photos lands on a single newly-created item.
+   */
+  itemId: number | (() => Promise<number>)
   onUploaded: () => void
 }
 
@@ -37,6 +42,17 @@ export function PhotoUploader({ itemId, onUploaded }: Props) {
     }))
     setPreviews(prev => [...prev, ...queued])
 
+    let resolvedItemId: number
+    try {
+      resolvedItemId = typeof itemId === 'function' ? await itemId() : itemId
+    } catch {
+      const queuedKeys = new Set(queued.map(q => q.key))
+      setPreviews(prev =>
+        prev.map(p => (queuedKeys.has(p.key) ? { ...p, status: 'error' } : p)),
+      )
+      return
+    }
+
     let anySucceeded = false
     for (let i = 0; i < arr.length; i++) {
       const file = arr[i]
@@ -62,7 +78,7 @@ export function PhotoUploader({ itemId, onUploaded }: Props) {
       }
 
       try {
-        await uploadPhoto(itemId, formData)
+        await uploadPhoto(resolvedItemId, formData)
         anySucceeded = true
         setPreviews(prev =>
           prev.map(p => (p.key === key ? { ...p, status: 'done' } : p)),

@@ -16,8 +16,8 @@ export default async function CollectionPage({ params }: Props) {
   const session = await auth()
   if (!session?.user?.id) redirect('/login')
 
-  const collection = await db.collection.findUnique({
-    where: { id: collectionId },
+  const collection = await db.collection.findFirst({
+    where: { id: collectionId, ownerId: Number(session.user.id) },
     include: {
       items: {
         include: { photos: { where: { isHero: true }, take: 1 } },

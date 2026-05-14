@@ -7,7 +7,9 @@ import { getDemoCollection, isDemoRequest } from '@/lib/demo-server'
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Your collections — PurseInator' }
 
-export default async function CuratorHome() {
+type Props = { searchParams: Promise<{ denied?: string }> }
+
+export default async function CuratorHome({ searchParams }: Props) {
   if (await isDemoRequest()) {
     const demo = await getDemoCollection()
     if (!demo) {
@@ -27,9 +29,19 @@ export default async function CuratorHome() {
   if (role === 'operator') redirect('/dashboard')
 
   const collections = await getUserCollections()
+  const { denied } = await searchParams
 
   return (
     <>
+      {denied === 'operator' && (
+        <div
+          role="alert"
+          className="mb-8 rounded-xl bg-surface px-5 py-4 font-body text-sm text-text-primary"
+        >
+          That area is for operators only. Ask your operator if you need access
+          to manage collections.
+        </div>
+      )}
       <h1 className="font-display text-heading text-text-primary mb-8">
         Your collections
       </h1>

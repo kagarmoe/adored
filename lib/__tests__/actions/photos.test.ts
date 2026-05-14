@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const mockAuth = vi.hoisted(() => vi.fn())
 const mockPut = vi.hoisted(() => vi.fn())
 const mockDb = vi.hoisted(() => ({
+  collection: { findUnique: vi.fn() },
   item: { findUnique: vi.fn() },
   photo: { findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
 }))
@@ -31,6 +32,7 @@ describe('uploadPhoto', () => {
     vi.clearAllMocks()
     mockAuth.mockResolvedValue(session)
     mockDb.item.findUnique.mockResolvedValue(item)
+    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 1 })
     mockDb.photo.findFirst.mockResolvedValue(null)
     mockPut.mockImplementation(async (path: string) => ({
       url: `https://blob.vercel.app/${path}`,
@@ -53,6 +55,18 @@ describe('uploadPhoto', () => {
   it('throws when item not found', async () => {
     mockDb.item.findUnique.mockResolvedValue(null)
     await expect(uploadPhoto(999, makeFormData())).rejects.toThrow('Item not found')
+  })
+
+  it("throws Unauthorized when the item's collection belongs to another user", async () => {
+    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 99 })
+    await expect(uploadPhoto(1, makeFormData())).rejects.toThrow('Unauthorized')
+  })
+
+  it('does not upload or create a photo when the ownership check fails', async () => {
+    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 99 })
+    await expect(uploadPhoto(1, makeFormData())).rejects.toThrow('Unauthorized')
+    expect(mockPut).not.toHaveBeenCalled()
+    expect(mockDb.photo.create).not.toHaveBeenCalled()
   })
 
   it('uploads original file to correct blob path', async () => {
