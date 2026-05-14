@@ -1,27 +1,23 @@
 import { test, expect } from './fixtures'
 
-test.describe('curator home', () => {
-  test('shows collections heading', async ({ curatorPage: page }) => {
+test.describe('post-auth home', () => {
+  test('an authenticated user landing on / is not bounced to login', async ({ curatorPage: page }) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { name: /your collections/i })).toBeVisible()
+    await expect(page).toHaveURL('/')
   })
 
-  test('header shows curator role indicator', async ({ curatorPage: page }) => {
+  test('/ shows the onboarding or collection-picker UI, not a redirect', async ({ curatorPage: page }) => {
     await page.goto('/')
-    await expect(page.getByText(/curator/i)).toBeVisible()
+    // With no memberships the user sees the onboarding screen; with memberships,
+    // the collection picker. Either way there is a "collection" link/heading.
+    await expect(page.getByRole('link', { name: /collection/i }).first()).toBeVisible()
   })
 
-  test('shows empty state when no collections', async ({ curatorPage: page }) => {
+  test('an operator-named session also lands on / (no role-based redirect)', async ({ operatorPage: page }) => {
     await page.goto('/')
-    // Either shows collection cards or empty state — should not show login
-    await expect(page).not.toHaveURL('/login')
-  })
-})
-
-test.describe('operator gets redirected from / to /dashboard', () => {
-  test('operator visiting / lands on /dashboard', async ({ operatorPage: page }) => {
-    await page.goto('/')
-    await expect(page).toHaveURL('/dashboard')
+    // The old behaviour redirected operators to /dashboard; role is per-collection
+    // now, so the post-auth router keeps everyone on /.
+    await expect(page).toHaveURL('/')
   })
 })
 
