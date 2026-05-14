@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { seedDemoItems, DEMO_ITEMS, RETIRED_URLS, type SeedDb } from '../seed-demo'
+import {
+  seedDemoItems,
+  ensureDemoMembership,
+  DEMO_ITEMS,
+  RETIRED_URLS,
+  type SeedDb,
+} from '../seed-demo'
 
 function makeDb(seedExisting: { itemId: number; originalBlobKey: string }[] = []): {
   db: SeedDb
@@ -130,6 +136,39 @@ describe('seedDemoItems', () => {
     // The stale row now points at the current URL; the retired URL is gone.
     expect(state.photos.some(p => p.originalBlobKey === currentUrl)).toBe(true)
     expect(state.photos.some(p => p.originalBlobKey === retiredUrl)).toBe(false)
+  })
+})
+
+describe('ensureDemoMembership', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('creates an operator membership when none exists', async () => {
+    const db = {
+      collectionMembership: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockResolvedValue({}),
+      },
+    }
+    await ensureDemoMembership(db as never, 10, 20)
+    expect(db.collectionMembership.findUnique).toHaveBeenCalledWith({
+      where: { collectionId_userId: { collectionId: 10, userId: 20 } },
+    })
+    expect(db.collectionMembership.create).toHaveBeenCalledWith({
+      data: { collectionId: 10, userId: 20, role: 'operator' },
+    })
+  })
+
+  it('is idempotent — skips when the membership already exists', async () => {
+    const db = {
+      collectionMembership: {
+        findUnique: vi.fn().mockResolvedValue({ id: 1 }),
+        create: vi.fn(),
+      },
+    }
+    await ensureDemoMembership(db as never, 10, 20)
+    expect(db.collectionMembership.create).not.toHaveBeenCalled()
   })
 })
 

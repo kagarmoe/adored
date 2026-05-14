@@ -175,6 +175,40 @@ function retiredKeyFor(currentUrl: string): string | undefined {
   return undefined
 }
 
+// Minimal contract on the prisma client for the membership upsert — keeps
+// ensureDemoMembership unit-testable without a real Postgres.
+interface MembershipDb {
+  collectionMembership: {
+    findUnique: (args: {
+      where: { collectionId_userId: { collectionId: number; userId: number } }
+    }) => Promise<unknown | null>
+    create: (args: {
+      data: { collectionId: number; userId: number; role: 'operator' }
+    }) => Promise<unknown>
+  }
+}
+
+/**
+ * Idempotently grant the demo owner an `operator` membership on the demo
+ * collection. The per_collection_roles migration backfills this for any DB that
+ * already had the demo collection, but a *fresh* dev/CI DB runs the migration
+ * with no prior data — so the seed must establish the membership itself.
+ */
+export async function ensureDemoMembership(
+  db: MembershipDb,
+  collectionId: number,
+  userId: number,
+): Promise<void> {
+  const existing = await db.collectionMembership.findUnique({
+    where: { collectionId_userId: { collectionId, userId } },
+  })
+  if (!existing) {
+    await db.collectionMembership.create({
+      data: { collectionId, userId, role: 'operator' },
+    })
+  }
+}
+
 async function main() {
   if (DEMO_ITEMS.length !== 20) {
     throw new Error(`Expected 20 demo items, got ${DEMO_ITEMS.length}`)
@@ -190,7 +224,7 @@ async function main() {
   try {
     const owner = await db.user.upsert({
       where: { email: DEMO_USER_EMAIL },
-      create: { email: DEMO_USER_EMAIL, name: 'PurseInator Demo', role: 'operator' },
+      create: { email: DEMO_USER_EMAIL, name: 'PurseInator Demo' },
       update: {},
     })
 
@@ -214,6 +248,9 @@ async function main() {
     } else {
       console.log(`Found existing demo collection id=${collection.id} (${collection.items.length} items)`)
     }
+
+    await ensureDemoMembership(db, collection.id, owner.id)
+    console.log(`Ensured demo owner ${owner.id} has an operator membership on collection ${collection.id}`)
 
     const { created, skipped } = await seedDemoItems(db, collection.id)
     console.log(
