@@ -57,3 +57,26 @@ test('submit button shows loading state while sending', async ({ page }) => {
   await page.getByRole('button', { name: /send link/i }).click()
   await expect(page.getByRole('button', { name: /sending/i })).toBeVisible()
 })
+
+// Regression for purses-e7f (P0): submitting an UNKNOWN email must still reach
+// the Resend send. The previous bug made @auth/core throw AccessDenied at send
+// time for any email not already in the DB, so the magic link never went out —
+// yet LoginForm still showed "check your email", so the UI-only tests above
+// stayed green. This test asserts the actual send is attempted.
+test('submitting an unknown email attempts a magic-link send', async ({ page }) => {
+  let resendAttempted = false
+  await page.route('https://api.resend.com/**', async route => {
+    resendAttempted = true
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ id: 'e2e-stub' }),
+    })
+  })
+  await page.goto('/login')
+  await page.getByLabel(/email/i).fill(`e2e-unknown-${Date.now()}@example.com`)
+  await page.getByRole('button', { name: /send link/i }).click()
+  // With the bug, @auth/core throws AccessDenied before sendVerificationRequest,
+  // so api.resend.com is never hit and this poll never flips true.
+  await expect.poll(() => resendAttempted, { timeout: 5_000 }).toBe(true)
+})
