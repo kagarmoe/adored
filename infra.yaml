@@ -106,9 +106,26 @@ env_vars:
     - "Secrets a human holds: the human sets them in the Vercel dashboard. Never
        put a secret in chat, a `! ` command, or a file an agent will read."
 
+post_deploy_smoke:
+  role: "Automated gate that runs after every successful Vercel Production
+         deploy. Probes the demo host, /login, and an authenticated curator
+         page (using a forged JWT). Fails the workflow on any non-200 or
+         error-page render — that's the visible signal."
+  script: "scripts/smoke.mjs (npm run smoke)"
+  workflow: ".github/workflows/post-deploy-smoke.yml (deployment_status event)"
+  required_secret: "AUTH_SECRET in GitHub Actions secrets — must match the
+                    production Vercel AUTH_SECRET. Without it the workflow
+                    fails the authenticated probe."
+  docs: "docs/smoke-test.md"
+  origin: "Built after the 2026-05-15 demo-500 outage was caught by a manual
+           curl. This is the test that would have caught it in seconds."
+
 # ──────────────────────────────────────────────────────────────────────────
 # Checklist when a schema-affecting change merges to `main`:
 #   1. Vercel auto-deploys the CODE (automatic).
 #   2. Apply the new migration.sql to Neon — MANUAL, SEPARATE step.
 #   3. Redeploy only if env vars changed (not needed for a migration alone).
 #   4. Verify: hit the demo host + an authenticated path; check `vercel logs`.
+#   5. The post-deploy smoke workflow runs automatically — but if the
+#      migration was applied AFTER the deploy, manually re-run the workflow
+#      (Actions → post-deploy smoke → Run workflow) to confirm green now.

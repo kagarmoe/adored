@@ -1,0 +1,57 @@
+name: post-deploy smoke
+
+# Runs the smoke probe (scripts/smoke.mjs) after every successful Vercel
+# Production deploy. Vercel posts a `deployment_status` event to GitHub when
+# the deploy goes live; we filter for state=success + environment=Production
+# and run the probe against the live app.
+#
+# Failure surfaces as a red ✗ on the commit + a failed workflow run +
+# (default GitHub setting) an email to the commit author. That is the
+# "visible, actionable signal" the bead acceptance criteria call for.
+#
+# Re-runnable manually via the "Run workflow" button (workflow_dispatch).
+
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      demo_url:
+        description: 'Override SMOKE_DEMO_URL'
+        required: false
+        default: ''
+      app_url:
+        description: 'Override SMOKE_APP_URL'
+        required: false
+        default: ''
+
+jobs:
+  smoke:
+    # Only run for successful Production deploys (or a manual dispatch).
+    # The `deployment_status` event fires for every state transition; filtering
+    # to `success` avoids 4 wasted runs per deploy (pending/building/...).
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run smoke
+        env:
+          # Required for the authenticated probe (forged JWT). Must match the
+          # AUTH_SECRET set in the production Vercel project. Add at
+          # Repo Settings → Secrets and variables → Actions → New secret.
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          SMOKE_DEMO_URL: ${{ inputs.demo_url }}
+          SMOKE_APP_URL: ${{ inputs.app_url }}
+        run: npm run smoke
