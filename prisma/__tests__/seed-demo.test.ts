@@ -172,19 +172,21 @@ describe('ensureDemoMembership', () => {
   })
 })
 
-// Network-dependent: hits the Unsplash CDN to verify each seed photoUrl is
-// still reachable. Catches the regression class where Unsplash removes a
-// source image (as happened with the Marshmallow URL — see purses-13k).
-//
-// Opt-IN: this block is skipped by default to keep CI hermetic and avoid
-// hammering Unsplash with 20 simultaneous HEADs on every push. Run locally
-// with:
+// HARD-JUSTIFIED OPT-IN SKIP (purses-chh.4 audit): the 20 it.each cases below
+// are gated behind RUN_NETWORK_TESTS=1 because they hit the Unsplash CDN —
+// an external service we do not control. Running them on every push would
+//   (a) make `npm test` flaky against any Unsplash blip,
+//   (b) fan 20 HEAD requests at Unsplash on every CI run, risking rate-limit,
+//   (c) couple a hermetic unit-test command to a third-party uptime SLA.
+// The skip is intentional, not a runner gap — there is no in-process fix that
+// removes the external dependency. This block exists to catch the regression
+// class where Unsplash removes a source image (see purses-13k Marshmallow
+// incident); run it manually before changing DEMO_ITEMS, e.g.:
 //
 //   RUN_NETWORK_TESTS=1 npx vitest run prisma/__tests__/seed-demo.test.ts
 //
-// We rely on vitest's default sequential it.each (no .concurrent) so the 20
-// requests fan out one at a time — adds a few seconds but avoids rate-limit
-// flake against Unsplash.
+// We use vitest's default sequential it.each (no .concurrent) so the 20
+// requests fan out one at a time when opted in — slower but rate-limit-safe.
 describe.skipIf(process.env.RUN_NETWORK_TESTS !== '1')(
   'DEMO_ITEMS photoUrl liveness (network)',
   () => {
