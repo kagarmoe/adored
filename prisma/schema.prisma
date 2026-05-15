@@ -8,25 +8,57 @@ datasource db {
 }
 
 model User {
-  id          Int          @id @default(autoincrement())
-  email       String       @unique
-  name        String
-  role        Role
-  createdAt   DateTime     @default(now())
+  id          Int                    @id @default(autoincrement())
+  email       String                 @unique
+  name        String                 @default("")
+  createdAt   DateTime               @default(now())
   collections Collection[]
   sessions    Session[]
   accounts    Account[]
+  memberships CollectionMembership[]
+  invitesSent CollectionInvite[]     @relation("InvitesSent")
 }
 
 model Collection {
-  id          Int      @id @default(autoincrement())
-  owner       User     @relation(fields: [ownerId], references: [id])
-  ownerId     Int
-  name        String
-  description String   @default("")
-  isDemo      Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  items       Item[]
+  id                 Int                    @id @default(autoincrement())
+  owner              User                   @relation(fields: [ownerId], references: [id])
+  ownerId            Int
+  name               String
+  description        String                 @default("")
+  isDemo             Boolean                @default(false)
+  createdAt          DateTime               @default(now())
+  // Set when a curator drives the ranking to termination (SortCompleteScreen).
+  // Operators may view the ranked-tier results only once this is non-null.
+  rankingCompletedAt DateTime?
+  items              Item[]
+  memberships        CollectionMembership[]
+  invites            CollectionInvite[]
+}
+
+model CollectionMembership {
+  id           Int        @id @default(autoincrement())
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId Int
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       Int
+  role         Role
+  createdAt    DateTime   @default(now())
+
+  @@unique([collectionId, userId])
+}
+
+model CollectionInvite {
+  id           Int        @id @default(autoincrement())
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId Int
+  email        String
+  role         Role       @default(curator)
+  invitedById  Int
+  invitedBy    User       @relation("InvitesSent", fields: [invitedById], references: [id])
+  createdAt    DateTime   @default(now())
+  acceptedAt   DateTime?
+
+  @@unique([collectionId, email])
 }
 
 model Item {

@@ -63,11 +63,14 @@ test.describe('collection management page', () => {
   })
 })
 
-test.describe('curator cannot access operator routes', () => {
-  test('/dashboard redirects curator away', async ({ curatorPage: page }) => {
-    await page.goto('/dashboard')
-    // Curators should not see dashboard — they get redirected to /
-    await expect(page).not.toHaveURL('/dashboard')
+test.describe('per-collection authorization', () => {
+  test('a non-member cannot see a collection management page', async ({ operatorPage: page }) => {
+    // Role is per-collection now: authorization is enforced server-side by
+    // assertCollectionRole, not by middleware. A user with no membership on a
+    // collection gets a not-found page — never the management UI.
+    await page.goto('/collections/999999')
+    await expect(page.getByRole('link', { name: /upload photos/i })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /add curator/i })).toHaveCount(0)
   })
 })
 

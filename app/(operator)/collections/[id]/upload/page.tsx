@@ -4,6 +4,7 @@ import { redirect, notFound } from 'next/navigation'
 import { PhotoUploader } from '@/components/operator/PhotoUploader'
 import { PhotoCard } from '@/components/operator/PhotoCard'
 import { NewItemUploader } from '@/components/operator/NewItemUploader'
+import { assertCollectionRole } from '@/lib/authz'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -14,8 +15,15 @@ export default async function UploadPage({ params }: Props) {
   const session = await auth()
   if (!session?.user?.id) redirect('/login')
 
-  const collection = await db.collection.findFirst({
-    where: { id: collectionId, ownerId: Number(session.user.id) },
+  // Uploading is content management — operator-level access (curator ⊇ operator).
+  try {
+    await assertCollectionRole(collectionId, session.user.id, 'operator')
+  } catch {
+    notFound()
+  }
+
+  const collection = await db.collection.findUnique({
+    where: { id: collectionId },
     include: { items: { include: { photos: true } } },
   })
 

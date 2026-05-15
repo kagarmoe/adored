@@ -30,29 +30,35 @@ type Fixtures = {
   curatorPage: Page
 }
 
+// Role is per-collection now (CollectionMembership) — the JWT no longer carries
+// a global role. These fixtures forge an authenticated session; per-collection
+// authorization is exercised against real membership rows (the demo seed grants
+// the demo owner an operator membership). The `operatorPage` / `curatorPage`
+// names are kept for spec readability — both are just "an authenticated user".
 export const test = base.extend<Fixtures>({
-  operatorPage: async ({ page }, use) => {
+  // The second fixture arg is Playwright's positional "provide" callback; it is
+  // named `runTest` (not `use`) so eslint's react-hooks rule does not mistake it
+  // for React 19's `use` hook.
+  operatorPage: async ({ page }, runTest) => {
     await page.goto('/')
     await setSessionCookie(page, {
       sub: '1',
       id: '1',
-      role: 'operator',
       email: 'operator@test.local',
       name: 'Test Operator',
     })
-    await use(page)
+    await runTest(page)
   },
 
-  curatorPage: async ({ page }, use) => {
+  curatorPage: async ({ page }, runTest) => {
     await page.goto('/')
     await setSessionCookie(page, {
       sub: '2',
       id: '2',
-      role: 'curator',
       email: 'curator@test.local',
       name: 'Test Curator',
     })
-    await use(page)
+    await runTest(page)
   },
 })
 

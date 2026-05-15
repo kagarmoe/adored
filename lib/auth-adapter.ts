@@ -13,8 +13,11 @@ function toAdapterUser(user: { id: number; email: string; name: string }): Adapt
 
 export function PurseAdapter(): Adapter {
   return {
-    async createUser() {
-      throw new Error('Direct sign-up is not allowed. Ask the operator to create your account.')
+    async createUser(user) {
+      const created = await db.user.create({
+        data: { email: user.email, name: user.name ?? '' },
+      })
+      return toAdapterUser(created)
     },
 
     async getUser(id) {

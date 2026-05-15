@@ -3,6 +3,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const mockAuth = vi.hoisted(() => vi.fn())
 const mockDb = vi.hoisted(() => ({
   collection: {
+    update: vi.fn(),
+  },
+  collectionMembership: {
     findUnique: vi.fn(),
   },
   item: {
@@ -21,7 +24,7 @@ vi.mock('@/auth', () => ({ auth: () => mockAuth() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/lib/db', () => ({ db: mockDb }))
 
-import { getNextPair, submitComparison } from '@/actions/ranking'
+import { getNextPair, submitComparison, markRankingCompleted } from '@/actions/ranking'
 
 const session = { user: { id: '1' } }
 const itemA = { id: 1, eloRating: 1000, collectionId: 10, brand: 'A', style: 'a' }
@@ -31,7 +34,8 @@ describe('getNextPair', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockAuth.mockResolvedValue(session)
-    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 1 })
+    // Ranking requires curator-level access.
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'curator' })
     mockDb.item.findMany.mockResolvedValue([itemA, itemB])
     mockDb.comparison.findMany.mockResolvedValue([])
   })
@@ -41,18 +45,18 @@ describe('getNextPair', () => {
     await expect(getNextPair(10)).rejects.toThrow('Unauthorized')
   })
 
-  it('throws when the collection does not exist', async () => {
-    mockDb.collection.findUnique.mockResolvedValue(null)
+  it('throws when the caller has no membership on the collection', async () => {
+    mockDb.collectionMembership.findUnique.mockResolvedValue(null)
     await expect(getNextPair(10)).rejects.toThrow('Unauthorized')
   })
 
-  it('throws when the collection belongs to another user', async () => {
-    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 99 })
+  it('throws when the caller is only an operator (operators cannot rank)', async () => {
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'operator' })
     await expect(getNextPair(10)).rejects.toThrow('Unauthorized')
   })
 
-  it('does not query items when ownership check fails', async () => {
-    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 99 })
+  it('does not query items when the authorization check fails', async () => {
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'operator' })
     await expect(getNextPair(10)).rejects.toThrow('Unauthorized')
     expect(mockDb.item.findMany).not.toHaveBeenCalled()
   })
@@ -96,7 +100,7 @@ describe('submitComparison', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockAuth.mockResolvedValue(session)
-    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 1 })
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'curator' })
     mockDb.item.findUniqueOrThrow.mockImplementation(({ where }: { where: { id: number } }) =>
       Promise.resolve(where.id === 1 ? itemA : itemB)
     )
@@ -108,13 +112,13 @@ describe('submitComparison', () => {
     await expect(submitComparison(10, 1, 2, 1, 'shown')).rejects.toThrow('Unauthorized')
   })
 
-  it('throws when the collection does not exist', async () => {
-    mockDb.collection.findUnique.mockResolvedValue(null)
+  it('throws when the caller has no membership on the collection', async () => {
+    mockDb.collectionMembership.findUnique.mockResolvedValue(null)
     await expect(submitComparison(10, 1, 2, 1, 'shown')).rejects.toThrow('Unauthorized')
   })
 
-  it('throws when the collection belongs to another user', async () => {
-    mockDb.collection.findUnique.mockResolvedValue({ id: 10, ownerId: 99 })
+  it('throws when the caller is only an operator (operators cannot rank)', async () => {
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'operator' })
     await expect(submitComparison(10, 1, 2, 1, 'shown')).rejects.toThrow('Unauthorized')
     expect(mockDb.$transaction).not.toHaveBeenCalled()
   })
@@ -142,5 +146,33 @@ describe('submitComparison', () => {
     await submitComparison(10, 1, 2, 1, 'shown')
     const txArgs = mockDb.$transaction.mock.calls[0][0] as unknown[]
     expect(txArgs).toHaveLength(3)
+  })
+})
+
+describe('markRankingCompleted', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockAuth.mockResolvedValue(session)
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'curator' })
+    mockDb.collection.update.mockResolvedValue({})
+  })
+
+  it('throws when not authenticated', async () => {
+    mockAuth.mockResolvedValue(null)
+    await expect(markRankingCompleted(10)).rejects.toThrow('Unauthorized')
+  })
+
+  it('throws when the caller is only an operator (operators cannot complete a ranking)', async () => {
+    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'operator' })
+    await expect(markRankingCompleted(10)).rejects.toThrow('Unauthorized')
+    expect(mockDb.collection.update).not.toHaveBeenCalled()
+  })
+
+  it('stamps rankingCompletedAt on the collection when the caller is a curator', async () => {
+    await markRankingCompleted(10)
+    expect(mockDb.collection.update).toHaveBeenCalledWith({
+      where: { id: 10 },
+      data: { rankingCompletedAt: expect.any(Date) },
+    })
   })
 })

@@ -28,46 +28,69 @@ type FakeReq = {
 // `auth` is mocked to return the bare handler; call it with just the request.
 const middleware = proxyDefault as unknown as (req: FakeReq) => unknown
 
-function req(pathname: string, opts: { role?: string; authed?: boolean } = {}): FakeReq {
-  const { role, authed = true } = opts
+function req(pathname: string, opts: { authed?: boolean } = {}): FakeReq {
+  const { authed = true } = opts
   return {
     nextUrl: { pathname },
     headers: { get: () => 'app.example.com' },
-    auth: authed ? { user: role ? { role } : {} } : null,
+    auth: authed ? { user: { id: '1' } } : null,
     url: `https://app.example.com${pathname}`,
   }
 }
 
-describe('proxy middleware — operator-only gating', () => {
+describe('proxy middleware — auth-only gating', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockIsDemoHost.mockReturnValue(false)
     mockIsDemoAllowedPath.mockReturnValue(true)
   })
 
-  it('redirects a non-operator off /collections/* with a non-silent denied marker', () => {
-    middleware(req('/collections/2', { role: 'curator' }))
+  it('sends unauthenticated users to /login', () => {
+    middleware(req('/collections/2', { authed: false }))
     expect(mockRedirect).toHaveBeenCalledTimes(1)
-    const target = mockRedirect.mock.calls[0][0]
-    expect(target.pathname).toBe('/')
-    expect(target.searchParams.get('denied')).toBe('operator')
+    expect(mockRedirect.mock.calls[0][0].pathname).toBe('/login')
   })
 
-  it('redirects a non-operator off /dashboard with the same denied marker', () => {
-    middleware(req('/dashboard', { role: 'curator' }))
-    const target = mockRedirect.mock.calls[0][0]
-    expect(target.searchParams.get('denied')).toBe('operator')
-  })
-
-  it('lets an operator through to /collections/*', () => {
-    middleware(req('/collections/2', { role: 'operator' }))
+  it('lets an authenticated user through to /collections/* (per-collection authz is server-side)', () => {
+    middleware(req('/collections/2'))
     expect(mockNext).toHaveBeenCalled()
     expect(mockRedirect).not.toHaveBeenCalled()
   })
 
-  it('still sends unauthenticated users to /login', () => {
+  it('lets an authenticated user through to /dashboard', () => {
+    middleware(req('/dashboard'))
+    expect(mockNext).toHaveBeenCalled()
+    expect(mockRedirect).not.toHaveBeenCalled()
+  })
+
+  it('lets an authenticated user through to a curator route', () => {
+    middleware(req('/2/rank'))
+    expect(mockNext).toHaveBeenCalled()
+    expect(mockRedirect).not.toHaveBeenCalled()
+  })
+
+  it('passes /login through without auth', () => {
+    middleware(req('/login', { authed: false }))
+    expect(mockNext).toHaveBeenCalled()
+    expect(mockRedirect).not.toHaveBeenCalled()
+  })
+})
+
+describe('proxy middleware — demo host default-deny', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockIsDemoHost.mockReturnValue(true)
+  })
+
+  it('redirects a disallowed demo path to /', () => {
+    mockIsDemoAllowedPath.mockReturnValue(false)
     middleware(req('/collections/2', { authed: false }))
-    const target = mockRedirect.mock.calls[0][0]
-    expect(target.pathname).toBe('/login')
+    expect(mockRedirect.mock.calls[0][0].pathname).toBe('/')
+  })
+
+  it('lets an allowed demo path through', () => {
+    mockIsDemoAllowedPath.mockReturnValue(true)
+    middleware(req('/2', { authed: false }))
+    expect(mockNext).toHaveBeenCalled()
   })
 })

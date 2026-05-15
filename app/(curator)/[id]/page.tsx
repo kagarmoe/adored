@@ -33,6 +33,25 @@ export default async function CollectionPage({ params }: Props) {
   const collection = await getCollection(parseInt(id))
   if (!collection) notFound()
 
+  // Operators may view the ranked-tier results only once a curator has driven
+  // the ranking to completion. While it is in progress an operator sees a
+  // "not complete yet" state, never partial/in-progress tiers. Curators (who
+  // do the ranking) see results at any time.
+  const isOperatorViewer = collection.viewerRole === 'operator'
+  if (isOperatorViewer && collection.rankingCompletedAt === null) {
+    return (
+      <>
+        <h1 className="font-display text-heading text-text-primary mb-4">
+          {collection.name}
+        </h1>
+        <p className="font-body text-text-muted">
+          This collection&apos;s ranking isn&apos;t complete yet — results will
+          appear here once the curator finishes ranking.
+        </p>
+      </>
+    )
+  }
+
   const tieredItems = computeTiers(
     collection.items.map(item => ({ id: item.id, eloRating: item.eloRating }))
   ).map(tiered => {
@@ -56,12 +75,16 @@ export default async function CollectionPage({ params }: Props) {
         <h1 className="font-display text-heading text-text-primary">
           {collection.name}
         </h1>
-        <Link
-          href={`/${id}/rank`}
-          className="font-display text-label uppercase tracking-widest bg-accent text-white rounded-full px-4 py-1.5 no-underline hover:opacity-75 transition-opacity"
-        >
-          Sort →
-        </Link>
+        {/* Only curators rank — the /rank route redirects operators away, so
+            don't show them an entry point that just bounces back. */}
+        {!isOperatorViewer && (
+          <Link
+            href={`/${id}/rank`}
+            className="font-display text-label uppercase tracking-widest bg-accent text-white rounded-full px-4 py-1.5 no-underline hover:opacity-75 transition-opacity"
+          >
+            Sort →
+          </Link>
+        )}
       </div>
 
       {collection.items.length < 2 ? (

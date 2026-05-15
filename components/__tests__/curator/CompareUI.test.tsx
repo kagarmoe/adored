@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockGetNextPair = vi.hoisted(() => vi.fn())
 const mockSubmitComparison = vi.hoisted(() => vi.fn())
+const mockMarkRankingCompleted = vi.hoisted(() => vi.fn())
 const mockUseSearchParams = vi.hoisted(() => vi.fn())
 const mockSessionEndScreen = vi.hoisted(() =>
   vi.fn((_props: Record<string, unknown>) => null),
@@ -14,6 +15,7 @@ const mockComparisonTimer = vi.hoisted(() =>
 vi.mock('@/actions/ranking', () => ({
   getNextPair: (id: number) => mockGetNextPair(id),
   submitComparison: (...args: unknown[]) => mockSubmitComparison(...args),
+  markRankingCompleted: (...args: unknown[]) => mockMarkRankingCompleted(...args),
 }))
 
 vi.mock('next/navigation', () => ({
@@ -51,6 +53,7 @@ describe('CompareUI (non-demo)', () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams('duration=300'))
     mockGetNextPair.mockResolvedValue(RANKING_STATE)
     mockSubmitComparison.mockResolvedValue(undefined)
+    mockMarkRankingCompleted.mockResolvedValue(undefined)
   })
 
   it('passes a per-session comparison count (NOT the cumulative total) to SessionEndScreen', async () => {

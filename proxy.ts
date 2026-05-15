@@ -28,15 +28,9 @@ export default auth((req) => {
     return NextResponse.redirect(new URL('/login', req.url))
   }
 
-  const role = (req.auth?.user as { role?: string })?.role
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/collections')) {
-    if (role !== 'operator') {
-      // Non-silent: carry a marker so the curator home can explain the bounce
-      // instead of leaving the user staring at an unexplained redirect.
-      return NextResponse.redirect(new URL('/?denied=operator', req.url))
-    }
-  }
-
+  // Authorization is per-collection now and enforced server-side in pages and
+  // server actions via lib/authz.ts `assertCollectionRole`. The JWT no longer
+  // carries a global role, so the middleware only gates authenticated vs not.
   return NextResponse.next()
 })
 

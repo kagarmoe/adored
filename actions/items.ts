@@ -2,7 +2,7 @@
 
 import { auth } from '@/auth'
 import { db } from '@/lib/db'
-import { assertCollectionOwner, assertItemOwner } from '@/lib/authz'
+import { assertCollectionRole, assertItemRole } from '@/lib/authz'
 import { revalidatePath } from 'next/cache'
 
 export async function createItem(
@@ -11,7 +11,8 @@ export async function createItem(
 ) {
   const session = await auth()
   if (!session?.user?.id) throw new Error('Unauthorized')
-  await assertCollectionOwner(collectionId, session.user.id)
+  // Managing content requires operator-level access (curator satisfies it too).
+  await assertCollectionRole(collectionId, session.user.id, 'operator')
 
   const item = await db.item.create({
     data: {
@@ -30,7 +31,7 @@ export async function updateItem(
 ) {
   const session = await auth()
   if (!session?.user?.id) throw new Error('Unauthorized')
-  await assertItemOwner(itemId, session.user.id)
+  await assertItemRole(itemId, session.user.id, 'operator')
 
   const item = await db.item.update({
     where: { id: itemId },
