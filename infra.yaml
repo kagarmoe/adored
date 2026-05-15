@@ -40,22 +40,32 @@ neon:
                             production DATABASE_URL."
 
 migrations:
-  tool: Prisma — schema at prisma/schema.prisma
-  files: "prisma/migrations/<timestamp>_<name>/migration.sql — hand-written SQL"
+  approach: |
+    Hand-written SQL, applied MANUALLY to Neon. We do NOT use Prisma's
+    migration tool (`prisma migrate dev` / `prisma migrate deploy`) — it is
+    incompatible with this setup (see `critical` below). Prisma is used as
+    the ORM only (the runtime client + schema-to-client codegen, not migrations).
+  schema_source: |
+    prisma/schema.prisma — the Prisma schema, read by `prisma generate` to
+    build the runtime client. When the schema changes here, ALSO write a
+    matching SQL migration file by hand.
+  files: |
+    prisma/migrations/<timestamp>_<name>/migration.sql — hand-written SQL.
+    The directory follows the Prisma filesystem convention but the files are
+    hand-written, NOT Prisma-generated.
   critical:
-    - "There is NO migration_lock.toml. The migrations were hand-applied and are
-       NOT recorded in a _prisma_migrations tracking table."
-    - "DO NOT run `prisma migrate deploy` against production — with no tracking
-       table it re-applies already-applied migrations and fails."
+    - "There is NO migration_lock.toml. Migrations are hand-applied and NOT
+       recorded in a _prisma_migrations tracking table."
+    - "DO NOT run `prisma migrate deploy` against production — with no
+       tracking table it re-applies already-applied migrations and fails."
     - "To apply a new migration: run that ONE migration.sql directly against
-       Neon (SQL editor / psql), as a SINGLE batch. Ordering within a file can
-       be load-bearing (e.g. backfill rows BEFORE a DROP COLUMN)."
+       Neon (SQL editor / psql), as a SINGLE batch. Ordering within a file
+       can be load-bearing (e.g. backfill rows BEFORE a DROP COLUMN)."
   applied_to_production:   # keep this list current — update when one is applied
     - {file: 20260509060000_add_bg_removal_to_photo, status: applied}
     - {file: 20260509070000_originalblobkey_unique,  status: applied}
     - {file: 20260509080000_add_isdemo_to_collection, status: applied}
-    - {file: 20260514220000_per_collection_roles,
-       status: "NOT APPLIED as of 2026-05-15 — production 500s until it is"}
+    - {file: 20260514220000_per_collection_roles,    status: "applied 2026-05-15"}
 
 resend:
   role: Sends the magic-link sign-in emails.
