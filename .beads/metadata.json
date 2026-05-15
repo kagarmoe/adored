@@ -1,7 +1,0 @@
-{
-  "database": "dolt",
-  "backend": "dolt",
-  "dolt_mode": "embedded",
-  "dolt_database": "kimberlygarmoe",
-  "project_id": "e39782f1-e260-42c4-8dfb-78da511e9618"
-}
