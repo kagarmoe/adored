@@ -24,10 +24,13 @@ describe('signInCallback', () => {
     expect(mockClaimInvites).not.toHaveBeenCalled()
   })
 
-  it('rejects sign-in when no DB user row exists (never mint a session without an id)', async () => {
+  it('allows sign-in for an unknown email so the magic link can still send', async () => {
+    // @auth/core runs this callback at SEND time with a throwaway user for any
+    // email not yet in the DB — gating on dbUser here would block the email
+    // (purses-e7f, P0). The row is created at click time by createUser.
     mockDb.user.findUnique.mockResolvedValue(null)
-    const ok = await signInCallback({ user: { email: 'ghost@b.com' } })
-    expect(ok).toBe(false)
+    const ok = await signInCallback({ user: { email: 'brand-new@example.com' } })
+    expect(ok).toBe(true)
     expect(mockClaimInvites).not.toHaveBeenCalled()
   })
 })

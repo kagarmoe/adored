@@ -12,12 +12,18 @@ import type { JWT } from 'next-auth/jwt'
  */
 
 /**
- * Allow sign-in only when a backing DB user row exists, then claim any pending
- * invites for it. For legitimate new users the adapter's `createUser` has
- * already inserted the row by the time this runs, so `dbUser` is non-null.
- * Returning `true` without a row would mint a session whose JWT has no `id`
- * (jwtCallback skips a null dbUser), and every downstream `session.user.id`
- * guard would then throw "Unauthorized".
+ * Allow sign-in for any verified email — do NOT gate on a pre-existing DB row.
+ *
+ * @auth/core runs this callback at SEND time with a throwaway `defaultUser` for
+ * any email not already in the User table (see send-token.js). Gating on
+ * `dbUser` here returns false for that throwaway user, @auth/core throws
+ * `AccessDenied`, and the magic-link email is never sent — i.e. nobody can sign
+ * up (purses-e7f, P0). The User row is created at click time by the adapter's
+ * `createUser`, so by the time the `jwt` callback runs `dbUser` exists; there
+ * is no risk of an id-less session from returning true here.
+ *
+ * Pending invites are claimed when the row already exists (returning curator,
+ * or the second pass of the verification flow after createUser has run).
  */
 export async function signInCallback({
   user,
@@ -26,8 +32,7 @@ export async function signInCallback({
 }): Promise<boolean> {
   if (!user.email) return false
   const dbUser = await db.user.findUnique({ where: { email: user.email } })
-  if (!dbUser) return false
-  await claimInvites(dbUser.id, dbUser.email)
+  if (dbUser) await claimInvites(dbUser.id, dbUser.email)
   return true
 }
 
