@@ -4,6 +4,19 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+## Tests
+
+See [`TESTING.md`](TESTING.md) for the full map. Quick version:
+
+- `npm test` — Vitest unit/integration, runs anywhere
+- `npm run e2e` — Playwright; needs Postgres + browsers. **Runs in CI**
+  (`.github/workflows/e2e.yml`), not in the polecat sandbox. Trigger
+  on-demand with `gh workflow run e2e.yml [--ref <branch>]`.
+- `npm run smoke` — post-deploy probe against the live Vercel deploy
+
+**Do not "skip e2e because the sandbox can't run it."** Push your branch —
+the workflow fires on push and gives you a real report.
+
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
 ## Beads Issue Tracker
 

@@ -122,6 +122,24 @@ post_deploy_smoke:
   origin: "Built after the 2026-05-15 demo-500 outage was caught by a manual
            curl. This is the test that would have caught it in seconds."
 
+e2e:
+  role: "Playwright browser tests (e2e/*.spec.ts) against a real Next dev
+         server backed by an ephemeral Postgres. Runs in CI, NOT in polecat
+         sandboxes (which lack Postgres + a Docker socket). This is the
+         contract for 'sandbox can't run e2e' — it doesn't mean skip, it
+         means push and let the workflow run it."
+  script: "playwright test (npm run e2e)"
+  workflow: ".github/workflows/e2e.yml (push + pull_request + workflow_dispatch)"
+  schema_path: "`prisma db push` from prisma/schema.prisma — matches the
+                'we don't use prisma migrate' convention (no _prisma_migrations
+                tracking table)."
+  secrets: "NONE from GitHub. The workflow inlines test-only AUTH_SECRET and
+            DATABASE_URL pointed at the in-job Postgres service. No prod
+            credential ever enters the runner — same posture as
+            post_deploy_smoke."
+  on_demand: "gh workflow run e2e.yml [--ref <branch>]"
+  docs: "TESTING.md"
+
 # ──────────────────────────────────────────────────────────────────────────
 # Checklist when a schema-affecting change merges to `main`:
 #   1. Vercel auto-deploys the CODE (automatic).

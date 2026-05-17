@@ -1,0 +1,112 @@
+name: e2e
+
+# Runs the Playwright e2e suite (e2e/*.spec.ts) against a real Next dev server
+# backed by an ephemeral Postgres service container. This is where the e2e
+# suite lives now — polecat sandboxes lack Postgres + browsers, so they all
+# silently skipped the suite. CI has both, every run from a clean slate.
+#
+# Triggers:
+#   - pull_request: every PR
+#   - push:         every branch push (so polecats can validate their own
+#                   branch before submitting to the merge queue)
+#   - workflow_dispatch: on-demand invocation (an agent / human can fire this
+#                       via `gh workflow run e2e.yml [--ref <branch>]`)
+#
+# Failure surfaces as a red ✗ + an uploaded Playwright HTML report artifact.
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Ephemeral Postgres for this run only. `prisma db push` writes the
+    # schema from prisma/schema.prisma; we deliberately do NOT use
+    # `prisma migrate deploy` because this project hand-applies SQL
+    # migrations to Neon (see infra.yaml → migrations.critical) and has no
+    # _prisma_migrations tracking table — `db push` is the schema-driven
+    # path that matches that convention.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: purseinator_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d purseinator_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # All values below are TEST-ONLY, scoped to this ephemeral runner +
+      # ephemeral DB. None of them are production secrets and none are
+      # pulled from GitHub Secrets — putting prod AUTH_SECRET into Actions
+      # would double its exposure surface (see post-deploy-smoke.yml for
+      # the full rationale). The test AUTH_SECRET only signs JWTs the test
+      # itself creates against the test DB; it cannot forge a prod session.
+      DATABASE_URL: postgresql://test:test@localhost:5432/purseinator_test
+      AUTH_SECRET: e2e-test-secret-not-for-production-min-32-chars-long
+      AUTH_RESEND_KEY: re_e2e_test_unused_resend_calls_are_mocked
+      BLOB_READ_WRITE_TOKEN: vercel_blob_e2e_test_unused
+      ALLOW_DEMO_SEED: '1'
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Push schema to test database
+        run: npx prisma db push --skip-generate --accept-data-loss
+
+      # Cache Playwright browsers across runs. Key includes the @playwright/test
+      # version from package-lock.json so a version bump busts the cache.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright system deps (cache hit path)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Run e2e suite
+        run: npm run e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results
+          retention-days: 7
