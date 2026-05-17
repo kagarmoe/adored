@@ -1,0 +1,80 @@
+name: ci
+
+# Runs lint + typecheck + unit/integration tests on every PR and every push
+# to main. This is the structural enforcement point for the "passing tests =
+# the app works" contract (purses-chh.5): a red suite here must block the
+# merge to main, which is configured via branch protection requiring the
+# `lint`, `typecheck`, and `test` checks below to be green.
+#
+# See TESTING.md for the full contract + verification procedure.
+#
+# What's NOT here (yet):
+#   - e2e — Playwright browsers + a real test DB need to land first
+#     (purses-chh.1). When that bead closes, add an `e2e` job here and
+#     add it to the required checks list.
+#   - build — Vercel runs `prisma generate && next build` on every push,
+#     duplicating it here would cost CI minutes without adding signal.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancel in-progress runs on the same ref when a new push lands — avoids
+# wasted minutes when a branch is force-pushed mid-run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Lint
+        run: npm run lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      # @prisma/client typings are generated, not committed. tsc --noEmit
+      # against unresolved imports of @/lib/db (which re-exports the client)
+      # would fail without this.
+      - name: Generate Prisma client
+        run: npx prisma generate
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Generate Prisma client
+        run: npx prisma generate
+      - name: Test (vitest)
+        # No DATABASE_URL needed — the suite mocks @/lib/db. That is also
+        # why this suite cannot, on its own, prove "the app works" against
+        # the real schema; see TESTING.md and purses-chh.3.
+        run: npm test
