@@ -29,8 +29,18 @@ OWNER_REPO=$(gh repo view --json owner,name -q '"\(.owner.login)/\(.name)"')
 BRANCH=main
 
 # Required checks. When adding a job to .github/workflows/ci.yml, add its
-# name here. When the e2e gate (purses-chh.1) lands, add "e2e".
-CHECKS=("lint" "typecheck" "test")
+# name here. The e2e suite (.github/workflows/e2e.yml) is sharded 4 ways via
+# a matrix, so each shard reports as a SEPARATE check: `e2e (1/4)` etc. If
+# you change the shard count in e2e.yml, update this list to match.
+CHECKS=(
+  "lint"
+  "typecheck"
+  "test"
+  "e2e (1/4)"
+  "e2e (2/4)"
+  "e2e (3/4)"
+  "e2e (4/4)"
+)
 
 # Build the contexts JSON array.
 contexts_json=$(printf '%s\n' "${CHECKS[@]}" | jq -R . | jq -s .)
