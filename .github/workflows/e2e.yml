@@ -36,6 +36,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
+    # Shard the Playwright suite across 4 parallel runners. The suite runs
+    # workers:1 within a shard (playwright.config.ts) because tests share a
+    # seeded DB, but each shard gets its OWN runner with its OWN postgres
+    # service — no cross-shard contention. Cuts wall-clock time ~4x at
+    # roughly the same total CI minutes. `fail-fast: false` so a failure in
+    # one shard doesn't cancel the others (we want to see all failures).
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ['1/4', '2/4', '3/4', '4/4']
+
     # Ephemeral Postgres for this run only. Schema is applied via plain
     # `psql` against `prisma/test-schema.sql` (the from-empty SQL bootstrap).
     # We deliberately do NOT use any Prisma migration tool here — Prisma is
@@ -115,14 +126,17 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
 
-      - name: Run e2e suite
-        run: npm run e2e
+      - name: Run e2e suite (shard ${{ matrix.shard }})
+        # --shard tells Playwright to run only its slice of the suite.
+        # `npm run e2e --` forwards the flag through npm to playwright test.
+        run: npm run e2e -- --shard=${{ matrix.shard }}
 
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          # Per-shard artifact name; clashing names error on upload.
+          name: playwright-report-shard-${{ strategy.job-index }}
           path: playwright-report
           retention-days: 7
 
@@ -130,6 +144,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-traces
+          name: playwright-traces-shard-${{ strategy.job-index }}
           path: test-results
           retention-days: 7
