@@ -24,12 +24,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
-    # Ephemeral Postgres for this run only. `prisma db push` writes the
-    # schema from prisma/schema.prisma; we deliberately do NOT use
-    # `prisma migrate deploy` because this project hand-applies SQL
-    # migrations to Neon (see infra.yaml → migrations.critical) and has no
-    # _prisma_migrations tracking table — `db push` is the schema-driven
-    # path that matches that convention.
+    # Ephemeral Postgres for this run only. Schema is applied via plain
+    # `psql` against `prisma/test-schema.sql` (the from-empty SQL bootstrap).
+    # We deliberately do NOT use any Prisma migration tool here — Prisma is
+    # the ORM only; the migration story is hand-written SQL applied to Neon
+    # (see infra.yaml → migrations). The `pg_isready` health check below
+    # makes the `apt-get install postgresql-client && psql -f` step safe.
     services:
       postgres:
         image: postgres:16
@@ -63,17 +63,28 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          # Node 24 matches Vercel Production for parity.
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Generate Prisma client
+      - name: Generate Prisma ORM client
+        # Prisma is the ORM only. `prisma generate` builds the TypeScript
+        # client from prisma/schema.prisma; it does not touch the database.
         run: npx prisma generate
 
-      - name: Push schema to test database
-        run: npx prisma db push --skip-generate --accept-data-loss
+      - name: Apply test schema (psql, no Prisma migration tool)
+        # Hand-written SQL bootstrap — see prisma/test-schema.sql. We do NOT
+        # use `prisma db push` or `prisma migrate *`. The `pg_isready` health
+        # check on the postgres service has already passed by the time this
+        # step runs.
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+          PGPASSWORD=test psql -v ON_ERROR_STOP=1 \
+            -h localhost -U test -d purseinator_test \
+            -f prisma/test-schema.sql
 
       # Cache Playwright browsers across runs. Key includes the @playwright/test
       # version from package-lock.json so a version bump busts the cache.

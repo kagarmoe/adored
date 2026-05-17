@@ -1,23 +1,29 @@
 /**
- * Test database client — a real Postgres-compatible server (Prisma Dev / pglite)
- * that tests can drive via the same Prisma client the app uses in production.
+ * Test database client — a real Postgres that tests can drive via the same
+ * Prisma ORM client the app uses in production.
  *
  * Why this exists: `vi.mock('@/lib/db')` substitutes a hand-rolled fake for the
  * entire Prisma client, so the mocked DB has whatever schema the test pretends
  * it has and real-schema drift is invisible (the structural cause of the
  * 2026-05-15 demo-500). Tests that touch multiple tables, rely on DB
- * constraints, or assert column-level behaviour should use `testDb` instead.
+ * constraints, or assert column-level behaviour should use `getTestDb()` instead.
  *
- * The Prisma Dev server is booted once per `vitest run` by
- * `vitest.global-setup.ts`; this module just hands out a client pointed at it.
+ * The Postgres comes from outside the suite — a service container in CI, or a
+ * `docker run` line locally (see TESTING.md). `vitest.global-setup.ts`
+ * prepares the schema once per `vitest run` by applying
+ * `prisma/test-schema.sql` directly via the `pg` client.
  *
  * See `docs/TESTING.md` for when to mock vs use the real DB.
  */
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from './generated/prisma/client'
 
+// Default points at the postgres:16 service container used in CI; override
+// locally with `TEST_DATABASE_URL=postgresql://...` if you run a Postgres on
+// a different port / creds / database.
 export const TEST_DATABASE_URL =
-  'postgres://postgres:postgres@localhost:51214/template1?sslmode=disable'
+  process.env.TEST_DATABASE_URL ??
+  'postgresql://test:test@localhost:5432/purseinator_test'
 
 let _client: PrismaClient | null = null
 
