@@ -108,14 +108,16 @@ env_vars:
 
 post_deploy_smoke:
   role: "Automated gate that runs after every successful Vercel Production
-         deploy. Probes the demo host, /login, and an authenticated curator
-         page (using a forged JWT). Fails the workflow on any non-200 or
-         error-page render — that's the visible signal."
+         deploy. Probes the demo host and /login — fails the workflow on any
+         non-200 or error-page render. That is the visible signal."
   script: "scripts/smoke.mjs (npm run smoke)"
   workflow: ".github/workflows/post-deploy-smoke.yml (deployment_status event)"
-  required_secret: "AUTH_SECRET in GitHub Actions secrets — must match the
-                    production Vercel AUTH_SECRET. Without it the workflow
-                    fails the authenticated probe."
+  secrets: "NONE — the workflow runs with --public-only. We deliberately do
+            NOT put AUTH_SECRET in GitHub: it would double its exposure
+            surface (Vercel + GitHub) and expose it to anyone with repo-write
+            (a malicious workflow edit could exfiltrate it). For DB-exercise
+            coverage without forging a session, the follow-up plan is an
+            unauthenticated /api/health endpoint that the smoke probes."
   docs: "docs/smoke-test.md"
   origin: "Built after the 2026-05-15 demo-500 outage was caught by a manual
            curl. This is the test that would have caught it in seconds."

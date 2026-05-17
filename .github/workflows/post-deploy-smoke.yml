@@ -47,11 +47,15 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Run smoke
+        # --public-only deliberately skips the authenticated probe so we do
+        # NOT need AUTH_SECRET in GitHub. AUTH_SECRET is the JWT signing key
+        # (forges any session) — putting it in GitHub doubles the exposure
+        # surface and exposes it to anyone with repo-write (a malicious
+        # workflow edit could exfiltrate it). The 2026-05-15 outage was
+        # caught by the unauthenticated demo probe — that signal needs no
+        # secret. Follow-up bead tracks /api/health for DB-exercise coverage
+        # without forging a session.
         env:
-          # Required for the authenticated probe (forged JWT). Must match the
-          # AUTH_SECRET set in the production Vercel project. Add at
-          # Repo Settings → Secrets and variables → Actions → New secret.
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           SMOKE_DEMO_URL: ${{ inputs.demo_url }}
           SMOKE_APP_URL: ${{ inputs.app_url }}
-        run: npm run smoke
+        run: npm run smoke -- --public-only
