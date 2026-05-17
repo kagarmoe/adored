@@ -15,9 +15,21 @@ name: e2e
 # Failure surfaces as a red ✗ + an uploaded Playwright HTML report artifact.
 
 on:
+  # PR validation runs via pull_request only. We do NOT also listen on
+  # `push:` (unfiltered) because that fires for every PR branch push too —
+  # PRs would then run e2e twice per commit. The push trigger is scoped to
+  # `main` so a direct main commit (rare) still gets validated.
   pull_request:
   push:
+    branches: [main]
   workflow_dispatch:
+
+# Cancel an in-progress e2e for the same ref when a new commit lands. Without
+# this, a force-push (common during polecat iteration) leaves the old run
+# burning CI minutes for code that's already been superseded.
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   e2e:
