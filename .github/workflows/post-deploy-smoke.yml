@@ -58,25 +58,23 @@ jobs:
 
       - name: Run smoke
         id: smoke
-        # --public-only deliberately skips the authenticated probe so we do
-        # NOT need AUTH_SECRET in GitHub. AUTH_SECRET is the JWT signing key
-        # (forges any session) — putting it in GitHub doubles the exposure
-        # surface and exposes it to anyone with repo-write (a malicious
-        # workflow edit could exfiltrate it). The 2026-05-15 outage was
-        # caught by the unauthenticated demo probe — that signal needs no
-        # secret. Follow-up bead tracks /api/health for DB-exercise coverage
-        # without forging a session.
+        # No secrets. The probe is fully unauthenticated: demo + /login +
+        # /api/health (which exercises Prisma → pg → Neon). We deliberately
+        # do NOT put AUTH_SECRET in GitHub — that secret is the JWT signing
+        # key (forges any session) and adding it would double its exposure
+        # surface (Vercel + GitHub) and expose it to anyone with repo-write.
         env:
           SMOKE_DEMO_URL: ${{ inputs.demo_url }}
           SMOKE_APP_URL: ${{ inputs.app_url }}
-        run: npm run smoke -- --public-only
+        run: npm run smoke
 
       - name: Mark deployment unhealthy on smoke failure
+        # Structural deploy gate (purses-chh.5): POST a deployment_status of
+        # `failure` back onto the same GitHub Deployment so the Vercel deploy
+        # is marked unhealthy in the Deployments UI. Without this, a failed
+        # smoke would still leave the deployment green in GitHub.
         # Only meaningful for deployment_status-triggered runs (manual
-        # dispatch has no deployment to flag). Runs whether smoke passed or
-        # failed so we can also POST a `success` status — but in practice the
-        # workflow-check itself is the success signal, so we only flag on
-        # failure to avoid noise.
+        # dispatch has no deployment to flag).
         if: failure() && github.event_name == 'deployment_status' && steps.smoke.conclusion == 'failure'
         env:
           GH_TOKEN: ${{ github.token }}

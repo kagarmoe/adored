@@ -1,31 +1,44 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+/**
+ * Real-DB tests for actions/items.ts — drives createItem/updateItem against a
+ * pglite-backed Postgres, so column-level changes to `Item` (eloRating default,
+ * brand/style/color/material columns, the collectionId FK) fail loud.
+ *
+ * Only `@/auth` and `next/cache` are mocked. `@/lib/authz` is NOT mocked: its
+ * own membership query runs against the same test DB, so a role-gate
+ * regression in authz.ts also fails this suite.
+ *
+ * See docs/TESTING.md.
+ */
+import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest'
 
 const mockAuth = vi.hoisted(() => vi.fn())
-const mockDb = vi.hoisted(() => ({
-  collectionMembership: {
-    findUnique: vi.fn(),
-  },
-  item: {
-    create: vi.fn(),
-    update: vi.fn(),
-    findUnique: vi.fn(),
-  },
-}))
-
 vi.mock('@/auth', () => ({ auth: () => mockAuth() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
-vi.mock('@/lib/db', () => ({ db: mockDb }))
 
 import { createItem, updateItem } from '@/actions/items'
+import { getTestDb, resetTestDb, disconnectTestDb } from '@/lib/test-db'
 
-const session = { user: { id: '1' } }
+const db = getTestDb()
+
+afterAll(async () => {
+  await disconnectTestDb()
+})
+
+async function seedUserCollectionMembership(role: 'operator' | 'curator') {
+  const user = await db.user.create({ data: { email: 'u@x.com', name: 'U' } })
+  const collection = await db.collection.create({
+    data: { name: 'C', ownerId: user.id },
+  })
+  await db.collectionMembership.create({
+    data: { collectionId: collection.id, userId: user.id, role },
+  })
+  return { user, collection }
+}
 
 describe('createItem', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await resetTestDb()
     vi.clearAllMocks()
-    mockAuth.mockResolvedValue(session)
-    // Caller is an operator-member of the collection.
-    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'operator' })
   })
 
   it('throws when not authenticated', async () => {
@@ -34,57 +47,65 @@ describe('createItem', () => {
   })
 
   it('throws Unauthorized when the caller has no membership on the collection', async () => {
-    mockDb.collectionMembership.findUnique.mockResolvedValue(null)
-    await expect(createItem(5, {})).rejects.toThrow('Unauthorized')
-  })
+    const user = await db.user.create({ data: { email: 'u@x.com', name: 'U' } })
+    const owner = await db.user.create({ data: { email: 'o@x.com', name: 'O' } })
+    const collection = await db.collection.create({
+      data: { name: 'C', ownerId: owner.id },
+    })
+    mockAuth.mockResolvedValue({ user: { id: String(user.id) } })
 
-  it('does not create an item when the authorization check fails', async () => {
-    mockDb.collectionMembership.findUnique.mockResolvedValue(null)
-    await expect(createItem(5, {})).rejects.toThrow('Unauthorized')
-    expect(mockDb.item.create).not.toHaveBeenCalled()
+    await expect(createItem(collection.id, {})).rejects.toThrow('Unauthorized')
+    expect(await db.item.count()).toBe(0)
   })
 
   it('allows a curator-member (curator ⊇ operator) to create an item', async () => {
-    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'curator' })
-    mockDb.item.create.mockResolvedValue({ id: 1, collectionId: 5 })
-    await expect(createItem(5, {})).resolves.toBeDefined()
+    const { user, collection } = await seedUserCollectionMembership('curator')
+    mockAuth.mockResolvedValue({ user: { id: String(user.id) } })
+
+    const item = await createItem(collection.id, { brand: 'Prada' })
+    expect(item.collectionId).toBe(collection.id)
+    expect(item.brand).toBe('Prada')
   })
 
-  it('creates item with collectionId', async () => {
-    mockDb.item.create.mockResolvedValue({ id: 1, collectionId: 5 })
-    await createItem(5, {})
-    expect(mockDb.item.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ collectionId: 5 }) })
-    )
-  })
+  it('persists provided metadata and defaults missing fields', async () => {
+    const { user, collection } = await seedUserCollectionMembership('operator')
+    mockAuth.mockResolvedValue({ user: { id: String(user.id) } })
 
-  it('creates item with provided metadata', async () => {
-    mockDb.item.create.mockResolvedValue({ id: 1 })
-    await createItem(5, { brand: 'Gucci', style: 'Bamboo', color: 'Black', material: 'Leather' })
-    expect(mockDb.item.create).toHaveBeenCalledWith({
-      data: { collectionId: 5, brand: 'Gucci', style: 'Bamboo', color: 'Black', material: 'Leather' },
+    const item = await createItem(collection.id, {
+      brand: 'Gucci',
+      style: 'Bamboo',
+      color: 'Black',
+      material: 'Leather',
     })
+    const row = await db.item.findUniqueOrThrow({ where: { id: item.id } })
+    expect(row).toMatchObject({
+      brand: 'Gucci',
+      style: 'Bamboo',
+      color: 'Black',
+      material: 'Leather',
+    })
+    // Schema-drift guard: the elo seed must be present, every item starts at
+    // 1000. The ranking math (lib/elo.ts) assumes this.
+    expect(row.eloRating).toBe(1000)
   })
 
-  it('creates item with no metadata (empty object)', async () => {
-    mockDb.item.create.mockResolvedValue({ id: 1 })
-    await expect(createItem(5, {})).resolves.toBeDefined()
-  })
+  it('an empty metadata object yields an item with all-default columns', async () => {
+    const { user, collection } = await seedUserCollectionMembership('operator')
+    mockAuth.mockResolvedValue({ user: { id: String(user.id) } })
 
-  it('returns the created item', async () => {
-    const item = { id: 42, collectionId: 5, brand: 'Prada' }
-    mockDb.item.create.mockResolvedValue(item)
-    expect(await createItem(5, { brand: 'Prada' })).toEqual(item)
+    const item = await createItem(collection.id, {})
+    const row = await db.item.findUniqueOrThrow({ where: { id: item.id } })
+    expect(row.brand).toBe('')
+    expect(row.style).toBe('')
+    expect(row.color).toBe('')
+    expect(row.material).toBe('')
   })
 })
 
 describe('updateItem', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await resetTestDb()
     vi.clearAllMocks()
-    mockAuth.mockResolvedValue(session)
-    mockDb.item.findUnique.mockResolvedValue({ id: 1, collectionId: 5 })
-    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'operator' })
-    mockDb.item.update.mockResolvedValue({ id: 1, collectionId: 5, brand: 'Updated' })
   })
 
   it('throws when not authenticated', async () => {
@@ -93,38 +114,37 @@ describe('updateItem', () => {
   })
 
   it("throws Unauthorized when the caller has no membership on the item's collection", async () => {
-    mockDb.collectionMembership.findUnique.mockResolvedValue(null)
-    await expect(updateItem(1, { brand: 'Updated' })).rejects.toThrow('Unauthorized')
+    const me = await db.user.create({ data: { email: 'me@x.com', name: 'Me' } })
+    const owner = await db.user.create({ data: { email: 'o@x.com', name: 'O' } })
+    const collection = await db.collection.create({
+      data: { name: 'C', ownerId: owner.id },
+    })
+    const item = await db.item.create({ data: { collectionId: collection.id } })
+    mockAuth.mockResolvedValue({ user: { id: String(me.id) } })
+
+    await expect(updateItem(item.id, { brand: 'X' })).rejects.toThrow('Unauthorized')
+
+    const fresh = await db.item.findUniqueOrThrow({ where: { id: item.id } })
+    expect(fresh.brand).toBe('') // unchanged
   })
 
   it('throws Unauthorized when the item does not exist', async () => {
-    mockDb.item.findUnique.mockResolvedValue(null)
-    await expect(updateItem(1, { brand: 'Updated' })).rejects.toThrow('Unauthorized')
+    const { user } = await seedUserCollectionMembership('operator')
+    mockAuth.mockResolvedValue({ user: { id: String(user.id) } })
+    await expect(updateItem(99999, { brand: 'X' })).rejects.toThrow('Unauthorized')
   })
 
-  it('does not update an item when the authorization check fails', async () => {
-    mockDb.collectionMembership.findUnique.mockResolvedValue(null)
-    await expect(updateItem(1, { brand: 'Updated' })).rejects.toThrow('Unauthorized')
-    expect(mockDb.item.update).not.toHaveBeenCalled()
-  })
-
-  it('updates item by id', async () => {
-    await updateItem(1, { brand: 'Updated' })
-    expect(mockDb.item.update).toHaveBeenCalledWith({
-      where: { id: 1 },
-      data: { brand: 'Updated' },
+  it('updates the requested fields and leaves others untouched', async () => {
+    const { user, collection } = await seedUserCollectionMembership('operator')
+    mockAuth.mockResolvedValue({ user: { id: String(user.id) } })
+    const item = await db.item.create({
+      data: { collectionId: collection.id, brand: 'OLD', color: 'Red' },
     })
-  })
 
-  it('returns the updated item', async () => {
-    const result = await updateItem(1, { brand: 'Updated' })
-    expect(result.brand).toBe('Updated')
-  })
+    await updateItem(item.id, { brand: 'NEW' })
 
-  it('can update partial fields', async () => {
-    await updateItem(1, { color: 'Red' })
-    expect(mockDb.item.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { color: 'Red' } })
-    )
+    const fresh = await db.item.findUniqueOrThrow({ where: { id: item.id } })
+    expect(fresh.brand).toBe('NEW')
+    expect(fresh.color).toBe('Red')
   })
 })

@@ -108,19 +108,43 @@ env_vars:
 
 post_deploy_smoke:
   role: "Automated gate that runs after every successful Vercel Production
-         deploy. Probes the demo host and /login — fails the workflow on any
-         non-200 or error-page render. That is the visible signal."
+         deploy. Probes the demo host, /login, and /api/health — fails the
+         workflow on any non-200, error-page render, or non-ok health body.
+         That is the visible signal."
   script: "scripts/smoke.mjs (npm run smoke)"
   workflow: ".github/workflows/post-deploy-smoke.yml (deployment_status event)"
-  secrets: "NONE — the workflow runs with --public-only. We deliberately do
-            NOT put AUTH_SECRET in GitHub: it would double its exposure
-            surface (Vercel + GitHub) and expose it to anyone with repo-write
-            (a malicious workflow edit could exfiltrate it). For DB-exercise
-            coverage without forging a session, the follow-up plan is an
-            unauthenticated /api/health endpoint that the smoke probes."
+  probes: "demo-home (server-renders Collection rows — the 2026-05-15 outage
+           manifested here first); login (the public front door);
+           health (GET /api/health → trivial Prisma query → 200
+           {status:ok, db:ok, schema_version:<vercel-commit-sha>}).
+           The health probe replaces the old forged-JWT curator-home-authed
+           probe and gives DB-exercise coverage without any secret in GitHub."
+  secrets: "NONE. We deliberately do NOT put AUTH_SECRET in GitHub: it would
+            double its exposure surface (Vercel + GitHub) and expose it to
+            anyone with repo-write (a malicious workflow edit could
+            exfiltrate it). The /api/health probe is unauthenticated and
+            covers the same Prisma → pg → Neon path the old authed probe did."
   docs: "docs/smoke-test.md"
   origin: "Built after the 2026-05-15 demo-500 outage was caught by a manual
            curl. This is the test that would have caught it in seconds."
+
+e2e:
+  role: "Playwright browser tests (e2e/*.spec.ts) against a real Next dev
+         server backed by an ephemeral Postgres. Runs in CI, NOT in polecat
+         sandboxes (which lack Postgres + a Docker socket). This is the
+         contract for 'sandbox can't run e2e' — it doesn't mean skip, it
+         means push and let the workflow run it."
+  script: "playwright test (npm run e2e)"
+  workflow: ".github/workflows/e2e.yml (push + pull_request + workflow_dispatch)"
+  schema_path: "`prisma db push` from prisma/schema.prisma — matches the
+                'we don't use prisma migrate' convention (no _prisma_migrations
+                tracking table)."
+  secrets: "NONE from GitHub. The workflow inlines test-only AUTH_SECRET and
+            DATABASE_URL pointed at the in-job Postgres service. No prod
+            credential ever enters the runner — same posture as
+            post_deploy_smoke."
+  on_demand: "gh workflow run e2e.yml [--ref <branch>]"
+  docs: "TESTING.md"
 
 # ──────────────────────────────────────────────────────────────────────────
 # Checklist when a schema-affecting change merges to `main`:

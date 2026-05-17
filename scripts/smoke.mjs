@@ -5,14 +5,10 @@
 // 2026-05-15-class outage where a deployed CODE shipped before its matching
 // DB migration was applied and every server-rendered page returned 500.
 
-import { encode } from '@auth/core/jwt'
-
 const DEMO_URL = process.env.SMOKE_DEMO_URL || 'https://purseinator-demo.kimberlygarmoe.com/'
 const APP_URL = (process.env.SMOKE_APP_URL || 'https://purseinator-app.vercel.app').replace(/\/$/, '')
-const AUTH_SECRET = process.env.AUTH_SECRET
 
 const SANITY = process.argv.includes('--sanity')
-const PUBLIC_ONLY = process.argv.includes('--public-only')
 
 // Substrings that mean "Next.js rendered an error", regardless of HTTP status.
 // A real page can mention "404" in routing internals (parallel-route fallbacks),
@@ -30,9 +26,8 @@ const ERROR_BODY_MARKERS = [
 const results = []
 function record(name, ok, info) { results.push({ name, ok, info }) }
 
-async function probe(name, url, { cookie, expectTitle } = {}) {
+async function probe(name, url, { expectTitle } = {}) {
   const headers = { 'user-agent': 'purseinator-smoke/1.0' }
-  if (cookie) headers.cookie = cookie
 
   let res, body
   try {
@@ -67,14 +62,41 @@ async function probe(name, url, { cookie, expectTitle } = {}) {
   record(name, true, `HTTP 200, ${body.length} bytes${expectTitle ? `, title OK` : ''}`)
 }
 
-async function forgeSessionCookie() {
-  if (!AUTH_SECRET) throw new Error('AUTH_SECRET is required for the authenticated probe')
-  const token = await encode({
-    token: { sub: '1', id: '1', email: 'smoke@purseinator.test', name: 'Smoke Test' },
-    secret: AUTH_SECRET,
-    salt: 'authjs.session-token',
-  })
-  return `authjs.session-token=${token}`
+// /api/health returns JSON and exercises a real Prisma query. We assert both
+// HTTP 200 AND status:ok in the body — a 200 with status:error would mean the
+// route is reachable but the DB is down.
+async function probeHealth(name, url) {
+  let res, body
+  try {
+    res = await fetch(url, {
+      headers: { 'user-agent': 'purseinator-smoke/1.0', accept: 'application/json' },
+      redirect: 'follow',
+    })
+    body = await res.text()
+  } catch (err) {
+    record(name, false, `${url} — fetch failed: ${err.message}`)
+    return
+  }
+
+  if (res.status !== 200) {
+    record(name, false, `${url} — HTTP ${res.status} (${body.slice(0, 200)})`)
+    return
+  }
+
+  let parsed
+  try {
+    parsed = JSON.parse(body)
+  } catch {
+    record(name, false, `${url} — non-JSON body (${body.slice(0, 200)})`)
+    return
+  }
+
+  if (parsed.status !== 'ok') {
+    record(name, false, `${url} — status="${parsed.status}", db="${parsed.db}", error="${parsed.error ?? ''}"`)
+    return
+  }
+
+  record(name, true, `HTTP 200, status=ok, db=${parsed.db}, schema_version=${parsed.schema_version ?? '?'}`)
 }
 
 async function main() {
@@ -90,22 +112,11 @@ async function main() {
   // 2. Public auth-free page.
   await probe('login', `${APP_URL}/login`, { expectTitle: 'Sign in' })
 
-  // 3. Authenticated server-action path. The forged JWT is the same trick
-  //    e2e/fixtures.ts uses. The curator home server-renders after calling
-  //    auth() + getUserMemberships(), exercising the auth adapter AND a real
-  //    DB query against CollectionMembership/User.
-  if (PUBLIC_ONLY) {
-    console.log('# (--public-only) skipping authenticated probe')
-  } else if (!AUTH_SECRET) {
-    record('curator-home-authed', false,
-      'AUTH_SECRET not set — cannot forge JWT. Set it in env, or pass --public-only to skip.')
-  } else {
-    const cookie = await forgeSessionCookie()
-    await probe('curator-home-authed', `${APP_URL}/`, {
-      cookie,
-      expectTitle: 'Your collections',
-    })
-  }
+  // 3. Unauthenticated DB-exercise probe. Replaces the old curator-home-authed
+  //    probe so we no longer need AUTH_SECRET in GitHub. Hits Prisma + the pg
+  //    adapter + Neon — the same surface that the 2026-05-15 migration-drift
+  //    outage broke.
+  await probeHealth('health', `${APP_URL}/api/health`)
 
   // Optional sanity verification: confirm the probe logic actually catches a
   // 500. We point it at a guaranteed-500 endpoint and assert that probe()
