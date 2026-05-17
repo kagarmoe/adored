@@ -47,15 +47,12 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Run smoke
-        # --public-only deliberately skips the authenticated probe so we do
-        # NOT need AUTH_SECRET in GitHub. AUTH_SECRET is the JWT signing key
-        # (forges any session) — putting it in GitHub doubles the exposure
-        # surface and exposes it to anyone with repo-write (a malicious
-        # workflow edit could exfiltrate it). The 2026-05-15 outage was
-        # caught by the unauthenticated demo probe — that signal needs no
-        # secret. Follow-up bead tracks /api/health for DB-exercise coverage
-        # without forging a session.
+        # No secrets. The probe is fully unauthenticated: demo + /login +
+        # /api/health (which exercises Prisma → pg → Neon). We deliberately
+        # do NOT put AUTH_SECRET in GitHub — that secret is the JWT signing
+        # key (forges any session) and adding it would double its exposure
+        # surface (Vercel + GitHub) and expose it to anyone with repo-write.
         env:
           SMOKE_DEMO_URL: ${{ inputs.demo_url }}
           SMOKE_APP_URL: ${{ inputs.app_url }}
-        run: npm run smoke -- --public-only
+        run: npm run smoke
