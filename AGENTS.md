@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 See [`TESTING.md`](TESTING.md) for the full map. Quick version:
 
-- `npm test` — Vitest unit/integration, runs anywhere
+- `npm test` — Vitest unit/integration, runs anywhere. **DB-touching code uses the real test DB by default** via `lib/test-db.ts` (a pglite Postgres `vitest.global-setup.ts` boots automatically). `vi.mock('@/lib/db')` is reserved for the narrow cases TESTING.md lists; if you use it, the test must include a comment saying which case applies and why. The structural reason: the 2026-05-15 demo-500 was a column-rename that escaped a suite full of `vi.mock('@/lib/db')` tests — a mocked Prisma has whatever shape the test pretends, so schema drift is invisible. See **purses-chh.3** + `lib/__tests__/schema-drift.test.ts`.
 - `npm run e2e` — Playwright; needs Postgres + browsers. **Runs in CI**
   (`.github/workflows/e2e.yml`), not in the polecat sandbox. Trigger
   on-demand with `gh workflow run e2e.yml [--ref <branch>]`.

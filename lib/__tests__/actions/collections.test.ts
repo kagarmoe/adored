@@ -1,36 +1,41 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+/**
+ * Real-DB tests for actions/collections.ts — drives the actual Prisma client
+ * against a per-test-truncated pglite Postgres (lib/test-db.ts), so schema
+ * drift in `Collection`, `CollectionMembership`, or the relations between them
+ * fails the test instead of silently passing against a hand-rolled mock.
+ *
+ * This is the **default pattern** for action-layer tests. See docs/TESTING.md.
+ *
+ * Only `@/auth` and `next/cache` are mocked — both are runtime concerns that
+ * don't belong in a unit test (session/cookies, ISR cache).
+ */
+import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest'
 
 const mockAuth = vi.hoisted(() => vi.fn())
-const mockDb = vi.hoisted(() => ({
-  collection: {
-    create: vi.fn(),
-    findMany: vi.fn(),
-    findFirst: vi.fn(),
-  },
-  collectionMembership: {
-    create: vi.fn(),
-    findMany: vi.fn(),
-    findUnique: vi.fn(),
-  },
-}))
-
 vi.mock('@/auth', () => ({ auth: () => mockAuth() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
-vi.mock('@/lib/db', () => ({ db: mockDb }))
 
 import {
   createCollection,
   getUserMemberships,
   getCollection,
 } from '@/actions/collections'
+import { getTestDb, resetTestDb, disconnectTestDb } from '@/lib/test-db'
 
-const session = { user: { id: '1' } }
+const db = getTestDb()
+
+async function seedUser(email = 'tester@example.com') {
+  return db.user.create({ data: { email, name: 'Tester' } })
+}
+
+afterAll(async () => {
+  await disconnectTestDb()
+})
 
 describe('createCollection', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await resetTestDb()
     vi.clearAllMocks()
-    mockAuth.mockResolvedValue(session)
-    mockDb.collection.create.mockResolvedValue({ id: 1 })
   })
 
   it('throws when not authenticated', async () => {
@@ -38,44 +43,64 @@ describe('createCollection', () => {
     await expect(createCollection('My Bags')).rejects.toThrow('Unauthorized')
   })
 
-  it('creates a collection with name and description, connected to the owner', async () => {
-    const created = { id: 3, name: 'Summer', description: 'Hot weather bags' }
-    mockDb.collection.create.mockResolvedValue(created)
+  it('persists a collection owned by the session user', async () => {
+    const owner = await seedUser()
+    mockAuth.mockResolvedValue({ user: { id: String(owner.id) } })
+
     const result = await createCollection('Summer', 'Hot weather bags', 'curator')
-    expect(result).toEqual(created)
-    expect(mockDb.collection.create).toHaveBeenCalledWith({
-      data: { name: 'Summer', description: 'Hot weather bags', owner: { connect: { id: 1 } } },
-    })
+
+    const row = await db.collection.findUniqueOrThrow({ where: { id: result.id } })
+    expect(row.name).toBe('Summer')
+    expect(row.description).toBe('Hot weather bags')
+    expect(row.ownerId).toBe(owner.id)
   })
 
   it('defaults description to empty string', async () => {
-    await createCollection('X')
-    expect(mockDb.collection.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ description: '' }) })
-    )
+    const owner = await seedUser()
+    mockAuth.mockResolvedValue({ user: { id: String(owner.id) } })
+
+    const result = await createCollection('X')
+
+    const row = await db.collection.findUniqueOrThrow({ where: { id: result.id } })
+    expect(row.description).toBe('')
   })
 
   it('records a creator membership with the chosen role', async () => {
-    mockDb.collection.create.mockResolvedValue({ id: 3, name: 'Summer' })
-    await createCollection('Summer', '', 'curator')
-    expect(mockDb.collectionMembership.create).toHaveBeenCalledWith({
-      data: { collectionId: 3, userId: 1, role: 'curator' },
+    const owner = await seedUser()
+    mockAuth.mockResolvedValue({ user: { id: String(owner.id) } })
+
+    const result = await createCollection('Summer', '', 'curator')
+
+    const membership = await db.collectionMembership.findUniqueOrThrow({
+      where: { collectionId_userId: { collectionId: result.id, userId: owner.id } },
     })
+    expect(membership.role).toBe('curator')
   })
 
   it('defaults the creator role to operator', async () => {
-    mockDb.collection.create.mockResolvedValue({ id: 4 })
-    await createCollection('X')
-    expect(mockDb.collectionMembership.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ role: 'operator' }) })
-    )
+    const owner = await seedUser()
+    mockAuth.mockResolvedValue({ user: { id: String(owner.id) } })
+
+    const result = await createCollection('X')
+
+    const membership = await db.collectionMembership.findUniqueOrThrow({
+      where: { collectionId_userId: { collectionId: result.id, userId: owner.id } },
+    })
+    expect(membership.role).toBe('operator')
+  })
+
+  it('rejects when the session user id does not match a real user row', async () => {
+    // Schema drift guard: ownerId is a FK to User.id. Mocking the DB would
+    // happily "create" with a dangling FK — the real DB raises P2003 here.
+    mockAuth.mockResolvedValue({ user: { id: '999' } })
+    await expect(createCollection('Ghost')).rejects.toThrow()
   })
 })
 
 describe('getUserMemberships', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await resetTestDb()
     vi.clearAllMocks()
-    mockAuth.mockResolvedValue(session)
   })
 
   it('throws when not authenticated', async () => {
@@ -83,70 +108,84 @@ describe('getUserMemberships', () => {
     await expect(getUserMemberships()).rejects.toThrow('Unauthorized')
   })
 
-  it('returns memberships for the current user with collection + role', async () => {
-    const memberships = [{ role: 'curator', collection: { id: 1, name: 'A', items: [] } }]
-    mockDb.collectionMembership.findMany.mockResolvedValue(memberships)
-    const result = await getUserMemberships()
-    expect(result).toEqual(memberships)
-    expect(mockDb.collectionMembership.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { userId: 1 } })
-    )
-  })
+  it('returns only memberships for the current user, newest first, with collection items', async () => {
+    const me = await seedUser('me@x.com')
+    const other = await seedUser('other@x.com')
+    mockAuth.mockResolvedValue({ user: { id: String(me.id) } })
 
-  it('orders results by createdAt descending and includes the collection items', async () => {
-    mockDb.collectionMembership.findMany.mockResolvedValue([])
-    await getUserMemberships()
-    const call = mockDb.collectionMembership.findMany.mock.calls[0][0]
-    expect(call.orderBy).toEqual({ createdAt: 'desc' })
-    expect(call.include.collection.include.items.select.id).toBe(true)
+    const c1 = await db.collection.create({ data: { name: 'Mine A', ownerId: me.id } })
+    const c2 = await db.collection.create({ data: { name: 'Mine B', ownerId: me.id } })
+    const c3 = await db.collection.create({ data: { name: 'Theirs', ownerId: other.id } })
+    await db.collectionMembership.create({ data: { collectionId: c1.id, userId: me.id, role: 'operator' } })
+    await db.collectionMembership.create({ data: { collectionId: c2.id, userId: me.id, role: 'curator' } })
+    await db.collectionMembership.create({ data: { collectionId: c3.id, userId: other.id, role: 'operator' } })
+    await db.item.create({ data: { collectionId: c2.id, brand: 'Gucci' } })
+
+    const result = await getUserMemberships()
+
+    expect(result.map((m) => m.collectionId)).toEqual([c2.id, c1.id])
+    const withItems = result.find((m) => m.collectionId === c2.id)!
+    expect(withItems.collection.items).toHaveLength(1)
   })
 })
 
 describe('getCollection', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await resetTestDb()
     vi.clearAllMocks()
-    mockAuth.mockResolvedValue(session)
   })
 
-  it('returns null when not authenticated (the curator layout redirects to /login)', async () => {
+  it('returns null when not authenticated', async () => {
     mockAuth.mockResolvedValue(null)
     expect(await getCollection(1)).toBeNull()
-    expect(mockDb.collectionMembership.findUnique).not.toHaveBeenCalled()
   })
 
   it('returns null when the user has no membership on the collection', async () => {
-    mockDb.collectionMembership.findUnique.mockResolvedValue(null)
-    expect(await getCollection(999)).toBeNull()
-    expect(mockDb.collection.findFirst).not.toHaveBeenCalled()
+    const me = await seedUser('me@x.com')
+    const other = await seedUser('other@x.com')
+    const c = await db.collection.create({ data: { name: 'Not mine', ownerId: other.id } })
+    mockAuth.mockResolvedValue({ user: { id: String(me.id) } })
+
+    expect(await getCollection(c.id)).toBeNull()
   })
 
-  it('returns the collection with viewerRole for an operator member (operators can view rankings)', async () => {
-    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'operator' })
-    mockDb.collection.findFirst.mockResolvedValue({ id: 1, items: [] })
-    expect(await getCollection(1)).toEqual({ id: 1, items: [], viewerRole: 'operator' })
+  it('returns the collection with viewerRole for an operator member', async () => {
+    const me = await seedUser('me@x.com')
+    const c = await db.collection.create({ data: { name: 'Mine', ownerId: me.id } })
+    await db.collectionMembership.create({ data: { collectionId: c.id, userId: me.id, role: 'operator' } })
+    mockAuth.mockResolvedValue({ user: { id: String(me.id) } })
+
+    const result = await getCollection(c.id)
+
+    expect(result).toMatchObject({ id: c.id, viewerRole: 'operator' })
   })
 
-  it('looks the membership up by the collection+user composite key', async () => {
-    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'curator' })
-    mockDb.collection.findFirst.mockResolvedValue({ id: 1, items: [] })
-    await getCollection(1)
-    expect(mockDb.collectionMembership.findUnique).toHaveBeenCalledWith({
-      where: { collectionId_userId: { collectionId: 1, userId: 1 } },
+  it('returns the collection with hero photo + viewerRole for a curator member', async () => {
+    const me = await seedUser('me@x.com')
+    const c = await db.collection.create({ data: { name: 'Mine', ownerId: me.id } })
+    await db.collectionMembership.create({ data: { collectionId: c.id, userId: me.id, role: 'curator' } })
+    const item = await db.item.create({ data: { collectionId: c.id, brand: 'Prada' } })
+    await db.photo.create({
+      data: {
+        itemId: item.id,
+        blobKey: 'k-hero',
+        originalBlobKey: 'k-hero',
+        isHero: true,
+      },
     })
-  })
+    await db.photo.create({
+      data: {
+        itemId: item.id,
+        blobKey: 'k-other',
+        originalBlobKey: 'k-other',
+        isHero: false,
+      },
+    })
+    mockAuth.mockResolvedValue({ user: { id: String(me.id) } })
 
-  it('returns the collection (with hero photos + viewerRole) when the user is a curator', async () => {
-    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'curator' })
-    mockDb.collection.findFirst.mockResolvedValue({ id: 1, items: [] })
-    expect(await getCollection(1)).toEqual({ id: 1, items: [], viewerRole: 'curator' })
-    const call = mockDb.collection.findFirst.mock.calls[0][0]
-    expect(call.where).toEqual({ id: 1 })
-    expect(call.include.items.include.photos).toBeDefined()
-  })
-
-  it('returns null when the membership exists but the collection row is gone', async () => {
-    mockDb.collectionMembership.findUnique.mockResolvedValue({ role: 'curator' })
-    mockDb.collection.findFirst.mockResolvedValue(null)
-    expect(await getCollection(1)).toBeNull()
+    const result = await getCollection(c.id)
+    expect(result?.viewerRole).toBe('curator')
+    expect(result?.items[0].photos).toHaveLength(1)
+    expect(result?.items[0].photos[0].isHero).toBe(true)
   })
 })

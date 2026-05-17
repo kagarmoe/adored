@@ -110,8 +110,38 @@ npm run test:watch
 npm run test:ui
 ```
 
-Runs in any Node environment, including the polecat sandbox. No Postgres
-needed — DB-touching code is mocked at the Prisma boundary.
+Runs in any Node environment, including the polecat sandbox. **No external
+Postgres needed** — `vitest.global-setup.ts` boots an in-process pglite
+Postgres (via `@prisma/dev`) once per run and pushes the current schema. The
+production `@/lib/db` module connects to it automatically because
+`vitest.setup.ts` pins `process.env.DATABASE_URL` to that server.
+
+### Mocking the DB vs hitting the real test DB
+
+The default for action / lib tests is the **real test DB**, via
+`lib/test-db.ts`:
+
+```ts
+import { getTestDb, resetTestDb, disconnectTestDb } from '@/lib/test-db'
+const db = getTestDb()
+afterAll(disconnectTestDb)
+beforeEach(resetTestDb)            // TRUNCATE … RESTART IDENTITY CASCADE
+```
+
+Then import your action / lib normally — it talks to the real Prisma client.
+Only mock `@/auth` and `next/cache`.
+
+`vi.mock('@/lib/db')` is reserved for narrow cases (seam tests of the
+@auth/core flow, page tests that only assert routing, callbacks that have
+nothing to do with schema shape). The full audit + rationale lives in
+[`docs/TESTING.md`](docs/TESTING.md).
+
+**Why this is the default:** the 2026-05-15 demo-500 outage was a
+column-rename that landed without a matching migration. Every action test
+passed because they all used `vi.mock('@/lib/db')` with a hand-rolled fake —
+a mocked Prisma client has whatever shape the test pretends it has, so the
+real-schema drift was invisible. `lib/__tests__/schema-drift.test.ts` is the
+explicit regression guard for that class of bug. See bead **purses-chh.3**.
 
 ## Post-deploy smoke
 
