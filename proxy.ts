@@ -35,5 +35,11 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/photos).*)'],
+  // Exclude /api/health from the auth middleware. The route is the
+  // post-deploy smoke gate's DB-exercise probe (scripts/smoke.mjs ->
+  // app/api/health/route.ts): it must be reachable WITHOUT a session, or
+  // the smoke fails on a 307 to /login instead of getting its
+  // {status:"ok"} JSON. Mirroring `api/photos` (already excluded for the
+  // same shape of reason — public-readable blob URLs).
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/photos|api/health).*)'],
 }
