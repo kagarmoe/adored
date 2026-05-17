@@ -7,6 +7,10 @@ process.env.ALLOW_DEMO_SEED = process.env.ALLOW_DEMO_SEED ?? '1'
 
 export default defineConfig({
   testDir: './e2e',
+  // Playwright walks testDir recursively, so it picks up e2e/__tests__/*.test.ts
+  // (vitest-flavored unit tests for the e2e helpers). Restrict to *.spec.ts so
+  // Playwright only sees its own files.
+  testMatch: /.*\.spec\.ts$/,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
