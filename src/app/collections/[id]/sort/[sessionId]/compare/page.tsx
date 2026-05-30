@@ -33,7 +33,25 @@ export default async function ComparePage({ params }: ComparePageProps) {
     redirect(`/collections/${params.id}/sort`);
   }
 
-  const [itemA, itemB] = items;
+  if (items.length < 2) {
+    return (
+      <AppLayout
+        breadcrumbs={[
+          { label: "Collections", href: "/collections" },
+          { label: collection.name, href: `/collections/${params.id}` },
+          { label: "Session", href: `/collections/${params.id}/sort/${params.sessionId}` },
+          { label: "Compare" },
+        ]}
+      >
+        <EmptyState
+          heading="Not enough items"
+          message="Add more items to the collection to use pairwise comparison"
+        />
+      </AppLayout>
+    );
+  }
+
+  const [itemA, itemB] = items.slice(0, 2);
 
   return (
     <AppLayout
