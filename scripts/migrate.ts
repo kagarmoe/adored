@@ -2,6 +2,11 @@ import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import path from "path";
+import dotenv from "dotenv";
+
+// Load environment variables from .env.local or .env.development.local
+dotenv.config({ path: ".env.local" });
+dotenv.config({ path: ".env.development.local" });
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
