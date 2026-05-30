@@ -1,5 +1,7 @@
 import { z } from "zod";
 import type { Photo } from "@/types";
+import { PhotoService } from "@/server/services/PhotoService";
+import type { IPhotoRepository } from "@/server/repositories/PhotoRepository";
 
 const UpdatePhotoSchema = z.object({
   isHero: z.boolean().optional(),
@@ -8,27 +10,41 @@ const UpdatePhotoSchema = z.object({
 export type UpdatePhotoInput = z.infer<typeof UpdatePhotoSchema>;
 
 export class PhotoController {
-  // TODO: Implement photo CRUD with Vercel Blob integration
+  constructor(private photoRepo: IPhotoRepository) {
+    this.photoService = new PhotoService(photoRepo);
+  }
+
+  private photoService: PhotoService;
+
   async listPhotos(itemId: string): Promise<Photo[]> {
-    return [];
+    return this.photoService.getItemPhotos(itemId);
   }
 
   async uploadPhoto(itemId: string, file: File, uploadedBy: string): Promise<Photo> {
-    // TODO: Upload to Vercel Blob, create photo record
-    throw new Error("Not implemented");
+    return this.photoService.uploadPhoto(itemId, file, uploadedBy);
   }
 
   async getPhoto(photoId: string): Promise<Photo> {
-    throw new Error("Not implemented");
+    const photo = await this.photoService.getPhoto(photoId);
+    if (!photo) {
+      throw new Error("Photo not found");
+    }
+    return photo;
   }
 
   async updatePhoto(photoId: string, data: unknown): Promise<Photo> {
     const parsed = UpdatePhotoSchema.parse(data);
-    // TODO: Update photo metadata
-    throw new Error("Not implemented");
+    if (parsed.isHero) {
+      const photo = await this.photoService.getPhoto(photoId);
+      if (!photo) {
+        throw new Error("Photo not found");
+      }
+      return this.photoService.setHeroPhoto(photo.itemId, photoId);
+    }
+    return this.photoService.getPhoto(photoId) as Promise<Photo>;
   }
 
   async deletePhoto(photoId: string): Promise<void> {
-    // TODO: Delete photo record and blob
+    await this.photoService.deletePhoto(photoId);
   }
 }
