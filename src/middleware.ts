@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export const config = {
   matcher: [
     // Protect all routes except these
-    "/((?!_next|api/auth|login|shared).*)",
+    "/((?!_next|api/auth|login|signup|shared).*)",
   ],
 };
 
