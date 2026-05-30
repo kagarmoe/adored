@@ -1,7 +1,6 @@
 import { z } from "zod";
 import type { DecisionEvent, TriageDecision, PairwiseDecision } from "@/types";
 import type { IDecisionEventRepository } from "@/server/repositories/DecisionEventRepository";
-import { validateDecisionEvent } from "@/lib/validation";
 
 const TriageDecisionSchema = z.object({
   itemId: z.string(),
@@ -24,7 +23,7 @@ export type CreateDecisionInput = z.infer<typeof CreateDecisionSchema>;
 export class DecisionController {
   constructor(private decisionRepo: IDecisionEventRepository) {}
 
-  async listDecisions(sessionId: string): Promise<DecisionEvent[]> {
+  async listDecisions(): Promise<DecisionEvent[]> {
     // TODO: Implement DecisionEventRepository.findBySession when available
     // For now, fetch all and filter in memory as temporary solution
     return [];
@@ -44,7 +43,7 @@ export class DecisionController {
     return event;
   }
 
-  async getDecision(decisionEventId: string): Promise<DecisionEvent> {
+  async getDecision(): Promise<DecisionEvent> {
     // Decisions are append-only and identified by ID
     // Repository should support findById
     // TODO: Ensure DecisionEventRepository.findById is implemented

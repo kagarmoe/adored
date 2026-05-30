@@ -5,8 +5,7 @@ import { DecisionEventRepository } from "@/server/repositories/implementations/D
 import { getDb } from "@/lib/db";
 
 export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest
 ) {
   try {
     await requireAuth();
@@ -14,7 +13,7 @@ export async function GET(
     const decisionRepo = new DecisionEventRepository(db);
     const controller = new DecisionController(decisionRepo);
 
-    const decisions = await controller.listDecisions(params.id);
+    const decisions = await controller.listDecisions();
     return NextResponse.json(decisions);
   } catch (error) {
     return NextResponse.json(

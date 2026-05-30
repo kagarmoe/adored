@@ -20,7 +20,7 @@ export async function GET(
     const sessionRepo = new SessionRepository(db);
     const scoringService = new ScoringService(decisionRepo, sessionRepo);
     const prefService = new PreferenceStateService(prefRepo, scoringService);
-    const controller = new PreferenceController(prefRepo, prefService);
+    const controller = new PreferenceController(prefService);
     const summary = await controller.getPreferenceSummary(params.id, user.id);
     return NextResponse.json(summary);
   } catch (error) {
@@ -43,7 +43,7 @@ export async function DELETE(
     const sessionRepo = new SessionRepository(db);
     const scoringService = new ScoringService(decisionRepo, sessionRepo);
     const prefService = new PreferenceStateService(prefRepo, scoringService);
-    const controller = new PreferenceController(prefRepo, prefService);
+    const controller = new PreferenceController(prefService);
     await controller.clearPreferences(params.id, user.id);
     return NextResponse.json({ message: "Preferences cleared" });
   } catch (error) {

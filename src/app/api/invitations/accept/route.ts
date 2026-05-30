@@ -2,14 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 import { getDb } from "@/lib/db";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { token: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
+    const token = request.nextUrl.searchParams.get("token");
+    if (!token) {
+      return NextResponse.json(
+        { error: "Token is required" },
+        { status: 400 }
+      );
+    }
+
     const db = getDb();
     const invRepo = new InvitationRepository(db);
-    const invitation = await invRepo.findByToken(params.token);
+    const invitation = await invRepo.findByToken(token);
 
     if (!invitation) {
       return NextResponse.json(
@@ -27,14 +32,19 @@ export async function GET(
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { token: string } }
-) {
+export async function POST(request: NextRequest) {
   try {
+    const token = request.nextUrl.searchParams.get("token");
+    if (!token) {
+      return NextResponse.json(
+        { error: "Token is required" },
+        { status: 400 }
+      );
+    }
+
     const db = getDb();
     const invRepo = new InvitationRepository(db);
-    const invitation = await invRepo.findByToken(params.token);
+    const invitation = await invRepo.findByToken(token);
 
     if (!invitation) {
       return NextResponse.json(

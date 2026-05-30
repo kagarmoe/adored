@@ -4,14 +4,13 @@ import { SortResultShareRepository } from "@/server/repositories/implementations
 import { getDb } from "@/lib/db";
 
 export async function GET(
-  _request: NextRequest,
-  { params }: { params: { token: string } }
+  _request: NextRequest
 ) {
   try {
     const db = getDb();
     const shareRepo = new SortResultShareRepository(db);
     const controller = new ShareController(shareRepo);
-    const share = await controller.viewSharedResult(params.token);
+    const share = await controller.viewSharedResult();
     return NextResponse.json(share);
   } catch (error) {
     return NextResponse.json(

@@ -37,7 +37,7 @@ export default function LoginPage() {
             A sign-in link has been sent to <strong>{email}</strong>
           </p>
           <p className="text-gray-600 text-sm">
-            Click the link in the email to complete your sign-in. If you don't see it, check your spam folder.
+            Click the link in the email to complete your sign-in. If you don&apos;t see it, check your spam folder.
           </p>
           <button
             onClick={() => setSubmitted(false)}

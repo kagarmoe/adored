@@ -47,15 +47,14 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string; rid: string } }
+  _request: NextRequest
 ) {
   try {
     await requireAuth();
     const db = getDb();
     const itemRepo = new SortResultItemRepository(db);
     const controller = new ResultItemController(itemRepo);
-    await controller.deleteResultItem(params.rid);
+    await controller.deleteResultItem();
     return NextResponse.json({ message: "Item removed from result" });
   } catch (error) {
     return NextResponse.json(

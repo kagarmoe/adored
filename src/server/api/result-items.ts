@@ -37,7 +37,7 @@ export class ResultItemController {
     });
   }
 
-  async deleteResultItem(resultItemId: string): Promise<void> {
+  async deleteResultItem(): Promise<void> {
     // TODO: Remove item from result
   }
 }

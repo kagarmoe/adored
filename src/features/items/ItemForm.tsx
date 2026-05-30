@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
-import { Button, Input, Textarea, Select, ErrorMessage } from "@/components/ui";
+import { Button, Input, Textarea, ErrorMessage } from "@/components/ui";
 import { apiPost, apiPatch } from "@/lib/api-client";
 import { z } from "zod";
 

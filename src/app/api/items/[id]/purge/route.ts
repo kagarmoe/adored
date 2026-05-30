@@ -8,8 +8,7 @@ import { getDb } from "@/lib/db";
 const PurgeConfirmSchema = z.object({ confirm: z.enum(["PURGE"]) });
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest
 ) {
   try {
     await requireAuth();
@@ -20,7 +19,7 @@ export async function POST(
     const itemRepo = new ItemRepository(db);
     const controller = new ItemController(itemRepo);
 
-    await controller.purgeItem(params.id);
+    await controller.purgeItem();
     return NextResponse.json({ message: "Item purged successfully" });
   } catch (error) {
     if (error instanceof SyntaxError) {

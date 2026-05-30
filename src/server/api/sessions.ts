@@ -17,7 +17,7 @@ export type UpdateSessionInput = z.infer<typeof UpdateSessionSchema>;
 export class SessionController {
   constructor(private sessionRepo: ISessionRepository) {}
 
-  async listSessions(collectionId: string): Promise<Session[]> {
+  async listSessions(): Promise<Session[]> {
     // TODO: Implement when SessionRepository.findByCollection available
     return [];
   }

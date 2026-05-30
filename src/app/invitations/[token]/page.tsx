@@ -21,7 +21,7 @@ export default function InvitationPage({ params }: InvitationPageProps) {
   useEffect(() => {
     const fetchInvitation = async () => {
       try {
-        const inviteData = await apiGet<Invitation>(`/api/invitations/${params.token}`);
+        const inviteData = await apiGet<Invitation>(`/api/invitations/accept?token=${params.token}`);
         setInvitation(inviteData);
 
         // Fetch collection details
@@ -47,7 +47,7 @@ export default function InvitationPage({ params }: InvitationPageProps) {
     setError("");
 
     try {
-      await apiPost(`/api/invitations/${params.token}/accept`, {});
+      await apiPost(`/api/invitations/accept?token=${params.token}`, {});
       router.push(`/collections/${invitation.collectionId}`);
     } catch (err: any) {
       setError(err?.message || "Failed to accept invitation");
@@ -76,9 +76,9 @@ export default function InvitationPage({ params }: InvitationPageProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-sm w-full bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">You're invited!</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">You&apos;re invited!</h1>
         <p className="text-gray-600 mb-6">
-          You've been invited to collaborate on a collection.
+          You&apos;ve been invited to collaborate on a collection.
         </p>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">

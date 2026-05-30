@@ -16,7 +16,7 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-export function AppLayout({ breadcrumbs, actions, children }: AppLayoutProps) {
+export function AppLayout({ breadcrumbs, children }: AppLayoutProps) {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />

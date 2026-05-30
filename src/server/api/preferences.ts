@@ -1,10 +1,8 @@
 import type { CollectionPreferenceItem } from "@/types";
-import type { ICollectionPreferenceItemRepository } from "@/server/repositories/CollectionPreferenceItemRepository";
 import type { PreferenceStateService } from "@/server/services/PreferenceStateService";
 
 export class PreferenceController {
   constructor(
-    private preferenceRepo: ICollectionPreferenceItemRepository,
     private preferenceService: PreferenceStateService,
   ) {}
 
@@ -22,7 +20,7 @@ export class PreferenceController {
     return this.preferenceService.getItemPreferences(collectionId, curatorId);
   }
 
-  async getItemPreference(itemId: string, curatorId: string): Promise<CollectionPreferenceItem | null> {
+  async getItemPreference(): Promise<CollectionPreferenceItem | null> {
     // TODO: Implement when preferenceRepo.findByItem available
     return null;
   }

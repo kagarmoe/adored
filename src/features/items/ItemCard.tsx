@@ -1,5 +1,5 @@
 import type { Item } from "@/types";
-import { Card, Badge } from "@/components/ui";
+import { Card } from "@/components/ui";
 import Link from "next/link";
 import Image from "next/image";
 

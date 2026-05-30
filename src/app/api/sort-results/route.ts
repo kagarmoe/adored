@@ -8,11 +8,11 @@ export async function GET(
   _request: NextRequest
 ) {
   try {
-    const user = await requireAuth();
+    await requireAuth();
     const db = getDb();
     const resultRepo = new SortResultRepository(db);
     const controller = new ResultController(resultRepo);
-    const results = await controller.listResults(user.id);
+    const results = await controller.listResults();
     return NextResponse.json(results);
   } catch (error) {
     return NextResponse.json(

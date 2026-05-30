@@ -5,15 +5,14 @@ import { InvitationRepository } from "@/server/repositories/implementations/Invi
 import { getDb } from "@/lib/db";
 
 export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest
 ) {
   try {
     await requireAuth();
     const db = getDb();
     const invRepo = new InvitationRepository(db);
     const controller = new InvitationController(invRepo);
-    const invitations = await controller.listInvitations(params.id);
+    const invitations = await controller.listInvitations();
     return NextResponse.json(invitations);
   } catch (error) {
     return NextResponse.json(

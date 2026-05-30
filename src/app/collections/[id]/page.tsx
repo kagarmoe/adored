@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { AppLayout } from "@/components/layout";
-import { Button, Card } from "@/components/ui";
+import { Card } from "@/components/ui";
 import Link from "next/link";
 
 interface CollectionPageProps {

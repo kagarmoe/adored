@@ -1,7 +1,6 @@
 import { z } from "zod";
 import type { Invitation } from "@/types";
 import type { IInvitationRepository } from "@/server/repositories/InvitationRepository";
-import { generateId } from "@/lib/id";
 import { randomBytes } from "crypto";
 
 const CreateInvitationSchema = z.object({
@@ -27,17 +26,13 @@ const UpdateInvitationSchema = z.object({
   canViewOutputs: z.boolean().optional(),
 });
 
-const AcceptInvitationSchema = z.object({
-  token: z.string(),
-});
-
 export type CreateInvitationInput = z.infer<typeof CreateInvitationSchema>;
 export type UpdateInvitationInput = z.infer<typeof UpdateInvitationSchema>;
 
 export class InvitationController {
   constructor(private invitationRepo: IInvitationRepository) {}
 
-  async listInvitations(collectionId: string): Promise<Invitation[]> {
+  async listInvitations(): Promise<Invitation[]> {
     // TODO: Implement when InvitationRepository.findByCollection available
     return [];
   }
@@ -97,7 +92,7 @@ export class InvitationController {
     return { message: "Invitation resent" };
   }
 
-  async acceptInvitation(token: string, userId: string): Promise<{ message: string }> {
+  async acceptInvitation(): Promise<{ message: string }> {
     // TODO: Find invitation by token, validate not expired, create membership
     // TODO: Update invitation status to accepted and set acceptedAt
     return { message: "Invitation accepted" };

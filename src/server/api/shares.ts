@@ -18,7 +18,7 @@ export type UpdateShareInput = z.infer<typeof UpdateShareSchema>;
 export class ShareController {
   constructor(private shareRepo: ISortResultShareRepository) {}
 
-  async listShares(resultId: string): Promise<SortResultShare[]> {
+  async listShares(): Promise<SortResultShare[]> {
     // TODO: Implement when ShareRepository.findByResult available
     return [];
   }
@@ -59,7 +59,7 @@ export class ShareController {
     await this.shareRepo.update(shareId, { status: "revoked" });
   }
 
-  async viewSharedResult(token: string): Promise<SortResultShare> {
+  async viewSharedResult(): Promise<SortResultShare> {
     // TODO: Find share by token and validate expiration
     throw new Error("Not implemented");
   }

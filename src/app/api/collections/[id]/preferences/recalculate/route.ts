@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { PreferenceController } from "@/server/api/preferences";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
+import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
+import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { PreferenceStateService } from "@/server/services/PreferenceStateService";
 import { ScoringService } from "@/server/services/ScoringService";
 import { getDb } from "@/lib/db";
@@ -16,7 +18,7 @@ export async function POST(
     const prefRepo = new CollectionPreferenceItemRepository(db);
     const scoringService = new ScoringService(new DecisionEventRepository(db), new SessionRepository(db));
     const prefService = new PreferenceStateService(prefRepo, scoringService);
-    const controller = new PreferenceController(prefRepo, prefService);
+    const controller = new PreferenceController(prefService);
     const prefs = await controller.recalculatePreferences(params.id, user.id);
     return NextResponse.json({ message: "Preferences recalculated", preferences: prefs });
   } catch (error) {

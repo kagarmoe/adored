@@ -10,11 +10,11 @@ const UpdatePhotoSchema = z.object({
 export type UpdatePhotoInput = z.infer<typeof UpdatePhotoSchema>;
 
 export class PhotoController {
-  constructor(private photoRepo: IPhotoRepository) {
+  private photoService: PhotoService;
+
+  constructor(photoRepo: IPhotoRepository) {
     this.photoService = new PhotoService(photoRepo);
   }
-
-  private photoService: PhotoService;
 
   async listPhotos(itemId: string): Promise<Photo[]> {
     return this.photoService.getItemPhotos(itemId);
