@@ -5,6 +5,8 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { generateId } from "@/lib/id";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
@@ -12,6 +14,15 @@ export async function POST(req: NextRequest) {
     if (!email || !password) {
       return NextResponse.json(
         { error: "Email and password are required" },
+        { status: 400 }
+      );
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      return NextResponse.json(
+        { error: "Invalid email format" },
         { status: 400 }
       );
     }
@@ -29,30 +40,31 @@ export async function POST(req: NextRequest) {
     const existing = await db
       .select()
       .from(user)
-      .where(eq(user.email, email))
+      .where(eq(user.email, normalizedEmail))
       .limit(1);
 
     if (existing.length > 0) {
+      // Return generic success to prevent email enumeration
       return NextResponse.json(
-        { error: "User with this email already exists" },
-        { status: 409 }
+        { message: "Account created successfully" },
+        { status: 201 }
       );
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash password with cost factor 12 (OWASP recommendation)
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user
     await db.insert(user).values({
       id: generateId("user"),
-      email,
-      name: email.split("@")[0],
+      email: normalizedEmail,
+      name: normalizedEmail.split("@")[0],
       password: hashedPassword,
       emailVerified: new Date(),
     });
 
     return NextResponse.json(
-      { message: "User created successfully" },
+      { message: "Account created successfully" },
       { status: 201 }
     );
   } catch (error) {

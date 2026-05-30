@@ -6,6 +6,7 @@ dotenv.config({ path: ".env.development.local" });
 
 import { getDb } from "@/lib/db";
 import { user, account, session, verificationToken } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { generateId } from "@/lib/id";
 
@@ -19,7 +20,7 @@ async function verifyAuthSetup() {
   // Test 1: Database schema exists
   totalTests++;
   try {
-    const users = await db.select().from(user).limit(1);
+    await db.select().from(user).limit(1);
     console.log("✅ Test 1: User table accessible");
     passedTests++;
   } catch (e) {
@@ -29,9 +30,9 @@ async function verifyAuthSetup() {
   // Test 2: NextAuth tables exist
   totalTests++;
   try {
-    const accounts = await db.select().from(account).limit(1);
-    const sessions = await db.select().from(session).limit(1);
-    const tokens = await db.select().from(verificationToken).limit(1);
+    await db.select().from(account).limit(1);
+    await db.select().from(session).limit(1);
+    await db.select().from(verificationToken).limit(1);
     console.log("✅ Test 2: NextAuth tables (account, session, verificationToken) accessible");
     passedTests++;
   } catch (e) {
@@ -92,7 +93,7 @@ async function verifyAuthSetup() {
       passedTests++;
 
       // Clean up test user
-      await db.delete(user).where({ id: userId });
+      await db.delete(user).where(eq(user.id, userId));
     } else {
       console.log("❌ Test 5: User creation verification failed");
     }

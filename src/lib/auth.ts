@@ -9,7 +9,14 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { generateId } from "@/lib/id";
 
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error(
+    "NEXTAUTH_SECRET environment variable is required. Set it to a secure random value."
+  );
+}
+
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   adapter: DrizzleAdapter(getDb()),
   providers: [
     Credentials({
@@ -28,32 +35,28 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Invalid credentials");
+          throw new Error("Invalid email or password");
         }
 
         const db = getDb();
         const users = await db
           .select()
           .from(user)
-          .where(eq(user.email, credentials.email))
+          .where(eq(user.email, credentials.email.toLowerCase()))
           .limit(1);
 
-        if (!users.length) {
-          throw new Error("No user found with this email");
+        if (!users.length || !users[0].password) {
+          throw new Error("Invalid email or password");
         }
 
         const userRecord = users[0];
-        if (!userRecord.password) {
-          throw new Error("User has no password set");
-        }
-
         const passwordMatch = await bcrypt.compare(
           credentials.password,
-          userRecord.password
+          userRecord.password!
         );
 
         if (!passwordMatch) {
-          throw new Error("Invalid password");
+          throw new Error("Invalid email or password");
         }
 
         return {
@@ -122,7 +125,7 @@ export const authOptions: NextAuthOptions = {
     error: "/login",
   },
   session: {
-    strategy: "database",
+    strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
   },
 };
