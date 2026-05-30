@@ -3,6 +3,7 @@ import type { Database } from "@/lib/db";
 import { itemsTable } from "@/lib/db/schema";
 import type { IItemRepository } from "../ItemRepository";
 import type { Item } from "@/types";
+import { generateId } from "@/lib/id";
 
 export class ItemRepository implements IItemRepository {
   constructor(private db: Database) {}
@@ -19,7 +20,7 @@ export class ItemRepository implements IItemRepository {
     status?: string;
     notes?: string;
   }): Promise<Item> {
-    const id = data.id || `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = data.id || generateId("item");
     const [item] = await this.db
       .insert(itemsTable)
       .values({

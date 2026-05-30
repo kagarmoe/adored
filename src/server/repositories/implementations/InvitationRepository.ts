@@ -3,6 +3,7 @@ import type { Database } from "@/lib/db";
 import { invitationsTable } from "@/lib/db/schema";
 import type { IInvitationRepository } from "../InvitationRepository";
 import type { Invitation } from "@/types";
+import { generateId } from "@/lib/id";
 
 export class InvitationRepository implements IInvitationRepository {
   constructor(private db: Database) {}
@@ -21,7 +22,7 @@ export class InvitationRepository implements IInvitationRepository {
     canSort: boolean;
     canViewOutputs: boolean;
   }): Promise<Invitation> {
-    const id = data.id || `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = data.id || generateId("inv");
     const [inv] = await this.db
       .insert(invitationsTable)
       .values({

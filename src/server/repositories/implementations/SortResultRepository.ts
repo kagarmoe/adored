@@ -3,6 +3,7 @@ import type { Database } from "@/lib/db";
 import { sortResultsTable } from "@/lib/db/schema";
 import type { ISortResultRepository } from "../SortResultRepository";
 import type { SortResult } from "@/types";
+import { generateId } from "@/lib/id";
 
 export class SortResultRepository implements ISortResultRepository {
   constructor(private db: Database) {}
@@ -14,7 +15,7 @@ export class SortResultRepository implements ISortResultRepository {
     name: string;
     status: "draft" | "finalized";
   }): Promise<SortResult> {
-    const id = data.id || `result_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = data.id || generateId("result");
     const [result] = await this.db
       .insert(sortResultsTable)
       .values({

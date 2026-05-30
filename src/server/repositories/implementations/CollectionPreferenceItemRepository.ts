@@ -3,6 +3,7 @@ import type { Database } from "@/lib/db";
 import { preferencesTable } from "@/lib/db/schema";
 import type { ICollectionPreferenceItemRepository } from "../CollectionPreferenceItemRepository";
 import type { CollectionPreferenceItem } from "@/types";
+import { generateId } from "@/lib/id";
 
 export class CollectionPreferenceItemRepository
   implements ICollectionPreferenceItemRepository
@@ -19,7 +20,7 @@ export class CollectionPreferenceItemRepository
     rankBucket: "top" | "high" | "medium" | "low";
     comparisonCount: number;
   }): Promise<CollectionPreferenceItem> {
-    const id = data.id || `pref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = data.id || generateId("pref");
     const [pref] = await this.db
       .insert(preferencesTable)
       .values({

@@ -1,5 +1,6 @@
 import type { Collection } from "@/types";
 import type { ICollectionRepository } from "@/server/repositories/CollectionRepository";
+import { generateId } from "@/lib/id";
 
 export class CollectionService {
   constructor(private repo: ICollectionRepository) {}
@@ -9,7 +10,7 @@ export class CollectionService {
     description?: string;
     ownerId: string;
   }): Promise<Collection> {
-    const id = `coll_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = generateId("coll");
     return this.repo.create({ ...data, id });
   }
 

@@ -3,6 +3,7 @@ import type { Database } from "@/lib/db";
 import { membershipsTable } from "@/lib/db/schema";
 import type { IMembershipRepository } from "../MembershipRepository";
 import type { CollectionMembership } from "@/types";
+import { generateId } from "@/lib/id";
 
 export class MembershipRepository implements IMembershipRepository {
   constructor(private db: Database) {}
@@ -20,7 +21,7 @@ export class MembershipRepository implements IMembershipRepository {
     canSort: boolean;
     canViewOutputs: boolean;
   }): Promise<CollectionMembership> {
-    const id = data.id || `mem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = data.id || generateId("mem");
     const [mem] = await this.db
       .insert(membershipsTable)
       .values({

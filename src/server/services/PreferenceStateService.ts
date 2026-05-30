@@ -17,13 +17,15 @@ export class PreferenceStateService {
       curatorId,
     );
 
+    // Batch fetch: get all existing preferences once, not per item
+    const existing = await this.preferenceRepo.findByCollection(collectionId, curatorId);
+    const existingByItemId = new Map(existing.map((p) => [p.itemId, p]));
+
+    // Process all preferences in batches
     for (const pref of preferences) {
-      const existing = await this.preferenceRepo.findByItem(
-        pref.itemId,
-        curatorId,
-      );
-      if (existing) {
-        await this.preferenceRepo.update(existing.id, {
+      const existingPref = existingByItemId.get(pref.itemId);
+      if (existingPref) {
+        await this.preferenceRepo.update(existingPref.id, {
           score: pref.score,
           confidence: pref.confidence,
           rankBucket: pref.rankBucket,

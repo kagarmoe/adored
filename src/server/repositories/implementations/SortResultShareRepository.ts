@@ -3,6 +3,7 @@ import type { Database } from "@/lib/db";
 import { sortResultSharesTable } from "@/lib/db/schema";
 import type { ISortResultShareRepository } from "../SortResultShareRepository";
 import type { SortResultShare } from "@/types";
+import { generateId } from "@/lib/id";
 
 export class SortResultShareRepository implements ISortResultShareRepository {
   constructor(private db: Database) {}
@@ -13,7 +14,7 @@ export class SortResultShareRepository implements ISortResultShareRepository {
     shareToken: string;
     expiresAt?: Date;
   }): Promise<SortResultShare> {
-    const id = data.id || `share_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = data.id || generateId("share");
     const [share] = await this.db
       .insert(sortResultSharesTable)
       .values({

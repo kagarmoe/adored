@@ -3,6 +3,7 @@ import type { Database } from "@/lib/db";
 import { sessionsTable } from "@/lib/db/schema";
 import type { ISessionRepository } from "../SessionRepository";
 import type { Session } from "@/types";
+import { generateId } from "@/lib/id";
 
 export class SessionRepository implements ISessionRepository {
   constructor(private db: Database) {}
@@ -13,7 +14,7 @@ export class SessionRepository implements ISessionRepository {
     curatorId: string;
     goal?: string;
   }): Promise<Session> {
-    const id = data.id || `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = data.id || generateId("sess");
     const [session] = await this.db
       .insert(sessionsTable)
       .values({

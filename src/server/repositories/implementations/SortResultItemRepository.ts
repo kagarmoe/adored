@@ -3,6 +3,7 @@ import type { Database } from "@/lib/db";
 import { sortResultItemsTable } from "@/lib/db/schema";
 import type { ISortResultItemRepository } from "../SortResultRepository";
 import type { SortResultItem } from "@/types";
+import { generateId } from "@/lib/id";
 
 export class SortResultItemRepository implements ISortResultItemRepository {
   constructor(private db: Database) {}
@@ -14,7 +15,7 @@ export class SortResultItemRepository implements ISortResultItemRepository {
     computedRank: number;
     computedBucket: "top" | "high" | "medium" | "low";
   }): Promise<SortResultItem> {
-    const id = data.id || `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = data.id || generateId("sri");
     const [item] = await this.db
       .insert(sortResultItemsTable)
       .values({

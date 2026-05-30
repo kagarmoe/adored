@@ -3,6 +3,7 @@ import type { Database } from "@/lib/db";
 import { decisionEventsTable } from "@/lib/db/schema";
 import type { IDecisionEventRepository } from "../DecisionEventRepository";
 import type { DecisionEvent, TriageDecision, PairwiseDecision } from "@/types";
+import { generateId } from "@/lib/id";
 
 export class DecisionEventRepository implements IDecisionEventRepository {
   constructor(private db: Database) {}
@@ -13,7 +14,7 @@ export class DecisionEventRepository implements IDecisionEventRepository {
     type: "triage" | "pairwise_compare";
     decision: TriageDecision | PairwiseDecision;
   }): Promise<DecisionEvent> {
-    const id = data.id || `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = data.id || generateId("evt");
     const [event] = await this.db
       .insert(decisionEventsTable)
       .values({
