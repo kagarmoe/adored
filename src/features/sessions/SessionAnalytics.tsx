@@ -122,7 +122,7 @@ export function SessionAnalytics({
             <div className="flex justify-between items-start">
               <span className="text-gray-600">Coverage</span>
               <span className="font-semibold text-gray-900">
-                {((triaged / totalItems) * 100).toFixed(0)}%
+                {totalItems > 0 ? ((triaged / totalItems) * 100).toFixed(0) : 0}%
               </span>
             </div>
             <div className="flex justify-between items-start">

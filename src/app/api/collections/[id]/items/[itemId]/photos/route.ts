@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { generateId } from "@/lib/id";
+import { put } from "@vercel/blob";
 
 export async function POST(
   req: NextRequest,
@@ -13,7 +16,25 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const db = getDb();
+  const itemRepo = new ItemRepository(db);
+  const membershipRepo = new MembershipRepository(db);
+
   try {
+    // Verify item belongs to collection and user has permission
+    const item = await itemRepo.findById(params.itemId);
+    if (!item || item.collectionId !== params.id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    const membership = await membershipRepo.findByUser(
+      session.user.id,
+      params.id
+    );
+    if (!membership || !membership.canAddPhotos) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const formData = await req.formData();
     const file = formData.get("file") as File;
 
@@ -26,14 +47,18 @@ export async function POST(
     }
 
     const buffer = await file.arrayBuffer();
-    const blobKey = `items/${params.itemId}/${generateId("photo")}-${file.name}`;
+    const blobPath = `items/${params.itemId}/${generateId("photo")}-${file.name}`;
 
-    const db = getDb();
+    // Upload to blob storage
+    const blob = await put(blobPath, buffer, {
+      access: "public",
+      contentType: file.type,
+    });
+
     const photoRepo = new PhotoRepository(db);
-
     const photo = await photoRepo.create({
       itemId: params.itemId,
-      blobKey,
+      blobKey: blob.url, // Store actual blob URL
       filename: file.name,
       mimeType: file.type,
       fileSize: buffer.byteLength,

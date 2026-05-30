@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 
 interface ItemUpdateRequest {
   name?: string;
@@ -22,12 +23,27 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body: ItemUpdateRequest = await req.json();
   const db = getDb();
   const itemRepo = new ItemRepository(db);
+  const membershipRepo = new MembershipRepository(db);
 
   try {
-    const item = await itemRepo.update(params.itemId, {
+    // Verify item belongs to collection and user has permission
+    const item = await itemRepo.findById(params.itemId);
+    if (!item || item.collectionId !== params.id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    const membership = await membershipRepo.findByUser(
+      session.user.id,
+      params.id
+    );
+    if (!membership || !membership.canEditMetadata) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const body: ItemUpdateRequest = await req.json();
+    const updated = await itemRepo.update(params.itemId, {
       name: body.name,
       brand: body.brand,
       style: body.style,
@@ -37,7 +53,7 @@ export async function PATCH(
       notes: body.notes,
     });
 
-    return NextResponse.json(item);
+    return NextResponse.json(updated);
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Update failed" },

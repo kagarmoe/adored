@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
-import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
+import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { AppLayout } from "@/components/layout";
 import { Card, EmptyState } from "@/components/ui";
 import { DecisionControls } from "@/features/sorting/DecisionControls";
@@ -24,21 +24,22 @@ export default async function TriagePage({ params }: TriagePageProps) {
   const collectionRepo = new CollectionRepository(db);
   const itemRepo = new ItemRepository(db);
   const sessionRepo = new SessionRepository(db);
-  const decisionRepo = new DecisionEventRepository(db);
-  const [collection, items, sortSession, decisions] = await Promise.all([
+  const prefRepo = new CollectionPreferenceItemRepository(db);
+  const [collection, items, sortSession, preferences] = await Promise.all([
     collectionRepo.findById(params.id),
     itemRepo.findByCollection(params.id),
     sessionRepo.findById(params.sessionId),
-    decisionRepo.findBySession(params.sessionId),
+    prefRepo.findByCollection(params.id, session.user.id),
   ]);
 
   if (!collection || !sortSession) {
     redirect(`/collections/${params.id}/sort`);
   }
 
-  const item = items[0];
+  const preferencesByItemId = new Map(preferences.map((p) => [p.itemId, p]));
+  const item = items.find((i) => !preferencesByItemId.has(i.id)) || null;
   const totalItems = items.length;
-  const decisionCount = decisions.length;
+  const triaged = preferences.length;
 
   return (
     <AppLayout
@@ -56,18 +57,18 @@ export default async function TriagePage({ params }: TriagePageProps) {
             <p className="mt-2 text-gray-600">Assign the current item to a preference bucket.</p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-500">{decisionCount} of {totalItems}</p>
+            <p className="text-sm text-gray-500">{triaged} of {totalItems}</p>
             <div className="mt-2 w-32 bg-gray-200 rounded-full h-2">
               <div
                 className="bg-blue-600 h-2 rounded-full transition-all"
-                style={{ width: `${totalItems > 0 ? (decisionCount / totalItems) * 100 : 0}%` }}
+                style={{ width: `${totalItems > 0 ? (triaged / totalItems) * 100 : 0}%` }}
               />
             </div>
           </div>
         </div>
 
         {!item ? (
-          <EmptyState heading="No items to triage" message="Add items before starting a sorting session" />
+          <EmptyState heading="All items triaged!" message="You&apos;ve completed triage for all items. View results to see your ranked order." />
         ) : (
           <>
             <ItemCard item={item} collectionId={params.id} />
