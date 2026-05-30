@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { sessionsTable } from "@/lib/db/schema";
 import type { ISessionRepository } from "../SessionRepository";
@@ -34,7 +34,7 @@ export class SessionRepository implements ISessionRepository {
     const [session] = await this.db
       .select()
       .from(sessionsTable)
-      .where(eq(sessionsTable.id, id));
+      .where(and(eq(sessionsTable.id, id), isNull(sessionsTable.deletedAt)));
     return session ? this.mapToSession(session) : null;
   }
 
@@ -47,6 +47,7 @@ export class SessionRepository implements ISessionRepository {
           eq(sessionsTable.collectionId, collectionId),
           eq(sessionsTable.curatorId, curatorId),
           eq(sessionsTable.status, "active"),
+          isNull(sessionsTable.deletedAt),
         ),
       );
     return session ? this.mapToSession(session) : null;
@@ -56,7 +57,7 @@ export class SessionRepository implements ISessionRepository {
     const sessions = await this.db
       .select()
       .from(sessionsTable)
-      .where(eq(sessionsTable.collectionId, collectionId));
+      .where(and(eq(sessionsTable.collectionId, collectionId), isNull(sessionsTable.deletedAt)));
     return sessions.map((s) => this.mapToSession(s));
   }
 

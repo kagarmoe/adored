@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, isNull, and } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { itemsTable } from "@/lib/db/schema";
 import type { IItemRepository } from "../ItemRepository";
@@ -45,7 +45,7 @@ export class ItemRepository implements IItemRepository {
     const [item] = await this.db
       .select()
       .from(itemsTable)
-      .where(eq(itemsTable.id, id));
+      .where(and(eq(itemsTable.id, id), isNull(itemsTable.deletedAt)));
     return item ? this.mapToItem(item) : null;
   }
 
@@ -53,7 +53,7 @@ export class ItemRepository implements IItemRepository {
     const items = await this.db
       .select()
       .from(itemsTable)
-      .where(eq(itemsTable.collectionId, collectionId));
+      .where(and(eq(itemsTable.collectionId, collectionId), isNull(itemsTable.deletedAt)));
     return items.map((i) => this.mapToItem(i));
   }
 

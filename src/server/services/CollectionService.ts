@@ -9,7 +9,8 @@ export class CollectionService {
     description?: string;
     ownerId: string;
   }): Promise<Collection> {
-    return this.repo.create(data);
+    const id = `coll_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return this.repo.create({ ...data, id });
   }
 
   async getCollection(collectionId: string): Promise<Collection | null> {

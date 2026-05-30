@@ -2,6 +2,7 @@ import type { Collection } from "@/types";
 
 export interface ICollectionRepository {
   create(data: {
+    id: string;
     ownerId: string;
     name: string;
     description?: string;
