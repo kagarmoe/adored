@@ -1,0 +1,14 @@
+import type { Session } from "@/types";
+
+export interface ISessionRepository {
+  create(data: {
+    collectionId: string;
+    curatorId: string;
+    goal?: string;
+  }): Promise<Session>;
+  findById(id: string): Promise<Session | null>;
+  findActive(collectionId: string, curatorId: string): Promise<Session | null>;
+  findByCollection(collectionId: string): Promise<Session[]>;
+  update(id: string, data: Partial<Omit<Session, "id" | "createdAt">>): Promise<Session>;
+  softDelete(id: string): Promise<Session>;
+}
