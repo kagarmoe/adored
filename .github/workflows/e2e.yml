@@ -1,0 +1,149 @@
+name: e2e
+
+# Runs the Playwright e2e suite (e2e/*.spec.ts) against a real Next dev server
+# backed by an ephemeral Postgres service container. This is where the e2e
+# suite lives now — polecat sandboxes lack Postgres + browsers, so they all
+# silently skipped the suite. CI has both, every run from a clean slate.
+#
+# Triggers:
+#   - pull_request: every PR
+#   - push:         every branch push (so polecats can validate their own
+#                   branch before submitting to the merge queue)
+#   - workflow_dispatch: on-demand invocation (an agent / human can fire this
+#                       via `gh workflow run e2e.yml [--ref <branch>]`)
+#
+# Failure surfaces as a red ✗ + an uploaded Playwright HTML report artifact.
+
+on:
+  # PR validation runs via pull_request only. We do NOT also listen on
+  # `push:` (unfiltered) because that fires for every PR branch push too —
+  # PRs would then run e2e twice per commit. The push trigger is scoped to
+  # `main` so a direct main commit (rare) still gets validated.
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel an in-progress e2e for the same ref when a new commit lands. Without
+# this, a force-push (common during polecat iteration) leaves the old run
+# burning CI minutes for code that's already been superseded.
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Shard the Playwright suite across 4 parallel runners. The suite runs
+    # workers:1 within a shard (playwright.config.ts) because tests share a
+    # seeded DB, but each shard gets its OWN runner with its OWN postgres
+    # service — no cross-shard contention. Cuts wall-clock time ~4x at
+    # roughly the same total CI minutes. `fail-fast: false` so a failure in
+    # one shard doesn't cancel the others (we want to see all failures).
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ['1/4', '2/4', '3/4', '4/4']
+
+    # Ephemeral Postgres for this run only. Schema is applied via plain
+    # `psql` against `prisma/test-schema.sql` (the from-empty SQL bootstrap).
+    # We deliberately do NOT use any Prisma migration tool here — Prisma is
+    # the ORM only; the migration story is hand-written SQL applied to Neon
+    # (see infra.yaml → migrations). The `pg_isready` health check below
+    # makes the `apt-get install postgresql-client && psql -f` step safe.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: purseinator_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d purseinator_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # All values below are TEST-ONLY, scoped to this ephemeral runner +
+      # ephemeral DB. None of them are production secrets and none are
+      # pulled from GitHub Secrets — putting prod AUTH_SECRET into Actions
+      # would double its exposure surface (see post-deploy-smoke.yml for
+      # the full rationale). The test AUTH_SECRET only signs JWTs the test
+      # itself creates against the test DB; it cannot forge a prod session.
+      DATABASE_URL: postgresql://test:test@localhost:5432/purseinator_test
+      AUTH_SECRET: e2e-test-secret-not-for-production-min-32-chars-long
+      AUTH_RESEND_KEY: re_e2e_test_unused_resend_calls_are_mocked
+      BLOB_READ_WRITE_TOKEN: vercel_blob_e2e_test_unused
+      ALLOW_DEMO_SEED: '1'
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          # Node 24 matches Vercel Production for parity.
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Generate Prisma ORM client
+        # Prisma is the ORM only. `prisma generate` builds the TypeScript
+        # client from prisma/schema.prisma; it does not touch the database.
+        run: npx prisma generate
+
+      - name: Apply test schema (psql, no Prisma migration tool)
+        # Hand-written SQL bootstrap — see prisma/test-schema.sql. We do NOT
+        # use `prisma db push` or `prisma migrate *`. The `pg_isready` health
+        # check on the postgres service has already passed by the time this
+        # step runs.
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+          PGPASSWORD=test psql -v ON_ERROR_STOP=1 \
+            -h localhost -U test -d purseinator_test \
+            -f prisma/test-schema.sql
+
+      # Cache Playwright browsers across runs. Key includes the @playwright/test
+      # version from package-lock.json so a version bump busts the cache.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright system deps (cache hit path)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Run e2e suite (shard ${{ matrix.shard }})
+        # --shard tells Playwright to run only its slice of the suite.
+        # `npm run e2e --` forwards the flag through npm to playwright test.
+        run: npm run e2e -- --shard=${{ matrix.shard }}
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          # Per-shard artifact name; clashing names error on upload.
+          name: playwright-report-shard-${{ strategy.job-index }}
+          path: playwright-report
+          retention-days: 7
+
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces-shard-${{ strategy.job-index }}
+          path: test-results
+          retention-days: 7

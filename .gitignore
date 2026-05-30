@@ -50,5 +50,10 @@ next-env.d.ts
 *.db
 .beads-credential-key
 
+# Local runtime config — env-specific (dolt mode/host/port). Must NOT be
+# committed: a stale committed value is a landmine that `git reset --hard`
+# re-introduces, masking the real Dolt DB as an orphan. (See bead purses-ok6.)
+.beads/metadata.json
+
 # Exception: DO commit src/lib (overrides global .gitignore_python)
 !src/lib/
