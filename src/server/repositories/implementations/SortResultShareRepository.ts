@@ -1,0 +1,79 @@
+import { eq } from "drizzle-orm";
+import type { Database } from "@/lib/db";
+import { sortResultSharesTable } from "@/lib/db/schema";
+import type { ISortResultShareRepository } from "../SortResultShareRepository";
+import type { SortResultShare } from "@/types";
+
+export class SortResultShareRepository implements ISortResultShareRepository {
+  constructor(private db: Database) {}
+
+  async create(data: {
+    id?: string;
+    sortResultId: string;
+    shareToken: string;
+    expiresAt?: Date;
+  }): Promise<SortResultShare> {
+    const id = data.id || `share_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const [share] = await this.db
+      .insert(sortResultSharesTable)
+      .values({
+        id,
+        sortResultId: data.sortResultId,
+        shareToken: data.shareToken,
+        status: "active",
+        expiresAt: data.expiresAt || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return this.mapToShare(share);
+  }
+
+  async findById(id: string): Promise<SortResultShare | null> {
+    const [share] = await this.db
+      .select()
+      .from(sortResultSharesTable)
+      .where(eq(sortResultSharesTable.id, id));
+    return share ? this.mapToShare(share) : null;
+  }
+
+  async findByToken(token: string): Promise<SortResultShare | null> {
+    const [share] = await this.db
+      .select()
+      .from(sortResultSharesTable)
+      .where(eq(sortResultSharesTable.shareToken, token));
+    return share ? this.mapToShare(share) : null;
+  }
+
+  async findByResult(sortResultId: string): Promise<SortResultShare[]> {
+    const shares = await this.db
+      .select()
+      .from(sortResultSharesTable)
+      .where(eq(sortResultSharesTable.sortResultId, sortResultId));
+    return shares.map((s) => this.mapToShare(s));
+  }
+
+  async update(id: string, data: Partial<SortResultShare>): Promise<SortResultShare> {
+    const [share] = await this.db
+      .update(sortResultSharesTable)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(sortResultSharesTable.id, id))
+      .returning();
+    return this.mapToShare(share);
+  }
+
+  private mapToShare(row: any): SortResultShare {
+    return {
+      id: row.id,
+      sortResultId: row.sortResultId,
+      shareToken: row.shareToken,
+      status: row.status as "active" | "revoked",
+      expiresAt: row.expiresAt,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    };
+  }
+}

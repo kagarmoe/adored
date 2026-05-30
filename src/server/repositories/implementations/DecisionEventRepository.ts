@@ -1,0 +1,55 @@
+import { eq } from "drizzle-orm";
+import type { Database } from "@/lib/db";
+import { decisionEventsTable } from "@/lib/db/schema";
+import type { IDecisionEventRepository } from "../DecisionEventRepository";
+import type { DecisionEvent, TriageDecision, PairwiseDecision } from "@/types";
+
+export class DecisionEventRepository implements IDecisionEventRepository {
+  constructor(private db: Database) {}
+
+  async create(data: {
+    id?: string;
+    sessionId: string;
+    type: "triage" | "pairwise_compare";
+    decision: TriageDecision | PairwiseDecision;
+  }): Promise<DecisionEvent> {
+    const id = data.id || `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const [event] = await this.db
+      .insert(decisionEventsTable)
+      .values({
+        id,
+        sessionId: data.sessionId,
+        type: data.type,
+        decision: data.decision,
+        createdAt: new Date(),
+      })
+      .returning();
+    return this.mapToDecisionEvent(event);
+  }
+
+  async findById(id: string): Promise<DecisionEvent | null> {
+    const [event] = await this.db
+      .select()
+      .from(decisionEventsTable)
+      .where(eq(decisionEventsTable.id, id));
+    return event ? this.mapToDecisionEvent(event) : null;
+  }
+
+  async findBySession(sessionId: string): Promise<DecisionEvent[]> {
+    const events = await this.db
+      .select()
+      .from(decisionEventsTable)
+      .where(eq(decisionEventsTable.sessionId, sessionId));
+    return events.map((e) => this.mapToDecisionEvent(e));
+  }
+
+  private mapToDecisionEvent(row: any): DecisionEvent {
+    return {
+      id: row.id,
+      sessionId: row.sessionId,
+      type: row.type as "triage" | "pairwise_compare",
+      decision: row.decision as TriageDecision | PairwiseDecision,
+      createdAt: row.createdAt,
+    };
+  }
+}
