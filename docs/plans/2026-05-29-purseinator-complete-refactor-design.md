@@ -253,33 +253,88 @@ Visible to any collection member:
 
 ### Pairing Algorithm
 
-**Priority order for pair selection:**
+**Base priority order for pair selection:**
 1. **Unseen items** — show for first time
 2. **Lightly judged items** — shown a few times but not thoroughly compared (low comparison_count)
-3. **Items near important boundaries** — score near top/high threshold or medium/low threshold
-4. **Items with close scores** — hard to disambiguate, need comparison
-5. **Top-tier items** — refine high-scoring items
-6. **Items with low confidence** — ambiguous, uncertain items
+3. **Items near important boundaries** — score near top/high threshold (87-93) or medium/low threshold (47-53)
+4. **Items with close scores** — hard to disambiguate, need comparison (score diff ≤ 10)
+5. **Top-tier items** — refine high-scoring items (score ≥ 85)
+6. **Items with low confidence** — ambiguous, uncertain items (confidence < 3)
 
-**Avoid:** Over-comparing items already confidently low (low score + high confidence)
+**Avoid:** Over-comparing items already confidently low (score < 50 AND confidence ≥ 5)
 
-**Context-aware:** Priorities may shift based on session goal:
-- "Find favorites" session prioritizes top-tier
-- "Quick triage" session prioritizes boundaries and unseen items
-- "Compare top items" session prioritizes high-scoring items
+**Goal-Driven Priority Reordering:**
+
+Pairing priorities shift based on session goal. The curator chooses a goal when creating/resuming a session.
+
+| Session Goal | Priority Order | Rationale |
+|---|---|---|
+| **Quick triage** (get initial judgments fast) | [1, 3, 2, 4, 6, 5] | Unseen and boundaries first, skip refinement |
+| **Find favorites** (identify top tier) | [5, 1, 4, 3, 2, 6] | Top items and close scores, refine top tier, avoid low items |
+| **Compare top items** (stabilize top tier) | [5, 4, 3, 1, 2, 6] | Prioritize top-tier refinement and disambiguation |
+| **Revisit undecided** (reduce ambiguity) | [6, 3, 4, 2, 1, 5] | Low-confidence and boundaries, skip already-decided items |
+
+**Implementation notes:**
+- Default goal if not specified: "Quick triage"
+- Goals may be selected per-session or overridable mid-session
+- Pairing service receives sessionGoal parameter and reorders priorities accordingly
 
 ### Session Item Scope
 
-- SessionService generates item list based on curator goal and collection state
-- Goals: quick triage, find favorites, compare top items, revisit undecided
-- Scope can be whole collection or curated subset
+SessionService generates the initial item list for a session based on curator goal and collection state. This list can be refined/filtered during session.
 
-### SortResult Finalization
+**Item scope filtering rules by goal:**
 
-- **Draft results** are editable; manual rank/bucket overrides stored on SortResultItems
-- **Finalized results** are immutable snapshots
-- **Supersede** creates new draft from finalized result without modifying original DecisionEvents
-- Manual overrides stored separately from computed scores (allow reverting)
+| Session Goal | Item Selection | Filter | Max Items | Rationale |
+|---|---|---|---|---|
+| **Quick triage** | All unseen + unranked | Exclude items already triaged | Collection size | Get broad coverage fast |
+| **Find favorites** | High-confidence high-tier | Score ≥ 70 OR unseen | Up to 50 items | Focus on favorites, avoid definite rejects |
+| **Compare top items** | High-scoring items | Score ≥ 80 OR confidence = 1 (new high-scorers) | Up to 20 items | Refine top tier, skip medium/low |
+| **Revisit undecided** | Low-confidence items | Confidence < 3 (few comparisons) | Up to 30 items | Reduce ambiguity in close items |
+
+**Generation logic:**
+1. Curator selects goal when creating session
+2. SessionService filters collection items by goal rules
+3. If fewer than min items available, expand filter (e.g., "quick triage" with <5 unseen → include all unseen + unranked)
+4. Order items for presentation:
+   - "Quick triage": unseen first, then by creation date
+   - "Find favorites": by score descending
+   - "Compare top items": by score descending
+   - "Revisit undecided": by confidence ascending (least confident first)
+
+**Note:** Curator may start a session and later request a different goal, which regenerates the item list.
+
+### Draft SortResult Generation & Lifecycle
+
+**When drafts are created:**
+- Curator requests a draft via POST `/sessions/{sessionId}/results/draft`
+- SortResultService computes preferences from all DecisionEvents for this curator in this collection
+- Service generates a new draft SortResult with computed rank/bucket for each item
+- If a draft already exists for this session, it is replaced (only one draft per session)
+
+**Draft result state:**
+- **Computed fields:** rank, bucket (derived from preferences at generation time)
+- **Editable overrides:** manualRank, manualBucket (optional, per-item)
+- **Display logic:** show manual override if set, else computed value
+- **Reset option:** curator can clear manual overrides and revert to computed values
+
+**Draft to finalize workflow:**
+1. Curator views draft result (shows all items with computed/manual ranks)
+2. Curator optionally edits manual overrides (reorder, change buckets)
+3. Curator reviews final output and taps "Finalize"
+4. POST `/sort-results/{draftId}/finalize` creates immutable snapshot
+5. Draft is archived; curator cannot edit finalized result
+
+**Finalized result immutability:**
+- Finalized results cannot be edited or deleted (only superseded)
+- Curator can view finalized results in history
+- Curator can supersede to create new draft based on this finalized result
+- POST `/sort-results/{finalizedId}/supersede` creates new draft with copied rank/bucket (no manual overrides)
+
+**Manual override semantics:**
+- Override persists only on draft; reverts if curator abandons or closes session
+- If curator finalizes, overrides are baked into the finalized snapshot
+- If curator supersedes, overrides are NOT copied to new draft (start fresh)
 
 ---
 
