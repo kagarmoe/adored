@@ -8,15 +8,10 @@ import { user } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { generateId } from "@/lib/id";
-
-if (!process.env.NEXTAUTH_SECRET) {
-  throw new Error(
-    "NEXTAUTH_SECRET environment variable is required. Set it to a secure random value."
-  );
-}
+import { env } from "@/lib/env";
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: env.NEXTAUTH_SECRET,
   adapter: DrizzleAdapter(getDb()),
   providers: [
     Credentials({
@@ -68,19 +63,19 @@ export const authOptions: NextAuthOptions = {
     }),
     EmailProvider({
       server: {
-        host: process.env.EMAIL_SERVER_HOST || "localhost",
-        port: parseInt(process.env.EMAIL_SERVER_PORT || "1025"),
-        secure: process.env.NODE_ENV === "production",
-        auth: process.env.EMAIL_SERVER_USER
+        host: env.EMAIL_SERVER_HOST,
+        port: env.EMAIL_SERVER_PORT,
+        secure: env.NODE_ENV === "production",
+        auth: env.EMAIL_SERVER_USER
           ? {
-              user: process.env.EMAIL_SERVER_USER,
-              pass: process.env.EMAIL_SERVER_PASSWORD,
+              user: env.EMAIL_SERVER_USER,
+              pass: env.EMAIL_SERVER_PASSWORD,
             }
           : undefined,
       },
-      from: process.env.EMAIL_FROM || "noreply@purseinator.app",
+      from: env.EMAIL_FROM,
       sendVerificationRequest: async ({ identifier, url }) => {
-        if (process.env.NODE_ENV === "development") {
+        if (env.NODE_ENV === "development") {
           console.log(`[DEV MAGIC LINK] ${identifier}\n${url}`);
         }
       },
