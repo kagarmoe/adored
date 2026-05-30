@@ -1,4 +1,4 @@
-import type { DecisionEvent, DecisionType, TriageDecision, PairwiseDecision } from "@/types";
+import type { DecisionEvent, TriageDecision, PairwiseDecision } from "@/types";
 import type { IDecisionEventRepository } from "@/server/repositories/DecisionEventRepository";
 
 export class DecisionEventService {

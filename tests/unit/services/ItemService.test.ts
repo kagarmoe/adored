@@ -128,6 +128,14 @@ describe("ItemService", () => {
       expect(result).toHaveLength(2);
       expect(result[0].name).toBe("Item 1");
     });
+
+    it("returns empty array for empty collection", async () => {
+      vi.mocked(mockRepo.findByCollection).mockResolvedValueOnce([]);
+
+      const result = await service.getCollectionItems("coll-empty");
+
+      expect(result).toHaveLength(0);
+    });
   });
 
   describe("updateItem", () => {
@@ -179,6 +187,36 @@ describe("ItemService", () => {
       const result = await service.deleteItem("item-123");
 
       expect(result.deletedAt).toBeDefined();
+    });
+  });
+
+  describe("restoreItem", () => {
+    it("restores a deleted item", async () => {
+      const restoredItem = {
+        id: "item-123",
+        collectionId: "coll-123",
+        name: "Item",
+        brand: null,
+        style: null,
+        color: null,
+        material: null,
+        category: null,
+        status: null,
+        notes: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+      };
+
+      vi.mocked(mockRepo.update).mockResolvedValueOnce(restoredItem);
+
+      const result = await service.restoreItem("item-123");
+
+      expect(result.deletedAt).toBeNull();
+      expect(mockRepo.update).toHaveBeenCalledWith("item-123", {
+        deletedAt: null,
+        updatedAt: expect.any(Date),
+      });
     });
   });
 });

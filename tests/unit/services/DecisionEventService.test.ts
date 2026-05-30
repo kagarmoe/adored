@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { DecisionEventService } from "@/server/services/DecisionEventService";
 import type { IDecisionEventRepository } from "@/server/repositories/DecisionEventRepository";
+import type { DecisionEvent, TriageDecision, PairwiseDecision } from "@/types";
 
 describe("DecisionEventService", () => {
   let mockRepo: IDecisionEventRepository;
@@ -17,11 +18,15 @@ describe("DecisionEventService", () => {
 
   describe("recordTriageDecision", () => {
     it("records a triage decision event", async () => {
-      const mockEvent = {
+      const triageDecision: TriageDecision = {
+        itemId: "item-1",
+        result: "top",
+      };
+      const mockEvent: DecisionEvent = {
         id: "event-123",
         sessionId: "sess-123",
-        type: "triage" as const,
-        decision: { itemId: "item-1", result: "top" },
+        type: "triage",
+        decision: triageDecision,
         createdAt: new Date(),
       };
 
@@ -45,11 +50,16 @@ describe("DecisionEventService", () => {
 
   describe("recordPairwiseDecision", () => {
     it("records a pairwise comparison decision event", async () => {
-      const mockEvent = {
+      const pairwiseDecision: PairwiseDecision = {
+        itemAId: "item-1",
+        itemBId: "item-2",
+        result: "item_a",
+      };
+      const mockEvent: DecisionEvent = {
         id: "event-124",
         sessionId: "sess-123",
-        type: "pairwise_compare" as const,
-        decision: { itemAId: "item-1", itemBId: "item-2", result: "item_a" },
+        type: "pairwise_compare",
+        decision: pairwiseDecision,
         createdAt: new Date(),
       };
 
@@ -73,19 +83,26 @@ describe("DecisionEventService", () => {
 
   describe("getSessionDecisions", () => {
     it("returns all decisions for a session", async () => {
-      const mockEvents = [
+      const triageDecision: TriageDecision = { itemId: "item-1", result: "top" };
+      const pairwiseDecision: PairwiseDecision = {
+        itemAId: "item-2",
+        itemBId: "item-3",
+        result: "tie",
+      };
+
+      const mockEvents: DecisionEvent[] = [
         {
           id: "event-1",
           sessionId: "sess-123",
-          type: "triage" as const,
-          decision: { itemId: "item-1", result: "top" },
+          type: "triage",
+          decision: triageDecision,
           createdAt: new Date(),
         },
         {
           id: "event-2",
           sessionId: "sess-123",
-          type: "pairwise_compare" as const,
-          decision: { itemAId: "item-2", itemBId: "item-3", result: "tie" },
+          type: "pairwise_compare",
+          decision: pairwiseDecision,
           createdAt: new Date(),
         },
       ];
@@ -102,11 +119,15 @@ describe("DecisionEventService", () => {
 
   describe("getDecisionEvent", () => {
     it("returns a specific decision event", async () => {
-      const mockEvent = {
+      const triageDecision: TriageDecision = {
+        itemId: "item-1",
+        result: "top",
+      };
+      const mockEvent: DecisionEvent = {
         id: "event-123",
         sessionId: "sess-123",
-        type: "triage" as const,
-        decision: { itemId: "item-1", result: "top" },
+        type: "triage",
+        decision: triageDecision,
         createdAt: new Date(),
       };
 

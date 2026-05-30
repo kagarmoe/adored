@@ -38,4 +38,11 @@ export class ItemService {
   async deleteItem(itemId: string): Promise<Item> {
     return this.repo.softDelete(itemId);
   }
+
+  async restoreItem(itemId: string): Promise<Item> {
+    return this.repo.update(itemId, {
+      deletedAt: null,
+      updatedAt: new Date(),
+    });
+  }
 }

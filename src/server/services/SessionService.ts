@@ -9,6 +9,12 @@ export class SessionService {
     curatorId: string,
     goal?: string,
   ): Promise<Session> {
+    const existing = await this.repo.findActive(collectionId, curatorId);
+    if (existing) {
+      throw new Error(
+        `Active session already exists for curator ${curatorId} in collection ${collectionId}`,
+      );
+    }
     return this.repo.create({ collectionId, curatorId, goal });
   }
 
