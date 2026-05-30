@@ -10,7 +10,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "db:generate": "drizzle-kit generate:pg --schema=src/lib/db/schema.ts --out=drizzle",
-    "db:migrate": "node -r esbuild-register scripts/migrate.ts"
+    "db:migrate": "node -r esbuild-register scripts/migrate.ts",
+    "auth:verify": "node -r ./scripts/load-env.js scripts/verify-auth.ts"
   },
   "dependencies": {
     "next": "14.2.3",
