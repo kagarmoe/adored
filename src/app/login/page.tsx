@@ -1,16 +1,49 @@
 "use client";
 
-import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Button, Input, ErrorMessage } from "@/components/ui";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
-  async function handleSignIn(e: React.FormEvent<HTMLFormElement>) {
+  const callbackUrl = searchParams.get("callbackUrl") || "/collections";
+
+  async function handlePasswordSignIn(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setLoading(true);
+
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError(result.error);
+      } else if (result?.ok) {
+        router.push(callbackUrl);
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleMagicLink(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
       const result = await signIn("email", {
@@ -19,72 +52,102 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError("Failed to send sign-in email. Please try again.");
+        setError(result.error);
       } else if (result?.ok) {
-        setSubmitted(true);
+        setMagicLinkSent(true);
       }
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      setError("Failed to send magic link. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
 
-  if (submitted) {
+  if (magicLinkSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
         <div className="max-w-sm w-full bg-white rounded-lg shadow-lg p-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Check your email</h1>
-          <p className="text-gray-700 mb-4">
+          <p className="text-gray-600 mb-4">
             A sign-in link has been sent to <strong>{email}</strong>
           </p>
-          <p className="text-gray-600 text-sm">
-            Click the link in the email to complete your sign-in. If you don&apos;t see it, check your spam folder.
+          <p className="text-gray-600 text-sm mb-6">
+            Click the link in the email to sign in. If you don&apos;t see it, check your spam folder.
           </p>
-          <button
-            onClick={() => setSubmitted(false)}
-            className="mt-6 w-full bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold py-3 px-4 rounded-lg transition-colors h-11"
+          <Button
+            onClick={() => {
+              setMagicLinkSent(false);
+              setEmail("");
+            }}
+            variant="secondary"
+            fullWidth
           >
             Try a different email
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-sm w-full bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">PurseInator</h1>
-        <p className="text-gray-600 mb-8">Curate what you love</p>
-
-        <p className="text-gray-700 mb-6">
-          Sign in to start organizing and sorting your favorite collections.
+        <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
+          PurseInator
+        </h1>
+        <p className="text-center text-gray-600 mb-8">
+          sort what you love, let go of the rest
         </p>
 
-        <form onSubmit={handleSignIn} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Email address
-            </label>
-            <input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        {error && <ErrorMessage message={error} />}
 
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>}
-
-          <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors h-12 flex items-center justify-center"
-          >
-            Sign in with Email
-          </button>
+        <form onSubmit={handlePasswordSignIn} className="space-y-4 mb-6">
+          <Input
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={loading}
+            label="Email"
+          />
+          <Input
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={loading}
+            label="Password"
+          />
+          <Button type="submit" disabled={loading} fullWidth>
+            {loading ? "Signing in..." : "Sign in"}
+          </Button>
         </form>
+
+        <div className="relative mb-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">or</span>
+          </div>
+        </div>
+
+        <Button
+          type="button"
+          variant="secondary"
+          fullWidth
+          onClick={handleMagicLink}
+          disabled={loading || !email}
+        >
+          Email me a magic link
+        </Button>
+
+        <p className="text-center text-sm text-gray-600 mt-6">
+          New here?{" "}
+          <a href="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+            Create an account
+          </a>
+        </p>
       </div>
     </div>
   );
