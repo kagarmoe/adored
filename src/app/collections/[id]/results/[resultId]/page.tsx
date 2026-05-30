@@ -5,9 +5,11 @@ import { CollectionRepository } from "@/server/repositories/implementations/Coll
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
+import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { AppLayout } from "@/components/layout";
 import { Badge, Button, Card, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
+import { SharePanel } from "@/features/results/SharePanel";
 import Link from "next/link";
 
 interface ResultDetailPageProps {
@@ -32,11 +34,13 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
   const resultRepo = new SortResultRepository(db);
   const resultItemRepo = new SortResultItemRepository(db);
   const itemRepo = new ItemRepository(db);
-  const [collection, result, resultItems, items] = await Promise.all([
+  const shareRepo = new SortResultShareRepository(db);
+  const [collection, result, resultItems, items, shares] = await Promise.all([
     collectionRepo.findById(params.id),
     resultRepo.findById(params.resultId),
     resultItemRepo.findByResult(params.resultId),
     itemRepo.findByCollection(params.id),
+    shareRepo.findByResult(params.resultId),
   ]);
 
   if (!collection || !result || result.collectionId !== params.id) {
@@ -101,6 +105,13 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
               );
             })}
           </div>
+        )}
+
+        {result.status === "finalized" && (
+          <SharePanel
+            resultId={params.resultId}
+            initialShares={shares}
+          />
         )}
       </div>
     </AppLayout>
