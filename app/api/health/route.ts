@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { getDb } from '@/lib/db'
+import { collectionsTable } from '@/lib/db/schema'
+import { count } from 'drizzle-orm'
 
-// Force every request to hit the DB. A cached 200 is a lie when the DB is down.
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
   const schemaVersion = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'unknown'
 
   try {
-    // Trivial read that exercises Prisma + the pg adapter + Neon. No PII.
-    await db.collection.count()
+    const db = getDb()
+    await db.select({ value: count() }).from(collectionsTable)
     return NextResponse.json(
       { status: 'ok', db: 'ok', schema_version: schemaVersion },
       { status: 200 },
