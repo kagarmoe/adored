@@ -1,23 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
-import { ResultController } from "@/server/api/results";
-import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { getDb } from "@/lib/db";
+import { sortResultsTable } from "@/lib/db/schema";
+import { generateId } from "@/lib/id";
+import { getSession } from "@/lib/auth";
 
-export async function GET(
-  _request: NextRequest
-) {
-  try {
-    await requireAuth();
-    const db = getDb();
-    const resultRepo = new SortResultRepository(db);
-    const controller = new ResultController(resultRepo);
-    const results = await controller.listResults();
-    return NextResponse.json(results);
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
-  }
+interface CreateResultRequest {
+  sessionId: string;
+  collectionId: string;
+  name: string;
+}
+
+export async function POST(req: NextRequest) {
+  const session = await getSession();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body: CreateResultRequest = await req.json();
+  const db = getDb();
+
+  const [result] = await db.insert(sortResultsTable).values({
+    id: generateId("result"),
+    collectionId: body.collectionId,
+    curatorId: session.user.id,
+    status: "draft",
+    name: body.name,
+  }).returning();
+
+  return NextResponse.json(result, { status: 201 });
 }
