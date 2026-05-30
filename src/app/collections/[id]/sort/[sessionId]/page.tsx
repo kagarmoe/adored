@@ -121,6 +121,22 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
             </Card>
           </Link>
         </div>
+
+        {bucketed > 0 && (
+          <Card padding="lg" className="border-blue-200 bg-blue-50">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-blue-950">Ready to see results?</h2>
+                <p className="mt-1 text-sm text-blue-900">
+                  You&apos;ve made {bucketed} decision{bucketed !== 1 ? "s" : ""}. Generate a draft result to see the ranked order.
+                </p>
+              </div>
+              <Link href={`/collections/${params.id}/results`}>
+                <Button>View Results</Button>
+              </Link>
+            </div>
+          </Card>
+        )}
       </div>
     </AppLayout>
   );
