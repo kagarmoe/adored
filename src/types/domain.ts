@@ -104,6 +104,7 @@ export interface Session {
   goal: string | null;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 // ===== DECISION EVENT =====
@@ -143,6 +144,7 @@ export interface CollectionPreferenceItem {
   rankBucket: RankBucket;
   comparisonCount: number;
   lastSeen: Date;
+  createdAt: Date;
   updatedAt: Date;
 }
 
