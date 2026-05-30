@@ -26,6 +26,8 @@ vercel
 
 ### Step 2: Configure Environment Variables
 
+**All environment variables must be set in Vercel Dashboard** (not in vercel.ts).
+
 In Vercel Project Settings → Environment Variables, add:
 
 #### Required (All Environments)
