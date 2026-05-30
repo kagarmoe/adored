@@ -5,32 +5,58 @@ import Link from "next/link";
 interface CollectionCardProps {
   collection: Collection;
   itemCount?: number;
-  role?: "owner" | "curator";
+  curators?: Array<{ id: string; name: string }>;
 }
 
-export function CollectionCard({ collection, itemCount = 0, role = "owner" }: CollectionCardProps) {
+export function CollectionCard({ collection, itemCount = 0, curators = [] }: CollectionCardProps) {
+  const getCuratorInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <Link href={`/collections/${collection.id}`}>
-      <Card interactive padding="md">
-        <div className="space-y-3">
+      <Card interactive padding="none" className="overflow-hidden h-full flex flex-col">
+        {/* Cover Photo */}
+        <div className="h-32 bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center relative overflow-hidden">
+          <span className="text-4xl">📷</span>
+        </div>
+
+        {/* Card Content */}
+        <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
           <div className="space-y-2">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="text-lg font-semibold text-gray-900">{collection.name}</h3>
-              <div className="flex shrink-0 gap-2">
-                <Badge variant={role}>{role === "owner" ? "Owner" : "Curator"}</Badge>
-                {collection.status !== "active" && (
-                  <Badge variant={collection.status}>{collection.status}</Badge>
-                )}
-              </div>
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{collection.name}</h3>
+              {collection.status !== "active" && (
+                <Badge variant={collection.status} className="shrink-0">{collection.status}</Badge>
+              )}
             </div>
             {collection.description && (
-              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{collection.description}</p>
+              <p className="text-sm text-gray-600 line-clamp-2">{collection.description}</p>
             )}
           </div>
 
-          <div className="flex justify-between text-sm text-gray-500">
-            <span>{itemCount} items</span>
-            <span>{new Date(collection.updatedAt).toLocaleDateString()}</span>
+          {/* Stats and Curators */}
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>{itemCount} items</span>
+              <span>{new Date(collection.updatedAt).toLocaleDateString()}</span>
+            </div>
+
+            {/* Curator Badges */}
+            {curators.length > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                {curators.map((curator) => (
+                  <Badge key={curator.id} variant="curator" title={curator.name}>
+                    {getCuratorInitials(curator.name)}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </Card>

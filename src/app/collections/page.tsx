@@ -60,7 +60,7 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
             message="Try a different status filter"
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             {filteredCollections.map((collection) => (
               <CollectionCard key={collection.id} collection={collection} />
             ))}
