@@ -11,7 +11,7 @@ import { generateId } from "@/lib/id";
 import { env } from "@/lib/env";
 
 export const authOptions: NextAuthOptions = {
-  secret: env.NEXTAUTH_SECRET,
+  secret: env.AUTH_SECRET,
   adapter: DrizzleAdapter(getDb()),
   providers: [
     Credentials({
