@@ -10,6 +10,13 @@ interface ItemCardProps {
   bucket?: "top" | "high" | "medium" | "low";
 }
 
+const bucketDots = {
+  top: "●●●●",
+  high: "●●●",
+  medium: "●●",
+  low: "●",
+};
+
 const bucketLabels = {
   top: "Love",
   high: "Like",
@@ -37,7 +44,7 @@ export function ItemCard({ item, collectionId, heroPhotoUrl, bucket }: ItemCardP
           <div className="space-y-2">
             <div className="flex items-start justify-between gap-2">
               <h3 className="font-semibold text-gray-900 truncate">{item.name}</h3>
-              {bucket && <Badge variant={bucket}>{bucketLabels[bucket]}</Badge>}
+              {bucket && <Badge variant={bucket} title={bucketLabels[bucket]}>{bucketDots[bucket]}</Badge>}
             </div>
             {item.brand && <p className="text-xs text-gray-600 truncate">{item.brand}</p>}
             {item.status && item.status !== "active" && (
