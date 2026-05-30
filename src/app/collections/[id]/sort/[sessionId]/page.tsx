@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
-import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
+import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { AppLayout } from "@/components/layout";
@@ -23,19 +23,29 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
   const collectionRepo = new CollectionRepository(db);
   const itemRepo = new ItemRepository(db);
   const sessionRepo = new SessionRepository(db);
-  const decisionRepo = new DecisionEventRepository(db);
-  const [collection, items, sortSession, decisions] = await Promise.all([
+  const prefRepo = new CollectionPreferenceItemRepository(db);
+  const [collection, items, sortSession] = await Promise.all([
     collectionRepo.findById(params.id),
     itemRepo.findByCollection(params.id),
     sessionRepo.findById(params.sessionId),
-    decisionRepo.findBySession(params.sessionId),
   ]);
 
   if (!collection || !sortSession) {
     redirect(`/collections/${params.id}/sort`);
   }
 
-  const progress = items.length === 0 ? 0 : Math.min(100, Math.round((decisions.length / items.length) * 100));
+  const preferences = await prefRepo.findByCollection(params.id, sortSession.curatorId);
+
+  const bucketCounts = {
+    top: preferences.filter((p) => p.rankBucket === "top").length,
+    high: preferences.filter((p) => p.rankBucket === "high").length,
+    medium: preferences.filter((p) => p.rankBucket === "medium").length,
+    low: preferences.filter((p) => p.rankBucket === "low").length,
+  };
+
+  const bucketed = bucketCounts.top + bucketCounts.high + bucketCounts.medium + bucketCounts.low;
+  const remaining = items.length - bucketed;
+  const progress = items.length === 0 ? 0 : Math.round((bucketed / items.length) * 100);
 
   return (
     <AppLayout
@@ -57,15 +67,36 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
 
         <Card padding="lg">
           <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Progress</p>
-                <p className="text-2xl font-bold text-gray-900">{decisions.length} decisions</p>
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-3">Progress</p>
+              <div className="h-3 overflow-hidden rounded-full bg-gray-100">
+                <div className="h-full rounded-full bg-blue-600" style={{ width: `${progress}%` }} />
               </div>
-              <p className="text-sm text-gray-600">{items.length} items in scope</p>
             </div>
-            <div className="h-3 overflow-hidden rounded-full bg-gray-100">
-              <div className="h-full rounded-full bg-blue-600" style={{ width: `${progress}%` }} />
+
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-gray-600">Love</p>
+                <p className="text-lg font-bold text-gray-900">{bucketCounts.top}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Like</p>
+                <p className="text-lg font-bold text-gray-900">{bucketCounts.high}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Maybe</p>
+                <p className="text-lg font-bold text-gray-900">{bucketCounts.medium}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Release</p>
+                <p className="text-lg font-bold text-gray-900">{bucketCounts.low}</p>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-gray-200">
+              <p className="text-sm text-gray-600">
+                {remaining} of {items.length} items left to triage
+              </p>
             </div>
           </div>
         </Card>
