@@ -1,3 +1,17 @@
+CREATE TABLE IF NOT EXISTS "account" (
+	"userId" text NOT NULL,
+	"type" text NOT NULL,
+	"provider" text NOT NULL,
+	"providerAccountId" text NOT NULL,
+	"refresh_token" text,
+	"access_token" text,
+	"expires_at" bigint,
+	"token_type" text,
+	"scope" text,
+	"id_token" text,
+	CONSTRAINT "account_provider_providerAccountId_pk" PRIMARY KEY("provider","providerAccountId")
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "collections" (
 	"id" text PRIMARY KEY NOT NULL,
 	"owner_id" text NOT NULL,
@@ -99,6 +113,12 @@ CREATE TABLE IF NOT EXISTS "preferences" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "session" (
+	"sessionToken" text PRIMARY KEY NOT NULL,
+	"userId" text NOT NULL,
+	"expires" timestamp NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "sessions" (
 	"id" text PRIMARY KEY NOT NULL,
 	"collection_id" text NOT NULL,
@@ -144,16 +164,24 @@ CREATE TABLE IF NOT EXISTS "sort_results" (
 	"finalized_at" timestamp
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "users" (
+CREATE TABLE IF NOT EXISTS "user" (
 	"id" text PRIMARY KEY NOT NULL,
-	"email" text NOT NULL,
 	"name" text,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
-	"deleted_at" timestamp,
-	CONSTRAINT "users_email_unique" UNIQUE("email")
+	"email" text,
+	"emailVerified" timestamp,
+	"image" text,
+	"password" text,
+	CONSTRAINT "user_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "verificationToken" (
+	"identifier" text NOT NULL,
+	"token" text NOT NULL,
+	"expires" timestamp NOT NULL,
+	CONSTRAINT "verificationToken_identifier_token_pk" PRIMARY KEY("identifier","token")
+);
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "account_userId_idx" ON "account" ("userId");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "collections_owner_id_idx" ON "collections" ("owner_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "decision_events_session_id_idx" ON "decision_events" ("session_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "invitations_collection_id_idx" ON "invitations" ("collection_id");--> statement-breakpoint
@@ -166,6 +194,7 @@ CREATE INDEX IF NOT EXISTS "photos_uploaded_by_idx" ON "photos" ("uploaded_by");
 CREATE INDEX IF NOT EXISTS "photos_deleted_at_idx" ON "photos" ("deleted_at");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "preferences_collection_curator_idx" ON "preferences" ("collection_id","curator_id");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "preferences_item_curator_unique" ON "preferences" ("item_id","curator_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "session_userId_idx" ON "session" ("userId");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "sessions_collection_id_idx" ON "sessions" ("collection_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "sessions_curator_id_idx" ON "sessions" ("curator_id");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "sessions_active_unique" ON "sessions" ("collection_id","curator_id");--> statement-breakpoint
@@ -174,9 +203,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS "sort_shares_token_unique" ON "sort_result_sha
 CREATE INDEX IF NOT EXISTS "sort_shares_result_id_idx" ON "sort_result_shares" ("sort_result_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "sort_results_collection_id_idx" ON "sort_results" ("collection_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "sort_results_curator_id_idx" ON "sort_results" ("curator_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "users_email_idx" ON "users" ("email");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_email_idx" ON "user" ("email");--> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "collections" ADD CONSTRAINT "collections_owner_id_users_id_fk" FOREIGN KEY ("owner_id") REFERENCES "users"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "account" ADD CONSTRAINT "account_userId_user_id_fk" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "collections" ADD CONSTRAINT "collections_owner_id_user_id_fk" FOREIGN KEY ("owner_id") REFERENCES "user"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -206,7 +241,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "memberships" ADD CONSTRAINT "memberships_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "memberships" ADD CONSTRAINT "memberships_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -224,7 +259,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "preferences" ADD CONSTRAINT "preferences_curator_id_users_id_fk" FOREIGN KEY ("curator_id") REFERENCES "users"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "preferences" ADD CONSTRAINT "preferences_curator_id_user_id_fk" FOREIGN KEY ("curator_id") REFERENCES "user"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -236,13 +271,19 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
+ ALTER TABLE "session" ADD CONSTRAINT "session_userId_user_id_fk" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
  ALTER TABLE "sessions" ADD CONSTRAINT "sessions_collection_id_collections_id_fk" FOREIGN KEY ("collection_id") REFERENCES "collections"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "sessions" ADD CONSTRAINT "sessions_curator_id_users_id_fk" FOREIGN KEY ("curator_id") REFERENCES "users"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "sessions" ADD CONSTRAINT "sessions_curator_id_user_id_fk" FOREIGN KEY ("curator_id") REFERENCES "user"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -272,7 +313,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "sort_results" ADD CONSTRAINT "sort_results_curator_id_users_id_fk" FOREIGN KEY ("curator_id") REFERENCES "users"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "sort_results" ADD CONSTRAINT "sort_results_curator_id_user_id_fk" FOREIGN KEY ("curator_id") REFERENCES "user"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
