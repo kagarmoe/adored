@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
+import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import { AppLayout } from "@/components/layout";
 import { Card, EmptyState } from "@/components/ui";
 import { DecisionControls } from "@/features/sorting/DecisionControls";
@@ -23,10 +24,12 @@ export default async function TriagePage({ params }: TriagePageProps) {
   const collectionRepo = new CollectionRepository(db);
   const itemRepo = new ItemRepository(db);
   const sessionRepo = new SessionRepository(db);
-  const [collection, items, sortSession] = await Promise.all([
+  const decisionRepo = new DecisionEventRepository(db);
+  const [collection, items, sortSession, decisions] = await Promise.all([
     collectionRepo.findById(params.id),
     itemRepo.findByCollection(params.id),
     sessionRepo.findById(params.sessionId),
+    decisionRepo.findBySession(params.sessionId),
   ]);
 
   if (!collection || !sortSession) {
@@ -34,6 +37,8 @@ export default async function TriagePage({ params }: TriagePageProps) {
   }
 
   const item = items[0];
+  const totalItems = items.length;
+  const decisionCount = decisions.length;
 
   return (
     <AppLayout
@@ -45,9 +50,20 @@ export default async function TriagePage({ params }: TriagePageProps) {
       ]}
     >
       <div className="mx-auto max-w-xl space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Triage</h1>
-          <p className="mt-2 text-gray-600">Assign the current item to a preference bucket.</p>
+        <div className="flex items-end justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Triage</h1>
+            <p className="mt-2 text-gray-600">Assign the current item to a preference bucket.</p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-gray-500">{decisionCount} of {totalItems}</p>
+            <div className="mt-2 w-32 bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full transition-all"
+                style={{ width: `${totalItems > 0 ? (decisionCount / totalItems) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
         </div>
 
         {!item ? (
