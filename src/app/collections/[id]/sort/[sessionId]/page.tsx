@@ -5,8 +5,10 @@ import { CollectionRepository } from "@/server/repositories/implementations/Coll
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
+import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import { AppLayout } from "@/components/layout";
 import { Badge, Button, Card } from "@/components/ui";
+import { SessionAnalytics } from "@/features/sessions/SessionAnalytics";
 import Link from "next/link";
 
 interface SessionPageProps {
@@ -24,6 +26,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
   const itemRepo = new ItemRepository(db);
   const sessionRepo = new SessionRepository(db);
   const prefRepo = new CollectionPreferenceItemRepository(db);
+  const decisionRepo = new DecisionEventRepository(db);
   const [collection, items, sortSession] = await Promise.all([
     collectionRepo.findById(params.id),
     itemRepo.findByCollection(params.id),
@@ -34,7 +37,10 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
     redirect(`/collections/${params.id}/sort`);
   }
 
-  const preferences = await prefRepo.findByCollection(params.id, sortSession.curatorId);
+  const [preferences, decisions] = await Promise.all([
+    prefRepo.findByCollection(params.id, sortSession.curatorId),
+    decisionRepo.findBySession(params.sessionId),
+  ]);
 
   const bucketCounts = {
     top: preferences.filter((p) => p.rankBucket === "top").length,
@@ -137,6 +143,13 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
             </div>
           </Card>
         )}
+
+        <SessionAnalytics
+          preferences={preferences}
+          decisions={decisions}
+          totalItems={items.length}
+          sessionCreatedAt={sortSession.createdAt}
+        />
       </div>
     </AppLayout>
   );
