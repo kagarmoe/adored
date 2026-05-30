@@ -58,11 +58,11 @@ function validateEnv(): EnvConfig {
 }
 
 export const env = new Proxy({} as EnvConfig, {
-  get: (target, prop) => {
+  get: (_target, prop: string | symbol) => {
     const config = validateEnv();
     return config[prop as keyof EnvConfig];
   },
-});
+}) as EnvConfig;
 
 // Validate on module load in production
 if (typeof window === "undefined" && process.env.NODE_ENV === "production") {
