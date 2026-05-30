@@ -17,6 +17,8 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "next-auth": "4.24.10",
+    "@auth/drizzle-adapter": "^1.2.0",
+    "bcryptjs": "^2.4.3",
     "@vercel/blob": "0.23.4",
     "drizzle-orm": "0.30.10",
     "drizzle-kit": "0.20.17",
@@ -25,13 +27,15 @@
     "zod": "3.23.8",
     "tailwindcss": "3.4.1",
     "class-variance-authority": "0.7.0",
-    "ulid": "^2.3.0"
+    "ulid": "^2.3.0",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "typescript": "^5.3.0",
     "@types/node": "^20.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/bcryptjs": "^2.4.2",
     "@vitejs/plugin-react": "^4.2.0",
     "vitest": "^1.0.0",
     "@vitest/ui": "^1.0.0",
