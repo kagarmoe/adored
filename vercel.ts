@@ -5,22 +5,6 @@ export const config: VercelConfig = {
   buildCommand: "npm run build",
   installCommand: "npm install",
 
-  // Environment variables configuration
-  env: {
-    // Database - users must set in Vercel project settings
-    DATABASE_URL: "@database_url",
-    // NextAuth - generate and set in Vercel project settings
-    NEXTAUTH_SECRET: "@nextauth_secret",
-    NEXTAUTH_URL: "@nextauth_url",
-    // Email - default for development, override in production
-    EMAIL_FROM: "noreply@purseinator.app",
-    EMAIL_SERVER_HOST: "@email_server_host",
-    EMAIL_SERVER_PORT: "@email_server_port",
-    // Optional SMTP auth for production
-    EMAIL_SERVER_USER: "@email_server_user",
-    EMAIL_SERVER_PASSWORD: "@email_server_password",
-  },
-
   // Rewrites for API routes (all handled by Next.js)
   rewrites: [],
 
