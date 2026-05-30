@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "db:generate": "drizzle-kit generate:pg --schema=src/lib/db/schema.ts --out=drizzle",
+    "db:migrate": "node -r esbuild-register scripts/migrate.ts"
   },
   "dependencies": {
     "next": "14.2.3",
@@ -36,6 +38,7 @@
     "eslint": "^8.55.0",
     "eslint-config-next": "^15.0.0",
     "postcss": "^8.4.0",
-    "autoprefixer": "^10.4.0"
+    "autoprefixer": "^10.4.0",
+    "esbuild-register": "^3.5.0"
   }
 }
