@@ -14,7 +14,7 @@ export async function POST(
     const user = await requireAuth();
     const db = getDb();
     const prefRepo = new CollectionPreferenceItemRepository(db);
-    const scoringService = new ScoringService(prefRepo);
+    const scoringService = new ScoringService(new DecisionEventRepository(db), new SessionRepository(db));
     const prefService = new PreferenceStateService(prefRepo, scoringService);
     const controller = new PreferenceController(prefRepo, prefService);
     const prefs = await controller.recalculatePreferences(params.id, user.id);

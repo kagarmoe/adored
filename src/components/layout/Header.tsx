@@ -22,7 +22,7 @@ export function Header() {
             <Button
               variant="ghost"
               size="md"
-              onClick={() => signOut({ redirect: true, redirectUrl: "/login" })}
+              onClick={() => signOut({ redirect: true, callbackUrl: "/login" })}
             >
               Sign out
             </Button>

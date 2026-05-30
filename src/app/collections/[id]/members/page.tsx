@@ -28,7 +28,7 @@ export default async function MembersPage({ params }: MembersPageProps) {
   }
 
   const members = await membershipRepo.findByCollection(params.id);
-  const currentUserMembership = members.find((m) => m.userId === session.user.id);
+  const currentUserMembership = session.user ? members.find((m) => m.userId === session.user.id) : undefined;
   const canManage = currentUserMembership?.role === "owner" || currentUserMembership?.canManageCollection;
 
   return (
