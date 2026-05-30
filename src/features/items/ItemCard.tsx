@@ -11,10 +11,10 @@ interface ItemCardProps {
 }
 
 const bucketLabels = {
-  top: "Top",
-  high: "High",
-  medium: "Medium",
-  low: "Low",
+  top: "Love",
+  high: "Like",
+  medium: "Maybe",
+  low: "Release",
 };
 
 export function ItemCard({ item, collectionId, heroPhotoUrl, bucket }: ItemCardProps) {

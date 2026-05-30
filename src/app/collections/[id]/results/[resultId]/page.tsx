@@ -15,10 +15,10 @@ interface ResultDetailPageProps {
 }
 
 const bucketLabels = {
-  top: "Top",
-  high: "High",
-  medium: "Medium",
-  low: "Low",
+  top: "Love",
+  high: "Like",
+  medium: "Maybe",
+  low: "Release",
 };
 
 export default async function ResultDetailPage({ params }: ResultDetailPageProps) {

@@ -60,10 +60,10 @@ export default async function TriagePage({ params }: TriagePageProps) {
                 sessionId={params.sessionId}
                 type="triage"
                 decisions={[
-                  { label: "Top", decision: { itemId: item.id, result: "top" } },
-                  { label: "High", decision: { itemId: item.id, result: "high" } },
-                  { label: "Medium", decision: { itemId: item.id, result: "medium" } },
-                  { label: "Low", decision: { itemId: item.id, result: "low" } },
+                  { label: "Love", decision: { itemId: item.id, result: "top" } },
+                  { label: "Like", decision: { itemId: item.id, result: "high" } },
+                  { label: "Maybe", decision: { itemId: item.id, result: "medium" } },
+                  { label: "Release", decision: { itemId: item.id, result: "low" } },
                 ]}
               />
             </Card>
