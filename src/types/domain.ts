@@ -23,18 +23,25 @@ export interface Collection {
 }
 
 // ===== COLLECTION MEMBERSHIP =====
+export type MembershipRole = "owner" | "curator";
+
 export interface CollectionMembership {
   id: string;
   collectionId: string;
   userId: string;
+  name?: string;
+  role: MembershipRole;
   canManageCollection: boolean;
   canInviteMembers: boolean;
   canAddItems: boolean;
+  canDeleteItems: boolean;
   canEditMetadata: boolean;
   canAddPhotos: boolean;
   canDeletePhotos: boolean;
   canSort: boolean;
   canViewOutputs: boolean;
+  canViewResults?: boolean;
+  canCreateSession?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

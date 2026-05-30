@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, LoadingSpinner, ErrorMessage } from "@/components/ui";
 import { apiGet, apiPost } from "@/lib/api-client";
-import type { Invitation } from "@/types";
+import type { Invitation, Collection } from "@/types";
 
 interface InvitationPageProps {
   params: { token: string };
@@ -13,6 +13,7 @@ interface InvitationPageProps {
 export default function InvitationPage({ params }: InvitationPageProps) {
   const router = useRouter();
   const [invitation, setInvitation] = useState<Invitation | null>(null);
+  const [collection, setCollection] = useState<Collection | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [accepting, setAccepting] = useState(false);
@@ -20,8 +21,16 @@ export default function InvitationPage({ params }: InvitationPageProps) {
   useEffect(() => {
     const fetchInvitation = async () => {
       try {
-        const data = await apiGet<Invitation>(`/api/invitations/${params.token}`);
-        setInvitation(data);
+        const inviteData = await apiGet<Invitation>(`/api/invitations/${params.token}`);
+        setInvitation(inviteData);
+
+        // Fetch collection details
+        try {
+          const collectionData = await apiGet<Collection>(`/api/collections/${inviteData.collectionId}`);
+          setCollection(collectionData);
+        } catch {
+          // Continue without collection details if fetch fails
+        }
       } catch (err: any) {
         setError(err?.message || "Invitation not found or expired");
       } finally {
@@ -73,8 +82,11 @@ export default function InvitationPage({ params }: InvitationPageProps) {
         </p>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <p className="text-sm font-medium text-gray-900">Collection Name</p>
-          <p className="text-lg font-bold text-blue-600">{invitation.collectionId}</p>
+          <p className="text-sm font-medium text-gray-900">Collection</p>
+          <p className="text-lg font-bold text-blue-600">{collection?.name || "Loading..."}</p>
+          {collection?.description && (
+            <p className="text-xs text-gray-600 mt-2">{collection.description}</p>
+          )}
         </div>
 
         <div className="flex gap-3">

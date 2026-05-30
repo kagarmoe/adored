@@ -36,8 +36,8 @@ export function usePermissions(membership: CollectionMembership | null | undefin
     canDeletePhotos: isOwner || membership.canDeletePhotos,
     canInviteMembers: isOwner || membership.canInviteMembers,
     canManageCollection: isOwner || membership.canManageCollection,
-    canCreateSession: isOwner || membership.canCreateSession,
-    canViewResults: isOwner || membership.canViewResults,
+    canCreateSession: isOwner || membership.canSort,
+    canViewResults: isOwner || membership.canViewOutputs,
     isOwner,
   };
 }
