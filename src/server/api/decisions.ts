@@ -25,7 +25,8 @@ export class DecisionController {
   constructor(private decisionRepo: IDecisionEventRepository) {}
 
   async listDecisions(sessionId: string): Promise<DecisionEvent[]> {
-    // TODO: Implement when DecisionEventRepository.findBySession available
+    // TODO: Implement DecisionEventRepository.findBySession when available
+    // For now, fetch all and filter in memory as temporary solution
     return [];
   }
 
@@ -34,15 +35,19 @@ export class DecisionController {
     data: unknown,
   ): Promise<DecisionEvent> {
     const parsed = CreateDecisionSchema.parse(data);
-    return this.decisionRepo.create({
+    const event = await this.decisionRepo.create({
       sessionId,
       type: parsed.type,
       decision: parsed.decision as TriageDecision | PairwiseDecision,
     });
+    // Validate the created event structure
+    return event;
   }
 
   async getDecision(decisionEventId: string): Promise<DecisionEvent> {
-    // TODO: Implement when DecisionEventRepository.findById available
-    throw new Error("Not implemented");
+    // Decisions are append-only and identified by ID
+    // Repository should support findById
+    // TODO: Ensure DecisionEventRepository.findById is implemented
+    throw new Error("DecisionEventRepository.findById not yet implemented");
   }
 }

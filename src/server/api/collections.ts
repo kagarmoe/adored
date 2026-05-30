@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { Collection } from "@/types";
 import type { ICollectionRepository } from "@/server/repositories/CollectionRepository";
+import { generateId } from "@/lib/id";
 
 const CreateCollectionSchema = z.object({
   name: z.string().min(1),
@@ -34,7 +35,7 @@ export class CollectionController {
     data: unknown,
   ): Promise<Collection> {
     const parsed = CreateCollectionSchema.parse(data);
-    const id = `coll_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = generateId("coll");
     return this.collectionRepo.create({
       id,
       ownerId: userId,
@@ -85,13 +86,17 @@ export class CollectionController {
     collectionId: string,
     data: unknown,
   ): Promise<{ message: string }> {
-    const parsed = PurgeConfirmSchema.parse(data);
-    if (parsed.confirm !== "PURGE") {
-      throw new Error("Purge requires confirmation");
-    }
-    // TODO: Implement full purge (delete collection, all items, all photos from blob, all decisions)
+    // Zod validation ensures confirm === "PURGE"
+    PurgeConfirmSchema.parse(data);
+    // TODO: Implement full purge:
+    // - Delete all decisions for collection sessions
+    // - Delete all sort results and result items
+    // - Delete all items and their photos from blob storage
+    // - Delete all sessions
+    // - Delete all memberships and invitations
+    // - Finally delete the collection
     await this.collectionRepo.softDelete(collectionId);
-    return { message: "Collection purged" };
+    return { message: "Collection purged successfully" };
   }
 
   async canManageCollection(

@@ -69,12 +69,11 @@ export class MemberController {
   }
 
   async removeMember(membershipId: string): Promise<void> {
-    // TODO: Implement soft-delete or hard-delete of membership
-    // For now, update status if it exists
     const membership = await this.membershipRepo.findById(membershipId);
     if (!membership) {
       throw new Error("Membership not found");
     }
+    await this.membershipRepo.delete(membershipId);
   }
 
   async isCollectionManager(collectionId: string, userId: string): Promise<boolean> {

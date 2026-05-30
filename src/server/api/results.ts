@@ -28,8 +28,15 @@ export class ResultController {
     data: unknown,
   ): Promise<SortResult> {
     const parsed = CreateResultSchema.parse(data);
-    // TODO: Compute preferences and create draft result
-    throw new Error("Not implemented");
+    // Create draft result from preferences
+    // TODO: Integrate with PreferenceStateService to compute preferences first
+    // TODO: Create SortResultItems from computed preferences
+    return this.resultRepo.create({
+      collectionId,
+      curatorId,
+      name: parsed.name,
+      status: "draft",
+    });
   }
 
   async getResult(resultId: string): Promise<SortResult> {
@@ -58,11 +65,27 @@ export class ResultController {
   }
 
   async deleteResult(resultId: string): Promise<void> {
-    // TODO: Delete draft result
+    const result = await this.resultRepo.findById(resultId);
+    if (!result) {
+      throw new Error("Result not found");
+    }
+    if (result.status !== "draft") {
+      throw new Error("Cannot delete finalized result");
+    }
+    // TODO: Implement hard delete for draft result
   }
 
   async supersedeResult(resultId: string): Promise<SortResult> {
-    // TODO: Create new draft from finalized result
-    throw new Error("Not implemented");
+    const result = await this.resultRepo.findById(resultId);
+    if (!result) {
+      throw new Error("Result not found");
+    }
+    if (result.status !== "finalized") {
+      throw new Error("Can only supersede finalized results");
+    }
+    // Create new draft from finalized result
+    // TODO: Copy all SortResultItems to new result (without manual overrides)
+    // TODO: Create new draft with same curator/collection
+    throw new Error("Supersede not yet implemented - requires SortResultItems copy logic");
   }
 }

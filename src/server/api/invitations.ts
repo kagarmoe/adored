@@ -81,16 +81,25 @@ export class InvitationController {
   }
 
   async revokeInvitation(invitationId: string): Promise<void> {
-    // TODO: Implement revocation (update status to revoked)
+    const invitation = await this.invitationRepo.findById(invitationId);
+    if (!invitation) {
+      throw new Error("Invitation not found");
+    }
+    await this.invitationRepo.update(invitationId, { status: "revoked" });
   }
 
   async resendInvitation(invitationId: string): Promise<{ message: string }> {
-    // TODO: Send invitation email
+    const invitation = await this.invitationRepo.findById(invitationId);
+    if (!invitation) {
+      throw new Error("Invitation not found");
+    }
+    // TODO: Send invitation email with token
     return { message: "Invitation resent" };
   }
 
   async acceptInvitation(token: string, userId: string): Promise<{ message: string }> {
-    // TODO: Validate token, create membership, update invitation status
+    // TODO: Find invitation by token, validate not expired, create membership
+    // TODO: Update invitation status to accepted and set acceptedAt
     return { message: "Invitation accepted" };
   }
 }
