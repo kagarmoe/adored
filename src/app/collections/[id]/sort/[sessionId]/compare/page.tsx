@@ -4,10 +4,13 @@ import { getDb } from "@/lib/db";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
+import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
+import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import { AppLayout } from "@/components/layout";
 import { Card, EmptyState } from "@/components/ui";
 import { DecisionControls } from "@/features/sorting/DecisionControls";
 import { ItemCard } from "@/features/items/ItemCard";
+import { selectNextPair } from "@/lib/pairwise-selection";
 
 interface ComparePageProps {
   params: { id: string; sessionId: string };
@@ -23,10 +26,14 @@ export default async function ComparePage({ params }: ComparePageProps) {
   const collectionRepo = new CollectionRepository(db);
   const itemRepo = new ItemRepository(db);
   const sessionRepo = new SessionRepository(db);
-  const [collection, items, sortSession] = await Promise.all([
+  const prefRepo = new CollectionPreferenceItemRepository(db);
+  const decisionRepo = new DecisionEventRepository(db);
+  const [collection, items, sortSession, preferences, decisions] = await Promise.all([
     collectionRepo.findById(params.id),
     itemRepo.findByCollection(params.id),
     sessionRepo.findById(params.sessionId),
+    prefRepo.findByCollection(params.id, session.user.id),
+    decisionRepo.findBySession(params.sessionId),
   ]);
 
   if (!collection || !sortSession) {
@@ -51,7 +58,40 @@ export default async function ComparePage({ params }: ComparePageProps) {
     );
   }
 
-  const [itemA, itemB] = items.slice(0, 2);
+  const decidedPairs = new Set(
+    decisions
+      .filter((d) => d.type === "pairwise_compare")
+      .map((d) => {
+        const decision = d.decision as any;
+        return `${decision.itemAId}-${decision.itemBId}`;
+      })
+  );
+
+  const pair = selectNextPair({
+    preferences,
+    items,
+    decidedPairs,
+  });
+
+  if (!pair) {
+    return (
+      <AppLayout
+        breadcrumbs={[
+          { label: "Collections", href: "/collections" },
+          { label: collection.name, href: `/collections/${params.id}` },
+          { label: "Session", href: `/collections/${params.id}/sort/${params.sessionId}` },
+          { label: "Compare" },
+        ]}
+      >
+        <EmptyState
+          heading="All comparisons complete"
+          message="You&apos;ve compared all meaningful pairs. Check your results!"
+        />
+      </AppLayout>
+    );
+  }
+
+  const [itemA, itemB] = pair;
 
   return (
     <AppLayout
