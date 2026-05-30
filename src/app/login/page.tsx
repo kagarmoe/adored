@@ -22,8 +22,9 @@ function LoginContent() {
     setLoading(true);
 
     try {
+      const normalizedEmail = email.toLowerCase().trim();
       const result = await signIn("credentials", {
-        email,
+        email: normalizedEmail,
         password,
         redirect: false,
       });
@@ -46,8 +47,9 @@ function LoginContent() {
     setLoading(true);
 
     try {
+      const normalizedEmail = email.toLowerCase().trim();
       const result = await signIn("email", {
-        email,
+        email: normalizedEmail,
         redirect: false,
       });
 

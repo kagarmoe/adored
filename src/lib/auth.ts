@@ -102,17 +102,18 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user: authUser, account }) {
       if (account?.provider === "email" && authUser?.email) {
         const db = getDb();
+        const normalizedEmail = authUser.email.toLowerCase().trim();
         const existing = await db
           .select()
           .from(user)
-          .where(eq(user.email, authUser.email))
+          .where(eq(user.email, normalizedEmail))
           .limit(1);
 
         if (!existing.length) {
           await db.insert(user).values({
             id: generateId("user"),
-            email: authUser.email,
-            name: authUser.name || authUser.email.split("@")[0],
+            email: normalizedEmail,
+            name: authUser.name || normalizedEmail.split("@")[0],
             emailVerified: new Date(),
           });
         }
