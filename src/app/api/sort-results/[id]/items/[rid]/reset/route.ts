@@ -6,7 +6,7 @@ import { getDb } from "@/lib/db";
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: { id: string; rid: string } }
+  { params }: { params: { id: string; rid: string } },
 ) {
   try {
     await requireAuth();
@@ -18,7 +18,7 @@ export async function POST(
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
+      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 },
     );
   }
 }

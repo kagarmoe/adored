@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { AppLayout } from "@/components/layout";
-import { Card, EmptyState } from "@/components/ui";
+import { Badge, Card, EmptyState } from "@/components/ui";
 import Link from "next/link";
 
 interface ResultsPageProps {
@@ -55,7 +55,10 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-semibold text-gray-900">Result #{result.id.slice(0, 8)}</p>
-                      <p className="text-sm text-gray-600">Status: {result.status}</p>
+                      <p className="text-sm text-gray-600">{result.name}</p>
+                      <div className="mt-2">
+                        <Badge variant={result.status}>{result.status}</Badge>
+                      </div>
                     </div>
                     <span className="text-sm text-gray-500">
                       {new Date(result.createdAt).toLocaleDateString()}

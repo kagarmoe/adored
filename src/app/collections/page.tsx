@@ -5,9 +5,14 @@ import { CollectionRepository } from "@/server/repositories/implementations/Coll
 import { AppLayout } from "@/components/layout";
 import { Button, EmptyState } from "@/components/ui";
 import { CollectionCard } from "@/features/collections/CollectionCard";
+import { CollectionFilters } from "@/features/collections/CollectionFilters";
 import Link from "next/link";
 
-export default async function CollectionsPage() {
+interface CollectionsPageProps {
+  searchParams?: { status?: string };
+}
+
+export default async function CollectionsPage({ searchParams }: CollectionsPageProps) {
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
@@ -16,6 +21,12 @@ export default async function CollectionsPage() {
   const db = getDb();
   const collectionRepo = new CollectionRepository(db);
   const collections = await collectionRepo.findByOwner(session.user.id);
+  const activeFilter = searchParams?.status === "active" || searchParams?.status === "archived"
+    ? searchParams.status
+    : "all";
+  const filteredCollections = activeFilter === "all"
+    ? collections
+    : collections.filter((collection) => collection.status === activeFilter);
 
   return (
     <AppLayout breadcrumbs={[{ label: "Collections" }]}>
@@ -32,18 +43,25 @@ export default async function CollectionsPage() {
         </div>
 
         {/* Collections Grid */}
+        <CollectionFilters activeFilter={activeFilter} />
+
         {collections.length === 0 ? (
           <EmptyState
             heading="No collections yet"
             message="Create your first collection to start organizing items"
             action={{
               label: "Create Collection",
-              onClick: () => (window.location.href = "/collections/new"),
+              href: "/collections/new",
             }}
+          />
+        ) : filteredCollections.length === 0 ? (
+          <EmptyState
+            heading={`No ${activeFilter} collections`}
+            message="Try a different status filter"
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {collections.map((collection) => (
+            {filteredCollections.map((collection) => (
               <CollectionCard key={collection.id} collection={collection} />
             ))}
           </div>

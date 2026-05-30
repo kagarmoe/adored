@@ -12,7 +12,13 @@ const badgeVariants = cva("inline-flex items-center justify-center font-semibold
       finalized: "bg-green-100 text-green-900",
       active: "bg-blue-100 text-blue-900",
       paused: "bg-yellow-100 text-yellow-900",
+      completed: "bg-green-100 text-green-900",
+      abandoned: "bg-gray-100 text-gray-900",
+      archived: "bg-gray-100 text-gray-900",
+      deleted: "bg-red-100 text-red-900",
       pending: "bg-gray-100 text-gray-900",
+      owner: "bg-purple-100 text-purple-900",
+      curator: "bg-indigo-100 text-indigo-900",
     },
   },
   defaultVariants: {

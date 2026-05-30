@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "./Button";
+import Link from "next/link";
 
 interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   icon?: React.ReactNode;
@@ -7,7 +8,8 @@ interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   message?: string;
   action?: {
     label: string;
-    onClick: () => void;
+    href?: string;
+    onClick?: () => void;
   };
 }
 
@@ -24,11 +26,15 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
       {icon && <div className="mb-4 text-gray-400 text-5xl">{icon}</div>}
       <h3 className="text-lg font-semibold text-gray-900 mb-2">{heading}</h3>
       {message && <p className="text-gray-600 mb-6 max-w-sm">{message}</p>}
-      {action && (
+      {action?.href ? (
+        <Link href={action.href}>
+          <Button variant="primary">{action.label}</Button>
+        </Link>
+      ) : action ? (
         <Button variant="primary" onClick={action.onClick}>
           {action.label}
         </Button>
-      )}
+      ) : null}
     </div>
   )
 );

@@ -5,7 +5,8 @@ import { SessionRepository } from "@/server/repositories/implementations/Session
 import { getDb } from "@/lib/db";
 
 export async function GET(
-  _request: NextRequest
+  _request: NextRequest,
+  { params }: { params: { id: string } }
 ) {
   try {
     await requireAuth();
@@ -13,7 +14,7 @@ export async function GET(
     const sessionRepo = new SessionRepository(db);
     const controller = new SessionController(sessionRepo);
 
-    const sessions = await controller.listSessions();
+    const sessions = await controller.listSessions(params.id);
     return NextResponse.json(sessions);
   } catch (error) {
     return NextResponse.json(

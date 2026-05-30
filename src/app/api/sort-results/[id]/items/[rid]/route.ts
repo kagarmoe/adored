@@ -33,6 +33,7 @@ export async function PATCH(
     const db = getDb();
     const itemRepo = new SortResultItemRepository(db);
     const controller = new ResultItemController(itemRepo);
+
     const item = await controller.updateResultItem(params.rid, body);
     return NextResponse.json(item);
   } catch (error) {

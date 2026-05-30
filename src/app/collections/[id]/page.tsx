@@ -2,8 +2,11 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
+import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { AppLayout } from "@/components/layout";
-import { Card } from "@/components/ui";
+import { Badge, Button, Card } from "@/components/ui";
 import Link from "next/link";
 
 interface CollectionPageProps {
@@ -18,11 +21,27 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
 
   const db = getDb();
   const collectionRepo = new CollectionRepository(db);
-  const collection = await collectionRepo.findById(params.id);
+  const itemRepo = new ItemRepository(db);
+  const sessionRepo = new SessionRepository(db);
+  const resultRepo = new SortResultRepository(db);
+  const [collection, items, sessions, results] = await Promise.all([
+    collectionRepo.findById(params.id),
+    itemRepo.findByCollection(params.id),
+    sessionRepo.findByCollection(params.id),
+    resultRepo.findByCollection(params.id),
+  ]);
 
   if (!collection) {
     redirect("/collections");
   }
+
+  const activeSession = sessions.find((sortSession) => sortSession.status === "active");
+  const finalizedResults = results.filter((result) => result.status === "finalized");
+  const stats = [
+    { label: "Items", value: items.length },
+    { label: "Sessions", value: sessions.length },
+    { label: "Finalized", value: finalizedResults.length },
+  ];
 
   const dashboardLinks = [
     {
@@ -75,6 +94,34 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
             Created {new Date(collection.createdAt).toLocaleDateString()}
           </p>
         </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {stats.map((stat) => (
+            <Card key={stat.label} padding="md">
+              <p className="text-sm font-medium text-gray-500">{stat.label}</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">{stat.value}</p>
+            </Card>
+          ))}
+        </div>
+
+        {activeSession && (
+          <Card padding="lg" className="border-blue-200 bg-blue-50">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="mb-2 flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-blue-950">Active Sorting Session</h2>
+                  <Badge variant="active">active</Badge>
+                </div>
+                <p className="text-sm text-blue-900">
+                  {activeSession.goal || "Preference discovery"}
+                </p>
+              </div>
+              <Link href={`/collections/${collection.id}/sort/${activeSession.id}`}>
+                <Button>Resume</Button>
+              </Link>
+            </div>
+          </Card>
+        )}
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

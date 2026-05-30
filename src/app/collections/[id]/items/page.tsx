@@ -6,13 +6,15 @@ import { ItemRepository } from "@/server/repositories/implementations/ItemReposi
 import { AppLayout } from "@/components/layout";
 import { Button, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
+import { ItemFilters } from "@/features/items/ItemFilters";
 import Link from "next/link";
 
 interface ItemsPageProps {
   params: { id: string };
+  searchParams?: { status?: string };
 }
 
-export default async function ItemsPage({ params }: ItemsPageProps) {
+export default async function ItemsPage({ params, searchParams }: ItemsPageProps) {
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
@@ -28,6 +30,12 @@ export default async function ItemsPage({ params }: ItemsPageProps) {
   }
 
   const items = await itemRepo.findByCollection(params.id);
+  const activeFilter = ["active", "archived", "deleted"].includes(searchParams?.status || "")
+    ? searchParams!.status!
+    : "all";
+  const filteredItems = activeFilter === "all"
+    ? items
+    : items.filter((item) => (item.status || "active") === activeFilter);
 
   return (
     <AppLayout
@@ -48,18 +56,25 @@ export default async function ItemsPage({ params }: ItemsPageProps) {
           </Link>
         </div>
 
+        <ItemFilters activeFilter={activeFilter} collectionId={params.id} />
+
         {items.length === 0 ? (
           <EmptyState
             heading="No items yet"
             message="Add items to start organizing your collection"
             action={{
               label: "Add Item",
-              onClick: () => (window.location.href = `/collections/${params.id}/items/new`),
+              href: `/collections/${params.id}/items/new`,
             }}
+          />
+        ) : filteredItems.length === 0 ? (
+          <EmptyState
+            heading={`No ${activeFilter} items`}
+            message="Try a different status filter"
           />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {items.map((item) => (
+            {filteredItems.map((item) => (
               <ItemCard key={item.id} item={item} collectionId={params.id} />
             ))}
           </div>

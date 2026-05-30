@@ -16,9 +16,8 @@ export type UpdateResultInput = z.infer<typeof UpdateResultSchema>;
 export class ResultController {
   constructor(private resultRepo: ISortResultRepository) {}
 
-  async listResults(): Promise<SortResult[]> {
-    // TODO: Implement when ResultRepository.findByCollection available
-    return [];
+  async listResults(collectionId: string): Promise<SortResult[]> {
+    return this.resultRepo.findByCollection(collectionId);
   }
 
   async createDraftResult(

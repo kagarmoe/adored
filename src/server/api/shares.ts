@@ -59,8 +59,14 @@ export class ShareController {
     await this.shareRepo.update(shareId, { status: "revoked" });
   }
 
-  async viewSharedResult(): Promise<SortResultShare> {
-    // TODO: Find share by token and validate expiration
-    throw new Error("Not implemented");
+  async viewSharedResult(token: string): Promise<SortResultShare> {
+    const share = await this.shareRepo.findByToken(token);
+    if (!share || share.status !== "active") {
+      throw new Error("Share not found");
+    }
+    if (share.expiresAt && share.expiresAt < new Date()) {
+      throw new Error("Share expired");
+    }
+    return share;
   }
 }

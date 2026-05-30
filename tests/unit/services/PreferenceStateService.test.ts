@@ -48,9 +48,9 @@ describe("PreferenceStateService", () => {
       ];
 
       vi.mocked(scoringService.computePreferences).mockResolvedValueOnce(newPrefs);
-      vi.mocked(preferenceRepo.findByItem).mockResolvedValueOnce(null);
-      vi.mocked(preferenceRepo.findByItem).mockResolvedValueOnce(null);
-      vi.mocked(preferenceRepo.findByCollection).mockResolvedValueOnce(newPrefs);
+      vi.mocked(preferenceRepo.findByCollection)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce(newPrefs);
 
       const result = await service.recalculatePreferences("coll-1", "curator-1");
 
@@ -65,8 +65,9 @@ describe("PreferenceStateService", () => {
       const existing = mockPreference({ id: "pref-1", score: 0.7 });
 
       vi.mocked(scoringService.computePreferences).mockResolvedValueOnce(newPrefs);
-      vi.mocked(preferenceRepo.findByItem).mockResolvedValueOnce(existing);
-      vi.mocked(preferenceRepo.findByCollection).mockResolvedValueOnce(newPrefs);
+      vi.mocked(preferenceRepo.findByCollection)
+        .mockResolvedValueOnce([existing])
+        .mockResolvedValueOnce(newPrefs);
 
       await service.recalculatePreferences("coll-1", "curator-1");
 
