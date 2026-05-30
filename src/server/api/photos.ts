@@ -44,7 +44,7 @@ export class PhotoController {
     return this.photoService.getPhoto(photoId) as Promise<Photo>;
   }
 
-  async deletePhoto(photoId: string): Promise<void> {
-    await this.photoService.deletePhoto(photoId);
+  async deletePhoto(photoId: string): Promise<Photo> {
+    return this.photoService.deletePhoto(photoId);
   }
 }

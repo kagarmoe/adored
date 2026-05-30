@@ -61,21 +61,35 @@ export class PhotoRepository implements IPhotoRepository {
         ...data,
         updatedAt: now,
       })
+      .where(and(eq(photosTable.id, id), isNull(photosTable.deletedAt)))
+      .returning();
+
+    return this.mapToPhoto(photo);
+  }
+
+  async softDelete(id: string): Promise<Photo> {
+    const now = new Date();
+    const [photo] = await this.db
+      .update(photosTable)
+      .set({
+        deletedAt: now,
+        updatedAt: now,
+      })
       .where(eq(photosTable.id, id))
       .returning();
 
     return this.mapToPhoto(photo);
   }
 
-  async softDelete(id: string): Promise<void> {
+  async clearHeroPhotos(itemId: string): Promise<void> {
     const now = new Date();
     await this.db
       .update(photosTable)
       .set({
-        deletedAt: now,
+        isHero: false,
         updatedAt: now,
       })
-      .where(eq(photosTable.id, id));
+      .where(and(eq(photosTable.itemId, itemId), eq(photosTable.isHero, true)));
   }
 
   private mapToPhoto(row: any): Photo {

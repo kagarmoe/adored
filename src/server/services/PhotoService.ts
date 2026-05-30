@@ -28,24 +28,18 @@ export class PhotoService {
     return this.photoRepo.findByItem(itemId);
   }
 
-  async deletePhoto(photoId: string): Promise<void> {
+  async deletePhoto(photoId: string): Promise<Photo> {
     const photo = await this.photoRepo.findById(photoId);
     if (!photo) {
       throw new Error("Photo not found");
     }
     // TODO: Delete from Vercel Blob using blobKey
-    await this.photoRepo.softDelete(photoId);
+    return this.photoRepo.softDelete(photoId);
   }
 
   async setHeroPhoto(itemId: string, photoId: string): Promise<Photo> {
-    // First, clear hero status from other photos in this item
-    const itemPhotos = await this.photoRepo.findByItem(itemId);
-    for (const photo of itemPhotos) {
-      if (photo.isHero && photo.id !== photoId) {
-        await this.photoRepo.update(photo.id, { isHero: false });
-      }
-    }
-
+    // Atomically clear hero on all other photos in this item using single query
+    await this.photoRepo.clearHeroPhotos(itemId);
     // Set this photo as hero
     return this.photoRepo.update(photoId, { isHero: true });
   }
