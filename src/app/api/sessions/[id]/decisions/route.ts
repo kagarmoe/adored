@@ -1,49 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
-import { DecisionController } from "@/server/api/decisions";
-import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import { getDb } from "@/lib/db";
+import { decisionEventsTable } from "@/lib/db/schema";
+import { generateId } from "@/lib/id";
+import { getSession } from "@/lib/auth";
 
-export async function GET(
-  _request: NextRequest
-) {
-  try {
-    await requireAuth();
-    const db = getDb();
-    const decisionRepo = new DecisionEventRepository(db);
-    const controller = new DecisionController(decisionRepo);
-
-    const decisions = await controller.listDecisions();
-    return NextResponse.json(decisions);
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
-  }
+interface DecisionRequest {
+  sessionId: string;
+  type: "triage" | "pairwise_compare" | "bucket_assign";
+  decision: Record<string, any>;
 }
 
 export async function POST(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try {
-    await requireAuth();
-    const body = await request.json();
+  const session = await getSession();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const db = getDb();
-    const decisionRepo = new DecisionEventRepository(db);
-    const controller = new DecisionController(decisionRepo);
+  const body: DecisionRequest = await req.json();
+  const db = getDb();
 
-    const decision = await controller.createDecision(params.id, body);
-    return NextResponse.json(decision, { status: 201 });
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
-  }
+  const [event] = await db.insert(decisionEventsTable).values({
+    id: generateId("event"),
+    sessionId: params.id,
+    type: body.type,
+    decision: body.decision,
+  }).returning();
+
+  return NextResponse.json(event, { status: 201 });
 }
