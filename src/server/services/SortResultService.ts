@@ -109,8 +109,8 @@ export class SortResultService {
       await this.sortResultItemRepo.create({
         sortResultId: newResult.id,
         itemId: item.itemId,
-        computedRank: item.manualRank ?? item.computedRank,
-        computedBucket: item.manualBucket ?? item.computedBucket,
+        computedRank: item.computedRank,
+        computedBucket: item.computedBucket,
       });
     }
 

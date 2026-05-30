@@ -1,12 +1,10 @@
 import type { CollectionPreferenceItem } from "@/types";
 import type { IDecisionEventRepository } from "@/server/repositories/DecisionEventRepository";
-import type { ICollectionPreferenceItemRepository } from "@/server/repositories/CollectionPreferenceItemRepository";
 import type { ISessionRepository } from "@/server/repositories/SessionRepository";
 
 export class ScoringService {
   constructor(
     private decisionRepo: IDecisionEventRepository,
-    private preferenceRepo: ICollectionPreferenceItemRepository,
     private sessionRepo: ISessionRepository,
   ) {}
 
@@ -36,69 +34,6 @@ export class ScoringService {
     return "low";
   }
 
-  async computeItemPreference(
-    itemId: string,
-    curatorId: string,
-  ): Promise<CollectionPreferenceItem | null> {
-    const existingPref = await this.preferenceRepo.findByItem(itemId, curatorId);
-    let score = existingPref?.score ?? 0;
-    let comparisonCount = existingPref?.comparisonCount ?? 0;
-
-    const decisions = await this.decisionRepo.findBySession(itemId);
-
-    for (const decision of decisions) {
-      if (decision.type === "triage") {
-        const triageDecision = decision.decision as {
-          itemId: string;
-          result: "top" | "high" | "medium" | "low";
-        };
-        if (triageDecision.itemId === itemId) {
-          score =
-            (score * comparisonCount +
-              this.scoreFromTriageEvent(triageDecision.result)) /
-            (comparisonCount + 1);
-          comparisonCount++;
-        }
-      } else if (decision.type === "pairwise_compare") {
-        const pairwiseDecision = decision.decision as {
-          itemAId: string;
-          itemBId: string;
-          result: "item_a" | "item_b" | "tie" | "skip";
-        };
-        if (pairwiseDecision.itemAId === itemId) {
-          const isWinner =
-            pairwiseDecision.result === "item_a" ||
-            pairwiseDecision.result === "tie";
-          score = this.scoreFromPairwiseEvent(score, isWinner);
-          comparisonCount++;
-        } else if (pairwiseDecision.itemBId === itemId) {
-          const isWinner =
-            pairwiseDecision.result === "item_b" ||
-            pairwiseDecision.result === "tie";
-          score = this.scoreFromPairwiseEvent(score, isWinner);
-          comparisonCount++;
-        }
-      }
-    }
-
-    if (comparisonCount === 0) return null;
-
-    const confidence = this.calculateConfidence(comparisonCount);
-    const bucket = this.getBucket(score);
-
-    if (existingPref) {
-      return this.preferenceRepo.update(existingPref.id, {
-        score,
-        confidence,
-        rankBucket: bucket,
-        comparisonCount,
-        lastSeen: new Date(),
-        updatedAt: new Date(),
-      });
-    }
-
-    return null;
-  }
 
   async computePreferences(
     collectionId: string,
@@ -109,7 +44,7 @@ export class ScoringService {
 
     const itemScores = new Map<
       string,
-      { score: number; count: number; triageCount: number }
+      { score: number; count: number; lastTriageScore: number | null }
     >();
 
     for (const session of curatorSessions) {
@@ -125,14 +60,12 @@ export class ScoringService {
           const current = itemScores.get(itemId) || {
             score: 0,
             count: 0,
-            triageCount: 0,
+            lastTriageScore: null,
           };
-          current.score =
-            (current.score * current.count +
-              this.scoreFromTriageEvent(triageDecision.result)) /
-            (current.count + 1);
+          current.lastTriageScore = this.scoreFromTriageEvent(
+            triageDecision.result,
+          );
           current.count++;
-          current.triageCount++;
           itemScores.set(itemId, current);
         } else if (decision.type === "pairwise_compare") {
           const pairwiseDecision = decision.decision as {
@@ -144,12 +77,12 @@ export class ScoringService {
           const itemAData = itemScores.get(pairwiseDecision.itemAId) || {
             score: 0,
             count: 0,
-            triageCount: 0,
+            lastTriageScore: null,
           };
           const itemBData = itemScores.get(pairwiseDecision.itemBId) || {
             score: 0,
             count: 0,
-            triageCount: 0,
+            lastTriageScore: null,
           };
 
           if (
@@ -187,14 +120,19 @@ export class ScoringService {
     const preferences: CollectionPreferenceItem[] = [];
     for (const [itemId, data] of itemScores) {
       if (data.count > 0) {
+        let finalScore = data.score;
+        if (data.lastTriageScore !== null) {
+          finalScore = data.lastTriageScore;
+        }
+
         const confidence = this.calculateConfidence(data.count);
-        const bucket = this.getBucket(data.score);
+        const bucket = this.getBucket(finalScore);
         preferences.push({
           id: `${collectionId}-${curatorId}-${itemId}`,
           collectionId,
           curatorId,
           itemId,
-          score: data.score,
+          score: finalScore,
           confidence,
           rankBucket: bucket,
           comparisonCount: data.count,

@@ -1,13 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { ScoringService } from "@/server/services/ScoringService";
 import type { IDecisionEventRepository } from "@/server/repositories/DecisionEventRepository";
-import type { ICollectionPreferenceItemRepository } from "@/server/repositories/CollectionPreferenceItemRepository";
 import type { ISessionRepository } from "@/server/repositories/SessionRepository";
 import type { DecisionEvent, TriageDecision, PairwiseDecision } from "@/types";
 
 describe("ScoringService", () => {
   let decisionRepo: IDecisionEventRepository;
-  let preferenceRepo: ICollectionPreferenceItemRepository;
   let sessionRepo: ISessionRepository;
   let service: ScoringService;
 
@@ -17,14 +15,6 @@ describe("ScoringService", () => {
       findById: vi.fn(),
       findBySession: vi.fn(),
     };
-    preferenceRepo = {
-      create: vi.fn(),
-      findById: vi.fn(),
-      findByItem: vi.fn(),
-      findByCollection: vi.fn(),
-      update: vi.fn(),
-      clear: vi.fn(),
-    };
     sessionRepo = {
       create: vi.fn(),
       findById: vi.fn(),
@@ -33,35 +23,7 @@ describe("ScoringService", () => {
       update: vi.fn(),
       softDelete: vi.fn(),
     };
-    service = new ScoringService(decisionRepo, preferenceRepo, sessionRepo);
-  });
-
-  describe("computeItemPreference", () => {
-    it("computes preference for item from triage events", async () => {
-      vi.mocked(preferenceRepo.findByItem).mockResolvedValueOnce(null);
-      vi.mocked(decisionRepo.findBySession).mockResolvedValueOnce([
-        {
-          id: "event-1",
-          sessionId: "sess-1",
-          type: "triage",
-          decision: { itemId: "item-1", result: "top" },
-          createdAt: new Date(),
-        },
-      ]);
-
-      const result = await service.computeItemPreference("item-1", "curator-1");
-
-      expect(result).toBeNull();
-    });
-
-    it("returns null if no comparisons exist", async () => {
-      vi.mocked(preferenceRepo.findByItem).mockResolvedValueOnce(null);
-      vi.mocked(decisionRepo.findBySession).mockResolvedValueOnce([]);
-
-      const result = await service.computeItemPreference("item-1", "curator-1");
-
-      expect(result).toBeNull();
-    });
+    service = new ScoringService(decisionRepo, sessionRepo);
   });
 
   describe("computePreferences", () => {
