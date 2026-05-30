@@ -1,0 +1,19 @@
+import type { Item } from "@/types";
+
+export interface IItemRepository {
+  create(data: {
+    collectionId: string;
+    name: string;
+    brand?: string;
+    style?: string;
+    color?: string;
+    material?: string;
+    category?: string;
+    status?: string;
+    notes?: string;
+  }): Promise<Item>;
+  findById(id: string): Promise<Item | null>;
+  findByCollection(collectionId: string): Promise<Item[]>;
+  update(id: string, data: Partial<Omit<Item, "id" | "createdAt">>): Promise<Item>;
+  softDelete(id: string): Promise<Item>;
+}
