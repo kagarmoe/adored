@@ -92,6 +92,15 @@ export class PhotoRepository implements IPhotoRepository {
       .where(and(eq(photosTable.itemId, itemId), eq(photosTable.isHero, true)));
   }
 
+  async delete(id: string): Promise<void> {
+    await this.softDelete(id);
+  }
+
+  async setHero(photoId: string, itemId: string): Promise<Photo> {
+    await this.clearHeroPhotos(itemId);
+    return this.update(photoId, { isHero: true });
+  }
+
   private mapToPhoto(row: any): Photo {
     return {
       id: row.id,
