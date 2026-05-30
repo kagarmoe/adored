@@ -7,9 +7,9 @@ const envSchema = z.object({
   // Database
   DATABASE_URL: z.string().url("DATABASE_URL must be a valid URL"),
 
-  // NextAuth (Vercel uses AUTH_URL and AUTH_SECRET)
-  AUTH_URL: z.string().url("AUTH_URL must be a valid URL"),
-  AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
+  // NextAuth
+  NEXTAUTH_URL: z.string().url("NEXTAUTH_URL must be a valid URL"),
+  NEXTAUTH_SECRET: z.string().min(32, "NEXTAUTH_SECRET must be at least 32 characters"),
 
   // Email (optional in development)
   EMAIL_FROM: z.string().email("EMAIL_FROM must be a valid email").default("noreply@purseinator.app"),
@@ -35,8 +35,8 @@ function validateEnv(): EnvConfig {
     envConfig = envSchema.parse({
       NODE_ENV: env.NODE_ENV,
       DATABASE_URL: env.DATABASE_URL,
-      AUTH_URL: env.AUTH_URL,
-      AUTH_SECRET: env.AUTH_SECRET,
+      NEXTAUTH_URL: env.NEXTAUTH_URL,
+      NEXTAUTH_SECRET: env.NEXTAUTH_SECRET,
       EMAIL_FROM: env.EMAIL_FROM,
       EMAIL_SERVER_HOST: env.EMAIL_SERVER_HOST,
       EMAIL_SERVER_PORT: env.EMAIL_SERVER_PORT,
