@@ -116,9 +116,12 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
                   {activeSession.goal || "Preference discovery"}
                 </p>
               </div>
-              <Link href={`/collections/${collection.id}/sort/${activeSession.id}`}>
-                <Button>Resume</Button>
-              </Link>
+              <div className="flex gap-2">
+                <Link href={`/collections/${collection.id}/sort/${activeSession.id}`}>
+                  <Button>Resume</Button>
+                </Link>
+                <Button variant="secondary">Abandon</Button>
+              </div>
             </div>
           </Card>
         )}
