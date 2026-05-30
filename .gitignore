@@ -49,3 +49,6 @@ next-env.d.ts
 .dolt/
 *.db
 .beads-credential-key
+
+# Exception: DO commit src/lib (overrides global .gitignore_python)
+!src/lib/
