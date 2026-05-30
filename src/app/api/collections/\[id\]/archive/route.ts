@@ -1,0 +1,31 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth";
+import { CollectionController } from "@/server/api/collections";
+import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { getDb } from "@/lib/db";
+
+export async function POST(
+  _request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const user = await requireAuth();
+    const db = getDb();
+    const collectionRepo = new CollectionRepository(db);
+    const controller = new CollectionController(collectionRepo);
+
+    // Check if user can manage collection
+    const canManage = await controller.canManageCollection(user.id, params.id);
+    if (!canManage) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const collection = await controller.archiveCollection(params.id);
+    return NextResponse.json(collection);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
+    );
+  }
+}
