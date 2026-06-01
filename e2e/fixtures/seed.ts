@@ -1,0 +1,52 @@
+import bcrypt from "bcryptjs";
+import { eq } from "drizzle-orm";
+import { user } from "@/lib/db/schema";
+import { generateId } from "@/lib/id";
+import { getTestDb, resetDb, closeDb } from "./db";
+
+// A known user every spec can log in as via the Credentials provider.
+export const BASELINE_USER = {
+  email: "e2e@purseinator.test",
+  password: "e2e-password-123", // ≥ 8 chars (signup rule)
+  name: "E2E Tester",
+} as const;
+
+/**
+ * Insert the baseline user (idempotent after resetDb). Returns its id.
+ * Safe to call repeatedly: if the user exists, returns the existing id.
+ */
+export async function seedBaseline(): Promise<string> {
+  const { db } = getTestDb();
+
+  const existing = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.email, BASELINE_USER.email))
+    .limit(1);
+  if (existing.length) return existing[0].id;
+
+  const id = generateId("user");
+  const hashed = await bcrypt.hash(BASELINE_USER.password, 12);
+  await db.insert(user).values({
+    id,
+    email: BASELINE_USER.email,
+    name: BASELINE_USER.name,
+    password: hashed,
+    emailVerified: new Date(),
+  });
+  return id;
+}
+
+// Allow running directly (tsx e2e/fixtures/seed.ts) for manual verification.
+if (require.main === module) {
+  (async () => {
+    await resetDb();
+    const id = await seedBaseline();
+    const idAgain = await seedBaseline(); // idempotency check
+    // eslint-disable-next-line no-console
+    console.log(
+      `seeded baseline user ${id}; second call returned ${idAgain} (idempotent: ${id === idAgain})`,
+    );
+    await closeDb();
+  })();
+}
