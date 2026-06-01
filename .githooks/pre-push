@@ -1,0 +1,25 @@
+#!/bin/sh
+# Pre-push gate: mirror CI locally so failures are caught before they leave
+# your machine. Mirrors .github/workflows/ci.yml (lint + unit tests + build).
+#
+# Enable once per clone:   git config core.hooksPath .githooks
+# Bypass in a pinch:       git push --no-verify
+#
+# Build needs dummy env (src/lib/env.ts validates at module load); real values
+# come from Vercel at runtime.
+
+set -e
+
+echo "pre-push: lint…"
+npm run lint
+
+echo "pre-push: unit tests…"
+npm run test:ci
+
+echo "pre-push: build…"
+DATABASE_URL="postgresql://user:pass@localhost:5432/ci" \
+AUTH_URL="http://localhost:3000" \
+AUTH_SECRET="ci-build-only-secret-at-least-32-characters-long" \
+npm run build
+
+echo "pre-push: all checks passed ✓"
