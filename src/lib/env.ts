@@ -31,11 +31,18 @@ function validateEnv(): EnvConfig {
 
   const env = process.env;
 
+  // Preview deployments don't get an explicit AUTH_URL (each has a unique,
+  // ephemeral hostname). Vercel injects VERCEL_URL per deploy (hostname only,
+  // no scheme), so derive AUTH_URL from it as a fallback. An explicit AUTH_URL
+  // (Production, or a branch override) always wins.
+  const resolvedAuthUrl =
+    env.AUTH_URL ?? (env.VERCEL_URL ? `https://${env.VERCEL_URL}` : undefined);
+
   try {
     envConfig = envSchema.parse({
       NODE_ENV: env.NODE_ENV,
       DATABASE_URL: env.DATABASE_URL,
-      AUTH_URL: env.AUTH_URL,
+      AUTH_URL: resolvedAuthUrl,
       AUTH_SECRET: env.AUTH_SECRET,
       EMAIL_FROM: env.EMAIL_FROM,
       EMAIL_SERVER_HOST: env.EMAIL_SERVER_HOST,
