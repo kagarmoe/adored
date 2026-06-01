@@ -10,6 +10,9 @@
     "test": "vitest",
     "test:ci": "vitest run --passWithNoTests",
     "test:ui": "vitest --ui",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
     "db:generate": "drizzle-kit generate:pg --schema=src/lib/db/schema.ts --out=drizzle",
     "db:migrate": "node -r esbuild-register scripts/migrate.ts",
     "auth:verify": "node -r ./scripts/load-env.js scripts/verify-auth.ts"
@@ -35,6 +38,7 @@
     "zod": "3.23.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/bcryptjs": "^2.4.2",
     "@types/node": "^20.0.0",
     "@types/react": "^19.0.0",
