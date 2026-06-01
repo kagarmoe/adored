@@ -1,10 +1,19 @@
 # Neon Database + Branch-per-Environment Plan
 
+> **STATUS (2026-06-01): LARGELY EXECUTED — kept for history.** What actually shipped differs from the original plan below in a few ways:
+> - **Neon DB branches:** `main` (the primary/production database) and `development` (schema-only, used by local dev AND all Vercel preview deploys). The original called the primary `production`; in Neon it's `main`.
+> - **No per-PR ephemeral DB branches.** We deliberately chose the simplest design that protects prod: scope `DATABASE_URL` so **Production → `main` DB** and **all Previews → `development` DB**. Prod is unreachable from any non-production deploy. (The Neon GitHub Action `neon_workflow.yml` that would create `preview/*` branches was removed.)
+> - **Git branches:** the `dev` git branch was dropped — the project uses **GitHub Flow** (feature → PR → `main`). "Development branch" in this doc refers to the Neon *database* branch `development`, not a git branch.
+> - **Prod schema:** `main` DB was migrated from the old Prisma schema to the Drizzle schema; old tables + data dropped.
+> - **e2e** uses an **ephemeral Postgres** (not a Neon branch) — see `2026-05-30-e2e-ui-testing.md`.
+>
+> Terminology note for the original text below: "dev branch" / "development branch" = the Neon `development` **database** branch; "production branch" = the Neon `main` database branch.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Make Neon the system of record with **isolated databases per environment** so local dev and preview deploys can never read or write production data.
 
-**Architecture:** One Neon project, multiple branches: `production` (the primary), a long-lived `development` branch for local work, and ephemeral per-PR `preview/*` branches. Each environment's `DATABASE_URL` points at its own branch. Drizzle migrations are applied per branch. The app already connects via `postgres-js` using a single `DATABASE_URL` (`src/lib/db.ts:5`), so no app-code change is required — this is configuration + workflow.
+**Architecture (as shipped):** One Neon project, two database branches: `main` (primary / production data) and a long-lived `development` branch used by **both** local dev and all Vercel preview deploys. `DATABASE_URL` is scoped in Vercel so Production → `main` and Preview → `development`; local `.env.local` points at `development`. No per-PR ephemeral branches. Drizzle migrations apply per branch. The app connects via `postgres-js` using a single `DATABASE_URL` (`src/lib/db.ts:5`), so no app-code change was required — this is configuration only.
 
 **Tech Stack:** Neon (serverless Postgres), Vercel env vars, Drizzle ORM + `drizzle-kit`, `postgres-js`.
 
