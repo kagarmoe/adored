@@ -1,0 +1,43 @@
+import { test as setup, expect } from "@playwright/test";
+import { resetDb, closeDb } from "./fixtures/db";
+import { seedBaseline, BASELINE_USER } from "./fixtures/seed";
+
+const AUTH_FILE = "e2e/.auth/user.json";
+
+// Runs once before the viewport projects. Seeds a known user and establishes a
+// session via the NextAuth credentials API, then saves storageState so every
+// other spec starts authenticated.
+//
+// We authenticate via the API rather than driving the /login UI: the login page
+// is a client component whose signIn() only works after hydration, which races
+// the test on cold builds (CI always cold-builds). The API path is
+// deterministic. The login *UI* itself is covered by the dedicated auth spec
+// (T7), which is where exercising the real form belongs.
+setup("authenticate", async ({ page }) => {
+  await resetDb();
+  await seedBaseline();
+  await closeDb();
+
+  // Use page.request (NOT the standalone `request` fixture): page.request shares
+  // the page's BrowserContext cookie jar, so the session cookie it receives is
+  // captured by storageState. The standalone fixture has a separate jar and
+  // would save empty state.
+  const csrfRes = await page.request.get("/api/auth/csrf");
+  const { csrfToken } = await csrfRes.json();
+
+  await page.request.post("/api/auth/callback/credentials", {
+    form: {
+      csrfToken,
+      email: BASELINE_USER.email,
+      password: BASELINE_USER.password,
+      json: "true",
+    },
+  });
+
+  // Confirm the session is real before saving state.
+  const sessionRes = await page.request.get("/api/auth/session");
+  const session = await sessionRes.json();
+  expect(session?.user?.email).toBe(BASELINE_USER.email);
+
+  await page.context().storageState({ path: AUTH_FILE });
+});
