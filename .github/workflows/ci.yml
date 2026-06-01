@@ -1,19 +1,17 @@
 name: CI
 
 # Thin test gate: lint + unit tests + build.
-# Runs on:
-#   - PRs targeting dev   (feature -> dev)
-#   - PRs targeting main  (dev -> main promotion)
-#   - pushes to dev and main
-# Make this a required check in branch protection on BOTH dev and main so a
-# PR cannot merge until it is green — that catches problems at the dev stage,
-# before the dev -> main promotion.
+# GitHub Flow (solo): feature branch -> PR into main -> merge -> prod deploy.
+# Runs on PRs targeting main and on pushes to main. It is a required status
+# check in main's branch protection, so a PR cannot merge until it is green.
+# Feature-branch pushes get a Vercel preview (against the dev database) but
+# don't run this workflow until a PR is opened against main.
 
 on:
   pull_request:
-    branches: [main, dev]
+    branches: [main]
   push:
-    branches: [main, dev]
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
