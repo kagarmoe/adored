@@ -1,0 +1,47 @@
+name: CI
+
+# Thin test gate: lint + unit tests + build.
+# Runs on PRs targeting main (the dev -> main promotion) and on direct
+# pushes to main. Make this a required check in branch protection so a PR
+# cannot merge into main until it is green.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: Lint, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test:ci
+
+      - name: Build
+        run: npm run build
+        env:
+          # next build imports src/lib/env.ts, which validates these at module
+          # load. They are dummy build-time values — no real DB/secret needed to
+          # compile. Runtime values come from Vercel's environment.
+          DATABASE_URL: postgresql://user:pass@localhost:5432/ci
+          AUTH_URL: http://localhost:3000
+          AUTH_SECRET: ci-build-only-secret-at-least-32-characters-long
