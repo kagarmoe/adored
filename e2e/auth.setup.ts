@@ -22,10 +22,14 @@ setup("authenticate", async ({ page }) => {
   // the page's BrowserContext cookie jar, so the session cookie it receives is
   // captured by storageState. The standalone fixture has a separate jar and
   // would save empty state.
+  // Check each step so a misconfig (wrong AUTH_SECRET, CSRF change, bad creds)
+  // fails AT the failing request, not as an opaque empty-session diff later.
   const csrfRes = await page.request.get("/api/auth/csrf");
+  expect(csrfRes.ok(), "CSRF request failed").toBeTruthy();
   const { csrfToken } = await csrfRes.json();
+  expect(csrfToken, "CSRF token missing/empty").toBeTruthy();
 
-  await page.request.post("/api/auth/callback/credentials", {
+  const loginRes = await page.request.post("/api/auth/callback/credentials", {
     form: {
       csrfToken,
       email: BASELINE_USER.email,
@@ -33,6 +37,7 @@ setup("authenticate", async ({ page }) => {
       json: "true",
     },
   });
+  expect(loginRes.ok(), "credentials callback returned non-2xx").toBeTruthy();
 
   // Confirm the session is real before saving state.
   const sessionRes = await page.request.get("/api/auth/session");

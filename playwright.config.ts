@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { TEST_DATABASE_URL } from "./e2e/fixtures/db";
 
 // Full suite runs on three viewports (tablet-first, but must work on phone +
 // desktop too). Specs are behavioral; exact-layout assertions live in
@@ -6,10 +7,12 @@ import { defineConfig, devices } from "@playwright/test";
 
 const DESKTOP = { viewport: { width: 1280, height: 800 } };
 
-// The throwaway test DB from e2e/fixtures/test-db.sh — never Neon main/dev.
-const TEST_DATABASE_URL =
-  process.env.DATABASE_URL_TEST ??
-  "postgresql://postgres:test@localhost:5433/purseinator_test";
+// Run e2e on a dedicated port so a developer's `npm run dev` on :3000 (which
+// reads .env.local → the dev Neon DB) is never silently reused. With a unique
+// port, Playwright always launches its own server with the injected test DB.
+const PORT = 3100;
+const BASE_URL = `http://localhost:${PORT}`;
+const AUTH_STATE = "e2e/.auth/user.json";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -19,7 +22,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: [["html", { open: "never" }], ["list"]],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: BASE_URL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
@@ -27,28 +30,28 @@ export default defineConfig({
     { name: "setup", testMatch: "**/auth.setup.ts" },
     {
       name: "tablet",
-      use: { ...devices["iPad (gen 7) landscape"], storageState: "e2e/.auth/user.json" },
+      use: { ...devices["iPad (gen 7) landscape"], storageState: AUTH_STATE },
       dependencies: ["setup"],
     },
     {
       name: "phone",
-      use: { ...devices["iPhone 13"], storageState: "e2e/.auth/user.json" },
+      use: { ...devices["iPhone 13"], storageState: AUTH_STATE },
       dependencies: ["setup"],
     },
     {
       name: "desktop",
-      use: { ...devices["Desktop Chrome"], ...DESKTOP, storageState: "e2e/.auth/user.json" },
+      use: { ...devices["Desktop Chrome"], ...DESKTOP, storageState: AUTH_STATE },
       dependencies: ["setup"],
     },
   ],
   webServer: {
-    command: "npm run build && npm run start",
-    url: "http://localhost:3000",
-    reuseExistingServer: !process.env.CI,
+    command: `npm run build && npm run start -- -p ${PORT}`,
+    url: BASE_URL,
+    reuseExistingServer: false, // always use our own server + injected test DB
     timeout: 180_000,
     env: {
       DATABASE_URL: TEST_DATABASE_URL,
-      AUTH_URL: "http://localhost:3000",
+      AUTH_URL: BASE_URL,
       AUTH_SECRET: "e2e-only-secret-at-least-32-characters-long-xx",
     },
   },

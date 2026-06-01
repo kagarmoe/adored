@@ -23,12 +23,22 @@ DB="purseinator_test"
 export DATABASE_URL_TEST="postgresql://postgres:test@localhost:${PORT}/${DB}"
 
 up() {
-  if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
-    echo "test-db: ${CONTAINER} already running"
-  else
-    echo "test-db: starting ${CONTAINER} (postgres:16) on :${PORT}…"
+  # ps -a so a stopped leftover container (interrupted run) doesn't wedge us.
+  if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
+    if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
+      echo "test-db: ${CONTAINER} already running"
+    else
+      echo "test-db: removing stopped ${CONTAINER}…"
+      docker rm -f "${CONTAINER}" >/dev/null
+    fi
+  fi
+
+  if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
+    echo "test-db: starting ${CONTAINER} (postgres:16) on 127.0.0.1:${PORT}…"
+    # Bind to loopback only — don't expose the test DB (guessable password) to
+    # the LAN.
     docker run --rm -d \
-      -p "${PORT}:5432" \
+      -p "127.0.0.1:${PORT}:5432" \
       -e POSTGRES_PASSWORD=test \
       -e POSTGRES_DB="${DB}" \
       --name "${CONTAINER}" \
@@ -36,13 +46,19 @@ up() {
   fi
 
   echo "test-db: waiting for readiness…"
+  ready=""
   for _ in $(seq 1 30); do
     if docker exec "${CONTAINER}" pg_isready -U postgres -d "${DB}" >/dev/null 2>&1; then
+      ready=1
       echo "test-db: ready"
       break
     fi
     sleep 1
   done
+  if [ -z "${ready}" ]; then
+    echo "test-db: ERROR — Postgres never became ready after 30s" >&2
+    exit 1
+  fi
 
   echo "test-db: applying schema (drizzle migrate)…"
   DATABASE_URL="${DATABASE_URL_TEST}" npm run db:migrate
@@ -50,12 +66,13 @@ up() {
 }
 
 down() {
-  if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
-    echo "test-db: stopping ${CONTAINER}…"
-    docker stop "${CONTAINER}" >/dev/null
-    echo "test-db: removed (container is --rm)"
+  # ps -a so a stopped leftover is also cleaned up.
+  if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
+    echo "test-db: removing ${CONTAINER}…"
+    docker rm -f "${CONTAINER}" >/dev/null
+    echo "test-db: removed"
   else
-    echo "test-db: ${CONTAINER} not running"
+    echo "test-db: ${CONTAINER} not present"
   fi
 }
 
