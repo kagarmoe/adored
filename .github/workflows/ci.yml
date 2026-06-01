@@ -1,15 +1,19 @@
 name: CI
 
 # Thin test gate: lint + unit tests + build.
-# Runs on PRs targeting main (the dev -> main promotion) and on direct
-# pushes to main. Make this a required check in branch protection so a PR
-# cannot merge into main until it is green.
+# Runs on:
+#   - PRs targeting dev   (feature -> dev)
+#   - PRs targeting main  (dev -> main promotion)
+#   - pushes to dev and main
+# Make this a required check in branch protection on BOTH dev and main so a
+# PR cannot merge until it is green — that catches problems at the dev stage,
+# before the dev -> main promotion.
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, dev]
   push:
-    branches: [main]
+    branches: [main, dev]
 
 concurrency:
   group: ci-${{ github.ref }}
