@@ -57,3 +57,6 @@ next-env.d.ts
 
 # Exception: DO commit src/lib (overrides global .gitignore_python)
 !src/lib/
+
+# Playwright auth storageState (secrets — never commit)
+/e2e/.auth/
