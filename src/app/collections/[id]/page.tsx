@@ -86,7 +86,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
       <div className="space-y-8">
         {/* Collection Header */}
         <div>
-          <h1 className="text-3xl font-bold text-ink">{collection.name}</h1>
+          <h1 className="text-3xl text-ink">{collection.name}</h1>
           {collection.description && (
             <p className="text-ink-soft mt-2">{collection.description}</p>
           )}
@@ -109,7 +109,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="mb-2 flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-verdigris-deep">Active Sorting Session</h2>
+                  <h2 className="text-lg text-verdigris-deep">Active Sorting Session</h2>
                   <Badge variant="active">active</Badge>
                 </div>
                 <p className="text-sm text-verdigris-deep">
@@ -133,7 +133,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
               <Card interactive padding="lg">
                 <div className="text-center">
                   <div className="text-4xl mb-3">{link.icon}</div>
-                  <h3 className="text-lg font-semibold text-ink mb-2">{link.label}</h3>
+                  <h3 className="text-lg text-ink mb-2">{link.label}</h3>
                   <p className="text-sm text-ink-soft">{link.description}</p>
                 </div>
               </Card>

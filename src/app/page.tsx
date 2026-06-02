@@ -14,10 +14,10 @@ export default async function Home() {
     <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-plaster">
       <div className="text-center max-w-2xl">
         <h1 className="text-5xl font-medium tracking-tight mb-3 text-ink">PurseInator</h1>
-        <p className="text-xl text-ink-soft mb-8">sort what you love, let go of the rest</p>
+        <p className="text-xl text-ink-soft mb-8">for the things you love</p>
 
         <p className="text-lg text-ink mb-8">
-          Curate your favorite collections with precision. Sort items into buckets, refine your preferences, and share your curated results.
+          A quiet place to sit with your things, one at a time, and notice what you love. When you&apos;re ready, share the order you arrive at.
         </p>
 
         <div className="flex gap-4 justify-center">

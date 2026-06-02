@@ -76,7 +76,7 @@ export default function InvitationPage({ params }: InvitationPageProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-plaster p-4">
       <div className="max-w-sm w-full bg-chalk rounded-lg shadow-lg p-8">
-        <h1 className="text-2xl font-bold text-ink mb-2">You&apos;re invited!</h1>
+        <h1 className="text-2xl text-ink mb-2">You&apos;re invited!</h1>
         <p className="text-ink-soft mb-6">
           You&apos;ve been invited to collaborate on a collection.
         </p>

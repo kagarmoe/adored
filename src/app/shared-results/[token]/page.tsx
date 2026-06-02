@@ -42,7 +42,7 @@ export default async function SharedResultPage({ params }: SharedResultPageProps
           <div className="mb-3">
             <Badge variant="finalized">finalized</Badge>
           </div>
-          <h1 className="text-3xl font-bold text-ink">{result.name}</h1>
+          <h1 className="text-3xl text-ink">{result.name}</h1>
           <p className="mt-2 text-ink-soft">Shared read-only result</p>
         </div>
 

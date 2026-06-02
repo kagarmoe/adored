@@ -34,7 +34,7 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-ink">Your Collections</h1>
+            <h1 className="text-3xl text-ink">Your Collections</h1>
             <p className="text-ink-soft mt-2">Organize and sort your favorite items</p>
           </div>
           <Link href="/collections/new">

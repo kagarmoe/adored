@@ -53,7 +53,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
       <div className="mx-auto max-w-xl space-y-6">
         <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-ink">Triage</h1>
+            <h1 className="text-3xl text-ink">Triage</h1>
             <p className="mt-2 text-ink-soft">Assign the current item to a preference bucket.</p>
           </div>
           <div className="text-right">

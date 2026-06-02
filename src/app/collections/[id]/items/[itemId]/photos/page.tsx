@@ -45,20 +45,20 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
     >
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-ink">{item.name}</h1>
+          <h1 className="text-3xl text-ink">{item.name}</h1>
           <p className="mt-2 text-ink-soft">Manage photos for this item</p>
         </div>
 
         {/* Upload Section */}
         <Card padding="lg">
-          <h2 className="text-lg font-semibold text-ink mb-4">Add Photos</h2>
+          <h2 className="text-lg text-ink mb-4">Add Photos</h2>
           <PhotoUpload itemId={params.itemId} collectionId={params.id} />
         </Card>
 
         {/* Gallery Section */}
         {photos.length > 0 && (
           <Card padding="lg">
-            <h2 className="text-lg font-semibold text-ink mb-4">Photos</h2>
+            <h2 className="text-lg text-ink mb-4">Photos</h2>
             <PhotoGallery photos={photos} itemId={params.itemId} collectionId={params.id} />
           </Card>
         )}

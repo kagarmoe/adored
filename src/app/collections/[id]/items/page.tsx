@@ -48,7 +48,7 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-ink">Items</h1>
+            <h1 className="text-3xl text-ink">Items</h1>
             <p className="text-ink-soft mt-2">{items.length} items in collection</p>
           </div>
           <Link href={`/collections/${params.id}/items/new`}>

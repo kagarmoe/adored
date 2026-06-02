@@ -32,7 +32,7 @@ export default async function EditCollectionPage({ params }: EditPageProps) {
       ]}
     >
       <div className="max-w-2xl">
-        <h1 className="text-3xl font-bold text-ink mb-8">Edit Collection</h1>
+        <h1 className="text-3xl text-ink mb-8">Edit Collection</h1>
         <CollectionForm collection={collection} mode="edit" />
       </div>
     </AppLayout>

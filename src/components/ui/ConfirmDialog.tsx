@@ -56,7 +56,7 @@ const ConfirmDialog = React.forwardRef<HTMLDivElement, ConfirmDialogProps>(
 
         {/* Dialog */}
         <div className="relative bg-chalk rounded-card shadow-raised max-w-sm w-full mx-4 p-6 z-10">
-          <h2 className="text-xl font-semibold text-ink mb-2">{title}</h2>
+          <h2 className="text-xl text-ink mb-2">{title}</h2>
           <p className="text-ink-soft mb-6">{message}</p>
 
           <div className="flex gap-3 justify-end">

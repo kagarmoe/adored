@@ -24,7 +24,7 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
       {...props}
     >
       {icon && <div className="mb-4 text-clay text-5xl">{icon}</div>}
-      <h3 className="text-lg font-semibold text-ink mb-2">{heading}</h3>
+      <h3 className="text-lg text-ink mb-2">{heading}</h3>
       {message && <p className="text-ink-soft mb-6 max-w-sm">{message}</p>}
       {action?.href ? (
         <Link href={action.href}>

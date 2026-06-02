@@ -48,7 +48,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
       <div className="space-y-8">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-ink">{item.name}</h1>
+            <h1 className="text-3xl text-ink">{item.name}</h1>
             {item.brand && <p className="mt-1 text-ink-soft">{item.brand}</p>}
           </div>
           <Link href={`/collections/${params.id}/items/${params.itemId}/edit`}>
@@ -81,14 +81,14 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
 
         {/* Item Metadata */}
         <Card padding="lg">
-          <h2 className="text-lg font-semibold text-ink mb-4">Details</h2>
+          <h2 className="text-lg text-ink mb-4">Details</h2>
           <ItemMetadata item={item} />
         </Card>
 
         {/* Photo Gallery */}
         {photos.length > 0 && (
           <Card padding="lg">
-            <h2 className="text-lg font-semibold text-ink mb-4">Photos</h2>
+            <h2 className="text-lg text-ink mb-4">Photos</h2>
             <div className="grid grid-cols-3 gap-4">
               {photos.map((photo) => (
                 <div

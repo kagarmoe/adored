@@ -93,12 +93,12 @@ function LoginContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-plaster p-4">
-      <div className="max-w-sm w-full bg-chalk rounded-lg shadow-lg p-8">
+      <div className="max-w-sm w-full bg-chalk rounded-card shadow-raised p-8">
         <h1 className="text-3xl font-medium tracking-tight text-center text-ink mb-2">
           PurseInator
         </h1>
         <p className="text-center text-ink-soft mb-8">
-          sort what you love, let go of the rest
+          for the things you love
         </p>
 
         {error && <ErrorMessage message={error} />}

@@ -64,7 +64,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
     >
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-ink">Sorting Session</h1>
+          <h1 className="text-3xl text-ink">Sorting Session</h1>
           <p className="text-ink-soft mt-2">Goal: {sortSession.goal}</p>
           <div className="mt-3">
             <Badge variant={sortSession.status}>{sortSession.status}</Badge>
@@ -110,7 +110,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
         <div className="grid gap-4 md:grid-cols-2">
           <Link href={`/collections/${params.id}/sort/${params.sessionId}/triage`}>
             <Card interactive padding="lg">
-              <h2 className="text-lg font-semibold text-ink">Triage</h2>
+              <h2 className="text-lg text-ink">Triage</h2>
               <p className="mt-2 text-sm text-ink-soft">Quickly bucket one item at a time.</p>
               <div className="mt-4">
                 <Button size="sm">Open</Button>
@@ -119,7 +119,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
           </Link>
           <Link href={`/collections/${params.id}/sort/${params.sessionId}/compare`}>
             <Card interactive padding="lg">
-              <h2 className="text-lg font-semibold text-ink">Compare</h2>
+              <h2 className="text-lg text-ink">Compare</h2>
               <p className="mt-2 text-sm text-ink-soft">Pick between pairs to refine ranking.</p>
               <div className="mt-4">
                 <Button size="sm">Open</Button>
@@ -132,7 +132,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
           <Card padding="lg" className="border-line bg-verdigris-soft">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-verdigris-deep">Ready to see results?</h2>
+                <h2 className="text-lg text-verdigris-deep">Ready to see results?</h2>
                 <p className="mt-1 text-sm text-verdigris-deep">
                   You&apos;ve made {bucketed} decision{bucketed !== 1 ? "s" : ""}. Generate a draft result to see the ranked order.
                 </p>
