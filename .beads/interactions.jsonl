@@ -1,0 +1,2 @@
+{"id":"int-5d5498d3","kind":"field_change","created_at":"2026-05-30T03:12:08.605247Z","actor":"Kimberly Garmoe","issue_id":"kimberlygarmoe-vh0","extra":{"field":"status","new_value":"in_progress","old_value":"open"}}
+{"id":"int-5cec32eb","kind":"field_change","created_at":"2026-05-30T03:13:33.962179Z","actor":"Kimberly Garmoe","issue_id":"kimberlygarmoe-vh0","extra":{"field":"status","new_value":"closed","old_value":"in_progress","reason":"Closed"}}
