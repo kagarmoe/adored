@@ -4,7 +4,7 @@ import React from "react";
 const badgeVariants = cva("inline-flex items-center justify-center font-semibold rounded-full text-sm px-3 py-1", {
   variants: {
     variant: {
-      top: "bg-warning-soft text-warning-deep",
+      top: "bg-clay-soft-strong text-ink",
       high: "bg-verdigris-soft text-verdigris-deep",
       medium: "bg-warning-soft text-warning-deep",
       low: "bg-plaster text-ink",
@@ -17,7 +17,7 @@ const badgeVariants = cva("inline-flex items-center justify-center font-semibold
       archived: "bg-plaster text-ink",
       deleted: "bg-error-soft text-error-deep",
       pending: "bg-plaster text-ink",
-      owner: "bg-verdigris-soft text-verdigris-deep",
+      owner: "bg-clay-soft text-ink",
       curator: "bg-verdigris-soft text-verdigris-deep",
     },
   },
