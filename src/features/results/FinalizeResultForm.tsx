@@ -52,33 +52,33 @@ export function FinalizeResultForm({ collectionId, resultId, defaultName }: Fina
       <Card padding="lg">
         <div className="space-y-5">
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">Name this result</label>
+            <label className="mb-2 block text-sm font-medium text-ink">Name this result</label>
             <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Spring edit 2026" />
           </div>
 
           <div>
-            <p className="mb-3 block text-sm font-medium text-gray-700">Visibility</p>
+            <p className="mb-3 block text-sm font-medium text-ink">Visibility</p>
             <div className="space-y-3">
-              <label className="block rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <label className="block rounded-lg border border-line bg-verdigris-soft p-4">
                 <input type="radio" name="visibility" value="private" defaultChecked />
-                <span className="ml-2 font-medium text-gray-900">Private</span>
-                <span className="mt-1 block text-sm text-gray-600">Only you can see it.</span>
+                <span className="ml-2 font-medium text-ink">Private</span>
+                <span className="mt-1 block text-sm text-ink-soft">Only you can see it.</span>
               </label>
-              <label className="block rounded-lg border border-gray-200 p-4">
+              <label className="block rounded-lg border border-line p-4">
                 <input type="radio" name="visibility" value="shareable" />
-                <span className="ml-2 font-medium text-gray-900">Shareable by link</span>
-                <span className="mt-1 block text-sm text-gray-600">Create links after finalizing.</span>
+                <span className="ml-2 font-medium text-ink">Shareable by link</span>
+                <span className="mt-1 block text-sm text-ink-soft">Create links after finalizing.</span>
               </label>
             </div>
           </div>
         </div>
       </Card>
 
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+      <div className="rounded-lg border border-line bg-verdigris-soft p-4 text-sm text-verdigris-deep">
         Finalizing snapshots the current order. New sorting can start a fresh draft while this result stays frozen.
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-error">{error}</p>}
 
       <div className="flex gap-3">
         <Button type="button" variant="secondary" onClick={() => router.back()}>

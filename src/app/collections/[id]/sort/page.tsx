@@ -39,21 +39,21 @@ export default async function SortPage({ params }: SortPageProps) {
     >
       <div className="space-y-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">Sorting Sessions</h1>
+          <h1 className="text-3xl text-ink">Sorting Sessions</h1>
           <Link href={`/collections/${params.id}/sort/new`}>
             <Button>New Session</Button>
           </Link>
         </div>
 
         {activeSession && (
-          <Card padding="lg" className="border-blue-200 bg-blue-50">
+          <Card padding="lg" className="border-line bg-verdigris-soft">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="mb-2 flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-blue-950">Active Session</h2>
+                  <h2 className="text-lg text-verdigris-deep">Active Session</h2>
                   <Badge variant="active">active</Badge>
                 </div>
-                <p className="text-sm text-blue-900">
+                <p className="text-sm text-verdigris-deep">
                   {activeSession.goal || "Preference discovery"} · {sessions.length} total session{sessions.length !== 1 ? "s" : ""}
                 </p>
               </div>
@@ -85,12 +85,12 @@ export default async function SortPage({ params }: SortPageProps) {
                 <Card interactive padding="md">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-semibold text-gray-900">{s.goal}</h3>
+                      <h3 className="text-ink">{s.goal}</h3>
                       <div className="mt-2 flex items-center gap-2">
                         <Badge variant={s.status}>{s.status}</Badge>
                       </div>
                     </div>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-ink-soft">
                       {new Date(s.createdAt).toLocaleDateString()}
                     </span>
                   </div>

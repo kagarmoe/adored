@@ -48,8 +48,8 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
       <div className="space-y-8">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{item.name}</h1>
-            {item.brand && <p className="mt-1 text-gray-600">{item.brand}</p>}
+            <h1 className="text-3xl text-ink">{item.name}</h1>
+            {item.brand && <p className="mt-1 text-ink-soft">{item.brand}</p>}
           </div>
           <Link href={`/collections/${params.id}/items/${params.itemId}/edit`}>
             <Button>Edit</Button>
@@ -58,7 +58,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
 
         {/* Hero Photo */}
         {heroPhoto ? (
-          <div className="bg-gray-100 rounded-lg overflow-hidden h-96 flex items-center justify-center">
+          <div className="bg-plaster rounded-lg overflow-hidden h-96 flex items-center justify-center">
             <Image
               src={heroPhoto.blobKey}
               alt={item.name}
@@ -71,7 +71,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
           <Card padding="lg" className="h-96 flex items-center justify-center">
             <div className="text-center">
               <span className="text-6xl block mb-2">📷</span>
-              <p className="text-gray-500">No hero photo</p>
+              <p className="text-ink-soft">No hero photo</p>
               <Link href={`/collections/${params.id}/items/${params.itemId}/photos`}>
                 <Button className="mt-4">Add Photos</Button>
               </Link>
@@ -81,19 +81,19 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
 
         {/* Item Metadata */}
         <Card padding="lg">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Details</h2>
+          <h2 className="text-lg text-ink mb-4">Details</h2>
           <ItemMetadata item={item} />
         </Card>
 
         {/* Photo Gallery */}
         {photos.length > 0 && (
           <Card padding="lg">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Photos</h2>
+            <h2 className="text-lg text-ink mb-4">Photos</h2>
             <div className="grid grid-cols-3 gap-4">
               {photos.map((photo) => (
                 <div
                   key={photo.id}
-                  className="bg-gray-100 rounded-lg overflow-hidden aspect-square relative"
+                  className="bg-plaster rounded-lg overflow-hidden aspect-square relative"
                 >
                   <Image
                     src={photo.blobKey}
@@ -120,7 +120,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
         {/* No Photos State */}
         {photos.length === 0 && (
           <Card padding="lg" className="text-center">
-            <p className="text-gray-500 mb-4">No photos yet</p>
+            <p className="text-ink-soft mb-4">No photos yet</p>
             <Link href={`/collections/${params.id}/items/${params.itemId}/photos`}>
               <Button>Add Photos</Button>
             </Link>

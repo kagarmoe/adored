@@ -78,8 +78,8 @@ export function PhotoGallery({
   return (
     <div className="space-y-4">
       {error && (
-        <Card padding="md" className="bg-red-50 border border-red-200">
-          <p className="text-red-700 text-sm">{error}</p>
+        <Card padding="md" className="bg-error-soft border border-error-soft">
+          <p className="text-error-deep text-sm">{error}</p>
         </Card>
       )}
 
@@ -87,7 +87,7 @@ export function PhotoGallery({
         {photos.map((photo) => (
           <div
             key={photo.id}
-            className="bg-gray-100 rounded-lg overflow-hidden relative group"
+            className="bg-plaster rounded-lg overflow-hidden relative group"
           >
             <div className="aspect-square relative">
               <Image

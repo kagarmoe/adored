@@ -16,21 +16,21 @@ export function ItemMetadata({ item }: ItemMetadataProps) {
   const filledFields = fields.filter((f) => f.value);
 
   if (filledFields.length === 0 && !item.notes) {
-    return <p className="text-sm text-gray-500">No details added yet</p>;
+    return <p className="text-sm text-ink-soft">No details added yet</p>;
   }
 
   return (
     <div className="space-y-4">
       {filledFields.map((field) => (
         <div key={field.label}>
-          <p className="text-xs font-medium text-gray-500 uppercase">{field.label}</p>
-          <p className="mt-1 text-sm text-gray-900">{field.value}</p>
+          <p className="text-xs font-medium text-ink-soft uppercase">{field.label}</p>
+          <p className="mt-1 text-sm text-ink">{field.value}</p>
         </div>
       ))}
       {item.notes && (
         <div>
-          <p className="text-xs font-medium text-gray-500 uppercase">Notes</p>
-          <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{item.notes}</p>
+          <p className="text-xs font-medium text-ink-soft uppercase">Notes</p>
+          <p className="mt-1 text-sm text-ink whitespace-pre-wrap">{item.notes}</p>
         </div>
       )}
     </div>

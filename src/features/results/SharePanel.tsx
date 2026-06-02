@@ -64,8 +64,8 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
   return (
     <div className="space-y-4">
       {error && (
-        <Card padding="md" className="bg-red-50 border border-red-200">
-          <p className="text-red-700 text-sm">{error}</p>
+        <Card padding="md" className="bg-error-soft border border-error-soft">
+          <p className="text-error-deep text-sm">{error}</p>
         </Card>
       )}
 
@@ -73,8 +73,8 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
         <div className="space-y-4">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="font-semibold text-gray-900">Share this result</h3>
-              <p className="text-sm text-gray-600 mt-1">
+              <h3 className="text-ink">Share this result</h3>
+              <p className="text-sm text-ink-soft mt-1">
                 Create a shareable link for anyone to view this result without logging in.
               </p>
             </div>
@@ -84,11 +84,11 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
           </div>
 
           {shares.length > 0 && (
-            <div className="space-y-3 pt-4 border-t border-gray-200">
+            <div className="space-y-3 pt-4 border-t border-line">
               {shares.map((share) => (
-                <div key={share.id} className="flex flex-col gap-3 p-3 bg-gray-50 rounded-lg">
+                <div key={share.id} className="flex flex-col gap-3 p-3 bg-plaster rounded-lg">
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-gray-600">Share Link:</p>
+                    <p className="text-xs font-medium text-ink-soft">Share Link:</p>
                     <Input
                       type="text"
                       readOnly
@@ -120,7 +120,7 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
                     </Button>
                   </div>
                   {share.expiresAt && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-ink-soft">
                       Expires: {new Date(share.expiresAt).toLocaleDateString()}
                     </p>
                   )}
@@ -130,7 +130,7 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
           )}
 
           {shares.length === 0 && (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-sm text-ink-soft text-center py-4">
               No active share links yet
             </p>
           )}

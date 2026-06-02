@@ -38,8 +38,8 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     >
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Sorting Results</h1>
-          <p className="text-gray-600 mt-2">{results.length} result(s)</p>
+          <h1 className="text-3xl text-ink">Sorting Results</h1>
+          <p className="text-ink-soft mt-2">{results.length} result(s)</p>
         </div>
 
         {results.length === 0 ? (
@@ -54,13 +54,13 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 <Card interactive padding="md">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-gray-900">Result #{result.id.slice(0, 8)}</p>
-                      <p className="text-sm text-gray-600">{result.name}</p>
+                      <p className="font-semibold text-ink">Result #{result.id.slice(0, 8)}</p>
+                      <p className="text-sm text-ink-soft">{result.name}</p>
                       <div className="mt-2">
                         <Badge variant={result.status}>{result.status}</Badge>
                       </div>
                     </div>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-ink-soft">
                       {new Date(result.createdAt).toLocaleDateString()}
                     </span>
                   </div>

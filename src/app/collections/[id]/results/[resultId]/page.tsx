@@ -67,7 +67,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
       <div className="space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{result.name}</h1>
+            <h1 className="text-3xl text-ink">{result.name}</h1>
             <div className="mt-3">
               <Badge variant={result.status}>{result.status}</Badge>
             </div>
@@ -82,8 +82,8 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
         <div className="grid gap-4 sm:grid-cols-4">
           {(["top", "high", "medium", "low"] as const).map((bucket) => (
             <Card key={bucket} padding="md">
-              <p className="text-sm font-medium text-gray-500">{bucketLabels[bucket]}</p>
-              <p className="mt-2 text-2xl font-bold text-gray-900">{bucketCounts[bucket] || 0}</p>
+              <p className="text-sm font-medium text-ink-soft">{bucketLabels[bucket]}</p>
+              <p className="mt-2 text-2xl font-bold text-ink">{bucketCounts[bucket] || 0}</p>
             </Card>
           ))}
         </div>

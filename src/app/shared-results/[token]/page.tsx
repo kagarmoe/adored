@@ -36,14 +36,14 @@ export default async function SharedResultPage({ params }: SharedResultPageProps
   const sortedResultItems = [...resultItems].sort((a, b) => (a.manualRank ?? a.computedRank) - (b.manualRank ?? b.computedRank));
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-8">
+    <main className="min-h-screen bg-plaster px-4 py-8">
       <div className="mx-auto max-w-6xl space-y-8">
         <div>
           <div className="mb-3">
             <Badge variant="finalized">finalized</Badge>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">{result.name}</h1>
-          <p className="mt-2 text-gray-600">Shared read-only result</p>
+          <h1 className="text-3xl text-ink">{result.name}</h1>
+          <p className="mt-2 text-ink-soft">Shared read-only result</p>
         </div>
 
         <Card padding="lg">

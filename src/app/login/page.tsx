@@ -67,13 +67,13 @@ function LoginContent() {
 
   if (magicLinkSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-        <div className="max-w-sm w-full bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Check your email</h1>
-          <p className="text-gray-600 mb-4">
+      <div className="min-h-screen flex items-center justify-center bg-plaster p-4">
+        <div className="max-w-sm w-full bg-chalk rounded-card shadow-raised p-8">
+          <h1 className="text-2xl text-ink mb-4">Check your email</h1>
+          <p className="text-ink-soft mb-4">
             A sign-in link has been sent to <strong>{email}</strong>
           </p>
-          <p className="text-gray-600 text-sm mb-6">
+          <p className="text-ink-soft text-sm mb-6">
             Click the link in the email to sign in. If you don&apos;t see it, check your spam folder.
           </p>
           <Button
@@ -92,13 +92,13 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-sm w-full bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
+    <div className="min-h-screen flex items-center justify-center bg-plaster p-4">
+      <div className="max-w-sm w-full bg-chalk rounded-card shadow-raised p-8">
+        <h1 className="text-3xl font-medium tracking-tight text-center text-ink mb-2">
           PurseInator
         </h1>
-        <p className="text-center text-gray-600 mb-8">
-          sort what you love, let go of the rest
+        <p className="text-center text-ink-soft mb-8">
+          for the things you love
         </p>
 
         {error && <ErrorMessage message={error} />}
@@ -127,10 +127,10 @@ function LoginContent() {
 
         <div className="relative mb-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
+            <div className="w-full border-t border-line"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">or</span>
+            <span className="px-2 bg-chalk text-ink-soft">or</span>
           </div>
         </div>
 
@@ -144,9 +144,9 @@ function LoginContent() {
           Email me a magic link
         </Button>
 
-        <p className="text-center text-sm text-gray-600 mt-6">
+        <p className="text-center text-sm text-ink-soft mt-6">
           New here?{" "}
-          <a href="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+          <a href="/signup" className="text-verdigris hover:text-verdigris-deep font-medium">
             Create an account
           </a>
         </p>

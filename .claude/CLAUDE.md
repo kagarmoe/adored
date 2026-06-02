@@ -19,7 +19,7 @@ Next.js is opinionated. Follow its conventions, not workarounds:
 
 All UI must match `docs/PurseInator_wireframes.pdf` exactly:
 
-- **Tablet-first, tap-only** — No drag interactions; buttons h-11 min (44px)
+- **Tablet-first, tap-first** — Taps are the primary affordance and there is **no swiping**. Dragging is permitted where it genuinely helps (e.g. reordering results, moving items between buckets). Buttons h-11 min (44px)
 - **Navigation** — Top-left back arrow, breadcrumb trail; top-right user profile
 - **Collections** — 3-column grid, collection cards (cover + name + stats)
 - **Items** — Responsive grid, hero photo prominent, bucket badges, search/filter

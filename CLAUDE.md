@@ -75,3 +75,20 @@ _Add a brief overview of your project architecture_
 ## Conventions & Patterns
 
 _Add your project-specific conventions here_
+
+## Design Context
+
+Strategic design context lives in [`PRODUCT.md`](PRODUCT.md) (register, users, purpose, brand
+personality, anti-references, design principles, accessibility). Read it before any UI work.
+
+**The one thing to internalize:** the primary user is often **grieving**, sorting belongings under
+real emotional weight. The purpose is **realizing what you love most** (affirmation), not deciding
+what to discard — prefer "which do you love more?" over "keep or let go?"; letting go follows
+naturally and is never the headline. Design is gentle, judgement-free, and low-cognitive-load by duty
+of care, not taste. One decision at a time; never the whole pile. No gamification (no confetti/streaks/scores), no
+shaming metrics ("too many"), no catalog/inventory/shopping-site framing. Tablet-first, tap-first,
+**no swiping** (drag is OK where it helps). Target WCAG 2.1 AA.
+
+The `/impeccable` skill (and its sub-commands) reads `PRODUCT.md` automatically. A `DESIGN.md` for the
+visual system is not yet written — the current Tailwind tokens are scaffolder defaults, not a
+deliberate system.

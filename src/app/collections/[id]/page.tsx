@@ -86,11 +86,11 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
       <div className="space-y-8">
         {/* Collection Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{collection.name}</h1>
+          <h1 className="text-3xl text-ink">{collection.name}</h1>
           {collection.description && (
-            <p className="text-gray-600 mt-2">{collection.description}</p>
+            <p className="text-ink-soft mt-2">{collection.description}</p>
           )}
-          <p className="text-sm text-gray-500 mt-4">
+          <p className="text-sm text-ink-soft mt-4">
             Created {new Date(collection.createdAt).toLocaleDateString()}
           </p>
         </div>
@@ -98,21 +98,21 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {stats.map((stat) => (
             <Card key={stat.label} padding="md">
-              <p className="text-sm font-medium text-gray-500">{stat.label}</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">{stat.value}</p>
+              <p className="text-sm font-medium text-ink-soft">{stat.label}</p>
+              <p className="mt-2 text-3xl font-bold text-ink">{stat.value}</p>
             </Card>
           ))}
         </div>
 
         {activeSession && (
-          <Card padding="lg" className="border-blue-200 bg-blue-50">
+          <Card padding="lg" className="border-line bg-verdigris-soft">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="mb-2 flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-blue-950">Active Sorting Session</h2>
+                  <h2 className="text-lg text-verdigris-deep">Active Sorting Session</h2>
                   <Badge variant="active">active</Badge>
                 </div>
-                <p className="text-sm text-blue-900">
+                <p className="text-sm text-verdigris-deep">
                   {activeSession.goal || "Preference discovery"}
                 </p>
               </div>
@@ -133,8 +133,8 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
               <Card interactive padding="lg">
                 <div className="text-center">
                   <div className="text-4xl mb-3">{link.icon}</div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{link.label}</h3>
-                  <p className="text-sm text-gray-600">{link.description}</p>
+                  <h3 className="text-lg text-ink mb-2">{link.label}</h3>
+                  <p className="text-sm text-ink-soft">{link.description}</p>
                 </div>
               </Card>
             </Link>

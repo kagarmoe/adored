@@ -10,7 +10,7 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 const paddingMap = {
   sm: "p-2",
   md: "p-4",
-  lg: "p-6",
+  lg: "p-5",
   none: "",
 };
 
@@ -18,10 +18,10 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className = "", children, padding = "md", border = true, interactive = false, ...props }, ref) => (
     <div
       className={`
-        rounded-lg bg-white shadow-sm
-        ${border ? "border border-gray-200" : ""}
+        rounded-card bg-chalk
+        ${border ? "border border-line" : ""}
         ${paddingMap[padding]}
-        ${interactive ? "cursor-pointer hover:shadow-md transition-shadow active:opacity-75" : ""}
+        ${interactive ? "cursor-pointer transition-shadow duration-200 ease-gentle hover:shadow-lift active:opacity-90" : ""}
         ${className}
       `}
       ref={ref}

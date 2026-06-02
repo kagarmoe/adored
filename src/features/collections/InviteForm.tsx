@@ -74,7 +74,7 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
 
   if (success) {
     return (
-      <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-green-900">
+      <div className="bg-success-soft border border-success-soft rounded-lg px-4 py-3 text-success-deep">
         Invitation sent successfully!
       </div>
     );
@@ -95,7 +95,7 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
       />
 
       <div>
-        <h3 className="font-semibold text-gray-900 mb-4">Permissions</h3>
+        <h3 className="text-ink mb-4">Permissions</h3>
         <PermissionCheckboxes
           values={formData}
           onChange={(key, value) =>
