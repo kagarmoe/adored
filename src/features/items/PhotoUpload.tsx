@@ -70,7 +70,7 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
 
   return (
     <div className="space-y-4">
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+      <div className="border-2 border-dashed border-line rounded-lg p-8 text-center">
         {preview ? (
           <div className="space-y-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -99,11 +99,11 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
             <span className="text-4xl">📸</span>
             <div>
               <label htmlFor="photo-input" className="cursor-pointer">
-                <span className="font-semibold text-blue-600 hover:text-blue-700">
+                <span className="font-semibold text-verdigris hover:text-verdigris-deep">
                   Click to upload
                 </span>
               </label>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-ink-soft">
                 or drag and drop PNG, JPG, GIF up to 10MB
               </p>
             </div>
@@ -127,8 +127,8 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
       </div>
 
       {error && (
-        <Card padding="md" className="bg-red-50 border border-red-200">
-          <p className="text-red-700 text-sm">{error}</p>
+        <Card padding="md" className="bg-error-soft border border-error-soft">
+          <p className="text-error-deep text-sm">{error}</p>
         </Card>
       )}
     </div>

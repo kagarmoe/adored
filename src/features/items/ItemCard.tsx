@@ -28,7 +28,7 @@ export function ItemCard({ item, collectionId, heroPhotoUrl, bucket }: ItemCardP
   return (
     <Link href={`/collections/${collectionId}/items/${item.id}`}>
       <Card interactive padding="none" className="overflow-hidden h-full flex flex-col">
-        <div className="bg-gray-200 aspect-square flex items-center justify-center relative overflow-hidden">
+        <div className="bg-clay-soft aspect-square flex items-center justify-center relative overflow-hidden">
           {heroPhotoUrl ? (
             <Image
               src={heroPhotoUrl}
@@ -43,10 +43,10 @@ export function ItemCard({ item, collectionId, heroPhotoUrl, bucket }: ItemCardP
         <div className="p-3 flex-1 flex flex-col justify-between">
           <div className="space-y-2">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="font-semibold text-gray-900 truncate">{item.name}</h3>
+              <h3 className="text-ink truncate">{item.name}</h3>
               {bucket && <Badge variant={bucket} title={bucketLabels[bucket]}>{bucketDots[bucket]}</Badge>}
             </div>
-            {item.brand && <p className="text-xs text-gray-600 truncate">{item.brand}</p>}
+            {item.brand && <p className="text-xs text-ink-soft truncate">{item.brand}</p>}
             {item.status && item.status !== "active" && (
               <Badge variant={item.status === "deleted" ? "deleted" : "archived"}>{item.status}</Badge>
             )}

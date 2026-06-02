@@ -45,12 +45,12 @@ export function StartSessionForm({ collectionId }: StartSessionFormProps) {
       <Card padding="lg">
         <div className="space-y-4">
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">Goal</label>
+            <label className="mb-2 block text-sm font-medium text-ink">Goal</label>
             <Input value={goal} onChange={(event) => setGoal(event.target.value)} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">Scope</label>
+              <label className="mb-2 block text-sm font-medium text-ink">Scope</label>
               <Select
                 value={scope}
                 onChange={(event) => setScope(event.target.value)}
@@ -62,7 +62,7 @@ export function StartSessionForm({ collectionId }: StartSessionFormProps) {
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">Timebox</label>
+              <label className="mb-2 block text-sm font-medium text-ink">Timebox</label>
               <Select
                 value={timebox}
                 onChange={(event) => setTimebox(event.target.value)}
@@ -77,7 +77,7 @@ export function StartSessionForm({ collectionId }: StartSessionFormProps) {
         </div>
       </Card>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-error">{error}</p>}
 
       <div className="flex gap-3">
         <Button type="submit" disabled={isSubmitting}>

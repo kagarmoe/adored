@@ -60,37 +60,37 @@ export function SessionCompleteScreen({
       <Card padding="lg" className="max-w-2xl w-full space-y-6">
         <div className="text-center space-y-2">
           <div className="text-5xl mb-4">🎉</div>
-          <h2 className="text-3xl font-bold text-gray-900">Session Complete!</h2>
-          <p className="text-gray-600">You&apos;ve made great progress organizing your items.</p>
+          <h2 className="text-3xl text-ink">Session Complete!</h2>
+          <p className="text-ink-soft">You&apos;ve made great progress organizing your items.</p>
         </div>
 
-        <div className="grid grid-cols-4 gap-3 bg-gray-50 p-4 rounded-lg">
+        <div className="grid grid-cols-4 gap-3 bg-plaster p-4 rounded-lg">
           <div className="text-center">
-            <p className="text-2xl font-bold text-gray-900">{bucketCounts.top}</p>
-            <p className="text-xs text-gray-600 mt-1">Love</p>
+            <p className="text-2xl font-bold text-ink">{bucketCounts.top}</p>
+            <p className="text-xs text-ink-soft mt-1">Love</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-gray-900">{bucketCounts.high}</p>
-            <p className="text-xs text-gray-600 mt-1">Like</p>
+            <p className="text-2xl font-bold text-ink">{bucketCounts.high}</p>
+            <p className="text-xs text-ink-soft mt-1">Like</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-gray-900">{bucketCounts.medium}</p>
-            <p className="text-xs text-gray-600 mt-1">Maybe</p>
+            <p className="text-2xl font-bold text-ink">{bucketCounts.medium}</p>
+            <p className="text-xs text-ink-soft mt-1">Maybe</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-gray-900">{bucketCounts.low}</p>
-            <p className="text-xs text-gray-600 mt-1">Release</p>
+            <p className="text-2xl font-bold text-ink">{bucketCounts.low}</p>
+            <p className="text-xs text-ink-soft mt-1">Release</p>
           </div>
         </div>
 
-        <div className="text-center text-sm text-gray-600 space-y-1">
+        <div className="text-center text-sm text-ink-soft space-y-1">
           <p className="font-medium">{total} items sorted out of {decisionCount} decisions</p>
           <p>Ready to finalize and share your results?</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded p-3">
-            <p className="text-red-700 text-sm">{error}</p>
+          <div className="bg-error-soft border border-error-soft rounded p-3">
+            <p className="text-error-deep text-sm">{error}</p>
           </div>
         )}
 

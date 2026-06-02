@@ -64,8 +64,8 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
   return (
     <>
       {error && (
-        <Card padding="lg" className="bg-red-50 border border-red-200">
-          <p className="text-red-700">{error}</p>
+        <Card padding="lg" className="bg-error-soft border border-error-soft">
+          <p className="text-error-deep">{error}</p>
         </Card>
       )}
 

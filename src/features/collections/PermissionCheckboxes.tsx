@@ -62,7 +62,7 @@ export function PermissionCheckboxes({ values, onChange, disabled = false }: Per
             onChange={(e) => onChange(key, e.target.checked)}
             disabled={disabled}
           />
-          <p className="text-xs text-gray-600 ml-9">{description}</p>
+          <p className="text-xs text-ink-soft ml-9">{description}</p>
         </div>
       ))}
     </div>

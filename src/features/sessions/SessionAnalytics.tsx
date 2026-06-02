@@ -46,52 +46,52 @@ export function SessionAnalytics({
 
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-gray-900">Session Analytics</h3>
+      <h3 className="text-ink">Session Analytics</h3>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Card padding="md" className="bg-blue-50 border-blue-200">
-          <p className="text-xs font-medium text-blue-700">Decisions Made</p>
-          <p className="text-2xl font-bold text-blue-900 mt-2">{totalDecisions}</p>
-          <p className="text-xs text-blue-600 mt-1">{triageCount} triage, {pairwiseCount} compare</p>
+        <Card padding="md" className="bg-verdigris-soft border-line">
+          <p className="text-xs font-medium text-verdigris-deep">Decisions Made</p>
+          <p className="text-2xl font-bold text-verdigris-deep mt-2">{totalDecisions}</p>
+          <p className="text-xs text-verdigris-deep mt-1">{triageCount} triage, {pairwiseCount} compare</p>
         </Card>
 
-        <Card padding="md" className="bg-green-50 border-green-200">
-          <p className="text-xs font-medium text-green-700">Items Triaged</p>
-          <p className="text-2xl font-bold text-green-900 mt-2">{triaged}</p>
-          <p className="text-xs text-green-600 mt-1">of {totalItems} items</p>
+        <Card padding="md" className="bg-success-soft border-success-soft">
+          <p className="text-xs font-medium text-success-deep">Items Triaged</p>
+          <p className="text-2xl font-bold text-success-deep mt-2">{triaged}</p>
+          <p className="text-xs text-success-deep mt-1">of {totalItems} items</p>
         </Card>
 
-        <Card padding="md" className="bg-purple-50 border-purple-200">
-          <p className="text-xs font-medium text-purple-700">Avg Confidence</p>
-          <p className="text-2xl font-bold text-purple-900 mt-2">
+        <Card padding="md" className="bg-plaster border-line">
+          <p className="text-xs font-medium text-ink-soft">Avg Confidence</p>
+          <p className="text-2xl font-bold text-ink mt-2">
             {(avgConfidence * 100).toFixed(0)}%
           </p>
-          <p className="text-xs text-purple-600 mt-1">across items</p>
+          <p className="text-xs text-ink-soft mt-1">across items</p>
         </Card>
 
-        <Card padding="md" className="bg-orange-50 border-orange-200">
-          <p className="text-xs font-medium text-orange-700">Time Spent</p>
-          <p className="text-2xl font-bold text-orange-900 mt-2">{timeSpent}m</p>
-          <p className="text-xs text-orange-600 mt-1">in session</p>
+        <Card padding="md" className="bg-warning-soft border-warning-soft">
+          <p className="text-xs font-medium text-warning-deep">Time Spent</p>
+          <p className="text-2xl font-bold text-warning-deep mt-2">{timeSpent}m</p>
+          <p className="text-xs text-warning-deep mt-1">in session</p>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card padding="lg">
-          <h4 className="font-medium text-gray-900 mb-4">Distribution</h4>
+          <h4 className="text-ink mb-4">Distribution</h4>
           <div className="space-y-3">
             {[
-              { label: "Love", count: bucketCounts.top, color: "bg-red-500" },
-              { label: "Like", count: bucketCounts.high, color: "bg-blue-500" },
-              { label: "Maybe", count: bucketCounts.medium, color: "bg-yellow-500" },
-              { label: "Release", count: bucketCounts.low, color: "bg-gray-500" },
+              { label: "Love", count: bucketCounts.top, color: "bg-verdigris" },
+              { label: "Like", count: bucketCounts.high, color: "bg-clay" },
+              { label: "Maybe", count: bucketCounts.medium, color: "bg-warning" },
+              { label: "Release", count: bucketCounts.low, color: "bg-ink-soft" },
             ].map((bucket) => (
               <div key={bucket.label}>
                 <div className="flex justify-between items-center mb-1">
-                  <p className="text-sm font-medium text-gray-700">{bucket.label}</p>
-                  <p className="text-sm text-gray-600">{bucket.count}</p>
+                  <p className="text-sm font-medium text-ink">{bucket.label}</p>
+                  <p className="text-sm text-ink-soft">{bucket.count}</p>
                 </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-2 bg-clay-soft rounded-full overflow-hidden">
                   <div
                     className={`${bucket.color} h-full`}
                     style={{
@@ -105,32 +105,32 @@ export function SessionAnalytics({
         </Card>
 
         <Card padding="lg">
-          <h4 className="font-medium text-gray-900 mb-4">Insights</h4>
+          <h4 className="text-ink mb-4">Insights</h4>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between items-start">
-              <span className="text-gray-600">Avg Comparisons per Item</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-ink-soft">Avg Comparisons per Item</span>
+              <span className="font-semibold text-ink">
                 {avgComparisonCount.toFixed(1)}
               </span>
             </div>
             <div className="flex justify-between items-start">
-              <span className="text-gray-600">Decision Rate</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-ink-soft">Decision Rate</span>
+              <span className="font-semibold text-ink">
                 {timeSpent > 0 ? (totalDecisions / (timeSpent || 1)).toFixed(1) : 0} per min
               </span>
             </div>
             <div className="flex justify-between items-start">
-              <span className="text-gray-600">Coverage</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-ink-soft">Coverage</span>
+              <span className="font-semibold text-ink">
                 {totalItems > 0 ? ((triaged / totalItems) * 100).toFixed(0) : 0}%
               </span>
             </div>
             <div className="flex justify-between items-start">
-              <span className="text-gray-600">Confidence Level</span>
+              <span className="text-ink-soft">Confidence Level</span>
               <span className={`font-semibold ${
-                avgConfidence > 0.8 ? "text-green-600" :
-                avgConfidence > 0.6 ? "text-yellow-600" :
-                "text-orange-600"
+                avgConfidence > 0.8 ? "text-success-deep" :
+                avgConfidence > 0.6 ? "text-warning-deep" :
+                "text-error-deep"
               }`}>
                 {avgConfidence > 0.8 ? "High" : avgConfidence > 0.6 ? "Medium" : "Low"}
               </span>
