@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
-import { user } from "@/lib/db/schema";
+import { user, collectionsTable } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
 import { getTestDb, resetDb, closeDb } from "./db";
 
@@ -35,6 +35,29 @@ export async function seedBaseline(): Promise<string> {
     emailVerified: new Date(),
   });
   return id;
+}
+
+/**
+ * Seed `count` collections owned by the given user. Used by the layout spec so
+ * the collections grid actually renders (the page shows EmptyState with zero
+ * collections, which never exercises the grid). Returns the created ids.
+ */
+export async function seedCollections(
+  ownerId: string,
+  count = 3,
+): Promise<string[]> {
+  const { db } = getTestDb();
+  const ids: string[] = [];
+  for (let i = 0; i < count; i++) {
+    const id = generateId("col");
+    await db.insert(collectionsTable).values({
+      id,
+      ownerId,
+      name: `E2E Collection ${i + 1}`,
+    });
+    ids.push(id);
+  }
+  return ids;
 }
 
 // Allow running directly (tsx e2e/fixtures/seed.ts) for manual verification.
