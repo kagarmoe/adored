@@ -60,3 +60,6 @@ next-env.d.ts
 
 # Playwright auth storageState (secrets — never commit)
 /e2e/.auth/
+
+# Beads / Dolt files (added by bd init)
+.beads/proxieddb/
