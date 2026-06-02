@@ -11,28 +11,45 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        plaster: "var(--color-plaster)",
-        chalk: "var(--color-chalk)",
+        // Surfaces — sunken → canvas → raised → floating
+        vellum: {
+          DEFAULT: "var(--color-vellum)",
+          deep: "var(--color-vellum-deep)",
+        },
+        veil: {
+          DEFAULT: "var(--color-veil)",
+          raised: "var(--color-veil-raised)",
+        },
         ink: {
           DEFAULT: "var(--color-ink)",
           soft: "var(--color-ink-soft)",
         },
-        line: "var(--color-line)",
-        verdigris: {
-          DEFAULT: "var(--color-verdigris)",
-          deep: "var(--color-verdigris-deep)",
-          soft: "var(--color-verdigris-soft)",
+        line: {
+          DEFAULT: "var(--color-line)",
+          strong: "var(--color-line-strong)",
         },
-        clay: {
-          DEFAULT: "var(--color-clay)",
-          soft: "var(--color-clay-soft)",
-          "soft-strong": "var(--color-clay-soft-strong)",
+        // Action voice
+        espresso: {
+          DEFAULT: "var(--color-espresso)",
+          deep: "var(--color-espresso-deep)",
+          soft: "var(--color-espresso-soft)",
         },
-        // Semantic aliases — primary is the action voice (verdigris).
+        // Warm secondary metal
+        gold: {
+          DEFAULT: "var(--color-gold)",
+          soft: "var(--color-gold-soft)",
+          "soft-strong": "var(--color-gold-soft-strong)",
+        },
+        // Content jewel tone (cover washes, accents) — never chrome
+        oxblood: {
+          DEFAULT: "var(--color-oxblood)",
+          soft: "var(--color-oxblood-soft)",
+        },
+        // Semantic aliases — primary is the action voice (espresso).
         primary: {
-          DEFAULT: "var(--color-verdigris)",
-          deep: "var(--color-verdigris-deep)",
-          soft: "var(--color-verdigris-soft)",
+          DEFAULT: "var(--color-espresso)",
+          deep: "var(--color-espresso-deep)",
+          soft: "var(--color-espresso-soft)",
         },
         success: {
           DEFAULT: "var(--color-success)",
@@ -55,8 +72,11 @@ const config: Config = {
         sans: ["var(--font-hanken)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       boxShadow: {
-        lift: "0 2px 8px oklch(0.25 0.02 50 / 0.06)",
-        raised: "0 8px 28px oklch(0.25 0.02 50 / 0.10)",
+        lift: "var(--shadow-lift)",
+        raised: "var(--shadow-raised)",
+        float: "var(--shadow-float)",
+        card: "var(--shadow-card)",
+        "card-hover": "var(--shadow-card-hover)",
       },
       borderRadius: {
         // Semantic radii (DESIGN.md): controls 10px, cards 16px (cozier).

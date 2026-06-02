@@ -2,18 +2,25 @@
 name: PurseInator
 description: A lamplit sitting room for sorting what you love — calm, curatorial, judgement-free.
 colors:
-  plaster: "#f6efe6"
-  chalk: "#faf6f0"
-  ink: "#2b2521"
-  ink-soft: "#5a5048"
-  verdigris: "#3d6b54"
-  verdigris-deep: "#2f5341"
-  clay: "#bd7d63"
-  clay-soft: "#ecd9cd"
-  line: "#e4dccf"
-  success: "#4f7d5f"
-  warning: "#c79a52"
-  error: "#b15441"
+  vellum: "#f4e3d0"
+  vellum-deep: "#e7d0b9"
+  veil: "#fbf2e5"
+  veil-raised: "#fff9f1"
+  ink: "#302218"
+  ink-soft: "#635146"
+  line: "#d8cbbd"
+  line-strong: "#c1b1a0"
+  espresso: "#302218"
+  espresso-deep: "#180c06"
+  espresso-soft: "#e4ddd4"
+  oxblood: "#892a29"
+  oxblood-soft: "#fbd3ce"
+  gold: "#c39553"
+  gold-soft: "#e9d5b3"
+  gold-soft-strong: "#dcbf94"
+  success: "#647a4e"
+  warning: "#e39849"
+  error: "#c8331a"
 typography:
   display:
     fontFamily: "Fraunces, Georgia, 'Times New Roman', serif"
@@ -58,39 +65,39 @@ spacing:
   xl: "40px"
 components:
   button-primary:
-    backgroundColor: "{colors.verdigris}"
-    textColor: "{colors.chalk}"
+    backgroundColor: "{colors.espresso}"
+    textColor: "{colors.veil-raised}"
     rounded: "{rounded.md}"
     padding: "0 20px"
     height: "44px"
   button-primary-hover:
-    backgroundColor: "{colors.verdigris-deep}"
-    textColor: "{colors.chalk}"
+    backgroundColor: "{colors.espresso-deep}"
+    textColor: "{colors.veil-raised}"
   button-secondary:
-    backgroundColor: "{colors.clay-soft}"
+    backgroundColor: "{colors.gold-soft}"
     textColor: "{colors.ink}"
     rounded: "{rounded.md}"
     padding: "0 20px"
     height: "44px"
   button-ghost:
     backgroundColor: "transparent"
-    textColor: "{colors.verdigris}"
+    textColor: "{colors.espresso}"
     rounded: "{rounded.md}"
     padding: "0 16px"
     height: "44px"
   card:
-    backgroundColor: "{colors.chalk}"
+    backgroundColor: "{colors.veil}"
     textColor: "{colors.ink}"
     rounded: "{rounded.lg}"
     padding: "20px"
   input:
-    backgroundColor: "{colors.chalk}"
+    backgroundColor: "{colors.veil}"
     textColor: "{colors.ink}"
     rounded: "{rounded.md}"
     padding: "0 14px"
     height: "44px"
   badge:
-    backgroundColor: "{colors.clay-soft}"
+    backgroundColor: "{colors.gold-soft}"
     textColor: "{colors.ink}"
     rounded: "{rounded.full}"
     padding: "2px 10px"
@@ -102,44 +109,48 @@ components:
 
 **Creative North Star: "The Lamplit Sitting Room"**
 
-PurseInator looks like a warm room in late-afternoon light where someone sits with a box of belongings and discovers, slowly, what they love most. The work is affirmation, not subtraction — recognizing the things that matter, with letting go following naturally from that clarity. The reference is *Cabana* magazine in print — cozy, intimate, maximalist, materially rich — not the flat tech-product look and not Cabana's own thin website. The maximalism is deliberately rehomed as affection: it lives in the user's photographs, the warm plaster-and-verdigris palette, and the old-style serif voice, never in the density of the interface. The chrome stays quiet so that exactly one loving choice is ever in front of a person who may be grieving.
+PurseInator looks like a warm room in late-afternoon light where someone sits with a box of belongings and discovers, slowly, what they love most. The work is affirmation, not subtraction — recognizing the things that matter, with letting go following naturally from that clarity. The reference is *Cabana* magazine in print — cozy, intimate, maximalist, materially rich — not the flat tech-product look and not Cabana's own thin website. The maximalism is deliberately rehomed as affection: it lives in the user's photographs, the warm parchment palette and its jewel-tone content, and the old-style serif voice, never in the density of the interface. The chrome stays quiet so that exactly one loving choice is ever in front of the person sorting.
 
 The system rejects every frame that treats belongings as stock. It is **not a catalog**, **not an inventory tool**, **not a shopping site**. It does not gamify letting go (no confetti, streaks, points, or "you have too many"), and it never feels like an enterprise asset dashboard or a resale-marketplace listing screen. Warmth and a light touch of playfulness show up as small material moments, not as rewards.
 
 **Key Characteristics:**
-- Warm plaster light theme; pure white and cool gray are forbidden.
-- One botanical-green action color, used sparingly; clay warmth as garnish only.
+- Warm honey-parchment light theme; pure white and cool gray are forbidden.
+- Achromatic espresso-ink chrome; gilt-gold warmth as garnish; color lives in the content.
 - Editorial serif (Fraunces) for soul; humanist sans (Hanken Grotesk) for everything functional.
 - Calm density: one decision at a time, generous but cozy spacing.
 - Flat tonal layering with one soft, warm lift; gentle 150–250ms motion.
 
 ## 2. Colors
 
-A warm, lamplit palette: plaster and chalk neutrals carrying a deep botanical green, with terracotta clay as an occasional garnish. Composed in OKLCH; hex in the frontmatter are sRGB approximations and the canonical OKLCH values live in `.impeccable/design.json`.
+A warm parchment palette with achromatic chrome: vellum and veil neutrals under espresso ink, with saturated color reserved for the content. Composed in OKLCH; hex in the frontmatter are sRGB approximations and the canonical OKLCH values live in `.impeccable/design.json`.
 
-### Primary
-- **Verdigris** (`#3d6b54`, `oklch(0.48 0.09 155)`): the single voice of action and selection. Primary buttons, the current/selected card, focus rings, links, progress fill. Deepens to **Verdigris Deep** (`#2f5341`) on hover/active. White (Chalk) text on Verdigris clears 4.5:1.
+### Chrome
+- **Espresso** (`#302218`, `oklch(0.265 0.028 55)`): the single voice of action and selection. Primary buttons, the current/selected card, focus rings, links, progress fill. Deepens to **Espresso Deep** (`#180c06`) on hover/active and as text on Espresso Soft. Veil-Raised text on Espresso clears 4.5:1. Espresso equals Ink by value but is a distinct role — interactive fill, not body text.
+- **Espresso Soft** (`#e4ddd4`): a warm grey wash for selected/info surfaces and quiet badges.
 
 ### Secondary
-- **Clay** (`#bd7d63`, `oklch(0.62 0.10 40)`): warmth and personality — small decorative moments, illustrative accents, the occasional flourish. Carries Ink text only (not white), and is never used for primary actions or error states.
-- **Clay Soft** (`#ecd9cd`): tinted fills for badges, secondary buttons, and gentle highlight chips.
+- **Gold** (`#c39553`, `oklch(0.70 0.10 75)`): gilt — the room's metal. Warmth and personality: small decorative moments, illustrative accents, the occasional flourish. Carries Ink text only (not white), and is never used for primary actions or error states.
+- **Gold Soft** (`#e9d5b3`) / **Gold Soft Strong** (`#dcbf94`): tinted fills for badges, secondary buttons, and gentle highlight chips.
+
+### Content jewel tone
+- **Oxblood** (`#892a29`, `oklch(0.43 0.13 25)`): a content accent — cover washes and illustrative moments, with **Oxblood Soft** (`#fbd3ce`) as its tint. Never chrome, never an action, never an alarm. (Per-collection cover colors — cognac, peacock, dusty blue — come from the same OKLCH family as content data.)
 
 ### Neutral
-- **Plaster** (`#f6efe6`, `oklch(0.955 0.018 50)`): the body canvas. The lamplit room. Deliberately warm and faintly chromatic — not the cream/sand AI default and not a cold white.
-- **Chalk** (`#faf6f0`): raised surfaces — cards, inputs, dialogs. A shade cleaner than plaster so content lifts by tone, not by heavy shadow.
-- **Ink** (`#2b2521`, `oklch(0.25 0.02 50)`): primary text and high-emphasis marks. A warm near-black, never `#000`.
-- **Ink Soft** (`#5a5048`): secondary text, captions, helper copy. Clears 4.5:1 on Plaster.
-- **Line** (`#e4dccf`): borders and dividers. Warm and low-contrast; structure is felt, not announced.
+- **Vellum** (`#f4e3d0`, `oklch(0.925 0.032 72)`): the body canvas — warm honey parchment. Deliberately warm and faintly chromatic — not the cream/sand AI default and not a cold white. **Vellum Deep** (`#e7d0b9`) carries sunken wells and the canvas gradient's top edge.
+- **Veil** (`#fbf2e5`): raised surfaces — cards, inputs, dialogs. A shade cleaner than vellum so content lifts by tone, not by heavy shadow. **Veil Raised** (`#fff9f1`) is the top elevation (dialogs, the active card) and the text color on espresso fills.
+- **Ink** (`#302218`, `oklch(0.265 0.028 55)`): primary text and high-emphasis marks. A warm near-black, never `#000`.
+- **Ink Soft** (`#635146`): secondary text, captions, helper copy. Clears 4.5:1 on Vellum.
+- **Line** (`#d8cbbd`) / **Line Strong** (`#c1b1a0`): borders, dividers, and the thin double-rule serif frames. Warm and low-contrast; structure is felt, not announced.
 
-### Semantic (muted by duty of care)
-- **Success** (`#4f7d5f`), **Warning** (`#c79a52`), **Error** (`#b15441`): all desaturated. For a grieving user, even errors speak softly; no fire-engine red, no alarm.
+### Semantic
+- **Success** (`#647a4e`, olive/sage), **Warning** (`#e39849`, amber), **Error** (`#c8331a`, vermilion): semantics speak softly; no fire-engine red, no alarm. Success is kept quiet so red and green never read as festive; error stays brighter and more chromatic than oxblood so the two never look alike. Each `-soft` is a tint background, each `-deep` the readable text on it.
 
 ### Named Rules
-**The One Voice Rule.** Verdigris is the only hue that signals action or selection, on ≤10% of any screen. Its rarity is what makes the current decision unmistakable.
+**The Achromatic-Chrome Rule.** No hue is spent on the interface itself — buttons, the title, links, focus, and progress are espresso ink. Color belongs to the content (photographs and covers), and that restraint is what makes the current decision unmistakable.
 
-**The Clay-as-Garnish Rule.** Clay is seasoning, never substance. It may warm a badge, an illustration, or an empty-state mark; it may never be a button you press or a state that warns you.
+**The Gilt-as-Garnish Rule.** Gold is seasoning, never substance. It may warm a badge, an illustration, or an empty-state mark; it may never be a button you press or a state that warns you.
 
-**The No Cold Surface Rule.** Every surface is warm — Plaster or Chalk. Pure `#ffffff` and any cool/blue-tinted gray are prohibited; they break the lamplit room instantly.
+**The No Cold Surface Rule.** Every surface is warm — Vellum or Veil. Pure `#ffffff` and any cool/blue-tinted gray are prohibited; they break the room instantly.
 
 ## 3. Typography
 
@@ -162,7 +173,7 @@ A warm, lamplit palette: plaster and chalk neutrals carrying a deep botanical gr
 
 ## 4. Elevation
 
-Flat by default with warm tonal layering: Chalk surfaces sit on the Plaster canvas and separate by tone and a hairline Line border, not by shadow. Depth is reserved as a response to lift — a single soft, warm ambient shadow on genuinely raised or interactive surfaces (the card under your finger, dialogs, popovers) — so the room feels tactile, like paper resting on a warm table, without hard gray drop shadows.
+Flat by default with warm tonal layering: Veil surfaces sit on the Vellum canvas and separate by tone and a hairline Line border, not by shadow. Depth is reserved as a response to lift — a single soft, warm ambient shadow on genuinely raised or interactive surfaces (the card under your finger, dialogs, popovers) — so the room feels tactile, like paper resting on a warm table, without hard gray drop shadows.
 
 ### Shadow Vocabulary
 - **Lift** (`box-shadow: 0 2px 8px rgba(43, 37, 33, 0.06)`): resting interactive cards.
@@ -175,26 +186,26 @@ Flat by default with warm tonal layering: Chalk surfaces sit on the Plaster canv
 
 ### Buttons
 - **Shape:** gently curved (10px, `{rounded.md}`); min height 44px for tap targets.
-- **Primary:** Verdigris fill, Chalk text, 0 20px padding. Hover → Verdigris Deep with a 150ms color transition; active dips opacity slightly. Focus-visible → 2px Verdigris ring, 2px offset.
-- **Secondary:** Clay Soft fill, Ink text. The quiet alternative to primary.
-- **Ghost:** transparent, Verdigris text; hover gets a faint Verdigris-tinted wash. For low-emphasis and back actions.
-- **Danger:** Error fill, Chalk text — reserved for truly destructive, irreversible actions; styled to be sober, not loud.
+- **Primary:** Espresso fill, Veil-Raised text, 0 20px padding. Hover → Espresso Deep with a 150ms color transition; active dips opacity slightly. Focus-visible → 2px Espresso ring, 2px offset.
+- **Secondary:** Gold Soft fill, Ink text. The quiet alternative to primary.
+- **Ghost:** transparent, Espresso text; hover gets a faint Espresso-Soft wash. For low-emphasis and back actions.
+- **Danger:** Error fill, Veil-Raised text — reserved for truly destructive, irreversible actions; styled to be sober, not loud.
 
 ### Cards / Containers
 - **Corner Style:** 16px (`{rounded.lg}`) — cozier than the buttons.
-- **Background:** Chalk on the Plaster canvas.
+- **Background:** Veil on the Vellum canvas.
 - **Shadow Strategy:** flat at rest (tone + Line border); **Lift** shadow on hover/selected per Elevation.
-- **Border:** 1px Line; the selected/current card swaps to a 1.5px Verdigris border (paired with a check, never color alone).
+- **Border:** 1px Line; the selected/current card swaps to a 1.5px Espresso border (paired with a check, never color alone).
 - **Internal Padding:** 20px (`{spacing.lg}`-ish).
 
 ### Inputs / Fields
-- **Style:** Chalk fill, 1px Line border, 10px radius, 44px height.
-- **Focus:** border shifts to Verdigris with a soft 2px Verdigris ring; no harsh glow.
+- **Style:** Veil fill, 1px Line border, 10px radius, 44px height.
+- **Focus:** border shifts to Espresso with a soft 2px Espresso ring; no harsh glow.
 - **Error:** Error border + a short Ink-readable message below; never color-only.
 - **Placeholder:** Ink Soft (must hold 4.5:1, not a faint gray).
 
 ### Badges / Buckets
-- **Style:** Clay Soft fill with Ink text, full-radius, label type. Bucket badges must pair hue with a label or icon — **never distinguish buckets by color alone** (color-blind safety).
+- **Style:** Gold Soft fill with Ink text, full-radius, label type. Bucket badges must pair hue with a label or icon — **never distinguish buckets by color alone** (color-blind safety).
 
 ### Navigation
 - Top-left back arrow + breadcrumb trail (Hanken Grotesk, Ink Soft → Ink on the current crumb); top-right user profile. Quiet by default; the current location is marked with Ink weight, not a heavy fill.
@@ -205,8 +216,8 @@ Flat by default with warm tonal layering: Chalk surfaces sit on the Plaster canv
 - **Do** frame the work as affirmation — "which do you love more?" — not as culling. Copy and motion celebrate favorites; letting go is honored quietly, never the headline.
 - **Do** keep one decision in view at a time; let whitespace and pacing carry the calm.
 - **Do** let the user's photographs be the loudest, richest thing on the screen.
-- **Do** use Verdigris as the single action voice (the One Voice Rule, ≤10% per screen).
-- **Do** keep all surfaces warm (Plaster/Chalk) and all text warm Ink — verify body text ≥4.5:1.
+- **Do** keep the chrome achromatic — espresso ink for buttons, links, focus, and progress; let color live in the content.
+- **Do** keep all surfaces warm (Vellum/Veil) and all text warm Ink — verify body text ≥4.5:1.
 - **Do** reserve Fraunces for names, headings, and the item being decided; Hanken for everything functional.
 - **Do** honor `prefers-reduced-motion` with a crossfade or instant transition on every animation.
 - **Do** support tap-first interaction with ≥44px targets; drag is allowed for reordering/bucketing.

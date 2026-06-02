@@ -49,10 +49,10 @@ export function SessionAnalytics({
       <h3 className="text-ink">Session Analytics</h3>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Card padding="md" className="bg-verdigris-soft border-line">
-          <p className="text-xs font-medium text-verdigris-deep">Decisions Made</p>
-          <p className="text-2xl font-bold text-verdigris-deep mt-2">{totalDecisions}</p>
-          <p className="text-xs text-verdigris-deep mt-1">{triageCount} triage, {pairwiseCount} compare</p>
+        <Card padding="md" className="bg-espresso-soft border-line">
+          <p className="text-xs font-medium text-espresso-deep">Decisions Made</p>
+          <p className="text-2xl font-bold text-espresso-deep mt-2">{totalDecisions}</p>
+          <p className="text-xs text-espresso-deep mt-1">{triageCount} triage, {pairwiseCount} compare</p>
         </Card>
 
         <Card padding="md" className="bg-success-soft border-success-soft">
@@ -61,7 +61,7 @@ export function SessionAnalytics({
           <p className="text-xs text-success-deep mt-1">of {totalItems} items</p>
         </Card>
 
-        <Card padding="md" className="bg-plaster border-line">
+        <Card padding="md" className="bg-vellum border-line">
           <p className="text-xs font-medium text-ink-soft">Avg Confidence</p>
           <p className="text-2xl font-bold text-ink mt-2">
             {(avgConfidence * 100).toFixed(0)}%
@@ -81,8 +81,8 @@ export function SessionAnalytics({
           <h4 className="text-ink mb-4">Distribution</h4>
           <div className="space-y-3">
             {[
-              { label: "Love", count: bucketCounts.top, color: "bg-verdigris" },
-              { label: "Like", count: bucketCounts.high, color: "bg-clay" },
+              { label: "Love", count: bucketCounts.top, color: "bg-espresso" },
+              { label: "Like", count: bucketCounts.high, color: "bg-gold" },
               { label: "Maybe", count: bucketCounts.medium, color: "bg-warning" },
               { label: "Release", count: bucketCounts.low, color: "bg-ink-soft" },
             ].map((bucket) => (
@@ -91,7 +91,7 @@ export function SessionAnalytics({
                   <p className="text-sm font-medium text-ink">{bucket.label}</p>
                   <p className="text-sm text-ink-soft">{bucket.count}</p>
                 </div>
-                <div className="h-2 bg-clay-soft rounded-full overflow-hidden">
+                <div className="h-2 bg-gold-soft rounded-full overflow-hidden">
                   <div
                     className={`${bucket.color} h-full`}
                     style={{

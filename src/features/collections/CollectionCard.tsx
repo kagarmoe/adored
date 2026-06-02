@@ -22,7 +22,7 @@ export function CollectionCard({ collection, itemCount = 0, curators = [] }: Col
     <Link href={`/collections/${collection.id}`}>
       <Card interactive padding="none" className="overflow-hidden h-full flex flex-col">
         {/* Cover Photo */}
-        <div className="h-32 bg-clay-soft flex items-center justify-center relative overflow-hidden">
+        <div className="h-32 bg-gold-soft flex items-center justify-center relative overflow-hidden">
           <span className="text-4xl">📷</span>
         </div>
 

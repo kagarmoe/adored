@@ -58,7 +58,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
 
         {/* Hero Photo */}
         {heroPhoto ? (
-          <div className="bg-plaster rounded-lg overflow-hidden h-96 flex items-center justify-center">
+          <div className="bg-vellum rounded-lg overflow-hidden h-96 flex items-center justify-center">
             <Image
               src={heroPhoto.blobKey}
               alt={item.name}
@@ -93,7 +93,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
               {photos.map((photo) => (
                 <div
                   key={photo.id}
-                  className="bg-plaster rounded-lg overflow-hidden aspect-square relative"
+                  className="bg-vellum rounded-lg overflow-hidden aspect-square relative"
                 >
                   <Image
                     src={photo.blobKey}

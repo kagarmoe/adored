@@ -18,7 +18,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ breadcrumbs, children }: AppLayoutProps) {
   return (
-    <div className="flex flex-col min-h-screen bg-plaster">
+    <div className="flex flex-col min-h-screen bg-vellum">
       <Header />
 
       <main className="flex-1 pt-20">
@@ -28,7 +28,7 @@ export function AppLayout({ breadcrumbs, children }: AppLayoutProps) {
         </PageContainer>
       </main>
 
-      <footer className="border-t border-line bg-chalk py-4 text-center text-sm text-ink-soft">
+      <footer className="border-t border-line bg-veil py-4 text-center text-sm text-ink-soft">
         <p>&copy; 2026 PurseInator. All rights reserved.</p>
       </footer>
     </div>
