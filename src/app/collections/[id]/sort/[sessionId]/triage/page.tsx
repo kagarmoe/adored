@@ -71,7 +71,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
           <EmptyState heading="All items triaged!" message="You&apos;ve completed triage for all items. View results to see your ranked order." />
         ) : (
           <>
-            <ItemCard item={item} collectionId={params.id} />
+            <ItemCard item={item} collectionId={params.id} imageClassName="h-64" />
             <Card padding="lg">
               <DecisionControls
                 sessionId={params.sessionId}

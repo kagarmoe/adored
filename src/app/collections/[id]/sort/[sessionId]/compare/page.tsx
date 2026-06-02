@@ -7,9 +7,8 @@ import { SessionRepository } from "@/server/repositories/implementations/Session
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import { AppLayout } from "@/components/layout";
-import { Card, EmptyState } from "@/components/ui";
-import { DecisionControls } from "@/features/sorting/DecisionControls";
-import { ItemCard } from "@/features/items/ItemCard";
+import { EmptyState } from "@/components/ui";
+import { CompareChoice } from "@/features/sorting/CompareChoice";
 import { selectNextPair } from "@/lib/pairwise-selection";
 
 interface ComparePageProps {
@@ -92,6 +91,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
   }
 
   const [itemA, itemB] = pair;
+  const comparisonsMade = decisions.filter((d) => d.type === "pairwise_compare").length;
 
   return (
     <AppLayout
@@ -102,33 +102,21 @@ export default async function ComparePage({ params }: ComparePageProps) {
         { label: "Compare" },
       ]}
     >
-      <div className="space-y-6">
+      <div className="mx-auto max-w-2xl space-y-6">
         <div>
-          <h1 className="text-3xl text-ink">Compare</h1>
-          <p className="mt-2 text-ink-soft">Choose which item better fits this session goal.</p>
+          <h1 className="text-3xl text-ink">Which do you love more?</h1>
+          <p className="mt-2 text-ink-soft">Tap the one you love more. Tie or skip whenever you like.</p>
         </div>
 
         {!itemA || !itemB ? (
           <EmptyState heading="Need at least two items" message="Add more items to use pairwise comparison" />
         ) : (
-          <>
-            <div className="grid gap-4 md:grid-cols-2">
-              <ItemCard item={itemA} collectionId={params.id} />
-              <ItemCard item={itemB} collectionId={params.id} />
-            </div>
-            <Card padding="lg">
-              <DecisionControls
-                sessionId={params.sessionId}
-                type="pairwise_compare"
-                decisions={[
-                  { label: itemA.name, decision: { itemAId: itemA.id, itemBId: itemB.id, result: "item_a" } },
-                  { label: itemB.name, decision: { itemAId: itemA.id, itemBId: itemB.id, result: "item_b" } },
-                  { label: "Tie", decision: { itemAId: itemA.id, itemBId: itemB.id, result: "tie" } },
-                  { label: "Skip", decision: { itemAId: itemA.id, itemBId: itemB.id, result: "skip" } },
-                ]}
-              />
-            </Card>
-          </>
+          <CompareChoice
+            sessionId={params.sessionId}
+            itemA={itemA}
+            itemB={itemB}
+            comparisonsMade={comparisonsMade}
+          />
         )}
       </div>
     </AppLayout>

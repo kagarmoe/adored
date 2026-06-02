@@ -8,6 +8,9 @@ interface ItemCardProps {
   collectionId: string;
   heroPhotoUrl?: string;
   bucket?: "top" | "high" | "medium" | "low";
+  /** Override the image area sizing (default a square). Triage caps height so
+   *  the decision buttons stay above the fold. */
+  imageClassName?: string;
 }
 
 const bucketDots = {
@@ -24,11 +27,11 @@ const bucketLabels = {
   low: "Release",
 };
 
-export function ItemCard({ item, collectionId, heroPhotoUrl, bucket }: ItemCardProps) {
+export function ItemCard({ item, collectionId, heroPhotoUrl, bucket, imageClassName = "aspect-square" }: ItemCardProps) {
   return (
     <Link href={`/collections/${collectionId}/items/${item.id}`}>
       <Card interactive padding="none" className="overflow-hidden h-full flex flex-col">
-        <div className="bg-clay-soft aspect-square flex items-center justify-center relative overflow-hidden">
+        <div className={`bg-clay-soft ${imageClassName} flex items-center justify-center relative overflow-hidden`}>
           {heroPhotoUrl ? (
             <Image
               src={heroPhotoUrl}
@@ -37,7 +40,9 @@ export function ItemCard({ item, collectionId, heroPhotoUrl, bucket }: ItemCardP
               className="object-cover"
             />
           ) : (
-            <span className="text-4xl">📦</span>
+            <span className="font-display text-5xl text-ink-soft" aria-hidden>
+              {item.name.charAt(0).toUpperCase()}
+            </span>
           )}
         </div>
         <div className="p-3 flex-1 flex flex-col justify-between">
