@@ -53,6 +53,12 @@ export default defineConfig({
       DATABASE_URL: TEST_DATABASE_URL,
       AUTH_URL: BASE_URL,
       AUTH_SECRET: "e2e-only-secret-at-least-32-characters-long-xx",
+      // Neutralize any inherited VERCEL=1 (e.g. from a polluted .env.local).
+      // With VERCEL set, NextAuth writes Secure cookies that http://localhost
+      // drops, so middleware never sees the session and bounces every authed
+      // request to /login (#62). Empty = treat this as the plain-http local
+      // server it is. Vercel's real deploys are unaffected.
+      VERCEL: "",
     },
   },
 });
