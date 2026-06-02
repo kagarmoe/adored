@@ -10,7 +10,7 @@ const ErrorMessage = React.forwardRef<HTMLDivElement, ErrorMessageProps>(
   ({ message, onRetry, className = "", ...props }, ref) => (
     <div
       className={`
-        bg-error-soft border border-error-soft rounded-lg px-4 py-4
+        bg-error-soft border border-error-soft rounded-control px-4 py-4
         flex items-start justify-between gap-4
         ${className}
       `}

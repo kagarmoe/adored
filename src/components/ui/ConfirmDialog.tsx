@@ -55,7 +55,7 @@ const ConfirmDialog = React.forwardRef<HTMLDivElement, ConfirmDialogProps>(
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel}></div>
 
         {/* Dialog */}
-        <div className="relative bg-chalk rounded-lg shadow-lg max-w-sm w-full mx-4 p-6 z-10">
+        <div className="relative bg-chalk rounded-card shadow-raised max-w-sm w-full mx-4 p-6 z-10">
           <h2 className="text-xl font-semibold text-ink mb-2">{title}</h2>
           <p className="text-ink-soft mb-6">{message}</p>
 

@@ -72,21 +72,60 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-kerning: normal;
+  font-optical-sizing: auto;
 }
 
+/*
+ * Type scale (see DESIGN.md). Fraunces for soul (display/headline), Hanken for
+ * sense (title/body/label). Fixed rem scale, ~1.2 ratio. Base element styles let
+ * semantic headings carry hierarchy without per-use utilities; a component that
+ * needs a different role applies the matching utility set instead.
+ */
 h1,
 h2,
-h3 {
+h3,
+h4 {
   font-family: var(--font-display);
   color: var(--color-ink);
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  font-weight: 460;
   text-wrap: balance;
+}
+
+h1 {
+  font-size: 2.25rem; /* display */
+  font-weight: 460;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+
+h2 {
+  font-size: 1.5rem; /* headline */
+  font-weight: 460;
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+}
+
+h3 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+/* Functional title role uses the body sans, not the serif (Serif-for-Soul rule) */
+h4 {
+  font-family: var(--font-body);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 p {
   text-wrap: pretty;
+}
+
+/* Cap prose measure on long-form copy; data/dense blocks opt out by not using it */
+.prose-measure {
+  max-width: 68ch;
 }
 
 a {

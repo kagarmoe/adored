@@ -68,9 +68,9 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-plaster p-4">
-      <div className="max-w-sm w-full bg-chalk rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center text-ink mb-2">
-          Create Account
+      <div className="max-w-sm w-full bg-chalk rounded-card shadow-raised p-8">
+        <h1 className="text-3xl font-medium tracking-tight text-center text-ink mb-2">
+          Create account
         </h1>
         <p className="text-center text-ink-soft mb-8">
           Join PurseInator to start curating

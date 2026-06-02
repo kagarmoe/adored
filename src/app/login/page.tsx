@@ -68,8 +68,8 @@ function LoginContent() {
   if (magicLinkSent) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-plaster p-4">
-        <div className="max-w-sm w-full bg-chalk rounded-lg shadow-lg p-8">
-          <h1 className="text-2xl font-bold text-ink mb-4">Check your email</h1>
+        <div className="max-w-sm w-full bg-chalk rounded-card shadow-raised p-8">
+          <h1 className="text-2xl text-ink mb-4">Check your email</h1>
           <p className="text-ink-soft mb-4">
             A sign-in link has been sent to <strong>{email}</strong>
           </p>
@@ -94,7 +94,7 @@ function LoginContent() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-plaster p-4">
       <div className="max-w-sm w-full bg-chalk rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center text-ink mb-2">
+        <h1 className="text-3xl font-medium tracking-tight text-center text-ink mb-2">
           PurseInator
         </h1>
         <p className="text-center text-ink-soft mb-8">

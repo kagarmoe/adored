@@ -58,6 +58,14 @@ const config: Config = {
         lift: "0 2px 8px oklch(0.25 0.02 50 / 0.06)",
         raised: "0 8px 28px oklch(0.25 0.02 50 / 0.10)",
       },
+      borderRadius: {
+        // Semantic radii (DESIGN.md): controls 10px, cards 16px (cozier).
+        control: "10px",
+        card: "16px",
+      },
+      transitionTimingFunction: {
+        gentle: "var(--ease-gentle)",
+      },
     },
   },
   plugins: [],
