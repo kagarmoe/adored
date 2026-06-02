@@ -1,10 +1,18 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { seedBaseline, BASELINE_USER } from "./fixtures/seed";
+import {
+  LOGGED_OUT,
+  ROUTE,
+  EMAIL_PLACEHOLDER,
+  PASSWORD_PLACEHOLDER,
+  sessionEmail,
+  submitLogin,
+} from "./fixtures/ui";
 
 // Drives the real login/signup UI (Credentials provider). Unlike auth.setup.ts
 // (which authenticates via the API for speed), these specs exercise the actual
 // forms. Logged out: clear the shared storageState.
-test.use({ storageState: { cookies: [], origins: [] } });
+test.use({ storageState: LOGGED_OUT });
 
 // Ensure the baseline user exists for the login tests. We do NOT resetDb here:
 // the `setup` project already seeded, and truncating would wipe the user the
@@ -14,31 +22,6 @@ test.beforeAll(async () => {
   await seedBaseline();
 });
 
-/** The user (if any) for the current browser context, via the session API. */
-async function sessionEmail(page: Page): Promise<string | null> {
-  const res = await page.request.get("/api/auth/session");
-  const session = await res.json().catch(() => ({}));
-  return session?.user?.email ?? null;
-}
-
-/** Submit the login form. Waits for the credentials callback so we don't race
- *  hydration (the client signIn handler must be attached before the POST). */
-async function submitLogin(page: Page, email: string, password: string) {
-  await page.goto("/login");
-  const submit = page.getByRole("button", { name: "Sign in" });
-  await expect(submit).toBeVisible();
-  await page.getByPlaceholder("you@example.com").fill(email);
-  await page.getByPlaceholder("••••••••").fill(password);
-  // Wait for the actual auth POST triggered by the React handler — proves the
-  // form is hydrated and the click did something, instead of timing out later.
-  await Promise.all([
-    page.waitForResponse((r) =>
-      r.url().includes("/api/auth/callback/credentials"),
-    ),
-    submit.click(),
-  ]);
-}
-
 test("login with bad credentials establishes no session and shows an error", async ({
   page,
 }) => {
@@ -46,8 +29,8 @@ test("login with bad credentials establishes no session and shows an error", asy
 
   // The substantive invariant: no session is created, and we stay on /login.
   // (We assert the *outcome*, not the error copy — NextAuth surfaces the code
-  // "CredentialsSignin", which the previous text-match would have missed.)
-  await expect(page).toHaveURL(/\/login/);
+  // "CredentialsSignin", which a text-match would have missed.)
+  await expect(page).toHaveURL(ROUTE.login);
   expect(await sessionEmail(page)).toBeNull();
   // An error is surfaced to the user (the ErrorMessage box renders).
   await expect(page.getByText("Error").first()).toBeVisible();
@@ -76,10 +59,10 @@ test("signup creates a fresh account and signs in as that user", async ({
   const submit = page.getByRole("button", { name: "Create account" });
   await expect(submit).toBeVisible();
 
-  await page.getByPlaceholder("you@example.com").fill(unique);
+  await page.getByPlaceholder(EMAIL_PLACEHOLDER).fill(unique);
   // Two password fields share the •••••••• placeholder — [0]=Password,
   // [1]=Confirm Password.
-  const pwFields = page.getByPlaceholder("••••••••");
+  const pwFields = page.getByPlaceholder(PASSWORD_PLACEHOLDER);
   await pwFields.nth(0).fill("signup-password-123");
   await pwFields.nth(1).fill("signup-password-123");
   // Signup POSTs to /api/auth/signup then signs in via credentials — wait for
