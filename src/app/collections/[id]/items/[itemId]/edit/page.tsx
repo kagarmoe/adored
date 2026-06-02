@@ -40,8 +40,8 @@ export default async function ItemEditPage({ params }: ItemEditPageProps) {
     >
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Edit Item</h1>
-          <p className="mt-2 text-gray-600">Update item details and metadata</p>
+          <h1 className="text-3xl font-bold text-ink">Edit Item</h1>
+          <p className="mt-2 text-ink-soft">Update item details and metadata</p>
         </div>
 
         <ItemEditForm item={item} collectionId={params.id} />

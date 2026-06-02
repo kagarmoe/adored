@@ -2,6 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * PurseInator design tokens — "The Lamplit Sitting Room" (see DESIGN.md).
+ * Warm plaster light theme. Verdigris is the single action voice; clay is garnish only.
+ * Composed in OKLCH. Font variables are provided by next/font in layout.tsx.
+ */
+:root {
+  /* Neutrals (warm) */
+  --color-plaster: oklch(0.955 0.018 50); /* body canvas — the lamplit room */
+  --color-chalk: oklch(0.985 0.008 50); /* raised surfaces: cards, inputs, dialogs */
+  --color-ink: oklch(0.25 0.02 50); /* primary text — warm near-black, never #000 */
+  --color-ink-soft: oklch(0.45 0.02 55); /* secondary text, captions, placeholder */
+  --color-line: oklch(0.88 0.012 55); /* borders, dividers — felt, not announced */
+
+  /* Action voice — the One Voice Rule: ≤10% of any screen */
+  --color-verdigris: oklch(0.48 0.09 155);
+  --color-verdigris-deep: oklch(0.4 0.09 155); /* hover / active, text on soft */
+  --color-verdigris-soft: oklch(0.93 0.03 155); /* info / selected surface tint */
+
+  /* Warm garnish — the Clay-as-Garnish Rule: never an action, never an alarm */
+  --color-clay: oklch(0.62 0.1 40);
+  --color-clay-soft: oklch(0.88 0.04 45); /* badge / secondary-button fills */
+  --color-clay-soft-strong: oklch(0.83 0.05 45); /* secondary-button hover */
+
+  /* Semantic — muted by duty of care; even errors speak softly.
+   * Each: DEFAULT (solid/border/icon), -soft (tint bg), -deep (text on -soft). */
+  --color-success: oklch(0.55 0.08 150);
+  --color-success-soft: oklch(0.93 0.03 150);
+  --color-success-deep: oklch(0.36 0.07 150);
+  --color-warning: oklch(0.7 0.1 70);
+  --color-warning-soft: oklch(0.93 0.04 80);
+  --color-warning-deep: oklch(0.42 0.07 70);
+  --color-error: oklch(0.52 0.13 28);
+  --color-error-soft: oklch(0.93 0.04 30);
+  --color-error-deep: oklch(0.4 0.12 28);
+
+  /* Type — families resolve to next/font CSS variables, with graceful fallbacks */
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-body: var(--font-hanken), ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Elevation — warm, soft. The Paper-on-a-Warm-Table Rule. */
+  --shadow-lift: 0 2px 8px oklch(0.25 0.02 50 / 0.06);
+  --shadow-raised: 0 8px 28px oklch(0.25 0.02 50 / 0.1);
+
+  /* Motion — gentle ease-out, 150–250ms */
+  --ease-gentle: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-state: 180ms;
+  --duration-reveal: 240ms;
+
+  color-scheme: light;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -14,18 +65,72 @@ body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #fafafa;
-  color: #1f2937;
-  line-height: 1.5;
+  font-family: var(--font-body);
+  background: var(--color-plaster);
+  color: var(--color-ink);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-button {
-  font-family: inherit;
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  color: var(--color-ink);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  font-weight: 460;
+  text-wrap: balance;
 }
 
+p {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--color-verdigris);
+  text-underline-offset: 2px;
+  transition: color var(--duration-state) var(--ease-gentle);
+}
+
+a:hover {
+  color: var(--color-verdigris-deep);
+}
+
+button,
 input,
 textarea,
 select {
   font-family: inherit;
+}
+
+/* Placeholder must hold 4.5:1, not a faint gray (ink-soft on chalk ≈ 7:1) */
+::placeholder {
+  color: var(--color-ink-soft);
+  opacity: 1;
+}
+
+::selection {
+  background: var(--color-clay-soft);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-verdigris);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Reduced motion is not optional (PRODUCT.md a11y) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

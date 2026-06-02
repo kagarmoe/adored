@@ -55,9 +55,9 @@ const ConfirmDialog = React.forwardRef<HTMLDivElement, ConfirmDialogProps>(
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel}></div>
 
         {/* Dialog */}
-        <div className="relative bg-white rounded-lg shadow-lg max-w-sm w-full mx-4 p-6 z-10">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">{title}</h2>
-          <p className="text-gray-600 mb-6">{message}</p>
+        <div className="relative bg-chalk rounded-lg shadow-lg max-w-sm w-full mx-4 p-6 z-10">
+          <h2 className="text-xl font-semibold text-ink mb-2">{title}</h2>
+          <p className="text-ink-soft mb-6">{message}</p>
 
           <div className="flex gap-3 justify-end">
             <Button variant="secondary" onClick={onCancel} disabled={loading || isLoading}>

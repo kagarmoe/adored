@@ -104,8 +104,8 @@ export default async function ComparePage({ params }: ComparePageProps) {
     >
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Compare</h1>
-          <p className="mt-2 text-gray-600">Choose which item better fits this session goal.</p>
+          <h1 className="text-3xl font-bold text-ink">Compare</h1>
+          <p className="mt-2 text-ink-soft">Choose which item better fits this session goal.</p>
         </div>
 
         {!itemA || !itemB ? (

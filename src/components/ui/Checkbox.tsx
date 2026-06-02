@@ -10,8 +10,8 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
       <input
         type="checkbox"
         className={`
-          w-6 h-6 min-h-6 min-w-6 rounded border-2 border-gray-300
-          text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500
+          w-6 h-6 min-h-6 min-w-6 rounded border-2 border-line
+          text-verdigris focus:outline-none focus:ring-2 focus:ring-verdigris
           focus:ring-offset-2 cursor-pointer disabled:opacity-50
           disabled:cursor-not-allowed
           ${className}
@@ -20,9 +20,9 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
         {...props}
       />
       {label && (
-        <label className="text-sm font-medium text-gray-700 cursor-pointer" htmlFor={props.id}>
+        <label className="text-sm font-medium text-ink cursor-pointer" htmlFor={props.id}>
           {label}
-          {props.required && <span className="text-red-600">*</span>}
+          {props.required && <span className="text-error">*</span>}
         </label>
       )}
     </div>

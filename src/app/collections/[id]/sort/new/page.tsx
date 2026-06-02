@@ -34,8 +34,8 @@ export default async function NewSortSessionPage({ params }: NewSortSessionPageP
     >
       <div className="max-w-2xl space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">New Sorting Session</h1>
-          <p className="mt-2 text-gray-600">Choose the goal, scope, and pace for this pass.</p>
+          <h1 className="text-3xl font-bold text-ink">New Sorting Session</h1>
+          <p className="mt-2 text-ink-soft">Choose the goal, scope, and pace for this pass.</p>
         </div>
         <StartSessionForm collectionId={params.id} />
       </div>

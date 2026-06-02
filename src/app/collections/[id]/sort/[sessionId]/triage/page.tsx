@@ -53,14 +53,14 @@ export default async function TriagePage({ params }: TriagePageProps) {
       <div className="mx-auto max-w-xl space-y-6">
         <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Triage</h1>
-            <p className="mt-2 text-gray-600">Assign the current item to a preference bucket.</p>
+            <h1 className="text-3xl font-bold text-ink">Triage</h1>
+            <p className="mt-2 text-ink-soft">Assign the current item to a preference bucket.</p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-500">{triaged} of {totalItems}</p>
-            <div className="mt-2 w-32 bg-gray-200 rounded-full h-2">
+            <p className="text-sm text-ink-soft">{triaged} of {totalItems}</p>
+            <div className="mt-2 w-32 bg-clay-soft rounded-full h-2">
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all"
+                className="bg-primary h-2 rounded-full transition-all"
                 style={{ width: `${totalItems > 0 ? (triaged / totalItems) * 100 : 0}%` }}
               />
             </div>

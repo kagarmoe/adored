@@ -67,12 +67,12 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-sm w-full bg-white rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
+    <div className="min-h-screen flex items-center justify-center bg-plaster p-4">
+      <div className="max-w-sm w-full bg-chalk rounded-lg shadow-lg p-8">
+        <h1 className="text-3xl font-bold text-center text-ink mb-2">
           Create Account
         </h1>
-        <p className="text-center text-gray-600 mb-8">
+        <p className="text-center text-ink-soft mb-8">
           Join PurseInator to start curating
         </p>
 
@@ -108,9 +108,9 @@ export default function SignupPage() {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-gray-600 mt-6">
+        <p className="text-center text-sm text-ink-soft mt-6">
           Already have an account?{" "}
-          <a href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+          <a href="/login" className="text-verdigris hover:text-verdigris-deep font-medium">
             Sign in
           </a>
         </p>

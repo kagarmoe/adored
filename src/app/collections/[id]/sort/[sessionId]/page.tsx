@@ -64,8 +64,8 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
     >
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Sorting Session</h1>
-          <p className="text-gray-600 mt-2">Goal: {sortSession.goal}</p>
+          <h1 className="text-3xl font-bold text-ink">Sorting Session</h1>
+          <p className="text-ink-soft mt-2">Goal: {sortSession.goal}</p>
           <div className="mt-3">
             <Badge variant={sortSession.status}>{sortSession.status}</Badge>
           </div>
@@ -74,33 +74,33 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
         <Card padding="lg">
           <div className="space-y-4">
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-3">Progress</p>
-              <div className="h-3 overflow-hidden rounded-full bg-gray-100">
-                <div className="h-full rounded-full bg-blue-600" style={{ width: `${progress}%` }} />
+              <p className="text-sm font-medium text-ink-soft mb-3">Progress</p>
+              <div className="h-3 overflow-hidden rounded-full bg-plaster">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${progress}%` }} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-gray-600">Love</p>
-                <p className="text-lg font-bold text-gray-900">{bucketCounts.top}</p>
+                <p className="text-ink-soft">Love</p>
+                <p className="text-lg font-bold text-ink">{bucketCounts.top}</p>
               </div>
               <div>
-                <p className="text-gray-600">Like</p>
-                <p className="text-lg font-bold text-gray-900">{bucketCounts.high}</p>
+                <p className="text-ink-soft">Like</p>
+                <p className="text-lg font-bold text-ink">{bucketCounts.high}</p>
               </div>
               <div>
-                <p className="text-gray-600">Maybe</p>
-                <p className="text-lg font-bold text-gray-900">{bucketCounts.medium}</p>
+                <p className="text-ink-soft">Maybe</p>
+                <p className="text-lg font-bold text-ink">{bucketCounts.medium}</p>
               </div>
               <div>
-                <p className="text-gray-600">Release</p>
-                <p className="text-lg font-bold text-gray-900">{bucketCounts.low}</p>
+                <p className="text-ink-soft">Release</p>
+                <p className="text-lg font-bold text-ink">{bucketCounts.low}</p>
               </div>
             </div>
 
-            <div className="pt-3 border-t border-gray-200">
-              <p className="text-sm text-gray-600">
+            <div className="pt-3 border-t border-line">
+              <p className="text-sm text-ink-soft">
                 {remaining} of {items.length} items left to triage
               </p>
             </div>
@@ -110,8 +110,8 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
         <div className="grid gap-4 md:grid-cols-2">
           <Link href={`/collections/${params.id}/sort/${params.sessionId}/triage`}>
             <Card interactive padding="lg">
-              <h2 className="text-lg font-semibold text-gray-900">Triage</h2>
-              <p className="mt-2 text-sm text-gray-600">Quickly bucket one item at a time.</p>
+              <h2 className="text-lg font-semibold text-ink">Triage</h2>
+              <p className="mt-2 text-sm text-ink-soft">Quickly bucket one item at a time.</p>
               <div className="mt-4">
                 <Button size="sm">Open</Button>
               </div>
@@ -119,8 +119,8 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
           </Link>
           <Link href={`/collections/${params.id}/sort/${params.sessionId}/compare`}>
             <Card interactive padding="lg">
-              <h2 className="text-lg font-semibold text-gray-900">Compare</h2>
-              <p className="mt-2 text-sm text-gray-600">Pick between pairs to refine ranking.</p>
+              <h2 className="text-lg font-semibold text-ink">Compare</h2>
+              <p className="mt-2 text-sm text-ink-soft">Pick between pairs to refine ranking.</p>
               <div className="mt-4">
                 <Button size="sm">Open</Button>
               </div>
@@ -129,11 +129,11 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
         </div>
 
         {bucketed > 0 && (
-          <Card padding="lg" className="border-blue-200 bg-blue-50">
+          <Card padding="lg" className="border-line bg-verdigris-soft">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-blue-950">Ready to see results?</h2>
-                <p className="mt-1 text-sm text-blue-900">
+                <h2 className="text-lg font-semibold text-verdigris-deep">Ready to see results?</h2>
+                <p className="mt-1 text-sm text-verdigris-deep">
                   You&apos;ve made {bucketed} decision{bucketed !== 1 ? "s" : ""}. Generate a draft result to see the ranked order.
                 </p>
               </div>

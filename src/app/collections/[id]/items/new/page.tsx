@@ -33,7 +33,7 @@ export default async function AddItemPage({ params }: AddItemPageProps) {
       ]}
     >
       <div className="max-w-2xl">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Add Item</h1>
+        <h1 className="text-3xl font-bold text-ink mb-8">Add Item</h1>
         <ItemForm collectionId={params.id} mode="create" />
       </div>
     </AppLayout>
