@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { seedBaseline, seedCollections } from "./fixtures/seed";
+import { ROUTE, hasHorizontalOverflow } from "./fixtures/ui";
 
 // The ONE place exact-layout / per-viewport assertions live (option b from the
 // plan): feature specs stay behavioral; viewport-specific expectations branch
@@ -14,14 +15,6 @@ test.beforeAll(async () => {
 
 function viewport(): "tablet" | "phone" | "desktop" {
   return test.info().project.name as "tablet" | "phone" | "desktop";
-}
-
-async function hasHorizontalOverflow(page: import("@playwright/test").Page) {
-  return page.evaluate(
-    () =>
-      document.documentElement.scrollWidth >
-      document.documentElement.clientWidth,
-  );
 }
 
 test("login page fits the viewport and has tap-sized controls", async ({
@@ -55,7 +48,7 @@ test("collections page renders the grid without overflow when authenticated", as
   // Authenticated via storageState, with seeded collections so the real grid
   // renders (not the empty state).
   await page.goto("/collections");
-  await expect(page).toHaveURL(/\/collections/);
+  await expect(page).toHaveURL(ROUTE.collections);
 
   // At least one collection card is present — confirms we're exercising the
   // grid layout, not the empty state. (.first(): seeded collections can

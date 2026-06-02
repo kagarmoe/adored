@@ -1,6 +1,7 @@
 import { test as setup, expect } from "@playwright/test";
 import { resetDb, closeDb } from "./fixtures/db";
 import { seedBaseline, BASELINE_USER } from "./fixtures/seed";
+import { sessionEmail } from "./fixtures/ui";
 
 const AUTH_FILE = "e2e/.auth/user.json";
 
@@ -40,9 +41,7 @@ setup("authenticate", async ({ page }) => {
   expect(loginRes.ok(), "credentials callback returned non-2xx").toBeTruthy();
 
   // Confirm the session is real before saving state.
-  const sessionRes = await page.request.get("/api/auth/session");
-  const session = await sessionRes.json();
-  expect(session?.user?.email).toBe(BASELINE_USER.email);
+  expect(await sessionEmail(page)).toBe(BASELINE_USER.email);
 
   await page.context().storageState({ path: AUTH_FILE });
 });

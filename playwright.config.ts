@@ -54,10 +54,17 @@ export default defineConfig({
       AUTH_URL: BASE_URL,
       AUTH_SECRET: "e2e-only-secret-at-least-32-characters-long-xx",
       // Neutralize any inherited VERCEL=1 (e.g. from a polluted .env.local).
-      // With VERCEL set, NextAuth writes Secure cookies that http://localhost
-      // drops, so middleware never sees the session and bounces every authed
-      // request to /login (#62). Empty = treat this as the plain-http local
-      // server it is. Vercel's real deploys are unaffected.
+      // NextAuth decides Secure cookies from two signals: the AUTH_URL/
+      // NEXTAUTH_URL scheme AND VERCEL. Here AUTH_URL is http://localhost, and
+      // middleware's getToken (edge runtime, no env bridge) sees no NEXTAUTH_URL
+      // so it falls through to !!process.env.VERCEL (next-auth/jwt). With
+      // VERCEL=1 both the cookie writer and getToken use the __Secure- name;
+      // http://localhost drops Secure cookies, so middleware sees no session and
+      // bounces every authed request to /login (#62). "" is falsy → a plain
+      // cookie that round-trips over http. NOTE: also depends on AUTH_URL staying
+      // http://; an https AUTH_URL would re-enable Secure regardless of VERCEL.
+      // Real (https) Vercel deploys are unaffected. e2e/auth-navigation.spec
+      // (#67) is the behavioral regression guard for this.
       VERCEL: "",
     },
   },

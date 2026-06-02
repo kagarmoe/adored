@@ -58,6 +58,21 @@ function validateEnv(): EnvConfig {
     process.env.NEXTAUTH_URL ??= envConfig.AUTH_URL;
     process.env.NEXTAUTH_SECRET ??= envConfig.AUTH_SECRET;
 
+    // Guard against the #62 footgun: VERCEL=1 (e.g. dumped into .env.local by
+    // `vercel env pull`) makes NextAuth write Secure cookies, but an http
+    // AUTH_URL means the browser drops them — auth silently breaks (every
+    // request bounces to /login). On real Vercel both are consistent (https);
+    // locally they contradict. Warn loudly rather than fail, since the app
+    // still starts.
+    if (process.env.VERCEL && envConfig.AUTH_URL.startsWith("http://")) {
+      console.warn(
+        "[env] WARNING: VERCEL is set but AUTH_URL is http:// — NextAuth will " +
+          "write Secure cookies the browser drops over http, breaking auth " +
+          "(redirects to /login). Remove VERCEL from your local env (do not " +
+          "keep Vercel system vars in .env.local).",
+      );
+    }
+
     return envConfig;
   } catch (error) {
     if (error instanceof z.ZodError) {
