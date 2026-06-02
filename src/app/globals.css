@@ -3,47 +3,69 @@
 @tailwind utilities;
 
 /*
- * PurseInator design tokens — "The Lamplit Sitting Room" (see DESIGN.md).
- * Warm plaster light theme. Verdigris is the single action voice; clay is garnish only.
+ * PurseInator design tokens — "Cabana" (see DESIGN.md).
+ * A warm honey-parchment palette built to let saturated jewel tones sing the way
+ * they do in a collected room. The chrome is achromatic espresso ink (title,
+ * buttons, links); color is spent only on content (covers, photos). Gilt gold is
+ * the warm secondary; semantics are a quiet olive, amber, and vermilion.
  * Composed in OKLCH. Font variables are provided by next/font in layout.tsx.
  */
 :root {
-  /* Neutrals (warm) */
-  --color-plaster: oklch(0.955 0.018 50); /* body canvas — the lamplit room */
-  --color-chalk: oklch(0.985 0.008 50); /* raised surfaces: cards, inputs, dialogs */
-  --color-ink: oklch(0.25 0.02 50); /* primary text — warm near-black, never #000 */
-  --color-ink-soft: oklch(0.45 0.02 55); /* secondary text, captions, placeholder */
-  --color-line: oklch(0.88 0.012 55); /* borders, dividers — felt, not announced */
+  /* Neutrals — warm parchment, clearly chromatic toward honey (hue ~72) */
+  --color-vellum: oklch(0.925 0.032 72); /* body canvas — warm parchment */
+  --color-vellum-deep: oklch(0.87 0.04 66); /* sunken wells, gradient edges, vignette */
+  --color-veil: oklch(0.965 0.02 76); /* raised surfaces: cards, inputs */
+  --color-veil-raised: oklch(0.985 0.012 78); /* top elevation: dialogs, active card */
+  --color-ink: oklch(0.265 0.028 55); /* primary text — warm espresso, never #000 */
+  --color-ink-soft: oklch(0.45 0.03 55); /* secondary text, captions, placeholder */
+  --color-line: oklch(0.85 0.024 70); /* borders, dividers — warm hairline */
+  --color-line-strong: oklch(0.77 0.03 68); /* emphasized separators */
 
-  /* Action voice — the One Voice Rule: ≤10% of any screen */
-  --color-verdigris: oklch(0.48 0.09 155);
-  --color-verdigris-deep: oklch(0.4 0.09 155); /* hover / active, text on soft */
-  --color-verdigris-soft: oklch(0.93 0.03 155); /* info / selected surface tint */
+  /* Action voice — espresso ink. Achromatic chrome: title, buttons, links, focus.
+   * Color is reserved for content (covers/photos), never spent on the chrome. */
+  --color-espresso: oklch(0.265 0.028 55); /* primary buttons, links, progress, focus */
+  --color-espresso-deep: oklch(0.17 0.024 50); /* hover / active, text on -soft */
+  --color-espresso-soft: oklch(0.9 0.014 70); /* selected / info surface tint (warm grey) */
 
-  /* Warm garnish — the Clay-as-Garnish Rule: never an action, never an alarm */
-  --color-clay: oklch(0.62 0.1 40);
-  --color-clay-soft: oklch(0.88 0.04 45); /* badge / secondary-button fills */
-  --color-clay-soft-strong: oklch(0.83 0.05 45); /* secondary-button hover */
+  /* Oxblood — a content jewel tone (cover washes, accents). Not chrome, not action. */
+  --color-oxblood: oklch(0.43 0.13 25);
+  --color-oxblood-soft: oklch(0.9 0.045 28);
 
-  /* Semantic — muted by duty of care; even errors speak softly.
-   * Each: DEFAULT (solid/border/icon), -soft (tint bg), -deep (text on -soft). */
-  --color-success: oklch(0.55 0.08 150);
-  --color-success-soft: oklch(0.93 0.03 150);
-  --color-success-deep: oklch(0.36 0.07 150);
-  --color-warning: oklch(0.7 0.1 70);
-  --color-warning-soft: oklch(0.93 0.04 80);
-  --color-warning-deep: oklch(0.42 0.07 70);
-  --color-error: oklch(0.52 0.13 28);
-  --color-error-soft: oklch(0.93 0.04 30);
-  --color-error-deep: oklch(0.4 0.12 28);
+  /* Warm secondary — gilt gold. The room's metal; never an action, never an alarm. */
+  --color-gold: oklch(0.7 0.1 75);
+  --color-gold-soft: oklch(0.88 0.05 80); /* badge / secondary-button fills */
+  --color-gold-soft-strong: oklch(0.82 0.066 78); /* secondary-button hover */
+
+  /* Semantic — present and legible (each: DEFAULT / -soft tint / -deep text-on-soft) */
+  /* Success — muted olive/sage, kept quiet so red + green never read as festive. */
+  --color-success: oklch(0.55 0.07 130);
+  --color-success-soft: oklch(0.91 0.035 128);
+  --color-success-deep: oklch(0.41 0.06 130);
+  --color-warning: oklch(0.74 0.13 65);
+  --color-warning-soft: oklch(0.92 0.06 70);
+  --color-warning-deep: oklch(0.46 0.09 60);
+  /* Error — vermilion, brighter than the oxblood action so they never read alike
+   * (and error always pairs with an icon + message, never color alone). */
+  --color-error: oklch(0.55 0.19 32);
+  --color-error-soft: oklch(0.9 0.055 32);
+  --color-error-deep: oklch(0.45 0.17 32);
 
   /* Type — families resolve to next/font CSS variables, with graceful fallbacks */
   --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
   --font-body: var(--font-hanken), ui-sans-serif, system-ui, -apple-system, sans-serif;
 
-  /* Elevation — warm, soft. The Paper-on-a-Warm-Table Rule. */
-  --shadow-lift: 0 2px 8px oklch(0.25 0.02 50 / 0.06);
-  --shadow-raised: 0 8px 28px oklch(0.25 0.02 50 / 0.1);
+  /* Elevation — warm espresso-tinted, layered. Depth from stacked soft shadows. */
+  --shadow-lift: 0 1px 2px oklch(0.26 0.03 50 / 0.06),
+    0 4px 12px oklch(0.26 0.03 50 / 0.09);
+  --shadow-raised: 0 2px 6px oklch(0.26 0.03 50 / 0.09),
+    0 12px 34px oklch(0.24 0.04 50 / 0.16);
+  --shadow-float: 0 4px 10px oklch(0.26 0.03 50 / 0.11),
+    0 24px 60px oklch(0.22 0.05 50 / 0.24);
+  /* Inner top-highlight that makes a surface read as lit from above */
+  --highlight-top: inset 0 1px 0 oklch(1 0 0 / 0.6);
+  /* Card surfaces carry resting depth + the lit-from-above highlight */
+  --shadow-card: var(--highlight-top), var(--shadow-lift);
+  --shadow-card-hover: var(--highlight-top), var(--shadow-raised);
 
   /* Motion — gentle ease-out, 150–250ms */
   --ease-gentle: cubic-bezier(0.22, 1, 0.36, 1);
@@ -64,9 +86,21 @@ body {
   height: 100%;
 }
 
+/*
+ * The parchment canvas: a soft vertical gradient, a shade deeper at the top,
+ * gives the page gentle warmth and depth before any content lands.
+ */
 body {
   font-family: var(--font-body);
-  background: var(--color-plaster);
+  background:
+    linear-gradient(
+      180deg,
+      var(--color-vellum-deep) 0%,
+      var(--color-vellum) 28%,
+      var(--color-vellum) 100%
+    ),
+    var(--color-vellum);
+  background-attachment: fixed;
   color: var(--color-ink);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -78,9 +112,7 @@ body {
 
 /*
  * Type scale (see DESIGN.md). Fraunces for soul (display/headline), Hanken for
- * sense (title/body/label). Fixed rem scale, ~1.2 ratio. Base element styles let
- * semantic headings carry hierarchy without per-use utilities; a component that
- * needs a different role applies the matching utility set instead.
+ * sense (title/body/label). Fixed rem scale, ~1.2 ratio.
  */
 h1,
 h2,
@@ -129,13 +161,13 @@ p {
 }
 
 a {
-  color: var(--color-verdigris);
+  color: var(--color-espresso);
   text-underline-offset: 2px;
   transition: color var(--duration-state) var(--ease-gentle);
 }
 
 a:hover {
-  color: var(--color-verdigris-deep);
+  color: var(--color-espresso-deep);
 }
 
 button,
@@ -145,19 +177,36 @@ select {
   font-family: inherit;
 }
 
-/* Placeholder must hold 4.5:1, not a faint gray (ink-soft on chalk ≈ 7:1) */
+/* Placeholder must hold 4.5:1, not a faint gray (ink-soft on veil ≈ 7:1) */
 ::placeholder {
   color: var(--color-ink-soft);
   opacity: 1;
 }
 
+/*
+ * Keep browser autofill on-palette. Chrome paints a hard blue over filled
+ * fields; the inset box-shadow trick repaints the veil surface, and the long
+ * transition defers Chrome's own background long enough to never flash.
+ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-ink);
+  -webkit-box-shadow: 0 0 0 100px var(--color-veil) inset;
+  box-shadow: 0 0 0 100px var(--color-veil) inset;
+  caret-color: var(--color-ink);
+  transition: background-color 100000s ease-in-out 0s;
+}
+
 ::selection {
-  background: var(--color-clay-soft);
-  color: var(--color-ink);
+  background: var(--color-espresso-soft);
+  color: var(--color-espresso-deep);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-verdigris);
+  outline: 2px solid var(--color-espresso);
   outline-offset: 2px;
   border-radius: 4px;
 }

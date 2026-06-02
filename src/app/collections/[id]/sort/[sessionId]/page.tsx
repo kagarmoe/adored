@@ -75,7 +75,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
           <div className="space-y-4">
             <div>
               <p className="text-sm font-medium text-ink-soft mb-3">Progress</p>
-              <div className="h-3 overflow-hidden rounded-full bg-plaster">
+              <div className="h-3 overflow-hidden rounded-full bg-vellum">
                 <div className="h-full rounded-full bg-primary" style={{ width: `${progress}%` }} />
               </div>
             </div>
@@ -129,11 +129,11 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
         </div>
 
         {bucketed > 0 && (
-          <Card padding="lg" className="border-line bg-verdigris-soft">
+          <Card padding="lg" className="border-line bg-espresso-soft">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg text-verdigris-deep">Ready to see results?</h2>
-                <p className="mt-1 text-sm text-verdigris-deep">
+                <h2 className="text-lg text-espresso-deep">Ready to see results?</h2>
+                <p className="mt-1 text-sm text-espresso-deep">
                   You&apos;ve made {bucketed} decision{bucketed !== 1 ? "s" : ""}. Generate a draft result to see the ranked order.
                 </p>
               </div>

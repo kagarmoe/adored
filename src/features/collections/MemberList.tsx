@@ -10,7 +10,7 @@ export function MemberList({ members, canManage = false }: MemberListProps) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
-        <thead className="border-b border-line bg-plaster">
+        <thead className="border-b border-line bg-vellum">
           <tr>
             <th className="text-left px-4 py-3 font-semibold text-ink">Member</th>
             <th className="text-left px-4 py-3 font-semibold text-ink">Role</th>
@@ -20,7 +20,7 @@ export function MemberList({ members, canManage = false }: MemberListProps) {
         </thead>
         <tbody>
           {members.map((member) => (
-            <tr key={member.id} className="border-b border-line hover:bg-plaster">
+            <tr key={member.id} className="border-b border-line hover:bg-vellum">
               <td className="px-4 py-3">
                 <div>
                   <p className="font-medium text-ink">{member.name || member.userId}</p>

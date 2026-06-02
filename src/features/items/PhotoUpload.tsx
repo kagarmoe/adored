@@ -99,7 +99,7 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
             <span className="text-4xl">📸</span>
             <div>
               <label htmlFor="photo-input" className="cursor-pointer">
-                <span className="font-semibold text-verdigris hover:text-verdigris-deep">
+                <span className="font-semibold text-espresso hover:text-espresso-deep">
                   Click to upload
                 </span>
               </label>

@@ -59,7 +59,7 @@ export function FinalizeResultForm({ collectionId, resultId, defaultName }: Fina
           <div>
             <p className="mb-3 block text-sm font-medium text-ink">Visibility</p>
             <div className="space-y-3">
-              <label className="block rounded-lg border border-line bg-verdigris-soft p-4">
+              <label className="block rounded-lg border border-line bg-espresso-soft p-4">
                 <input type="radio" name="visibility" value="private" defaultChecked />
                 <span className="ml-2 font-medium text-ink">Private</span>
                 <span className="mt-1 block text-sm text-ink-soft">Only you can see it.</span>
@@ -74,7 +74,7 @@ export function FinalizeResultForm({ collectionId, resultId, defaultName }: Fina
         </div>
       </Card>
 
-      <div className="rounded-lg border border-line bg-verdigris-soft p-4 text-sm text-verdigris-deep">
+      <div className="rounded-lg border border-line bg-espresso-soft p-4 text-sm text-espresso-deep">
         Finalizing snapshots the current order. New sorting can start a fresh draft while this result stays frozen.
       </div>
 

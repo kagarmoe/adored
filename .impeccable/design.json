@@ -4,10 +4,11 @@
   "title": "Design System: PurseInator",
   "extensions": {
     "colorMeta": {
-      "verdigris": { "role": "primary", "displayName": "Verdigris", "canonical": "oklch(0.48 0.09 155)", "tonalRamp": ["oklch(0.20 0.05 155)", "oklch(0.28 0.07 155)", "oklch(0.36 0.08 155)", "oklch(0.48 0.09 155)", "oklch(0.58 0.08 155)", "oklch(0.70 0.06 155)", "oklch(0.84 0.04 155)", "oklch(0.94 0.02 155)"] },
-      "clay": { "role": "secondary", "displayName": "Clay", "canonical": "oklch(0.62 0.10 40)", "tonalRamp": ["oklch(0.28 0.06 40)", "oklch(0.38 0.08 40)", "oklch(0.50 0.10 40)", "oklch(0.62 0.10 40)", "oklch(0.72 0.09 40)", "oklch(0.82 0.06 40)", "oklch(0.90 0.04 40)", "oklch(0.95 0.02 40)"] },
-      "plaster": { "role": "neutral", "displayName": "Plaster", "canonical": "oklch(0.955 0.018 50)", "tonalRamp": ["oklch(0.25 0.02 50)", "oklch(0.38 0.02 50)", "oklch(0.52 0.02 50)", "oklch(0.66 0.02 50)", "oklch(0.78 0.018 50)", "oklch(0.88 0.018 50)", "oklch(0.955 0.018 50)", "oklch(0.985 0.008 50)"] },
-      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "oklch(0.25 0.02 50)", "tonalRamp": ["oklch(0.18 0.02 50)", "oklch(0.25 0.02 50)", "oklch(0.35 0.02 50)", "oklch(0.45 0.02 55)", "oklch(0.58 0.018 55)", "oklch(0.72 0.015 55)", "oklch(0.86 0.012 55)", "oklch(0.94 0.01 55)"] }
+      "espresso": { "role": "primary", "displayName": "Espresso (chrome)", "canonical": "oklch(0.265 0.028 55)", "tonalRamp": ["oklch(0.17 0.024 50)", "oklch(0.22 0.026 52)", "oklch(0.265 0.028 55)", "oklch(0.40 0.030 55)", "oklch(0.55 0.025 58)", "oklch(0.70 0.020 60)", "oklch(0.85 0.015 65)", "oklch(0.94 0.010 68)"] },
+      "gold": { "role": "secondary", "displayName": "Gold (gilt)", "canonical": "oklch(0.70 0.10 75)", "tonalRamp": ["oklch(0.30 0.05 70)", "oklch(0.42 0.07 72)", "oklch(0.55 0.09 74)", "oklch(0.70 0.10 75)", "oklch(0.80 0.08 78)", "oklch(0.88 0.05 80)", "oklch(0.93 0.03 82)", "oklch(0.97 0.015 84)"] },
+      "oxblood": { "role": "accent", "displayName": "Oxblood (content jewel)", "canonical": "oklch(0.43 0.13 25)", "tonalRamp": ["oklch(0.25 0.08 25)", "oklch(0.34 0.11 25)", "oklch(0.43 0.13 25)", "oklch(0.54 0.13 27)", "oklch(0.66 0.11 30)", "oklch(0.78 0.08 32)", "oklch(0.88 0.05 30)", "oklch(0.94 0.03 28)"] },
+      "vellum": { "role": "neutral", "displayName": "Vellum (canvas)", "canonical": "oklch(0.925 0.032 72)", "tonalRamp": ["oklch(0.30 0.020 60)", "oklch(0.45 0.025 65)", "oklch(0.60 0.028 68)", "oklch(0.74 0.030 70)", "oklch(0.85 0.030 72)", "oklch(0.925 0.032 72)", "oklch(0.965 0.020 76)", "oklch(0.985 0.012 78)"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "oklch(0.265 0.028 55)", "tonalRamp": ["oklch(0.17 0.024 50)", "oklch(0.265 0.028 55)", "oklch(0.36 0.030 55)", "oklch(0.45 0.030 55)", "oklch(0.58 0.022 58)", "oklch(0.72 0.018 60)", "oklch(0.86 0.014 65)", "oklch(0.94 0.010 68)"] }
     },
     "typographyMeta": {
       "display": { "displayName": "Display (Fraunces)", "purpose": "Collection names, the emotional heading, the item under decision. The object gets the beautiful type." },
@@ -17,8 +18,9 @@
       "label": { "displayName": "Label (Hanken Grotesk)", "purpose": "Buttons, field labels, badges, metadata." }
     },
     "shadows": [
-      { "name": "lift", "value": "0 2px 8px rgba(43, 37, 33, 0.06)", "purpose": "Resting interactive cards; gentle warm lift." },
-      { "name": "raised", "value": "0 8px 28px rgba(43, 37, 33, 0.10)", "purpose": "Dialogs, popovers, the active card mid-decision." }
+      { "name": "lift", "value": "0 1px 2px oklch(0.26 0.03 50 / 0.06), 0 4px 12px oklch(0.26 0.03 50 / 0.09)", "purpose": "Resting interactive cards; warm espresso-tinted lift." },
+      { "name": "raised", "value": "0 2px 6px oklch(0.26 0.03 50 / 0.09), 0 12px 34px oklch(0.24 0.04 50 / 0.16)", "purpose": "Dialogs, popovers, the active card mid-decision." },
+      { "name": "float", "value": "0 4px 10px oklch(0.26 0.03 50 / 0.11), 0 24px 60px oklch(0.22 0.05 50 / 0.24)", "purpose": "Highest layer; used sparingly." }
     ],
     "motion": [
       { "name": "ease-gentle", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Default ease-out for state transitions (ease-out-quint feel)." },
@@ -35,65 +37,65 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The single action voice. Verdigris fill, used sparingly for the primary action on a screen.",
+      "description": "The single action voice. Espresso-ink fill, used sparingly for the primary action on a screen.",
       "html": "<button class=\"ds-btn-primary\">Save changes</button>",
-      "css": ".ds-btn-primary { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif; font-weight: 600; font-size: 0.9375rem; letter-spacing: 0.01em; color: #faf6f0; background: #3d6b54; border: none; height: 44px; padding: 0 20px; border-radius: 10px; cursor: pointer; transition: background 180ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary:hover { background: #2f5341; } .ds-btn-primary:active { opacity: 0.88; } .ds-btn-primary:focus-visible { outline: 2px solid #3d6b54; outline-offset: 2px; }"
+      "css": ".ds-btn-primary { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif; font-weight: 600; font-size: 0.9375rem; letter-spacing: 0.01em; color: #fff9f1; background: #302218; border: none; height: 44px; padding: 0 20px; border-radius: 10px; cursor: pointer; transition: background 180ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary:hover { background: #180c06; } .ds-btn-primary:active { opacity: 0.88; } .ds-btn-primary:focus-visible { outline: 2px solid #302218; outline-offset: 2px; }"
     },
     {
       "name": "Secondary Button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "The quiet alternative to primary. Clay Soft fill, Ink text.",
+      "description": "The quiet alternative to primary. Gold Soft fill, Ink text.",
       "html": "<button class=\"ds-btn-secondary\">Not now</button>",
-      "css": ".ds-btn-secondary { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif; font-weight: 600; font-size: 0.9375rem; color: #2b2521; background: #ecd9cd; border: none; height: 44px; padding: 0 20px; border-radius: 10px; cursor: pointer; transition: background 180ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-secondary:hover { background: #e3c9b9; } .ds-btn-secondary:focus-visible { outline: 2px solid #3d6b54; outline-offset: 2px; }"
+      "css": ".ds-btn-secondary { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif; font-weight: 600; font-size: 0.9375rem; color: #302218; background: #e9d5b3; border: none; height: 44px; padding: 0 20px; border-radius: 10px; cursor: pointer; transition: background 180ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-secondary:hover { background: #dcbf94; } .ds-btn-secondary:focus-visible { outline: 2px solid #302218; outline-offset: 2px; }"
     },
     {
       "name": "Ghost Button",
       "kind": "button",
       "refersTo": "button-ghost",
-      "description": "Low-emphasis and back actions. Transparent with Verdigris text.",
+      "description": "Low-emphasis and back actions. Transparent with Espresso text.",
       "html": "<button class=\"ds-btn-ghost\">Back</button>",
-      "css": ".ds-btn-ghost { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif; font-weight: 600; font-size: 0.9375rem; color: #3d6b54; background: transparent; border: none; height: 44px; padding: 0 16px; border-radius: 10px; cursor: pointer; transition: background 180ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-ghost:hover { background: rgba(61,107,84,0.08); } .ds-btn-ghost:focus-visible { outline: 2px solid #3d6b54; outline-offset: 2px; }"
+      "css": ".ds-btn-ghost { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif; font-weight: 600; font-size: 0.9375rem; color: #302218; background: transparent; border: none; height: 44px; padding: 0 16px; border-radius: 10px; cursor: pointer; transition: background 180ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-ghost:hover { background: rgba(48,34,24,0.07); } .ds-btn-ghost:focus-visible { outline: 2px solid #302218; outline-offset: 2px; }"
     },
     {
       "name": "Collection Card",
       "kind": "card",
       "refersTo": "card",
-      "description": "Chalk surface on the Plaster canvas; flat at rest, soft warm Lift on hover. Title in Fraunces.",
+      "description": "Veil surface on the Vellum canvas; rests with a soft warm lift and a lit-from-above edge, rising on hover. Title in Fraunces.",
       "html": "<article class=\"ds-card\"><h3 class=\"ds-card-title\">Mother's scarves</h3><p class=\"ds-card-meta\">24 items · sorted last week</p></article>",
-      "css": ".ds-card { background: #faf6f0; border: 1px solid #e4dccf; border-radius: 16px; padding: 20px; transition: box-shadow 180ms cubic-bezier(0.22,1,0.36,1), border-color 180ms; } .ds-card:hover { box-shadow: 0 2px 8px rgba(43,37,33,0.06); border-color: #d8cdb9; } .ds-card-title { font-family: Fraunces, Georgia, serif; font-weight: 460; font-size: 1.5rem; line-height: 1.2; color: #2b2521; margin: 0; } .ds-card-meta { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; color: #5a5048; margin: 6px 0 0; }"
+      "css": ".ds-card { background: #fbf2e5; border: 1px solid #d8cbbd; border-radius: 16px; padding: 20px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 1px 2px rgba(48,34,24,0.06), 0 4px 12px rgba(48,34,24,0.09); transition: box-shadow 180ms cubic-bezier(0.22,1,0.36,1), transform 180ms; } .ds-card:hover { transform: translateY(-2px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 2px 6px rgba(48,34,24,0.09), 0 12px 34px rgba(48,34,24,0.16); } .ds-card-title { font-family: Fraunces, Georgia, serif; font-weight: 460; font-size: 1.5rem; line-height: 1.2; color: #302218; margin: 0; } .ds-card-meta { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; color: #635146; margin: 6px 0 0; }"
     },
     {
       "name": "Search Input",
       "kind": "input",
       "refersTo": "input",
-      "description": "Chalk fill, warm Line border, Verdigris focus ring. No harsh glow.",
+      "description": "Veil fill, warm Line border, Espresso focus ring. No harsh glow.",
       "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Search this collection\" />",
-      "css": ".ds-input { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 1rem; color: #2b2521; background: #faf6f0; border: 1px solid #e4dccf; border-radius: 10px; height: 44px; padding: 0 14px; width: 100%; box-sizing: border-box; transition: border-color 180ms, box-shadow 180ms; } .ds-input::placeholder { color: #5a5048; } .ds-input:focus { outline: none; border-color: #3d6b54; box-shadow: 0 0 0 2px rgba(61,107,84,0.35); }"
+      "css": ".ds-input { font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif; font-size: 1rem; color: #302218; background: #fbf2e5; border: 1px solid #d8cbbd; border-radius: 10px; height: 44px; padding: 0 14px; width: 100%; box-sizing: border-box; transition: border-color 180ms, box-shadow 180ms; } .ds-input::placeholder { color: #635146; } .ds-input:focus { outline: none; border-color: #302218; box-shadow: 0 0 0 2px rgba(48,34,24,0.35); }"
     },
     {
       "name": "Bucket Badge",
       "kind": "chip",
       "refersTo": "badge",
-      "description": "Clay Soft pill with Ink text and an icon — buckets never rely on hue alone.",
-      "html": "<span class=\"ds-badge\"><svg viewBox=\"0 0 16 16\" width=\"13\" height=\"13\" aria-hidden=\"true\"><path d=\"M3 8.5l3 3 7-7\" fill=\"none\" stroke=\"#2b2521\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>Keep</span>",
-      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 5px; font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif; font-weight: 600; font-size: 0.8125rem; letter-spacing: 0.01em; color: #2b2521; background: #ecd9cd; border-radius: 999px; padding: 3px 10px; }"
+      "description": "Gold Soft pill with Ink text and an icon — buckets never rely on hue alone.",
+      "html": "<span class=\"ds-badge\"><svg viewBox=\"0 0 16 16\" width=\"13\" height=\"13\" aria-hidden=\"true\"><path d=\"M3 8.5l3 3 7-7\" fill=\"none\" stroke=\"#302218\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>Keep</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 5px; font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif; font-weight: 600; font-size: 0.8125rem; letter-spacing: 0.01em; color: #302218; background: #e9d5b3; border-radius: 999px; padding: 3px 10px; }"
     }
   ],
   "narrative": {
     "northStar": "The Lamplit Sitting Room",
-    "overview": "PurseInator looks like a warm room in late-afternoon light where someone sits with a box of belongings and discovers, slowly, what they love most. The work is affirmation, not subtraction — recognizing the things that matter, with letting go following naturally from that clarity. The reference is Cabana magazine in print — cozy, intimate, maximalist, materially rich — not the flat tech-product look and not Cabana's own thin website. The maximalism is rehomed as affection: it lives in the user's photographs, the warm plaster-and-verdigris palette, and the old-style serif voice, never in the density of the interface. The chrome stays quiet so exactly one loving choice is ever in front of a person who may be grieving. The system rejects every frame that treats belongings as stock: not a catalog, not an inventory tool, not a shopping site, and never a gamified declutter app, a resale-marketplace listing, or an enterprise asset dashboard.",
+    "overview": "PurseInator looks like a warm room in late-afternoon light where someone sits with a box of belongings and discovers, slowly, what they love most. The work is affirmation, not subtraction — recognizing the things that matter, with letting go following naturally from that clarity. The reference is Cabana magazine in print — cozy, intimate, maximalist, materially rich — not the flat tech-product look and not Cabana's own thin website. The maximalism is rehomed as affection: it lives in the user's photographs, the warm parchment palette and its jewel-tone content, and the old-style serif voice, never in the density of the interface. The chrome stays quiet so exactly one loving choice is ever in front of the person sorting. The system rejects every frame that treats belongings as stock: not a catalog, not an inventory tool, not a shopping site, and never a gamified declutter app, a resale-marketplace listing, or an enterprise asset dashboard.",
     "keyCharacteristics": [
-      "Warm plaster light theme; pure white and cool gray are forbidden.",
-      "One botanical-green action color, used sparingly; clay warmth as garnish only.",
+      "Warm honey-parchment light theme; pure white and cool gray are forbidden.",
+      "Achromatic espresso-ink chrome; gilt-gold warmth as garnish; color lives in the content.",
       "Editorial serif (Fraunces) for soul; humanist sans (Hanken Grotesk) for everything functional.",
       "Calm density: one decision at a time, generous but cozy spacing.",
       "Flat tonal layering with one soft, warm lift; gentle 150-250ms motion."
     ],
     "rules": [
-      { "name": "The One Voice Rule", "body": "Verdigris is the only hue that signals action or selection, on ≤10% of any screen. Its rarity is what makes the current decision unmistakable.", "section": "colors" },
-      { "name": "The Clay-as-Garnish Rule", "body": "Clay is seasoning, never substance. It may warm a badge, an illustration, or an empty-state mark; it may never be a button you press or a state that warns you.", "section": "colors" },
-      { "name": "The No Cold Surface Rule", "body": "Every surface is warm — Plaster or Chalk. Pure #ffffff and any cool/blue-tinted gray are prohibited; they break the lamplit room instantly.", "section": "colors" },
+      { "name": "The Achromatic-Chrome Rule", "body": "No hue is spent on the interface itself — buttons, the title, links, focus, and progress are espresso ink. Color belongs to the content (photographs and covers), and that restraint is what makes the current decision unmistakable.", "section": "colors" },
+      { "name": "The Gilt-as-Garnish Rule", "body": "Gold is seasoning, never substance. It may warm a badge, an illustration, or an empty-state mark; it may never be a button you press or a state that warns you.", "section": "colors" },
+      { "name": "The No Cold Surface Rule", "body": "Every surface is warm — Vellum or Veil. Pure #ffffff and any cool/blue-tinted gray are prohibited; they break the room instantly.", "section": "colors" },
       { "name": "The Serif-for-Soul, Sans-for-Sense Rule", "body": "Fraunces appears only where feeling belongs — names of things, headings, the item being decided. Every dense, functional, or repeated string is Hanken Grotesk. Fraunces in a UI label is a bug.", "section": "typography" },
       { "name": "The Fixed-Scale Rule", "body": "Type sizes are a fixed rem scale, never fluid clamp(). This is product UI viewed at consistent distance.", "section": "typography" },
       { "name": "The Paper-on-a-Warm-Table Rule", "body": "Shadows are warm (tinted with Ink, never pure black) and soft. A hard, dark, tight drop shadow reads as a 2014 app.", "section": "elevation" }
@@ -102,8 +104,8 @@
       "Do frame the work as affirmation — 'which do you love more?' — not as culling. Copy and motion celebrate favorites; letting go is honored quietly, never the headline.",
       "Do keep one decision in view at a time; let whitespace and pacing carry the calm.",
       "Do let the user's photographs be the loudest, richest thing on the screen.",
-      "Do use Verdigris as the single action voice (the One Voice Rule, ≤10% per screen).",
-      "Do keep all surfaces warm (Plaster/Chalk) and all text warm Ink — verify body text ≥4.5:1.",
+      "Do keep the chrome achromatic — espresso ink for buttons, links, focus, and progress; let color live in the content.",
+      "Do keep all surfaces warm (Vellum/Veil) and all text warm Ink — verify body text ≥4.5:1.",
       "Do reserve Fraunces for names, headings, and the item being decided; Hanken for everything functional.",
       "Do honor prefers-reduced-motion with a crossfade or instant transition on every animation.",
       "Do support tap-first interaction with ≥44px targets; drag is allowed for reordering/bucketing."
