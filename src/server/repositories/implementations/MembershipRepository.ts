@@ -12,9 +12,11 @@ export class MembershipRepository implements IMembershipRepository {
     id?: string;
     collectionId: string;
     userId: string;
+    role?: "owner" | "curator";
     canManageCollection: boolean;
     canInviteMembers: boolean;
     canAddItems: boolean;
+    canDeleteItems?: boolean;
     canEditMetadata: boolean;
     canAddPhotos: boolean;
     canDeletePhotos: boolean;
@@ -28,9 +30,11 @@ export class MembershipRepository implements IMembershipRepository {
         id,
         collectionId: data.collectionId,
         userId: data.userId,
+        role: data.role ?? "curator",
         canManageCollection: data.canManageCollection,
         canInviteMembers: data.canInviteMembers,
         canAddItems: data.canAddItems,
+        canDeleteItems: data.canDeleteItems ?? false,
         canEditMetadata: data.canEditMetadata,
         canAddPhotos: data.canAddPhotos,
         canDeletePhotos: data.canDeletePhotos,

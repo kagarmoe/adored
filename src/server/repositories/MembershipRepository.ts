@@ -4,9 +4,11 @@ export interface IMembershipRepository {
   create(data: {
     collectionId: string;
     userId: string;
+    role?: "owner" | "curator";
     canManageCollection: boolean;
     canInviteMembers: boolean;
     canAddItems: boolean;
+    canDeleteItems?: boolean;
     canEditMetadata: boolean;
     canAddPhotos: boolean;
     canDeletePhotos: boolean;

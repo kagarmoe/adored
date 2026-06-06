@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
+import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { del } from "@vercel/blob";
 
 export async function DELETE(
@@ -19,6 +20,7 @@ export async function DELETE(
   const photoRepo = new PhotoRepository(db);
   const itemRepo = new ItemRepository(db);
   const membershipRepo = new MembershipRepository(db);
+  const collectionRepo = new CollectionRepository(db);
 
   try {
     // Verify item belongs to collection and user has permission
@@ -31,7 +33,9 @@ export async function DELETE(
       session.user.id,
       params.id
     );
-    if (!membership || !membership.canDeletePhotos) {
+    const collection = await collectionRepo.findById(params.id);
+    const isOwner = collection?.ownerId === session.user.id;
+    if ((!membership || !membership.canDeletePhotos) && !isOwner) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
