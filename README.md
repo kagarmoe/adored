@@ -36,6 +36,7 @@ A full-featured web application for managing collections and sorting items throu
    ```
 
    Example for local PostgreSQL:
+   
    ```
    DATABASE_URL=postgresql://postgres:password@localhost:5432/purseinator
    NEXTAUTH_URL=http://localhost:3000
@@ -47,7 +48,7 @@ A full-featured web application for managing collections and sorting items throu
    ```bash
    # Using Postgres.app or brew
    createdb purseinator
-   
+
    # Using Docker
    docker run -d \
      -e POSTGRES_PASSWORD=password \
