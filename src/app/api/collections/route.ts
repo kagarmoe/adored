@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { CollectionController } from "@/server/api/collections";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { getDb } from "@/lib/db";
 
 export async function GET() {
@@ -28,9 +29,24 @@ export async function POST(request: NextRequest) {
 
     const db = getDb();
     const collectionRepo = new CollectionRepository(db);
+    const membershipRepo = new MembershipRepository(db);
     const controller = new CollectionController(collectionRepo);
 
     const collection = await controller.createCollection(user.id, body);
+    await membershipRepo.create({
+      collectionId: collection.id,
+      userId: user.id,
+      role: "owner",
+      canManageCollection: true,
+      canInviteMembers: true,
+      canAddItems: true,
+      canDeleteItems: true,
+      canEditMetadata: true,
+      canAddPhotos: true,
+      canDeletePhotos: true,
+      canSort: true,
+      canViewOutputs: true,
+    });
     return NextResponse.json(collection, { status: 201 });
   } catch (error) {
     if (error instanceof SyntaxError) {

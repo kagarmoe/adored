@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
+import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { generateId } from "@/lib/id";
 import { put } from "@vercel/blob";
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_ERROR } from "@/lib/uploads";
@@ -22,6 +23,7 @@ export async function POST(
   const db = getDb();
   const itemRepo = new ItemRepository(db);
   const membershipRepo = new MembershipRepository(db);
+  const collectionRepo = new CollectionRepository(db);
 
   try {
     // Verify item belongs to collection and user has permission
@@ -34,7 +36,9 @@ export async function POST(
       session.user.id,
       params.id
     );
-    if (!membership || !membership.canAddPhotos) {
+    const collection = await collectionRepo.findById(params.id);
+    const isOwner = collection?.ownerId === session.user.id;
+    if ((!membership || !membership.canAddPhotos) && !isOwner) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

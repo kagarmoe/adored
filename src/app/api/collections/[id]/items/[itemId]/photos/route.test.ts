@@ -9,6 +9,7 @@ const {
   mockGenerateId,
   mockPut,
   itemRepo,
+  collectionRepo,
   membershipRepo,
   photoRepo,
 } = vi.hoisted(() => ({
@@ -17,6 +18,9 @@ const {
   mockGenerateId: vi.fn(),
   mockPut: vi.fn(),
   itemRepo: {
+    findById: vi.fn(),
+  },
+  collectionRepo: {
     findById: vi.fn(),
   },
   membershipRepo: {
@@ -45,6 +49,10 @@ vi.mock("@/server/repositories/implementations/ItemRepository", () => ({
 
 vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({
   MembershipRepository: vi.fn().mockImplementation(() => membershipRepo),
+}));
+
+vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({
+  CollectionRepository: vi.fn().mockImplementation(() => collectionRepo),
 }));
 
 vi.mock("@/server/repositories/implementations/PhotoRepository", () => ({
@@ -88,6 +96,10 @@ describe("POST /api/collections/[id]/items/[itemId]/photos", () => {
     itemRepo.findById.mockResolvedValue({
       id: "item-1",
       collectionId: "collection-1",
+    });
+    collectionRepo.findById.mockResolvedValue({
+      id: "collection-1",
+      ownerId: "user-2",
     });
     membershipRepo.findByUser.mockResolvedValue({
       id: "membership-1",
@@ -181,5 +193,27 @@ describe("POST /api/collections/[id]/items/[itemId]/photos", () => {
         fileSize: file.size,
       })
     );
+  });
+
+  it("allows the collection owner to upload even when an old collection has no membership row", async () => {
+    membershipRepo.findByUser.mockResolvedValue(null);
+    collectionRepo.findById.mockResolvedValue({
+      id: "collection-1",
+      ownerId: "user-1",
+    });
+
+    const request = makeRequest(
+      new File([new Uint8Array([1, 2, 3])], "owner.jpg", {
+        type: "image/jpeg",
+      })
+    );
+
+    const response = await POST(request as any, {
+      params: { id: "collection-1", itemId: "item-1" },
+    });
+
+    expect(response.status).toBe(201);
+    expect(mockPut).toHaveBeenCalledOnce();
+    expect(photoRepo.create).toHaveBeenCalledOnce();
   });
 });
