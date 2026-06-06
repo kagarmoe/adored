@@ -6,6 +6,9 @@ import { ItemRepository } from "@/server/repositories/implementations/ItemReposi
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { generateId } from "@/lib/id";
 import { put } from "@vercel/blob";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_ERROR } from "@/lib/uploads";
+
+export const MAX_SERVER_UPLOAD_BYTES = MAX_UPLOAD_BYTES;
 
 export async function POST(
   req: NextRequest,
@@ -44,6 +47,13 @@ export async function POST(
 
     if (!file.type.startsWith("image/")) {
       return NextResponse.json({ error: "File must be an image" }, { status: 400 });
+    }
+
+    if (file.size > MAX_SERVER_UPLOAD_BYTES) {
+      return NextResponse.json(
+        { error: MAX_UPLOAD_ERROR },
+        { status: 413 }
+      );
     }
 
     const buffer = await file.arrayBuffer();
