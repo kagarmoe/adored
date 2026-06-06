@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button, Card } from "@/components/ui";
 import type { Photo } from "@/types";
 import Image from "next/image";
+import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
 
 interface PhotoGalleryProps {
   photos: Photo[];
@@ -91,7 +92,7 @@ export function PhotoGallery({
           >
             <div className="aspect-square relative">
               <Image
-                src={photo.blobKey}
+                src={getPhotoAssetUrlForPhoto(photo, collectionId)}
                 alt="Item photo"
                 fill
                 className="object-cover"

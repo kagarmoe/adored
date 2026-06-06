@@ -9,6 +9,7 @@ import { Button, Card } from "@/components/ui";
 import { ItemMetadata } from "@/features/items/ItemMetadata";
 import Link from "next/link";
 import Image from "next/image";
+import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
 
 interface ItemDetailPageProps {
   params: { id: string; itemId: string };
@@ -60,7 +61,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
         {heroPhoto ? (
           <div className="bg-vellum rounded-lg overflow-hidden h-96 flex items-center justify-center">
             <Image
-              src={heroPhoto.blobKey}
+              src={getPhotoAssetUrlForPhoto(heroPhoto, params.id)}
               alt={item.name}
               fill
               className="object-cover"
@@ -96,7 +97,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
                   className="bg-vellum rounded-lg overflow-hidden aspect-square relative"
                 >
                   <Image
-                    src={photo.blobKey}
+                    src={getPhotoAssetUrlForPhoto(photo, params.id)}
                     alt="Item photo"
                     fill
                     className="object-cover"

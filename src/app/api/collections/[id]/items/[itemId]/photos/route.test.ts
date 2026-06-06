@@ -141,7 +141,7 @@ describe("POST /api/collections/[id]/items/[itemId]/photos", () => {
       "items/item-1/photo-generated-bag.jpg",
       expect.any(ArrayBuffer),
       {
-        access: "public",
+        access: "private",
         contentType: "image/jpeg",
       }
     );

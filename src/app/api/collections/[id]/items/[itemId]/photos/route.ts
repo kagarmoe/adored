@@ -65,7 +65,7 @@ export async function POST(
 
     // Upload to blob storage
     const blob = await put(blobPath, buffer, {
-      access: "public",
+      access: "private",
       contentType: file.type,
     });
 
