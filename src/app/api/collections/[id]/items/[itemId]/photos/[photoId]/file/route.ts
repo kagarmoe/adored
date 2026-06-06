@@ -46,7 +46,7 @@ export async function GET(
       ifNoneMatch: request.headers.get("if-none-match") ?? undefined,
     });
 
-    if (!result || result.statusCode === 404) {
+    if (!result) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
