@@ -66,6 +66,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
               fill
               className="object-cover"
               priority
+              unoptimized
             />
           </div>
         ) : (
@@ -101,6 +102,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
                     alt="Item photo"
                     fill
                     className="object-cover"
+                    unoptimized
                   />
                   {photo.isHero && (
                     <div className="absolute inset-0 bg-black/30 flex items-center justify-center">

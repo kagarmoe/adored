@@ -96,6 +96,7 @@ export function PhotoGallery({
                 alt="Item photo"
                 fill
                 className="object-cover"
+                unoptimized
               />
             </div>
 
