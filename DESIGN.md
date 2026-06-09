@@ -105,6 +105,8 @@ components:
 
 # Design System: PurseInator
 
+> **Accountable to [`TONE.md`](TONE.md).** This is the visual and motion system that *implements* the tone contract; TONE.md is first-order and wins any conflict. Every token, rule, and component here must pass TONE.md's litmus test — does it speak from the person's side (what they feel about their things), not the machine's? When the two disagree, the fix is to change `DESIGN.md`, or to amend `TONE.md` deliberately — never to override the contract locally here. TONE states the constraints (the feel); this document chooses the mechanisms (the hex, the scale, the curve).
+
 ## 1. Overview
 
 **Creative North Star: "The Lamplit Sitting Room"**

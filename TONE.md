@@ -4,6 +4,14 @@ The standard this product's expression is held to — voice, copy, color, motion
 
 This contract is **first-order**: the app conforms to it, not the reverse.
 
+## Scope
+
+TONE governs the *felt quality* of the product across every medium — words, color, motion, layout, naming. It is medium-agnostic and states **constraints, not mechanisms**: what the experience must feel like, never a specific hex, type scale, or motion curve.
+
+The concrete visual and motion system that delivers that feel lives in [`DESIGN.md`](DESIGN.md), which is **accountable to this contract** — every token, rule, and component it defines must pass the litmus test below. (Words have no separate spec document yet; until one exists, copy answers to TONE directly.)
+
+Rule of thumb: a *constraint* ("motion is unhurried; nothing snaps for attention") belongs here; a *mechanism* ("240ms ease-out; reduced-motion → instant crossfade") belongs in `DESIGN.md`. TONE never names a hex or a duration; `DESIGN.md` never re-litigates the feel.
+
 ## Authority
 
 The app meets this contract. It does not bend the contract to suit a screen, a feature, or a deadline, and there are no local exceptions. When a design appears to need one, the contract is what gets revisited — deliberately, in writing, in this file — and only then does the app follow. An exception is an amendment here, never a quiet precedent set in code.
