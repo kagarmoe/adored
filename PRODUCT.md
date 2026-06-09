@@ -1,5 +1,7 @@
 # Product
 
+> **Tone is governed by [`TONE.md`](TONE.md) — first-order.** This document is strategic context: who the product is for, its purpose, and what it must never become. Where its Brand Personality and Design Principles touch the *felt quality* of the experience, `TONE.md` is canonical and wins any conflict. The visual and motion system lives in [`DESIGN.md`](DESIGN.md), accountable to `TONE.md`.
+
 ## Register
 
 product
