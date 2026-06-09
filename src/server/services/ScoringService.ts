@@ -74,6 +74,12 @@ export class ScoringService {
             result: "item_a" | "item_b" | "tie" | "skip";
           };
 
+          // A skip carries no preference signal: leave both items untouched
+          // (no score change, no comparison counted toward confidence).
+          if (pairwiseDecision.result === "skip") {
+            continue;
+          }
+
           const itemAData = itemScores.get(pairwiseDecision.itemAId) || {
             score: 0,
             count: 0,
@@ -120,9 +126,11 @@ export class ScoringService {
     const preferences: CollectionPreferenceItem[] = [];
     for (const [itemId, data] of itemScores) {
       if (data.count > 0) {
+        // Triage sets the base tier; pairwise comparisons refine on top of it.
+        // Adding (not overwriting) keeps pairwise results from being discarded.
         let finalScore = data.score;
         if (data.lastTriageScore !== null) {
-          finalScore = data.lastTriageScore;
+          finalScore = data.lastTriageScore + data.score;
         }
 
         const confidence = this.calculateConfidence(data.count);
