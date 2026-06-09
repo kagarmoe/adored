@@ -37,8 +37,6 @@ function pairwise(
   };
 }
 
-// Builds a ScoringService whose curator has one session containing `decisions`,
-// processed in array order (triage phase before pairwise phase, as in the app).
 function buildService(decisions: DecisionEvent[]): ScoringService {
   const sessionRepo: ISessionRepository = {
     findByCollection: async () =>
@@ -61,59 +59,129 @@ async function scoreByItem(decisions: DecisionEvent[]) {
 }
 
 describe("ScoringService.computePreferences", () => {
-  it("combines pairwise refinement with the triage base instead of discarding it", async () => {
-    // Bug 1: with triage present, pairwise was overwritten and had zero effect.
+  it("round-trips each triage tier to its own bucket (purses-7lh)", async () => {
     const byItem = await scoreByItem([
-      triage("a", "high"), // base 0.75
-      triage("b", "high"),
-      pairwise("a", "b", "item_a"), // a wins: +0.1
+      triage("love", "top"),
+      triage("like", "high"),
+      triage("maybe", "medium"),
+      triage("release", "low"),
     ]);
 
-    expect(byItem.get("a")!.score).toBeCloseTo(0.85);
+    expect(byItem.get("love")!.score).toBeCloseTo(0.875);
+    expect(byItem.get("love")!.rankBucket).toBe("top");
+    expect(byItem.get("like")!.score).toBeCloseTo(0.625);
+    expect(byItem.get("like")!.rankBucket).toBe("high");
+    expect(byItem.get("maybe")!.score).toBeCloseTo(0.375);
+    expect(byItem.get("maybe")!.rankBucket).toBe("medium");
+    expect(byItem.get("release")!.score).toBeCloseTo(0.125);
+    expect(byItem.get("release")!.rankBucket).toBe("low");
   });
 
-  it("orders items within the same triage tier by their pairwise outcomes", async () => {
-    // Bug 1 symptom: same-tier items tied and could not be ordered.
+  it("promotes across a tier boundary after two consistent wins", async () => {
     const byItem = await scoreByItem([
-      triage("a", "high"),
+      triage("a", "high"), // 0.625
       triage("b", "high"),
-      pairwise("a", "b", "item_a"), // a beats b
+      pairwise("a", "b", "item_a"),
+      pairwise("a", "b", "item_a"),
     ]);
 
-    expect(byItem.get("a")!.score).toBeGreaterThan(byItem.get("b")!.score);
+    expect(byItem.get("a")!.score).toBeCloseTo(0.825);
+    expect(byItem.get("a")!.rankBucket).toBe("top"); // Like -> Love
   });
 
-  it("treats a skip as a no-op: no score penalty and no comparison counted", async () => {
-    // Bug 2: skip fell into the loser branch for BOTH items and inflated count.
+  it("stays in tier after only two losses (needs three to demote)", async () => {
     const byItem = await scoreByItem([
-      triage("a", "medium"), // base 0.5
+      triage("a", "high"), // 0.625
+      triage("b", "top"),
+      pairwise("a", "b", "item_b"),
+      pairwise("a", "b", "item_b"),
+    ]);
+
+    expect(byItem.get("a")!.score).toBeCloseTo(0.525);
+    expect(byItem.get("a")!.rankBucket).toBe("high"); // still Like
+  });
+
+  it("demotes across a tier boundary after three consistent losses", async () => {
+    const byItem = await scoreByItem([
+      triage("a", "high"), // 0.625
+      triage("b", "top"),
+      pairwise("a", "b", "item_b"),
+      pairwise("a", "b", "item_b"),
+      pairwise("a", "b", "item_b"),
+    ]);
+
+    expect(byItem.get("a")!.score).toBeCloseTo(0.475);
+    expect(byItem.get("a")!.rankBucket).toBe("medium"); // Like -> Maybe
+  });
+
+  it("rescues a Release item up into favorites (symmetric override)", async () => {
+    const byItem = await scoreByItem([
+      triage("a", "low"), // 0.125 (Release)
+      triage("b", "low"),
+      pairwise("a", "b", "item_a"),
+      pairwise("a", "b", "item_a"),
+    ]);
+
+    expect(byItem.get("a")!.score).toBeCloseTo(0.325);
+    expect(byItem.get("a")!.rankBucket).toBe("medium"); // out of Release
+  });
+
+  it("demotes a favorite into Release on sustained losses (symmetric override)", async () => {
+    const byItem = await scoreByItem([
+      triage("a", "medium"), // 0.375 (Maybe, a favorite)
+      triage("b", "top"),
+      pairwise("a", "b", "item_b"),
+      pairwise("a", "b", "item_b"),
+      pairwise("a", "b", "item_b"),
+    ]);
+
+    expect(byItem.get("a")!.score).toBeCloseTo(0.225);
+    expect(byItem.get("a")!.rankBucket).toBe("low"); // Maybe -> Release
+  });
+
+  it("treats a tie as no net swing that still counts as evidence", async () => {
+    const byItem = await scoreByItem([
+      triage("a", "high"), // 0.625
+      triage("b", "high"),
+      pairwise("a", "b", "tie"),
+    ]);
+
+    expect(byItem.get("a")!.score).toBeCloseTo(0.625);
+    expect(byItem.get("b")!.score).toBeCloseTo(0.625);
+    expect(byItem.get("a")!.comparisonCount).toBe(2); // triage + tie
+    expect(byItem.get("b")!.comparisonCount).toBe(2);
+  });
+
+  it("treats a skip as a complete no-op", async () => {
+    const byItem = await scoreByItem([
+      triage("a", "medium"), // 0.375
       triage("b", "medium"),
       pairwise("a", "b", "skip"),
     ]);
 
-    expect(byItem.get("a")!.score).toBeCloseTo(0.5);
-    expect(byItem.get("b")!.score).toBeCloseTo(0.5);
-    expect(byItem.get("a")!.comparisonCount).toBe(1); // triage only, skip not counted
+    expect(byItem.get("a")!.score).toBeCloseTo(0.375);
+    expect(byItem.get("b")!.score).toBeCloseTo(0.375);
+    expect(byItem.get("a")!.comparisonCount).toBe(1); // skip not counted
     expect(byItem.get("b")!.comparisonCount).toBe(1);
   });
 
-  it("does not let a skip erase an already-earned pairwise gain", async () => {
-    // Integration of both fixes: combined score survives, skip adds nothing.
+  it("counts ties but not skips toward confidence", async () => {
     const byItem = await scoreByItem([
-      triage("a", "high"), // base 0.75
-      triage("b", "low"),
-      pairwise("a", "b", "item_a"), // a wins: +0.1 -> 0.85
-      pairwise("a", "b", "skip"), // no-op
+      triage("a", "high"),
+      triage("b", "high"),
+      pairwise("a", "b", "tie"),
+      pairwise("a", "b", "skip"),
     ]);
 
-    expect(byItem.get("a")!.score).toBeCloseTo(0.85);
-    expect(byItem.get("a")!.comparisonCount).toBe(2); // triage + one real compare
+    expect(byItem.get("a")!.comparisonCount).toBe(2); // triage + tie only
+    expect(byItem.get("a")!.confidence).toBeCloseTo(0.2);
   });
 
-  it("scores a triage-only item by its tier (regression guard)", async () => {
-    const byItem = await scoreByItem([triage("a", "top")]);
+  it("defaults an un-triaged item compared in pairwise to the Maybe center", async () => {
+    const byItem = await scoreByItem([pairwise("a", "b", "tie")]);
 
-    expect(byItem.get("a")!.score).toBeCloseTo(1.0);
+    expect(byItem.get("a")!.score).toBeCloseTo(0.375);
+    expect(byItem.get("a")!.rankBucket).toBe("medium");
     expect(byItem.get("a")!.comparisonCount).toBe(1);
   });
 });
