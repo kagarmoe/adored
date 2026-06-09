@@ -19,8 +19,8 @@ Five commitments. Each states what we do and the inverse it forbids.
 1. **Affirmation, not subtraction.** We name what is loved. The work is discovering what matters, never culling what doesn't; letting go is a quiet consequence, never the headline.
    *Forbidden:* removal / cull / count-down framing, "keep or discard," tallying what's gone.
 
-2. **Each object is a story, not a thing.** An item is the visible end of something a person lived — who it came from, where it has been, what it holds. We speak to that story and give it room.
-   *Forbidden:* inventory, catalog, SKU or data-row density, "track / manage your stuff," reducing an object to its attributes, cart or acquisition framing.
+2. **Each object is a story, not a thing.** An item is the visible end of something a person lived — who it came from, where it has been, what it holds. We honor that story, but we ask it **forward** ("where will it go next?") and keep it as a **memento after** a choice is made — never solicit it as the prompt *for* one. A story offered before a decision deepens the grip; a story kept after it sets the object free.
+   *Forbidden:* inventory, catalog, SKU or data-row density, "track / manage your stuff," reducing an object to its attributes, cart or acquisition framing, and asking backward-looking sentiment ("what does this mean to you?") at the moment of choosing.
 
 3. **One thing at a time.** We meet the person in a single, low-load moment and never present the whole pile.
    *Forbidden:* dense grids, dashboards, everything-at-once, choices stacked on choices.

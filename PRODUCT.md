@@ -18,7 +18,7 @@ It exists because surfacing what you truly love is emotionally and cognitively h
 
 ## Brand Personality
 
-_Tone is governed by [`TONE.md`](TONE.md) — first-order. This section describes personality within that contract._
+*Tone is governed by [`TONE.md`](TONE.md) — first-order. This section describes personality within that contract.*
 
 **Calm, judgement-free, gently encouraging — with a light touch of playfulness.**
 
