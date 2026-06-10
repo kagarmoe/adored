@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { AppLayout } from "@/components/layout";
-import { Button, EmptyState } from "@/components/ui";
+import { buttonVariants, EmptyState } from "@/components/ui";
 import { CollectionCard } from "@/features/collections/CollectionCard";
 import { CollectionFilters } from "@/features/collections/CollectionFilters";
 import Link from "next/link";
@@ -32,13 +32,13 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
     <AppLayout breadcrumbs={[{ label: "Collections" }]}>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl text-ink">Your Collections</h1>
-            <p className="text-ink-soft mt-2">Organize and sort your favorite items</p>
+            <h1 className="text-3xl text-ink">Your collections</h1>
+            <p className="text-ink-soft mt-2">The things you&rsquo;re deciding about, gathered in one calm place.</p>
           </div>
-          <Link href="/collections/new">
-            <Button>New Collection</Button>
+          <Link href="/collections/new" className={`${buttonVariants()} shrink-0`}>
+            New collection
           </Link>
         </div>
 
@@ -47,20 +47,20 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
 
         {collections.length === 0 ? (
           <EmptyState
-            heading="No collections yet"
-            message="Create your first collection to start organizing items"
+            heading="Nothing here yet"
+            message="Begin a collection whenever you’re ready — there’s no rush."
             action={{
-              label: "Create Collection",
+              label: "Begin a collection",
               href: "/collections/new",
             }}
           />
         ) : filteredCollections.length === 0 ? (
           <EmptyState
-            heading={`No ${activeFilter} collections`}
-            message="Try a different status filter"
+            heading={activeFilter === "archived" ? "Nothing archived" : "Nothing active right now"}
+            message="Try a different view above."
           />
         ) : (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCollections.map((collection) => (
               <CollectionCard key={collection.id} collection={collection} />
             ))}

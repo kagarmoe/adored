@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui";
+import { buttonVariants } from "@/components/ui";
 import Link from "next/link";
 
 const filters = [
@@ -14,16 +14,19 @@ interface CollectionFiltersProps {
 export function CollectionFilters({ activeFilter }: CollectionFiltersProps) {
   return (
     <div className="flex flex-wrap gap-2">
-      {filters.map((filter) => (
-        <Link key={filter.value} href={filter.value === "all" ? "/collections" : `/collections?status=${filter.value}`}>
-          <Button
-            size="sm"
-            variant={activeFilter === filter.value ? "primary" : "secondary"}
+      {filters.map((filter) => {
+        const isActive = activeFilter === filter.value;
+        return (
+          <Link
+            key={filter.value}
+            href={filter.value === "all" ? "/collections" : `/collections?status=${filter.value}`}
+            aria-current={isActive ? "true" : undefined}
+            className={buttonVariants({ variant: isActive ? "primary" : "secondary", size: "sm" })}
           >
             {filter.label}
-          </Button>
-        </Link>
-      ))}
+          </Link>
+        );
+      })}
     </div>
   );
 }

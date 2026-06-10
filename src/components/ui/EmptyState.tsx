@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "./Button";
+import { Button, buttonVariants } from "./Button";
 import Link from "next/link";
 
 interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -27,8 +27,8 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
       <h3 className="text-lg text-ink mb-2">{heading}</h3>
       {message && <p className="text-ink-soft mb-6 max-w-sm">{message}</p>}
       {action?.href ? (
-        <Link href={action.href}>
-          <Button variant="primary">{action.label}</Button>
+        <Link href={action.href} className={buttonVariants({ variant: "primary" })}>
+          {action.label}
         </Link>
       ) : action ? (
         <Button variant="primary" onClick={action.onClick}>
