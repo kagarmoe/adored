@@ -3,11 +3,11 @@ import type { Config } from "tailwindcss";
 // Palette maps to the OKLCH CSS variables defined in src/app/globals.css.
 // One source of truth: edit token values there, not here. See DESIGN.md.
 const config: Config = {
-  content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  // Single broad glob so classes used only in src/features/** (and any future
+  // src dir) are always generated. The earlier pages/components/app list
+  // silently dropped feature-only classes (e.g. the results hero layout, the
+  // mauve spark halo).
+  content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
       colors: {

@@ -7,8 +7,9 @@ import { SortResultItemRepository } from "@/server/repositories/implementations/
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { AppLayout } from "@/components/layout";
-import { Badge, Button, Card, EmptyState } from "@/components/ui";
+import { Badge, Button, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
+import { MostLovedHero } from "@/features/results/MostLovedHero";
 import { SharePanel } from "@/features/results/SharePanel";
 import Link from "next/link";
 
@@ -20,7 +21,15 @@ const bucketLabels = {
   top: "Love",
   high: "Like",
   medium: "Maybe",
-  low: "Release",
+  low: "Onward",
+};
+
+// The cool value-ramp made visible: deeper teal = more loved, palest = Onward.
+const bucketRamp: Record<"top" | "high" | "medium" | "low", string> = {
+  top: "bg-tier-love text-tier-love-ink",
+  high: "bg-tier-like text-tier-like-ink",
+  medium: "bg-tier-maybe text-tier-maybe-ink",
+  low: "bg-tier-onward text-tier-onward-ink",
 };
 
 export default async function ResultDetailPage({ params }: ResultDetailPageProps) {
@@ -79,33 +88,46 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
           )}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-4">
+        {/* The value ramp as structure: deeper teal = more loved. */}
+        <div className="grid gap-3 sm:grid-cols-4">
           {(["top", "high", "medium", "low"] as const).map((bucket) => (
-            <Card key={bucket} padding="md">
-              <p className="text-sm font-medium text-ink-soft">{bucketLabels[bucket]}</p>
-              <p className="mt-2 text-2xl font-bold text-ink">{bucketCounts[bucket] || 0}</p>
-            </Card>
+            <div key={bucket} className={`rounded-card px-4 py-5 ${bucketRamp[bucket]}`}>
+              <p className="text-sm font-semibold">{bucketLabels[bucket]}</p>
+              <p className="mt-1 text-3xl font-bold">{bucketCounts[bucket] || 0}</p>
+            </div>
           ))}
         </div>
 
         {sortedResultItems.length === 0 ? (
-          <EmptyState heading="No ranked items yet" message="Complete more sorting decisions to populate this result" />
+          <EmptyState heading="No ranked items yet" message="A little more sorting and your ranking will appear here." />
         ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {sortedResultItems.map((resultItem, index) => {
-              const item = itemById.get(resultItem.itemId);
-              if (!item) return null;
-              return (
-                <ItemCard
-                  key={resultItem.id}
-                  item={item}
-                  collectionId={params.id}
-                  bucket={resultItem.manualBucket || resultItem.computedBucket}
-                  isTop={index === 0 && sortedResultItems.length > 1}
-                />
-              );
-            })}
-          </div>
+          (() => {
+            const ranked = sortedResultItems
+              .map((ri) => ({ ri, item: itemById.get(ri.itemId) }))
+              .filter((r): r is { ri: typeof r.ri; item: NonNullable<typeof r.item> } => Boolean(r.item));
+            if (ranked.length === 0) return null;
+            const [hero, ...rest] = ranked;
+            return (
+              <div className="space-y-8">
+                <MostLovedHero item={hero.item} collectionId={params.id} />
+                {rest.length > 0 && (
+                  <div className="space-y-4">
+                    <h2 className="text-ink">The full ranking</h2>
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                      {rest.map(({ ri, item }) => (
+                        <ItemCard
+                          key={ri.id}
+                          item={item}
+                          collectionId={params.id}
+                          bucket={ri.manualBucket || ri.computedBucket}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()
         )}
 
         {result.status === "finalized" && (
