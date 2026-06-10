@@ -23,3 +23,14 @@ AUTH_SECRET="ci-build-only-secret-at-least-32-characters-long" \
 npm run build
 
 echo "pre-push: all checks passed ✓"
+
+# Mirror beads -> GitHub Project board. NEVER blocks the push (the gate above
+# already passed). This lives here, not in .git/hooks/, because this repo sets
+# core.hooksPath=.githooks — a hook in .git/hooks/pre-push is silently ignored.
+BEADS_GH_SYNC_DIR="$HOME/repos/beads-gh-sync"
+if [ -d "$BEADS_GH_SYNC_DIR" ]; then
+  echo "pre-push: syncing beads → GitHub…"
+  PYTHONPATH="$BEADS_GH_SYNC_DIR/src" python3 -m beads_gh_sync.cli push \
+    --repo "$(git rev-parse --show-toplevel)" \
+    || echo "[beads-gh-sync] sync error (ignored)" >&2
+fi
