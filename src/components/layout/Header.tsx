@@ -2,6 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import Link from "next/link";
 
 export function Header() {
@@ -14,20 +15,23 @@ export function Header() {
           <h1 className="text-2xl font-medium tracking-tight text-ink">PurseInator</h1>
         </Link>
 
-        {session?.user && (
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-ink">
-              <p className="font-medium">{session.user.name || session.user.email}</p>
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          {session?.user && (
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-ink">
+                <p className="font-medium">{session.user.name || session.user.email}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="md"
+                onClick={() => signOut({ redirect: true, callbackUrl: "/login" })}
+              >
+                Sign out
+              </Button>
             </div>
-            <Button
-              variant="ghost"
-              size="md"
-              onClick={() => signOut({ redirect: true, callbackUrl: "/login" })}
-            >
-              Sign out
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </header>
   );
