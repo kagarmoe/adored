@@ -1,7 +1,9 @@
 # Visual regression & automated UI screenshots — exploration
 
 **Status:** Exploration / starting point (not a committed plan)
+
 **Bead:** `purses-04q`
+
 **Date:** 2026-06-09
 
 ## Why this exists
@@ -31,15 +33,19 @@ regression testing (VRT)**, a well-trodden domain with sharp edges that a hand-r
 branch-diff inherits without the tooling that tames them.
 
 ### Sharp edge 1 — cross-environment rendering
+
 Screenshots differ for reasons unrelated to the change: font hinting/antialiasing
 (macOS vs Linux/CI), Chromium version bumps, sub-pixel layout, scrollbars, caret blink.
 A shot captured locally on macOS will *always* differ from one captured in CI. Naive
 comparison ⇒ constant false positives. This is the #1 reason homegrown VRT gets ripped out.
-→ Capture in **one fixed environment only** (a pinned Docker image, same in CI and locally),
-with an antialiasing-aware tolerance threshold and masked dynamic regions.
+
+Mitigation: capture in **one fixed environment only** (a pinned Docker image, same in CI and
+locally), with an antialiasing-aware tolerance threshold and masked dynamic regions.
 
 ### Sharp edge 2 — determinism (blocking prerequisite)
+
 Our seed is non-deterministic and the UI renders live values:
+
 - `generateId` → random ULID (every entity id changes per run).
 - `SessionAnalytics` renders `{timeSpent}m` from `new Date()` — changes every run.
 - Cards render `updatedAt.toLocaleDateString()` and other time-derived strings.
@@ -49,11 +55,13 @@ and time-based UI is masked. *Nothing visual works without this.* This is the fi
 of work regardless of which path we choose.
 
 ### Sharp edge 3 — we'd be rebuilding `toHaveScreenshot()`, worse
+
 Playwright already ships visual comparison: baseline storage, per-platform baselines,
 threshold config, and an `--update-snapshots` accept-flow. "Diff against the assets branch"
 is that, hand-coded, minus the threshold logic that keeps it from being flaky.
 
 ### Sharp edge 4 — baselines vs review artifacts are two jobs
+
 - A **baseline** is "the accepted look" — updates deliberately (on merge to main), with a
   human saying *yes, this is the new correct*.
 - A **per-PR shot** is an ephemeral review aid.
@@ -64,6 +72,7 @@ a "failure" until someone re-baselines, and that accept step must be explicit or
 ## Options
 
 ### A. Hosted VRT (Argos / Chromatic / Percy) — recommended if a service is acceptable
+
 - Normalizes cross-env rendering; stores baselines off-repo (no `main` bloat — satisfies the
   original instinct *better* than a branch).
 - Human approve-new-baseline flow built in.
@@ -74,6 +83,7 @@ a "failure" until someone re-baselines, and that accept step must be explicit or
 - Argos has a free tier and is partly self-hostable; Chromatic is the Storybook-native option.
 
 ### B. Playwright-native `toHaveScreenshot()` — recommended if staying in-house
+
 - No third party. Use (a) deterministic seed + frozen clock, (b) capture only in a pinned
   container, (c) `animations: 'disabled'` and masked dynamic regions.
 - **Cost:** baselines live in the repo working tree (Playwright requires them at test time),
@@ -81,6 +91,7 @@ a "failure" until someone re-baselines, and that accept step must be explicit or
   Manageable (many projects commit `__screenshots__/`), but it's an honest tradeoff.
 
 ### C. Hand-rolled branch-diff (the original idea) — not recommended
+
 - You inherit all of A/B's flakiness with none of the tooling. Most maintenance burden.
 - Keep the `assets` branch for **PR review artifacts** (its current, good use) — but don't make
   it the regression-detection mechanism.
@@ -98,6 +109,7 @@ a "failure" until someone re-baselines, and that accept step must be explicit or
    orthogonal to regression detection and already working).
 
 ## Open decisions (for the bead)
+
 - [ ] Service vs in-house (privacy/cost vs binary-in-repo).
 - [ ] Which surfaces are "key" enough to baseline? (results, compare, triage, collections home,
       empty states — start small.)
@@ -105,6 +117,7 @@ a "failure" until someone re-baselines, and that accept step must be explicit or
 - [ ] Capture environment: pin a Docker image for both CI and local capture.
 
 ## Prior art in this repo
+
 - `e2e/` (Playwright), `e2e/auth.setup.ts`, `e2e/fixtures/{seed,db}.ts`, `e2e/fixtures/test-db.sh`.
 - `docs/plans/2026-05-30-e2e-ui-testing.md` (existing e2e plan).
 - `assets` branch (current PR-screenshot store).
