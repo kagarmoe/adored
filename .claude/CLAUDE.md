@@ -40,8 +40,21 @@ metadata to fill in later, and bulk-uploading images.
 - **Build before commit** — `npm run build` + `npm run auth:verify`
 - **Follow auth patterns** — API routes, error responses, validation precedent already set
 
-## Git Workflow
+## Workflow
 
-- **Branch:** `complete-refactor`
-- **Commit:** Frequent, one logical change per commit
-- **Review:** Major features get `pr-review-toolkit:code-reviewer` before merge
+Use the **superpowers** workflow for substantive work: `brainstorming` → `writing-plans` →
+`executing-plans`, with `test-driven-development` and `systematic-debugging`. Track work in **beads**
+(`bd`), never TodoWrite. Then close out properly — the two steps most easily skipped are gates, not
+optional:
+
+- **Branch:** feature branch off `main` → PR → squash-merge → Vercel auto-deploys prod. Never commit
+  directly to `main`.
+- **Commit:** frequent, one logical change per commit.
+- **Verify before claiming done:** run the gates — `npm run build`, `npm run test:ci`, `npm run lint`,
+  `npm run auth:verify` (the pre-push hook mirrors these). Evidence before assertions
+  (`superpowers:verification-before-completion`).
+- **Code review is a GATE before merging any major feature** — run `superpowers:requesting-code-review`
+  (or `pr-review-toolkit:code-reviewer`). Self-verification catches your errors; review catches errors
+  in the understanding. Do not merge a major feature without it.
+- **Close the branch with `superpowers:finishing-a-development-branch`** — don't hand-roll the
+  merge/cleanup.
