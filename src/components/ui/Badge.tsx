@@ -19,7 +19,7 @@ const badgeVariants = cva("inline-flex items-center justify-center font-semibold
       archived: "bg-hairline text-ink",
       deleted: "bg-error-soft text-error-deep",
       pending: "bg-hairline text-ink",
-      owner: "bg-spark/30 text-ink",
+      owner: "bg-accent-periwinkle text-ink",
       curator: "bg-accent-aqua text-ink",
     },
   },

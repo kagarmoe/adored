@@ -23,7 +23,7 @@ export default async function Home() {
         <div className="flex gap-4 justify-center">
           <Link
             href="/login"
-            className="bg-primary hover:bg-primary-deep text-white font-semibold py-3 px-8 rounded-lg transition-colors h-12 flex items-center"
+            className="bg-primary hover:bg-primary-hover text-primary-ink font-semibold py-3 px-8 rounded-lg transition-colors h-12 flex items-center"
           >
             Sign In
           </Link>
