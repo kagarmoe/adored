@@ -59,7 +59,13 @@ export function SessionCompleteScreen({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <Card padding="lg" className="max-w-2xl w-full space-y-6">
         <div className="text-center space-y-2">
-          <div className="text-5xl mb-4">🎉</div>
+          <div className="mb-4 flex justify-center" aria-hidden="true">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-decor">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7 text-spark">
+                <path d="M12 2.5l2.1 5.6 5.9.3-4.6 3.7 1.6 5.7L12 20.3 7 17.8l1.6-5.7-4.6-3.7 5.9-.3z" />
+              </svg>
+            </span>
+          </div>
           <h2 className="text-3xl text-ink">Session Complete!</h2>
           <p className="text-ink-soft">You&apos;ve made great progress organizing your items.</p>
         </div>

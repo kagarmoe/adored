@@ -16,7 +16,7 @@ export function CollectionCard({ collection }: CollectionCardProps) {
             aria-hidden="true"
             viewBox="0 0 24 24"
             fill="none"
-            className="h-10 w-10 text-primary/35"
+            className="h-10 w-10 text-ink-soft/50"
           >
             <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
             <circle cx="8.5" cy="10" r="1.5" fill="currentColor" />

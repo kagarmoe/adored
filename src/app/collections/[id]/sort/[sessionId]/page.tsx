@@ -132,8 +132,8 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
           <Card padding="lg" className="border-hairline bg-accent-aqua">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg text-primary-hover">Ready to see results?</h2>
-                <p className="mt-1 text-sm text-primary-hover">
+                <h2 className="text-lg text-ink">Ready to see results?</h2>
+                <p className="mt-1 text-sm text-ink">
                   You&apos;ve made {bucketed} decision{bucketed !== 1 ? "s" : ""}. Generate a draft result to see the ranked order.
                 </p>
               </div>
