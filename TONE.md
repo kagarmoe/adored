@@ -48,6 +48,23 @@ Five commitments. Each states what we do and the inverse it forbids.
 
 When commitments pull against each other, **gentleness wins.** Commitments 3 and 4 are the floor: any affirmation, warmth, delight, or play that risks pressuring, overwhelming, or performing yields to them. Affirmation is the direction we move; gentleness is the line we do not cross.
 
+## Restraint is not minimalism
+
+Calm is a stance toward stimulation and load, never a mandate to strip the interface bare.
+PurseInator is **aesthetic, not minimalist**: rich, warm, and colour-forward — the photograph
+is lush, the palette is a protagonist, the craft is visible — all held in calm. Restraint
+governs noise (few choices at once, no gamification, quiet motion, no clutter), not beauty. We
+never drain richness for its own sake, and "more minimal" is not, in itself, "better." Where the
+Nielsen "aesthetic and minimalist" heuristic is applied to this product, **aesthetic is the goal;
+minimalism is not** — reward beauty and clarity, not bareness.
+
+*Forbidden:* sterile stripped-down minimal-UI framing, monochrome-for-restraint, removing warmth,
+colour, or ornament "to look cleaner," treating empty space as automatically superior to a
+crafted, colour-rich surface.
+
+This does not loosen the floor: commitments 3 (one thing at a time) and 4 (unpressured) still win.
+Richness is held *within* calm — it is never licence to add clutter or load.
+
 ## The litmus test
 
 For any word, color, motion, or layout, ask: does it speak from the **person's side** — what they feel about their things — or the **machine's side** — what the software does to them? If it reads from the machine's side, rewrite it.
