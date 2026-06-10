@@ -8,8 +8,6 @@ interface ItemCardProps {
   collectionId: string;
   heroPhotoUrl?: string;
   bucket?: "top" | "high" | "medium" | "low";
-  /** Mark the single most-loved item (rank #1) with the affirmation spark. */
-  isTop?: boolean;
   /** Override the image area sizing (default a square). Triage caps height so
    *  the decision buttons stay above the fold. */
   imageClassName?: string;
@@ -29,19 +27,11 @@ const bucketLabels = {
   low: "Release",
 };
 
-export function ItemCard({ item, collectionId, heroPhotoUrl, bucket, isTop = false, imageClassName = "aspect-square" }: ItemCardProps) {
+export function ItemCard({ item, collectionId, heroPhotoUrl, bucket, imageClassName = "aspect-square" }: ItemCardProps) {
   return (
     <Link href={`/collections/${collectionId}/items/${item.id}`}>
       <Card interactive padding="none" className="overflow-hidden h-full flex flex-col">
         <div className={`bg-accent-aqua ${imageClassName} flex items-center justify-center relative overflow-hidden`}>
-          {isTop && (
-            <div className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-spark px-2 py-0.5">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-spark-ink" aria-hidden="true">
-                <path d="M12 2.5l2.1 5.6 5.9.3-4.6 3.7 1.6 5.7L12 20.3 7 17.8l1.6-5.7-4.6-3.7 5.9-.3z" />
-              </svg>
-              <span className="text-[0.6875rem] font-semibold text-spark-ink">Most loved</span>
-            </div>
-          )}
           {heroPhotoUrl ? (
             <Image
               src={heroPhotoUrl}
