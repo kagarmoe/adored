@@ -10,6 +10,8 @@ product
 
 One person, making decisions about their own things. The work is personal and emotionally weighted, and it is fundamentally about **realizing what they love most**, one item at a time; letting go is the connected consequence of that clarity, not the goal they set out with. They are not a power user optimizing a workflow.
 
+The collection is not assumed to be wholly theirs. A real pile is entangled — it may hold a child's things, a partner's tools, objects that simply don't feel like theirs to decide about right now — so the product must let a person set those aside with zero emotional engagement, never forcing a decision on what was never theirs to weigh.
+
 Sharing exists, but it is an *after-the-fact* step: once a ranked list is complete, it can be shared. PurseInator is not a collaboration tool and never asks the user to coordinate with others mid-decision.
 
 ## Product Purpose
