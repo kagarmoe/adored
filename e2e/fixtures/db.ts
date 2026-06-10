@@ -9,7 +9,7 @@ import * as schema from "@/lib/db/schema";
 // can never target different databases.
 export const TEST_DATABASE_URL =
   process.env.DATABASE_URL_TEST ??
-  "postgresql://postgres:test@localhost:5433/purseinator_test";
+  "postgresql://postgres:test@localhost:5433/app_test";
 
 // Safety guard, fail-CLOSED: e2e may ONLY talk to a local ephemeral Postgres.
 // An allowlist (host must be localhost/127.0.0.1) is correct-by-construction —
