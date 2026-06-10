@@ -12,7 +12,9 @@ const envSchema = z.object({
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
 
   // Email (optional in development)
-  EMAIL_FROM: z.string().email("EMAIL_FROM must be a valid email").default("noreply@adored.kimberlygarmoe.com"),
+  // Sender must be a Resend-verified domain. kimberlygarmoe.com is verified;
+  // a subdomain (adored.kimberlygarmoe.com) would need its own verification.
+  EMAIL_FROM: z.string().email("EMAIL_FROM must be a valid email").default("noreply@kimberlygarmoe.com"),
   EMAIL_SERVER_HOST: z.string().default("localhost"),
   EMAIL_SERVER_PORT: z.coerce.number().default(1025),
   EMAIL_SERVER_USER: z.string().optional(),
