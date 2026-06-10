@@ -143,6 +143,7 @@ Flat by default. In **light**, surfaces sit on white and lift by a soft, cool sh
 
 ### Do
 
+- **Do** treat the gallery as aesthetically rich — colour-forward, lush photography, visible craft — held in calm. **Aesthetic, not minimalist** (see [`TONE.md`](TONE.md) → "Restraint is not minimalism").
 - **Do** frame the work as affirmation — "which do you love more?" — never as culling.
 - **Do** keep one decision in view; let airy whitespace carry the calm.
 - **Do** let the photographs be the richest thing on screen.
@@ -154,6 +155,7 @@ Flat by default. In **light**, surfaces sit on white and lift by a soft, cool sh
 
 ### Don't
 
+- **Don't** strip the surface to sterile minimalism or drain colour to "look cleaner"; restraint governs noise and load, never beauty.
 - **Don't** make this a catalog, inventory tool, or shopping site — no dense SKU grids, stock counts, or cart affordances.
 - **Don't** gamify letting go: no confetti, streaks, points, or "you have too many."
 - **Don't** let the brand speak danger — never use red/amber/yellow/green decoratively; reds are for true destructive actions only.
