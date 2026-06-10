@@ -49,19 +49,19 @@ export function SessionAnalytics({
       <h3 className="text-ink">Session Analytics</h3>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Card padding="md" className="bg-accent-aqua border-hairline">
-          <p className="text-xs font-medium text-primary-hover">Decisions Made</p>
-          <p className="text-2xl font-bold text-primary-hover mt-2">{totalDecisions}</p>
-          <p className="text-xs text-primary-hover mt-1">{triageCount} triage, {pairwiseCount} compare</p>
+        <Card padding="md" className="bg-surface border-hairline">
+          <p className="text-xs font-medium text-ink-soft">Decisions Made</p>
+          <p className="text-2xl font-bold text-ink mt-2">{totalDecisions}</p>
+          <p className="text-xs text-ink-soft mt-1">{triageCount} triage, {pairwiseCount} compare</p>
         </Card>
 
-        <Card padding="md" className="bg-success-soft border-success-soft">
-          <p className="text-xs font-medium text-success-deep">Items Triaged</p>
-          <p className="text-2xl font-bold text-success-deep mt-2">{triaged}</p>
-          <p className="text-xs text-success-deep mt-1">of {totalItems} items</p>
+        <Card padding="md" className="bg-surface border-hairline">
+          <p className="text-xs font-medium text-ink-soft">Items Triaged</p>
+          <p className="text-2xl font-bold text-ink mt-2">{triaged}</p>
+          <p className="text-xs text-ink-soft mt-1">of {totalItems} items</p>
         </Card>
 
-        <Card padding="md" className="bg-ground border-hairline">
+        <Card padding="md" className="bg-surface border-hairline">
           <p className="text-xs font-medium text-ink-soft">Avg Confidence</p>
           <p className="text-2xl font-bold text-ink mt-2">
             {(avgConfidence * 100).toFixed(0)}%
@@ -69,10 +69,10 @@ export function SessionAnalytics({
           <p className="text-xs text-ink-soft mt-1">across items</p>
         </Card>
 
-        <Card padding="md" className="bg-warning-soft border-warning-soft">
-          <p className="text-xs font-medium text-warning-deep">Time Spent</p>
-          <p className="text-2xl font-bold text-warning-deep mt-2">{timeSpent}m</p>
-          <p className="text-xs text-warning-deep mt-1">in session</p>
+        <Card padding="md" className="bg-surface border-hairline">
+          <p className="text-xs font-medium text-ink-soft">Time Spent</p>
+          <p className="text-2xl font-bold text-ink mt-2">{timeSpent}m</p>
+          <p className="text-xs text-ink-soft mt-1">in session</p>
         </Card>
       </div>
 
@@ -127,11 +127,7 @@ export function SessionAnalytics({
             </div>
             <div className="flex justify-between items-start">
               <span className="text-ink-soft">Confidence Level</span>
-              <span className={`font-semibold ${
-                avgConfidence > 0.8 ? "text-success-deep" :
-                avgConfidence > 0.6 ? "text-warning-deep" :
-                "text-error-deep"
-              }`}>
+              <span className="font-semibold text-ink">
                 {avgConfidence > 0.8 ? "High" : avgConfidence > 0.6 ? "Medium" : "Low"}
               </span>
             </div>

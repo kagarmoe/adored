@@ -92,7 +92,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
           <EmptyState heading="No ranked items yet" message="Complete more sorting decisions to populate this result" />
         ) : (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {sortedResultItems.map((resultItem) => {
+            {sortedResultItems.map((resultItem, index) => {
               const item = itemById.get(resultItem.itemId);
               if (!item) return null;
               return (
@@ -101,6 +101,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
                   item={item}
                   collectionId={params.id}
                   bucket={resultItem.manualBucket || resultItem.computedBucket}
+                  isTop={index === 0 && sortedResultItems.length > 1}
                 />
               );
             })}
