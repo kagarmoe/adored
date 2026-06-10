@@ -26,18 +26,23 @@ Five commitments. Each states what we do and the inverse it forbids.
 
 1. **Affirmation, not subtraction.** We name what is loved. The work is discovering what matters, never culling what doesn't; letting go is a quiet consequence, never the headline.
    *Forbidden:* removal / cull / count-down framing, "keep or discard," tallying what's gone.
+   *e.g.* Ask "Which do you love more?" and title results "What you love most" — not "Keep or discard?" or a running count of what's been culled.
 
 2. **Each object is a story, not a thing.** An item is the visible end of something a person lived — who it came from, where it has been, what it holds. We honor that story, but we ask it **forward** ("where will it go next?") and keep it as a **memento after** a choice is made — never solicit it as the prompt *for* one. A story offered before a decision deepens the grip; a story kept after it sets the object free.
    *Forbidden:* inventory, catalog, SKU or data-row density, "track / manage your stuff," reducing an object to its attributes, cart or acquisition framing, and asking backward-looking sentiment ("what does this mean to you?") at the moment of choosing.
+   *e.g.* After something is set down, offer "Where will it go next?" with a photo-and-caption keepsake — not a required "Why does this matter to you?" field before the choice is made.
 
 3. **One thing at a time.** We meet the person in a single, low-load moment and never present the whole pile.
    *Forbidden:* dense grids, dashboards, everything-at-once, choices stacked on choices.
+   *e.g.* Center one item with the next out of view — not a wall of forty thumbnails above a "sort all" button.
 
 4. **Unpressured and forgiving.** Unhurried, patient, reversible. The person sets the pace, can stop and return, and is never made to feel watched or counted against.
    *Forbidden:* urgency on routine actions, shame ("too many"), destructive surprises, streak or completion guilt, deadlines.
+   *e.g.* Keep "Set this aside for now" and undo always within reach — not a "5 still undecided" badge, a streak counter, or "finish today."
 
 5. **Calm is the baseline, warmth is the texture, play is a rare grace note.** Restraint by default. Warmth lives in small, soft moments; playfulness is a light touch, never a system.
    *Forbidden:* gamification, confetti / streaks / scores-as-reward, loud celebration, stimulation used to drive engagement.
+   *e.g.* A soft crossfade between items and one warm accent — not confetti on completion, a bouncing "Nice!", or saturated alert colors.
 
 ## The floor
 
