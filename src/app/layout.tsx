@@ -20,7 +20,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "PurseInator",
+  title: "Adored",
   description: "Curate what you love",
 };
 

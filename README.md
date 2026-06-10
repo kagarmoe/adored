@@ -1,4 +1,4 @@
-# PurseInator — Curatorial Collection Sorting App
+# Adored — Curatorial Collection Sorting App
 
 A full-featured web application for managing collections and sorting items through guided preference sessions. Built with Next.js 14, TypeScript, Drizzle ORM, and Tailwind CSS.
 
@@ -38,7 +38,7 @@ A full-featured web application for managing collections and sorting items throu
    Example for local PostgreSQL:
    
    ```
-   DATABASE_URL=postgresql://postgres:password@localhost:5432/purseinator
+   DATABASE_URL=postgresql://postgres:password@localhost:5432/adored
    NEXTAUTH_URL=http://localhost:3000
    NEXTAUTH_SECRET=$(openssl rand -base64 32)
    EMAIL_FROM=noreply@localhost
@@ -47,12 +47,12 @@ A full-featured web application for managing collections and sorting items throu
 3. **Set up PostgreSQL database:**
    ```bash
    # Using Postgres.app or brew
-   createdb purseinator
+   createdb adored
 
    # Using Docker
    docker run -d \
      -e POSTGRES_PASSWORD=password \
-     -e POSTGRES_DB=purseinator \
+     -e POSTGRES_DB=adored \
      -p 5432:5432 \
      postgres:15
    ```

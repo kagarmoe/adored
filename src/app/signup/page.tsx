@@ -73,7 +73,7 @@ export default function SignupPage() {
           Create account
         </h1>
         <p className="text-center text-ink-soft mb-8">
-          Join PurseInator to start curating
+          Join Adored to start curating
         </p>
 
         {error && <ErrorMessage message={error} />}

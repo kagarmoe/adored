@@ -121,7 +121,7 @@ export default function PreviewPage() {
       {/* Static chrome (no session dependency) */}
       <header className="sticky top-0 z-40 border-b border-hairline bg-surface/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <h1 className="font-display text-2xl text-ink">PurseInator</h1>
+          <h1 className="font-display text-2xl text-ink">Adored</h1>
           <span className="text-sm text-ink-soft">Rosa Whitfield</span>
         </div>
       </header>

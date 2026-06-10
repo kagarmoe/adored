@@ -1,4 +1,4 @@
-# PurseInator Project Instructions
+# Adored Project Instructions
 
 ## Align with Next.js Opinions (REQUIRED)
 
@@ -17,7 +17,7 @@ Next.js is opinionated. Follow its conventions, not workarounds:
 
 ## Wireframes (reference, not law)
 
-`docs/PurseInator_wireframes.pdf` is a **starting reference, not a spec to match exactly.**
+`docs/Adored_wireframes.pdf` is a **starting reference, not a spec to match exactly.**
 Deviate whenever a better flow serves the user — the governing authorities are
 [`PRODUCT.md`](../PRODUCT.md) (purpose) and [`TONE.md`](../TONE.md) (first-order tone contract),
 **not** the wireframes. When a wireframe and a better flow conflict, choose the better flow.
