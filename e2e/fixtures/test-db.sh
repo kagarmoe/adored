@@ -13,13 +13,13 @@
 #   e2e/fixtures/test-db.sh reset   # down then up (clean slate)
 #
 # DATABASE_URL for the test DB:
-#   postgresql://postgres:test@localhost:5433/purseinator_test
+#   postgresql://postgres:test@localhost:5433/app_test
 #
 set -euo pipefail
 
 CONTAINER="pi-e2e-db"
 PORT="5433"
-DB="purseinator_test"
+DB="app_test"
 export DATABASE_URL_TEST="postgresql://postgres:test@localhost:${PORT}/${DB}"
 
 up() {
