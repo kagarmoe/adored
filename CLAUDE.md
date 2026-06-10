@@ -91,6 +91,6 @@ whole pile. No gamification (no confetti/streaks/scores), no shaming metrics ("t
 catalog/inventory/shopping-site framing. Tablet-first, tap-first, **no swiping** (drag is OK where it
 helps). Target WCAG 2.1 AA.
 
-The `/impeccable` skill (and its sub-commands) reads `PRODUCT.md` automatically. A `DESIGN.md` for the
-visual system is not yet written — the current Tailwind tokens are scaffolder defaults, not a
-deliberate system.
+The `/impeccable` skill (and its sub-commands) reads `PRODUCT.md` automatically. The visual system is
+defined in [`DESIGN.md`](DESIGN.md) ("The Lamplit Sitting Room") — a deliberate palette, type,
+elevation, and component system — and is accountable to [`TONE.md`](TONE.md).
