@@ -30,11 +30,7 @@ export function MostLovedHero({ item, collectionId, heroPhotoUrl }: MostLovedHer
           {/* The affirmation, held in calm. */}
           <div className="flex flex-1 flex-col justify-center gap-3 p-6 sm:p-10">
             <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-decor" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-spark">
-                  <path d="M12 2.5l2.1 5.6 5.9.3-4.6 3.7 1.6 5.7L12 20.3 7 17.8l1.6-5.7-4.6-3.7 5.9-.3z" />
-                </svg>
-              </span>
+              <span className="h-3.5 w-3.5 shrink-0 rounded-full bg-spark" aria-hidden="true" />
               <span className="font-display text-lg text-ink">What you love most</span>
             </div>
             <p className="font-display text-3xl text-ink sm:text-4xl">{item.name}</p>
