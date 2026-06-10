@@ -37,6 +37,12 @@ export interface ThemeTokens {
   tierLike: Hex;
   tierMaybe: Hex;
   tierOnward: Hex;
+  // Per-tier text colour — varies because the value-ramp puts dark and light
+  // chips in different places per theme.
+  tierLoveInk: Hex;
+  tierLikeInk: Hex;
+  tierMaybeInk: Hex;
+  tierOnwardInk: Hex;
 }
 
 export const light: ThemeTokens = {
@@ -72,6 +78,10 @@ export const light: ThemeTokens = {
   tierLike: "#79AFE0",
   tierMaybe: "#98CEDD",
   tierOnward: "#CAE4E1",
+  tierLoveInk: "#FFFFFF",
+  tierLikeInk: "#16242B",
+  tierMaybeInk: "#16242B",
+  tierOnwardInk: "#16242B",
 };
 
 export const dark: ThemeTokens = {
@@ -107,4 +117,8 @@ export const dark: ThemeTokens = {
   tierLike: "#79AFE0",
   tierMaybe: "#5E83A0",
   tierOnward: "#334654",
+  tierLoveInk: "#081016",
+  tierLikeInk: "#081016",
+  tierMaybeInk: "#081016",
+  tierOnwardInk: "#ECF2F4",
 };
