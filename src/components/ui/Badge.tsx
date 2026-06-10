@@ -4,21 +4,23 @@ import React from "react";
 const badgeVariants = cva("inline-flex items-center justify-center font-semibold rounded-full text-sm px-3 py-1", {
   variants: {
     variant: {
-      top: "bg-gold-soft-strong text-ink",
-      high: "bg-espresso-soft text-espresso-deep",
-      medium: "bg-warning-soft text-warning-deep",
-      low: "bg-vellum text-ink",
-      draft: "bg-espresso-soft text-espresso-deep",
+      // Tiers — the cool value-ramp; each pairs hue with a label + position too.
+      top: "bg-tier-love text-tier-love-ink",
+      high: "bg-tier-like text-tier-like-ink",
+      medium: "bg-tier-maybe text-tier-maybe-ink",
+      low: "bg-tier-onward text-tier-onward-ink",
+      // Status — semantic where it carries meaning, neutral otherwise.
+      draft: "bg-accent-aqua text-ink",
       finalized: "bg-success-soft text-success-deep",
-      active: "bg-espresso-soft text-espresso-deep",
+      active: "bg-accent-aqua text-ink",
       paused: "bg-warning-soft text-warning-deep",
       completed: "bg-success-soft text-success-deep",
-      abandoned: "bg-vellum text-ink",
-      archived: "bg-vellum text-ink",
+      abandoned: "bg-hairline text-ink",
+      archived: "bg-hairline text-ink",
       deleted: "bg-error-soft text-error-deep",
-      pending: "bg-vellum text-ink",
-      owner: "bg-gold-soft text-ink",
-      curator: "bg-espresso-soft text-espresso-deep",
+      pending: "bg-hairline text-ink",
+      owner: "bg-spark/30 text-ink",
+      curator: "bg-accent-aqua text-ink",
     },
   },
   defaultVariants: {
