@@ -67,8 +67,8 @@ function LoginContent() {
 
   if (magicLinkSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-vellum p-4">
-        <div className="max-w-sm w-full bg-veil rounded-card shadow-raised p-8">
+      <div className="min-h-screen flex items-center justify-center bg-ground p-4">
+        <div className="max-w-sm w-full bg-surface rounded-card shadow-raised p-8">
           <h1 className="text-2xl text-ink mb-4">Check your email</h1>
           <p className="text-ink-soft mb-4">
             A sign-in link has been sent to <strong>{email}</strong>
@@ -92,8 +92,8 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-vellum p-4">
-      <div className="max-w-sm w-full bg-veil rounded-card shadow-raised p-8">
+    <div className="min-h-screen flex items-center justify-center bg-ground p-4">
+      <div className="max-w-sm w-full bg-surface rounded-card shadow-raised p-8">
         <h1 className="text-3xl font-medium tracking-tight text-center text-ink mb-2">
           PurseInator
         </h1>
@@ -127,10 +127,10 @@ function LoginContent() {
 
         <div className="relative mb-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-line"></div>
+            <div className="w-full border-t border-hairline"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-veil text-ink-soft">or</span>
+            <span className="px-2 bg-surface text-ink-soft">or</span>
           </div>
         </div>
 
@@ -146,7 +146,7 @@ function LoginContent() {
 
         <p className="text-center text-sm text-ink-soft mt-6">
           New here?{" "}
-          <a href="/signup" className="text-espresso hover:text-espresso-deep font-medium">
+          <a href="/signup" className="text-primary hover:text-primary-hover font-medium">
             Create an account
           </a>
         </p>

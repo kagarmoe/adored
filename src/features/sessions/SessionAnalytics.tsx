@@ -49,10 +49,10 @@ export function SessionAnalytics({
       <h3 className="text-ink">Session Analytics</h3>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Card padding="md" className="bg-espresso-soft border-line">
-          <p className="text-xs font-medium text-espresso-deep">Decisions Made</p>
-          <p className="text-2xl font-bold text-espresso-deep mt-2">{totalDecisions}</p>
-          <p className="text-xs text-espresso-deep mt-1">{triageCount} triage, {pairwiseCount} compare</p>
+        <Card padding="md" className="bg-accent-aqua border-hairline">
+          <p className="text-xs font-medium text-primary-hover">Decisions Made</p>
+          <p className="text-2xl font-bold text-primary-hover mt-2">{totalDecisions}</p>
+          <p className="text-xs text-primary-hover mt-1">{triageCount} triage, {pairwiseCount} compare</p>
         </Card>
 
         <Card padding="md" className="bg-success-soft border-success-soft">
@@ -61,7 +61,7 @@ export function SessionAnalytics({
           <p className="text-xs text-success-deep mt-1">of {totalItems} items</p>
         </Card>
 
-        <Card padding="md" className="bg-vellum border-line">
+        <Card padding="md" className="bg-ground border-hairline">
           <p className="text-xs font-medium text-ink-soft">Avg Confidence</p>
           <p className="text-2xl font-bold text-ink mt-2">
             {(avgConfidence * 100).toFixed(0)}%
@@ -81,17 +81,17 @@ export function SessionAnalytics({
           <h4 className="text-ink mb-4">Distribution</h4>
           <div className="space-y-3">
             {[
-              { label: "Love", count: bucketCounts.top, color: "bg-espresso" },
-              { label: "Like", count: bucketCounts.high, color: "bg-gold" },
-              { label: "Maybe", count: bucketCounts.medium, color: "bg-warning" },
-              { label: "Release", count: bucketCounts.low, color: "bg-ink-soft" },
+              { label: "Love", count: bucketCounts.top, color: "bg-tier-love" },
+              { label: "Like", count: bucketCounts.high, color: "bg-tier-like" },
+              { label: "Maybe", count: bucketCounts.medium, color: "bg-tier-maybe" },
+              { label: "Onward", count: bucketCounts.low, color: "bg-tier-onward" },
             ].map((bucket) => (
               <div key={bucket.label}>
                 <div className="flex justify-between items-center mb-1">
                   <p className="text-sm font-medium text-ink">{bucket.label}</p>
                   <p className="text-sm text-ink-soft">{bucket.count}</p>
                 </div>
-                <div className="h-2 bg-gold-soft rounded-full overflow-hidden">
+                <div className="h-2 bg-accent-aqua rounded-full overflow-hidden">
                   <div
                     className={`${bucket.color} h-full`}
                     style={{

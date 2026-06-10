@@ -1,19 +1,21 @@
 import type { Metadata } from "next";
-import { Fraunces, Hanken_Grotesk } from "next/font/google";
+import { Playfair_Display, Inter } from "next/font/google";
 import { SessionProviderWrapper } from "@/components/layout/SessionProviderWrapper";
+import { ThemeScript } from "@/components/theme/theme-script";
 import "./globals.css";
 
-// Fraunces (display) for soul; Hanken Grotesk (body) for everything functional.
-// Both are variable fonts — exposed as CSS variables consumed by globals.css.
-const fraunces = Fraunces({
+// Playfair Display (display) for the tender moments; Inter (body) for everything
+// functional. Exposed as CSS variables consumed by globals.css.
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  weight: ["500", "600"],
+  variable: "--font-playfair",
   display: "swap",
 });
 
-const hanken = Hanken_Grotesk({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-hanken",
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -28,8 +30,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${hanken.variable}`}>
+    <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
       <body className="min-h-screen">
+        <ThemeScript />
         <SessionProviderWrapper>{children}</SessionProviderWrapper>
       </body>
     </html>

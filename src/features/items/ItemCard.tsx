@@ -31,7 +31,7 @@ export function ItemCard({ item, collectionId, heroPhotoUrl, bucket, imageClassN
   return (
     <Link href={`/collections/${collectionId}/items/${item.id}`}>
       <Card interactive padding="none" className="overflow-hidden h-full flex flex-col">
-        <div className={`bg-gold-soft ${imageClassName} flex items-center justify-center relative overflow-hidden`}>
+        <div className={`bg-accent-aqua ${imageClassName} flex items-center justify-center relative overflow-hidden`}>
           {heroPhotoUrl ? (
             <Image
               src={heroPhotoUrl}

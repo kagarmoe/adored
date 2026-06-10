@@ -105,14 +105,14 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
         </div>
 
         {activeSession && (
-          <Card padding="lg" className="border-line bg-espresso-soft">
+          <Card padding="lg" className="border-hairline bg-accent-aqua">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="mb-2 flex items-center gap-2">
-                  <h2 className="text-lg text-espresso-deep">Active Sorting Session</h2>
+                  <h2 className="text-lg text-primary-hover">Active Sorting Session</h2>
                   <Badge variant="active">active</Badge>
                 </div>
-                <p className="text-sm text-espresso-deep">
+                <p className="text-sm text-primary-hover">
                   {activeSession.goal || "Preference discovery"}
                 </p>
               </div>
