@@ -3,76 +3,147 @@
 @tailwind utilities;
 
 /*
- * PurseInator design tokens — "Cabana" (see DESIGN.md).
- * A warm honey-parchment palette built to let saturated jewel tones sing the way
- * they do in a collected room. The chrome is achromatic espresso ink (title,
- * buttons, links); color is spent only on content (covers, photos). Gilt gold is
- * the warm secondary; semantics are a quiet olive, amber, and vermilion.
- * Composed in OKLCH. Font variables are provided by next/font in layout.tsx.
+ * Luminous design system tokens (see DESIGN.md).
+ * A gallery-cool, colour-forward system on neutral white (light) / deep cool
+ * near-black (dark). Role-based token names; the deck palette (teal anchor, cool
+ * blues, lone citron spark, soft mauve) carries identity; safety colours are
+ * reserved (see "Brand never speaks Danger"). Values are AA-verified in
+ * src/lib/design/contrast.test.ts. Fonts come from next/font in layout.tsx.
  */
 :root {
-  /* Neutrals — warm parchment, clearly chromatic toward honey (hue ~72) */
-  --color-vellum: oklch(0.925 0.032 72); /* body canvas — warm parchment */
-  --color-vellum-deep: oklch(0.87 0.04 66); /* sunken wells, gradient edges, vignette */
-  --color-veil: oklch(0.965 0.02 76); /* raised surfaces: cards, inputs */
-  --color-veil-raised: oklch(0.985 0.012 78); /* top elevation: dialogs, active card */
-  --color-ink: oklch(0.265 0.028 55); /* primary text — warm espresso, never #000 */
-  --color-ink-soft: oklch(0.45 0.03 55); /* secondary text, captions, placeholder */
-  --color-line: oklch(0.85 0.024 70); /* borders, dividers — warm hairline */
-  --color-line-strong: oklch(0.77 0.03 68); /* emphasized separators */
+  color-scheme: light;
 
-  /* Action voice — espresso ink. Achromatic chrome: title, buttons, links, focus.
-   * Color is reserved for content (covers/photos), never spent on the chrome. */
-  --color-espresso: oklch(0.265 0.028 55); /* primary buttons, links, progress, focus */
-  --color-espresso-deep: oklch(0.17 0.024 50); /* hover / active, text on -soft */
-  --color-espresso-soft: oklch(0.9 0.014 70); /* selected / info surface tint (warm grey) */
+  --color-ground: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-hairline: #eceff1;
+  --color-ink: #16242b;
+  --color-ink-soft: #5b6b73;
 
-  /* Oxblood — a content jewel tone (cover washes, accents). Not chrome, not action. */
-  --color-oxblood: oklch(0.43 0.13 25);
-  --color-oxblood-soft: oklch(0.9 0.045 28);
+  --color-primary: #004a67;
+  --color-primary-ink: #ffffff;
+  --color-primary-hover: #013a51;
 
-  /* Warm secondary — gilt gold. The room's metal; never an action, never an alarm. */
-  --color-gold: oklch(0.7 0.1 75);
-  --color-gold-soft: oklch(0.88 0.05 80); /* badge / secondary-button fills */
-  --color-gold-soft-strong: oklch(0.82 0.066 78); /* secondary-button hover */
+  --color-accent-aqua: #cae4e1;
+  --color-accent-sky: #98cedd;
+  --color-accent-cornflower: #79afe0;
+  --color-accent-periwinkle: #b3bfd8;
 
-  /* Semantic — present and legible (each: DEFAULT / -soft tint / -deep text-on-soft) */
-  /* Success — muted olive/sage, kept quiet so red + green never read as festive. */
-  --color-success: oklch(0.55 0.07 130);
-  --color-success-soft: oklch(0.91 0.035 128);
-  --color-success-deep: oklch(0.41 0.06 130);
-  --color-warning: oklch(0.74 0.13 65);
-  --color-warning-soft: oklch(0.92 0.06 70);
-  --color-warning-deep: oklch(0.46 0.09 60);
-  /* Error — vermilion, brighter than the oxblood action so they never read alike
-   * (and error always pairs with an icon + message, never color alone). */
-  --color-error: oklch(0.55 0.19 32);
-  --color-error-soft: oklch(0.9 0.055 32);
-  --color-error-deep: oklch(0.45 0.17 32);
+  --color-spark: #c9bf29;
+  --color-spark-ink: #2a2705;
+  --color-decor: #d9c7d1;
 
-  /* Type — families resolve to next/font CSS variables, with graceful fallbacks */
-  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
-  --font-body: var(--font-hanken), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --color-error: #b0463c;
+  --color-error-soft: #f4dad6;
+  --color-error-deep: #8a3128;
+  --color-warning: #c58a2e;
+  --color-warning-soft: #f6e6cc;
+  --color-warning-deep: #7e5616;
+  --color-success: #5c7c57;
+  --color-success-soft: #dce7d9;
+  --color-success-deep: #3c5238;
+  --color-info: #3c7e96;
+  --color-info-soft: #d6e8ee;
+  --color-info-deep: #27576a;
 
-  /* Elevation — warm espresso-tinted, layered. Depth from stacked soft shadows. */
-  --shadow-lift: 0 1px 2px oklch(0.26 0.03 50 / 0.06),
-    0 4px 12px oklch(0.26 0.03 50 / 0.09);
-  --shadow-raised: 0 2px 6px oklch(0.26 0.03 50 / 0.09),
-    0 12px 34px oklch(0.24 0.04 50 / 0.16);
-  --shadow-float: 0 4px 10px oklch(0.26 0.03 50 / 0.11),
-    0 24px 60px oklch(0.22 0.05 50 / 0.24);
-  /* Inner top-highlight that makes a surface read as lit from above */
-  --highlight-top: inset 0 1px 0 oklch(1 0 0 / 0.6);
-  /* Card surfaces carry resting depth + the lit-from-above highlight */
-  --shadow-card: var(--highlight-top), var(--shadow-lift);
-  --shadow-card-hover: var(--highlight-top), var(--shadow-raised);
+  --color-tier-love: #004a67;
+  --color-tier-like: #79afe0;
+  --color-tier-maybe: #98cedd;
+  --color-tier-onward: #cae4e1;
+  --color-tier-love-ink: #ffffff;
+  --color-tier-like-ink: #16242b;
+  --color-tier-maybe-ink: #16242b;
+  --color-tier-onward-ink: #16242b;
+
+  /* Type — resolve to next/font variables, with graceful fallbacks */
+  --font-display: var(--font-playfair), Georgia, "Times New Roman", serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Elevation — light: soft, cool shadow; surfaces lift off white */
+  --shadow-lift: 0 1px 2px oklch(0.4 0.05 230 / 0.05),
+    0 6px 18px oklch(0.4 0.05 230 / 0.08);
+  --shadow-raised: 0 10px 28px oklch(0.4 0.05 230 / 0.12),
+    0 20px 48px oklch(0.4 0.05 230 / 0.12);
+  --shadow-float: 0 16px 40px oklch(0.4 0.05 230 / 0.16);
+  --highlight-top: none;
+  --shadow-card: var(--shadow-lift);
+  --shadow-card-hover: var(--shadow-raised);
 
   /* Motion — gentle ease-out, 150–250ms */
   --ease-gentle: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-state: 180ms;
   --duration-reveal: 240ms;
 
-  color-scheme: light;
+  /* --- transitional aliases (removed in the component migration, Task 8) --- */
+  --color-vellum: var(--color-ground);
+  --color-vellum-deep: var(--color-hairline);
+  --color-veil: var(--color-surface);
+  --color-veil-raised: var(--color-surface-raised);
+  --color-line: var(--color-hairline);
+  --color-line-strong: var(--color-hairline);
+  --color-espresso: var(--color-primary);
+  --color-espresso-deep: var(--color-primary-hover);
+  --color-espresso-soft: var(--color-accent-aqua);
+  --color-gold: var(--color-spark);
+  --color-gold-soft: var(--color-accent-aqua);
+  --color-gold-soft-strong: var(--color-accent-sky);
+  --color-oxblood: var(--color-decor);
+  --color-oxblood-soft: var(--color-decor);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-ground: #081016;
+  --color-surface: #14202a;
+  --color-surface-raised: #1b2a35;
+  --color-hairline: #243640;
+  --color-ink: #ecf2f4;
+  --color-ink-soft: #9fb3bc;
+
+  --color-primary: #79afe0;
+  --color-primary-ink: #081016;
+  --color-primary-hover: #9ac2e8;
+
+  --color-accent-aqua: #cae4e1;
+  --color-accent-sky: #98cedd;
+  --color-accent-cornflower: #79afe0;
+  --color-accent-periwinkle: #3a4a5e;
+
+  --color-spark: #d7cd3a;
+  --color-spark-ink: #081016;
+  --color-decor: #5e4a55;
+
+  --color-error: #e08a80;
+  --color-error-soft: #2a1714;
+  --color-error-deep: #f4dad6;
+  --color-warning: #e0b266;
+  --color-warning-soft: #241b0e;
+  --color-warning-deep: #f6e6cc;
+  --color-success: #8fb089;
+  --color-success-soft: #152017;
+  --color-success-deep: #dce7d9;
+  --color-info: #79b6cc;
+  --color-info-soft: #101f25;
+  --color-info-deep: #d6e8ee;
+
+  --color-tier-love: #bfe6ee;
+  --color-tier-like: #79afe0;
+  --color-tier-maybe: #5e83a0;
+  --color-tier-onward: #334654;
+  --color-tier-love-ink: #081016;
+  --color-tier-like-ink: #081016;
+  --color-tier-maybe-ink: #081016;
+  --color-tier-onward-ink: #ecf2f4;
+
+  /* Elevation — dark: a hairline + a soft glow, not warm shadow */
+  --shadow-lift: 0 0 0 1px var(--color-hairline);
+  --shadow-raised: 0 0 0 1px var(--color-hairline),
+    0 10px 30px oklch(0 0 0 / 0.45);
+  --shadow-float: 0 16px 44px oklch(0 0 0 / 0.6);
+  --highlight-top: none;
+  --shadow-card: var(--shadow-lift);
+  --shadow-card-hover: var(--shadow-raised);
 }
 
 * {
@@ -86,21 +157,9 @@ body {
   height: 100%;
 }
 
-/*
- * The parchment canvas: a soft vertical gradient, a shade deeper at the top,
- * gives the page gentle warmth and depth before any content lands.
- */
 body {
   font-family: var(--font-body);
-  background:
-    linear-gradient(
-      180deg,
-      var(--color-vellum-deep) 0%,
-      var(--color-vellum) 28%,
-      var(--color-vellum) 100%
-    ),
-    var(--color-vellum);
-  background-attachment: fixed;
+  background: var(--color-ground);
   color: var(--color-ink);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -111,8 +170,8 @@ body {
 }
 
 /*
- * Type scale (see DESIGN.md). Fraunces for soul (display/headline), Hanken for
- * sense (title/body/label). Fixed rem scale, ~1.2 ratio.
+ * Type scale (see DESIGN.md). Playfair Display for display moments; Inter for
+ * everything functional. Headings are neutral ink — never teal.
  */
 h1,
 h2,
@@ -124,26 +183,26 @@ h4 {
 }
 
 h1 {
-  font-size: 2.25rem; /* display */
-  font-weight: 460;
+  font-size: 2.25rem;
+  font-weight: 600;
   line-height: 1.1;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.01em;
 }
 
 h2 {
-  font-size: 1.5rem; /* headline */
-  font-weight: 460;
+  font-size: 1.5rem;
+  font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.005em;
 }
 
 h3 {
   font-size: 1.25rem;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.25;
 }
 
-/* Functional title role uses the body sans, not the serif (Serif-for-Soul rule) */
+/* Functional title role uses the body sans, not the serif */
 h4 {
   font-family: var(--font-body);
   font-size: 1.125rem;
@@ -155,19 +214,18 @@ p {
   text-wrap: pretty;
 }
 
-/* Cap prose measure on long-form copy; data/dense blocks opt out by not using it */
 .prose-measure {
   max-width: 68ch;
 }
 
 a {
-  color: var(--color-espresso);
+  color: var(--color-primary);
   text-underline-offset: 2px;
   transition: color var(--duration-state) var(--ease-gentle);
 }
 
 a:hover {
-  color: var(--color-espresso-deep);
+  color: var(--color-primary-hover);
 }
 
 button,
@@ -177,36 +235,30 @@ select {
   font-family: inherit;
 }
 
-/* Placeholder must hold 4.5:1, not a faint gray (ink-soft on veil ≈ 7:1) */
 ::placeholder {
   color: var(--color-ink-soft);
   opacity: 1;
 }
 
-/*
- * Keep browser autofill on-palette. Chrome paints a hard blue over filled
- * fields; the inset box-shadow trick repaints the veil surface, and the long
- * transition defers Chrome's own background long enough to never flash.
- */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
   -webkit-text-fill-color: var(--color-ink);
-  -webkit-box-shadow: 0 0 0 100px var(--color-veil) inset;
-  box-shadow: 0 0 0 100px var(--color-veil) inset;
+  -webkit-box-shadow: 0 0 0 100px var(--color-surface) inset;
+  box-shadow: 0 0 0 100px var(--color-surface) inset;
   caret-color: var(--color-ink);
   transition: background-color 100000s ease-in-out 0s;
 }
 
 ::selection {
-  background: var(--color-espresso-soft);
-  color: var(--color-espresso-deep);
+  background: var(--color-primary);
+  color: var(--color-primary-ink);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-espresso);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
   border-radius: 4px;
 }
