@@ -15,16 +15,22 @@ Next.js is opinionated. Follow its conventions, not workarounds:
 9. **No hardcoded secrets** — All config via `process.env.*` with validation at module load
 10. **TypeScript strict mode** — All inference errors resolved, no `any`
 
-## Wireframe Compliance (REQUIRED)
+## Wireframes (reference, not law)
 
-All UI must match `docs/PurseInator_wireframes.pdf` exactly:
+`docs/PurseInator_wireframes.pdf` is a **starting reference, not a spec to match exactly.**
+Deviate whenever a better flow serves the user — the governing authorities are
+[`PRODUCT.md`](../PRODUCT.md) (purpose) and [`TONE.md`](../TONE.md) (first-order tone contract),
+**not** the wireframes. When a wireframe and a better flow conflict, choose the better flow.
 
-- **Tablet-first, tap-first** — Taps are the primary affordance and there is **no swiping**. Dragging is permitted where it genuinely helps (e.g. reordering results, moving items between buckets). Buttons h-11 min (44px)
-- **Navigation** — Top-left back arrow, breadcrumb trail; top-right user profile
-- **Collections** — 3-column grid, collection cards (cover + name + stats)
-- **Items** — Responsive grid, hero photo prominent, bucket badges, search/filter
-- **Sorting** — Card-based comparisons, progress bar, decision counts
-- **Results** — Bucketed view, reorderable (up/down buttons), finalize/share
+**Durable interaction principles (these hold regardless of any wireframe):**
+
+- **Tablet-first, tap-first** — taps are the primary affordance; there is **no swiping**. Dragging is
+  permitted where it genuinely helps (reordering, moving items between buckets). Touch targets ≥44px (h-11).
+- **Navigation** — top-left back arrow + breadcrumb; top-right user area.
+
+The wireframes' per-screen layouts (collections grid, item grid, card-based sorting, bucketed results)
+are useful reference, but the **flow may change** — e.g. uploading photos before metadata, deferring
+metadata to fill in later, and bulk-uploading images.
 
 ## Code Quality
 
