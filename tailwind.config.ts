@@ -11,45 +11,49 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Surfaces — sunken → canvas → raised → floating
-        vellum: {
-          DEFAULT: "var(--color-vellum)",
-          deep: "var(--color-vellum-deep)",
+        // === Luminous role-based tokens ===
+        ground: "var(--color-ground)",
+        surface: {
+          DEFAULT: "var(--color-surface)",
+          raised: "var(--color-surface-raised)",
         },
-        veil: {
-          DEFAULT: "var(--color-veil)",
-          raised: "var(--color-veil-raised)",
+        hairline: "var(--color-hairline)",
+        accent: {
+          aqua: "var(--color-accent-aqua)",
+          sky: "var(--color-accent-sky)",
+          cornflower: "var(--color-accent-cornflower)",
+          periwinkle: "var(--color-accent-periwinkle)",
+        },
+        spark: {
+          DEFAULT: "var(--color-spark)",
+          ink: "var(--color-spark-ink)",
+        },
+        decor: "var(--color-decor)",
+        info: {
+          DEFAULT: "var(--color-info)",
+          soft: "var(--color-info-soft)",
+          deep: "var(--color-info-deep)",
+        },
+        tier: {
+          love: "var(--color-tier-love)",
+          like: "var(--color-tier-like)",
+          maybe: "var(--color-tier-maybe)",
+          onward: "var(--color-tier-onward)",
+          "love-ink": "var(--color-tier-love-ink)",
+          "like-ink": "var(--color-tier-like-ink)",
+          "maybe-ink": "var(--color-tier-maybe-ink)",
+          "onward-ink": "var(--color-tier-onward-ink)",
         },
         ink: {
           DEFAULT: "var(--color-ink)",
           soft: "var(--color-ink-soft)",
         },
-        line: {
-          DEFAULT: "var(--color-line)",
-          strong: "var(--color-line-strong)",
-        },
-        // Action voice
-        espresso: {
-          DEFAULT: "var(--color-espresso)",
-          deep: "var(--color-espresso-deep)",
-          soft: "var(--color-espresso-soft)",
-        },
-        // Warm secondary metal
-        gold: {
-          DEFAULT: "var(--color-gold)",
-          soft: "var(--color-gold-soft)",
-          "soft-strong": "var(--color-gold-soft-strong)",
-        },
-        // Content jewel tone (cover washes, accents) — never chrome
-        oxblood: {
-          DEFAULT: "var(--color-oxblood)",
-          soft: "var(--color-oxblood-soft)",
-        },
-        // Semantic aliases — primary is the action voice (espresso).
         primary: {
-          DEFAULT: "var(--color-espresso)",
-          deep: "var(--color-espresso-deep)",
-          soft: "var(--color-espresso-soft)",
+          DEFAULT: "var(--color-primary)",
+          ink: "var(--color-primary-ink)",
+          hover: "var(--color-primary-hover)",
+          deep: "var(--color-primary-hover)",
+          soft: "var(--color-accent-aqua)",
         },
         success: {
           DEFAULT: "var(--color-success)",
@@ -68,8 +72,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ["var(--font-fraunces)", "Georgia", "serif"],
-        sans: ["var(--font-hanken)", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["var(--font-playfair)", "Georgia", "serif"],
+        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       boxShadow: {
         lift: "var(--shadow-lift)",

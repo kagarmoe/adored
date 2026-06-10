@@ -67,8 +67,8 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-vellum p-4">
-      <div className="max-w-sm w-full bg-veil rounded-card shadow-raised p-8">
+    <div className="min-h-screen flex items-center justify-center bg-ground p-4">
+      <div className="max-w-sm w-full bg-surface rounded-card shadow-raised p-8">
         <h1 className="text-3xl font-medium tracking-tight text-center text-ink mb-2">
           Create account
         </h1>
@@ -110,7 +110,7 @@ export default function SignupPage() {
 
         <p className="text-center text-sm text-ink-soft mt-6">
           Already have an account?{" "}
-          <a href="/login" className="text-espresso hover:text-espresso-deep font-medium">
+          <a href="/login" className="text-primary hover:text-primary-hover font-medium">
             Sign in
           </a>
         </p>

@@ -88,7 +88,7 @@ export function PhotoGallery({
         {photos.map((photo) => (
           <div
             key={photo.id}
-            className="bg-vellum rounded-lg overflow-hidden relative group"
+            className="bg-ground rounded-lg overflow-hidden relative group"
           >
             <div className="aspect-square relative">
               <Image

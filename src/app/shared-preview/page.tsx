@@ -1,8 +1,8 @@
 /*
  * Living design-swatch route (public via the `shared` middleware exclusion).
- * Renders content-rich screens in the "Cabana" palette — espresso chrome on warm
- * parchment, jewel-tone covers — as an at-a-glance reference for the design system.
- * See DESIGN.md. Not part of the product flow; safe to delete if no longer useful.
+ * Renders content-rich screens in the luminous palette — teal anchor and cool
+ * blues on a neutral-white ground — as an at-a-glance reference for the design
+ * system. See DESIGN.md. Not part of the product flow; safe to delete if unused.
  */
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -90,7 +90,7 @@ function CompareSide({
   meta: string;
 }) {
   return (
-    <button className="group flex flex-1 flex-col overflow-hidden rounded-card border border-line bg-veil text-left shadow-card transition-all duration-200 ease-gentle hover:-translate-y-0.5 hover:shadow-card-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-espresso focus-visible:ring-offset-2">
+    <button className="group flex flex-1 flex-col overflow-hidden rounded-card border border-hairline bg-surface text-left shadow-card transition-all duration-200 ease-gentle hover:-translate-y-0.5 hover:shadow-card-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
       <div
         className="relative flex aspect-[4/3] items-center justify-center overflow-hidden"
         style={{ background: cover }}
@@ -108,7 +108,7 @@ function CompareSide({
 // A thin double-rule serif frame — the Cabana "TRAVEL / DISCOVER NOW" chrome motif.
 function RuleLabel({ kicker, title }: { kicker: string; title: string }) {
   return (
-    <div className="mx-auto w-fit border-y border-line-strong px-8 py-2 text-center">
+    <div className="mx-auto w-fit border-y border-hairline px-8 py-2 text-center">
       <p className="font-display text-lg text-ink">{title}</p>
       <p className="mt-0.5 text-xs uppercase tracking-[0.18em] text-ink-soft">{kicker}</p>
     </div>
@@ -119,7 +119,7 @@ export default function PreviewPage() {
   return (
     <div className="min-h-screen">
       {/* Static chrome (no session dependency) */}
-      <header className="sticky top-0 z-40 border-b border-line bg-veil/85 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-hairline bg-surface/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <h1 className="font-display text-2xl text-ink">PurseInator</h1>
           <span className="text-sm text-ink-soft">Rosa Whitfield</span>
@@ -149,8 +149,8 @@ export default function PreviewPage() {
 
           {/* progress */}
           <div className="mx-auto max-w-md space-y-2">
-            <div className="h-2 overflow-hidden rounded-full bg-vellum-deep">
-              <div className="h-full rounded-full bg-espresso" style={{ width: "45%" }} />
+            <div className="h-2 overflow-hidden rounded-full bg-hairline">
+              <div className="h-full rounded-full bg-primary" style={{ width: "45%" }} />
             </div>
             <div className="flex justify-between text-xs text-ink-soft">
               <span>14 decided</span>

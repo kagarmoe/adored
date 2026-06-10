@@ -16,7 +16,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
         <div key={index} className="flex items-center gap-2 whitespace-nowrap">
           {index > 0 && <span className="text-ink-soft">/</span>}
           {item.href ? (
-            <Link href={item.href} className="text-espresso hover:text-espresso-deep hover:underline">
+            <Link href={item.href} className="text-primary hover:text-primary-hover hover:underline">
               {item.label}
             </Link>
           ) : (

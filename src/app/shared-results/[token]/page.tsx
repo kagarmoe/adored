@@ -36,7 +36,7 @@ export default async function SharedResultPage({ params }: SharedResultPageProps
   const sortedResultItems = [...resultItems].sort((a, b) => (a.manualRank ?? a.computedRank) - (b.manualRank ?? b.computedRank));
 
   return (
-    <main className="min-h-screen bg-vellum px-4 py-8">
+    <main className="min-h-screen bg-ground px-4 py-8">
       <div className="mx-auto max-w-6xl space-y-8">
         <div>
           <div className="mb-3">

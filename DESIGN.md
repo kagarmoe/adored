@@ -1,61 +1,52 @@
 ---
 name: PurseInator
-description: A lamplit sitting room for sorting what you love — calm, curatorial, judgement-free.
+description: A luminous gallery for recognizing what you love — calm, colour-forward, light or dark.
 colors:
-  vellum: "#f4e3d0"
-  vellum-deep: "#e7d0b9"
-  veil: "#fbf2e5"
-  veil-raised: "#fff9f1"
-  ink: "#302218"
-  ink-soft: "#635146"
-  line: "#d8cbbd"
-  line-strong: "#c1b1a0"
-  espresso: "#302218"
-  espresso-deep: "#180c06"
-  espresso-soft: "#e4ddd4"
-  oxblood: "#892a29"
-  oxblood-soft: "#fbd3ce"
-  gold: "#c39553"
-  gold-soft: "#e9d5b3"
-  gold-soft-strong: "#dcbf94"
-  success: "#647a4e"
-  warning: "#e39849"
-  error: "#c8331a"
+  ground: "#ffffff"
+  surface: "#ffffff"
+  surface-raised: "#ffffff"
+  hairline: "#eceff1"
+  ink: "#16242b"
+  ink-soft: "#5b6b73"
+  primary: "#004a67"
+  primary-hover: "#013a51"
+  primary-ink: "#ffffff"
+  accent-aqua: "#cae4e1"
+  accent-sky: "#98cedd"
+  accent-cornflower: "#79afe0"
+  accent-periwinkle: "#b3bfd8"
+  spark: "#c9bf29"
+  decor: "#d9c7d1"
+  error: "#b0463c"
+  warning: "#c58a2e"
+  success: "#5c7c57"
+  info: "#3c7e96"
+  tier-love: "#004a67"
+  tier-like: "#79afe0"
+  tier-maybe: "#98cedd"
+  tier-onward: "#cae4e1"
 typography:
   display:
-    fontFamily: "Fraunces, Georgia, 'Times New Roman', serif"
+    fontFamily: "Playfair Display, Georgia, serif"
     fontSize: "2.25rem"
-    fontWeight: 460
+    fontWeight: 600
     lineHeight: 1.1
     letterSpacing: "-0.01em"
-  headline:
-    fontFamily: "Fraunces, Georgia, serif"
-    fontSize: "1.5rem"
-    fontWeight: 460
-    lineHeight: 1.2
-    letterSpacing: "-0.005em"
-  title:
-    fontFamily: "Hanken Grotesk, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "1.125rem"
-    fontWeight: 600
-    lineHeight: 1.35
-    letterSpacing: "normal"
   body:
-    fontFamily: "Hanken Grotesk, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.55
     letterSpacing: "normal"
   label:
-    fontFamily: "Hanken Grotesk, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
     fontSize: "0.8125rem"
     fontWeight: 600
     lineHeight: 1.2
     letterSpacing: "0.01em"
 rounded:
-  sm: "6px"
-  md: "10px"
-  lg: "16px"
+  control: "10px"
+  card: "16px"
   full: "999px"
 spacing:
   xs: "4px"
@@ -63,44 +54,6 @@ spacing:
   md: "16px"
   lg: "24px"
   xl: "40px"
-components:
-  button-primary:
-    backgroundColor: "{colors.espresso}"
-    textColor: "{colors.veil-raised}"
-    rounded: "{rounded.md}"
-    padding: "0 20px"
-    height: "44px"
-  button-primary-hover:
-    backgroundColor: "{colors.espresso-deep}"
-    textColor: "{colors.veil-raised}"
-  button-secondary:
-    backgroundColor: "{colors.gold-soft}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.md}"
-    padding: "0 20px"
-    height: "44px"
-  button-ghost:
-    backgroundColor: "transparent"
-    textColor: "{colors.espresso}"
-    rounded: "{rounded.md}"
-    padding: "0 16px"
-    height: "44px"
-  card:
-    backgroundColor: "{colors.veil}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.lg}"
-    padding: "20px"
-  input:
-    backgroundColor: "{colors.veil}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.md}"
-    padding: "0 14px"
-    height: "44px"
-  badge:
-    backgroundColor: "{colors.gold-soft}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.full}"
-    padding: "2px 10px"
 ---
 
 # Design System: PurseInator
@@ -109,126 +62,100 @@ components:
 
 ## 1. Overview
 
-**Creative North Star: "The Lamplit Sitting Room"**
+**Creative North Star: "The Luminous Gallery"**
 
-PurseInator looks like a warm room in late-afternoon light where someone sits with a box of belongings and discovers, slowly, what they love most. The work is affirmation, not subtraction — recognizing the things that matter, with letting go following naturally from that clarity. The reference is *Cabana* magazine in print — cozy, intimate, maximalist, materially rich — not the flat tech-product look and not Cabana's own thin website. The maximalism is deliberately rehomed as affection: it lives in the user's photographs, the warm parchment palette and its jewel-tone content, and the old-style serif voice, never in the density of the interface. The chrome stays quiet so that exactly one loving choice is ever in front of the person sorting.
+PurseInator looks like a bright, quiet gallery where one cherished object is presented at a time. The work is affirmation, not subtraction — recognizing what matters, with letting go following naturally from that clarity. Colour is a real protagonist (it lives in the chrome, not only the content), but it is calm and committed, never loud. The object's own photograph is still the loudest thing on screen; the room around it is airy and restrained so exactly one loving choice is ever in front of the person.
 
-The system rejects every frame that treats belongings as stock. It is **not a catalog**, **not an inventory tool**, **not a shopping site**. It does not gamify letting go (no confetti, streaks, points, or "you have too many"), and it never feels like an enterprise asset dashboard or a resale-marketplace listing screen. Warmth and a light touch of playfulness show up as small material moments, not as rewards.
+The system ships in **two themes**: a default **light** (gallery white) and a **dark** (a deep cool near-black where the colours glow like a gallery at night). Both are first-class and honour `prefers-color-scheme`, with a manual toggle.
 
-**Key Characteristics:**
-- Warm honey-parchment light theme; pure white and cool gray are forbidden.
-- Achromatic espresso-ink chrome; gilt-gold warmth as garnish; color lives in the content.
-- Editorial serif (Fraunces) for soul; humanist sans (Hanken Grotesk) for everything functional.
-- Calm density: one decision at a time, generous but cozy spacing.
-- Flat tonal layering with one soft, warm lift; gentle 150–250ms motion.
+It rejects every frame that treats belongings as stock: **not a catalog**, **not an inventory tool**, **not a shopping site**. It does not gamify letting go (no confetti, streaks, points, or "you have too many").
 
-## 2. Colors
+**Key characteristics:**
 
-A warm parchment palette with achromatic chrome: vellum and veil neutrals under espresso ink, with saturated color reserved for the content. Composed in OKLCH; hex in the frontmatter are sRGB approximations and the canonical OKLCH values live in `.impeccable/design.json`.
+- Neutral-white ground (light) / deep cool `#081016` (dark); never warm parchment, never pure black.
+- One deep teal anchor for action; cool airy blues for content; a lone citron spark; soft mauve for gentle decoration.
+- Playfair Display for the tender display moments; Inter for everything functional. Headings are neutral ink, never coloured.
+- Calm density: one decision at a time, generous airy spacing.
+- Surfaces lift by soft cool shadow + a hairline (light) or a hairline + glow (dark) — not by warm tone.
 
-### Chrome
-- **Espresso** (`#302218`, `oklch(0.265 0.028 55)`): the single voice of action and selection. Primary buttons, the current/selected card, focus rings, links, progress fill. Deepens to **Espresso Deep** (`#180c06`) on hover/active and as text on Espresso Soft. Veil-Raised text on Espresso clears 4.5:1. Espresso equals Ink by value but is a distinct role — interactive fill, not body text.
-- **Espresso Soft** (`#e4ddd4`): a warm grey wash for selected/info surfaces and quiet badges.
+## 2. Colours
 
-### Secondary
-- **Gold** (`#c39553`, `oklch(0.70 0.10 75)`): gilt — the room's metal. Warmth and personality: small decorative moments, illustrative accents, the occasional flourish. Carries Ink text only (not white), and is never used for primary actions or error states.
-- **Gold Soft** (`#e9d5b3`) / **Gold Soft Strong** (`#dcbf94`): tinted fills for badges, secondary buttons, and gentle highlight chips.
+Two **separate** colour systems that never trade places (see the named rule below). All pairings are AA-verified by `src/lib/design/contrast.test.ts` in both themes. Tokens are CSS variables in `src/app/globals.css`; light values shown here, dark in that file.
 
-### Content jewel tone
-- **Oxblood** (`#892a29`, `oklch(0.43 0.13 25)`): a content accent — cover washes and illustrative moments, with **Oxblood Soft** (`#fbd3ce`) as its tint. Never chrome, never an action, never an alarm. (Per-collection cover colors — cognac, peacock, dusty blue — come from the same OKLCH family as content data.)
+### Brand / expressive
 
-### Neutral
-- **Vellum** (`#f4e3d0`, `oklch(0.925 0.032 72)`): the body canvas — warm honey parchment. Deliberately warm and faintly chromatic — not the cream/sand AI default and not a cold white. **Vellum Deep** (`#e7d0b9`) carries sunken wells and the canvas gradient's top edge.
-- **Veil** (`#fbf2e5`): raised surfaces — cards, inputs, dialogs. A shade cleaner than vellum so content lifts by tone, not by heavy shadow. **Veil Raised** (`#fff9f1`) is the top elevation (dialogs, the active card) and the text color on espresso fills.
-- **Ink** (`#302218`, `oklch(0.265 0.028 55)`): primary text and high-emphasis marks. A warm near-black, never `#000`.
-- **Ink Soft** (`#635146`): secondary text, captions, helper copy. Clears 4.5:1 on Vellum.
-- **Line** (`#d8cbbd`) / **Line Strong** (`#c1b1a0`): borders, dividers, and the thin double-rule serif frames. Warm and low-contrast; structure is felt, not announced.
+- **Primary — deep teal** (`#004A67`): the one anchor. Action, links, progress, focus, selection. In dark it brightens to a luminous cornflower (`#79AFE0`) so it still leads. **Action only — never a heading colour.**
+- **Cool blues** — Aqua `#CAE4E1`, Sky `#98CEDD`, Cornflower `#79AFE0`, Periwinkle `#B3BFD8`: content, soft fills, photo areas, and benign-state chips ("Not yet").
+- **Spark — citron** (`#C9BF29`): the lone affirmation spark. Sparing; dark text on it; never in a caution context.
+- **Decor — soft mauve** (`#D9C7D1`): gentle non-state decoration only — never a state, tier, or action colour.
+- **Ink** (`#16242B` light / `#ECF2F4` dark) and **Ink-soft**: text. Headings are ink, never teal.
+- **Ground / surface / hairline**: the room. White surfaces lift by shadow + hairline, not tone.
 
-### Semantic
-- **Success** (`#647a4e`, olive/sage), **Warning** (`#e39849`, amber), **Error** (`#c8331a`, vermilion): semantics speak softly; no fire-engine red, no alarm. Success is kept quiet so red and green never read as festive; error stays brighter and more chromatic than oxblood so the two never look alike. Each `-soft` is a tint background, each `-deep` the readable text on it.
+### Semantic / safety (reserved)
+
+Soft, conventional, reserved for meaning only: **error** `#B0463C`, **warning** `#C58A2E`, **success** `#5C7C57`, **info** `#3C7E96` (each with `-soft`/`-deep` variants, theme-tuned for AA). Red appears only on genuinely destructive, irreversible actions, and even then it is sober.
 
 ### Named Rules
-**The Achromatic-Chrome Rule.** No hue is spent on the interface itself — buttons, the title, links, focus, and progress are espresso ink. Color belongs to the content (photographs and covers), and that restraint is what makes the current decision unmistakable.
 
-**The Gilt-as-Garnish Rule.** Gold is seasoning, never substance. It may warm a badge, an illustration, or an empty-state mark; it may never be a button you press or a state that warns you.
+**Brand never speaks Danger.** Safety-coded hues (red, amber, yellow, green) are reserved for their conventional meanings (ANSI Z535 / learned UX). The expressive palette never poaches them, and they are never used decoratively.
 
-**The No Cold Surface Rule.** Every surface is warm — Vellum or Veil. Pure `#ffffff` and any cool/blue-tinted gray are prohibited; they break the room instantly.
+**Colour is never the sole signal.** Buckets and states pair hue with a label, icon, or position — never hue alone (colour-blind safety).
+
+**One spark.** Citron is the only bright accent and appears rarely; warmth otherwise comes from the soft mauve and gentle copy. Nothing else competes with it.
+
+### Tiers — Love / Like / Maybe / Onward
+
+A single cool value-ramp: **deeper teal = more loved, palest = Onward** (the letting-go set). No tier gets a "bad" colour; Onward is simply the quietest. The ramp flips in dark (brightest = most loved). Every tier carries label + icon + position, and reads as an ordered ramp even in greyscale. Each tier uses its own AA-locked text colour (`tier-*-ink`).
 
 ## 3. Typography
 
-**Display Font:** Fraunces (with Georgia, serif)
-**Body Font:** Hanken Grotesk (with ui-sans-serif, system-ui)
+**Display:** Playfair Display. **Body / UI:** Inter.
 
-**Character:** A high-contrast, old-style serif with a little soft personality (Fraunces) paired against a warm, low-contrast humanist sans (Hanken Grotesk). The pairing sits on a real contrast axis — characterful serif soul over plain-spoken sans sense — so it reads as edited, not as two fonts competing. Fraunces carries identity and feeling; Hanken carries all the work.
+A high-contrast editorial serif for the tender moments paired with a clean, neutral humanist sans for all the work. The character lives in the display face; Inter carries everything functional.
 
 ### Hierarchy
-- **Display** (Fraunces, ~460 weight, 2.25rem, line-height 1.1): collection names, the screen's emotional heading, the single item under decision. The object gets the beautiful type.
-- **Headline** (Fraunces, ~460, 1.5rem, line-height 1.2): section headings within a screen.
-- **Title** (Hanken Grotesk, 600, 1.125rem, line-height 1.35): card titles, list-row leads, dialog titles.
-- **Body** (Hanken Grotesk, 400, 1rem, line-height 1.55): all prose and descriptions. Cap measure at 65–75ch.
-- **Label** (Hanken Grotesk, 600, 0.8125rem, +0.01em): buttons, field labels, badges, metadata. Sentence case or short caps (≤4 words) only.
+
+- **Display** (Playfair, ~600, 2.25rem): the decision question, collection names, the single item being decided. The object gets the beautiful type.
+- **Headline** (Playfair, ~600, 1.5rem): section headings.
+- **Title** (Inter, 600, 1.125rem): card titles, list leads, dialog titles.
+- **Body** (Inter, 400, 1rem): prose. Cap measure ~68ch.
+- **Label** (Inter, 600, 0.8125rem): buttons, fields, badges, metadata.
 
 ### Named Rules
-**The Serif-for-Soul, Sans-for-Sense Rule.** Fraunces appears only where feeling belongs — names of things, headings, the item being decided. Every dense, functional, or repeated string (labels, table data, helper text, buttons) is Hanken Grotesk. Fraunces in a UI label is a bug.
 
-**The Fixed-Scale Rule.** Type sizes are a fixed rem scale, never fluid `clamp()`. This is product UI viewed at consistent distance; a heading that shrinks inside a sidebar looks worse, not designed.
+**Display-for-soul, sans-for-sense.** Playfair appears only where feeling belongs — names, headings, the item being decided — and **only at display sizes** (its thin strokes hurt small text). Every functional or repeated string is Inter. Playfair in a UI label is a bug.
+
+**Headings are neutral ink, never colour.** Teal is reserved for actions; a coloured heading is a bug in both themes.
 
 ## 4. Elevation
 
-Flat by default with warm tonal layering: Veil surfaces sit on the Vellum canvas and separate by tone and a hairline Line border, not by shadow. Depth is reserved as a response to lift — a single soft, warm ambient shadow on genuinely raised or interactive surfaces (the card under your finger, dialogs, popovers) — so the room feels tactile, like paper resting on a warm table, without hard gray drop shadows.
-
-### Shadow Vocabulary
-- **Lift** (`box-shadow: 0 2px 8px rgba(43, 37, 33, 0.06)`): resting interactive cards.
-- **Raised** (`box-shadow: 0 8px 28px rgba(43, 37, 33, 0.10)`): dialogs, popovers, the active card mid-decision.
-
-### Named Rules
-**The Paper-on-a-Warm-Table Rule.** Shadows are warm (tinted with Ink, never pure black) and soft. A hard, dark, tight drop shadow reads as a 2014 app; if it looks cut-out, the shadow is wrong.
+Flat by default. In **light**, surfaces sit on white and lift by a soft, cool shadow + a hairline. In **dark**, surfaces lift by a hairline + a gentle glow, not shadow. No warm tint, no hard black drop shadow.
 
 ## 5. Components
 
-### Buttons
-- **Shape:** gently curved (10px, `{rounded.md}`); min height 44px for tap targets.
-- **Primary:** Espresso fill, Veil-Raised text, 0 20px padding. Hover → Espresso Deep with a 150ms color transition; active dips opacity slightly. Focus-visible → 2px Espresso ring, 2px offset.
-- **Secondary:** Gold Soft fill, Ink text. The quiet alternative to primary.
-- **Ghost:** transparent, Espresso text; hover gets a faint Espresso-Soft wash. For low-emphasis and back actions.
-- **Danger:** Error fill, Veil-Raised text — reserved for truly destructive, irreversible actions; styled to be sober, not loud.
-
-### Cards / Containers
-- **Corner Style:** 16px (`{rounded.lg}`) — cozier than the buttons.
-- **Background:** Veil on the Vellum canvas.
-- **Shadow Strategy:** flat at rest (tone + Line border); **Lift** shadow on hover/selected per Elevation.
-- **Border:** 1px Line; the selected/current card swaps to a 1.5px Espresso border (paired with a check, never color alone).
-- **Internal Padding:** 20px (`{spacing.lg}`-ish).
-
-### Inputs / Fields
-- **Style:** Veil fill, 1px Line border, 10px radius, 44px height.
-- **Focus:** border shifts to Espresso with a soft 2px Espresso ring; no harsh glow.
-- **Error:** Error border + a short Ink-readable message below; never color-only.
-- **Placeholder:** Ink Soft (must hold 4.5:1, not a faint gray).
-
-### Badges / Buckets
-- **Style:** Gold Soft fill with Ink text, full-radius, label type. Bucket badges must pair hue with a label or icon — **never distinguish buckets by color alone** (color-blind safety).
-
-### Navigation
-- Top-left back arrow + breadcrumb trail (Hanken Grotesk, Ink Soft → Ink on the current crumb); top-right user profile. Quiet by default; the current location is marked with Ink weight, not a heavy fill.
+- **Buttons:** 10px radius, min height 44px. **Primary:** teal fill, white text (dark: cornflower fill, dark text). **Secondary/ghost:** transparent or soft-aqua, ink/teal text. **Danger:** the reserved error red — only for truly destructive, irreversible actions; sober, not loud.
+- **Cards:** 16px radius, surface fill, soft shadow + hairline (light) / hairline + glow (dark); the selected card uses a teal border + a check, never colour alone.
+- **Inputs:** surface fill, hairline border, 10px radius, 44px height; focus → teal ring; error → error border + a message, never colour alone.
+- **Badges / buckets:** tier badges use the value-ramp tokens + label + icon. Status badges are semantic where meaningful, neutral (hairline) otherwise.
+- **Theme toggle:** top-right of the shell; 44px tap target; honours reduced-motion.
 
 ## 6. Do's and Don'ts
 
-### Do:
-- **Do** frame the work as affirmation — "which do you love more?" — not as culling. Copy and motion celebrate favorites; letting go is honored quietly, never the headline.
-- **Do** keep one decision in view at a time; let whitespace and pacing carry the calm.
-- **Do** let the user's photographs be the loudest, richest thing on the screen.
-- **Do** keep the chrome achromatic — espresso ink for buttons, links, focus, and progress; let color live in the content.
-- **Do** keep all surfaces warm (Vellum/Veil) and all text warm Ink — verify body text ≥4.5:1.
-- **Do** reserve Fraunces for names, headings, and the item being decided; Hanken for everything functional.
-- **Do** honor `prefers-reduced-motion` with a crossfade or instant transition on every animation.
-- **Do** support tap-first interaction with ≥44px targets; drag is allowed for reordering/bucketing.
+### Do
 
-### Don't:
-- **Don't** make this a **catalog, an inventory/storage tool, or a shopping site** — no dense SKU grids, no stock counts, no cart/"add more" affordances.
-- **Don't** evoke **Marie Kondo–style gamified declutter apps**, **Poshmark/eBay selling UIs**, or **enterprise asset-management dashboards**. No KPI tiles, no everything-at-once.
-- **Don't** gamify letting go: no confetti, streaks, points, scores-as-rewards, or "you have too many."
-- **Don't** use `#ffffff`, cool/blue grays, or fire-engine semantic colors — they shatter the lamplit warmth and feel clinical.
-- **Don't** ship Cabana's thin website energy: the richness is cozy and material, not sparse-and-trendy.
+- **Do** frame the work as affirmation — "which do you love more?" — never as culling.
+- **Do** keep one decision in view; let airy whitespace carry the calm.
+- **Do** let the photographs be the richest thing on screen.
+- **Do** keep the chrome to the teal anchor + cool blues; spend the citron rarely.
+- **Do** verify AA in **both** themes; honour `prefers-color-scheme` and the manual toggle.
+- **Do** reserve Playfair for display moments; Inter for everything functional; headings in ink.
+- **Do** honour `prefers-reduced-motion` with a crossfade or instant transition.
+- **Do** support tap-first interaction with ≥44px targets; no swiping.
+
+### Don't
+
+- **Don't** make this a catalog, inventory tool, or shopping site — no dense SKU grids, stock counts, or cart affordances.
+- **Don't** gamify letting go: no confetti, streaks, points, or "you have too many."
+- **Don't** let the brand speak danger — never use red/amber/yellow/green decoratively; reds are for true destructive actions only.
 - **Don't** distinguish buckets or states by hue alone; always pair with label, icon, or position.
-- **Don't** use fluid `clamp()` heading scales, hard black drop shadows, or `border-left` color stripes on cards/alerts.
+- **Don't** colour a heading, use Playfair at small sizes, or use warm parchment / pure black / cool clinical grey for the ground.

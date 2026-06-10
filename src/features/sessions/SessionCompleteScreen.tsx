@@ -64,7 +64,7 @@ export function SessionCompleteScreen({
           <p className="text-ink-soft">You&apos;ve made great progress organizing your items.</p>
         </div>
 
-        <div className="grid grid-cols-4 gap-3 bg-vellum p-4 rounded-lg">
+        <div className="grid grid-cols-4 gap-3 bg-ground p-4 rounded-lg">
           <div className="text-center">
             <p className="text-2xl font-bold text-ink">{bucketCounts.top}</p>
             <p className="text-xs text-ink-soft mt-1">Love</p>
