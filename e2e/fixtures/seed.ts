@@ -6,7 +6,7 @@ import { getTestDb, resetDb, closeDb } from "./db";
 
 // A known user every spec can log in as via the Credentials provider.
 export const BASELINE_USER = {
-  email: "e2e@purseinator.test",
+  email: "e2e@adored.test",
   password: "e2e-password-123", // ≥ 8 chars (signup rule)
   name: "E2E Tester",
 } as const;

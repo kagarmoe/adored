@@ -51,7 +51,7 @@ When commitments pull against each other, **gentleness wins.** Commitments 3 and
 ## Restraint is not minimalism
 
 Calm is a stance toward stimulation and load, never a mandate to strip the interface bare.
-PurseInator is **aesthetic, not minimalist**: rich, warm, and colour-forward — the photograph
+Adored is **aesthetic, not minimalist**: rich, warm, and colour-forward — the photograph
 is lush, the palette is a protagonist, the craft is visible — all held in calm. Restraint
 governs noise (few choices at once, no gamification, quiet motion, no clutter), not beauty. We
 never drain richness for its own sake, and "more minimal" is not, in itself, "better." Where the

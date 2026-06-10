@@ -95,7 +95,7 @@ function LoginContent() {
     <div className="min-h-screen flex items-center justify-center bg-ground p-4">
       <div className="max-w-sm w-full bg-surface rounded-card shadow-raised p-8">
         <h1 className="text-3xl font-medium tracking-tight text-center text-ink mb-2">
-          PurseInator
+          Adored
         </h1>
         <p className="text-center text-ink-soft mb-8">
           for the things you love

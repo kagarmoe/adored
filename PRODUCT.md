@@ -12,11 +12,11 @@ One person, making decisions about their own things. The work is personal and em
 
 The collection is not assumed to be wholly theirs. A real pile is entangled — it may hold a child's things, a partner's tools, objects that simply don't feel like theirs to decide about right now — so the product must let a person set those aside with zero emotional engagement, never forcing a decision on what was never theirs to weigh.
 
-Sharing exists, but it is an *after-the-fact* step: once a ranked list is complete, it can be shared. PurseInator is not a collaboration tool and never asks the user to coordinate with others mid-decision.
+Sharing exists, but it is an *after-the-fact* step: once a ranked list is complete, it can be shared. Adored is not a collaboration tool and never asks the user to coordinate with others mid-decision.
 
 ## Product Purpose
 
-PurseInator helps one person discover what they love most in a collection, and arrive at a confident ranking of it. The work happens in phases — triage, then pairwise comparisons ("which do you love more?"), then results — so the user never faces the whole pile at once. Success is the user reaching a finished, ranked list they trust, feeling that the things they cherish have been *recognized* — and feeling settled rather than drained. The completed list can then be shared. Letting go, where it happens, follows naturally from knowing what matters most.
+Adored helps one person discover what they love most in a collection, and arrive at a confident ranking of it. The work happens in phases — triage, then pairwise comparisons ("which do you love more?"), then results — so the user never faces the whole pile at once. Success is the user reaching a finished, ranked list they trust, feeling that the things they cherish have been *recognized* — and feeling settled rather than drained. The completed list can then be shared. Letting go, where it happens, follows naturally from knowing what matters most.
 
 It exists because surfacing what you truly love is emotionally and cognitively heavy, and existing tools (catalogs, inventory apps, shopping sites) treat belongings as stock to be counted, not as things that matter to a person.
 

@@ -1,4 +1,4 @@
-# PurseInator — Curatorial Collection Sorting App
+# Adored — Curatorial Collection Sorting App
 
 A full-featured web application for managing collections and sorting items through guided preference sessions. Built with Next.js 14, TypeScript, Drizzle ORM, and Tailwind CSS.
 

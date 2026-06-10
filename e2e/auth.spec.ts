@@ -53,7 +53,7 @@ test("signup creates a fresh account and signs in as that user", async ({
   // across viewport projects). signup returns generic success even if the user
   // exists (anti-enumeration), so a collision would 201 without creating a user
   // and the follow-on sign-in would fail.
-  const unique = `e2e+${crypto.randomUUID()}@purseinator.test`;
+  const unique = `e2e+${crypto.randomUUID()}@adored.test`;
 
   await page.goto("/signup");
   const submit = page.getByRole("button", { name: "Create account" });

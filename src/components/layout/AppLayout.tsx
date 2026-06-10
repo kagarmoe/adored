@@ -29,7 +29,7 @@ export function AppLayout({ breadcrumbs, children }: AppLayoutProps) {
       </main>
 
       <footer className="border-t border-hairline bg-surface py-4 text-center text-sm text-ink-soft">
-        <p>PurseInator &middot; take all the time you need</p>
+        <p>Adored &middot; take all the time you need</p>
       </footer>
     </div>
   );
