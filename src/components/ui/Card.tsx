@@ -18,8 +18,8 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className = "", children, padding = "md", border = true, interactive = false, ...props }, ref) => (
     <div
       className={`
-        rounded-card bg-veil shadow-card
-        ${border ? "border border-line" : ""}
+        rounded-card bg-surface shadow-card
+        ${border ? "border border-hairline" : ""}
         ${paddingMap[padding]}
         ${interactive ? "cursor-pointer transition-all duration-200 ease-gentle hover:-translate-y-0.5 hover:shadow-card-hover active:translate-y-0 active:shadow-card" : ""}
         ${className}

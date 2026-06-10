@@ -9,7 +9,7 @@ export function Header() {
   const { data: session } = useSession();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-veil/85 backdrop-blur-md border-b border-line shadow-lift">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-surface/85 backdrop-blur-md border-b border-hairline shadow-lift">
       <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/collections" className="flex items-center gap-2">
           <h1 className="text-2xl font-medium tracking-tight text-ink">PurseInator</h1>

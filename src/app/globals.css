@@ -73,22 +73,6 @@
   --ease-gentle: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-state: 180ms;
   --duration-reveal: 240ms;
-
-  /* --- transitional aliases (removed in the component migration, Task 8) --- */
-  --color-vellum: var(--color-ground);
-  --color-vellum-deep: var(--color-hairline);
-  --color-veil: var(--color-surface);
-  --color-veil-raised: var(--color-surface-raised);
-  --color-line: var(--color-hairline);
-  --color-line-strong: var(--color-hairline);
-  --color-espresso: var(--color-primary);
-  --color-espresso-deep: var(--color-primary-hover);
-  --color-espresso-soft: var(--color-accent-aqua);
-  --color-gold: var(--color-spark);
-  --color-gold-soft: var(--color-accent-aqua);
-  --color-gold-soft-strong: var(--color-accent-sky);
-  --color-oxblood: var(--color-decor);
-  --color-oxblood-soft: var(--color-decor);
 }
 
 [data-theme="dark"] {

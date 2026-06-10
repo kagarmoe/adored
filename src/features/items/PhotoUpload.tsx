@@ -205,7 +205,7 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
 
   return (
     <div className="space-y-4">
-      <div className="border-2 border-dashed border-line rounded-lg p-8 text-center">
+      <div className="border-2 border-dashed border-hairline rounded-lg p-8 text-center">
         {preview ? (
           <div className="space-y-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -239,7 +239,7 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
             <span className="text-4xl">📸</span>
             <div>
               <label htmlFor="photo-input" className="cursor-pointer">
-                <span className="font-semibold text-espresso hover:text-espresso-deep">
+                <span className="font-semibold text-primary hover:text-primary-hover">
                   {preparing ? "Preparing image..." : "Click to upload"}
                 </span>
               </label>

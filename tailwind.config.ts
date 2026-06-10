@@ -44,42 +44,10 @@ const config: Config = {
           "maybe-ink": "var(--color-tier-maybe-ink)",
           "onward-ink": "var(--color-tier-onward-ink)",
         },
-        // === legacy (migrated, then removed, in Task 8) ===
-        // Surfaces — sunken → canvas → raised → floating
-        vellum: {
-          DEFAULT: "var(--color-vellum)",
-          deep: "var(--color-vellum-deep)",
-        },
-        veil: {
-          DEFAULT: "var(--color-veil)",
-          raised: "var(--color-veil-raised)",
-        },
         ink: {
           DEFAULT: "var(--color-ink)",
           soft: "var(--color-ink-soft)",
         },
-        line: {
-          DEFAULT: "var(--color-line)",
-          strong: "var(--color-line-strong)",
-        },
-        // Action voice
-        espresso: {
-          DEFAULT: "var(--color-espresso)",
-          deep: "var(--color-espresso-deep)",
-          soft: "var(--color-espresso-soft)",
-        },
-        // Warm secondary metal
-        gold: {
-          DEFAULT: "var(--color-gold)",
-          soft: "var(--color-gold-soft)",
-          "soft-strong": "var(--color-gold-soft-strong)",
-        },
-        // Content jewel tone (cover washes, accents) — never chrome
-        oxblood: {
-          DEFAULT: "var(--color-oxblood)",
-          soft: "var(--color-oxblood-soft)",
-        },
-        // Semantic aliases — primary is the action voice (espresso).
         primary: {
           DEFAULT: "var(--color-primary)",
           ink: "var(--color-primary-ink)",

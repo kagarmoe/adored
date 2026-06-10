@@ -58,7 +58,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
           </div>
           <div className="text-right">
             <p className="text-sm text-ink-soft">{triaged} of {totalItems}</p>
-            <div className="mt-2 w-32 bg-gold-soft rounded-full h-2">
+            <div className="mt-2 w-32 bg-accent-aqua rounded-full h-2">
               <div
                 className="bg-primary h-2 rounded-full transition-all"
                 style={{ width: `${totalItems > 0 ? (triaged / totalItems) * 100 : 0}%` }}

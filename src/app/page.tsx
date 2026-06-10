@@ -11,7 +11,7 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-vellum">
+    <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-ground">
       <div className="text-center max-w-2xl">
         <h1 className="text-5xl font-medium tracking-tight mb-3 text-ink">PurseInator</h1>
         <p className="text-xl text-ink-soft mb-8">for the things you love</p>
