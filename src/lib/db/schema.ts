@@ -111,12 +111,18 @@ export const itemsTable = pgTable(
     collectionId: text("collection_id")
       .notNull()
       .references(() => collectionsTable.id),
-    name: text("name").notNull(),
+    name: text("name"),
     brand: text("brand"),
     style: text("style"),
     color: text("color"),
     material: text("material"),
     category: text("category"),
+    number: integer("number"),
+    height: numeric("height"),
+    width: numeric("width"),
+    depth: numeric("depth"),
+    weight: numeric("weight"),
+    unit: text("unit").default("imperial").notNull(),
     status: text("status"),
     notes: text("notes"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -125,6 +131,10 @@ export const itemsTable = pgTable(
   },
   (table) => ({
     collectionIdx: index("items_collection_id_idx").on(table.collectionId),
+    collectionNumberUnique: uniqueIndex("items_collection_number_unique").on(
+      table.collectionId,
+      table.number,
+    ),
   }),
 );
 
@@ -133,9 +143,10 @@ export const photosTable = pgTable(
   "photos",
   {
     id: text("id").primaryKey(),
-    itemId: text("item_id")
+    itemId: text("item_id").references(() => itemsTable.id),
+    collectionId: text("collection_id")
       .notNull()
-      .references(() => itemsTable.id),
+      .references(() => collectionsTable.id),
     blobKey: text("blob_key").notNull(),
     filename: text("filename").notNull(),
     mimeType: text("mime_type").notNull(),
@@ -148,6 +159,7 @@ export const photosTable = pgTable(
   },
   (table) => ({
     itemIdIdx: index("photos_item_id_idx").on(table.itemId),
+    collectionIdx: index("photos_collection_id_idx").on(table.collectionId),
     uploadedByIdx: index("photos_uploaded_by_idx").on(table.uploadedBy),
     deletedAtIdx: index("photos_deleted_at_idx").on(table.deletedAt),
   }),
