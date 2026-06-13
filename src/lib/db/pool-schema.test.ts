@@ -72,4 +72,23 @@ describeDb("pool-ready schema", () => {
     expect(Number(rows[0].height)).toBe(10.5);
     expect(Number(rows[0].weight)).toBe(1.25);
   });
+
+  it("PhotoRepository persists a pool photo via the typed layer", async () => {
+    const { db } = getTestDb();
+    const { PhotoRepository } = await import(
+      "@/server/repositories/implementations/PhotoRepository"
+    );
+    const repo = new PhotoRepository(db);
+    const photo = await repo.create({
+      itemId: null,
+      collectionId,
+      blobKey: "k2",
+      filename: "b.jpg",
+      mimeType: "image/jpeg",
+      fileSize: 123,
+      uploadedBy: userId,
+      isHero: false,
+    });
+    expect(photo).toMatchObject({ itemId: null, collectionId });
+  });
 });

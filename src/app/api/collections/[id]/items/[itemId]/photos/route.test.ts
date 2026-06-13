@@ -111,6 +111,7 @@ describe("POST /api/collections/[id]/items/[itemId]/photos", () => {
     photoRepo.create.mockResolvedValue({
       id: "photo-1",
       itemId: "item-1",
+      collectionId: "collection-1",
       blobKey: "https://example.blob.vercel-storage.com/photo.jpg",
       filename: "bag.jpg",
       mimeType: "image/jpeg",
@@ -147,6 +148,7 @@ describe("POST /api/collections/[id]/items/[itemId]/photos", () => {
     );
     expect(photoRepo.create).toHaveBeenCalledWith({
       itemId: "item-1",
+      collectionId: "collection-1",
       blobKey: "https://example.blob.vercel-storage.com/photo.jpg",
       filename: "bag.jpg",
       mimeType: "image/jpeg",

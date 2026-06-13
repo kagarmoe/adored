@@ -19,6 +19,7 @@ export class PhotoRepository implements IPhotoRepository {
       .values({
         id,
         itemId: data.itemId,
+        collectionId: data.collectionId,
         blobKey: data.blobKey,
         filename: data.filename,
         mimeType: data.mimeType,
@@ -105,6 +106,7 @@ export class PhotoRepository implements IPhotoRepository {
     return {
       id: row.id,
       itemId: row.itemId,
+      collectionId: row.collectionId,
       blobKey: row.blobKey,
       filename: row.filename,
       mimeType: row.mimeType,

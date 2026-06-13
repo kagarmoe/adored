@@ -78,6 +78,12 @@ export interface Item {
   color: string | null;
   material: string | null;
   category: string | null;
+  number: number | null;
+  height: string | null;
+  width: string | null;
+  depth: string | null;
+  weight: string | null;
+  unit: string;
   status: string | null;
   notes: string | null;
   createdAt: Date;
@@ -88,7 +94,8 @@ export interface Item {
 // ===== PHOTO =====
 export interface Photo {
   id: string;
-  itemId: string;
+  itemId: string | null;
+  collectionId: string;
   blobKey: string;
   filename: string;
   mimeType: string;
