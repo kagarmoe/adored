@@ -20,8 +20,13 @@ export class PhotoController {
     return this.photoService.getItemPhotos(itemId);
   }
 
-  async uploadPhoto(itemId: string, file: File, uploadedBy: string): Promise<Photo> {
-    return this.photoService.uploadPhoto(itemId, file, uploadedBy);
+  async uploadPhoto(
+    collectionId: string,
+    itemId: string,
+    file: File,
+    uploadedBy: string,
+  ): Promise<Photo> {
+    return this.photoService.uploadPhoto(collectionId, itemId, file, uploadedBy);
   }
 
   async getPhoto(photoId: string): Promise<Photo> {
@@ -38,6 +43,9 @@ export class PhotoController {
       const photo = await this.photoService.getPhoto(photoId);
       if (!photo) {
         throw new Error("Photo not found");
+      }
+      if (!photo.itemId) {
+        throw new Error("Cannot set hero on a photo not assigned to an item");
       }
       return this.photoService.setHeroPhoto(photo.itemId, photoId);
     }

@@ -4,13 +4,19 @@ import type { IPhotoRepository } from "@/server/repositories/PhotoRepository";
 export class PhotoService {
   constructor(private photoRepo: IPhotoRepository) {}
 
-  async uploadPhoto(itemId: string, file: File, uploadedBy: string): Promise<Photo> {
+  async uploadPhoto(
+    collectionId: string,
+    itemId: string,
+    file: File,
+    uploadedBy: string,
+  ): Promise<Photo> {
     // TODO: Upload file to Vercel Blob and get blobKey
     // const blobKey = await uploadToBlob(file);
     const blobKey = `temp_${Date.now()}`;
 
     return this.photoRepo.create({
       itemId,
+      collectionId,
       blobKey,
       filename: file.name,
       mimeType: file.type,

@@ -72,6 +72,7 @@ export async function POST(
     const photoRepo = new PhotoRepository(db);
     const photo = await photoRepo.create({
       itemId: params.itemId,
+      collectionId: params.id,
       blobKey: blob.url, // Store actual blob URL
       filename: file.name,
       mimeType: file.type,
