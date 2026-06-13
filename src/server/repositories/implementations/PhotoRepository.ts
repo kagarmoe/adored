@@ -1,7 +1,7 @@
 import type { Database } from "@/lib/db";
 import type { Photo } from "@/types";
 import { photosTable } from "@/lib/db/schema";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, asc } from "drizzle-orm";
 import { generateId } from "@/lib/id";
 import type { IPhotoRepository } from "@/server/repositories/PhotoRepository";
 
@@ -50,6 +50,21 @@ export class PhotoRepository implements IPhotoRepository {
       .from(photosTable)
       .where(and(eq(photosTable.itemId, itemId), isNull(photosTable.deletedAt)));
 
+    return photos.map((p) => this.mapToPhoto(p));
+  }
+
+  async findPoolByCollection(collectionId: string): Promise<Photo[]> {
+    const photos = await this.db
+      .select()
+      .from(photosTable)
+      .where(
+        and(
+          eq(photosTable.collectionId, collectionId),
+          isNull(photosTable.itemId),
+          isNull(photosTable.deletedAt),
+        ),
+      )
+      .orderBy(asc(photosTable.createdAt));
     return photos.map((p) => this.mapToPhoto(p));
   }
 

@@ -91,4 +91,70 @@ describeDb("pool-ready schema", () => {
     });
     expect(photo).toMatchObject({ itemId: null, collectionId });
   });
+
+  it("findPoolByCollection returns only unassigned, non-deleted photos", async () => {
+    const { db } = getTestDb();
+    const { PhotoRepository } = await import(
+      "@/server/repositories/implementations/PhotoRepository"
+    );
+    const repo = new PhotoRepository(db);
+
+    // an item to attach one photo to (so it is NOT pooled)
+    await db.execute(
+      sql`INSERT INTO items (id, collection_id, number, created_at, updated_at) VALUES ('item_p1', ${collectionId}, 1, now(), now())`,
+    );
+    // pooled (item_id NULL)
+    await repo.create({
+      itemId: null,
+      collectionId,
+      blobKey: "p1",
+      filename: "p1.jpg",
+      mimeType: "image/jpeg",
+      fileSize: 1,
+      uploadedBy: userId,
+      isHero: false,
+    });
+    // assigned (NOT pooled)
+    await repo.create({
+      itemId: "item_p1",
+      collectionId,
+      blobKey: "a1",
+      filename: "a1.jpg",
+      mimeType: "image/jpeg",
+      fileSize: 1,
+      uploadedBy: userId,
+      isHero: false,
+    });
+    // pooled but soft-deleted (excluded)
+    const deleted = await repo.create({
+      itemId: null,
+      collectionId,
+      blobKey: "d1",
+      filename: "d1.jpg",
+      mimeType: "image/jpeg",
+      fileSize: 1,
+      uploadedBy: userId,
+      isHero: false,
+    });
+    await repo.softDelete(deleted.id);
+
+    // a pooled photo in a DIFFERENT collection (must be excluded)
+    await db.execute(
+      sql`INSERT INTO collections (id, owner_id, name, status, created_at, updated_at) VALUES ('col_other_pool', ${userId}, 'Other', 'active', now(), now())`,
+    );
+    await repo.create({
+      itemId: null,
+      collectionId: "col_other_pool",
+      blobKey: "o1",
+      filename: "o1.jpg",
+      mimeType: "image/jpeg",
+      fileSize: 1,
+      uploadedBy: userId,
+      isHero: false,
+    });
+
+    const pool = await repo.findPoolByCollection(collectionId);
+    expect(pool).toHaveLength(1);
+    expect(pool[0]).toMatchObject({ blobKey: "p1", itemId: null, collectionId });
+  });
 });
