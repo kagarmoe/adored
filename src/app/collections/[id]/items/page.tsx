@@ -51,9 +51,14 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
             <h1 className="text-3xl text-ink">Items</h1>
             <p className="text-ink-soft mt-2">{items.length} items in collection</p>
           </div>
-          <Link href={`/collections/${params.id}/items/new`}>
-            <Button>Add Item</Button>
-          </Link>
+          <div className="flex gap-3">
+            <Link href={`/collections/${params.id}/pool`}>
+              <Button variant="secondary">Add photos</Button>
+            </Link>
+            <Link href={`/collections/${params.id}/items/new`}>
+              <Button>Add Item</Button>
+            </Link>
+          </div>
         </div>
 
         <ItemFilters activeFilter={activeFilter} collectionId={params.id} />
