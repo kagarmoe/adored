@@ -1,4 +1,4 @@
-import { eq, isNull, and } from "drizzle-orm";
+import { eq, isNull, and, sql } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { itemsTable } from "@/lib/db/schema";
 import type { IItemRepository } from "../ItemRepository";
@@ -56,6 +56,34 @@ export class ItemRepository implements IItemRepository {
       .from(itemsTable)
       .where(and(eq(itemsTable.collectionId, collectionId), isNull(itemsTable.deletedAt)));
     return items.map((i) => this.mapToItem(i));
+  }
+
+  async findByCollectionAndNumber(
+    collectionId: string,
+    number: number,
+  ): Promise<Item | null> {
+    const [item] = await this.db
+      .select()
+      .from(itemsTable)
+      .where(
+        and(
+          eq(itemsTable.collectionId, collectionId),
+          eq(itemsTable.number, number),
+          isNull(itemsTable.deletedAt),
+        ),
+      );
+    return item ? this.mapToItem(item) : null;
+  }
+
+  async getNextCatalogNumber(collectionId: string): Promise<number> {
+    // MAX over ALL rows (incl. soft-deleted) — a deleted item still holds its
+    // number in the UNIQUE(collection_id, number) index, so reusing it would
+    // collide. Resolution (findByCollectionAndNumber) excludes deleted rows.
+    const [row] = await this.db
+      .select({ max: sql<number | null>`max(${itemsTable.number})` })
+      .from(itemsTable)
+      .where(eq(itemsTable.collectionId, collectionId));
+    return (row?.max ?? 0) + 1;
   }
 
   async update(id: string, data: Partial<Item>): Promise<Item> {
