@@ -306,4 +306,26 @@ describeDb("pool-ready schema", () => {
     const count = await repo.assignPooledPhotosToItem(collectionId, [gone.id], "item_g4", gone.id);
     expect(count).toBe(0);
   });
+
+  it("assignPooledPhotosToItem demotes a previously-true hero to the chosen one", async () => {
+    const { db } = getTestDb();
+    const { PhotoRepository } = await import(
+      "@/server/repositories/implementations/PhotoRepository"
+    );
+    const repo = new PhotoRepository(db);
+    await db.execute(
+      sql`INSERT INTO items (id, collection_id, number, created_at, updated_at) VALUES ('item_g5', ${collectionId}, 1, now(), now())`,
+    );
+    // p1 is pooled but already carries is_hero=true; the assign must flip it off.
+    const p1 = await repo.create({ itemId: null, collectionId, blobKey: "h1", filename: "h1.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: userId, isHero: false });
+    const p2 = await repo.create({ itemId: null, collectionId, blobKey: "h2", filename: "h2.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: userId, isHero: false });
+    await repo.update(p1.id, { isHero: true });
+
+    const count = await repo.assignPooledPhotosToItem(collectionId, [p1.id, p2.id], "item_g5", p2.id);
+    expect(count).toBe(2);
+
+    const assigned = await repo.findByItem("item_g5");
+    expect(assigned.filter((p) => p.isHero).map((p) => p.id)).toEqual([p2.id]);
+    expect(assigned.find((p) => p.id === p1.id)?.isHero).toBe(false);
+  });
 });
