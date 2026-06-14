@@ -40,6 +40,7 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
     setError(null);
 
     try {
+      // PATCH targets the stable ULID; the page URL uses the human-readable catalog number.
       const response = await fetch(
         `/api/collections/${collectionId}/items/${item.id}`,
         {

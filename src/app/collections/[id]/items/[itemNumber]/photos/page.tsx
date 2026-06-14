@@ -28,7 +28,7 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
   const number = Number(params.itemNumber);
   const [collection, item] = await Promise.all([
     collectionRepo.findById(params.id),
-    Number.isInteger(number)
+    number > 0 && Number.isInteger(number)
       ? itemRepo.findByCollectionAndNumber(params.id, number)
       : Promise.resolve(null),
   ]);
