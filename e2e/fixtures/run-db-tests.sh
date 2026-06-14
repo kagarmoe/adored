@@ -28,4 +28,7 @@ trap cleanup EXIT INT TERM
 bash "${DB_SCRIPT}" up
 
 cd "${ROOT_DIR}"
-RUN_DB_TESTS=1 npx vitest run src/lib/db/e2e-db.test.ts "$@"
+# Run EVERY DB test file under src/lib/db so new DB tests are auto-included.
+# --no-file-parallelism keeps the files serial: concurrent RUN_DB_TESTS files
+# deadlock on the shared DB (memory: db-test-parallel-deadlock).
+RUN_DB_TESTS=1 npx vitest run --no-file-parallelism src/lib/db "$@"
