@@ -15,4 +15,5 @@ export interface IPhotoRepository {
     heroPhotoId: string,
   ): Promise<number>;
   countAvailablePooled(collectionId: string, photoIds: string[]): Promise<number>;
+  unassignAllFromItem(itemId: string): Promise<number>;
 }

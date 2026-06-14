@@ -358,4 +358,18 @@ describeDb("pool-ready schema", () => {
     const { PhotoRepository } = await import("@/server/repositories/implementations/PhotoRepository");
     expect(await new PhotoRepository(db).assignPooledPhotosToItem(collectionId, [], "item_none", "item_none")).toBe(0);
   });
+
+  it("unassignAllFromItem returns an item's photos to the pool (item_id NULL, hero cleared)", async () => {
+    const { db } = getTestDb();
+    const { PhotoRepository } = await import("@/server/repositories/implementations/PhotoRepository");
+    const repo = new PhotoRepository(db);
+    await db.execute(sql`INSERT INTO items (id, collection_id, number, created_at, updated_at) VALUES ('item_un', ${collectionId}, 1, now(), now())`);
+    const a = await repo.create({ itemId: "item_un", collectionId, blobKey: "ua", filename: "a.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: userId, isHero: true });
+    const b = await repo.create({ itemId: "item_un", collectionId, blobKey: "ub", filename: "b.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: userId, isHero: false });
+    const n = await repo.unassignAllFromItem("item_un");
+    expect(n).toBe(2);
+    const pool = await repo.findPoolByCollection(collectionId);
+    expect(pool.map((p) => p.id).sort()).toEqual([a.id, b.id].sort());
+    expect(pool.every((p) => p.isHero === false)).toBe(true);
+  });
 });

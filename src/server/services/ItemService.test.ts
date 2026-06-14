@@ -14,6 +14,7 @@ function makeRepos(overrides: { assign?: number; available?: number } = {}) {
   const photoRepo = {
     countAvailablePooled: vi.fn().mockResolvedValue(overrides.available ?? 2),
     assignPooledPhotosToItem: vi.fn().mockResolvedValue(overrides.assign ?? 2),
+    unassignAllFromItem: vi.fn().mockResolvedValue(0),
   } as any;
   return { itemRepo: itemRepo as any, photoRepo };
 }
@@ -89,6 +90,7 @@ describe("ItemService.createItemFromPool", () => {
       code: "conflict",
     });
     expect(itemRepo.create).toHaveBeenCalled();
+    expect(photoRepo.unassignAllFromItem).toHaveBeenCalledWith("item_new");
     expect(itemRepo.softDelete).toHaveBeenCalledWith("item_new");
   });
 });
