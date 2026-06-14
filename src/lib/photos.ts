@@ -23,3 +23,7 @@ export function getPhotoAssetUrlForPhoto(
   }
   return getPhotoAssetUrl(collectionId, photo.itemId, photo.id);
 }
+
+export function getPoolPhotoAssetUrl(collectionId: string, photoId: string): string {
+  return `/api/collections/${collectionId}/pool/photos/${photoId}/file`;
+}
