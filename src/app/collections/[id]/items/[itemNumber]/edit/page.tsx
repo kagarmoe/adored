@@ -8,7 +8,7 @@ import { ItemEditForm } from "@/features/items/ItemEditForm";
 import { itemDisplayName } from "@/lib/items";
 
 interface ItemEditPageProps {
-  params: { id: string; itemId: string };
+  params: { id: string; itemNumber: string };
 }
 
 export default async function ItemEditPage({ params }: ItemEditPageProps) {
@@ -20,12 +20,15 @@ export default async function ItemEditPage({ params }: ItemEditPageProps) {
   const db = getDb();
   const collectionRepo = new CollectionRepository(db);
   const itemRepo = new ItemRepository(db);
+  const number = Number(params.itemNumber);
   const [collection, item] = await Promise.all([
     collectionRepo.findById(params.id),
-    itemRepo.findById(params.itemId),
+    Number.isInteger(number)
+      ? itemRepo.findByCollectionAndNumber(params.id, number)
+      : Promise.resolve(null),
   ]);
 
-  if (!collection || !item || item.collectionId !== params.id) {
+  if (!collection || !item) {
     redirect(`/collections/${params.id}/items`);
   }
 
@@ -35,7 +38,7 @@ export default async function ItemEditPage({ params }: ItemEditPageProps) {
         { label: "Collections", href: "/collections" },
         { label: collection.name, href: `/collections/${params.id}` },
         { label: "Items", href: `/collections/${params.id}/items` },
-        { label: itemDisplayName(item), href: `/collections/${params.id}/items/${params.itemId}` },
+        { label: itemDisplayName(item), href: `/collections/${params.id}/items/${item.number}` },
         { label: "Edit" },
       ]}
     >

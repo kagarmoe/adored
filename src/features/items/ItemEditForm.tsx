@@ -53,7 +53,7 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
         throw new Error("Failed to update item");
       }
 
-      router.push(`/collections/${collectionId}/items/${item.id}`);
+      router.push(`/collections/${collectionId}/items/${item.number}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

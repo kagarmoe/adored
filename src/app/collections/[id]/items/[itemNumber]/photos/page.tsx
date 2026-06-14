@@ -11,7 +11,7 @@ import { PhotoGallery } from "@/features/items/PhotoGallery";
 import { itemDisplayName } from "@/lib/items";
 
 interface PhotoPageProps {
-  params: { id: string; itemId: string };
+  params: { id: string; itemNumber: string };
 }
 
 export default async function PhotoPage({ params }: PhotoPageProps) {
@@ -24,15 +24,20 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
   const collectionRepo = new CollectionRepository(db);
   const itemRepo = new ItemRepository(db);
   const photoRepo = new PhotoRepository(db);
-  const [collection, item, photos] = await Promise.all([
+
+  const number = Number(params.itemNumber);
+  const [collection, item] = await Promise.all([
     collectionRepo.findById(params.id),
-    itemRepo.findById(params.itemId),
-    photoRepo.findByItem(params.itemId),
+    Number.isInteger(number)
+      ? itemRepo.findByCollectionAndNumber(params.id, number)
+      : Promise.resolve(null),
   ]);
 
-  if (!collection || !item || item.collectionId !== params.id) {
+  if (!collection || !item) {
     redirect(`/collections/${params.id}/items`);
   }
+
+  const photos = await photoRepo.findByItem(item.id);
 
   return (
     <AppLayout
@@ -40,7 +45,7 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
         { label: "Collections", href: "/collections" },
         { label: collection.name, href: `/collections/${params.id}` },
         { label: "Items", href: `/collections/${params.id}/items` },
-        { label: itemDisplayName(item), href: `/collections/${params.id}/items/${params.itemId}` },
+        { label: itemDisplayName(item), href: `/collections/${params.id}/items/${item.number}` },
         { label: "Photos" },
       ]}
     >
@@ -53,14 +58,14 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
         {/* Upload Section */}
         <Card padding="lg">
           <h2 className="text-lg text-ink mb-4">Add Photos</h2>
-          <PhotoUpload itemId={params.itemId} collectionId={params.id} />
+          <PhotoUpload itemId={item.id} collectionId={params.id} />
         </Card>
 
         {/* Gallery Section */}
         {photos.length > 0 && (
           <Card padding="lg">
             <h2 className="text-lg text-ink mb-4">Photos</h2>
-            <PhotoGallery photos={photos} itemId={params.itemId} collectionId={params.id} />
+            <PhotoGallery photos={photos} itemId={item.id} collectionId={params.id} />
           </Card>
         )}
       </div>
