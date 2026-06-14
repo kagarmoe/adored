@@ -2,7 +2,7 @@ import type { Item } from "@/types";
 import type { IItemRepository } from "@/server/repositories/ItemRepository";
 import type { IPhotoRepository } from "@/server/repositories/PhotoRepository";
 
-const MAX_GROUP_PHOTOS = 50;
+export const MAX_GROUP_PHOTOS = 50;
 
 export class PoolGroupError extends Error {
   constructor(
@@ -54,8 +54,10 @@ export class ItemService {
       ids[0],
     );
     if (assigned !== ids.length) {
-      // Lost a race between the check and the assign (rare). Remove the
-      // just-created item so a conflict never leaks an orphan.
+      // Lost a race between the check and the assign (rare). Return any photos
+      // that did get assigned to the pool, then remove the empty item — a
+      // conflict leaves neither an orphan item nor an orphaned photo.
+      await this.photoRepo.unassignAllFromItem(item.id);
       await this.repo.softDelete(item.id);
       throw new PoolGroupError(
         "conflict",

@@ -55,7 +55,7 @@ export function PoolPhotoGrid({
       const grouped = new Set(selected);
       setPool((prev) => prev.filter((p) => !grouped.has(p.id)));
       setSelected([]);
-      setNotice(`Made #${data.number} — find it in your items.`);
+      setNotice(`Your photos are grouped — find item #${data.number} in your items.`);
     } catch {
       setError("We couldn’t make that item just now — your photos are safe; try again.");
     } finally {

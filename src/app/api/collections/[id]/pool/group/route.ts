@@ -5,7 +5,7 @@ import { CollectionRepository } from "@/server/repositories/implementations/Coll
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
-import { ItemService, PoolGroupError } from "@/server/services/ItemService";
+import { ItemService, PoolGroupError, MAX_GROUP_PHOTOS } from "@/server/services/ItemService";
 
 // Groups selected pooled photos into one new (nameless, catalog-numbered) item.
 // Auth mirrors the other pool routes: member-or-owner. The heavy lifting and the
@@ -42,6 +42,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     !photoIds.every((x) => typeof x === "string")
   ) {
     return NextResponse.json({ error: "photoIds must be a non-empty string array" }, { status: 400 });
+  }
+  if (photoIds.length > MAX_GROUP_PHOTOS) {
+    return NextResponse.json(
+      { error: `photoIds must be at most ${MAX_GROUP_PHOTOS}` },
+      { status: 400 },
+    );
   }
 
   const service = new ItemService(new ItemRepository(db), new PhotoRepository(db));

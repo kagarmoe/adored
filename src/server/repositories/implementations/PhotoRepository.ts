@@ -171,6 +171,18 @@ export class PhotoRepository implements IPhotoRepository {
     return rows.length;
   }
 
+  // Return every photo of an item to the pool (item_id NULL, hero cleared).
+  // Used to compensate a race-lost grouping so no photo is left pointing at a
+  // soft-deleted item.
+  async unassignAllFromItem(itemId: string): Promise<number> {
+    const rows = await this.db
+      .update(photosTable)
+      .set({ itemId: null, isHero: false, updatedAt: new Date() })
+      .where(and(eq(photosTable.itemId, itemId), isNull(photosTable.deletedAt)))
+      .returning({ id: photosTable.id });
+    return rows.length;
+  }
+
   private mapToPhoto(row: any): Photo {
     return {
       id: row.id,
