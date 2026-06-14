@@ -237,4 +237,57 @@ describeDb("pool-ready schema", () => {
     const item = await repo.create({ collectionId, name: "X", number: 42 });
     expect(item.number).toBe(42);
   });
+
+  it("assignPooledPhotosToItem assigns matching pooled photos and sets exactly one hero", async () => {
+    const { db } = getTestDb();
+    const { PhotoRepository } = await import(
+      "@/server/repositories/implementations/PhotoRepository"
+    );
+    const repo = new PhotoRepository(db);
+    await db.execute(
+      sql`INSERT INTO items (id, collection_id, number, created_at, updated_at) VALUES ('item_g1', ${collectionId}, 1, now(), now())`,
+    );
+    const p1 = await repo.create({ itemId: null, collectionId, blobKey: "g1", filename: "g1.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: userId, isHero: false });
+    const p2 = await repo.create({ itemId: null, collectionId, blobKey: "g2", filename: "g2.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: userId, isHero: false });
+
+    const count = await repo.assignPooledPhotosToItem(collectionId, [p1.id, p2.id], "item_g1", p1.id);
+    expect(count).toBe(2);
+
+    const assigned = await repo.findByItem("item_g1");
+    expect(assigned).toHaveLength(2);
+    expect(assigned.filter((p) => p.isHero).map((p) => p.id)).toEqual([p1.id]);
+  });
+
+  it("assignPooledPhotosToItem refuses a cross-collection photo (count short)", async () => {
+    const { db } = getTestDb();
+    const { PhotoRepository } = await import(
+      "@/server/repositories/implementations/PhotoRepository"
+    );
+    const repo = new PhotoRepository(db);
+    await db.execute(
+      sql`INSERT INTO collections (id, owner_id, name, status, created_at, updated_at) VALUES ('col_g_other', ${userId}, 'Other', 'active', now(), now())`,
+    );
+    await db.execute(
+      sql`INSERT INTO items (id, collection_id, number, created_at, updated_at) VALUES ('item_g2', ${collectionId}, 1, now(), now())`,
+    );
+    const mine = await repo.create({ itemId: null, collectionId, blobKey: "m1", filename: "m1.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: userId, isHero: false });
+    const theirs = await repo.create({ itemId: null, collectionId: "col_g_other", blobKey: "t1", filename: "t1.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: userId, isHero: false });
+
+    const count = await repo.assignPooledPhotosToItem(collectionId, [mine.id, theirs.id], "item_g2", mine.id);
+    expect(count).toBe(1);
+  });
+
+  it("assignPooledPhotosToItem refuses an already-assigned photo", async () => {
+    const { db } = getTestDb();
+    const { PhotoRepository } = await import(
+      "@/server/repositories/implementations/PhotoRepository"
+    );
+    const repo = new PhotoRepository(db);
+    await db.execute(
+      sql`INSERT INTO items (id, collection_id, number, created_at, updated_at) VALUES ('item_g3', ${collectionId}, 1, now(), now()), ('item_g3b', ${collectionId}, 2, now(), now())`,
+    );
+    const taken = await repo.create({ itemId: "item_g3b", collectionId, blobKey: "k1", filename: "k1.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: userId, isHero: false });
+    const count = await repo.assignPooledPhotosToItem(collectionId, [taken.id], "item_g3", taken.id);
+    expect(count).toBe(0);
+  });
 });

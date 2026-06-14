@@ -8,4 +8,10 @@ export interface IPhotoRepository {
   update(id: string, data: Partial<Omit<Photo, "id" | "createdAt">>): Promise<Photo>;
   softDelete(id: string): Promise<Photo>;
   clearHeroPhotos(itemId: string): Promise<void>;
+  assignPooledPhotosToItem(
+    collectionId: string,
+    photoIds: string[],
+    itemId: string,
+    heroPhotoId: string,
+  ): Promise<number>;
 }

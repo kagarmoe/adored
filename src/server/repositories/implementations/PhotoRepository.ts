@@ -1,7 +1,7 @@
 import type { Database } from "@/lib/db";
 import type { Photo } from "@/types";
 import { photosTable } from "@/lib/db/schema";
-import { eq, and, isNull, asc } from "drizzle-orm";
+import { eq, and, isNull, asc, inArray, sql } from "drizzle-orm";
 import { generateId } from "@/lib/id";
 import type { IPhotoRepository } from "@/server/repositories/PhotoRepository";
 
@@ -115,6 +115,39 @@ export class PhotoRepository implements IPhotoRepository {
   async setHero(photoId: string, itemId: string): Promise<Photo> {
     await this.clearHeroPhotos(itemId);
     return this.update(photoId, { isHero: true });
+  }
+
+  // Assigns the given pooled photos to an item and marks exactly one as hero,
+  // in a single UPDATE. The WHERE clause is the IDOR / double-assign guard: it
+  // matches only this collection's still-pooled, non-deleted rows, so a photo
+  // from another collection, an already-grouped photo, or a deleted one can
+  // never be captured. The caller compares the returned count to the requested
+  // count and rejects on a mismatch (neon-http has no transaction to lean on).
+  async assignPooledPhotosToItem(
+    collectionId: string,
+    photoIds: string[],
+    itemId: string,
+    heroPhotoId: string,
+  ): Promise<number> {
+    if (photoIds.length === 0) return 0;
+    const now = new Date();
+    const rows = await this.db
+      .update(photosTable)
+      .set({
+        itemId,
+        isHero: sql<boolean>`(${photosTable.id} = ${heroPhotoId})`,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(photosTable.collectionId, collectionId),
+          inArray(photosTable.id, photoIds),
+          isNull(photosTable.itemId),
+          isNull(photosTable.deletedAt),
+        ),
+      )
+      .returning({ id: photosTable.id });
+    return rows.length;
   }
 
   private mapToPhoto(row: any): Photo {
