@@ -20,11 +20,11 @@ export class ItemService {
     private photoRepo: IPhotoRepository,
   ) {}
 
-  // Make one item from selected pooled photos: create the (nameless,
-  // catalog-numbered) item, then assign the photos with the first as hero.
-  // Order is create -> assign because neon-http is stateless; the worst partial
-  // failure is a harmless empty item, and the repo's affected-count guard makes
-  // assignment all-or-reject (see assignPooledPhotosToItem).
+  // Make one item from selected pooled photos: pre-validate availability, then
+  // create the (nameless, catalog-numbered) item and assign the photos with the
+  // first as hero. neon-http is stateless (no transaction), so we pre-check
+  // availability before any write — a conflict must leave the pool untouched —
+  // and keep the assign guard as a race backstop that compensates the item.
   async createItemFromPool(collectionId: string, photoIds: string[]): Promise<Item> {
     const ids = [...new Set(photoIds)];
     if (ids.length === 0) {
@@ -33,6 +33,19 @@ export class ItemService {
     if (ids.length > MAX_GROUP_PHOTOS) {
       throw new PoolGroupError("too_many", `You can group up to ${MAX_GROUP_PHOTOS} photos at once.`);
     }
+
+    // Pre-validate availability BEFORE creating or assigning anything, so a
+    // conflict leaves the pool untouched — no orphan item, no half-assigned
+    // photos. neon-http has no transaction; this check plus the assign guard
+    // below keep conflicts clean.
+    const available = await this.photoRepo.countAvailablePooled(collectionId, ids);
+    if (available !== ids.length) {
+      throw new PoolGroupError(
+        "conflict",
+        "Some of those photos aren't available to group anymore — try again.",
+      );
+    }
+
     const item = await this.repo.create({ collectionId });
     const assigned = await this.photoRepo.assignPooledPhotosToItem(
       collectionId,
@@ -41,6 +54,9 @@ export class ItemService {
       ids[0],
     );
     if (assigned !== ids.length) {
+      // Lost a race between the check and the assign (rare). Remove the
+      // just-created item so a conflict never leaks an orphan.
+      await this.repo.softDelete(item.id);
       throw new PoolGroupError(
         "conflict",
         "Some of those photos aren't available to group anymore — try again.",

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { ItemService, PoolGroupError } from "./ItemService";
 
-function makeRepos(overrides: { assign?: number } = {}) {
+function makeRepos(overrides: { assign?: number; available?: number } = {}) {
   const itemRepo = {
     create: vi.fn().mockResolvedValue({ id: "item_new", collectionId: "c1", number: 7, name: null }),
     findById: vi.fn(),
@@ -12,6 +12,7 @@ function makeRepos(overrides: { assign?: number } = {}) {
     softDelete: vi.fn(),
   };
   const photoRepo = {
+    countAvailablePooled: vi.fn().mockResolvedValue(overrides.available ?? 2),
     assignPooledPhotosToItem: vi.fn().mockResolvedValue(overrides.assign ?? 2),
   } as any;
   return { itemRepo: itemRepo as any, photoRepo };
@@ -43,6 +44,17 @@ describe("ItemService.createItemFromPool", () => {
       name: "PoolGroupError",
       code: "conflict",
     });
+  });
+
+  it("rejects with conflict (without creating an item) when a photo is unavailable", async () => {
+    const { itemRepo, photoRepo } = makeRepos({ available: 1 });
+    const service = new ItemService(itemRepo, photoRepo);
+    await expect(service.createItemFromPool("c1", ["p1", "p2"])).rejects.toMatchObject({
+      name: "PoolGroupError",
+      code: "conflict",
+    });
+    expect(itemRepo.create).not.toHaveBeenCalled();
+    expect(photoRepo.assignPooledPhotosToItem).not.toHaveBeenCalled();
   });
 
   it("rejects an empty selection without creating an item", async () => {
