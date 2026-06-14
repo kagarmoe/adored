@@ -290,4 +290,20 @@ describeDb("pool-ready schema", () => {
     const count = await repo.assignPooledPhotosToItem(collectionId, [taken.id], "item_g3", taken.id);
     expect(count).toBe(0);
   });
+
+  it("assignPooledPhotosToItem refuses a soft-deleted pooled photo", async () => {
+    const { db } = getTestDb();
+    const { PhotoRepository } = await import(
+      "@/server/repositories/implementations/PhotoRepository"
+    );
+    const repo = new PhotoRepository(db);
+    await db.execute(
+      sql`INSERT INTO items (id, collection_id, number, created_at, updated_at) VALUES ('item_g4', ${collectionId}, 1, now(), now())`,
+    );
+    const gone = await repo.create({ itemId: null, collectionId, blobKey: "x1", filename: "x1.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: userId, isHero: false });
+    await repo.softDelete(gone.id);
+
+    const count = await repo.assignPooledPhotosToItem(collectionId, [gone.id], "item_g4", gone.id);
+    expect(count).toBe(0);
+  });
 });
