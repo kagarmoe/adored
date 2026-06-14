@@ -7,11 +7,12 @@ import { AppLayout } from "@/components/layout";
 import { Button, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
 import { ItemFilters } from "@/features/items/ItemFilters";
+import { filterItems, itemsEmptyState } from "@/lib/items";
 import Link from "next/link";
 
 interface ItemsPageProps {
   params: { id: string };
-  searchParams?: { status?: string };
+  searchParams?: { status?: string; unnamed?: string };
 }
 
 export default async function ItemsPage({ params, searchParams }: ItemsPageProps) {
@@ -33,9 +34,13 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
   const activeFilter = ["active", "archived", "deleted"].includes(searchParams?.status || "")
     ? searchParams!.status!
     : "all";
-  const filteredItems = activeFilter === "all"
-    ? items
-    : items.filter((item) => (item.status || "active") === activeFilter);
+  const unnamed = searchParams?.unnamed === "1";
+  const filteredItems = filterItems(items, { status: activeFilter, unnamed });
+  const empty = itemsEmptyState({
+    hasAnyItems: items.length > 0,
+    unnamed,
+    status: activeFilter,
+  });
 
   return (
     <AppLayout
@@ -61,21 +66,17 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
           </div>
         </div>
 
-        <ItemFilters activeFilter={activeFilter} collectionId={params.id} />
+        <ItemFilters activeFilter={activeFilter} unnamed={unnamed} collectionId={params.id} />
 
-        {items.length === 0 ? (
+        {filteredItems.length === 0 ? (
           <EmptyState
-            heading="No items yet"
-            message="Add items to start organizing your collection"
-            action={{
-              label: "Add Item",
-              href: `/collections/${params.id}/items/new`,
-            }}
-          />
-        ) : filteredItems.length === 0 ? (
-          <EmptyState
-            heading={`No ${activeFilter} items`}
-            message="Try a different status filter"
+            heading={empty.heading}
+            message={empty.message}
+            action={
+              items.length === 0
+                ? { label: "Add Item", href: `/collections/${params.id}/items/new` }
+                : undefined
+            }
           />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

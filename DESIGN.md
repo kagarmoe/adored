@@ -85,6 +85,7 @@ Two **separate** colour systems that never trade places (see the named rule belo
 ### Brand / expressive
 
 - **Primary — deep teal** (`#004A67`): the one anchor. Action, links, progress, focus, selection. In dark it brightens to a luminous cornflower (`#79AFE0`) so it still leads. **Action only — never a heading colour.**
+  - *Quiet inline links (exception).* A low-pressure inline invitation — e.g. a gentle "Add a name" on a not-yet-named item — may use `ink-soft` instead of teal where drawing the eye would read as pressure. The underline carries the affordance and contrast stays ≥ AA. A deliberate, tone-driven exception (`TONE.md` is first-order): naming follows from affection, never a nag.
 - **Cool blues** — Aqua `#CAE4E1`, Sky `#98CEDD`, Cornflower `#79AFE0`, Periwinkle `#B3BFD8`: content, soft fills, photo areas, and benign-state chips ("Not yet").
 - **Spark — citron** (`#C9BF29`): the lone affirmation spark. Sparing; dark text on it; never in a caution context.
 - **Decor — soft mauve** (`#D9C7D1`): gentle non-state decoration only — never a state, tier, or action colour.
