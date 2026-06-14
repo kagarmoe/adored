@@ -328,4 +328,34 @@ describeDb("pool-ready schema", () => {
     expect(assigned.filter((p) => p.isHero).map((p) => p.id)).toEqual([p2.id]);
     expect(assigned.find((p) => p.id === p1.id)?.isHero).toBe(false);
   });
+
+  it("countAvailablePooled counts only available pooled photos (excludes foreign-collection, assigned, soft-deleted)", async () => {
+    const { db } = getTestDb();
+    const { PhotoRepository } = await import("@/server/repositories/implementations/PhotoRepository");
+    const repo = new PhotoRepository(db);
+    await db.execute(sql`INSERT INTO collections (id, owner_id, name, status, created_at, updated_at) VALUES ('col_cap_other', ${userId}, 'Other', 'active', now(), now())`);
+    await db.execute(sql`INSERT INTO items (id, collection_id, number, created_at, updated_at) VALUES ('item_cap', ${collectionId}, 1, now(), now())`);
+    const a = await repo.create({ itemId: null, collectionId, blobKey: "ca", filename: "a.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: userId, isHero: false });
+    const b = await repo.create({ itemId: null, collectionId, blobKey: "cb", filename: "b.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: userId, isHero: false });
+    const foreign = await repo.create({ itemId: null, collectionId: "col_cap_other", blobKey: "cf", filename: "f.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: userId, isHero: false });
+    const assigned = await repo.create({ itemId: "item_cap", collectionId, blobKey: "cg", filename: "g.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: userId, isHero: false });
+    const del = await repo.create({ itemId: null, collectionId, blobKey: "cd", filename: "d.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: userId, isHero: false });
+    await repo.softDelete(del.id);
+
+    // all five ids submitted; only the two genuinely-available ones count
+    const n = await repo.countAvailablePooled(collectionId, [a.id, b.id, foreign.id, assigned.id, del.id]);
+    expect(n).toBe(2);
+  });
+
+  it("countAvailablePooled returns 0 for an empty list", async () => {
+    const { db } = getTestDb();
+    const { PhotoRepository } = await import("@/server/repositories/implementations/PhotoRepository");
+    expect(await new PhotoRepository(db).countAvailablePooled(collectionId, [])).toBe(0);
+  });
+
+  it("assignPooledPhotosToItem returns 0 for an empty list (no-op)", async () => {
+    const { db } = getTestDb();
+    const { PhotoRepository } = await import("@/server/repositories/implementations/PhotoRepository");
+    expect(await new PhotoRepository(db).assignPooledPhotosToItem(collectionId, [], "item_none", "item_none")).toBe(0);
+  });
 });
