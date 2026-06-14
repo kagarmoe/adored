@@ -6,11 +6,13 @@ export function PoolActionBar({
   count,
   busy,
   onMakeItem,
+  onMakeEach,
   onClear,
 }: {
   count: number;
   busy: boolean;
   onMakeItem: () => void;
+  onMakeEach?: () => void;
   onClear: () => void;
 }) {
   if (count === 0) return null;
@@ -28,6 +30,19 @@ export function PoolActionBar({
           <Button type="button" variant="ghost" className="min-h-11" disabled={busy} onClick={onClear}>
             Clear
           </Button>
+          {/* With one photo this is identical to "Make an item" — only offer it
+              when there's a real choice to make (2+). */}
+          {count >= 2 && onMakeEach && (
+            <Button
+              type="button"
+              variant="secondary"
+              className="min-h-11"
+              disabled={busy}
+              onClick={onMakeEach}
+            >
+              Make each its own
+            </Button>
+          )}
           <Button type="button" variant="primary" className="min-h-11" disabled={busy} onClick={onMakeItem}>
             {busy ? "Making…" : "Make an item"}
           </Button>

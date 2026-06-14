@@ -50,8 +50,16 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     );
   }
 
+  // mode is lenient: "each" makes one item per photo; anything else (including a
+  // missing or unknown mode) falls back to "combine" — never a 400 on mode.
+  const mode = (body as { mode?: unknown })?.mode === "each" ? "each" : "combine";
+
   const service = new ItemService(new ItemRepository(db), new PhotoRepository(db));
   try {
+    if (mode === "each") {
+      const items = await service.createItemsFromPoolEach(params.id, photoIds as string[]);
+      return NextResponse.json({ count: items.length }, { status: 201 });
+    }
     const item = await service.createItemFromPool(params.id, photoIds as string[]);
     return NextResponse.json({ number: item.number }, { status: 201 });
   } catch (error) {

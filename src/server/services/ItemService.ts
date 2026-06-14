@@ -67,6 +67,43 @@ export class ItemService {
     return item;
   }
 
+  // Make one item PER photo: a bulk fast-path where N selected photos become N
+  // items, each with its single photo as hero. Mirrors createItemFromPool's
+  // validation and pre-check discipline — a conflict touches nothing — but loops
+  // create+assign per photo, compensating any individual item that loses a race.
+  async createItemsFromPoolEach(collectionId: string, photoIds: string[]): Promise<Item[]> {
+    const ids = [...new Set(photoIds)];
+    if (ids.length === 0) {
+      throw new PoolGroupError("empty", "Choose at least one photo to make items.");
+    }
+    if (ids.length > MAX_GROUP_PHOTOS) {
+      throw new PoolGroupError("too_many", `You can make up to ${MAX_GROUP_PHOTOS} items at once.`);
+    }
+
+    // Pre-validate availability up front so a conflict touches nothing.
+    const available = await this.photoRepo.countAvailablePooled(collectionId, ids);
+    if (available !== ids.length) {
+      throw new PoolGroupError(
+        "conflict",
+        "Some of those photos aren't available to group anymore — try again.",
+      );
+    }
+
+    const created: Item[] = [];
+    for (const id of ids) {
+      const item = await this.repo.create({ collectionId });
+      const assigned = await this.photoRepo.assignPooledPhotosToItem(collectionId, [id], item.id, id);
+      if (assigned !== 1) {
+        // Lost a race for this one photo — clean up its empty item and skip it.
+        await this.photoRepo.unassignAllFromItem(item.id);
+        await this.repo.softDelete(item.id);
+        continue;
+      }
+      created.push(item);
+    }
+    return created;
+  }
+
   async createItem(
     collectionId: string,
     data: {

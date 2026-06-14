@@ -1,13 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockGetSession, mockGetDb, membershipRepo, collectionRepo, createItemFromPool } =
-  vi.hoisted(() => ({
-    mockGetSession: vi.fn(),
-    mockGetDb: vi.fn(),
-    membershipRepo: { findByUser: vi.fn() },
-    collectionRepo: { findById: vi.fn() },
-    createItemFromPool: vi.fn(),
-  }));
+const {
+  mockGetSession,
+  mockGetDb,
+  membershipRepo,
+  collectionRepo,
+  createItemFromPool,
+  createItemsFromPoolEach,
+} = vi.hoisted(() => ({
+  mockGetSession: vi.fn(),
+  mockGetDb: vi.fn(),
+  membershipRepo: { findByUser: vi.fn() },
+  collectionRepo: { findById: vi.fn() },
+  createItemFromPool: vi.fn(),
+  createItemsFromPoolEach: vi.fn(),
+}));
 
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: mockGetDb }));
@@ -27,7 +34,7 @@ vi.mock("@/server/services/ItemService", async () => {
   const actual = await vi.importActual<any>("@/server/services/ItemService");
   return {
     ...actual, // keep the real PoolGroupError class for instanceof mapping
-    ItemService: vi.fn().mockImplementation(() => ({ createItemFromPool })),
+    ItemService: vi.fn().mockImplementation(() => ({ createItemFromPool, createItemsFromPoolEach })),
   };
 });
 
@@ -49,6 +56,7 @@ describe("POST /api/collections/[id]/pool/group", () => {
     membershipRepo.findByUser.mockResolvedValue({ id: "m1" });
     collectionRepo.findById.mockResolvedValue({ id: "c1", ownerId: "u9" });
     createItemFromPool.mockResolvedValue({ id: "item_new", number: 7 });
+    createItemsFromPoolEach.mockResolvedValue([{ id: "i1" }, { id: "i2" }]);
   });
 
   it("401 when unauthenticated", async () => {
@@ -100,6 +108,28 @@ describe("POST /api/collections/[id]/pool/group", () => {
     expect(res.status).toBe(201);
     await expect(res.json()).resolves.toEqual({ number: 7 });
     expect(createItemFromPool).toHaveBeenCalledWith("c1", ["p1", "p2"]);
+  });
+
+  it('mode "each" makes one item per photo and returns the count', async () => {
+    const res = await POST(req({ photoIds: ["p1", "p2"], mode: "each" }), { params: { id: "c1" } });
+    expect(res.status).toBe(201);
+    await expect(res.json()).resolves.toEqual({ count: 2 });
+    expect(createItemsFromPoolEach).toHaveBeenCalledWith("c1", ["p1", "p2"]);
+    expect(createItemFromPool).not.toHaveBeenCalled();
+  });
+
+  it("defaults to combine mode (returns the item number) when no mode is given", async () => {
+    const res = await POST(req({ photoIds: ["p1", "p2"] }), { params: { id: "c1" } });
+    expect(res.status).toBe(201);
+    await expect(res.json()).resolves.toEqual({ number: 7 });
+    expect(createItemFromPool).toHaveBeenCalledWith("c1", ["p1", "p2"]);
+    expect(createItemsFromPoolEach).not.toHaveBeenCalled();
+  });
+
+  it('409 when mode "each" reports a grouping conflict', async () => {
+    createItemsFromPoolEach.mockRejectedValue(new PoolGroupError("conflict", "gone"));
+    const res = await POST(req({ photoIds: ["p1", "p2"], mode: "each" }), { params: { id: "c1" } });
+    expect(res.status).toBe(409);
   });
 
   it("409 when the service reports a grouping conflict", async () => {

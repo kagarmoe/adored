@@ -94,3 +94,49 @@ describe("ItemService.createItemFromPool", () => {
     expect(itemRepo.softDelete).toHaveBeenCalledWith("item_new");
   });
 });
+
+describe("ItemService.createItemsFromPoolEach", () => {
+  it("makes one item per photo, each photo its own hero", async () => {
+    const { itemRepo, photoRepo } = makeRepos({ available: 2, assign: 1 });
+    const service = new ItemService(itemRepo, photoRepo);
+
+    const items = await service.createItemsFromPoolEach("c1", ["p1", "p2"]);
+
+    expect(items).toHaveLength(2);
+    expect(itemRepo.create).toHaveBeenCalledTimes(2);
+    expect(photoRepo.assignPooledPhotosToItem).toHaveBeenNthCalledWith(1, "c1", ["p1"], "item_new", "p1");
+    expect(photoRepo.assignPooledPhotosToItem).toHaveBeenNthCalledWith(2, "c1", ["p2"], "item_new", "p2");
+  });
+
+  it("dedupes photoIds before creating items", async () => {
+    const { itemRepo, photoRepo } = makeRepos({ available: 1, assign: 1 });
+    const service = new ItemService(itemRepo, photoRepo);
+    await service.createItemsFromPoolEach("c1", ["p1", "p1"]);
+    expect(itemRepo.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("pre-checks availability and creates nothing on conflict", async () => {
+    const { itemRepo, photoRepo } = makeRepos({ available: 1 });
+    const service = new ItemService(itemRepo, photoRepo);
+    await expect(service.createItemsFromPoolEach("c1", ["p1", "p2"])).rejects.toMatchObject({
+      name: "PoolGroupError",
+      code: "conflict",
+    });
+    expect(itemRepo.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects an empty selection without creating an item", async () => {
+    const { itemRepo, photoRepo } = makeRepos();
+    const service = new ItemService(itemRepo, photoRepo);
+    await expect(service.createItemsFromPoolEach("c1", [])).rejects.toBeInstanceOf(PoolGroupError);
+    expect(itemRepo.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects more than 50 photos without creating an item", async () => {
+    const { itemRepo, photoRepo } = makeRepos();
+    const service = new ItemService(itemRepo, photoRepo);
+    const ids = Array.from({ length: 51 }, (_, i) => `p${i}`);
+    await expect(service.createItemsFromPoolEach("c1", ids)).rejects.toBeInstanceOf(PoolGroupError);
+    expect(itemRepo.create).not.toHaveBeenCalled();
+  });
+});
