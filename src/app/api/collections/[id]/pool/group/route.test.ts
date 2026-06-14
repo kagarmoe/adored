@@ -89,6 +89,12 @@ describe("POST /api/collections/[id]/pool/group", () => {
     expect(res.status).toBe(409);
   });
 
+  it("400 when the service rejects an oversized selection (too_many)", async () => {
+    createItemFromPool.mockRejectedValue(new PoolGroupError("too_many", "too many"));
+    const res = await POST(req({ photoIds: ["p1"] }), { params: { id: "c1" } });
+    expect(res.status).toBe(400);
+  });
+
   it("allows the owner who has no membership row", async () => {
     membershipRepo.findByUser.mockResolvedValue(null);
     collectionRepo.findById.mockResolvedValue({ id: "c1", ownerId: "u1" });
