@@ -1,0 +1,80 @@
+name: Project — set Status to Done on close
+
+# When an issue (or PR) is closed, set its Status to "Done" on Project #2.
+# Replaces the built-in "Item closed" / "Pull request merged" Project workflows
+# with a version-controlled one. Field + option IDs are looked up by NAME at
+# runtime, so reordering/renaming-safe (as long as a "Status" field with a
+# "Done" option exists). No-ops cleanly if the closed item isn't on the board.
+#
+# Needs repo secret PROJECTS_PAT (PAT with `project` + `repo` scopes) — the
+# default GITHUB_TOKEN can't write a USER-owned Project.
+
+on:
+  issues:
+    types: [closed]
+  pull_request:
+    types: [closed]
+
+jobs:
+  set-done:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Status = Done for this item
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_PAT }}
+          OWNER: kagarmoe
+          PROJECT_NUMBER: "2"
+          # GitHub-generated opaque node ID for the closed issue/PR (not user text).
+          CONTENT_NODE_ID: ${{ github.event.issue.node_id || github.event.pull_request.node_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # 1. Project ID + Status field ID + "Done" option ID (looked up by name).
+          read -r PROJECT_ID FIELD_ID DONE_ID < <(
+            gh api graphql -f query='
+              query($owner:String!, $num:Int!) {
+                user(login:$owner) {
+                  projectV2(number:$num) {
+                    id
+                    field(name:"Status") {
+                      ... on ProjectV2SingleSelectField { id options { id name } }
+                    }
+                  }
+                }
+              }' -f owner="$OWNER" -F num="$PROJECT_NUMBER" \
+              --jq '.data.user.projectV2 | "\(.id) \(.field.id) \((.field.options[] | select(.name=="Done")).id)"'
+          )
+
+          if [ -z "${PROJECT_ID:-}" ] || [ -z "${FIELD_ID:-}" ] || [ -z "${DONE_ID:-}" ]; then
+            echo "Could not resolve project/Status/Done IDs; aborting." >&2
+            exit 1
+          fi
+
+          # 2. Find this issue/PR's item ON THIS project (an item knows its projects).
+          ITEM_ID=$(
+            gh api graphql -f query='
+              query($id:ID!) {
+                node(id:$id) {
+                  ... on Issue       { projectItems(first:50) { nodes { id project { id } } } }
+                  ... on PullRequest { projectItems(first:50) { nodes { id project { id } } } }
+                }
+              }' -f id="$CONTENT_NODE_ID" \
+              --jq ".data.node.projectItems.nodes[] | select(.project.id==\"$PROJECT_ID\") | .id" | head -n1
+          )
+
+          if [ -z "${ITEM_ID:-}" ]; then
+            echo "Closed item is not on Project #$PROJECT_NUMBER; nothing to do."
+            exit 0
+          fi
+
+          # 3. Set Status = Done.
+          gh api graphql -f query='
+            mutation($p:ID!, $i:ID!, $f:ID!, $o:String!) {
+              updateProjectV2ItemFieldValue(input:{
+                projectId:$p, itemId:$i, fieldId:$f,
+                value:{ singleSelectOptionId:$o }
+              }) { projectV2Item { id } }
+            }' -f p="$PROJECT_ID" -f i="$ITEM_ID" -f f="$FIELD_ID" -f o="$DONE_ID" >/dev/null
+
+          echo "Set item $ITEM_ID → Done on Project #$PROJECT_NUMBER."

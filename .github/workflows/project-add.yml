@@ -1,0 +1,20 @@
+name: Project — add new issues
+
+# Adds every newly-opened issue to the user Project board (#2, "PurseInator").
+# Replaces the built-in Project "Item added to project" / auto-add workflow with
+# a version-controlled one. Needs a PAT with `project` + `repo` scopes stored as
+# the repo secret PROJECTS_PAT — the default GITHUB_TOKEN cannot write to a
+# USER-owned Project (it's owned by the account, not this repo).
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  add-to-project:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: https://github.com/users/kagarmoe/projects/2
+          github-token: ${{ secrets.PROJECTS_PAT }}
