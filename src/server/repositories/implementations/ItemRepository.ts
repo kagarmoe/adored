@@ -161,7 +161,10 @@ export class ItemRepository implements IItemRepository {
 }
 
 function isCatalogNumberConflict(error: unknown): boolean {
+  // Retry ONLY the UNIQUE(collection_id, number) race — any other unique
+  // violation is a real bug and must surface, not be masked by retries.
+  // Constraint name matches the Drizzle-generated unique index; update if renamed.
   const code = (error as { code?: string })?.code;
   const message = error instanceof Error ? error.message : String(error);
-  return code === "23505" || message.includes("items_collection_number_unique");
+  return code === "23505" && message.includes("items_collection_number_unique");
 }
