@@ -52,7 +52,11 @@ export function ItemCard({ item, collectionId, heroPhotoUrl, bucket, imageClassN
               <h3 className="text-ink truncate">{itemDisplayName(item)}</h3>
               {bucket && <Badge variant={bucket} title={bucketLabels[bucket]}>{bucketDots[bucket]}</Badge>}
             </div>
-            {item.brand && <p className="text-xs text-ink-soft truncate">{item.brand}</p>}
+            {item.name ? (
+              item.brand && <p className="text-xs text-ink-soft truncate">{item.brand}</p>
+            ) : (
+              <p className="text-xs text-ink-soft truncate">Add a name</p>
+            )}
             {item.status && item.status !== "active" && (
               <Badge variant={item.status === "deleted" ? "deleted" : "archived"}>{item.status}</Badge>
             )}
