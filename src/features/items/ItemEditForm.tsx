@@ -15,7 +15,7 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    name: item.name,
+    name: item.name ?? "",
     brand: item.brand || "",
     style: item.style || "",
     color: item.color || "",
@@ -40,6 +40,7 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
     setError(null);
 
     try {
+      // PATCH targets the stable ULID; the page URL uses the human-readable catalog number.
       const response = await fetch(
         `/api/collections/${collectionId}/items/${item.id}`,
         {
@@ -53,7 +54,7 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
         throw new Error("Failed to update item");
       }
 
-      router.push(`/collections/${collectionId}/items/${item.id}`);
+      router.push(`/collections/${collectionId}/items/${item.number}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

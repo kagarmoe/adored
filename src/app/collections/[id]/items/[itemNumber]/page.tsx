@@ -10,9 +10,10 @@ import { ItemMetadata } from "@/features/items/ItemMetadata";
 import Link from "next/link";
 import Image from "next/image";
 import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
+import { itemDisplayName } from "@/lib/items";
 
 interface ItemDetailPageProps {
-  params: { id: string; itemId: string };
+  params: { id: string; itemNumber: string };
 }
 
 export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
@@ -25,16 +26,20 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   const collectionRepo = new CollectionRepository(db);
   const itemRepo = new ItemRepository(db);
   const photoRepo = new PhotoRepository(db);
-  const [collection, item, photos] = await Promise.all([
+
+  const number = Number(params.itemNumber);
+  const [collection, item] = await Promise.all([
     collectionRepo.findById(params.id),
-    itemRepo.findById(params.itemId),
-    photoRepo.findByItem(params.itemId),
+    number > 0 && Number.isInteger(number)
+      ? itemRepo.findByCollectionAndNumber(params.id, number)
+      : Promise.resolve(null),
   ]);
 
-  if (!collection || !item || item.collectionId !== params.id) {
+  if (!collection || !item) {
     redirect(`/collections/${params.id}/items`);
   }
 
+  const photos = await photoRepo.findByItem(item.id);
   const heroPhoto = photos.find((p) => p.isHero);
 
   return (
@@ -43,16 +48,16 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
         { label: "Collections", href: "/collections" },
         { label: collection.name, href: `/collections/${params.id}` },
         { label: "Items", href: `/collections/${params.id}/items` },
-        { label: item.name },
+        { label: itemDisplayName(item) },
       ]}
     >
       <div className="space-y-8">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl text-ink">{item.name}</h1>
+            <h1 className="text-3xl text-ink">{itemDisplayName(item)}</h1>
             {item.brand && <p className="mt-1 text-ink-soft">{item.brand}</p>}
           </div>
-          <Link href={`/collections/${params.id}/items/${params.itemId}/edit`}>
+          <Link href={`/collections/${params.id}/items/${item.number}/edit`}>
             <Button>Edit</Button>
           </Link>
         </div>
@@ -62,7 +67,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
           <div className="bg-ground rounded-lg overflow-hidden h-96 flex items-center justify-center">
             <Image
               src={getPhotoAssetUrlForPhoto(heroPhoto, params.id)}
-              alt={item.name}
+              alt={itemDisplayName(item)}
               fill
               className="object-cover"
               priority
@@ -74,7 +79,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
             <div className="text-center">
               <span className="text-6xl block mb-2">📷</span>
               <p className="text-ink-soft">No hero photo</p>
-              <Link href={`/collections/${params.id}/items/${params.itemId}/photos`}>
+              <Link href={`/collections/${params.id}/items/${item.number}/photos`}>
                 <Button className="mt-4">Add Photos</Button>
               </Link>
             </div>
@@ -112,7 +117,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
                 </div>
               ))}
             </div>
-            <Link href={`/collections/${params.id}/items/${params.itemId}/photos`}>
+            <Link href={`/collections/${params.id}/items/${item.number}/photos`}>
               <Button className="mt-4" variant="secondary">
                 Manage Photos
               </Button>
@@ -124,7 +129,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
         {photos.length === 0 && (
           <Card padding="lg" className="text-center">
             <p className="text-ink-soft mb-4">No photos yet</p>
-            <Link href={`/collections/${params.id}/items/${params.itemId}/photos`}>
+            <Link href={`/collections/${params.id}/items/${item.number}/photos`}>
               <Button>Add Photos</Button>
             </Link>
           </Card>

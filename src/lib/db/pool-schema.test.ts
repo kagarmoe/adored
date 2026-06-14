@@ -92,6 +92,53 @@ describeDb("pool-ready schema", () => {
     expect(photo).toMatchObject({ itemId: null, collectionId });
   });
 
+  it("findByCollectionAndNumber resolves an item by its catalog number", async () => {
+    const { db } = getTestDb();
+    const { ItemRepository } = await import(
+      "@/server/repositories/implementations/ItemRepository"
+    );
+    const repo = new ItemRepository(db);
+    await db.execute(
+      sql`INSERT INTO items (id, collection_id, number, created_at, updated_at) VALUES ('item_byn_1', ${collectionId}, 5, now(), now())`,
+    );
+
+    const found = await repo.findByCollectionAndNumber(collectionId, 5);
+    expect(found).toMatchObject({ id: "item_byn_1", number: 5 });
+
+    const missing = await repo.findByCollectionAndNumber(collectionId, 999);
+    expect(missing).toBeNull();
+  });
+
+  it("findByCollectionAndNumber ignores soft-deleted items", async () => {
+    const { db } = getTestDb();
+    const { ItemRepository } = await import(
+      "@/server/repositories/implementations/ItemRepository"
+    );
+    const repo = new ItemRepository(db);
+    await db.execute(
+      sql`INSERT INTO items (id, collection_id, number, deleted_at, created_at, updated_at) VALUES ('item_del_1', ${collectionId}, 6, now(), now(), now())`,
+    );
+    expect(await repo.findByCollectionAndNumber(collectionId, 6)).toBeNull();
+  });
+
+  it("getNextCatalogNumber starts at 1 and steps past the max (incl. soft-deleted)", async () => {
+    const { db } = getTestDb();
+    const { ItemRepository } = await import(
+      "@/server/repositories/implementations/ItemRepository"
+    );
+    const repo = new ItemRepository(db);
+    expect(await repo.getNextCatalogNumber(collectionId)).toBe(1);
+
+    await db.execute(
+      sql`INSERT INTO items (id, collection_id, number, created_at, updated_at) VALUES ('item_nx_1', ${collectionId}, 3, now(), now())`,
+    );
+    // soft-deleted item still occupies its number in the unique index
+    await db.execute(
+      sql`INSERT INTO items (id, collection_id, number, deleted_at, created_at, updated_at) VALUES ('item_nx_2', ${collectionId}, 9, now(), now(), now())`,
+    );
+    expect(await repo.getNextCatalogNumber(collectionId)).toBe(10);
+  });
+
   it("findPoolByCollection returns only unassigned, non-deleted photos", async () => {
     const { db } = getTestDb();
     const { PhotoRepository } = await import(
@@ -156,5 +203,38 @@ describeDb("pool-ready schema", () => {
     const pool = await repo.findPoolByCollection(collectionId);
     expect(pool).toHaveLength(1);
     expect(pool[0]).toMatchObject({ blobKey: "p1", itemId: null, collectionId });
+  });
+
+  it("create auto-allocates sequential catalog numbers", async () => {
+    const { db } = getTestDb();
+    const { ItemRepository } = await import(
+      "@/server/repositories/implementations/ItemRepository"
+    );
+    const repo = new ItemRepository(db);
+    const a = await repo.create({ collectionId, name: "A" });
+    const b = await repo.create({ collectionId, name: "B" });
+    expect(a.number).toBe(1);
+    expect(b.number).toBe(2);
+  });
+
+  it("create accepts a nameless item and still allocates a number", async () => {
+    const { db } = getTestDb();
+    const { ItemRepository } = await import(
+      "@/server/repositories/implementations/ItemRepository"
+    );
+    const repo = new ItemRepository(db);
+    const item = await repo.create({ collectionId });
+    expect(item.name).toBeNull();
+    expect(item.number).toBe(1);
+  });
+
+  it("create honours an explicit number when given", async () => {
+    const { db } = getTestDb();
+    const { ItemRepository } = await import(
+      "@/server/repositories/implementations/ItemRepository"
+    );
+    const repo = new ItemRepository(db);
+    const item = await repo.create({ collectionId, name: "X", number: 42 });
+    expect(item.number).toBe(42);
   });
 });

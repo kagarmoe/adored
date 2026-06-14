@@ -7,7 +7,7 @@ export class ItemService {
   async createItem(
     collectionId: string,
     data: {
-      name: string;
+      name?: string | null;
       brand?: string;
       style?: string;
       color?: string;

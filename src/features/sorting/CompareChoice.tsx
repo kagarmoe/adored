@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { Item } from "@/types";
+import { itemDisplayName, itemInitial } from "@/lib/items";
 import { Button } from "@/components/ui";
 
 interface CompareChoiceProps {
@@ -58,21 +59,21 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
             key={key}
             type="button"
             disabled={busy}
-            aria-label={`Choose ${item.name}`}
+            aria-label={`Choose ${itemDisplayName(item)}`}
             onClick={() => choose(result, key)}
             className="group flex flex-col overflow-hidden rounded-card border border-hairline bg-surface text-left transition-shadow duration-200 ease-gentle hover:shadow-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-accent-aqua">
               {hero ? (
-                <Image src={hero} alt={item.name} fill className="object-cover" />
+                <Image src={hero} alt={itemDisplayName(item)} fill className="object-cover" />
               ) : (
                 <span className="font-display text-6xl text-ink-soft" aria-hidden>
-                  {item.name.charAt(0).toUpperCase()}
+                  {itemInitial(item)}
                 </span>
               )}
             </div>
             <div className="p-4">
-              <h3 className="text-ink">{pending === key ? "Saving…" : item.name}</h3>
+              <h3 className="text-ink">{pending === key ? "Saving…" : itemDisplayName(item)}</h3>
               {item.brand && <p className="mt-1 text-sm text-ink-soft">{item.brand}</p>}
             </div>
           </button>

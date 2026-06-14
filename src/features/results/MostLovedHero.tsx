@@ -1,4 +1,5 @@
 import type { Item } from "@/types";
+import { itemDisplayName, itemInitial } from "@/lib/items";
 import { Card } from "@/components/ui";
 import Link from "next/link";
 import Image from "next/image";
@@ -13,16 +14,16 @@ interface MostLovedHeroProps {
  *  real presence. The photograph leads; the lone citron spark marks the moment. */
 export function MostLovedHero({ item, collectionId, heroPhotoUrl }: MostLovedHeroProps) {
   return (
-    <Link href={`/collections/${collectionId}/items/${item.id}`} className="group block">
+    <Link href={`/collections/${collectionId}/items/${item.number}`} className="group block">
       <Card interactive padding="none" className="overflow-hidden">
         <div className="flex flex-col md:flex-row">
           {/* The photograph is the loudest thing on screen. */}
           <div className="relative aspect-[4/3] md:aspect-auto md:w-2/5 md:self-stretch bg-accent-aqua flex items-center justify-center overflow-hidden">
             {heroPhotoUrl ? (
-              <Image src={heroPhotoUrl} alt={item.name} fill className="object-cover" />
+              <Image src={heroPhotoUrl} alt={itemDisplayName(item)} fill className="object-cover" />
             ) : (
               <span className="font-display text-7xl text-ink-soft/70" aria-hidden>
-                {item.name.charAt(0).toUpperCase()}
+                {itemInitial(item)}
               </span>
             )}
           </div>
@@ -33,7 +34,7 @@ export function MostLovedHero({ item, collectionId, heroPhotoUrl }: MostLovedHer
               <span className="h-3.5 w-3.5 shrink-0 rounded-full bg-spark" aria-hidden="true" />
               <span className="font-display text-lg text-ink">What you love most</span>
             </div>
-            <p className="font-display text-3xl text-ink sm:text-4xl">{item.name}</p>
+            <p className="font-display text-3xl text-ink sm:text-4xl">{itemDisplayName(item)}</p>
             {item.brand && <p className="text-ink-soft">{item.brand}</p>}
           </div>
         </div>

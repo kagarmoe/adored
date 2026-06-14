@@ -47,10 +47,12 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
 
       if (mode === "create") {
         const result = await apiPost<Item>(`/api/collections/${collectionId}/items`, validated);
-        router.push(`/collections/${collectionId}/items/${result.id}`);
+        // The server assigns a catalog number; the page URL uses that human-readable number.
+        router.push(`/collections/${collectionId}/items/${result.number}`);
       } else if (item) {
+        // PATCH targets the stable ULID; the page URL uses the human-readable catalog number.
         await apiPatch(`/api/collections/${collectionId}/items/${item.id}`, validated);
-        router.push(`/collections/${collectionId}/items/${item.id}`);
+        router.push(`/collections/${collectionId}/items/${item.number}`);
       }
     } catch (err: any) {
       if (err instanceof z.ZodError) {

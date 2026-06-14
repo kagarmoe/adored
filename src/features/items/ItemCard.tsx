@@ -1,4 +1,5 @@
 import type { Item } from "@/types";
+import { itemDisplayName, itemInitial } from "@/lib/items";
 import { Badge, Card } from "@/components/ui";
 import Link from "next/link";
 import Image from "next/image";
@@ -29,26 +30,26 @@ const bucketLabels = {
 
 export function ItemCard({ item, collectionId, heroPhotoUrl, bucket, imageClassName = "aspect-square" }: ItemCardProps) {
   return (
-    <Link href={`/collections/${collectionId}/items/${item.id}`}>
+    <Link href={`/collections/${collectionId}/items/${item.number}`}>
       <Card interactive padding="none" className="overflow-hidden h-full flex flex-col">
         <div className={`bg-accent-aqua ${imageClassName} flex items-center justify-center relative overflow-hidden`}>
           {heroPhotoUrl ? (
             <Image
               src={heroPhotoUrl}
-              alt={item.name}
+              alt={itemDisplayName(item)}
               fill
               className="object-cover"
             />
           ) : (
             <span className="font-display text-5xl text-ink-soft" aria-hidden>
-              {item.name.charAt(0).toUpperCase()}
+              {itemInitial(item)}
             </span>
           )}
         </div>
         <div className="p-3 flex-1 flex flex-col justify-between">
           <div className="space-y-2">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-ink truncate">{item.name}</h3>
+              <h3 className="text-ink truncate">{itemDisplayName(item)}</h3>
               {bucket && <Badge variant={bucket} title={bucketLabels[bucket]}>{bucketDots[bucket]}</Badge>}
             </div>
             {item.brand && <p className="text-xs text-ink-soft truncate">{item.brand}</p>}
