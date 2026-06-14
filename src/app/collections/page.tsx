@@ -2,6 +2,8 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
 import { buttonVariants, EmptyState } from "@/components/ui";
 import { CollectionCard } from "@/features/collections/CollectionCard";
@@ -21,6 +23,9 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
   const db = getDb();
   const collectionRepo = new CollectionRepository(db);
   const collections = await collectionRepo.findByOwner(session.user.id);
+  const covers = await new PhotoRepository(db).findCoverPhotosByCollectionIds(
+    collections.map((c) => c.id),
+  );
   const activeFilter = searchParams?.status === "active" || searchParams?.status === "archived"
     ? searchParams.status
     : "all";
@@ -61,9 +66,16 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCollections.map((collection) => (
-              <CollectionCard key={collection.id} collection={collection} />
-            ))}
+            {filteredCollections.map((collection) => {
+              const cover = covers.get(collection.id);
+              return (
+                <CollectionCard
+                  key={collection.id}
+                  collection={collection}
+                  coverPhotoUrl={cover ? getPhotoAssetUrlForPhoto(cover, collection.id) : undefined}
+                />
+              );
+            })}
           </div>
         )}
       </div>

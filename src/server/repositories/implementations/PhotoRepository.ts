@@ -1,7 +1,7 @@
 import type { Database } from "@/lib/db";
 import type { Photo } from "@/types";
 import { photosTable } from "@/lib/db/schema";
-import { eq, and, isNull, asc, inArray, sql } from "drizzle-orm";
+import { eq, and, isNull, isNotNull, asc, inArray, sql } from "drizzle-orm";
 import { generateId } from "@/lib/id";
 import type { IPhotoRepository } from "@/server/repositories/PhotoRepository";
 
@@ -96,6 +96,40 @@ export class PhotoRepository implements IPhotoRepository {
         map.set(photo.itemId, photo);
       } else if (photo.isHero && !existing.isHero) {
         map.set(photo.itemId, photo);
+      }
+    }
+    return map;
+  }
+
+  // Per-collection cover photo for a batch of collections, in a single query
+  // (avoids N+1 on the collections-home page). A collection's cover is a
+  // representative ASSIGNED photo (item_id IS NOT NULL): its hero (is_hero=true)
+  // if any, else the earliest (created_at asc) non-deleted assigned photo.
+  // POOLED photos (item_id IS NULL) are excluded — they have no item-scoped asset
+  // URL. Collections with no assigned photos are absent from the map.
+  async findCoverPhotosByCollectionIds(collectionIds: string[]): Promise<Map<string, Photo>> {
+    const map = new Map<string, Photo>();
+    if (collectionIds.length === 0) return map;
+    const rows = await this.db
+      .select()
+      .from(photosTable)
+      .where(
+        and(
+          inArray(photosTable.collectionId, collectionIds),
+          isNotNull(photosTable.itemId),
+          isNull(photosTable.deletedAt),
+        ),
+      )
+      .orderBy(asc(photosTable.createdAt), asc(photosTable.id));
+    // earliest-first (id breaks created_at ties); a hero overrides. One
+    // representative cover photo per collection.
+    for (const row of rows) {
+      const photo = this.mapToPhoto(row);
+      const existing = map.get(photo.collectionId);
+      if (!existing) {
+        map.set(photo.collectionId, photo);
+      } else if (photo.isHero && !existing.isHero) {
+        map.set(photo.collectionId, photo);
       }
     }
     return map;
