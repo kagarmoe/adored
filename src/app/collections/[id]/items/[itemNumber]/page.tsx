@@ -56,6 +56,14 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
           <div>
             <h1 className="text-3xl text-ink">{itemDisplayName(item)}</h1>
             {item.brand && <p className="mt-1 text-ink-soft">{item.brand}</p>}
+            {!item.name && (
+              <Link
+                href={`/collections/${params.id}/items/${item.number}/edit`}
+                className="mt-1 inline-block text-ink-soft underline underline-offset-2"
+              >
+                Add a name
+              </Link>
+            )}
           </div>
           <Link href={`/collections/${params.id}/items/${item.number}/edit`}>
             <Button>Edit</Button>
