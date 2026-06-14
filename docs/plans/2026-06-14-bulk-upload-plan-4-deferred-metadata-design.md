@@ -6,10 +6,21 @@
 Governed by [`TONE.md`](../../TONE.md) (first-order), [`PRODUCT.md`](../../PRODUCT.md), [`DESIGN.md`](../../DESIGN.md).
 Parent design: [`2026-06-10-bulk-upload-pool-design.md`](./2026-06-10-bulk-upload-pool-design.md) (§ "Deferred metadata").
 
-> **Status: DRAFT for review.** Plan 4 is the most tone-sensitive phase — "needs details" surfacing is
-> exactly where shaming creeps in. I've made recommendations below and marked the genuine **decisions**
-> (▶) I'd want to confirm before turning this into a TDD implementation plan. Skim it, answer the ▶s
-> (or just say "go with your defaults"), and I'll write the executable plan.
+> **Status: APPROVED (2026-06-14)** — owner accepted the recommended defaults ("go with your defaults").
+> See **Resolved decisions** at the bottom; the ▶ markers below are kept for context. The executable
+> TDD plan lives alongside this doc.
+
+## Resolved decisions (2026-06-14)
+
+1. **"Could use details" = `name IS NULL`.** A name turns a row into a story; other fields are optional extras, not deficiencies.
+2. **Ship both** the calm card cue and the opt-in "waiting for a name" filter.
+3. **Defer** the guided one-at-a-time naming flow.
+
+**Implementation refinement (simpler than the phases below):** filtering by `name IS NULL` is **in-page**, matching the existing status filter (`items.filter(...)`) — **no new repo/DB method.** The "needs a name" test is just `!item.name`. So Plan 4 is three presentational pieces + one pure, unit-tested helper:
+- **Card cue** — a nameless `ItemCard` shows a calm `Add a name` hint (ink-soft, where the brand sub-line sits); the card still links to the item detail (no special-cased navigation, no nested interactive element).
+- **Opt-in filter** — a `Waiting for a name` toggle in `ItemFilters` via a new `?unnamed=1` searchParam (off by default, **no count in the label**); the items page applies `!item.name` when on, preserving the existing `status` filter.
+- **Detail-page affordance** — a nameless item's detail page shows a calm, honest `Add a name` link (to the existing `/edit` form) in the title area; named items just show the name.
+- **Pure helper** `filterItems(items, { status, unnamed })` — extracted so the filter logic is unit-tested in node (behavior, not just render).
 
 ## Goal
 
