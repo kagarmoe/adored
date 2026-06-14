@@ -204,4 +204,37 @@ describeDb("pool-ready schema", () => {
     expect(pool).toHaveLength(1);
     expect(pool[0]).toMatchObject({ blobKey: "p1", itemId: null, collectionId });
   });
+
+  it("create auto-allocates sequential catalog numbers", async () => {
+    const { db } = getTestDb();
+    const { ItemRepository } = await import(
+      "@/server/repositories/implementations/ItemRepository"
+    );
+    const repo = new ItemRepository(db);
+    const a = await repo.create({ collectionId, name: "A" });
+    const b = await repo.create({ collectionId, name: "B" });
+    expect(a.number).toBe(1);
+    expect(b.number).toBe(2);
+  });
+
+  it("create accepts a nameless item and still allocates a number", async () => {
+    const { db } = getTestDb();
+    const { ItemRepository } = await import(
+      "@/server/repositories/implementations/ItemRepository"
+    );
+    const repo = new ItemRepository(db);
+    const item = await repo.create({ collectionId });
+    expect(item.name).toBeNull();
+    expect(item.number).toBe(1);
+  });
+
+  it("create honours an explicit number when given", async () => {
+    const { db } = getTestDb();
+    const { ItemRepository } = await import(
+      "@/server/repositories/implementations/ItemRepository"
+    );
+    const repo = new ItemRepository(db);
+    const item = await repo.create({ collectionId, name: "X", number: 42 });
+    expect(item.number).toBe(42);
+  });
 });

@@ -3,7 +3,8 @@ import type { Item } from "@/types";
 export interface IItemRepository {
   create(data: {
     collectionId: string;
-    name: string;
+    name?: string | null;
+    number?: number;
     brand?: string;
     style?: string;
     color?: string;
