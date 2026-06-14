@@ -38,6 +38,7 @@ export function ItemCard({ item, collectionId, heroPhotoUrl, bucket, imageClassN
               src={heroPhotoUrl}
               alt={itemDisplayName(item)}
               fill
+              sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
               className="object-cover"
             />
           ) : (

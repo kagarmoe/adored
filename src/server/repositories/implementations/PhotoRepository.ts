@@ -68,6 +68,39 @@ export class PhotoRepository implements IPhotoRepository {
     return photos.map((p) => this.mapToPhoto(p));
   }
 
+  // Per-item cover photo for a batch of items, in a single query (avoids N+1
+  // on the items-list page). Cover = the item's hero (is_hero=true) if it has
+  // one, else its earliest (created_at asc) non-deleted photo. Items with no
+  // photos are absent from the map.
+  async findCoverPhotosByItemIds(itemIds: string[]): Promise<Map<string, Photo>> {
+    const map = new Map<string, Photo>();
+    if (itemIds.length === 0) return map;
+    const rows = await this.db
+      .select()
+      .from(photosTable)
+      .where(
+        and(
+          inArray(photosTable.itemId, itemIds),
+          isNull(photosTable.deletedAt),
+        ),
+      )
+      .orderBy(asc(photosTable.createdAt), asc(photosTable.id));
+    // earliest-first (id breaks created_at ties so "earliest" is deterministic);
+    // hero wins. Walk once: set the first photo seen per item (the earliest),
+    // then let a hero override.
+    for (const row of rows) {
+      const photo = this.mapToPhoto(row);
+      if (!photo.itemId) continue;
+      const existing = map.get(photo.itemId);
+      if (!existing) {
+        map.set(photo.itemId, photo);
+      } else if (photo.isHero && !existing.isHero) {
+        map.set(photo.itemId, photo);
+      }
+    }
+    return map;
+  }
+
   async findPoolByCollection(collectionId: string): Promise<Photo[]> {
     const photos = await this.db
       .select()
