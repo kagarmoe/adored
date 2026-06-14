@@ -11,7 +11,7 @@ interface PoolUploadProps {
   collectionId: string;
 }
 
-type FileStatus = "pending" | "preparing" | "uploading" | "done" | "error";
+type FileStatus = "pending" | "preparing" | "uploading" | "done" | "error" | "skipped";
 
 interface TrackedFile {
   key: string;
@@ -76,13 +76,14 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
 
   const uploadAll = async (selected: File[]) => {
     const { accepted, skipped } = partitionPoolFiles(selected);
-    // surface skipped files gently (so the person sees why nothing happened for them)
+    // surface skipped files gently (so the person sees why nothing happened for
+    // them) — a pre-flight skip is not a failure, so it renders muted, not red.
     if (skipped.length > 0) {
       setFiles((prev) => [
         ...skipped.map((s) => ({
           key: `skip-${s.name}-${s.reason}`,
           name: s.name,
-          status: "error" as const,
+          status: "skipped" as const,
           error: s.reason,
         })),
         ...prev,
@@ -208,11 +209,13 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
                     ? "added"
                     : f.status === "error"
                       ? (f.error ?? "failed")
-                      : f.status === "uploading"
-                        ? "uploading…"
-                        : f.status === "preparing"
-                          ? "preparing…"
-                          : "waiting…"}
+                      : f.status === "skipped"
+                        ? (f.error ?? "skipped")
+                        : f.status === "uploading"
+                          ? "uploading…"
+                          : f.status === "preparing"
+                            ? "preparing…"
+                            : "waiting…"}
                 </span>
               </li>
             ))}

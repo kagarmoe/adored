@@ -48,7 +48,7 @@ describe("partitionPoolFiles", () => {
     expect(accepted).toEqual([]);
     expect(skipped).toHaveLength(1);
     expect(skipped[0].name).toBe("a.avif");
-    expect(skipped[0].reason).toMatch(/Unsupported/i);
+    expect(skipped[0].reason).toMatch(/isn't supported/i);
   });
 
   it("skips an svg as an unsupported format", () => {
@@ -56,7 +56,7 @@ describe("partitionPoolFiles", () => {
     expect(accepted).toEqual([]);
     expect(skipped).toHaveLength(1);
     expect(skipped[0].name).toBe("a.svg");
-    expect(skipped[0].reason).toMatch(/Unsupported/i);
+    expect(skipped[0].reason).toMatch(/isn't supported/i);
   });
 
   it("accepts a HEIC file by mime type (it will be converted to jpeg)", () => {
@@ -78,7 +78,15 @@ describe("partitionPoolFiles", () => {
     expect(accepted).toEqual([]);
     expect(skipped).toHaveLength(1);
     expect(skipped[0].name).toBe("big.jpg");
-    expect(skipped[0].reason).toMatch(/too large|50 MB/i);
+    expect(skipped[0].reason).toMatch(/over|50 MB/i);
+  });
+
+  it("accepts a jpeg of exactly the size cap (the check is >, not >=)", () => {
+    const { accepted, skipped } = partitionPoolFiles([
+      makeFile("exact.jpg", "image/jpeg", POOL_MAX_BYTES),
+    ]);
+    expect(accepted.map((f) => f.name)).toEqual(["exact.jpg"]);
+    expect(skipped).toEqual([]);
   });
 
   it("partitions mixed input while preserving order", () => {

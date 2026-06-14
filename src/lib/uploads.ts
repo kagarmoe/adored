@@ -48,11 +48,11 @@ export function partitionPoolFiles(files: File[]): PoolFilePartition {
       isHeifFile(file) ||
       (POOL_ALLOWED_CONTENT_TYPES as readonly string[]).includes(file.type);
     if (!typeOk) {
-      skipped.push({ name: file.name, reason: "Unsupported format" });
+      skipped.push({ name: file.name, reason: "This kind of photo isn't supported yet" });
       continue;
     }
     if (file.size > POOL_MAX_BYTES) {
-      skipped.push({ name: file.name, reason: `Too large (max ${POOL_MAX_LABEL})` });
+      skipped.push({ name: file.name, reason: `This photo is over ${POOL_MAX_LABEL}` });
       continue;
     }
     accepted.push(file);
