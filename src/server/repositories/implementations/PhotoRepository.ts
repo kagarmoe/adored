@@ -44,6 +44,21 @@ export class PhotoRepository implements IPhotoRepository {
     return photos.length > 0 ? this.mapToPhoto(photos[0]) : null;
   }
 
+  async findByIds(collectionId: string, photoIds: string[]): Promise<Photo[]> {
+    if (photoIds.length === 0) return [];
+    const rows = await this.db
+      .select()
+      .from(photosTable)
+      .where(
+        and(
+          eq(photosTable.collectionId, collectionId),
+          inArray(photosTable.id, photoIds),
+          isNull(photosTable.deletedAt),
+        ),
+      );
+    return rows.map((r) => this.mapToPhoto(r));
+  }
+
   async findByItem(itemId: string): Promise<Photo[]> {
     const photos = await this.db
       .select()
@@ -168,6 +183,36 @@ export class PhotoRepository implements IPhotoRepository {
           isNull(photosTable.deletedAt),
         ),
       );
+    return rows.length;
+  }
+
+  // Reassign photos to a destination item (or NULL for the pool) and set hero:
+  // the heroPhotoId becomes is_hero=true, everything else moved is_hero=false.
+  // Used by the unified "Move to…" (move / split / return-to-pool).
+  async reassignPhotos(
+    collectionId: string,
+    photoIds: string[],
+    targetItemId: string | null,
+    heroPhotoId: string | null,
+  ): Promise<number> {
+    if (photoIds.length === 0) return 0;
+    const rows = await this.db
+      .update(photosTable)
+      .set({
+        itemId: targetItemId,
+        isHero: heroPhotoId
+          ? sql<boolean>`(${photosTable.id} = ${heroPhotoId})`
+          : sql<boolean>`false`,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(photosTable.collectionId, collectionId),
+          inArray(photosTable.id, photoIds),
+          isNull(photosTable.deletedAt),
+        ),
+      )
+      .returning({ id: photosTable.id });
     return rows.length;
   }
 

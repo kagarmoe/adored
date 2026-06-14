@@ -15,6 +15,10 @@ function makeRepos(overrides: { assign?: number; available?: number } = {}) {
     countAvailablePooled: vi.fn().mockResolvedValue(overrides.available ?? 2),
     assignPooledPhotosToItem: vi.fn().mockResolvedValue(overrides.assign ?? 2),
     unassignAllFromItem: vi.fn().mockResolvedValue(0),
+    findByIds: vi.fn().mockResolvedValue([]),
+    reassignPhotos: vi.fn().mockResolvedValue(0),
+    findByItem: vi.fn().mockResolvedValue([]),
+    setHero: vi.fn().mockResolvedValue(undefined),
   } as any;
   return { itemRepo: itemRepo as any, photoRepo };
 }
@@ -157,5 +161,131 @@ describe("ItemService.createItemsFromPoolEach", () => {
     // both items (the committed first + the raced second) are softDeleted
     expect(itemRepo.softDelete).toHaveBeenCalledWith("item_A");
     expect(itemRepo.softDelete).toHaveBeenCalledWith("item_B");
+  });
+});
+
+describe("ItemService.reassignPhotos", () => {
+  function photo(id: string, itemId: string | null, isHero = false) {
+    return { id, itemId, collectionId: "c1", isHero } as any;
+  }
+
+  it('new dest: creates an item and reassigns with hero = first id', async () => {
+    const { itemRepo, photoRepo } = makeRepos();
+    photoRepo.findByIds.mockResolvedValue([photo("p1", "itemA", true), photo("p2", "itemA")]);
+    const service = new ItemService(itemRepo, photoRepo);
+
+    const result = await service.reassignPhotos("c1", ["p1", "p2"], { type: "new" });
+
+    expect(itemRepo.create).toHaveBeenCalledWith({ collectionId: "c1" });
+    expect(photoRepo.reassignPhotos).toHaveBeenCalledWith("c1", ["p1", "p2"], "item_new", "p1");
+    expect(result).toEqual({ number: 7 });
+  });
+
+  it('item dest: validates target via repo.findById and reassigns with hero = null', async () => {
+    const { itemRepo, photoRepo } = makeRepos();
+    photoRepo.findByIds.mockResolvedValue([photo("p1", "itemA")]);
+    itemRepo.findById.mockResolvedValue({ id: "itemB", collectionId: "c1", number: 4 });
+    photoRepo.findByItem.mockResolvedValue([]); // sources/target reconciled to nothing notable
+    const service = new ItemService(itemRepo, photoRepo);
+
+    const result = await service.reassignPhotos("c1", ["p1"], { type: "item", itemId: "itemB" });
+
+    expect(itemRepo.findById).toHaveBeenCalledWith("itemB");
+    expect(photoRepo.reassignPhotos).toHaveBeenCalledWith("c1", ["p1"], "itemB", null);
+    expect(result).toEqual({ number: 4 });
+  });
+
+  it('pool dest: target = null, hero = null, number = null', async () => {
+    const { itemRepo, photoRepo } = makeRepos();
+    photoRepo.findByIds.mockResolvedValue([photo("p1", "itemA")]);
+    const service = new ItemService(itemRepo, photoRepo);
+
+    const result = await service.reassignPhotos("c1", ["p1"], { type: "pool" });
+
+    expect(itemRepo.create).not.toHaveBeenCalled();
+    expect(photoRepo.reassignPhotos).toHaveBeenCalledWith("c1", ["p1"], null, null);
+    expect(result).toEqual({ number: null });
+  });
+
+  it('conflict when findByIds returns fewer than requested', async () => {
+    const { itemRepo, photoRepo } = makeRepos();
+    photoRepo.findByIds.mockResolvedValue([photo("p1", "itemA")]); // only 1 of 2
+    const service = new ItemService(itemRepo, photoRepo);
+
+    await expect(service.reassignPhotos("c1", ["p1", "p2"], { type: "new" })).rejects.toMatchObject({
+      name: "PoolGroupError",
+      code: "conflict",
+    });
+    expect(itemRepo.create).not.toHaveBeenCalled();
+    expect(photoRepo.reassignPhotos).not.toHaveBeenCalled();
+  });
+
+  it('conflict when the target item is missing or cross-collection', async () => {
+    const { itemRepo, photoRepo } = makeRepos();
+    photoRepo.findByIds.mockResolvedValue([photo("p1", "itemA")]);
+    itemRepo.findById.mockResolvedValue({ id: "itemB", collectionId: "OTHER", number: 4 });
+    const service = new ItemService(itemRepo, photoRepo);
+
+    await expect(
+      service.reassignPhotos("c1", ["p1"], { type: "item", itemId: "itemB" }),
+    ).rejects.toMatchObject({ name: "PoolGroupError", code: "conflict" });
+    expect(photoRepo.reassignPhotos).not.toHaveBeenCalled();
+  });
+
+  it('reconciles a source whose hero moved away by promoting its first remaining photo', async () => {
+    const { itemRepo, photoRepo } = makeRepos();
+    // Move p1 (itemA's hero) to the pool; itemA keeps p2 (no hero) afterward.
+    photoRepo.findByIds.mockResolvedValue([photo("p1", "itemA", true)]);
+    photoRepo.findByItem.mockResolvedValue([photo("p2", "itemA", false)]);
+    const service = new ItemService(itemRepo, photoRepo);
+
+    await service.reassignPhotos("c1", ["p1"], { type: "pool" });
+
+    expect(photoRepo.findByItem).toHaveBeenCalledWith("itemA");
+    expect(photoRepo.setHero).toHaveBeenCalledWith("p2", "itemA");
+  });
+
+  it('does not promote a hero when a source still has one', async () => {
+    const { itemRepo, photoRepo } = makeRepos();
+    photoRepo.findByIds.mockResolvedValue([photo("p1", "itemA")]);
+    photoRepo.findByItem.mockResolvedValue([photo("p2", "itemA", true)]); // still has a hero
+    const service = new ItemService(itemRepo, photoRepo);
+
+    await service.reassignPhotos("c1", ["p1"], { type: "pool" });
+
+    expect(photoRepo.setHero).not.toHaveBeenCalled();
+  });
+
+  it('dedupes ids before validating and reassigning', async () => {
+    const { itemRepo, photoRepo } = makeRepos();
+    photoRepo.findByIds.mockResolvedValue([photo("p1", "itemA")]);
+    const service = new ItemService(itemRepo, photoRepo);
+
+    await service.reassignPhotos("c1", ["p1", "p1"], { type: "pool" });
+
+    expect(photoRepo.findByIds).toHaveBeenCalledWith("c1", ["p1"]);
+    expect(photoRepo.reassignPhotos).toHaveBeenCalledWith("c1", ["p1"], null, null);
+  });
+
+  it('rejects an empty selection without touching the repos', async () => {
+    const { itemRepo, photoRepo } = makeRepos();
+    const service = new ItemService(itemRepo, photoRepo);
+    await expect(service.reassignPhotos("c1", [], { type: "new" })).rejects.toMatchObject({
+      name: "PoolGroupError",
+      code: "empty",
+    });
+    expect(photoRepo.findByIds).not.toHaveBeenCalled();
+    expect(itemRepo.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects more than 50 photos without touching the repos', async () => {
+    const { itemRepo, photoRepo } = makeRepos();
+    const service = new ItemService(itemRepo, photoRepo);
+    const ids = Array.from({ length: 51 }, (_, i) => `p${i}`);
+    await expect(service.reassignPhotos("c1", ids, { type: "new" })).rejects.toMatchObject({
+      name: "PoolGroupError",
+      code: "too_many",
+    });
+    expect(photoRepo.findByIds).not.toHaveBeenCalled();
   });
 });

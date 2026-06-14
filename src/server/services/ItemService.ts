@@ -4,6 +4,11 @@ import type { IPhotoRepository } from "@/server/repositories/PhotoRepository";
 
 export const MAX_GROUP_PHOTOS = 50;
 
+export type ReassignDest =
+  | { type: "item"; itemId: string }
+  | { type: "new" }
+  | { type: "pool" };
+
 export class PoolGroupError extends Error {
   constructor(
     public readonly code: "empty" | "too_many" | "conflict",
@@ -112,6 +117,74 @@ export class ItemService {
       created.push(item);
     }
     return created;
+  }
+
+  // Unified "Move to…": move/split/return-to-pool are all reassigning photos'
+  // item_id. Reconciles hero on every affected item (a source whose hero moved
+  // away, or a heroless target) so display stays coherent. neon-http has no
+  // transaction; findByIds pre-validates so a conflict touches nothing.
+  async reassignPhotos(
+    collectionId: string,
+    photoIds: string[],
+    dest: ReassignDest,
+  ): Promise<{ number: number | null }> {
+    const ids = [...new Set(photoIds)];
+    if (ids.length === 0) {
+      throw new PoolGroupError("empty", "Choose at least one photo to move.");
+    }
+    if (ids.length > MAX_GROUP_PHOTOS) {
+      throw new PoolGroupError("too_many", `You can move up to ${MAX_GROUP_PHOTOS} photos at once.`);
+    }
+    const photos = await this.photoRepo.findByIds(collectionId, ids);
+    if (photos.length !== ids.length) {
+      throw new PoolGroupError("conflict", "Some of those photos aren't available to move anymore — try again.");
+    }
+
+    let targetItemId: string | null;
+    let heroPhotoId: string | null;
+    let resultNumber: number | null;
+    if (dest.type === "item") {
+      const target = await this.repo.findById(dest.itemId);
+      if (!target || target.collectionId !== collectionId) {
+        throw new PoolGroupError("conflict", "That item isn't available anymore — try again.");
+      }
+      targetItemId = target.id;
+      heroPhotoId = null; // target keeps its own hero
+      resultNumber = target.number;
+    } else if (dest.type === "new") {
+      const created = await this.repo.create({ collectionId });
+      targetItemId = created.id;
+      heroPhotoId = ids[0];
+      resultNumber = created.number;
+    } else {
+      targetItemId = null;
+      heroPhotoId = null;
+      resultNumber = null;
+    }
+
+    const sourceItemIds = [
+      ...new Set(
+        photos
+          .map((p) => p.itemId)
+          .filter((id): id is string => !!id && id !== targetItemId),
+      ),
+    ];
+
+    await this.photoRepo.reassignPhotos(collectionId, ids, targetItemId, heroPhotoId);
+
+    // Reconcile hero on every affected item (sources + an existing-item target):
+    // if it has photos but none is hero, promote its first remaining photo.
+    const affected = targetItemId && dest.type === "item"
+      ? [...sourceItemIds, targetItemId]
+      : sourceItemIds;
+    for (const itemId of affected) {
+      const remaining = await this.photoRepo.findByItem(itemId);
+      if (remaining.length > 0 && !remaining.some((p) => p.isHero)) {
+        await this.photoRepo.setHero(remaining[0].id, itemId);
+      }
+    }
+
+    return { number: resultNumber };
   }
 
   async createItem(
