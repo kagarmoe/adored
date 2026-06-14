@@ -79,4 +79,29 @@ describe("PoolPhotoGrid selection + grouping", () => {
     expect(tile("one")).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: /three/i })).toBeInTheDocument();
   });
+
+  it("guards against double-submit while a group is in flight", async () => {
+    const user = userEvent.setup();
+    let resolveFetch: (v: unknown) => void = () => {};
+    (fetch as any).mockReturnValue(
+      new Promise((resolve) => {
+        resolveFetch = resolve;
+      }),
+    );
+    render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} />);
+
+    await user.click(tile("one"));
+    await user.click(screen.getByRole("button", { name: /make an item/i }));
+
+    // in flight: the action shows "Making…" and is disabled
+    const making = screen.getByRole("button", { name: /making/i });
+    expect(making).toBeDisabled();
+
+    // a second click while busy does not fire another request
+    await user.click(making);
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    resolveFetch({ ok: true, json: async () => ({ number: 9 }) });
+    await waitFor(() => expect(screen.getByText(/made #9/i)).toBeInTheDocument());
+  });
 });

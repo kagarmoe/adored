@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getPoolPhotoAssetUrl } from "@/lib/photos";
 import type { Photo } from "@/types";
 import { PoolActionBar } from "./PoolActionBar";
@@ -24,6 +24,14 @@ export function PoolPhotoGrid({
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // The success confirmation is a quiet, auto-dismissing note (design spec) —
+  // it clears itself so it never lingers as the person keeps grouping.
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), 4000);
+    return () => clearTimeout(timer);
+  }, [notice]);
+
   const toggle = (id: string) =>
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
@@ -37,6 +45,7 @@ export function PoolPhotoGrid({
     try {
       const res = await fetch(`/api/collections/${collectionId}/pool/group`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ photoIds: selected }),
       });
       if (!res.ok) {
