@@ -76,6 +76,18 @@ describe("POST /api/collections/[id]/pool/group", () => {
     expect(createItemFromPool).not.toHaveBeenCalled();
   });
 
+  it("400 when photoIds is an empty array", async () => {
+    const res = await POST(req({ photoIds: [] }), { params: { id: "c1" } });
+    expect(res.status).toBe(400);
+    expect(createItemFromPool).not.toHaveBeenCalled();
+  });
+
+  it("400 when photoIds contains a non-string element", async () => {
+    const res = await POST(req({ photoIds: ["p1", 3] }), { params: { id: "c1" } });
+    expect(res.status).toBe(400);
+    expect(createItemFromPool).not.toHaveBeenCalled();
+  });
+
   it("201 with the new item number on success", async () => {
     const res = await POST(req({ photoIds: ["p1", "p2"] }), { params: { id: "c1" } });
     expect(res.status).toBe(201);

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PoolPhotoGrid } from "./PoolPhotoGrid";
 
@@ -36,6 +36,7 @@ describe("PoolPhotoGrid selection + grouping", () => {
     await user.click(tile("one"));
     expect(tile("one")).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText(/1 selected/i)).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /grouping actions/i })).toBeInTheDocument();
 
     await user.click(tile("two"));
     expect(screen.getByText(/2 selected/i)).toBeInTheDocument();
@@ -58,10 +59,12 @@ describe("PoolPhotoGrid selection + grouping", () => {
       "/api/collections/c1/pool/group",
       expect.objectContaining({
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ photoIds: ["p2", "p1"] }),
       }),
     ));
     await waitFor(() => expect(screen.getByText(/made #7/i)).toBeInTheDocument());
+    expect(screen.getByRole("status")).toHaveTextContent(/made #7/i);
     expect(screen.queryByRole("button", { name: /two/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /one/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /three/i })).toBeInTheDocument();
@@ -76,6 +79,7 @@ describe("PoolPhotoGrid selection + grouping", () => {
     await user.click(screen.getByRole("button", { name: /make an item/i }));
 
     await waitFor(() => expect(screen.getByText(/couldn’t make that item|try again/i)).toBeInTheDocument());
+    expect(screen.getByRole("alert")).toBeInTheDocument();
     expect(tile("one")).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: /three/i })).toBeInTheDocument();
   });
@@ -103,5 +107,30 @@ describe("PoolPhotoGrid selection + grouping", () => {
 
     resolveFetch({ ok: true, json: async () => ({ number: 9 }) });
     await waitFor(() => expect(screen.getByText(/made #9/i)).toBeInTheDocument());
+  });
+
+  it("auto-dismisses the success confirmation after the timeout", async () => {
+    // Fake timers throughout: drive clicks with fireEvent (synchronous, no
+    // userEvent internal delays) so there's no userEvent/fake-timer deadlock.
+    vi.useFakeTimers();
+    (fetch as any).mockResolvedValue({ ok: true, json: async () => ({ number: 7 }) });
+    try {
+      render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} />);
+      fireEvent.click(tile("one"));
+      fireEvent.click(screen.getByRole("button", { name: /make an item/i }));
+
+      // flush the fetch + json microtasks so the notice gets set
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(screen.getByText(/made #7/i)).toBeInTheDocument();
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(4000);
+      });
+      expect(screen.queryByText(/made #7/i)).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

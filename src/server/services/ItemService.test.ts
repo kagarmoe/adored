@@ -71,4 +71,24 @@ describe("ItemService.createItemFromPool", () => {
     await expect(service.createItemFromPool("c1", ids)).rejects.toBeInstanceOf(PoolGroupError);
     expect(itemRepo.create).not.toHaveBeenCalled();
   });
+
+  it("accepts exactly 50 photos (boundary — the cap is > 50, not >= 50)", async () => {
+    const { itemRepo, photoRepo } = makeRepos({ available: 50, assign: 50 });
+    const service = new ItemService(itemRepo, photoRepo);
+    const ids = Array.from({ length: 50 }, (_, i) => `p${i}`);
+    const item = await service.createItemFromPool("c1", ids);
+    expect(item).toBeDefined();
+    expect(itemRepo.create).toHaveBeenCalled();
+  });
+
+  it("on the race backstop (pre-check passes but assign comes up short), soft-deletes the created item so no orphan leaks", async () => {
+    const { itemRepo, photoRepo } = makeRepos({ available: 2, assign: 1 });
+    const service = new ItemService(itemRepo, photoRepo);
+    await expect(service.createItemFromPool("c1", ["p1", "p2"])).rejects.toMatchObject({
+      name: "PoolGroupError",
+      code: "conflict",
+    });
+    expect(itemRepo.create).toHaveBeenCalled();
+    expect(itemRepo.softDelete).toHaveBeenCalledWith("item_new");
+  });
 });
