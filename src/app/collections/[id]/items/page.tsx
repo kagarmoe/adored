@@ -7,7 +7,7 @@ import { AppLayout } from "@/components/layout";
 import { Button, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
 import { ItemFilters } from "@/features/items/ItemFilters";
-import { filterItems } from "@/lib/items";
+import { filterItems, itemsEmptyState } from "@/lib/items";
 import Link from "next/link";
 
 interface ItemsPageProps {
@@ -36,6 +36,11 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
     : "all";
   const unnamed = searchParams?.unnamed === "1";
   const filteredItems = filterItems(items, { status: activeFilter, unnamed });
+  const empty = itemsEmptyState({
+    hasAnyItems: items.length > 0,
+    unnamed,
+    status: activeFilter,
+  });
 
   return (
     <AppLayout
@@ -63,27 +68,16 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
 
         <ItemFilters activeFilter={activeFilter} unnamed={unnamed} collectionId={params.id} />
 
-        {items.length === 0 ? (
+        {filteredItems.length === 0 ? (
           <EmptyState
-            heading="No items yet"
-            message="Add items to start organizing your collection"
-            action={{
-              label: "Add Item",
-              href: `/collections/${params.id}/items/new`,
-            }}
+            heading={empty.heading}
+            message={empty.message}
+            action={
+              items.length === 0
+                ? { label: "Add Item", href: `/collections/${params.id}/items/new` }
+                : undefined
+            }
           />
-        ) : filteredItems.length === 0 ? (
-          unnamed ? (
-            <EmptyState
-              heading="Everything has a name"
-              message="Nothing is waiting — name things whenever you like."
-            />
-          ) : (
-            <EmptyState
-              heading={`No ${activeFilter} items`}
-              message="Try a different status filter"
-            />
-          )
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredItems.map((item) => (

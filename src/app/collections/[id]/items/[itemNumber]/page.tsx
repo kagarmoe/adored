@@ -10,7 +10,7 @@ import { ItemMetadata } from "@/features/items/ItemMetadata";
 import Link from "next/link";
 import Image from "next/image";
 import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
-import { itemDisplayName } from "@/lib/items";
+import { hasName, itemDisplayName } from "@/lib/items";
 
 interface ItemDetailPageProps {
   params: { id: string; itemNumber: string };
@@ -56,7 +56,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
           <div>
             <h1 className="text-3xl text-ink">{itemDisplayName(item)}</h1>
             {item.brand && <p className="mt-1 text-ink-soft">{item.brand}</p>}
-            {!item.name && (
+            {!hasName(item) && (
               <Link
                 href={`/collections/${params.id}/items/${item.number}/edit`}
                 className="mt-1 inline-block text-ink-soft underline underline-offset-2"

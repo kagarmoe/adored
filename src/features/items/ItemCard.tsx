@@ -1,5 +1,5 @@
 import type { Item } from "@/types";
-import { itemDisplayName, itemInitial } from "@/lib/items";
+import { hasName, itemDisplayName, itemInitial } from "@/lib/items";
 import { Badge, Card } from "@/components/ui";
 import Link from "next/link";
 import Image from "next/image";
@@ -52,7 +52,7 @@ export function ItemCard({ item, collectionId, heroPhotoUrl, bucket, imageClassN
               <h3 className="text-ink truncate">{itemDisplayName(item)}</h3>
               {bucket && <Badge variant={bucket} title={bucketLabels[bucket]}>{bucketDots[bucket]}</Badge>}
             </div>
-            {item.name ? (
+            {hasName(item) ? (
               item.brand && <p className="text-xs text-ink-soft truncate">{item.brand}</p>
             ) : (
               <p className="text-xs text-ink-soft truncate">Add a name</p>

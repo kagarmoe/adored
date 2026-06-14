@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterItems, itemDisplayName, itemInitial } from "./items";
+import { filterItems, hasName, itemDisplayName, itemInitial, itemsEmptyState } from "./items";
 
 const mk = (over: Partial<{ name: string | null; status: string | null }>) =>
   ({ id: "i", collectionId: "c", number: 1, name: null, status: "active", ...over }) as any;
@@ -26,6 +26,43 @@ describe("filterItems", () => {
   it("treats missing status as active", () => {
     const r = filterItems([mk({ name: "x", status: null })], { status: "active", unnamed: false });
     expect(r).toHaveLength(1);
+  });
+  it("treats a whitespace-only name as nameless (included when unnamed=true)", () => {
+    const r = filterItems([mk({ name: "   " })], { status: "all", unnamed: true });
+    expect(r).toHaveLength(1);
+  });
+});
+
+describe("hasName", () => {
+  it("is false for null, empty, and whitespace-only names", () => {
+    expect(hasName({ name: null })).toBe(false);
+    expect(hasName({ name: "" })).toBe(false);
+    expect(hasName({ name: "   " })).toBe(false);
+  });
+  it("is true for a real name", () => {
+    expect(hasName({ name: "Bag" })).toBe(true);
+  });
+});
+
+describe("itemsEmptyState", () => {
+  it("no items: prompts to add (existing copy)", () => {
+    expect(itemsEmptyState({ hasAnyItems: false, unnamed: false, status: "all" })).toEqual({
+      heading: "No items yet",
+      message: "Add items to start organizing your collection",
+    });
+  });
+  it("unnamed filter empty: gentle, no-shame copy", () => {
+    const e = itemsEmptyState({ hasAnyItems: true, unnamed: true, status: "all" });
+    expect(e.heading).toBe("Everything has a name");
+    expect(e.message).toBe("Nothing is waiting — name things whenever you like.");
+    expect(`${e.heading} ${e.message}`.toLowerCase()).not.toMatch(
+      /incomplete|missing|need|unfinished|finish/,
+    );
+  });
+  it("status filter empty: names the status", () => {
+    expect(itemsEmptyState({ hasAnyItems: true, unnamed: false, status: "archived" }).heading).toBe(
+      "No archived items",
+    );
   });
 });
 
