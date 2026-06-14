@@ -9,11 +9,8 @@ export function itemDisplayName(item: NameableItem): string {
   return item.number != null ? `#${item.number}` : "Untitled";
 }
 
-/** Single-glyph avatar for an item with no photo: name initial, else number, else "•". */
+/** Single-glyph avatar for an item with no photo: name initial, else a neutral mark. */
 export function itemInitial(item: NameableItem): string {
   const name = item.name?.trim();
-  if (name) {
-    return name.charAt(0).toUpperCase();
-  }
-  return item.number != null ? String(item.number) : "•";
+  return name ? name.charAt(0).toUpperCase() : "•";
 }

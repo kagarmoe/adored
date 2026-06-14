@@ -24,8 +24,8 @@ describe("itemInitial", () => {
     expect(itemInitial({ name: "tote", number: 3 })).toBe("T");
   });
 
-  it("returns the number for a nameless item", () => {
-    expect(itemInitial({ name: null, number: 3 })).toBe("3");
+  it("returns a neutral mark for a nameless item, regardless of number", () => {
+    expect(itemInitial({ name: null, number: 3 })).toBe("•");
   });
 
   it("returns a neutral glyph when there is nothing", () => {
