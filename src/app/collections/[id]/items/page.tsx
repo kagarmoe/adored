@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
 import { Button, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
@@ -31,6 +33,9 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
   }
 
   const items = await itemRepo.findByCollection(params.id);
+  const covers = await new PhotoRepository(db).findCoverPhotosByItemIds(
+    items.map((i) => i.id),
+  );
   const activeFilter = ["active", "archived", "deleted"].includes(searchParams?.status || "")
     ? searchParams!.status!
     : "all";
@@ -54,7 +59,9 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl text-ink">Items</h1>
-            <p className="text-ink-soft mt-2">{items.length} items in collection</p>
+            <p className="text-ink-soft mt-2">
+              {items.length} {items.length === 1 ? "item" : "items"} in collection
+            </p>
           </div>
           <div className="flex gap-3">
             <Link href={`/collections/${params.id}/pool`}>
@@ -80,9 +87,17 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
           />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredItems.map((item) => (
-              <ItemCard key={item.id} item={item} collectionId={params.id} />
-            ))}
+            {filteredItems.map((item) => {
+              const cover = covers.get(item.id);
+              return (
+                <ItemCard
+                  key={item.id}
+                  item={item}
+                  collectionId={params.id}
+                  heroPhotoUrl={cover ? getPhotoAssetUrlForPhoto(cover, params.id) : undefined}
+                />
+              );
+            })}
           </div>
         )}
       </div>
