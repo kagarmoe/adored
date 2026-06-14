@@ -34,6 +34,8 @@ The suite passing means nothing until you prove it *could fail*. Check, in order
 3. **Tautology.** Does it assert only that a mock was called, rather than on real output/returned state? `expect(mock).toHaveBeenCalledWith(...)` with no assertion on a real result is theater.
 4. **Seam coverage.** Is there ≥1 test that crosses the real layers end-to-end (request → service → repo → DB) with the business logic un-mocked?
 5. **Negative + boundary space.** Error paths, partial failures, malformed input, re-thrown/unexpected errors, the empty/oversized cases — tested, or asserted only by a comment?
+6. **Completeness — is everything that needs testing tested?** Don't trust a coverage %; line coverage can read 100% while branches, invariants, and seams go untested. Derive the obligation from the code instead: enumerate every public **behavior**, every **branch/decision**, every **error path**, every **invariant the unit claims** (often stated in a comment — "exactly one hero", "all-or-reject", "leaves the pool untouched"), every **seam** it crosses, and the **boundary inputs** (empty, max, malformed, duplicate, concurrent). Map a test to each and **name the ones with no test.** A claimed invariant with no test is the highest-value gap — that's how a real bug ships green.
+7. **No waste — does every test earn its keep?** Flag for merge/deletion: two tests asserting the *same* behavior; the same rule tested redundantly at repo **and** service **and** route when one layer owns it; tests of trivial getters / framework / language behavior; tests so coupled to implementation they break on any refactor without catching a real bug; tests that can never fail (assert a constant, or only a mock's own return value). Lean coverage of the right things beats a bloated suite that is slow to run and expensive to change. (Over-mocking from check 2 is a common source of these — note the overlap.)
 
 ### 2. Security — *think like a hostile caller, not a builder*
 Assume the caller is an attacker. Authorization enforced on **every** surface (member/owner re-checked server-side, not trusted from the client)? **IDOR / BOLA** — can you reach another tenant's row by changing an id? Injection (SQL, template, command)? Secrets/PII exposure in logs, responses, or the client bundle? SSRF, unsafe deserialization, missing rate limits, replayable tokens? Trust boundaries: does the server re-verify what the client claims, or take it on faith? Walk the OWASP Top 10 as a checklist, not a vibe.
@@ -92,6 +94,8 @@ Output: per-persona findings (file:line, confidence, severity, the debate outcom
 | Excuse | Reality |
 |--------|---------|
 | "The suite is green." | Green means nothing if the real-behavior test is `describe.skip`ped in CI. Prove it runs. |
+| "Coverage is 100%." | Line coverage ≠ behaviour coverage — untested branches, claimed invariants, and seams hide at 100%. Enumerate behaviours and map a test to each. |
+| "More tests is safer." | Duplicate/low-value tests cost maintenance and slow the suite without catching more bugs. Each test must earn its keep. |
 | "Mocking the repo is fine — the repo is tested elsewhere." | Only if *some* test crosses the seam un-mocked. Two mock contracts drift silently. |
 | "It asserts the mock was called." | That's testing your test setup, not the behavior. Assert on real output/state. |
 | "Looks on-brand." | Open DESIGN.md. Name the tokens. Check dark mode + AA contrast, don't eyeball. |
@@ -103,6 +107,7 @@ Output: per-persona findings (file:line, confidence, severity, the debate outcom
 - A persona returned "LGTM"/"looks good" with no specific artifact cited.
 - CLEAN reached without naming what was checked.
 - No finding about tests that are skipped/gated/CI-absent on a change that added tests.
+- QA reached CLEAN without enumerating the behaviours / branches / claimed invariants / seams that must be tested and mapping each to a test (or to an explicit gap).
 - Design/UX personas never opened DESIGN.md / TONE.md.
 
 **Any of these mean: the review didn't happen. Re-run that persona harder.**
