@@ -63,8 +63,8 @@ describe("PoolPhotoGrid selection + grouping", () => {
         body: JSON.stringify({ photoIds: ["p2", "p1"] }),
       }),
     ));
-    await waitFor(() => expect(screen.getByText(/made #7/i)).toBeInTheDocument());
-    expect(screen.getByRole("status")).toHaveTextContent(/made #7/i);
+    await waitFor(() => expect(screen.getByText(/your photos are grouped/i)).toBeInTheDocument());
+    expect(screen.getByRole("status")).toHaveTextContent(/grouped.*#7|#7.*grouped/i);
     expect(screen.queryByRole("button", { name: /two/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /one/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /three/i })).toBeInTheDocument();
@@ -106,7 +106,7 @@ describe("PoolPhotoGrid selection + grouping", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
 
     resolveFetch({ ok: true, json: async () => ({ number: 9 }) });
-    await waitFor(() => expect(screen.getByText(/made #9/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/your photos are grouped/i)).toBeInTheDocument());
   });
 
   it("auto-dismisses the success confirmation after the timeout", async () => {
@@ -123,12 +123,12 @@ describe("PoolPhotoGrid selection + grouping", () => {
       await act(async () => {
         await vi.advanceTimersByTimeAsync(0);
       });
-      expect(screen.getByText(/made #7/i)).toBeInTheDocument();
+      expect(screen.getByText(/grouped/i)).toBeInTheDocument();
 
       await act(async () => {
         await vi.advanceTimersByTimeAsync(4000);
       });
-      expect(screen.queryByText(/made #7/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/grouped/i)).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }
