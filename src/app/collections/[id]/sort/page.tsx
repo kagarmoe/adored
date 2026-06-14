@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireCollectionAccess } from "@/lib/collection-access";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { AppLayout } from "@/components/layout";
 import { Badge, Button, Card, EmptyState } from "@/components/ui";
@@ -18,13 +18,8 @@ export default async function SortPage({ params }: SortPageProps) {
   }
 
   const db = getDb();
-  const collectionRepo = new CollectionRepository(db);
+  const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const sessionRepo = new SessionRepository(db);
-
-  const collection = await collectionRepo.findById(params.id);
-  if (!collection) {
-    redirect("/collections");
-  }
 
   const sessions = await sessionRepo.findByCollection(params.id);
   const activeSession = sessions.find((sortSession) => sortSession.status === "active");

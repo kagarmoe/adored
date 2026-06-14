@@ -1,8 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
+import { requireCollectionAccess } from "@/lib/collection-access";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { AppLayout } from "@/components/layout";
 import { EmptyState } from "@/components/ui";
@@ -20,17 +19,8 @@ export default async function PoolPage({ params }: PoolPageProps) {
   }
 
   const db = getDb();
-  const [collection, membership, pool] = await Promise.all([
-    new CollectionRepository(db).findById(params.id),
-    new MembershipRepository(db).findByUser(session.user.id, params.id),
-    new PhotoRepository(db).findPoolByCollection(params.id),
-  ]);
-  if (!collection) {
-    redirect("/collections");
-  }
-  if (!membership && collection.ownerId !== session.user.id) {
-    redirect("/collections");
-  }
+  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  const pool = await new PhotoRepository(db).findPoolByCollection(params.id);
 
   return (
     <AppLayout

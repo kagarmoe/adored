@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireCollectionAccess } from "@/lib/collection-access";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { AppLayout } from "@/components/layout";
 import { FinalizeResultForm } from "@/features/results/FinalizeResultForm";
@@ -17,14 +17,11 @@ export default async function FinalizePage({ params }: FinalizePageProps) {
   }
 
   const db = getDb();
-  const collectionRepo = new CollectionRepository(db);
+  const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const resultRepo = new SortResultRepository(db);
-  const [collection, result] = await Promise.all([
-    collectionRepo.findById(params.id),
-    resultRepo.findById(params.resultId),
-  ]);
+  const result = await resultRepo.findById(params.resultId);
 
-  if (!collection || !result || result.collectionId !== params.id || result.curatorId !== session.user.id) {
+  if (!result || result.collectionId !== params.id || result.curatorId !== session.user.id) {
     redirect(`/collections/${params.id}/results`);
   }
 

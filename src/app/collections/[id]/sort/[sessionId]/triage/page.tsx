@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
@@ -21,18 +21,17 @@ export default async function TriagePage({ params }: TriagePageProps) {
   }
 
   const db = getDb();
-  const collectionRepo = new CollectionRepository(db);
+  const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const itemRepo = new ItemRepository(db);
   const sessionRepo = new SessionRepository(db);
   const prefRepo = new CollectionPreferenceItemRepository(db);
-  const [collection, items, sortSession, preferences] = await Promise.all([
-    collectionRepo.findById(params.id),
+  const [items, sortSession, preferences] = await Promise.all([
     itemRepo.findByCollection(params.id),
     sessionRepo.findById(params.sessionId),
     prefRepo.findByCollection(params.id, session.user.id),
   ]);
 
-  if (!collection || !sortSession) {
+  if (!sortSession) {
     redirect(`/collections/${params.id}/sort`);
   }
 

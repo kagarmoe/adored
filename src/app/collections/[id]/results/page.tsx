@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireCollectionAccess } from "@/lib/collection-access";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { AppLayout } from "@/components/layout";
 import { Badge, Card, EmptyState } from "@/components/ui";
@@ -18,13 +18,8 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   }
 
   const db = getDb();
-  const collectionRepo = new CollectionRepository(db);
+  const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const resultRepo = new SortResultRepository(db);
-
-  const collection = await collectionRepo.findById(params.id);
-  if (!collection) {
-    redirect("/collections");
-  }
 
   const results = await resultRepo.findByCollection(params.id);
 

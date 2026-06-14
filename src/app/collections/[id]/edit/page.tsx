@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireCollectionAccess } from "@/lib/collection-access";
 import { AppLayout } from "@/components/layout";
 import { CollectionForm } from "@/features/collections/CollectionForm";
 
@@ -16,12 +16,7 @@ export default async function EditCollectionPage({ params }: EditPageProps) {
   }
 
   const db = getDb();
-  const collectionRepo = new CollectionRepository(db);
-  const collection = await collectionRepo.findById(params.id);
-
-  if (!collection) {
-    redirect("/collections");
-  }
+  const collection = await requireCollectionAccess(db, params.id, session.user.id);
 
   return (
     <AppLayout
