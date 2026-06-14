@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireCollectionAccess } from "@/lib/collection-access";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { AppLayout } from "@/components/layout";
 import { SectionHeader } from "@/components/layout/SectionHeader";
@@ -19,13 +19,8 @@ export default async function MembersPage({ params }: MembersPageProps) {
   }
 
   const db = getDb();
-  const collectionRepo = new CollectionRepository(db);
+  const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const membershipRepo = new MembershipRepository(db);
-
-  const collection = await collectionRepo.findById(params.id);
-  if (!collection) {
-    redirect("/collections");
-  }
 
   const members = await membershipRepo.findByCollection(params.id);
   const currentUserMembership = members.find((m) => m.userId === session.user!.id);

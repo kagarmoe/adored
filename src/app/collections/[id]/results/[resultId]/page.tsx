@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
@@ -39,20 +39,19 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
   }
 
   const db = getDb();
-  const collectionRepo = new CollectionRepository(db);
+  const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const resultRepo = new SortResultRepository(db);
   const resultItemRepo = new SortResultItemRepository(db);
   const itemRepo = new ItemRepository(db);
   const shareRepo = new SortResultShareRepository(db);
-  const [collection, result, resultItems, items, shares] = await Promise.all([
-    collectionRepo.findById(params.id),
+  const [result, resultItems, items, shares] = await Promise.all([
     resultRepo.findById(params.resultId),
     resultItemRepo.findByResult(params.resultId),
     itemRepo.findByCollection(params.id),
     shareRepo.findByResult(params.resultId),
   ]);
 
-  if (!collection || !result || result.collectionId !== params.id) {
+  if (!result || result.collectionId !== params.id) {
     redirect(`/collections/${params.id}/results`);
   }
 

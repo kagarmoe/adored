@@ -1,9 +1,8 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
@@ -25,22 +24,8 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
   }
 
   const db = getDb();
-  const collectionRepo = new CollectionRepository(db);
+  const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const itemRepo = new ItemRepository(db);
-
-  const [collection, membership] = await Promise.all([
-    collectionRepo.findById(params.id),
-    new MembershipRepository(db).findByUser(session.user.id, params.id),
-  ]);
-  if (!collection) {
-    redirect("/collections");
-  }
-  // Member-or-owner only — mirrors the item-detail and pool pages so a
-  // collection's item metadata (names, cover URLs) isn't readable by guessing
-  // its id.
-  if (!membership && collection.ownerId !== session.user.id) {
-    redirect("/collections");
-  }
 
   const items = await itemRepo.findByCollection(params.id);
   const covers = await new PhotoRepository(db).findCoverPhotosByItemIds(

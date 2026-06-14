@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireCollectionAccess } from "@/lib/collection-access";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
@@ -22,18 +22,17 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
   }
 
   const db = getDb();
-  const collectionRepo = new CollectionRepository(db);
+  const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const itemRepo = new ItemRepository(db);
   const sessionRepo = new SessionRepository(db);
   const prefRepo = new CollectionPreferenceItemRepository(db);
   const decisionRepo = new DecisionEventRepository(db);
-  const [collection, items, sortSession] = await Promise.all([
-    collectionRepo.findById(params.id),
+  const [items, sortSession] = await Promise.all([
     itemRepo.findByCollection(params.id),
     sessionRepo.findById(params.sessionId),
   ]);
 
-  if (!collection || !sortSession) {
+  if (!sortSession) {
     redirect(`/collections/${params.id}/sort`);
   }
 

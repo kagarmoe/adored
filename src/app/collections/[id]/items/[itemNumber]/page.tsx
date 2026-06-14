@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { AppLayout } from "@/components/layout";
@@ -23,19 +23,17 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   }
 
   const db = getDb();
-  const collectionRepo = new CollectionRepository(db);
+  const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const itemRepo = new ItemRepository(db);
   const photoRepo = new PhotoRepository(db);
 
   const number = Number(params.itemNumber);
-  const [collection, item] = await Promise.all([
-    collectionRepo.findById(params.id),
+  const item =
     number > 0 && Number.isInteger(number)
-      ? itemRepo.findByCollectionAndNumber(params.id, number)
-      : Promise.resolve(null),
-  ]);
+      ? await itemRepo.findByCollectionAndNumber(params.id, number)
+      : null;
 
-  if (!collection || !item) {
+  if (!item) {
     redirect(`/collections/${params.id}/items`);
   }
 
