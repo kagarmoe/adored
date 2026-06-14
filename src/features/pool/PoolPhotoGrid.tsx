@@ -77,13 +77,13 @@ export function PoolPhotoGrid({
       if (!res.ok) {
         throw new Error("group failed");
       }
-      const data = (await res.json()) as { count: number };
+      await res.json();
       const grouped = new Set(selected);
       setPool((prev) => prev.filter((p) => !grouped.has(p.id)));
       setSelected([]);
-      setNotice(`Made ${data.count} items — find them in your items.`);
+      setNotice("Your photos are now their own items — find them in your items.");
     } catch {
-      setError("We couldn’t make that item just now — your photos are safe; try again.");
+      setError("We couldn’t make those items just now — your photos are safe; try again.");
     } finally {
       setBusy(false);
     }

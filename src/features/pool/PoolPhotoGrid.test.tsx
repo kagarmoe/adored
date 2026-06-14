@@ -98,7 +98,7 @@ describe("PoolPhotoGrid selection + grouping", () => {
         body: JSON.stringify({ photoIds: ["p1", "p2"], mode: "each" }),
       }),
     ));
-    await waitFor(() => expect(screen.getByText(/made 2 items/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/your photos are now their own items/i)).toBeInTheDocument());
     expect(screen.queryByRole("button", { name: /one/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /two/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /three/i })).toBeInTheDocument();

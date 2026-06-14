@@ -70,7 +70,8 @@ export class ItemService {
   // Make one item PER photo: a bulk fast-path where N selected photos become N
   // items, each with its single photo as hero. Mirrors createItemFromPool's
   // validation and pre-check discipline — a conflict touches nothing — but loops
-  // create+assign per photo, compensating any individual item that loses a race.
+  // create+assign per photo. All-or-nothing: if any photo loses a race, every
+  // item made this call is rolled back so success always means all were made.
   async createItemsFromPoolEach(collectionId: string, photoIds: string[]): Promise<Item[]> {
     const ids = [...new Set(photoIds)];
     if (ids.length === 0) {
@@ -94,10 +95,19 @@ export class ItemService {
       const item = await this.repo.create({ collectionId });
       const assigned = await this.photoRepo.assignPooledPhotosToItem(collectionId, [id], item.id, id);
       if (assigned !== 1) {
-        // Lost a race for this one photo — clean up its empty item and skip it.
+        // Lost a race for this photo — roll back everything made this call so the
+        // action is all-or-nothing (no orphan items, no photos vanishing from the
+        // pool view, consistent with the combine path).
         await this.photoRepo.unassignAllFromItem(item.id);
         await this.repo.softDelete(item.id);
-        continue;
+        for (const made of created) {
+          await this.photoRepo.unassignAllFromItem(made.id);
+          await this.repo.softDelete(made.id);
+        }
+        throw new PoolGroupError(
+          "conflict",
+          "Some of those photos aren't available to group anymore — try again.",
+        );
       }
       created.push(item);
     }

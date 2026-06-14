@@ -139,4 +139,23 @@ describe("ItemService.createItemsFromPoolEach", () => {
     await expect(service.createItemsFromPoolEach("c1", ids)).rejects.toBeInstanceOf(PoolGroupError);
     expect(itemRepo.create).not.toHaveBeenCalled();
   });
+
+  it("each-mode is all-or-nothing: a mid-batch race rolls back every item made and throws conflict", async () => {
+    const { itemRepo, photoRepo } = makeRepos();
+    itemRepo.create.mockReset();
+    itemRepo.create
+      .mockResolvedValueOnce({ id: "item_A", number: 1 } as any)
+      .mockResolvedValueOnce({ id: "item_B", number: 2 } as any);
+    photoRepo.assignPooledPhotosToItem.mockReset();
+    photoRepo.assignPooledPhotosToItem.mockResolvedValueOnce(1).mockResolvedValueOnce(0);
+    const service = new ItemService(itemRepo, photoRepo);
+
+    await expect(service.createItemsFromPoolEach("c1", ["p1", "p2"])).rejects.toMatchObject({
+      name: "PoolGroupError",
+      code: "conflict",
+    });
+    // both items (the committed first + the raced second) are softDeleted
+    expect(itemRepo.softDelete).toHaveBeenCalledWith("item_A");
+    expect(itemRepo.softDelete).toHaveBeenCalledWith("item_B");
+  });
 });
