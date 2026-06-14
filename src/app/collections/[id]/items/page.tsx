@@ -7,11 +7,12 @@ import { AppLayout } from "@/components/layout";
 import { Button, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
 import { ItemFilters } from "@/features/items/ItemFilters";
+import { filterItems } from "@/lib/items";
 import Link from "next/link";
 
 interface ItemsPageProps {
   params: { id: string };
-  searchParams?: { status?: string };
+  searchParams?: { status?: string; unnamed?: string };
 }
 
 export default async function ItemsPage({ params, searchParams }: ItemsPageProps) {
@@ -33,9 +34,8 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
   const activeFilter = ["active", "archived", "deleted"].includes(searchParams?.status || "")
     ? searchParams!.status!
     : "all";
-  const filteredItems = activeFilter === "all"
-    ? items
-    : items.filter((item) => (item.status || "active") === activeFilter);
+  const unnamed = searchParams?.unnamed === "1";
+  const filteredItems = filterItems(items, { status: activeFilter, unnamed });
 
   return (
     <AppLayout
@@ -61,7 +61,7 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
           </div>
         </div>
 
-        <ItemFilters activeFilter={activeFilter} collectionId={params.id} />
+        <ItemFilters activeFilter={activeFilter} unnamed={unnamed} collectionId={params.id} />
 
         {items.length === 0 ? (
           <EmptyState
@@ -73,10 +73,17 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
             }}
           />
         ) : filteredItems.length === 0 ? (
-          <EmptyState
-            heading={`No ${activeFilter} items`}
-            message="Try a different status filter"
-          />
+          unnamed ? (
+            <EmptyState
+              heading="Everything has a name"
+              message="Nothing is waiting — name things whenever you like."
+            />
+          ) : (
+            <EmptyState
+              heading={`No ${activeFilter} items`}
+              message="Try a different status filter"
+            />
+          )
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredItems.map((item) => (
