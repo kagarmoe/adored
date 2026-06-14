@@ -42,13 +42,32 @@ Assume the caller is an attacker. Authorization enforced on **every** surface (m
 Do the seam contracts (arg order, types, status codes, response shape) line up across layers? Data integrity without a transaction — guards, idempotency, partial-failure states that are recoverable not corrupt? What breaks under concurrency, scale, or a malformed/oversized input? Does it actually do what it claims, including the error paths? Are the boundaries and names honest? Asks: **is it right?**
 
 ### 4. Craftsman — *simplicity & elegance*
-The opposite pull from the Architect — and that tension is the point. The simplest thing that works; **YAGNI**; over-abstraction, premature generalization, a factory where a function would do; dead code, needless indirection, duplicated logic, an interface with one implementation that earns nothing. Could a whole layer, branch, or file be **deleted**? Would a senior engineer wince? Honors this repo's "no premature abstraction / DRY within reason" rule. Asks: **is it more than it needs to be?**
+The opposite pull from the Architect — and that tension is the point. Push for **the simplest thing that could possibly work** (DTSTTCPW): over-abstraction, premature generalization, a factory where a function would do; dead code, needless indirection, duplicated logic, an interface with one implementation that earns nothing. Could a whole layer, branch, or file be **deleted**? Would a senior engineer wince?
+
+**But YAGNI is not a licence for debt.** It is an XP practice that stays safe *only* alongside continuous refactoring, automated tests, and CI — drop those and "simplest thing" rots into technical debt. So flag the inverse too: a simplification bought by skipping the safety net (no test, or one that doesn't run in CI) is under-engineering, not elegance — hand that to the QA persona. Honors this repo's "no premature abstraction / DRY within reason." Asks: **is it more than it needs to be — and is the simplicity backed by tests + CI, or is it just debt?**
 
 ### 5. Graphic Design — *visual fidelity*
 Accountable to **`DESIGN.md`** (the "Adored" luminous system: role-based tokens — `ink`/`surface`/`primary #004a67`/accent aqua-sky-cornflower-periwinkle/`spark`/tier colours; Playfair Display for display type). Are real tokens used, not invented or hard-coded hexes? **Both light and dark** themes correct? Contrast meets **WCAG 2.1 AA**? Spacing, elevation, type scale, and rhythm consistent with the system, not ad hoc?
 
 ### 6. UX — *usability & interaction*
-Accountable to **`TONE.md`** (first-order) and **`PRODUCT.md`**. Affirming, judgement-free, low-cognitive-load? One decision at a time — never the whole pile? **Tap-first, no swiping** (drag only where it genuinely helps); touch targets ≥44px. No gamification, no shaming metrics ("N incomplete/too many"), no catalog/inventory framing. Error/empty/loading states honest and gentle? Keyboard + screen-reader operable (roles, `aria-pressed`, live regions, focus)?
+Accountable **first** to `TONE.md` and `PRODUCT.md`: when a generic UX convention conflicts with the tone contract, the contract wins (this product forbids swiping, so "respect standard swipe gestures" does **not** apply; it is not a catalog, so SKU/inventory idioms do not).
+
+**Depth via `ui-ux-pro-max`:** when reviewing rendered UI, invoke the installed `ui-ux-pro-max` skill (99 UX guidelines, accessibility, interaction states, design-system reasoning) for heuristic depth — then **re-judge its output against `TONE.md`** and discard anything that conflicts with the first-order contract (swipe gestures, platform/catalog idioms). It is the engine; the tone contract is the authority. It's an optional dependency: if it isn't loaded, the heuristics below are the floor. Either way, name the law you're applying — don't review on vibes:
+
+- **Fitts's Law** — primary/most-frequent actions large and reachable; targets ≥44px with real spacing; never seat a destructive action against a primary one.
+- **Hick's Law** — fewer choices per step; progressive disclosure; one decision at a time, never the whole pile.
+- **Miller's Law / Cognitive Load** — chunk information; don't front-load a wall of options; show, don't make them recall.
+- **Jakob's Law** — meet learned expectations for controls the user already knows — *except* where the contract demands a gentler, non-standard pattern.
+- **Peak-End Rule** — the end of a flow (the confirmation, the error recovery) dominates memory; make success affirming and recovery painless.
+- **Norman — affordances, signifiers, feedback** — interactive things look interactive; state is visible; every action gets feedback within ~100–300ms (loading / optimistic / confirm).
+- **Gestalt** — proximity, alignment, and grouping carry meaning; related controls read as one unit.
+- **Error prevention > error messages** — make the wrong action hard; confirm destructive/irreversible ones; never lose the user's input on failure.
+
+**Anti-patterns to flag:** colour as the *only* signal; icon-only controls without a label/aria; hover-only interactions (no touch/keyboard equivalent); instant 0ms state changes (no feedback); layout shift / content jump; horizontal scroll; disabled zoom; a "select-all → act on the whole pile" gesture.
+
+**Accessibility (WCAG 2.1 AA):** keyboard-operable, visible focus, correct roles / `aria-pressed` / live regions, real labels, 4.5:1 text contrast, a reduced-motion path.
+
+**Tone checks (first-order):** affirming and judgement-free; tap-first, **no swiping** (drag only where it genuinely helps); no gamification (confetti/streaks/scores); no shaming metrics ("N incomplete / too many"); no catalog/inventory framing; gentle, reversible error / empty / loading states. Apply the `TONE.md` litmus: does the copy speak from the *person's* side or the *machine's*?
 
 ## Method: forced debate
 
