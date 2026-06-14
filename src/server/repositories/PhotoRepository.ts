@@ -5,6 +5,7 @@ export interface IPhotoRepository {
   findById(id: string): Promise<Photo | null>;
   findByIds(collectionId: string, photoIds: string[]): Promise<Photo[]>;
   findByItem(itemId: string): Promise<Photo[]>;
+  findCoverPhotosByItemIds(itemIds: string[]): Promise<Map<string, Photo>>;
   findPoolByCollection(collectionId: string): Promise<Photo[]>;
   update(id: string, data: Partial<Omit<Photo, "id" | "createdAt">>): Promise<Photo>;
   softDelete(id: string): Promise<Photo>;
