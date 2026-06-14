@@ -63,6 +63,32 @@ export function PoolPhotoGrid({
     }
   };
 
+  const makeEach = async () => {
+    if (selected.length === 0 || busy) return;
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await fetch(`/api/collections/${collectionId}/pool/group`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photoIds: selected, mode: "each" }),
+      });
+      if (!res.ok) {
+        throw new Error("group failed");
+      }
+      await res.json();
+      const grouped = new Set(selected);
+      setPool((prev) => prev.filter((p) => !grouped.has(p.id)));
+      setSelected([]);
+      setNotice("Your photos are now their own items — find them in your items.");
+    } catch {
+      setError("We couldn’t make those items just now — your photos are safe; try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {notice && (
@@ -111,7 +137,13 @@ export function PoolPhotoGrid({
 
       {selected.length > 0 && <div aria-hidden className="h-20" />}
 
-      <PoolActionBar count={selected.length} busy={busy} onMakeItem={makeItem} onClear={clear} />
+      <PoolActionBar
+        count={selected.length}
+        busy={busy}
+        onMakeItem={makeItem}
+        onMakeEach={makeEach}
+        onClear={clear}
+      />
     </div>
   );
 }

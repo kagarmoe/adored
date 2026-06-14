@@ -6,6 +6,7 @@ import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepo
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { recordPooledPhoto } from "@/server/photos/recordPooledPhoto";
+import { POOL_ALLOWED_CONTENT_TYPES, POOL_MAX_BYTES } from "@/lib/uploads";
 
 class HttpError extends Error {
   constructor(
@@ -15,9 +16,6 @@ class HttpError extends Error {
     super(message);
   }
 }
-
-const ALLOWED_CONTENT_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-const MAX_BYTES = 50_000_000; // client upload bypasses the 4.5MB serverless cap; keep a sane ceiling
 
 async function assertCanAddPhotos(collectionId: string): Promise<string> {
   const session = await getSession();
@@ -53,8 +51,8 @@ export async function POST(
         // User request: cookies present → authorize and capture the uploader.
         const uploadedBy = await assertCanAddPhotos(params.id);
         return {
-          allowedContentTypes: ALLOWED_CONTENT_TYPES,
-          maximumSizeInBytes: MAX_BYTES,
+          allowedContentTypes: [...POOL_ALLOWED_CONTENT_TYPES],
+          maximumSizeInBytes: POOL_MAX_BYTES,
           addRandomSuffix: true,
           tokenPayload: JSON.stringify({ collectionId: params.id, uploadedBy }),
         };

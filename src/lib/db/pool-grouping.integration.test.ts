@@ -73,6 +73,25 @@ describeDb("pool grouping seam (service -> repo -> DB)", () => {
     expect(pool).toHaveLength(0);
   });
 
+  it("make-each: one item per photo, each its own hero, pool drains", async () => {
+    const p1 = await seedPooled("each1");
+    const p2 = await seedPooled("each2");
+
+    const items = await makeService().createItemsFromPoolEach(collectionId, [p1.id, p2.id]);
+    expect(items).toHaveLength(2);
+    const numbers = items.map((i) => i.number);
+    expect(new Set(numbers).size).toBe(2);
+
+    for (const item of items) {
+      const assigned = await photoRepo().findByItem(item.id);
+      expect(assigned).toHaveLength(1);
+      expect(assigned[0].isHero).toBe(true);
+    }
+
+    const pool = await photoRepo().findPoolByCollection(collectionId);
+    expect(pool).toHaveLength(0);
+  });
+
   it("conflict path: rejects and leaves the system clean (mine still pooled, no orphan item)", async () => {
     const mine = await seedPooled("mine1");
     const error = await makeService()

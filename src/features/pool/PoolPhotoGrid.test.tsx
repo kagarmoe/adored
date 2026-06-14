@@ -70,6 +70,40 @@ describe("PoolPhotoGrid selection + grouping", () => {
     expect(screen.getByRole("button", { name: /three/i })).toBeInTheDocument();
   });
 
+  it('"Make each its own" is hidden with one selected, shown with two', async () => {
+    const user = userEvent.setup();
+    render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} />);
+
+    await user.click(tile("one"));
+    expect(screen.queryByRole("button", { name: /make each its own/i })).not.toBeInTheDocument();
+
+    await user.click(tile("two"));
+    expect(screen.getByRole("button", { name: /make each its own/i })).toBeInTheDocument();
+  });
+
+  it('"Make each its own" posts mode "each", confirms the count, and removes the tiles', async () => {
+    const user = userEvent.setup();
+    (fetch as any).mockResolvedValue({ ok: true, json: async () => ({ count: 2 }) });
+    render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} />);
+
+    await user.click(tile("one"));
+    await user.click(tile("two"));
+    await user.click(screen.getByRole("button", { name: /make each its own/i }));
+
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith(
+      "/api/collections/c1/pool/group",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photoIds: ["p1", "p2"], mode: "each" }),
+      }),
+    ));
+    await waitFor(() => expect(screen.getByText(/your photos are now their own items/i)).toBeInTheDocument());
+    expect(screen.queryByRole("button", { name: /one/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /two/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /three/i })).toBeInTheDocument();
+  });
+
   it("on failure: keeps the selection and shows an error", async () => {
     const user = userEvent.setup();
     (fetch as any).mockResolvedValue({ ok: false, status: 409, json: async () => ({ error: "gone" }) });

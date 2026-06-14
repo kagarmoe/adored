@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import { upload } from "@vercel/blob/client";
 import { Button, Card } from "@/components/ui";
 import { convertHeifToJpeg } from "@/lib/heic";
-import { isHeifFile } from "@/lib/uploads";
+import { isHeifFile, partitionPoolFiles } from "@/lib/uploads";
 
 interface PoolUploadProps {
   collectionId: string;
 }
 
-type FileStatus = "pending" | "preparing" | "uploading" | "done" | "error";
+type FileStatus = "pending" | "preparing" | "uploading" | "done" | "error" | "skipped";
 
 interface TrackedFile {
   key: string;
@@ -75,14 +75,27 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
     setFiles((prev) => prev.map((f) => (f.key === key ? { ...f, ...patch } : f)));
 
   const uploadAll = async (selected: File[]) => {
-    const images = selected.filter((f) => f.type.startsWith("image/") || isHeifFile(f));
-    if (images.length === 0) return;
+    const { accepted, skipped } = partitionPoolFiles(selected);
+    // surface skipped files gently (so the person sees why nothing happened for
+    // them) — a pre-flight skip is not a failure, so it renders muted, not red.
+    if (skipped.length > 0) {
+      setFiles((prev) => [
+        ...skipped.map((s) => ({
+          key: `skip-${s.name}-${s.reason}`,
+          name: s.name,
+          status: "skipped" as const,
+          error: s.reason,
+        })),
+        ...prev,
+      ]);
+    }
+    if (accepted.length === 0) return;
 
     setBusy(true);
     // Baseline before any rows are written, so we can detect when the async
     // completion callbacks have caught up.
     const baseline = await fetchPoolCount(collectionId);
-    const tracked: TrackedFile[] = images.map((f, i) => ({
+    const tracked: TrackedFile[] = accepted.map((f, i) => ({
       key: `${Date.now()}-${i}-${f.name}`,
       name: f.name,
       status: "pending",
@@ -92,8 +105,8 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
     let succeeded = 0;
     // Sequential keeps the UI legible and avoids hammering the token endpoint;
     // switch to a small concurrency pool later if needed.
-    for (let i = 0; i < images.length; i++) {
-      const file = images[i];
+    for (let i = 0; i < accepted.length; i++) {
+      const file = accepted[i];
       const t = tracked[i];
       try {
         update(t.key, { status: "preparing" });
@@ -196,11 +209,13 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
                     ? "added"
                     : f.status === "error"
                       ? (f.error ?? "failed")
-                      : f.status === "uploading"
-                        ? "uploading…"
-                        : f.status === "preparing"
-                          ? "preparing…"
-                          : "waiting…"}
+                      : f.status === "skipped"
+                        ? (f.error ?? "skipped")
+                        : f.status === "uploading"
+                          ? "uploading…"
+                          : f.status === "preparing"
+                            ? "preparing…"
+                            : "waiting…"}
                 </span>
               </li>
             ))}
