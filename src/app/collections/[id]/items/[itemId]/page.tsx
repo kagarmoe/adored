@@ -10,6 +10,7 @@ import { ItemMetadata } from "@/features/items/ItemMetadata";
 import Link from "next/link";
 import Image from "next/image";
 import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
+import { itemDisplayName } from "@/lib/items";
 
 interface ItemDetailPageProps {
   params: { id: string; itemId: string };
@@ -43,13 +44,13 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
         { label: "Collections", href: "/collections" },
         { label: collection.name, href: `/collections/${params.id}` },
         { label: "Items", href: `/collections/${params.id}/items` },
-        { label: item.name },
+        { label: itemDisplayName(item) },
       ]}
     >
       <div className="space-y-8">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl text-ink">{item.name}</h1>
+            <h1 className="text-3xl text-ink">{itemDisplayName(item)}</h1>
             {item.brand && <p className="mt-1 text-ink-soft">{item.brand}</p>}
           </div>
           <Link href={`/collections/${params.id}/items/${params.itemId}/edit`}>
@@ -62,7 +63,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
           <div className="bg-ground rounded-lg overflow-hidden h-96 flex items-center justify-center">
             <Image
               src={getPhotoAssetUrlForPhoto(heroPhoto, params.id)}
-              alt={item.name}
+              alt={itemDisplayName(item)}
               fill
               className="object-cover"
               priority

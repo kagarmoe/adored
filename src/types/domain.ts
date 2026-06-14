@@ -72,7 +72,7 @@ export interface Invitation {
 export interface Item {
   id: string;
   collectionId: string;
-  name: string;
+  name: string | null;
   brand: string | null;
   style: string | null;
   color: string | null;

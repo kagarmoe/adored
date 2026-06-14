@@ -15,7 +15,7 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    name: item.name,
+    name: item.name ?? "",
     brand: item.brand || "",
     style: item.style || "",
     color: item.color || "",

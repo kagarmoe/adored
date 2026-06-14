@@ -5,6 +5,7 @@ import { CollectionRepository } from "@/server/repositories/implementations/Coll
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { AppLayout } from "@/components/layout";
 import { ItemEditForm } from "@/features/items/ItemEditForm";
+import { itemDisplayName } from "@/lib/items";
 
 interface ItemEditPageProps {
   params: { id: string; itemId: string };
@@ -34,7 +35,7 @@ export default async function ItemEditPage({ params }: ItemEditPageProps) {
         { label: "Collections", href: "/collections" },
         { label: collection.name, href: `/collections/${params.id}` },
         { label: "Items", href: `/collections/${params.id}/items` },
-        { label: item.name, href: `/collections/${params.id}/items/${params.itemId}` },
+        { label: itemDisplayName(item), href: `/collections/${params.id}/items/${params.itemId}` },
         { label: "Edit" },
       ]}
     >

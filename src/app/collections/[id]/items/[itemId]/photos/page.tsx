@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/layout";
 import { Card } from "@/components/ui";
 import { PhotoUpload } from "@/features/items/PhotoUpload";
 import { PhotoGallery } from "@/features/items/PhotoGallery";
+import { itemDisplayName } from "@/lib/items";
 
 interface PhotoPageProps {
   params: { id: string; itemId: string };
@@ -39,13 +40,13 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
         { label: "Collections", href: "/collections" },
         { label: collection.name, href: `/collections/${params.id}` },
         { label: "Items", href: `/collections/${params.id}/items` },
-        { label: item.name, href: `/collections/${params.id}/items/${params.itemId}` },
+        { label: itemDisplayName(item), href: `/collections/${params.id}/items/${params.itemId}` },
         { label: "Photos" },
       ]}
     >
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl text-ink">{item.name}</h1>
+          <h1 className="text-3xl text-ink">{itemDisplayName(item)}</h1>
           <p className="mt-2 text-ink-soft">Manage photos for this item</p>
         </div>
 
