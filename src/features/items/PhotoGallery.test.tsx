@@ -114,4 +114,89 @@ describe("PhotoGallery move-to selection", () => {
     expect(tiles()).toHaveLength(2);
     expect(tiles()[1]).toHaveAttribute("aria-pressed", "true");
   });
+
+  it("choosing Back to the pool POSTs the pool destination and on success removes the tiles + confirms", async () => {
+    const user = userEvent.setup();
+    (fetch as any).mockResolvedValue({ ok: true, json: async () => ({ number: null }) });
+    render(
+      <PhotoGallery photos={PHOTOS} itemId="item-1" collectionId="c1" otherItems={OTHER_ITEMS} />,
+    );
+
+    await user.click(tiles()[1]); // p2
+    await user.click(screen.getByRole("button", { name: /move to/i }));
+    await user.click(screen.getByRole("button", { name: /back to the pool/i }));
+
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(
+        "/api/collections/c1/photos/reassign",
+        expect.objectContaining({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ photoIds: ["p2"], destination: { type: "pool" } }),
+        }),
+      ),
+    );
+
+    await waitFor(() => expect(screen.getByRole("status")).toBeInTheDocument());
+    expect(screen.getByRole("status")).toHaveTextContent(/pool/i);
+    await waitFor(() => expect(tiles()).toHaveLength(1));
+  });
+
+  it("choosing another item POSTs the item destination with that item's id", async () => {
+    const user = userEvent.setup();
+    (fetch as any).mockResolvedValue({ ok: true, json: async () => ({ number: 9 }) });
+    render(
+      <PhotoGallery photos={PHOTOS} itemId="item-1" collectionId="c1" otherItems={OTHER_ITEMS} />,
+    );
+
+    await user.click(tiles()[1]); // p2
+    await user.click(screen.getByRole("button", { name: /move to/i }));
+    await user.click(screen.getByRole("button", { name: /red clutch/i }));
+
+    await waitFor(() =>
+      expect(fetch).toHaveBeenCalledWith(
+        "/api/collections/c1/photos/reassign",
+        expect.objectContaining({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            photoIds: ["p2"],
+            destination: { type: "item", itemId: "i9" },
+          }),
+        }),
+      ),
+    );
+  });
+
+  it("tapping a selected tile again deselects it and hides the Move bar when it was the only one", async () => {
+    const user = userEvent.setup();
+    render(
+      <PhotoGallery photos={PHOTOS} itemId="item-1" collectionId="c1" otherItems={OTHER_ITEMS} />,
+    );
+
+    await user.click(tiles()[1]);
+    expect(tiles()[1]).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: /move to/i })).toBeInTheDocument();
+
+    await user.click(tiles()[1]); // deselect
+    expect(tiles()[1]).toHaveAttribute("aria-pressed", "false");
+    expect(screen.queryByRole("button", { name: /move to/i })).not.toBeInTheDocument();
+  });
+
+  it("clicking the per-photo Hero control does not select the tile (act-separation)", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    (fetch as any).mockResolvedValue({ ok: true, json: async () => ({}) });
+    render(
+      <PhotoGallery photos={PHOTOS} itemId="item-1" collectionId="c1" otherItems={OTHER_ITEMS} />,
+    );
+
+    // p2 is not the hero, so it shows a "Hero" (set-hero) button.
+    const heroButton = screen.getByRole("button", { name: /^hero$/i });
+    await user.click(heroButton);
+
+    // Clicking Hero must NOT toggle selection (stopPropagation on the control).
+    expect(tiles()[1]).toHaveAttribute("aria-pressed", "false");
+    expect(screen.queryByRole("button", { name: /move to/i })).not.toBeInTheDocument();
+  });
 });

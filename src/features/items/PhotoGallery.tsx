@@ -38,10 +38,14 @@ export function PhotoGallery({
     return () => clearTimeout(timer);
   }, [moveNote]);
 
-  const toggleSelect = (photoId: string) =>
+  const toggleSelect = (photoId: string) => {
+    // Re-picking the selection clears any stale move error so an old red alert
+    // doesn't linger while the user reconsiders.
+    setMoveError(null);
     setSelected((prev) =>
       prev.includes(photoId) ? prev.filter((x) => x !== photoId) : [...prev, photoId],
     );
+  };
 
   const moveTo = async (dest: MoveDestination) => {
     if (selected.length === 0 || moving) return;
@@ -57,6 +61,10 @@ export function PhotoGallery({
       if (!res.ok) {
         throw new Error("reassign failed");
       }
+      // Optimistic: drop the moved photos from this gallery. If a moved photo was
+      // this item's hero, the server promotes a remaining photo to hero; that new
+      // hero shows on next load. Mirrors the pool "stay in place" pattern — the
+      // source gallery is not the source of truth for the moved photos' new home.
       const moved = new Set(selected);
       setPhotos((prev) => prev.filter((p) => !moved.has(p.id)));
       setSelected([]);
