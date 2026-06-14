@@ -39,6 +39,11 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
 
   const photos = await photoRepo.findByItem(item.id);
 
+  const allItems = await itemRepo.findByCollection(params.id);
+  const otherItems = allItems
+    .filter((i) => i.id !== item.id)
+    .map((i) => ({ id: i.id, number: i.number, name: i.name }));
+
   return (
     <AppLayout
       breadcrumbs={[
@@ -65,7 +70,12 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
         {photos.length > 0 && (
           <Card padding="lg">
             <h2 className="text-lg text-ink mb-4">Photos</h2>
-            <PhotoGallery photos={photos} itemId={item.id} collectionId={params.id} />
+            <PhotoGallery
+              photos={photos}
+              itemId={item.id}
+              collectionId={params.id}
+              otherItems={otherItems}
+            />
           </Card>
         )}
       </div>
