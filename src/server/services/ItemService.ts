@@ -2,7 +2,7 @@ import type { Item } from "@/types";
 import type { IItemRepository } from "@/server/repositories/ItemRepository";
 import type { IPhotoRepository } from "@/server/repositories/PhotoRepository";
 
-const MAX_GROUP_PHOTOS = 50;
+export const MAX_GROUP_PHOTOS = 50;
 
 export class PoolGroupError extends Error {
   constructor(

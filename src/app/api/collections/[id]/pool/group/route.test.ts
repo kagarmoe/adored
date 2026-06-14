@@ -76,6 +76,13 @@ describe("POST /api/collections/[id]/pool/group", () => {
     expect(createItemFromPool).not.toHaveBeenCalled();
   });
 
+  it("400 when photoIds exceeds the max length (bounded at the route, before the service)", async () => {
+    const ids = Array.from({ length: 51 }, (_, i) => `p${i}`);
+    const res = await POST(req({ photoIds: ids }), { params: { id: "c1" } });
+    expect(res.status).toBe(400);
+    expect(createItemFromPool).not.toHaveBeenCalled();
+  });
+
   it("400 when photoIds is an empty array", async () => {
     const res = await POST(req({ photoIds: [] }), { params: { id: "c1" } });
     expect(res.status).toBe(400);
