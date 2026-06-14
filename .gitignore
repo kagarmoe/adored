@@ -64,6 +64,11 @@ next-env.d.ts
 # Beads / Dolt files (added by bd init)
 .beads/proxieddb/
 
+# beads↔GitHub sync map — per-machine state from beads-gh-sync. A known bug
+# duplicates GitHub issues when this is shared; managed manually now, so it is
+# local-only and untracked. (See GitHub issue dedup, 2026-06-13.)
+.beads/gh-sync-map.json
+
 # Superpowers brainstorm visual companion artifacts
 .superpowers/
 
