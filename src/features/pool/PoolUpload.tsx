@@ -20,6 +20,50 @@ interface TrackedFile {
   error?: string;
 }
 
+const POLL_INTERVAL_MS = 1200;
+const POLL_TIMEOUT_MS = 15000;
+const FALLBACK_DELAY_MS = 2500;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchPoolCount(collectionId: string): Promise<number | null> {
+  try {
+    const res = await fetch(`/api/collections/${collectionId}/pool/photos`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { photos?: unknown[] };
+    return Array.isArray(data.photos) ? data.photos.length : null;
+  } catch {
+    return null;
+  }
+}
+
+// Pooled rows are written by Blob's async completion callback, which lands a
+// beat after upload() resolves — so refreshing immediately can show an empty
+// pool. Wait until the server reflects the new rows (or a timeout) before
+// refreshing, so the grid never looks empty right after a successful add.
+async function waitForPooledRows(
+  collectionId: string,
+  baseline: number | null,
+  expectedNew: number,
+): Promise<void> {
+  if (baseline === null) {
+    // Couldn't read a baseline; give the callback a moment, then refresh anyway.
+    await delay(FALLBACK_DELAY_MS);
+    return;
+  }
+  const target = baseline + expectedNew;
+  const deadline = Date.now() + POLL_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    await delay(POLL_INTERVAL_MS);
+    const current = await fetchPoolCount(collectionId);
+    if (current !== null && current >= target) return;
+  }
+}
+
 export function PoolUpload({ collectionId }: PoolUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -35,6 +79,9 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
     if (images.length === 0) return;
 
     setBusy(true);
+    // Baseline before any rows are written, so we can detect when the async
+    // completion callbacks have caught up.
+    const baseline = await fetchPoolCount(collectionId);
     const tracked: TrackedFile[] = images.map((f, i) => ({
       key: `${Date.now()}-${i}-${f.name}`,
       name: f.name,
@@ -42,7 +89,7 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
     }));
     setFiles((prev) => [...tracked, ...prev]);
 
-    let anySucceeded = false;
+    let succeeded = 0;
     // Sequential keeps the UI legible and avoids hammering the token endpoint;
     // switch to a small concurrency pool later if needed.
     for (let i = 0; i < images.length; i++) {
@@ -58,7 +105,7 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
           contentType: toUpload.type,
         });
         update(t.key, { status: "done" });
-        anySucceeded = true;
+        succeeded += 1;
       } catch (err) {
         update(t.key, {
           status: "error",
@@ -67,11 +114,13 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
       }
     }
 
-    setBusy(false);
-    if (anySucceeded) {
-      // Pooled rows are written by Blob's completion callback; refresh to show them.
+    if (succeeded > 0) {
+      // Wait for Blob's async completion callbacks to persist the rows, then
+      // refresh so the pool grid reflects what was just added.
+      await waitForPooledRows(collectionId, baseline, succeeded);
       router.refresh();
     }
+    setBusy(false);
   };
 
   const onPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
