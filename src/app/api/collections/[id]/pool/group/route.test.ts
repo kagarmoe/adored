@@ -101,4 +101,21 @@ describe("POST /api/collections/[id]/pool/group", () => {
     const res = await POST(req({ photoIds: ["p1"] }), { params: { id: "c1" } });
     expect(res.status).toBe(201);
   });
+
+  it("400 when the request body is malformed JSON", async () => {
+    const bad = new Request("http://localhost/pool/group", {
+      method: "POST",
+      body: "{not json",
+    }) as any;
+    const res = await POST(bad, { params: { id: "c1" } });
+    expect(res.status).toBe(400);
+    expect(createItemFromPool).not.toHaveBeenCalled();
+  });
+
+  it("re-throws a non-PoolGroupError instead of swallowing it", async () => {
+    createItemFromPool.mockRejectedValue(new Error("boom"));
+    await expect(
+      POST(req({ photoIds: ["p1"] }), { params: { id: "c1" } }),
+    ).rejects.toThrow("boom");
+  });
 });

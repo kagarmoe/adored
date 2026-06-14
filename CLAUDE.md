@@ -74,7 +74,18 @@ _Add a brief overview of your project architecture_
 
 ## Conventions & Patterns
 
-_Add your project-specific conventions here_
+**Project-local skills** live in `skills/` (version-controlled source); `.claude/skills/`
+is gitignored (managed by the skills package manager), so run
+`bash scripts/link-local-skills.sh` after a fresh clone to make them discoverable.
+
+- **`adversarial-review`** — a six-persona (QA/Test, Security, Architect, Craftsman/simplicity,
+  Graphic Design, UX) guilty-until-proven review built to defeat rubber-stamping. Use it as a
+  review gate before merging substantial work — it adds design/UX lenses and test-honesty teeth
+  (does the test actually run in CI? is it mock theater?) that the generic code review skills lack.
+
+**Testing:** DB-backed tests live in `src/lib/db/` behind `RUN_DB_TESTS=1`; they run serially in CI
+via the `db-tests` job and locally via `npm run test:db`. A change with new tests must prove the
+important ones execute in CI, and that at least one test crosses the real layers un-mocked.
 
 ## Design Context
 
@@ -92,5 +103,5 @@ catalog/inventory/shopping-site framing. Tablet-first, tap-first, **no swiping**
 helps). Target WCAG 2.1 AA.
 
 The `/impeccable` skill (and its sub-commands) reads `PRODUCT.md` automatically. The visual system is
-defined in [`DESIGN.md`](DESIGN.md) ("The Lamplit Sitting Room") — a deliberate palette, type,
+defined in [`DESIGN.md`](DESIGN.md) — a deliberate palette, type,
 elevation, and component system — and is accountable to [`TONE.md`](TONE.md).

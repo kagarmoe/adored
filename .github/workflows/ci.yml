@@ -47,3 +47,44 @@ jobs:
           DATABASE_URL: postgresql://user:pass@localhost:5432/ci
           AUTH_URL: http://localhost:3000
           AUTH_SECRET: ci-build-only-secret-at-least-32-characters-long
+
+  # DB-gated tests (RUN_DB_TESTS=1) against a real Postgres service. These are
+  # describe.skip'd in the plain `gate` job, so the IDOR/pool-schema guard tests
+  # only run here. Files run serially (--no-file-parallelism): concurrent
+  # RUN_DB_TESTS files deadlock on the shared DB.
+  db-tests:
+    name: DB integration tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: app_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d app_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply schema
+        run: npm run db:migrate
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/app_test
+
+      - name: DB tests (serial)
+        run: RUN_DB_TESTS=1 npx vitest run --no-file-parallelism src/lib/db
+        env:
+          DATABASE_URL_TEST: postgresql://postgres:test@localhost:5432/app_test

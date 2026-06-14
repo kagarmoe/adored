@@ -150,6 +150,27 @@ export class PhotoRepository implements IPhotoRepository {
     return rows.length;
   }
 
+  // How many of these ids are currently available pooled photos of this
+  // collection (unassigned, not deleted). Used to reject a grouping conflict
+  // BEFORE any item is created or any photo is assigned — neon-http has no
+  // transaction, so a pre-check keeps a conflict from leaking a half-assigned
+  // orphan item.
+  async countAvailablePooled(collectionId: string, photoIds: string[]): Promise<number> {
+    if (photoIds.length === 0) return 0;
+    const rows = await this.db
+      .select({ id: photosTable.id })
+      .from(photosTable)
+      .where(
+        and(
+          eq(photosTable.collectionId, collectionId),
+          inArray(photosTable.id, photoIds),
+          isNull(photosTable.itemId),
+          isNull(photosTable.deletedAt),
+        ),
+      );
+    return rows.length;
+  }
+
   private mapToPhoto(row: any): Photo {
     return {
       id: row.id,
