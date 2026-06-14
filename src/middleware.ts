@@ -1,5 +1,6 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import { isRequestAuthorized } from "@/lib/middleware-auth";
 
 export const config = {
   matcher: [
@@ -15,10 +16,8 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => {
-        // Allow access if token exists (user is authenticated)
-        return !!token;
-      },
+      authorized: ({ token, req }) =>
+        isRequestAuthorized(req.nextUrl.pathname, !!token),
     },
     pages: {
       signIn: "/login",
