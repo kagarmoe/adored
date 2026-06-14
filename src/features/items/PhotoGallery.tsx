@@ -161,7 +161,7 @@ export function PhotoGallery({
           return (
             <div
               key={photo.id}
-              className="bg-ground rounded-lg overflow-hidden relative group"
+              className="bg-ground rounded-lg overflow-hidden relative"
             >
               <button
                 type="button"
@@ -190,12 +190,18 @@ export function PhotoGallery({
               </button>
 
               {photo.isHero && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
-                  <span className="text-white text-sm font-semibold">Hero</span>
-                </div>
+                <span
+                  aria-hidden
+                  className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-ink shadow pointer-events-none"
+                >
+                  Hero
+                </span>
               )}
 
-              <div className="absolute inset-x-0 bottom-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end justify-center pb-2 opacity-0 group-hover:opacity-100">
+              {/* Per-photo actions stay visible (no hover gate) so they are
+                  reachable on touch — this is the tablet-first photo manager.
+                  stopPropagation keeps them from toggling tile selection. */}
+              <div className="absolute inset-x-0 bottom-0 flex items-end justify-center pb-2">
                 <div className="flex gap-2 w-full px-2">
                   {!photo.isHero && (
                     <Button
