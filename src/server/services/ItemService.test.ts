@@ -71,4 +71,15 @@ describe("ItemService.createItemFromPool", () => {
     await expect(service.createItemFromPool("c1", ids)).rejects.toBeInstanceOf(PoolGroupError);
     expect(itemRepo.create).not.toHaveBeenCalled();
   });
+
+  it("on the race backstop (pre-check passes but assign comes up short), soft-deletes the created item so no orphan leaks", async () => {
+    const { itemRepo, photoRepo } = makeRepos({ available: 2, assign: 1 });
+    const service = new ItemService(itemRepo, photoRepo);
+    await expect(service.createItemFromPool("c1", ["p1", "p2"])).rejects.toMatchObject({
+      name: "PoolGroupError",
+      code: "conflict",
+    });
+    expect(itemRepo.create).toHaveBeenCalled();
+    expect(itemRepo.softDelete).toHaveBeenCalledWith("item_new");
+  });
 });
