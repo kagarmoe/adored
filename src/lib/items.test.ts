@@ -1,5 +1,33 @@
 import { describe, expect, it } from "vitest";
-import { itemDisplayName, itemInitial } from "./items";
+import { filterItems, itemDisplayName, itemInitial } from "./items";
+
+const mk = (over: Partial<{ name: string | null; status: string | null }>) =>
+  ({ id: "i", collectionId: "c", number: 1, name: null, status: "active", ...over }) as any;
+
+describe("filterItems", () => {
+  const items = [
+    mk({ name: "Bag", status: "active" }),
+    mk({ name: null, status: "active" }),
+    mk({ name: null, status: "archived" }),
+  ];
+  it("returns all when status=all and unnamed=false", () => {
+    expect(filterItems(items, { status: "all", unnamed: false })).toHaveLength(3);
+  });
+  it("filters to nameless when unnamed=true", () => {
+    const r = filterItems(items, { status: "all", unnamed: true });
+    expect(r).toHaveLength(2);
+    expect(r.every((i) => !i.name)).toBe(true);
+  });
+  it("applies status and unnamed together", () => {
+    const r = filterItems(items, { status: "active", unnamed: true });
+    expect(r).toHaveLength(1);
+    expect(r[0]).toMatchObject({ name: null, status: "active" });
+  });
+  it("treats missing status as active", () => {
+    const r = filterItems([mk({ name: "x", status: null })], { status: "active", unnamed: false });
+    expect(r).toHaveLength(1);
+  });
+});
 
 describe("itemDisplayName", () => {
   it("uses the name when present", () => {
