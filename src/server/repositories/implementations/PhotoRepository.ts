@@ -84,9 +84,10 @@ export class PhotoRepository implements IPhotoRepository {
           isNull(photosTable.deletedAt),
         ),
       )
-      .orderBy(asc(photosTable.createdAt));
-    // earliest-first; hero wins. Walk once: set the first photo seen per item
-    // (the earliest), then let a hero override.
+      .orderBy(asc(photosTable.createdAt), asc(photosTable.id));
+    // earliest-first (id breaks created_at ties so "earliest" is deterministic);
+    // hero wins. Walk once: set the first photo seen per item (the earliest),
+    // then let a hero override.
     for (const row of rows) {
       const photo = this.mapToPhoto(row);
       if (!photo.itemId) continue;

@@ -126,6 +126,23 @@ describeDb("cover-photo lookup (repo -> DB)", () => {
     expect(covers.has(itemEmpty.id)).toBe(false);
   });
 
+  it("uses the single photo as the cover when an item has just one non-hero photo (the modal case)", async () => {
+    const item = await itemRepo().create({ collectionId });
+    const only = await seedPhoto(item.id, "only", false);
+
+    const covers = await photoRepo().findCoverPhotosByItemIds([item.id]);
+    expect(covers.get(item.id)?.id).toBe(only.id);
+  });
+
+  it("keeps a single hero when an item somehow has multiple is_hero rows (earliest hero wins)", async () => {
+    const item = await itemRepo().create({ collectionId });
+    const h1 = await seedPhoto(item.id, "h1", true); // earlier hero
+    await seedPhoto(item.id, "h2", true); // later hero — does not override
+
+    const covers = await photoRepo().findCoverPhotosByItemIds([item.id]);
+    expect(covers.get(item.id)?.id).toBe(h1.id);
+  });
+
   it("returns an empty map for empty input", async () => {
     const covers = await photoRepo().findCoverPhotosByItemIds([]);
     expect(covers.size).toBe(0);
