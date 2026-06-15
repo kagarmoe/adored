@@ -15,16 +15,17 @@ Collection-scoped page URLs expose the raw 26-char ULID primary key:
 We want a short, human-meaningful identifier in user-facing URLs:
 
 ```
-/collections/coll_summer-bags/items/6
+/collections/summer-bags/items/6
 ```
 
 ## Decisions (settled during brainstorming)
 
 | # | Decision | Rationale |
 |---|----------|-----------|
-| Scheme | **`coll_` + slugified collection name** (`coll_summer-bags`) | Meaningful to the user; globally unique with a dedupe suffix; viewer-independent so shared-collection links keep working. |
-| Uniqueness | **Global**, via numeric dedupe suffix (`coll_summer-bags-2`, `-3`) excluding the collection's own row | A URL identifier must resolve the same collection for every viewer. Per-owner numbers (`coll_1`) are not globally unique and break shared links. |
-| Empty-name fallback | If the name slugifies to empty (emoji/non-Latin only), use `coll_` + 6 random Crockford-base32 chars | Guarantees a valid, unique slug always exists. |
+| Scheme | **Slugified collection name, no prefix** (`summer-bags`) | Meaningful to the user; the `/collections/` path segment already namespaces it, so a `coll_` prefix is redundant noise. Globally unique with a dedupe suffix; viewer-independent so shared-collection links keep working. |
+| Uniqueness | **Global**, via numeric dedupe suffix (`summer-bags-2`, `-3`) excluding the collection's own row | A URL identifier must resolve the same collection for every viewer. Per-owner numbers (`coll_1`) are not globally unique and break shared links. |
+| Reserved slugs | A curated blocklist (today: **`new`**) is treated as already-taken, so a colliding name falls back to the dedupe suffix (`new` → `new-2`) | `/collections/new` is a **static** route (create page) that Next.js resolves before `/collections/[id]`. A collection slugged `new` would be unreachable. **Rule: any static route added as a sibling of `/collections/[id]` must be added to the blocklist.** |
+| Empty-name fallback | If the name slugifies to empty (emoji/non-Latin only), use 6 random Crockford-base32 chars (no prefix) | Guarantees a valid, unique slug always exists. |
 | Rename | **Regenerate the slug on rename** | Slug always mirrors the current name. The **immutable ULID remains the permanent link** (resolver still accepts it); a stale slug falls through to the same "not found → /collections" path as any unknown id. Chosen over stable-at-creation knowingly. |
 | Scope | **Page routes only.** API routes and client `fetch` calls stay on the ULID. | API URLs are never user-visible. There is no shared API access-guard to hang slug resolution on (23 hand-rolled handlers, some without membership checks); slugging them would be invasive, risky, and valueless. |
 | Old URLs | **Keep working**, no redirect. The resolver accepts slug **or** ULID. | Zero breakage for existing bookmarks/links. A canonical 301 (ULID→slug) is explicitly out of scope (YAGNI). |
@@ -63,8 +64,9 @@ Nullable in the column type; non-null by construction (generated on create, on r
 
 ### 3. Slug helper — `src/lib/collections/slug.ts` (new)
 
-- `slugifyName(name: string): string` — lowercase; replace runs of non-`[a-z0-9]` with `-`; collapse repeats; trim leading/trailing `-`; truncate to ~40 chars.
-- `generateUniqueCollectionSlug(db, name, excludeId?): Promise<string>` — base = `coll_` + (`slugifyName(name)` or random Crockford-base32 fallback); probe for the first free value among `base`, `base-2`, `base-3`, …, scanning **all** rows (incl. soft-deleted) and excluding `excludeId` (the row being renamed, so a no-op rename doesn't bump itself). Return the first free value.
+- `slugifyName(name: string): string` — lowercase; replace runs of non-`[a-z0-9]` with `-`; collapse repeats; trim leading/trailing `-`; truncate to ~40 chars. **No prefix.**
+- `RESERVED_COLLECTION_SLUGS: Set<string>` — static-route siblings of `/collections/[id]` that must never be a slug. Today: `{ "new" }`. A base equal to a reserved slug is treated as "taken" (forced into the dedupe suffix path).
+- `generateUniqueCollectionSlug(db, name, excludeId?): Promise<string>` — base = `slugifyName(name)` (or a random Crockford-base32 fallback if empty); probe for the first free value among `base`, `base-2`, `base-3`, …, where "free" means **not** in `RESERVED_COLLECTION_SLUGS` **and** not present in **any** row (incl. soft-deleted) other than `excludeId` (the row being renamed, so a no-op rename doesn't bump itself). Return the first free value.
 - The `UNIQUE` index is the race backstop: insert/update retries on unique violation (the proven `ItemRepository` MAX+1 retry pattern). The retry **matches the `collections_slug_unique` constraint name specifically** (mirror `isCatalogNumberConflict`) so it never masks an unrelated unique violation.
 
 ### 4. Repository — `src/server/repositories/implementations/CollectionRepository.ts`
@@ -81,7 +83,7 @@ resolveCollection(db, slugOrId, userId): Promise<Collection | null>
 // findBySlug(slugOrId) ?? findById(slugOrId), then member-or-owner check
 ```
 
-`requireCollectionAccess` delegates to `resolveCollection`, preserving its redirect-on-miss / redirect-on-no-access behavior **exactly** (no IDOR regression — the member-or-owner check is unchanged). Its parameter is renamed `collectionId → slugOrId` in the signature + doc comment to reflect that every call site now passes a slug-or-ULID. Disambiguation is purely at the DB-column level (try `slug` column, fall through to `id` column) — never string-shape parsing — so a slug that happens to look ULID-shaped still resolves correctly.
+`requireCollectionAccess` delegates to `resolveCollection`, preserving its redirect-on-miss / redirect-on-no-access behavior **exactly** (no IDOR regression — the member-or-owner check is unchanged). Its parameter is renamed `collectionId → slugOrId` in the signature + doc comment to reflect that every call site now passes a slug-or-ULID. Disambiguation is purely at the DB-column level (try `slug` column, fall through to `id` column) — never string-shape parsing. Collision is structurally impossible anyway: slugs are `[a-z0-9-]` only (no underscore), while every ULID is `coll_` + 26 chars — a slug can never equal an id.
 
 ### 6. Type — `src/types`
 
@@ -115,7 +117,8 @@ After an edit-mode save, `src/features/collections/CollectionForm.tsx` redirects
 
 - **Unit** (`slug.test.ts`, no DB): `slugifyName` over normal names, punctuation, unicode/emoji → empty, length cap.
 - **DB-backed** (`src/lib/db/collection-slug.integration.test.ts`, behind `RUN_DB_TESTS=1`, runs in the CI `db-tests` job, crosses repository→real DB un-mocked):
-  - two collections with the same name → `coll_x` and `coll_x-2`.
+  - two collections with the same name → `summer-bags` and `summer-bags-2`.
+  - a collection named "New" → slug `new-2`, not `new` (reserved-slug guard; `/collections/new` static route stays reachable).
   - rename regenerates the slug; **old slug no longer resolves, new slug + ULID both do**.
   - `resolveCollection` returns the collection by **slug** and by **ULID**; returns null for a non-member (IDOR guard — the acceptance criterion).
   - soft-deleted collection is **not** found by `findBySlug`, but its slug is still **not** reclaimable by a new collection (unique index spans deleted rows).
