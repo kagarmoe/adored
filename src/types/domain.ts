@@ -15,6 +15,7 @@ export interface Collection {
   id: string;
   ownerId: string;
   name: string;
+  slug: string | null;
   description: string | null;
   status: CollectionStatus;
   createdAt: Date;
