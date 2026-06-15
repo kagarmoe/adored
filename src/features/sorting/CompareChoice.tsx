@@ -65,7 +65,13 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
           >
             <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-accent-aqua">
               {hero ? (
-                <Image src={hero} alt={itemDisplayName(item)} fill className="object-cover" />
+                <Image
+                  src={hero}
+                  alt={itemDisplayName(item)}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
               ) : (
                 <span className="font-display text-6xl text-ink-soft" aria-hidden>
                   {itemInitial(item)}
