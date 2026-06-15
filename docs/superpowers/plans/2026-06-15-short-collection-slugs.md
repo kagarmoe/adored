@@ -80,6 +80,7 @@ const MAX_SLUG_LENGTH = 40;
 export function slugifyName(name: string): string {
   return name
     .toLowerCase()
+    .replace(/['’]/g, "") // strip apostrophes so "Kim's" -> "kims", not "kim-s"
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
