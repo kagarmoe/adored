@@ -177,13 +177,21 @@ export interface Collection {
 }
 ```
 
-- [ ] **Step 2: Add `findBySlug` to the interface**
+- [ ] **Step 2: Add `findBySlug` to the interface and make `slug` repository-managed**
 
-In `src/server/repositories/CollectionRepository.ts`, add the method to `ICollectionRepository`:
+In `src/server/repositories/CollectionRepository.ts`: add `findBySlug`, and exclude `slug` from the `update` data type so callers can never overwrite the generated slug (it is set only inside the repo). Before:
+
+```ts
+  findById(id: string): Promise<Collection | null>;
+  update(id: string, data: Partial<Omit<Collection, "id" | "createdAt">>): Promise<Collection>;
+```
+
+After:
 
 ```ts
   findById(id: string): Promise<Collection | null>;
   findBySlug(slug: string): Promise<Collection | null>;
+  update(id: string, data: Partial<Omit<Collection, "id" | "createdAt" | "slug">>): Promise<Collection>;
 ```
 
 - [ ] **Step 3: Verify it fails to compile (drives Task 4)**
@@ -368,7 +376,10 @@ export class CollectionRepository implements ICollectionRepository {
     return collections.map((c) => this.mapToCollection(c));
   }
 
-  async update(id: string, data: Partial<Collection>): Promise<Collection> {
+  async update(
+    id: string,
+    data: Partial<Omit<Collection, "id" | "createdAt" | "slug">>,
+  ): Promise<Collection> {
     // Regenerate the slug when the name changes (excluding this row from dedupe).
     const renaming = data.name !== undefined;
     let newSlug = renaming ? await this.generateUniqueSlug(data.name!, id) : undefined;
@@ -563,15 +574,49 @@ export async function requireCollectionAccess(
 }
 ```
 
-- [ ] **Step 4: Run the DB test to verify it passes**
+- [ ] **Step 4: Fix the existing guard unit test (mock now needs `findBySlug`)**
 
-Run: `npm run test:db -- collection-slug`
-Expected: PASS (9 tests).
+`src/lib/collection-access.test.ts` mocks `CollectionRepository` as `{ findById: vi.fn() }`. The new resolver calls `findBySlug` first, so the mock must provide it or every test throws `TypeError: repo.findBySlug is not a function`. Update the hoisted mock (line 9) and make the existing ID-based tests fall through `findBySlug → findById`:
 
-- [ ] **Step 5: Commit**
+```ts
+// line 9: add findBySlug to the mock
+collectionRepo: { findById: vi.fn(), findBySlug: vi.fn() },
+```
+
+In `beforeEach`, default `findBySlug` to null so the existing tests exercise the ULID/`findById` path:
+
+```ts
+  beforeEach(() => {
+    vi.clearAllMocks();
+    collectionRepo.findBySlug.mockResolvedValue(null);
+  });
+```
+
+Add one slug-path test so the new branch is covered:
+
+```ts
+  it("resolves by slug (findBySlug) without touching findById", async () => {
+    const collection = { id: "col-1", ownerId: "user-1", name: "Mine", slug: "mine" };
+    collectionRepo.findBySlug.mockResolvedValue(collection);
+    membershipRepo.findByUser.mockResolvedValue(null);
+
+    const result = await requireCollectionAccess(db, "mine", "user-1");
+
+    expect(result).toBe(collection);
+    expect(collectionRepo.findById).not.toHaveBeenCalled();
+    expect(mockRedirect).not.toHaveBeenCalled();
+  });
+```
+
+- [ ] **Step 5: Run both test layers to verify they pass**
+
+Run: `npx vitest run src/lib/collection-access.test.ts && npm run test:db -- collection-slug`
+Expected: guard unit tests PASS (5 tests); DB tests PASS (9 tests).
+
+- [ ] **Step 6: Commit**
 
 ```bash
-git add src/lib/collection-access.ts src/lib/db/collection-slug.integration.test.ts
+git add src/lib/collection-access.ts src/lib/collection-access.test.ts src/lib/db/collection-slug.integration.test.ts
 git commit -m "feat(purses-9fi): resolveCollection accepts slug-or-ULID; guard delegates"
 ```
 
@@ -824,3 +869,8 @@ git commit -am "chore(purses-9fi): verification sweep — no residual params.id 
 - Existing collections resolve via slug (after backfill) **and** legacy ULID URLs still resolve.
 - No IDOR regression: `resolveCollection` returns null for non-members (covered by the DB test).
 - All gates green: `build`, `test:ci`, `lint`, `auth:verify`, `test:db`.
+
+## Known limitations (acceptable, out of scope)
+
+- `e2e/fixtures/seed.ts` `seedCollections` and the raw-SQL `seedCollection` in `collection-cover-photos.integration.test.ts` insert collections directly (not via `CollectionRepository.create`), so seeded rows have `slug = NULL`. Harmless: the resolver and link-building fall back to `collection.id`, so those fixtures keep working — they just don't exercise the slug path. Migrating seeds to `create()` is future cleanup, not part of this bead.
+- The backfill script uses the `postgres-js` driver (one-shot, manual) while the app uses `neon-http`; the `db as any` cast bridges the two Drizzle adapter types. Fine for a run-once script, not a long-term pattern.
