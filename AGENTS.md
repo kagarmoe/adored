@@ -1,8 +1,11 @@
 # Repository Guidelines
 
+This repository is a Next.js application for Adored, a curatorial collection
+sorting app.
+
 ## Project Structure & Module Organization
 
-Adored is a Next.js 14 App Router app. Main code lives in `src/`.
+Main app code lives in `src/`.
 Use `src/app/` for pages and API routes, `src/features/` for feature components,
 `src/components/` for shared UI and layout, `src/server/` for repositories and
 services, `src/lib/` for utilities, database schema, and auth helpers, and
@@ -23,7 +26,7 @@ specs and fixtures live in `e2e/`; unit and component tests are colocated under
 
 ## Coding Style & Naming Conventions
 
-Use TypeScript, React function components, and existing repository patterns before
+Use TypeScript, React/Next.js function components, and existing repository patterns before
 adding new abstractions. Keep UI tablet-first and tap-friendly. Components use
 PascalCase (`ItemCard.tsx`), hooks use `useX`, utilities use camelCase, and tests
 mirror the file under test. Tailwind classes are the primary styling mechanism.
