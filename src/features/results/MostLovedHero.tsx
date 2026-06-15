@@ -20,7 +20,13 @@ export function MostLovedHero({ item, collectionId, heroPhotoUrl }: MostLovedHer
           {/* The photograph is the loudest thing on screen. */}
           <div className="relative aspect-[4/3] md:aspect-auto md:w-2/5 md:self-stretch bg-accent-aqua flex items-center justify-center overflow-hidden">
             {heroPhotoUrl ? (
-              <Image src={heroPhotoUrl} alt={itemDisplayName(item)} fill className="object-cover" />
+              <Image
+                src={heroPhotoUrl}
+                alt={itemDisplayName(item)}
+                fill
+                className="object-cover"
+                unoptimized
+              />
             ) : (
               <span className="font-display text-7xl text-ink-soft/70" aria-hidden>
                 {itemInitial(item)}

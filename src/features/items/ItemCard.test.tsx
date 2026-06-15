@@ -16,4 +16,17 @@ describe("ItemCard nameless cue", () => {
     expect(screen.queryByText(/add a name/i)).not.toBeInTheDocument();
     expect(screen.getByText("Acme")).toBeInTheDocument();
   });
+  it("browser-loads authenticated hero image URLs directly", () => {
+    render(
+      <ItemCard
+        item={item({ name: "Bag" }) as any}
+        collectionId="c"
+        heroPhotoUrl="/api/collections/c/items/i/photos/p/file"
+      />,
+    );
+    expect(screen.getByRole("img", { name: "Bag" })).toHaveAttribute(
+      "src",
+      "/api/collections/c/items/i/photos/p/file",
+    );
+  });
 });
