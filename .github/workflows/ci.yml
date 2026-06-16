@@ -22,9 +22,9 @@ jobs:
     name: Lint, test, build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
@@ -42,7 +42,7 @@ jobs:
       # suite runs in the db-tests job and is not reflected here.
       - name: Upload coverage report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage/
@@ -79,9 +79,9 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
@@ -101,9 +101,15 @@ jobs:
 
   # Did this change touch the UI / how data is presented? Playwright is slow
   # (full next build + 3 viewports, serial), so we only run it when the view
-  # layer changed. Pure server/API/db changes are covered by `gate` + `db-tests`
-  # and skip e2e. `src/app/api/**` is server code, so it's excluded even though
-  # it lives under src/app/**.
+  # layer changed. Pure server/db/docs/config changes are covered by `gate` +
+  # `db-tests` and skip e2e.
+  #
+  # NOTE: positive patterns only. dorny/paths-filter uses picomatch with an OR
+  # quantifier, where a leading "!" pattern matches every path NOT in that dir —
+  # so `!src/app/api/**` made the filter match almost everything (ci.yml, docs,
+  # server, db all triggered e2e). src/app/api routes are under src/app/** and
+  # therefore DO trigger e2e; that over-trigger is a safe, cheap price for a
+  # correct filter (better than a missed UI regression).
   changes:
     name: Detect UI changes
     runs-on: ubuntu-latest
@@ -116,14 +122,13 @@ jobs:
     outputs:
       ui: ${{ steps.filter.outputs.ui }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
             ui:
               - 'src/app/**'
-              - '!src/app/api/**'
               - 'src/components/**'
               - 'src/features/**'
               - 'src/hooks/**'
@@ -147,9 +152,9 @@ jobs:
     if: needs.changes.outputs.ui == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
@@ -193,7 +198,7 @@ jobs:
       # Always keep the full HTML report (downloadable dashboard), pass or fail.
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: playwright-report/
@@ -215,20 +220,20 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
 
       - name: Download coverage artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: coverage-report
           path: _artifacts/coverage
 
       - name: Download e2e artifact (absent on non-UI pushes)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: playwright-report
