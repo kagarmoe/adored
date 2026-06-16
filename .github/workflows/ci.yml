@@ -97,6 +97,12 @@ jobs:
   changes:
     name: Detect UI changes
     runs-on: ubuntu-latest
+    # dorny/paths-filter lists the PR's changed files via the GitHub API, which
+    # needs pull-requests:read. Scoped to this job so other jobs keep the repo
+    # default token permissions.
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       ui: ${{ steps.filter.outputs.ui }}
     steps:
