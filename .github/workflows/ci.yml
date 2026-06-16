@@ -88,3 +88,72 @@ jobs:
         run: RUN_DB_TESTS=1 npx vitest run --no-file-parallelism src/lib/db
         env:
           DATABASE_URL_TEST: postgresql://postgres:test@localhost:5432/app_test
+
+  # Did this change touch the UI / how data is presented? Playwright is slow
+  # (full next build + 3 viewports, serial), so we only run it when the view
+  # layer changed. Pure server/API/db changes are covered by `gate` + `db-tests`
+  # and skip e2e. `src/app/api/**` is server code, so it's excluded even though
+  # it lives under src/app/**.
+  changes:
+    name: Detect UI changes
+    runs-on: ubuntu-latest
+    outputs:
+      ui: ${{ steps.filter.outputs.ui }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            ui:
+              - 'src/app/**'
+              - '!src/app/api/**'
+              - 'src/components/**'
+              - 'src/features/**'
+              - 'src/hooks/**'
+              - 'src/lib/design/**'
+              - '**/*.css'
+              - 'tailwind.config.ts'
+              - 'postcss.config.mjs'
+              - 'next.config.mjs'
+              - 'e2e/**'
+              - 'playwright.config.ts'
+
+  # E2E only runs when `changes` says the UI moved. When it doesn't, this job is
+  # skipped — which GitHub reports as success, so it can be a REQUIRED check
+  # (mark it required in main's branch protection) without blocking non-UI PRs.
+  # Playwright's globalSetup spins its own postgres:16 on :5433 via
+  # e2e/fixtures/test-db.sh (Docker is preinstalled on ubuntu runners); the
+  # webServer builds + starts next on :3100 with the injected test DB.
+  e2e:
+    name: E2E (Playwright)
+    needs: changes
+    if: needs.changes.outputs.ui == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # iPad/iPhone devices are WebKit; Desktop Chrome is Chromium — install both.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Run e2e
+        run: npx playwright test
+        env:
+          DATABASE_URL_TEST: postgresql://postgres:test@localhost:5433/app_test
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
