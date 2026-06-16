@@ -5,7 +5,8 @@ import Link from "next/link";
 export default async function Home() {
   const session = await getSession();
 
-  // If authenticated, redirect to collections
+  // Authenticated visitors skip the marketing landing and go straight to their
+  // collections.
   if (session?.user) {
     redirect("/collections");
   }

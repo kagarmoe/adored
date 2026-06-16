@@ -23,7 +23,12 @@ export default defineConfig({
   fullyParallel: false, // tests share one seeded DB
   workers: 1,
   retries: process.env.CI ? 2 : 0,
-  reporter: [["html", { open: "never" }], ["list"]],
+  reporter: [
+    ["html", { open: "never" }],
+    ["list"],
+    // Machine-readable stats so CI can render an inline summary dashboard.
+    ["json", { outputFile: "playwright-report/results.json" }],
+  ],
   use: {
     baseURL: BASE_URL,
     trace: "on-first-retry",

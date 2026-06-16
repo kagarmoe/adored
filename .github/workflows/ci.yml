@@ -35,8 +35,18 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Unit tests
-        run: npm run test:ci
+      - name: Unit tests (with coverage)
+        run: npm run test:ci -- --coverage
+
+      # Coverage for the dashboard. Unit/component only — the DB integration
+      # suite runs in the db-tests job and is not reflected here.
+      - name: Upload coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
 
       - name: Build
         run: npm run build
@@ -88,3 +98,167 @@ jobs:
         run: RUN_DB_TESTS=1 npx vitest run --no-file-parallelism src/lib/db
         env:
           DATABASE_URL_TEST: postgresql://postgres:test@localhost:5432/app_test
+
+  # Did this change touch the UI / how data is presented? Playwright is slow
+  # (full next build + 3 viewports, serial), so we only run it when the view
+  # layer changed. Pure server/API/db changes are covered by `gate` + `db-tests`
+  # and skip e2e. `src/app/api/**` is server code, so it's excluded even though
+  # it lives under src/app/**.
+  changes:
+    name: Detect UI changes
+    runs-on: ubuntu-latest
+    # dorny/paths-filter lists the PR's changed files via the GitHub API, which
+    # needs pull-requests:read. Scoped to this job so other jobs keep the repo
+    # default token permissions.
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      ui: ${{ steps.filter.outputs.ui }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            ui:
+              - 'src/app/**'
+              - '!src/app/api/**'
+              - 'src/components/**'
+              - 'src/features/**'
+              - 'src/hooks/**'
+              - 'src/lib/design/**'
+              - '**/*.css'
+              - 'tailwind.config.ts'
+              - 'postcss.config.mjs'
+              - 'next.config.mjs'
+              - 'e2e/**'
+              - 'playwright.config.ts'
+
+  # E2E only runs when `changes` says the UI moved. When it doesn't, this job is
+  # skipped — which GitHub reports as success, so it can be a REQUIRED check
+  # (mark it required in main's branch protection) without blocking non-UI PRs.
+  # Playwright's globalSetup spins its own postgres:16 on :5433 via
+  # e2e/fixtures/test-db.sh (Docker is preinstalled on ubuntu runners); the
+  # webServer builds + starts next on :3100 with the injected test DB.
+  e2e:
+    name: E2E (Playwright)
+    needs: changes
+    if: needs.changes.outputs.ui == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # iPad/iPhone devices are WebKit; Desktop Chrome is Chromium — install both.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Run e2e
+        run: npx playwright test
+        env:
+          DATABASE_URL_TEST: postgresql://postgres:test@localhost:5433/app_test
+
+      # Inline dashboard: render the JSON stats into the run's summary page so
+      # results are visible at a glance without downloading the artifact.
+      - name: Publish e2e summary
+        if: ${{ !cancelled() }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const p = "playwright-report/results.json";
+            if (!fs.existsSync(p)) { console.log("no results.json"); process.exit(0); }
+            const s = (JSON.parse(fs.readFileSync(p, "utf8")).stats) || {};
+            const dur = Math.round((s.duration || 0) / 1000);
+            const md = [
+              "## Playwright e2e",
+              "",
+              "| ✅ Passed | ❌ Failed | ⚠️ Flaky | ⏭️ Skipped | ⏱ Duration |",
+              "|---|---|---|---|---|",
+              `| ${s.expected ?? 0} | ${s.unexpected ?? 0} | ${s.flaky ?? 0} | ${s.skipped ?? 0} | ${dur}s |`,
+              "",
+              "Full HTML report (traces, screenshots) is in the **playwright-report** artifact.",
+              "",
+            ].join("\n");
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+          '
+
+      # Always keep the full HTML report (downloadable dashboard), pass or fail.
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # Publish the reports dashboard to the gh-pages branch (main only). Plain git
+  # push with the built-in GITHUB_TOKEN — no third-party Pages action. Coverage
+  # refreshes on every main push; the e2e report refreshes only when e2e ran;
+  # each deploy overwrites just the subdir(s) it built, so the other report
+  # survives (the "keep_files" behaviour, done by hand). Also appends a metrics
+  # row and regenerates the trends page.
+  deploy-report:
+    name: Publish reports dashboard
+    needs: [changes, gate, e2e]
+    # Run on main pushes whenever the gate passed, even if e2e was skipped
+    # (non-UI push) or failed (we still want to publish the failure report).
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && !cancelled() && needs.gate.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: _artifacts/coverage
+
+      - name: Download e2e artifact (absent on non-UI pushes)
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: playwright-report
+          path: _artifacts/e2e
+
+      - name: Assemble site and push to gh-pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          rm -rf site
+          if git ls-remote --exit-code --heads "$REMOTE" gh-pages >/dev/null 2>&1; then
+            git clone --quiet --branch gh-pages --depth 1 "$REMOTE" site
+          else
+            mkdir site && git -C site init --quiet && git -C site checkout --quiet -b gh-pages
+          fi
+          # Landing page always latest; .nojekyll so report asset dirs aren't mangled.
+          cp .github/pages/index.html site/index.html
+          touch site/.nojekyll
+          if [ -d _artifacts/coverage ] && [ -n "$(ls -A _artifacts/coverage 2>/dev/null)" ]; then
+            rm -rf site/coverage && cp -r _artifacts/coverage site/coverage
+          fi
+          if [ -d _artifacts/e2e ] && [ -n "$(ls -A _artifacts/e2e 2>/dev/null)" ]; then
+            rm -rf site/e2e && cp -r _artifacts/e2e site/e2e
+          fi
+          node .github/pages/append-history.mjs site _artifacts
+          cd site
+          git add -A
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit --quiet -m "reports: ${GITHUB_SHA::7}" || { echo "no changes to publish"; exit 0; }
+          git push --quiet "$REMOTE" gh-pages
