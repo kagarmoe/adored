@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import { SessionProviderWrapper } from "@/components/layout/SessionProviderWrapper";
 import { ThemeScript } from "@/components/theme/theme-script";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 // Playfair Display (display) for the tender moments; Inter (body) for everything
@@ -34,6 +36,8 @@ export default function RootLayout({
       <body className="min-h-screen">
         <ThemeScript />
         <SessionProviderWrapper>{children}</SessionProviderWrapper>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
