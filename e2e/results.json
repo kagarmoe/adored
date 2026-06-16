@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/29c3737dcd26e22b01782503274d1cc89880c94d",
-        "commitHash": "29c3737dcd26e22b01782503274d1cc89880c94d",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27641476174"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5c3df73700490962724aaa299d95b50d3302d77f",
+        "commitHash": "5c3df73700490962724aaa299d95b50d3302d77f",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27643594974"
       },
       "gitCommit": {
-        "shortHash": "29c3737",
-        "hash": "29c3737dcd26e22b01782503274d1cc89880c94d",
-        "subject": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)",
-        "body": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)\n\n* chore(skills): make adversarial-review the global review gate; remove local-skills mechanism\n\nReplaces the six-persona blurb with a lens→engine routing table (root CLAUDE.md),\nadds parallel-agent/worktree git hygiene + repoints the review gate to adversarial-review\n(.claude/CLAUDE.md), and removes the now-unused skills/ source dir + link-local-skills.sh.\n.claude/skills/ stays gitignored for package-managed skills.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* local .claude/CLAUDE.md\n\n* docs: consolidate project instructions into one root CLAUDE.md\n\nMerge .claude/CLAUDE.md (Next.js conventions, code quality, workflow,\nwireframes) into root CLAUDE.md and delete it — single source of truth.\nFill the empty Build & Test placeholder with the real gates, fix a stray\n'Hol-' typo and ../PRODUCT/TONE links, and point the workflow's review\nbullet at the existing gate table instead of duplicating it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* build: add static test-presence script (scripts/static-coverage.mjs)\n\nZero-dep static 'is this file tested?' map. The e2e/coverage CI work and\n@vitest/coverage-v8 that were on this branch are already on main (a fuller\nversion), so ci.yml + package.json are left at main's — this PR touches\nneither.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "5c3df73",
+        "hash": "5c3df73700490962724aaa299d95b50d3302d77f",
+        "subject": "feat: Vercel Speed Insights + Web Analytics (#194)",
+        "body": "feat: Vercel Speed Insights + Web Analytics (#194)\n\n* feat: add Vercel Speed Insights and Web Analytics\n\nAdd <SpeedInsights /> and <Analytics /> to the root layout per Vercel's\nApp Router quickstart. Enables the Speed Insights and Analytics dashboards\nfor the deployed app.\n\nAdds .npmrc legacy-peer-deps=true: @vercel/analytics declares an optional\n@sveltejs/kit peer that drags in a Svelte->Vite 8 chain conflicting with the\nproject's Vite 7; nothing Svelte is used. The flag keeps npm install and CI's\nnpm ci from failing on that spurious conflict.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix: declare vite + @testing-library/dom explicitly for legacy-peer-deps\n\nlegacy-peer-deps (added for @vercel/analytics) reverts npm to npm-6 behaviour\nand stops auto-installing peer deps. Two peers the project relied on then\nvanished from a clean 'npm ci':\n- vite (peer of @vitejs/plugin-react, loaded by vitest.config.mts)\n- @testing-library/dom (peer of @testing-library/react, used by .test.tsx)\n\nDeclare both as explicit devDependencies. Verified with a clean\n'rm -rf node_modules && npm ci' + lint + test:ci + build (CI parity).\nnpm ls confirms these were the only non-optional unmet peers.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1781636891000
+          "time": 1781639149000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1781636891000
+          "time": 1781639149000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/29c3737dcd26e22b01782503274d1cc89880c94d",
-            "commitHash": "29c3737dcd26e22b01782503274d1cc89880c94d",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27641476174"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5c3df73700490962724aaa299d95b50d3302d77f",
+            "commitHash": "5c3df73700490962724aaa299d95b50d3302d77f",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27643594974"
           },
           "gitCommit": {
-            "shortHash": "29c3737",
-            "hash": "29c3737dcd26e22b01782503274d1cc89880c94d",
-            "subject": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)",
-            "body": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)\n\n* chore(skills): make adversarial-review the global review gate; remove local-skills mechanism\n\nReplaces the six-persona blurb with a lens→engine routing table (root CLAUDE.md),\nadds parallel-agent/worktree git hygiene + repoints the review gate to adversarial-review\n(.claude/CLAUDE.md), and removes the now-unused skills/ source dir + link-local-skills.sh.\n.claude/skills/ stays gitignored for package-managed skills.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* local .claude/CLAUDE.md\n\n* docs: consolidate project instructions into one root CLAUDE.md\n\nMerge .claude/CLAUDE.md (Next.js conventions, code quality, workflow,\nwireframes) into root CLAUDE.md and delete it — single source of truth.\nFill the empty Build & Test placeholder with the real gates, fix a stray\n'Hol-' typo and ../PRODUCT/TONE links, and point the workflow's review\nbullet at the existing gate table instead of duplicating it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* build: add static test-presence script (scripts/static-coverage.mjs)\n\nZero-dep static 'is this file tested?' map. The e2e/coverage CI work and\n@vitest/coverage-v8 that were on this branch are already on main (a fuller\nversion), so ci.yml + package.json are left at main's — this PR touches\nneither.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "5c3df73",
+            "hash": "5c3df73700490962724aaa299d95b50d3302d77f",
+            "subject": "feat: Vercel Speed Insights + Web Analytics (#194)",
+            "body": "feat: Vercel Speed Insights + Web Analytics (#194)\n\n* feat: add Vercel Speed Insights and Web Analytics\n\nAdd <SpeedInsights /> and <Analytics /> to the root layout per Vercel's\nApp Router quickstart. Enables the Speed Insights and Analytics dashboards\nfor the deployed app.\n\nAdds .npmrc legacy-peer-deps=true: @vercel/analytics declares an optional\n@sveltejs/kit peer that drags in a Svelte->Vite 8 chain conflicting with the\nproject's Vite 7; nothing Svelte is used. The flag keeps npm install and CI's\nnpm ci from failing on that spurious conflict.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix: declare vite + @testing-library/dom explicitly for legacy-peer-deps\n\nlegacy-peer-deps (added for @vercel/analytics) reverts npm to npm-6 behaviour\nand stops auto-installing peer deps. Two peers the project relied on then\nvanished from a clean 'npm ci':\n- vite (peer of @vitejs/plugin-react, loaded by vitest.config.mts)\n- @testing-library/dom (peer of @testing-library/react, used by .test.tsx)\n\nDeclare both as explicit devDependencies. Verified with a clean\n'rm -rf node_modules && npm ci' + lint + test:ci + build (CI parity).\nnpm ls confirms these were the only non-optional unmet peers.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781636891000
+              "time": 1781639149000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781636891000
+              "time": 1781639149000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/29c3737dcd26e22b01782503274d1cc89880c94d",
-            "commitHash": "29c3737dcd26e22b01782503274d1cc89880c94d",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27641476174"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5c3df73700490962724aaa299d95b50d3302d77f",
+            "commitHash": "5c3df73700490962724aaa299d95b50d3302d77f",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27643594974"
           },
           "gitCommit": {
-            "shortHash": "29c3737",
-            "hash": "29c3737dcd26e22b01782503274d1cc89880c94d",
-            "subject": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)",
-            "body": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)\n\n* chore(skills): make adversarial-review the global review gate; remove local-skills mechanism\n\nReplaces the six-persona blurb with a lens→engine routing table (root CLAUDE.md),\nadds parallel-agent/worktree git hygiene + repoints the review gate to adversarial-review\n(.claude/CLAUDE.md), and removes the now-unused skills/ source dir + link-local-skills.sh.\n.claude/skills/ stays gitignored for package-managed skills.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* local .claude/CLAUDE.md\n\n* docs: consolidate project instructions into one root CLAUDE.md\n\nMerge .claude/CLAUDE.md (Next.js conventions, code quality, workflow,\nwireframes) into root CLAUDE.md and delete it — single source of truth.\nFill the empty Build & Test placeholder with the real gates, fix a stray\n'Hol-' typo and ../PRODUCT/TONE links, and point the workflow's review\nbullet at the existing gate table instead of duplicating it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* build: add static test-presence script (scripts/static-coverage.mjs)\n\nZero-dep static 'is this file tested?' map. The e2e/coverage CI work and\n@vitest/coverage-v8 that were on this branch are already on main (a fuller\nversion), so ci.yml + package.json are left at main's — this PR touches\nneither.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "5c3df73",
+            "hash": "5c3df73700490962724aaa299d95b50d3302d77f",
+            "subject": "feat: Vercel Speed Insights + Web Analytics (#194)",
+            "body": "feat: Vercel Speed Insights + Web Analytics (#194)\n\n* feat: add Vercel Speed Insights and Web Analytics\n\nAdd <SpeedInsights /> and <Analytics /> to the root layout per Vercel's\nApp Router quickstart. Enables the Speed Insights and Analytics dashboards\nfor the deployed app.\n\nAdds .npmrc legacy-peer-deps=true: @vercel/analytics declares an optional\n@sveltejs/kit peer that drags in a Svelte->Vite 8 chain conflicting with the\nproject's Vite 7; nothing Svelte is used. The flag keeps npm install and CI's\nnpm ci from failing on that spurious conflict.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix: declare vite + @testing-library/dom explicitly for legacy-peer-deps\n\nlegacy-peer-deps (added for @vercel/analytics) reverts npm to npm-6 behaviour\nand stops auto-installing peer deps. Two peers the project relied on then\nvanished from a clean 'npm ci':\n- vite (peer of @vitejs/plugin-react, loaded by vitest.config.mts)\n- @testing-library/dom (peer of @testing-library/react, used by .test.tsx)\n\nDeclare both as explicit devDependencies. Verified with a clean\n'rm -rf node_modules && npm ci' + lint + test:ci + build (CI parity).\nnpm ls confirms these were the only non-optional unmet peers.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781636891000
+              "time": 1781639149000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781636891000
+              "time": 1781639149000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/29c3737dcd26e22b01782503274d1cc89880c94d",
-            "commitHash": "29c3737dcd26e22b01782503274d1cc89880c94d",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27641476174"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5c3df73700490962724aaa299d95b50d3302d77f",
+            "commitHash": "5c3df73700490962724aaa299d95b50d3302d77f",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27643594974"
           },
           "gitCommit": {
-            "shortHash": "29c3737",
-            "hash": "29c3737dcd26e22b01782503274d1cc89880c94d",
-            "subject": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)",
-            "body": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)\n\n* chore(skills): make adversarial-review the global review gate; remove local-skills mechanism\n\nReplaces the six-persona blurb with a lens→engine routing table (root CLAUDE.md),\nadds parallel-agent/worktree git hygiene + repoints the review gate to adversarial-review\n(.claude/CLAUDE.md), and removes the now-unused skills/ source dir + link-local-skills.sh.\n.claude/skills/ stays gitignored for package-managed skills.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* local .claude/CLAUDE.md\n\n* docs: consolidate project instructions into one root CLAUDE.md\n\nMerge .claude/CLAUDE.md (Next.js conventions, code quality, workflow,\nwireframes) into root CLAUDE.md and delete it — single source of truth.\nFill the empty Build & Test placeholder with the real gates, fix a stray\n'Hol-' typo and ../PRODUCT/TONE links, and point the workflow's review\nbullet at the existing gate table instead of duplicating it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* build: add static test-presence script (scripts/static-coverage.mjs)\n\nZero-dep static 'is this file tested?' map. The e2e/coverage CI work and\n@vitest/coverage-v8 that were on this branch are already on main (a fuller\nversion), so ci.yml + package.json are left at main's — this PR touches\nneither.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "5c3df73",
+            "hash": "5c3df73700490962724aaa299d95b50d3302d77f",
+            "subject": "feat: Vercel Speed Insights + Web Analytics (#194)",
+            "body": "feat: Vercel Speed Insights + Web Analytics (#194)\n\n* feat: add Vercel Speed Insights and Web Analytics\n\nAdd <SpeedInsights /> and <Analytics /> to the root layout per Vercel's\nApp Router quickstart. Enables the Speed Insights and Analytics dashboards\nfor the deployed app.\n\nAdds .npmrc legacy-peer-deps=true: @vercel/analytics declares an optional\n@sveltejs/kit peer that drags in a Svelte->Vite 8 chain conflicting with the\nproject's Vite 7; nothing Svelte is used. The flag keeps npm install and CI's\nnpm ci from failing on that spurious conflict.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix: declare vite + @testing-library/dom explicitly for legacy-peer-deps\n\nlegacy-peer-deps (added for @vercel/analytics) reverts npm to npm-6 behaviour\nand stops auto-installing peer deps. Two peers the project relied on then\nvanished from a clean 'npm ci':\n- vite (peer of @vitejs/plugin-react, loaded by vitest.config.mts)\n- @testing-library/dom (peer of @testing-library/react, used by .test.tsx)\n\nDeclare both as explicit devDependencies. Verified with a clean\n'rm -rf node_modules && npm ci' + lint + test:ci + build (CI parity).\nnpm ls confirms these were the only non-optional unmet peers.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781636891000
+              "time": 1781639149000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781636891000
+              "time": 1781639149000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/29c3737dcd26e22b01782503274d1cc89880c94d",
-            "commitHash": "29c3737dcd26e22b01782503274d1cc89880c94d",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27641476174"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5c3df73700490962724aaa299d95b50d3302d77f",
+            "commitHash": "5c3df73700490962724aaa299d95b50d3302d77f",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27643594974"
           },
           "gitCommit": {
-            "shortHash": "29c3737",
-            "hash": "29c3737dcd26e22b01782503274d1cc89880c94d",
-            "subject": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)",
-            "body": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)\n\n* chore(skills): make adversarial-review the global review gate; remove local-skills mechanism\n\nReplaces the six-persona blurb with a lens→engine routing table (root CLAUDE.md),\nadds parallel-agent/worktree git hygiene + repoints the review gate to adversarial-review\n(.claude/CLAUDE.md), and removes the now-unused skills/ source dir + link-local-skills.sh.\n.claude/skills/ stays gitignored for package-managed skills.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* local .claude/CLAUDE.md\n\n* docs: consolidate project instructions into one root CLAUDE.md\n\nMerge .claude/CLAUDE.md (Next.js conventions, code quality, workflow,\nwireframes) into root CLAUDE.md and delete it — single source of truth.\nFill the empty Build & Test placeholder with the real gates, fix a stray\n'Hol-' typo and ../PRODUCT/TONE links, and point the workflow's review\nbullet at the existing gate table instead of duplicating it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* build: add static test-presence script (scripts/static-coverage.mjs)\n\nZero-dep static 'is this file tested?' map. The e2e/coverage CI work and\n@vitest/coverage-v8 that were on this branch are already on main (a fuller\nversion), so ci.yml + package.json are left at main's — this PR touches\nneither.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "5c3df73",
+            "hash": "5c3df73700490962724aaa299d95b50d3302d77f",
+            "subject": "feat: Vercel Speed Insights + Web Analytics (#194)",
+            "body": "feat: Vercel Speed Insights + Web Analytics (#194)\n\n* feat: add Vercel Speed Insights and Web Analytics\n\nAdd <SpeedInsights /> and <Analytics /> to the root layout per Vercel's\nApp Router quickstart. Enables the Speed Insights and Analytics dashboards\nfor the deployed app.\n\nAdds .npmrc legacy-peer-deps=true: @vercel/analytics declares an optional\n@sveltejs/kit peer that drags in a Svelte->Vite 8 chain conflicting with the\nproject's Vite 7; nothing Svelte is used. The flag keeps npm install and CI's\nnpm ci from failing on that spurious conflict.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix: declare vite + @testing-library/dom explicitly for legacy-peer-deps\n\nlegacy-peer-deps (added for @vercel/analytics) reverts npm to npm-6 behaviour\nand stops auto-installing peer deps. Two peers the project relied on then\nvanished from a clean 'npm ci':\n- vite (peer of @vitejs/plugin-react, loaded by vitest.config.mts)\n- @testing-library/dom (peer of @testing-library/react, used by .test.tsx)\n\nDeclare both as explicit devDependencies. Verified with a clean\n'rm -rf node_modules && npm ci' + lint + test:ci + build (CI parity).\nnpm ls confirms these were the only non-optional unmet peers.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781636891000
+              "time": 1781639149000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781636891000
+              "time": 1781639149000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 943,
+                  "duration": 1013,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:22.104Z",
+                  "startTime": "2026-06-16T19:48:27.887Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -303,12 +303,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4153,
+                  "duration": 5655,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:23.701Z",
+                  "startTime": "2026-06-16T19:48:29.544Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -337,12 +337,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2036,
+                  "duration": 2142,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:28.401Z",
+                  "startTime": "2026-06-16T19:48:35.947Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -371,12 +371,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1586,
+                  "duration": 2123,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:41.675Z",
+                  "startTime": "2026-06-16T19:49:22.418Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -405,12 +405,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2340,
+                  "duration": 2823,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:43.434Z",
+                  "startTime": "2026-06-16T19:49:25.068Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -439,12 +439,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 896,
+                  "duration": 2076,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:55.356Z",
+                  "startTime": "2026-06-16T19:49:40.217Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -473,12 +473,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1078,
+                  "duration": 1113,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:56.588Z",
+                  "startTime": "2026-06-16T19:49:44.699Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -515,12 +515,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1681,
+                  "duration": 1691,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:30.477Z",
+                  "startTime": "2026-06-16T19:48:38.122Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -549,12 +549,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1522,
+                  "duration": 1512,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:32.217Z",
+                  "startTime": "2026-06-16T19:48:39.861Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -583,12 +583,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2285,
+                  "duration": 2376,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:33.779Z",
+                  "startTime": "2026-06-16T19:48:41.408Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -617,12 +617,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1516,
+                  "duration": 1791,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:45.813Z",
+                  "startTime": "2026-06-16T19:49:27.947Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -651,12 +651,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1453,
+                  "duration": 1893,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:47.385Z",
+                  "startTime": "2026-06-16T19:49:29.801Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -685,12 +685,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1937,
+                  "duration": 2259,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:48.862Z",
+                  "startTime": "2026-06-16T19:49:31.726Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -719,12 +719,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 733,
+                  "duration": 751,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:57.696Z",
+                  "startTime": "2026-06-16T19:49:45.842Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -753,12 +753,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 727,
+                  "duration": 745,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:58.461Z",
+                  "startTime": "2026-06-16T19:49:46.630Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -787,12 +787,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1056,
+                  "duration": 1185,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:59.210Z",
+                  "startTime": "2026-06-16T19:49:47.387Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -829,12 +829,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 775,
+                  "duration": 792,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:36.101Z",
+                  "startTime": "2026-06-16T19:48:43.810Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -863,12 +863,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 862,
+                  "duration": 1386,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:36.936Z",
+                  "startTime": "2026-06-16T19:48:44.673Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -897,12 +897,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 749,
+                  "duration": 1196,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:50.834Z",
+                  "startTime": "2026-06-16T19:49:34.035Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -931,12 +931,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 825,
+                  "duration": 1068,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:51.631Z",
+                  "startTime": "2026-06-16T19:49:35.328Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -965,12 +965,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 274,
+                  "duration": 289,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:12:00.300Z",
+                  "startTime": "2026-06-16T19:49:48.594Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -999,12 +999,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 356,
+                  "duration": 358,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:12:00.611Z",
+                  "startTime": "2026-06-16T19:49:48.930Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1041,12 +1041,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1198,
+                  "duration": 2084,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:37.827Z",
+                  "startTime": "2026-06-16T19:48:46.101Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1075,12 +1075,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 985,
+                  "duration": 1740,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:39.049Z",
+                  "startTime": "2026-06-16T19:48:48.228Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1109,12 +1109,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 856,
+                  "duration": 1175,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:40.060Z",
+                  "startTime": "2026-06-16T19:48:50.024Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1143,12 +1143,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 705,
+                  "duration": 842,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:52.489Z",
+                  "startTime": "2026-06-16T19:49:36.421Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1177,12 +1177,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 602,
+                  "duration": 700,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:53.218Z",
+                  "startTime": "2026-06-16T19:49:37.292Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1211,12 +1211,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 827,
+                  "duration": 1029,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:11:53.838Z",
+                  "startTime": "2026-06-16T19:49:38.014Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1245,12 +1245,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 242,
+                  "duration": 254,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:12:00.987Z",
+                  "startTime": "2026-06-16T19:49:49.307Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1279,12 +1279,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 271,
+                  "duration": 236,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:12:01.243Z",
+                  "startTime": "2026-06-16T19:49:49.577Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1313,12 +1313,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 317,
+                  "duration": 282,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T19:12:01.529Z",
+                  "startTime": "2026-06-16T19:49:49.828Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1336,8 +1336,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-16T19:10:17.449Z",
-    "duration": 104664.444,
+    "startTime": "2026-06-16T19:47:27.444Z",
+    "duration": 142947.282,
     "expected": 31,
     "skipped": 0,
     "unexpected": 0,
