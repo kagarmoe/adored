@@ -304,7 +304,7 @@ describe("TriagePage hero image", () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run "src/app/collections/[id]/sort/[sessionId]/triage/page.test.tsx"`
-Expected: FAIL — no `<img>` (page passes no `heroPhotoUrl`).
+Expected: the first test FAILS — no `<img>` (page passes no `heroPhotoUrl`). (The no-cover test already passes pre-fix; it pins the fallback branch. The hero-image test is the red-first proof.)
 
 - [ ] **Step 3: Implement the load in the page**
 
@@ -561,7 +561,7 @@ import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepo
 import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
 ```
 
-Replace the JSX IIFE block (the `(() => { const ranked = ... })()` between `sortedResultItems.length === 0 ? ... :` and the closing of that ternary) by first computing `ranked` + `covers` in the async body, above the `return (`:
+Replace the **entire** JSX IIFE block (the whole `(() => { const ranked = ... })()`, including its `const [hero, ...rest]` — leave no orphan) by first computing `ranked` + `covers` in the async body, above the `return (`. Note: the new `|| ranked.length === 0` guard shows `EmptyState` where the original IIFE rendered *nothing* for the (near-impossible) "items exist but none resolve" case — an intentional, calmer improvement, not a byte-faithful copy.
 
 ```tsx
 const ranked = sortedResultItems
@@ -623,18 +623,24 @@ git commit -m "feat(purses-nkp): results renders hero + ranked photos via collec
 ### Task 6: DB-backed `/file` authz seam test (slug 404 / id 200 / IDOR 403)
 
 **Files:**
-- Create: `src/app/api/collections/[id]/items/[itemId]/photos/[photoId]/file/route.integration.test.ts`
+- Create: `src/lib/db/file-route-authz.integration.test.ts`
 
-> Crosses the real DB un-mocked (item/photo/membership/collection queries). Only the auth session and the external Blob `get` are mocked. Gated behind `RUN_DB_TESTS=1` and runs in CI's `db-tests` job. No production code changes — this pins the root-cause invariant + authorization.
+> **Lives under `src/lib/db/` on purpose.** CI's `db-tests` job runs
+> `RUN_DB_TESTS=1 npx vitest run --no-file-parallelism src/lib/db` — it only collects
+> `src/lib/db`. A DB test placed next to the route (`src/app/...`) would run in **zero**
+> CI jobs (skipped by `describe.skip` in the plain gate, not collected by `db-tests`). It
+> imports the route handler via the `@/` alias. Crosses the real DB un-mocked
+> (item/photo/membership/collection queries); only the auth session and the external Blob
+> `get` are mocked. No production code changes — this pins the root-cause invariant + authz.
 
 - [ ] **Step 1: Write the test**
 
 ```ts
-// src/app/api/collections/[id]/items/[itemId]/photos/[photoId]/file/route.integration.test.ts
+// src/lib/db/file-route-authz.integration.test.ts
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { sql } from "drizzle-orm";
-import { closeDb, getTestDb, resetDb } from "../../../../../../../../../../e2e/fixtures/db";
-import { seedBaseline } from "../../../../../../../../../../e2e/fixtures/seed";
+import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
+import { seedBaseline } from "../../../e2e/fixtures/seed";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 
@@ -646,7 +652,8 @@ vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@vercel/blob", () => ({ get: mockBlobGet }));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
-import { GET } from "./route";
+// Route imported via the @/ alias (literal [id]/[itemId]/... are real dirs).
+import { GET } from "@/app/api/collections/[id]/items/[itemId]/photos/[photoId]/file/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -699,17 +706,20 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
 });
 ```
 
-> The relative import depth to `e2e/fixtures` is 10 `../` from the `file/` folder (10 directory levels below the repo root). If the path resolves wrong, run `npx vitest` once and correct the depth.
+> From `src/lib/db/`, `e2e/fixtures` is 3 `../` (matches the existing `move-photos.integration.test.ts`). The route resolves via the `@/` alias.
 
 - [ ] **Step 2: Run with the DB harness to verify it passes (and that 404/403 truly fire)**
 
-Run: `npm run test:db -- src/app/api/collections/\[id\]/items/\[itemId\]/photos/\[photoId\]/file/route.integration.test.ts`
-Expected: PASS (3 tests). If `RUN_DB_TESTS` isn't set, the suite skips — `npm run test:db` sets it.
+Run: `npm run test:db -- src/lib/db/file-route-authz.integration.test.ts`
+Expected: PASS (3 tests). If `RUN_DB_TESTS` isn't set the suite skips — `npm run test:db` sets it.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 3: Verify it is collected by the CI `db-tests` path, then commit**
+
+Run: `RUN_DB_TESTS=1 npx vitest run --no-file-parallelism src/lib/db 2>&1 | grep file-route-authz`
+Expected: the file appears in the run (proving CI's `db-tests` job — same command — collects it).
 
 ```bash
-git add "src/app/api/collections/[id]/items/[itemId]/photos/[photoId]/file/route.integration.test.ts"
+git add src/lib/db/file-route-authz.integration.test.ts
 git commit -m "test(purses-nkp): DB-backed /file authz seam (slug 404 / id 200 / IDOR 403)"
 ```
 
