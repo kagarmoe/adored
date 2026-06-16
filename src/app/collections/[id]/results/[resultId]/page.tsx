@@ -6,6 +6,8 @@ import { ItemRepository } from "@/server/repositories/implementations/ItemReposi
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
+import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
 import { Badge, Button, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
@@ -63,6 +65,15 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
     return counts;
   }, {});
 
+  const ranked = sortedResultItems
+    .map((ri) => ({ ri, item: itemById.get(ri.itemId) }))
+    .filter((r): r is { ri: typeof r.ri; item: NonNullable<typeof r.item> } => Boolean(r.item));
+  const covers = await new PhotoRepository(db).findCoverPhotosByItemIds(ranked.map((r) => r.item.id));
+  const coverUrl = (itemId: string) => {
+    const c = covers.get(itemId);
+    return c ? getPhotoAssetUrlForPhoto(c, collection.id) : undefined;
+  };
+
   return (
     <AppLayout
       breadcrumbs={[
@@ -97,36 +108,32 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
           ))}
         </div>
 
-        {sortedResultItems.length === 0 ? (
+        {sortedResultItems.length === 0 || ranked.length === 0 ? (
           <EmptyState heading="No ranked items yet" message="A little more sorting and your ranking will appear here." />
         ) : (
-          (() => {
-            const ranked = sortedResultItems
-              .map((ri) => ({ ri, item: itemById.get(ri.itemId) }))
-              .filter((r): r is { ri: typeof r.ri; item: NonNullable<typeof r.item> } => Boolean(r.item));
-            if (ranked.length === 0) return null;
-            const [hero, ...rest] = ranked;
-            return (
-              <div className="space-y-8">
-                <MostLovedHero item={hero.item} collectionId={collection.slug ?? collection.id} />
-                {rest.length > 0 && (
-                  <div className="space-y-4">
-                    <h2 className="text-ink">The full ranking</h2>
-                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-                      {rest.map(({ ri, item }) => (
-                        <ItemCard
-                          key={ri.id}
-                          item={item}
-                          collectionId={collection.slug ?? collection.id}
-                          bucket={ri.manualBucket || ri.computedBucket}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
+          <div className="space-y-8">
+            <MostLovedHero
+              item={ranked[0].item}
+              collectionId={collection.slug ?? collection.id}
+              heroPhotoUrl={coverUrl(ranked[0].item.id)}
+            />
+            {ranked.length > 1 && (
+              <div className="space-y-4">
+                <h2 className="text-ink">The full ranking</h2>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                  {ranked.slice(1).map(({ ri, item }) => (
+                    <ItemCard
+                      key={ri.id}
+                      item={item}
+                      collectionId={collection.slug ?? collection.id}
+                      heroPhotoUrl={coverUrl(item.id)}
+                      bucket={ri.manualBucket || ri.computedBucket}
+                    />
+                  ))}
+                </div>
               </div>
-            );
-          })()
+            )}
+          </div>
         )}
 
         {result.status === "finalized" && (
