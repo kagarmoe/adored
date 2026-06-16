@@ -12,6 +12,15 @@ export default defineConfig({
     // by the vitest runner (they'd throw "test() called outside Playwright").
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     exclude: ["e2e/**", "node_modules/**", ".next/**"],
+    coverage: {
+      provider: "v8",
+      // html -> browsable dashboard page; json-summary -> inline CI table;
+      // text-summary -> CI log. Reflects unit/component tests only; the DB
+      // integration suite runs in a separate job and is NOT counted here.
+      reporter: ["text-summary", "json-summary", "html"],
+      reportsDirectory: "coverage",
+      include: ["src/**"],
+    },
   },
   resolve: {
     alias: {
