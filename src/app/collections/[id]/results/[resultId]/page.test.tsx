@@ -58,6 +58,7 @@ describe("ResultDetailPage hero images", () => {
     expect(hero.getAttribute("src")).toContain("coll_01ABCDEF");
     expect(hero.getAttribute("src")).not.toContain("summer-bags");
     expect(rest.getAttribute("src")).toContain("coll_01ABCDEF");
+    expect(rest.getAttribute("src")).not.toContain("summer-bags");
     expect(photoRepo.findCoverPhotosByItemIds).toHaveBeenCalledTimes(1);
   });
 });

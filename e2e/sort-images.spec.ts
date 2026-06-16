@@ -19,7 +19,7 @@ test.describe("triage hero image", () => {
     );
 
     const fileRequest = page.waitForRequest(
-      (r) => r.url().includes("/file") && r.url().includes(collectionId),
+      (r) => r.url().includes("/file") && r.url().includes(collectionId) && !r.url().includes(slug),
     );
     await page.goto(`/collections/${slug}/sort/${sessionId}/triage`);
     await fileRequest; // the image URL carried collection.id (ULID), not the slug

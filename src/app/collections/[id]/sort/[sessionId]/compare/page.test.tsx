@@ -55,6 +55,7 @@ describe("ComparePage hero images", () => {
     expect(a.getAttribute("src")).toContain("coll_01ABCDEF");
     expect(a.getAttribute("src")).not.toContain("summer-bags");
     expect(b.getAttribute("src")).toContain("coll_01ABCDEF");
+    expect(b.getAttribute("src")).not.toContain("summer-bags");
     expect(photoRepo.findCoverPhotosByItemIds).toHaveBeenCalledTimes(1);
   });
 });
