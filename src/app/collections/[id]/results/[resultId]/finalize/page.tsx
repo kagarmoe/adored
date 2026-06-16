@@ -21,16 +21,16 @@ export default async function FinalizePage({ params }: FinalizePageProps) {
   const resultRepo = new SortResultRepository(db);
   const result = await resultRepo.findById(params.resultId);
 
-  if (!result || result.collectionId !== params.id || result.curatorId !== session.user.id) {
-    redirect(`/collections/${params.id}/results`);
+  if (!result || result.collectionId !== collection.id || result.curatorId !== session.user.id) {
+    redirect(`/collections/${collection.slug ?? collection.id}/results`);
   }
 
   return (
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${params.id}` },
-        { label: "Results", href: `/collections/${params.id}/results` },
+        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
+        { label: "Results", href: `/collections/${collection.slug ?? collection.id}/results` },
         { label: "Finalize" },
       ]}
     >
@@ -39,7 +39,7 @@ export default async function FinalizePage({ params }: FinalizePageProps) {
           <h1 className="text-3xl text-ink">Finalize Results</h1>
           <p className="mt-2 text-ink-soft">Lock the current order and make this result ready to share.</p>
         </div>
-        <FinalizeResultForm collectionId={params.id} resultId={params.resultId} defaultName={result.name} />
+        <FinalizeResultForm collectionId={collection.slug ?? collection.id} resultId={params.resultId} defaultName={result.name} />
       </div>
     </AppLayout>
   );

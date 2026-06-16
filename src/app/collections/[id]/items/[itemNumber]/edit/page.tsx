@@ -23,20 +23,20 @@ export default async function ItemEditPage({ params }: ItemEditPageProps) {
   const number = Number(params.itemNumber);
   const item =
     number > 0 && Number.isInteger(number)
-      ? await itemRepo.findByCollectionAndNumber(params.id, number)
+      ? await itemRepo.findByCollectionAndNumber(collection.id, number)
       : null;
 
   if (!item) {
-    redirect(`/collections/${params.id}/items`);
+    redirect(`/collections/${collection.slug ?? collection.id}/items`);
   }
 
   return (
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${params.id}` },
-        { label: "Items", href: `/collections/${params.id}/items` },
-        { label: itemDisplayName(item), href: `/collections/${params.id}/items/${item.number}` },
+        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
+        { label: "Items", href: `/collections/${collection.slug ?? collection.id}/items` },
+        { label: itemDisplayName(item), href: `/collections/${collection.slug ?? collection.id}/items/${item.number}` },
         { label: "Edit" },
       ]}
     >
@@ -46,7 +46,7 @@ export default async function ItemEditPage({ params }: ItemEditPageProps) {
           <p className="mt-2 text-ink-soft">Update item details and metadata</p>
         </div>
 
-        <ItemEditForm item={item} collectionId={params.id} />
+        <ItemEditForm item={item} collectionId={collection.id} />
       </div>
     </AppLayout>
   );

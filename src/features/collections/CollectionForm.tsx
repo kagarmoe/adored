@@ -36,10 +36,10 @@ export function CollectionForm({ collection, mode }: CollectionFormProps) {
 
       if (mode === "create") {
         const result = await apiPost<Collection>("/api/collections", validated);
-        router.push(`/collections/${result.id}`);
+        router.push(`/collections/${result.slug ?? result.id}`);
       } else if (collection) {
-        await apiPatch(`/api/collections/${collection.id}`, validated);
-        router.push(`/collections/${collection.id}`);
+        const result = await apiPatch<Collection>(`/api/collections/${collection.id}`, validated);
+        router.push(`/collections/${result.slug ?? result.id}`);
       }
     } catch (err: any) {
       if (err instanceof z.ZodError) {

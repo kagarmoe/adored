@@ -22,7 +22,7 @@ export default async function MembersPage({ params }: MembersPageProps) {
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const membershipRepo = new MembershipRepository(db);
 
-  const members = await membershipRepo.findByCollection(params.id);
+  const members = await membershipRepo.findByCollection(collection.id);
   const currentUserMembership = members.find((m) => m.userId === session.user!.id);
   const canManage = currentUserMembership?.role === "owner" || currentUserMembership?.canManageCollection;
 
@@ -30,7 +30,7 @@ export default async function MembersPage({ params }: MembersPageProps) {
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.id}` },
+        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
         { label: "Members" },
       ]}
     >

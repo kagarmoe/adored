@@ -28,16 +28,16 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
   const prefRepo = new CollectionPreferenceItemRepository(db);
   const decisionRepo = new DecisionEventRepository(db);
   const [items, sortSession] = await Promise.all([
-    itemRepo.findByCollection(params.id),
+    itemRepo.findByCollection(collection.id),
     sessionRepo.findById(params.sessionId),
   ]);
 
   if (!sortSession) {
-    redirect(`/collections/${params.id}/sort`);
+    redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
   const [preferences, decisions] = await Promise.all([
-    prefRepo.findByCollection(params.id, sortSession.curatorId),
+    prefRepo.findByCollection(collection.id, sortSession.curatorId),
     decisionRepo.findBySession(params.sessionId),
   ]);
 
@@ -56,8 +56,8 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${params.id}` },
-        { label: "Sort", href: `/collections/${params.id}/sort` },
+        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
+        { label: "Sort", href: `/collections/${collection.slug ?? collection.id}/sort` },
         { label: "Session" },
       ]}
     >
@@ -107,7 +107,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
         </Card>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <Link href={`/collections/${params.id}/sort/${params.sessionId}/triage`}>
+          <Link href={`/collections/${collection.slug ?? collection.id}/sort/${params.sessionId}/triage`}>
             <Card interactive padding="lg">
               <h2 className="text-lg text-ink">Triage</h2>
               <p className="mt-2 text-sm text-ink-soft">Quickly bucket one item at a time.</p>
@@ -116,7 +116,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
               </div>
             </Card>
           </Link>
-          <Link href={`/collections/${params.id}/sort/${params.sessionId}/compare`}>
+          <Link href={`/collections/${collection.slug ?? collection.id}/sort/${params.sessionId}/compare`}>
             <Card interactive padding="lg">
               <h2 className="text-lg text-ink">Compare</h2>
               <p className="mt-2 text-sm text-ink-soft">Pick between pairs to refine ranking.</p>
@@ -136,7 +136,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
                   You&apos;ve made {bucketed} decision{bucketed !== 1 ? "s" : ""}. Generate a draft result to see the ranked order.
                 </p>
               </div>
-              <Link href={`/collections/${params.id}/results`}>
+              <Link href={`/collections/${collection.slug ?? collection.id}/results`}>
                 <Button>View Results</Button>
               </Link>
             </div>

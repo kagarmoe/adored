@@ -22,14 +22,14 @@ export default async function AddItemPage({ params }: AddItemPageProps) {
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${params.id}` },
-        { label: "Items", href: `/collections/${params.id}/items` },
+        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
+        { label: "Items", href: `/collections/${collection.slug ?? collection.id}/items` },
         { label: "Add" },
       ]}
     >
       <div className="max-w-2xl">
         <h1 className="text-3xl text-ink mb-8">Add Item</h1>
-        <ItemForm collectionId={params.id} mode="create" />
+        <ItemForm collectionId={collection.id} mode="create" />
       </div>
     </AppLayout>
   );

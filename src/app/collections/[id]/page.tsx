@@ -25,9 +25,9 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   const sessionRepo = new SessionRepository(db);
   const resultRepo = new SortResultRepository(db);
   const [items, sessions, results] = await Promise.all([
-    itemRepo.findByCollection(params.id),
-    sessionRepo.findByCollection(params.id),
-    resultRepo.findByCollection(params.id),
+    itemRepo.findByCollection(collection.id),
+    sessionRepo.findByCollection(collection.id),
+    resultRepo.findByCollection(collection.id),
   ]);
 
   const activeSession = sessions.find((sortSession) => sortSession.status === "active");
