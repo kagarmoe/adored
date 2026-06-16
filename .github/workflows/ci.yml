@@ -156,8 +156,33 @@ jobs:
         env:
           DATABASE_URL_TEST: postgresql://postgres:test@localhost:5433/app_test
 
-      - name: Upload Playwright report on failure
-        if: failure()
+      # Inline dashboard: render the JSON stats into the run's summary page so
+      # results are visible at a glance without downloading the artifact.
+      - name: Publish e2e summary
+        if: ${{ !cancelled() }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const p = "playwright-report/results.json";
+            if (!fs.existsSync(p)) { console.log("no results.json"); process.exit(0); }
+            const s = (JSON.parse(fs.readFileSync(p, "utf8")).stats) || {};
+            const dur = Math.round((s.duration || 0) / 1000);
+            const md = [
+              "## Playwright e2e",
+              "",
+              "| ✅ Passed | ❌ Failed | ⚠️ Flaky | ⏭️ Skipped | ⏱ Duration |",
+              "|---|---|---|---|---|",
+              `| ${s.expected ?? 0} | ${s.unexpected ?? 0} | ${s.flaky ?? 0} | ${s.skipped ?? 0} | ${dur}s |`,
+              "",
+              "Full HTML report (traces, screenshots) is in the **playwright-report** artifact.",
+              "",
+            ].join("\n");
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+          '
+
+      # Always keep the full HTML report (downloadable dashboard), pass or fail.
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
