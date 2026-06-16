@@ -1,8 +1,7 @@
 import type { Item } from "@/types";
 import { hasName, itemDisplayName, itemInitial } from "@/lib/items";
-import { Badge, Card } from "@/components/ui";
+import { Badge, Card, CardImage } from "@/components/ui";
 import Link from "next/link";
-import Image from "next/image";
 
 interface ItemCardProps {
   item: Item;
@@ -33,20 +32,15 @@ export function ItemCard({ item, collectionId, heroPhotoUrl, bucket, imageClassN
     <Link href={`/collections/${collectionId}/items/${item.number}`}>
       <Card interactive padding="none" className="overflow-hidden h-full flex flex-col">
         <div className={`bg-accent-aqua ${imageClassName} flex items-center justify-center relative overflow-hidden`}>
-          {heroPhotoUrl ? (
-            <Image
-              src={heroPhotoUrl}
-              alt={itemDisplayName(item)}
-              fill
-              sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
-              className="object-cover"
-              unoptimized
-            />
-          ) : (
-            <span className="font-display text-5xl text-ink-soft" aria-hidden>
-              {itemInitial(item)}
-            </span>
-          )}
+          <CardImage
+            src={heroPhotoUrl}
+            alt={itemDisplayName(item)}
+            fallback={
+              <span className="font-display text-5xl text-ink-soft" aria-hidden>
+                {itemInitial(item)}
+              </span>
+            }
+          />
         </div>
         <div className="p-3 flex-1 flex flex-col justify-between">
           <div className="space-y-2">
