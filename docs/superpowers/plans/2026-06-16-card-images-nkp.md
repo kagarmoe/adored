@@ -258,6 +258,8 @@ vi.mock("@/lib/collection-access", () => ({ requireCollectionAccess: mockRequire
 vi.mock("@/server/repositories/implementations/ItemRepository", () => ({ ItemRepository: vi.fn(() => itemRepo) }));
 vi.mock("@/server/repositories/implementations/SessionRepository", () => ({ SessionRepository: vi.fn(() => sessionRepo) }));
 vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({ CollectionPreferenceItemRepository: vi.fn(() => prefRepo) }));
+// Harmless before Step 3 adds the import (the factory only runs when the page imports it).
+vi.mock("@/server/repositories/implementations/PhotoRepository", () => ({ PhotoRepository: vi.fn(() => photoRepo) }));
 
 import TriagePage from "./page";
 
@@ -631,8 +633,8 @@ git commit -m "feat(purses-nkp): results renders hero + ranked photos via collec
 // src/app/api/collections/[id]/items/[itemId]/photos/[photoId]/file/route.integration.test.ts
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { sql } from "drizzle-orm";
-import { closeDb, getTestDb, resetDb } from "../../../../../../../../../e2e/fixtures/db";
-import { seedBaseline } from "../../../../../../../../../e2e/fixtures/seed";
+import { closeDb, getTestDb, resetDb } from "../../../../../../../../../../e2e/fixtures/db";
+import { seedBaseline } from "../../../../../../../../../../e2e/fixtures/seed";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 
@@ -697,7 +699,7 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
 });
 ```
 
-> The relative import depth to `e2e/fixtures` is 9 `../` from the route folder; if the path resolves wrong, run `npx vitest` once and correct the depth (the file is at `src/app/api/collections/[id]/items/[itemId]/photos/[photoId]/file/`).
+> The relative import depth to `e2e/fixtures` is 10 `../` from the `file/` folder (10 directory levels below the repo root). If the path resolves wrong, run `npx vitest` once and correct the depth.
 
 - [ ] **Step 2: Run with the DB harness to verify it passes (and that 404/403 truly fire)**
 
