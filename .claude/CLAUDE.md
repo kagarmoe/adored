@@ -49,12 +49,17 @@ optional:
 
 - **Branch:** feature branch off `main` → PR → squash-merge → Vercel auto-deploys prod. Never commit
   directly to `main`.
-- **Commit:** frequent, one logical change per commit.
+- **Isolate concurrent work:** multiple agents may run here at once, and a branch switch in a *shared*
+  working tree silently discards another agent's uncommitted changes. For substantial or parallel work,
+  branch into your own git worktree (or the `EnterWorktree` tool); never switch branches with
+  uncommitted changes (commit or stash first).
+- **Commit:** frequent, one logical change per commit; don't leave work parked only in the working tree.
 - **Verify before claiming done:** run the gates — `npm run build`, `npm run test:ci`, `npm run lint`,
   `npm run auth:verify` (the pre-push hook mirrors these). Evidence before assertions
   (`superpowers:verification-before-completion`).
-- **Code review is a GATE before merging any major feature** — run `superpowers:requesting-code-review`
-  (or `pr-review-toolkit:code-reviewer`). Self-verification catches your errors; review catches errors
-  in the understanding. Do not merge a major feature without it.
+- **Code review is a GATE before merging any major feature** — run the `adversarial-review` skill
+  (guilty-until-proven, seven personas; see the lens→engine routing in the root `CLAUDE.md`), optionally
+  alongside `superpowers:requesting-code-review`. Self-verification catches your errors; review catches
+  errors in the understanding. Do not merge a major feature without it.
 - **Close the branch with `superpowers:finishing-a-development-branch`** — don't hand-roll the
   merge/cleanup.

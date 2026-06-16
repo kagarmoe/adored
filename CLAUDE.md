@@ -74,14 +74,22 @@ _Add a brief overview of your project architecture_
 
 ## Conventions & Patterns
 
-**Project-local skills** live in `skills/` (version-controlled source); `.claude/skills/`
-is gitignored (managed by the skills package manager), so run
-`bash scripts/link-local-skills.sh` after a fresh clone to make them discoverable.
+**Review gate — `adversarial-review`.** Before merging substantial work, run the global
+`adversarial-review` skill (guilty-until-proven, seven personas; defeats rubber-stamping where
+generic review rubber-stamps). Scale the set to the diff — reach for the lens + engine that
+matches what changed:
 
-- **`adversarial-review`** — a six-persona (QA/Test, Security, Architect, Craftsman/simplicity,
-  Graphic Design, UX) guilty-until-proven review built to defeat rubber-stamping. Use it as a
-  review gate before merging substantial work — it adds design/UX lenses and test-honesty teeth
-  (does the test actually run in CI? is it mock theater?) that the generic code review skills lack.
+| Lens → engine | Invoke when the change touches… | Typical paths |
+|---|---|---|
+| **Security** → `vibe-security` | auth, access control, user input, secrets, API surface | `src/app/api/**`, `src/middleware.ts`, `**/*auth*` |
+| **Data/Persistence** → `postgres-review` | schema, migrations, queries, indexes | `src/lib/db/**`, `drizzle/**`, `*.sql` |
+| **Architect** → `system-design-review` | cross-layer seams, concurrency, idempotency, silent failures, type design | service/repo/route wiring |
+| **Craftsman** → `ponytail` | any non-trivial logic (simplicity / YAGNI) | `**/*.ts`, `**/*.tsx` |
+| **Graphic Design** → `DESIGN.md` | components, tokens, styling, theming | `**/*.tsx`, `**/*.css`, `tailwind*` |
+| **UX** → `ui-ux-pro-max` | rendered UI, interaction, accessibility | `src/app/**/*.tsx` (view/page components) |
+| **QA/Test** | new/changed behavior — and proof the test runs in CI | `**/*.test.ts`, `**/*.spec.ts`, `.github/**` |
+
+The skill and its engines are global (personal `~/.claude/skills/`), so there's no per-repo setup.
 
 **Testing:** DB-backed tests live in `src/lib/db/` behind `RUN_DB_TESTS=1`; they run serially in CI
 via the `db-tests` job and locally via `npm run test:db`. A change with new tests must prove the
