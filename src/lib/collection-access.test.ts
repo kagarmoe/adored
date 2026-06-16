@@ -6,7 +6,7 @@ const { mockRedirect, collectionRepo, membershipRepo } = vi.hoisted(() => ({
   mockRedirect: vi.fn(() => {
     throw new Error("REDIRECT");
   }),
-  collectionRepo: { findById: vi.fn() },
+  collectionRepo: { findById: vi.fn(), findBySlug: vi.fn() },
   membershipRepo: { findByUser: vi.fn() },
 }));
 
@@ -25,6 +25,7 @@ const db = {} as never;
 describe("requireCollectionAccess", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    collectionRepo.findBySlug.mockResolvedValue(null);
   });
 
   it("returns the collection for the owner (no membership row)", async () => {
@@ -46,6 +47,18 @@ describe("requireCollectionAccess", () => {
     const result = await requireCollectionAccess(db, "col-1", "user-1");
 
     expect(result).toBe(collection);
+    expect(mockRedirect).not.toHaveBeenCalled();
+  });
+
+  it("resolves by slug (findBySlug) without touching findById", async () => {
+    const collection = { id: "col-1", ownerId: "user-1", name: "Mine", slug: "mine" };
+    collectionRepo.findBySlug.mockResolvedValue(collection);
+    membershipRepo.findByUser.mockResolvedValue(null);
+
+    const result = await requireCollectionAccess(db, "mine", "user-1");
+
+    expect(result).toBe(collection);
+    expect(collectionRepo.findById).not.toHaveBeenCalled();
     expect(mockRedirect).not.toHaveBeenCalled();
   });
 

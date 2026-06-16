@@ -73,4 +73,29 @@ describeDb("collection slug generation (repo -> DB)", () => {
     const fresh = await repo().create({ id: generateId("coll"), ownerId, name: "Gone" });
     expect(fresh.slug).toBe("gone-2");
   });
+
+  it("resolveCollection finds by slug AND by ULID, and blocks non-members", async () => {
+    const { resolveCollection } = await import("@/lib/collection-access");
+    const { db } = getTestDb();
+    const c = await repo().create({ id: generateId("coll"), ownerId, name: "Resolve Me" });
+
+    expect((await resolveCollection(db, c.slug!, ownerId))?.id).toBe(c.id);
+    expect((await resolveCollection(db, c.id, ownerId))?.id).toBe(c.id);
+    expect(await resolveCollection(db, c.slug!, "user_stranger")).toBeNull();
+  });
+
+  it("un-mocked layer crossing: slug resolves, then items fetch by collection.id", async () => {
+    const { resolveCollection } = await import("@/lib/collection-access");
+    const { ItemRepository } = await import(
+      "@/server/repositories/implementations/ItemRepository"
+    );
+    const { db } = getTestDb();
+    const c = await repo().create({ id: generateId("coll"), ownerId, name: "With Items" });
+    const itemRepo = new ItemRepository(db);
+    await itemRepo.create({ collectionId: c.id, name: "Thing" });
+
+    const resolved = await resolveCollection(db, c.slug!, ownerId);
+    const items = await itemRepo.findByCollection(resolved!.id);
+    expect(items).toHaveLength(1);
+  });
 });
