@@ -20,13 +20,13 @@ export default async function PoolPage({ params }: PoolPageProps) {
 
   const db = getDb();
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const pool = await new PhotoRepository(db).findPoolByCollection(params.id);
+  const pool = await new PhotoRepository(db).findPoolByCollection(collection.id);
 
   return (
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${params.id}` },
+        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
         { label: "Add photos" },
       ]}
     >
@@ -38,7 +38,7 @@ export default async function PoolPage({ params }: PoolPageProps) {
           </p>
         </div>
 
-        <PoolUpload collectionId={params.id} />
+        <PoolUpload collectionId={collection.id} />
 
         {pool.length === 0 ? (
           <EmptyState
@@ -47,7 +47,7 @@ export default async function PoolPage({ params }: PoolPageProps) {
           />
         ) : (
           <PoolPhotoGrid
-            collectionId={params.id}
+            collectionId={collection.id}
             photos={pool.map((p) => ({ id: p.id, filename: p.filename }))}
           />
         )}
