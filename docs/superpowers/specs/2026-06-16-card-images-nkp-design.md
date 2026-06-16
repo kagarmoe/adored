@@ -32,6 +32,10 @@ and pass `collection.id`. The fix makes the broken surfaces match them.
 | Compare | `sort/[sessionId]/compare/page.tsx` | `CompareChoice` with no `heroA/heroB` | Load covers for `itemA`/`itemB`; pass `heroA`/`heroB` |
 | Results | `results/[resultId]/page.tsx` | `MostLovedHero` + ranked `ItemCard`s, no photos | Batch-load covers for ranked items; pass `heroPhotoUrl` |
 
+Plus shared test infrastructure: ~10 real CC0/PD image fixtures + extended e2e seeding
+(item + photo) + a real-browser triage image test (see Testing). These are reusable by
+purses-bwr.
+
 **Out of scope** (own beads):
 - Public shared-results card images → **purses-bwr** (needs a new token-authorized
   public image endpoint; this issue blocks it).
@@ -94,13 +98,33 @@ the returned element with RTL:
 `collection.id` (ULID), **not** `collection.slug` — locks in the invariant that caused
 the original confusion and would catch a future slug regression.
 
-**Out of scope (own infra task, not this bug):** a real-browser Playwright test that the
-triage image visibly loads. The e2e `seed.ts` seeds only a user + collection (no items,
-no photos, no blob), so proving pixel display needs new photo-seeding fixtures. File
-separately if wanted; the vitest route tests above already prove the data load + correct
-URL in CI.
+**Real-browser e2e (in scope, folded in):** a Playwright test that visits triage as the
+seeded authenticated user and asserts the hero image renders.
 
-No new test harness — only the `vi.mock` pattern and RTL the repo already uses.
+- **Blob reality check:** there is no local blob emulator. The `/file` route calls
+  `get(photo.blobKey)` against real Vercel Blob, and e2e runs a real `next start`. So the
+  test **intercepts** the `**/photos/*/file` request in the browser
+  (`page.route(...)`) and fulfills it with a committed fixture image. This keeps the test
+  hermetic (no blob token, no network) while still exercising the real page, real server
+  routing, and real seeded DB — and asserts the requested URL carries `collection.id`.
+- **Seeding:** extend `e2e/fixtures/seed.ts` to create an item + a hero photo row for the
+  seeded collection. `blobKey` can be a fixed placeholder (the browser intercepts before
+  the server's blob fetch runs).
+
+### Test image fixtures (real CC0/public-domain)
+
+Add ~10 openly-licensed real photos under `e2e/fixtures/photos/` for e2e and any
+visual/screenshot use, replacing the lone existing `IMG_0428.jpeg` as the canonical set.
+
+- **Provenance:** sourced from Wikimedia Commons items marked Public Domain or CC0.
+  Each file's source URL + license recorded in `e2e/fixtures/photos/LICENSES.md`. License
+  verified before committing — anything not unambiguously PD/CC0 is dropped.
+- **Subject:** handbags/purses where available (fits the product), generic objects
+  otherwise. Realism matters only for screenshots; tests assert presence, not content.
+- Reusable by **purses-bwr** (public shared-results images) — that's why they live in a
+  shared fixtures dir, not inline in one test.
+
+No new test harness — the `vi.mock` pattern, RTL, and Playwright the repo already uses.
 
 ## Review gates (before merge)
 
