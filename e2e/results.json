@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5f23bb9e52d2e9569cf33d67328c51fd46611030",
-        "commitHash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27640269430"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/29c3737dcd26e22b01782503274d1cc89880c94d",
+        "commitHash": "29c3737dcd26e22b01782503274d1cc89880c94d",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27641476174"
       },
       "gitCommit": {
-        "shortHash": "5f23bb9",
-        "hash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
-        "subject": "ci: run Playwright selectively on UI/presentation changes (#192)",
-        "body": "ci: run Playwright selectively on UI/presentation changes (#192)\n\n* ci: run Playwright selectively on UI/presentation changes\n\nWire the e2e (Playwright) suite into CI as a separate job that only runs\nwhen the view layer changed, detected via dorny/paths-filter:\n\n- `changes` job outputs `ui=true` for src/app/** (minus src/app/api/**),\n  components/features/hooks, design tokens, CSS, tailwind/postcss/next\n  config, and e2e/playwright config.\n- `e2e` job runs only `if: needs.changes.outputs.ui == 'true'`. When the UI\n  isn't touched it's skipped (reported as success), so it can be a required\n  check without blocking server/db-only PRs.\n- Reuses e2e/fixtures/test-db.sh (postgres:16 on :5433) via Playwright's\n  globalSetup; installs chromium + webkit (mobile devices are WebKit).\n\nThe one-line comment tweak in src/app/page.tsx is a UI-path change that\nexercises this new gate end-to-end on its own PR.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: grant pull-requests:read to the UI-detection job\n\ndorny/paths-filter lists the PR's changed files via the GitHub API, which\nfails with 'Resource not accessible by integration' under the repo's default\nread-only token. Scope contents+pull-requests read to the changes job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: always keep e2e report + render inline summary dashboard\n\nPreviously the Playwright report uploaded only on failure, so green runs\nkept nothing. Now:\n- upload the full HTML report (traces/screenshots) on every non-cancelled\n  run as the 'playwright-report' artifact (downloadable dashboard);\n- add a JSON reporter and render a pass/fail/flaky/skip/duration table into\n  the GitHub Actions run summary (inline dashboard, no download).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test: add v8 coverage reporting to vitest\n\nAdd @vitest/coverage-v8 and a coverage block (html + json-summary +\ntext-summary). Reflects unit/component tests only; the DB integration suite\nruns in a separate CI job and is not counted here. Prep for publishing the\ncoverage report to the Pages dashboard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: run coverage in the gate job and upload it as an artifact\n\ngate now runs test:ci with --coverage and uploads the coverage/ report\n(unit/component only). Feeds the Pages dashboard's coverage page.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add Pages dashboard landing page\n\nStatic landing for the test-reports site: links to the e2e and coverage\nreports, notes that coverage excludes the DB suite. Copied to the site root\nby the deploy-report job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: publish e2e + coverage + trends dashboard to gh-pages\n\ndeploy-report job (main only) assembles a reports site and pushes it to\ngh-pages with plain git + GITHUB_TOKEN — no third-party Pages action. Each\ndeploy overwrites only the report subdir it built, so the other survives.\nappend-history.mjs records a metrics row per main deploy (coverage %, e2e\npass/duration) and regenerates a trends page for current-vs-past comparison.\n\nVerified locally: history dedupe + carry-forward, and keep-files across a\nnon-UI deploy.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "29c3737",
+        "hash": "29c3737dcd26e22b01782503274d1cc89880c94d",
+        "subject": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)",
+        "body": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)\n\n* chore(skills): make adversarial-review the global review gate; remove local-skills mechanism\n\nReplaces the six-persona blurb with a lens→engine routing table (root CLAUDE.md),\nadds parallel-agent/worktree git hygiene + repoints the review gate to adversarial-review\n(.claude/CLAUDE.md), and removes the now-unused skills/ source dir + link-local-skills.sh.\n.claude/skills/ stays gitignored for package-managed skills.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* local .claude/CLAUDE.md\n\n* docs: consolidate project instructions into one root CLAUDE.md\n\nMerge .claude/CLAUDE.md (Next.js conventions, code quality, workflow,\nwireframes) into root CLAUDE.md and delete it — single source of truth.\nFill the empty Build & Test placeholder with the real gates, fix a stray\n'Hol-' typo and ../PRODUCT/TONE links, and point the workflow's review\nbullet at the existing gate table instead of duplicating it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* build: add static test-presence script (scripts/static-coverage.mjs)\n\nZero-dep static 'is this file tested?' map. The e2e/coverage CI work and\n@vitest/coverage-v8 that were on this branch are already on main (a fuller\nversion), so ci.yml + package.json are left at main's — this PR touches\nneither.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1781635640000
+          "time": 1781636891000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1781635640000
+          "time": 1781636891000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5f23bb9e52d2e9569cf33d67328c51fd46611030",
-            "commitHash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27640269430"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/29c3737dcd26e22b01782503274d1cc89880c94d",
+            "commitHash": "29c3737dcd26e22b01782503274d1cc89880c94d",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27641476174"
           },
           "gitCommit": {
-            "shortHash": "5f23bb9",
-            "hash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
-            "subject": "ci: run Playwright selectively on UI/presentation changes (#192)",
-            "body": "ci: run Playwright selectively on UI/presentation changes (#192)\n\n* ci: run Playwright selectively on UI/presentation changes\n\nWire the e2e (Playwright) suite into CI as a separate job that only runs\nwhen the view layer changed, detected via dorny/paths-filter:\n\n- `changes` job outputs `ui=true` for src/app/** (minus src/app/api/**),\n  components/features/hooks, design tokens, CSS, tailwind/postcss/next\n  config, and e2e/playwright config.\n- `e2e` job runs only `if: needs.changes.outputs.ui == 'true'`. When the UI\n  isn't touched it's skipped (reported as success), so it can be a required\n  check without blocking server/db-only PRs.\n- Reuses e2e/fixtures/test-db.sh (postgres:16 on :5433) via Playwright's\n  globalSetup; installs chromium + webkit (mobile devices are WebKit).\n\nThe one-line comment tweak in src/app/page.tsx is a UI-path change that\nexercises this new gate end-to-end on its own PR.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: grant pull-requests:read to the UI-detection job\n\ndorny/paths-filter lists the PR's changed files via the GitHub API, which\nfails with 'Resource not accessible by integration' under the repo's default\nread-only token. Scope contents+pull-requests read to the changes job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: always keep e2e report + render inline summary dashboard\n\nPreviously the Playwright report uploaded only on failure, so green runs\nkept nothing. Now:\n- upload the full HTML report (traces/screenshots) on every non-cancelled\n  run as the 'playwright-report' artifact (downloadable dashboard);\n- add a JSON reporter and render a pass/fail/flaky/skip/duration table into\n  the GitHub Actions run summary (inline dashboard, no download).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test: add v8 coverage reporting to vitest\n\nAdd @vitest/coverage-v8 and a coverage block (html + json-summary +\ntext-summary). Reflects unit/component tests only; the DB integration suite\nruns in a separate CI job and is not counted here. Prep for publishing the\ncoverage report to the Pages dashboard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: run coverage in the gate job and upload it as an artifact\n\ngate now runs test:ci with --coverage and uploads the coverage/ report\n(unit/component only). Feeds the Pages dashboard's coverage page.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add Pages dashboard landing page\n\nStatic landing for the test-reports site: links to the e2e and coverage\nreports, notes that coverage excludes the DB suite. Copied to the site root\nby the deploy-report job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: publish e2e + coverage + trends dashboard to gh-pages\n\ndeploy-report job (main only) assembles a reports site and pushes it to\ngh-pages with plain git + GITHUB_TOKEN — no third-party Pages action. Each\ndeploy overwrites only the report subdir it built, so the other survives.\nappend-history.mjs records a metrics row per main deploy (coverage %, e2e\npass/duration) and regenerates a trends page for current-vs-past comparison.\n\nVerified locally: history dedupe + carry-forward, and keep-files across a\nnon-UI deploy.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "29c3737",
+            "hash": "29c3737dcd26e22b01782503274d1cc89880c94d",
+            "subject": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)",
+            "body": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)\n\n* chore(skills): make adversarial-review the global review gate; remove local-skills mechanism\n\nReplaces the six-persona blurb with a lens→engine routing table (root CLAUDE.md),\nadds parallel-agent/worktree git hygiene + repoints the review gate to adversarial-review\n(.claude/CLAUDE.md), and removes the now-unused skills/ source dir + link-local-skills.sh.\n.claude/skills/ stays gitignored for package-managed skills.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* local .claude/CLAUDE.md\n\n* docs: consolidate project instructions into one root CLAUDE.md\n\nMerge .claude/CLAUDE.md (Next.js conventions, code quality, workflow,\nwireframes) into root CLAUDE.md and delete it — single source of truth.\nFill the empty Build & Test placeholder with the real gates, fix a stray\n'Hol-' typo and ../PRODUCT/TONE links, and point the workflow's review\nbullet at the existing gate table instead of duplicating it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* build: add static test-presence script (scripts/static-coverage.mjs)\n\nZero-dep static 'is this file tested?' map. The e2e/coverage CI work and\n@vitest/coverage-v8 that were on this branch are already on main (a fuller\nversion), so ci.yml + package.json are left at main's — this PR touches\nneither.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781635640000
+              "time": 1781636891000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781635640000
+              "time": 1781636891000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5f23bb9e52d2e9569cf33d67328c51fd46611030",
-            "commitHash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27640269430"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/29c3737dcd26e22b01782503274d1cc89880c94d",
+            "commitHash": "29c3737dcd26e22b01782503274d1cc89880c94d",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27641476174"
           },
           "gitCommit": {
-            "shortHash": "5f23bb9",
-            "hash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
-            "subject": "ci: run Playwright selectively on UI/presentation changes (#192)",
-            "body": "ci: run Playwright selectively on UI/presentation changes (#192)\n\n* ci: run Playwright selectively on UI/presentation changes\n\nWire the e2e (Playwright) suite into CI as a separate job that only runs\nwhen the view layer changed, detected via dorny/paths-filter:\n\n- `changes` job outputs `ui=true` for src/app/** (minus src/app/api/**),\n  components/features/hooks, design tokens, CSS, tailwind/postcss/next\n  config, and e2e/playwright config.\n- `e2e` job runs only `if: needs.changes.outputs.ui == 'true'`. When the UI\n  isn't touched it's skipped (reported as success), so it can be a required\n  check without blocking server/db-only PRs.\n- Reuses e2e/fixtures/test-db.sh (postgres:16 on :5433) via Playwright's\n  globalSetup; installs chromium + webkit (mobile devices are WebKit).\n\nThe one-line comment tweak in src/app/page.tsx is a UI-path change that\nexercises this new gate end-to-end on its own PR.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: grant pull-requests:read to the UI-detection job\n\ndorny/paths-filter lists the PR's changed files via the GitHub API, which\nfails with 'Resource not accessible by integration' under the repo's default\nread-only token. Scope contents+pull-requests read to the changes job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: always keep e2e report + render inline summary dashboard\n\nPreviously the Playwright report uploaded only on failure, so green runs\nkept nothing. Now:\n- upload the full HTML report (traces/screenshots) on every non-cancelled\n  run as the 'playwright-report' artifact (downloadable dashboard);\n- add a JSON reporter and render a pass/fail/flaky/skip/duration table into\n  the GitHub Actions run summary (inline dashboard, no download).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test: add v8 coverage reporting to vitest\n\nAdd @vitest/coverage-v8 and a coverage block (html + json-summary +\ntext-summary). Reflects unit/component tests only; the DB integration suite\nruns in a separate CI job and is not counted here. Prep for publishing the\ncoverage report to the Pages dashboard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: run coverage in the gate job and upload it as an artifact\n\ngate now runs test:ci with --coverage and uploads the coverage/ report\n(unit/component only). Feeds the Pages dashboard's coverage page.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add Pages dashboard landing page\n\nStatic landing for the test-reports site: links to the e2e and coverage\nreports, notes that coverage excludes the DB suite. Copied to the site root\nby the deploy-report job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: publish e2e + coverage + trends dashboard to gh-pages\n\ndeploy-report job (main only) assembles a reports site and pushes it to\ngh-pages with plain git + GITHUB_TOKEN — no third-party Pages action. Each\ndeploy overwrites only the report subdir it built, so the other survives.\nappend-history.mjs records a metrics row per main deploy (coverage %, e2e\npass/duration) and regenerates a trends page for current-vs-past comparison.\n\nVerified locally: history dedupe + carry-forward, and keep-files across a\nnon-UI deploy.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "29c3737",
+            "hash": "29c3737dcd26e22b01782503274d1cc89880c94d",
+            "subject": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)",
+            "body": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)\n\n* chore(skills): make adversarial-review the global review gate; remove local-skills mechanism\n\nReplaces the six-persona blurb with a lens→engine routing table (root CLAUDE.md),\nadds parallel-agent/worktree git hygiene + repoints the review gate to adversarial-review\n(.claude/CLAUDE.md), and removes the now-unused skills/ source dir + link-local-skills.sh.\n.claude/skills/ stays gitignored for package-managed skills.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* local .claude/CLAUDE.md\n\n* docs: consolidate project instructions into one root CLAUDE.md\n\nMerge .claude/CLAUDE.md (Next.js conventions, code quality, workflow,\nwireframes) into root CLAUDE.md and delete it — single source of truth.\nFill the empty Build & Test placeholder with the real gates, fix a stray\n'Hol-' typo and ../PRODUCT/TONE links, and point the workflow's review\nbullet at the existing gate table instead of duplicating it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* build: add static test-presence script (scripts/static-coverage.mjs)\n\nZero-dep static 'is this file tested?' map. The e2e/coverage CI work and\n@vitest/coverage-v8 that were on this branch are already on main (a fuller\nversion), so ci.yml + package.json are left at main's — this PR touches\nneither.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781635640000
+              "time": 1781636891000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781635640000
+              "time": 1781636891000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5f23bb9e52d2e9569cf33d67328c51fd46611030",
-            "commitHash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27640269430"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/29c3737dcd26e22b01782503274d1cc89880c94d",
+            "commitHash": "29c3737dcd26e22b01782503274d1cc89880c94d",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27641476174"
           },
           "gitCommit": {
-            "shortHash": "5f23bb9",
-            "hash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
-            "subject": "ci: run Playwright selectively on UI/presentation changes (#192)",
-            "body": "ci: run Playwright selectively on UI/presentation changes (#192)\n\n* ci: run Playwright selectively on UI/presentation changes\n\nWire the e2e (Playwright) suite into CI as a separate job that only runs\nwhen the view layer changed, detected via dorny/paths-filter:\n\n- `changes` job outputs `ui=true` for src/app/** (minus src/app/api/**),\n  components/features/hooks, design tokens, CSS, tailwind/postcss/next\n  config, and e2e/playwright config.\n- `e2e` job runs only `if: needs.changes.outputs.ui == 'true'`. When the UI\n  isn't touched it's skipped (reported as success), so it can be a required\n  check without blocking server/db-only PRs.\n- Reuses e2e/fixtures/test-db.sh (postgres:16 on :5433) via Playwright's\n  globalSetup; installs chromium + webkit (mobile devices are WebKit).\n\nThe one-line comment tweak in src/app/page.tsx is a UI-path change that\nexercises this new gate end-to-end on its own PR.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: grant pull-requests:read to the UI-detection job\n\ndorny/paths-filter lists the PR's changed files via the GitHub API, which\nfails with 'Resource not accessible by integration' under the repo's default\nread-only token. Scope contents+pull-requests read to the changes job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: always keep e2e report + render inline summary dashboard\n\nPreviously the Playwright report uploaded only on failure, so green runs\nkept nothing. Now:\n- upload the full HTML report (traces/screenshots) on every non-cancelled\n  run as the 'playwright-report' artifact (downloadable dashboard);\n- add a JSON reporter and render a pass/fail/flaky/skip/duration table into\n  the GitHub Actions run summary (inline dashboard, no download).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test: add v8 coverage reporting to vitest\n\nAdd @vitest/coverage-v8 and a coverage block (html + json-summary +\ntext-summary). Reflects unit/component tests only; the DB integration suite\nruns in a separate CI job and is not counted here. Prep for publishing the\ncoverage report to the Pages dashboard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: run coverage in the gate job and upload it as an artifact\n\ngate now runs test:ci with --coverage and uploads the coverage/ report\n(unit/component only). Feeds the Pages dashboard's coverage page.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add Pages dashboard landing page\n\nStatic landing for the test-reports site: links to the e2e and coverage\nreports, notes that coverage excludes the DB suite. Copied to the site root\nby the deploy-report job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: publish e2e + coverage + trends dashboard to gh-pages\n\ndeploy-report job (main only) assembles a reports site and pushes it to\ngh-pages with plain git + GITHUB_TOKEN — no third-party Pages action. Each\ndeploy overwrites only the report subdir it built, so the other survives.\nappend-history.mjs records a metrics row per main deploy (coverage %, e2e\npass/duration) and regenerates a trends page for current-vs-past comparison.\n\nVerified locally: history dedupe + carry-forward, and keep-files across a\nnon-UI deploy.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "29c3737",
+            "hash": "29c3737dcd26e22b01782503274d1cc89880c94d",
+            "subject": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)",
+            "body": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)\n\n* chore(skills): make adversarial-review the global review gate; remove local-skills mechanism\n\nReplaces the six-persona blurb with a lens→engine routing table (root CLAUDE.md),\nadds parallel-agent/worktree git hygiene + repoints the review gate to adversarial-review\n(.claude/CLAUDE.md), and removes the now-unused skills/ source dir + link-local-skills.sh.\n.claude/skills/ stays gitignored for package-managed skills.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* local .claude/CLAUDE.md\n\n* docs: consolidate project instructions into one root CLAUDE.md\n\nMerge .claude/CLAUDE.md (Next.js conventions, code quality, workflow,\nwireframes) into root CLAUDE.md and delete it — single source of truth.\nFill the empty Build & Test placeholder with the real gates, fix a stray\n'Hol-' typo and ../PRODUCT/TONE links, and point the workflow's review\nbullet at the existing gate table instead of duplicating it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* build: add static test-presence script (scripts/static-coverage.mjs)\n\nZero-dep static 'is this file tested?' map. The e2e/coverage CI work and\n@vitest/coverage-v8 that were on this branch are already on main (a fuller\nversion), so ci.yml + package.json are left at main's — this PR touches\nneither.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781635640000
+              "time": 1781636891000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781635640000
+              "time": 1781636891000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5f23bb9e52d2e9569cf33d67328c51fd46611030",
-            "commitHash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27640269430"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/29c3737dcd26e22b01782503274d1cc89880c94d",
+            "commitHash": "29c3737dcd26e22b01782503274d1cc89880c94d",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27641476174"
           },
           "gitCommit": {
-            "shortHash": "5f23bb9",
-            "hash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
-            "subject": "ci: run Playwright selectively on UI/presentation changes (#192)",
-            "body": "ci: run Playwright selectively on UI/presentation changes (#192)\n\n* ci: run Playwright selectively on UI/presentation changes\n\nWire the e2e (Playwright) suite into CI as a separate job that only runs\nwhen the view layer changed, detected via dorny/paths-filter:\n\n- `changes` job outputs `ui=true` for src/app/** (minus src/app/api/**),\n  components/features/hooks, design tokens, CSS, tailwind/postcss/next\n  config, and e2e/playwright config.\n- `e2e` job runs only `if: needs.changes.outputs.ui == 'true'`. When the UI\n  isn't touched it's skipped (reported as success), so it can be a required\n  check without blocking server/db-only PRs.\n- Reuses e2e/fixtures/test-db.sh (postgres:16 on :5433) via Playwright's\n  globalSetup; installs chromium + webkit (mobile devices are WebKit).\n\nThe one-line comment tweak in src/app/page.tsx is a UI-path change that\nexercises this new gate end-to-end on its own PR.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: grant pull-requests:read to the UI-detection job\n\ndorny/paths-filter lists the PR's changed files via the GitHub API, which\nfails with 'Resource not accessible by integration' under the repo's default\nread-only token. Scope contents+pull-requests read to the changes job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: always keep e2e report + render inline summary dashboard\n\nPreviously the Playwright report uploaded only on failure, so green runs\nkept nothing. Now:\n- upload the full HTML report (traces/screenshots) on every non-cancelled\n  run as the 'playwright-report' artifact (downloadable dashboard);\n- add a JSON reporter and render a pass/fail/flaky/skip/duration table into\n  the GitHub Actions run summary (inline dashboard, no download).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test: add v8 coverage reporting to vitest\n\nAdd @vitest/coverage-v8 and a coverage block (html + json-summary +\ntext-summary). Reflects unit/component tests only; the DB integration suite\nruns in a separate CI job and is not counted here. Prep for publishing the\ncoverage report to the Pages dashboard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: run coverage in the gate job and upload it as an artifact\n\ngate now runs test:ci with --coverage and uploads the coverage/ report\n(unit/component only). Feeds the Pages dashboard's coverage page.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add Pages dashboard landing page\n\nStatic landing for the test-reports site: links to the e2e and coverage\nreports, notes that coverage excludes the DB suite. Copied to the site root\nby the deploy-report job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: publish e2e + coverage + trends dashboard to gh-pages\n\ndeploy-report job (main only) assembles a reports site and pushes it to\ngh-pages with plain git + GITHUB_TOKEN — no third-party Pages action. Each\ndeploy overwrites only the report subdir it built, so the other survives.\nappend-history.mjs records a metrics row per main deploy (coverage %, e2e\npass/duration) and regenerates a trends page for current-vs-past comparison.\n\nVerified locally: history dedupe + carry-forward, and keep-files across a\nnon-UI deploy.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "29c3737",
+            "hash": "29c3737dcd26e22b01782503274d1cc89880c94d",
+            "subject": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)",
+            "body": "chore(skills): adversarial-review as global review gate; remove local-skills mechanism (#191)\n\n* chore(skills): make adversarial-review the global review gate; remove local-skills mechanism\n\nReplaces the six-persona blurb with a lens→engine routing table (root CLAUDE.md),\nadds parallel-agent/worktree git hygiene + repoints the review gate to adversarial-review\n(.claude/CLAUDE.md), and removes the now-unused skills/ source dir + link-local-skills.sh.\n.claude/skills/ stays gitignored for package-managed skills.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* local .claude/CLAUDE.md\n\n* docs: consolidate project instructions into one root CLAUDE.md\n\nMerge .claude/CLAUDE.md (Next.js conventions, code quality, workflow,\nwireframes) into root CLAUDE.md and delete it — single source of truth.\nFill the empty Build & Test placeholder with the real gates, fix a stray\n'Hol-' typo and ../PRODUCT/TONE links, and point the workflow's review\nbullet at the existing gate table instead of duplicating it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* build: add static test-presence script (scripts/static-coverage.mjs)\n\nZero-dep static 'is this file tested?' map. The e2e/coverage CI work and\n@vitest/coverage-v8 that were on this branch are already on main (a fuller\nversion), so ci.yml + package.json are left at main's — this PR touches\nneither.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781635640000
+              "time": 1781636891000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781635640000
+              "time": 1781636891000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1036,
+                  "duration": 943,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:00.763Z",
+                  "startTime": "2026-06-16T19:11:22.104Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -303,12 +303,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 10831,
+                  "duration": 4153,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:02.465Z",
+                  "startTime": "2026-06-16T19:11:23.701Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -337,12 +337,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2060,
+                  "duration": 2036,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:14.679Z",
+                  "startTime": "2026-06-16T19:11:28.401Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -371,12 +371,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1635,
+                  "duration": 1586,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:28.119Z",
+                  "startTime": "2026-06-16T19:11:41.675Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -405,12 +405,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2422,
+                  "duration": 2340,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:29.936Z",
+                  "startTime": "2026-06-16T19:11:43.434Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -439,12 +439,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2449,
+                  "duration": 896,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:51:20.825Z",
+                  "startTime": "2026-06-16T19:11:55.356Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -473,12 +473,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1297,
+                  "duration": 1078,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:51:27.977Z",
+                  "startTime": "2026-06-16T19:11:56.588Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -515,12 +515,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1665,
+                  "duration": 1681,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:16.783Z",
+                  "startTime": "2026-06-16T19:11:30.477Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -549,12 +549,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1629,
+                  "duration": 1522,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:18.510Z",
+                  "startTime": "2026-06-16T19:11:32.217Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -583,12 +583,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2282,
+                  "duration": 2285,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:20.163Z",
+                  "startTime": "2026-06-16T19:11:33.779Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -617,12 +617,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1520,
+                  "duration": 1516,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:32.398Z",
+                  "startTime": "2026-06-16T19:11:45.813Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -651,12 +651,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2346,
+                  "duration": 1453,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:33.980Z",
+                  "startTime": "2026-06-16T19:11:47.385Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -685,12 +685,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3933,
+                  "duration": 1937,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:36.348Z",
+                  "startTime": "2026-06-16T19:11:48.862Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -719,12 +719,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 864,
+                  "duration": 733,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:51:29.316Z",
+                  "startTime": "2026-06-16T19:11:57.696Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -753,12 +753,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 920,
+                  "duration": 727,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:51:30.227Z",
+                  "startTime": "2026-06-16T19:11:58.461Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -787,12 +787,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1299,
+                  "duration": 1056,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:51:31.165Z",
+                  "startTime": "2026-06-16T19:11:59.210Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -829,12 +829,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 893,
+                  "duration": 775,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:22.476Z",
+                  "startTime": "2026-06-16T19:11:36.101Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -863,12 +863,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 845,
+                  "duration": 862,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:23.422Z",
+                  "startTime": "2026-06-16T19:11:36.936Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -897,12 +897,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2943,
+                  "duration": 749,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:40.312Z",
+                  "startTime": "2026-06-16T19:11:50.834Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -931,12 +931,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1258,
+                  "duration": 825,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:45.130Z",
+                  "startTime": "2026-06-16T19:11:51.631Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -965,12 +965,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 356,
+                  "duration": 274,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:51:32.500Z",
+                  "startTime": "2026-06-16T19:12:00.300Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -999,12 +999,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 496,
+                  "duration": 356,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:51:32.920Z",
+                  "startTime": "2026-06-16T19:12:00.611Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1041,12 +1041,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1151,
+                  "duration": 1198,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:24.302Z",
+                  "startTime": "2026-06-16T19:11:37.827Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1075,12 +1075,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 949,
+                  "duration": 985,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:25.495Z",
+                  "startTime": "2026-06-16T19:11:39.049Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1109,12 +1109,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 863,
+                  "duration": 856,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:26.469Z",
+                  "startTime": "2026-06-16T19:11:40.060Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1143,12 +1143,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 800,
+                  "duration": 705,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:46.777Z",
+                  "startTime": "2026-06-16T19:11:52.489Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1177,12 +1177,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 923,
+                  "duration": 602,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:47.621Z",
+                  "startTime": "2026-06-16T19:11:53.218Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1211,12 +1211,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1261,
+                  "duration": 827,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:50:48.572Z",
+                  "startTime": "2026-06-16T19:11:53.838Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1245,12 +1245,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 288,
+                  "duration": 242,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:51:33.451Z",
+                  "startTime": "2026-06-16T19:12:00.987Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1284,7 +1284,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:51:33.757Z",
+                  "startTime": "2026-06-16T19:12:01.243Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1313,12 +1313,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 247,
+                  "duration": 317,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-16T18:51:34.042Z",
+                  "startTime": "2026-06-16T19:12:01.529Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1336,8 +1336,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-16T18:48:58.708Z",
-    "duration": 155857.646,
+    "startTime": "2026-06-16T19:10:17.449Z",
+    "duration": 104664.444,
     "expected": 31,
     "skipped": 0,
     "unexpected": 0,
