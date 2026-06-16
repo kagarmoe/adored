@@ -21,13 +21,13 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const resultRepo = new SortResultRepository(db);
 
-  const results = await resultRepo.findByCollection(params.id);
+  const results = await resultRepo.findByCollection(collection.id);
 
   return (
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${params.id}` },
+        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
         { label: "Results" },
       ]}
     >
@@ -45,7 +45,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         ) : (
           <div className="space-y-3">
             {results.map((result) => (
-              <Link key={result.id} href={`/collections/${params.id}/results/${result.id}`}>
+              <Link key={result.id} href={`/collections/${collection.slug ?? collection.id}/results/${result.id}`}>
                 <Card interactive padding="md">
                   <div className="flex items-center justify-between">
                     <div>
