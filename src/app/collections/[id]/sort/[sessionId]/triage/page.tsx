@@ -26,13 +26,13 @@ export default async function TriagePage({ params }: TriagePageProps) {
   const sessionRepo = new SessionRepository(db);
   const prefRepo = new CollectionPreferenceItemRepository(db);
   const [items, sortSession, preferences] = await Promise.all([
-    itemRepo.findByCollection(params.id),
+    itemRepo.findByCollection(collection.id),
     sessionRepo.findById(params.sessionId),
-    prefRepo.findByCollection(params.id, session.user.id),
+    prefRepo.findByCollection(collection.id, session.user.id),
   ]);
 
   if (!sortSession) {
-    redirect(`/collections/${params.id}/sort`);
+    redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
   const preferencesByItemId = new Map(preferences.map((p) => [p.itemId, p]));
@@ -44,8 +44,8 @@ export default async function TriagePage({ params }: TriagePageProps) {
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${params.id}` },
-        { label: "Session", href: `/collections/${params.id}/sort/${params.sessionId}` },
+        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
+        { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${params.sessionId}` },
         { label: "Triage" },
       ]}
     >
@@ -70,7 +70,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
           <EmptyState heading="All items triaged!" message="You&apos;ve completed triage for all items. View results to see your ranked order." />
         ) : (
           <>
-            <ItemCard item={item} collectionId={params.id} imageClassName="h-64" />
+            <ItemCard item={item} collectionId={collection.slug ?? collection.id} imageClassName="h-64" />
             <Card padding="lg">
               <DecisionControls
                 sessionId={params.sessionId}

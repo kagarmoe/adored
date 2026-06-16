@@ -28,16 +28,16 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
   const number = Number(params.itemNumber);
   const item =
     number > 0 && Number.isInteger(number)
-      ? await itemRepo.findByCollectionAndNumber(params.id, number)
+      ? await itemRepo.findByCollectionAndNumber(collection.id, number)
       : null;
 
   if (!item) {
-    redirect(`/collections/${params.id}/items`);
+    redirect(`/collections/${collection.slug ?? collection.id}/items`);
   }
 
   const photos = await photoRepo.findByItem(item.id);
 
-  const allItems = await itemRepo.findByCollection(params.id);
+  const allItems = await itemRepo.findByCollection(collection.id);
   const otherItems = allItems
     .filter((i) => i.id !== item.id)
     .map((i) => ({ id: i.id, number: i.number, name: i.name }));
@@ -46,9 +46,9 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${params.id}` },
-        { label: "Items", href: `/collections/${params.id}/items` },
-        { label: itemDisplayName(item), href: `/collections/${params.id}/items/${item.number}` },
+        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
+        { label: "Items", href: `/collections/${collection.slug ?? collection.id}/items` },
+        { label: itemDisplayName(item), href: `/collections/${collection.slug ?? collection.id}/items/${item.number}` },
         { label: "Photos" },
       ]}
     >
@@ -61,7 +61,7 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
         {/* Upload Section */}
         <Card padding="lg">
           <h2 className="text-lg text-ink mb-4">Add Photos</h2>
-          <PhotoUpload itemId={item.id} collectionId={params.id} />
+          <PhotoUpload itemId={item.id} collectionId={collection.id} />
         </Card>
 
         {/* Gallery Section */}
@@ -71,7 +71,7 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
             <PhotoGallery
               photos={photos}
               itemId={item.id}
-              collectionId={params.id}
+              collectionId={collection.id}
               otherItems={otherItems}
             />
           </Card>

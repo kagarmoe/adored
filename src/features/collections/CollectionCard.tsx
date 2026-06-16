@@ -10,7 +10,7 @@ interface CollectionCardProps {
 
 export function CollectionCard({ collection, coverPhotoUrl }: CollectionCardProps) {
   return (
-    <Link href={`/collections/${collection.id}`} className="group block h-full">
+    <Link href={`/collections/${collection.slug ?? collection.id}`} className="group block h-full">
       <Card interactive padding="none" className="overflow-hidden h-full flex flex-col">
         {/* Cover — the photograph leads. Branded placeholder until a real cover exists. */}
         <div className="relative aspect-[4/3] bg-accent-aqua flex items-center justify-center">

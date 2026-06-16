@@ -30,11 +30,11 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   const number = Number(params.itemNumber);
   const item =
     number > 0 && Number.isInteger(number)
-      ? await itemRepo.findByCollectionAndNumber(params.id, number)
+      ? await itemRepo.findByCollectionAndNumber(collection.id, number)
       : null;
 
   if (!item) {
-    redirect(`/collections/${params.id}/items`);
+    redirect(`/collections/${collection.slug ?? collection.id}/items`);
   }
 
   const photos = await photoRepo.findByItem(item.id);
@@ -44,8 +44,8 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${params.id}` },
-        { label: "Items", href: `/collections/${params.id}/items` },
+        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
+        { label: "Items", href: `/collections/${collection.slug ?? collection.id}/items` },
         { label: itemDisplayName(item) },
       ]}
     >
@@ -56,14 +56,14 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
             {item.brand && <p className="mt-1 text-ink-soft">{item.brand}</p>}
             {!hasName(item) && (
               <Link
-                href={`/collections/${params.id}/items/${item.number}/edit`}
+                href={`/collections/${collection.slug ?? collection.id}/items/${item.number}/edit`}
                 className="mt-1 inline-block text-ink-soft underline underline-offset-2"
               >
                 Add a name
               </Link>
             )}
           </div>
-          <Link href={`/collections/${params.id}/items/${item.number}/edit`}>
+          <Link href={`/collections/${collection.slug ?? collection.id}/items/${item.number}/edit`}>
             <Button>Edit</Button>
           </Link>
         </div>
@@ -72,7 +72,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
         {heroPhoto ? (
           <div className="bg-ground rounded-lg overflow-hidden h-96 flex items-center justify-center">
             <Image
-              src={getPhotoAssetUrlForPhoto(heroPhoto, params.id)}
+              src={getPhotoAssetUrlForPhoto(heroPhoto, collection.id)}
               alt={itemDisplayName(item)}
               fill
               className="object-cover"
@@ -85,7 +85,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
             <div className="text-center">
               <span className="text-6xl block mb-2">📷</span>
               <p className="text-ink-soft">No hero photo</p>
-              <Link href={`/collections/${params.id}/items/${item.number}/photos`}>
+              <Link href={`/collections/${collection.slug ?? collection.id}/items/${item.number}/photos`}>
                 <Button className="mt-4">Add Photos</Button>
               </Link>
             </div>
@@ -109,7 +109,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
                   className="bg-ground rounded-lg overflow-hidden aspect-square relative"
                 >
                   <Image
-                    src={getPhotoAssetUrlForPhoto(photo, params.id)}
+                    src={getPhotoAssetUrlForPhoto(photo, collection.id)}
                     alt="Item photo"
                     fill
                     className="object-cover"
@@ -123,7 +123,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
                 </div>
               ))}
             </div>
-            <Link href={`/collections/${params.id}/items/${item.number}/photos`}>
+            <Link href={`/collections/${collection.slug ?? collection.id}/items/${item.number}/photos`}>
               <Button className="mt-4" variant="secondary">
                 Manage Photos
               </Button>
@@ -135,7 +135,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
         {photos.length === 0 && (
           <Card padding="lg" className="text-center">
             <p className="text-ink-soft mb-4">No photos yet</p>
-            <Link href={`/collections/${params.id}/items/${item.number}/photos`}>
+            <Link href={`/collections/${collection.slug ?? collection.id}/items/${item.number}/photos`}>
               <Button>Add Photos</Button>
             </Link>
           </Card>

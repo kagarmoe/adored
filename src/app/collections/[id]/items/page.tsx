@@ -27,7 +27,7 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const itemRepo = new ItemRepository(db);
 
-  const items = await itemRepo.findByCollection(params.id);
+  const items = await itemRepo.findByCollection(collection.id);
   const covers = await new PhotoRepository(db).findCoverPhotosByItemIds(
     items.map((i) => i.id),
   );
@@ -46,7 +46,7 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${params.id}` },
+        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
         { label: "Items" },
       ]}
     >
@@ -59,16 +59,16 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
             </p>
           </div>
           <div className="flex gap-3">
-            <Link href={`/collections/${params.id}/pool`}>
+            <Link href={`/collections/${collection.slug ?? collection.id}/pool`}>
               <Button variant="secondary">Add photos</Button>
             </Link>
-            <Link href={`/collections/${params.id}/items/new`}>
+            <Link href={`/collections/${collection.slug ?? collection.id}/items/new`}>
               <Button>Add Item</Button>
             </Link>
           </div>
         </div>
 
-        <ItemFilters activeFilter={activeFilter} unnamed={unnamed} collectionId={params.id} />
+        <ItemFilters activeFilter={activeFilter} unnamed={unnamed} collectionId={collection.slug ?? collection.id} />
 
         {filteredItems.length === 0 ? (
           <EmptyState
@@ -76,7 +76,7 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
             message={empty.message}
             action={
               items.length === 0
-                ? { label: "Add Item", href: `/collections/${params.id}/items/new` }
+                ? { label: "Add Item", href: `/collections/${collection.slug ?? collection.id}/items/new` }
                 : undefined
             }
           />
@@ -88,8 +88,8 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
                 <ItemCard
                   key={item.id}
                   item={item}
-                  collectionId={params.id}
-                  heroPhotoUrl={cover ? getPhotoAssetUrlForPhoto(cover, params.id) : undefined}
+                  collectionId={collection.slug ?? collection.id}
+                  heroPhotoUrl={cover ? getPhotoAssetUrlForPhoto(cover, collection.id) : undefined}
                 />
               );
             })}

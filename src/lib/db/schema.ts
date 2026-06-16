@@ -92,6 +92,7 @@ export const collectionsTable = pgTable(
       .notNull()
       .references(() => user.id),
     name: text("name").notNull(),
+    slug: text("slug"),
     description: text("description"),
     status: text("status").default("active").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -100,6 +101,7 @@ export const collectionsTable = pgTable(
   },
   (table) => ({
     ownerIdx: index("collections_owner_id_idx").on(table.ownerId),
+    slugUnique: uniqueIndex("collections_slug_unique").on(table.slug),
   }),
 );
 

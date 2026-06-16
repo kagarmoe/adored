@@ -21,21 +21,21 @@ export default async function SortPage({ params }: SortPageProps) {
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const sessionRepo = new SessionRepository(db);
 
-  const sessions = await sessionRepo.findByCollection(params.id);
+  const sessions = await sessionRepo.findByCollection(collection.id);
   const activeSession = sessions.find((sortSession) => sortSession.status === "active");
 
   return (
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${params.id}` },
+        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
         { label: "Sorting" },
       ]}
     >
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl text-ink">Sorting Sessions</h1>
-          <Link href={`/collections/${params.id}/sort/new`}>
+          <Link href={`/collections/${collection.slug ?? collection.id}/sort/new`}>
             <Button>New Session</Button>
           </Link>
         </div>
@@ -53,10 +53,10 @@ export default async function SortPage({ params }: SortPageProps) {
                 </p>
               </div>
               <div className="flex gap-3">
-                <Link href={`/collections/${params.id}/sort/${activeSession.id}`}>
+                <Link href={`/collections/${collection.slug ?? collection.id}/sort/${activeSession.id}`}>
                   <Button>Resume</Button>
                 </Link>
-                <Link href={`/collections/${params.id}/sort/${activeSession.id}`}>
+                <Link href={`/collections/${collection.slug ?? collection.id}/sort/${activeSession.id}`}>
                   <Button variant="secondary">Details</Button>
                 </Link>
               </div>
@@ -70,13 +70,13 @@ export default async function SortPage({ params }: SortPageProps) {
             message="Create a session to start organizing items"
             action={{
               label: "Create Session",
-              href: `/collections/${params.id}/sort/new`,
+              href: `/collections/${collection.slug ?? collection.id}/sort/new`,
             }}
           />
         ) : (
           <div className="space-y-3">
             {sessions.map((s) => (
-              <Link key={s.id} href={`/collections/${params.id}/sort/${s.id}`}>
+              <Link key={s.id} href={`/collections/${collection.slug ?? collection.id}/sort/${s.id}`}>
                 <Card interactive padding="md">
                   <div className="flex items-center justify-between">
                     <div>

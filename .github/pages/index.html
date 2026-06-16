@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Purseinator — Test Reports</title>
+  <style>
+    :root {
+      --bg: #0f1115; --card: #171a21; --ink: #e6e8ee; --soft: #9aa3b2;
+      --line: #262b35; --accent: #7c9cff;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f6f7f9; --card: #ffffff; --ink: #1a1d24; --soft: #5b6472;
+        --line: #e3e6eb; --accent: #3056d3;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
+      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 6vh 5vw;
+    }
+    header { max-width: 760px; width: 100%; margin-bottom: 2rem; }
+    h1 { font-size: 1.7rem; margin: 0 0 .35rem; letter-spacing: -.02em; }
+    .sub { color: var(--soft); margin: 0; }
+    .grid {
+      display: grid; gap: 1rem; width: 100%; max-width: 760px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+    a.card {
+      display: block; background: var(--card); border: 1px solid var(--line);
+      border-radius: 12px; padding: 1.25rem 1.4rem; text-decoration: none;
+      color: inherit; transition: border-color .15s, transform .15s;
+    }
+    a.card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .card h2 { margin: 0 0 .3rem; font-size: 1.15rem; }
+    .card h2 .arrow { color: var(--accent); }
+    .card p { margin: 0; color: var(--soft); font-size: .92rem; }
+    .note {
+      max-width: 760px; width: 100%; margin-top: 1.75rem; color: var(--soft);
+      font-size: .82rem; border-top: 1px solid var(--line); padding-top: 1rem;
+    }
+    code { background: var(--line); padding: .1em .4em; border-radius: 5px; font-size: .85em; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Purseinator — Test Reports</h1>
+    <p class="sub">Latest CI results from <code>main</code>. Each report updates independently.</p>
+  </header>
+
+  <main class="grid">
+    <a class="card" href="./e2e/">
+      <h2>End-to-end <span class="arrow">→</span></h2>
+      <p>Playwright suite across tablet, phone, and desktop. Traces and screenshots on failure. Updates when the UI/presentation layer changes.</p>
+    </a>
+    <a class="card" href="./coverage/">
+      <h2>Coverage <span class="arrow">→</span></h2>
+      <p>Vitest line/branch/function coverage, browsable per file. Updates on every <code>main</code> push.</p>
+    </a>
+    <a class="card" href="./trends.html">
+      <h2>Trends <span class="arrow">→</span></h2>
+      <p>Coverage %, e2e pass rate, and suite duration over time — current vs past runs on <code>main</code>.</p>
+    </a>
+  </main>
+
+  <p class="note">
+    Coverage reflects <strong>unit and component tests only</strong> — the database integration
+    suite runs in a separate CI job and is not counted here, so the percentage is a floor,
+    not the total. End-to-end coverage is not instrumented.
+  </p>
+</body>
+</html>

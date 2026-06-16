@@ -28,14 +28,14 @@ export default async function ComparePage({ params }: ComparePageProps) {
   const prefRepo = new CollectionPreferenceItemRepository(db);
   const decisionRepo = new DecisionEventRepository(db);
   const [items, sortSession, preferences, decisions] = await Promise.all([
-    itemRepo.findByCollection(params.id),
+    itemRepo.findByCollection(collection.id),
     sessionRepo.findById(params.sessionId),
-    prefRepo.findByCollection(params.id, session.user.id),
+    prefRepo.findByCollection(collection.id, session.user.id),
     decisionRepo.findBySession(params.sessionId),
   ]);
 
   if (!sortSession) {
-    redirect(`/collections/${params.id}/sort`);
+    redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
   if (items.length < 2) {
@@ -43,8 +43,8 @@ export default async function ComparePage({ params }: ComparePageProps) {
       <AppLayout
         breadcrumbs={[
           { label: "Collections", href: "/collections" },
-          { label: collection.name, href: `/collections/${params.id}` },
-          { label: "Session", href: `/collections/${params.id}/sort/${params.sessionId}` },
+          { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
+          { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${params.sessionId}` },
           { label: "Compare" },
         ]}
       >
@@ -76,8 +76,8 @@ export default async function ComparePage({ params }: ComparePageProps) {
       <AppLayout
         breadcrumbs={[
           { label: "Collections", href: "/collections" },
-          { label: collection.name, href: `/collections/${params.id}` },
-          { label: "Session", href: `/collections/${params.id}/sort/${params.sessionId}` },
+          { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
+          { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${params.sessionId}` },
           { label: "Compare" },
         ]}
       >
@@ -96,8 +96,8 @@ export default async function ComparePage({ params }: ComparePageProps) {
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${params.id}` },
-        { label: "Session", href: `/collections/${params.id}/sort/${params.sessionId}` },
+        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
+        { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${params.sessionId}` },
         { label: "Compare" },
       ]}
     >

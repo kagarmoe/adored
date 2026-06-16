@@ -47,12 +47,12 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
   const [result, resultItems, items, shares] = await Promise.all([
     resultRepo.findById(params.resultId),
     resultItemRepo.findByResult(params.resultId),
-    itemRepo.findByCollection(params.id),
+    itemRepo.findByCollection(collection.id),
     shareRepo.findByResult(params.resultId),
   ]);
 
-  if (!result || result.collectionId !== params.id) {
-    redirect(`/collections/${params.id}/results`);
+  if (!result || result.collectionId !== collection.id) {
+    redirect(`/collections/${collection.slug ?? collection.id}/results`);
   }
 
   const itemById = new Map(items.map((item) => [item.id, item]));
@@ -67,8 +67,8 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${params.id}` },
-        { label: "Results", href: `/collections/${params.id}/results` },
+        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
+        { label: "Results", href: `/collections/${collection.slug ?? collection.id}/results` },
         { label: result.name },
       ]}
     >
@@ -81,7 +81,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
             </div>
           </div>
           {result.status === "draft" && (
-            <Link href={`/collections/${params.id}/results/${params.resultId}/finalize`}>
+            <Link href={`/collections/${collection.slug ?? collection.id}/results/${params.resultId}/finalize`}>
               <Button>Finalize</Button>
             </Link>
           )}
@@ -108,7 +108,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
             const [hero, ...rest] = ranked;
             return (
               <div className="space-y-8">
-                <MostLovedHero item={hero.item} collectionId={params.id} />
+                <MostLovedHero item={hero.item} collectionId={collection.slug ?? collection.id} />
                 {rest.length > 0 && (
                   <div className="space-y-4">
                     <h2 className="text-ink">The full ranking</h2>
@@ -117,7 +117,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
                         <ItemCard
                           key={ri.id}
                           item={item}
-                          collectionId={params.id}
+                          collectionId={collection.slug ?? collection.id}
                           bucket={ri.manualBucket || ri.computedBucket}
                         />
                       ))}
