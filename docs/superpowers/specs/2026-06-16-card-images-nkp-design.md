@@ -69,15 +69,38 @@ page is `collection.id` (it issues API calls); fix if it was switched to slug.
 
 ## Testing (TDD; must run in CI)
 
-- **Component (triage):** failing test first — render the triage page's card with an
-  item that has a hero photo; assert an `<img>` with the `/file` src renders (not the
-  initial). Drives the fix.
-- **Guard:** assert the image `src` contains `collection.id` (ULID), not the slug, on
-  at least one surface — locks in the invariant that caused the confusion.
-- **Compare / results:** assert hero `<img>` renders for items with covers; initial
-  fallback only when no cover.
-- Reuse existing test patterns (`ItemCard.test.tsx`, `MostLovedHero.test.tsx`,
-  `CompareChoice.test.tsx`); no new harness.
+**Bar (project policy):** baseline coverage is ~20%. Every **route** and **UI element**
+this change touches gets real tests that run automatically in `npm run test:ci`
+(`vitest run`). No surface is touched without a test. TDD: failing test first.
+
+**Routes touched** — the three pages are async Server Components and have **no tests
+today**. Add a render test for each, reusing the existing `vi.hoisted` + `vi.mock`
+pattern from the API-route tests (mock `@/lib/auth` `getSession`, `@/lib/db` `getDb`,
+and the repos the page constructs). Each test `await`s the page function and renders
+the returned element with RTL:
+
+| Route | Assertions |
+| --- | --- |
+| `sort/[sessionId]/triage/page.tsx` | item with a cover → hero `<img>` whose `src` contains `collection.id` (ULID), not the slug; item without a cover → initial fallback, no `<img>`; `findCoverPhotosByItemIds` called with the current item's id |
+| `sort/[sessionId]/compare/page.tsx` | `itemA`/`itemB` with covers → two hero images (`heroA`/`heroB`) using `collection.id`; missing cover → that side falls back to initial |
+| `results/[resultId]/page.tsx` | ranked items with covers → `MostLovedHero` + grid `ItemCard`s render hero images; covers batch-loaded once (no per-item query) |
+
+**UI elements touched** — assert image-vs-initial behavior directly:
+
+- `ItemCard` (has tests) — extend: renders `<img>` when `heroPhotoUrl` set, initial when not.
+- `MostLovedHero`, `CompareChoice` (have tests) — extend with the same image/initial cases.
+
+**Guard test:** on at least one surface, assert the image `src` segment is
+`collection.id` (ULID), **not** `collection.slug` — locks in the invariant that caused
+the original confusion and would catch a future slug regression.
+
+**Out of scope (own infra task, not this bug):** a real-browser Playwright test that the
+triage image visibly loads. The e2e `seed.ts` seeds only a user + collection (no items,
+no photos, no blob), so proving pixel display needs new photo-seeding fixtures. File
+separately if wanted; the vitest route tests above already prove the data load + correct
+URL in CI.
+
+No new test harness — only the `vi.mock` pattern and RTL the repo already uses.
 
 ## Review gates (before merge)
 
