@@ -28,7 +28,7 @@ Deviate whenever a better flow serves the user — the governing authorities are
   permitted where it genuinely helps (reordering, moving items between buckets). Touch targets ≥44px (h-11).
 - **Navigation** — top-left back arrow + breadcrumb; top-right user area.
 
-The wireframes' per-screen layouts (collections grid, item grid, card-based sorting, bucketed results)
+The wireframes per-screen layouts (collections grid, item grid, card-based sorting, bucketed results)
 are useful reference, but the **flow may change** — e.g. uploading photos before metadata, deferring
 metadata to fill in later, and bulk-uploading images.
 
@@ -49,7 +49,7 @@ optional:
 
 - **Branch:** feature branch off `main` → PR → squash-merge → Vercel auto-deploys prod. Never commit
   directly to `main`.
-- **Isolate concurrent work:** multiple agents may run here at once, and a branch switch in a *shared*
+Hol- **Isolate concurrent work:** multiple agents may run here at once, and a branch switch in a *shared*
   working tree silently discards another agent's uncommitted changes. For substantial or parallel work,
   branch into your own git worktree (or the `EnterWorktree` tool); never switch branches with
   uncommitted changes (commit or stash first).
