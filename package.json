@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "npm run db:migrate && next build",
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "vitest",
@@ -16,6 +17,7 @@
     "test:e2e:report": "playwright show-report",
     "db:generate": "drizzle-kit generate:pg --schema=src/lib/db/schema.ts --out=drizzle",
     "db:migrate": "node -r esbuild-register scripts/migrate.ts",
+    "db:backfill-slugs": "node -r esbuild-register scripts/backfill-collection-slugs.ts",
     "auth:verify": "node -r ./scripts/load-env.js scripts/verify-auth.ts"
   },
   "dependencies": {
@@ -49,6 +51,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.2.0",
+    "@vitest/coverage-v8": "^1.6.1",
     "@vitest/ui": "^1.0.0",
     "autoprefixer": "^10.4.0",
     "culori": "^4.0.2",
