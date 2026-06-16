@@ -1,0 +1,1346 @@
+{
+  "config": {
+    "configFile": "/home/runner/work/purseinator-app/purseinator-app/playwright.config.ts",
+    "rootDir": "/home/runner/work/purseinator-app/purseinator-app/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/home/runner/work/purseinator-app/purseinator-app/e2e/global-setup.ts",
+    "globalTeardown": "/home/runner/work/purseinator-app/purseinator-app/e2e/global-teardown.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "ci": {
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5f23bb9e52d2e9569cf33d67328c51fd46611030",
+        "commitHash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27640269430"
+      },
+      "gitCommit": {
+        "shortHash": "5f23bb9",
+        "hash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
+        "subject": "ci: run Playwright selectively on UI/presentation changes (#192)",
+        "body": "ci: run Playwright selectively on UI/presentation changes (#192)\n\n* ci: run Playwright selectively on UI/presentation changes\n\nWire the e2e (Playwright) suite into CI as a separate job that only runs\nwhen the view layer changed, detected via dorny/paths-filter:\n\n- `changes` job outputs `ui=true` for src/app/** (minus src/app/api/**),\n  components/features/hooks, design tokens, CSS, tailwind/postcss/next\n  config, and e2e/playwright config.\n- `e2e` job runs only `if: needs.changes.outputs.ui == 'true'`. When the UI\n  isn't touched it's skipped (reported as success), so it can be a required\n  check without blocking server/db-only PRs.\n- Reuses e2e/fixtures/test-db.sh (postgres:16 on :5433) via Playwright's\n  globalSetup; installs chromium + webkit (mobile devices are WebKit).\n\nThe one-line comment tweak in src/app/page.tsx is a UI-path change that\nexercises this new gate end-to-end on its own PR.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: grant pull-requests:read to the UI-detection job\n\ndorny/paths-filter lists the PR's changed files via the GitHub API, which\nfails with 'Resource not accessible by integration' under the repo's default\nread-only token. Scope contents+pull-requests read to the changes job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: always keep e2e report + render inline summary dashboard\n\nPreviously the Playwright report uploaded only on failure, so green runs\nkept nothing. Now:\n- upload the full HTML report (traces/screenshots) on every non-cancelled\n  run as the 'playwright-report' artifact (downloadable dashboard);\n- add a JSON reporter and render a pass/fail/flaky/skip/duration table into\n  the GitHub Actions run summary (inline dashboard, no download).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test: add v8 coverage reporting to vitest\n\nAdd @vitest/coverage-v8 and a coverage block (html + json-summary +\ntext-summary). Reflects unit/component tests only; the DB integration suite\nruns in a separate CI job and is not counted here. Prep for publishing the\ncoverage report to the Pages dashboard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: run coverage in the gate job and upload it as an artifact\n\ngate now runs test:ci with --coverage and uploads the coverage/ report\n(unit/component only). Feeds the Pages dashboard's coverage page.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add Pages dashboard landing page\n\nStatic landing for the test-reports site: links to the e2e and coverage\nreports, notes that coverage excludes the DB suite. Copied to the site root\nby the deploy-report job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: publish e2e + coverage + trends dashboard to gh-pages\n\ndeploy-report job (main only) assembles a reports site and pushes it to\ngh-pages with plain git + GITHUB_TOKEN — no third-party Pages action. Each\ndeploy overwrites only the report subdir it built, so the other survives.\nappend-history.mjs records a metrics row per main deploy (coverage %, e2e\npass/duration) and regenerates a trends page for current-vs-past comparison.\n\nVerified locally: history dedupe + carry-forward, and keep-files across a\nnon-UI deploy.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "author": {
+          "name": "Kimberly Garmoe",
+          "email": "kagarmoe@gmail.com",
+          "time": 1781635640000
+        },
+        "committer": {
+          "name": "GitHub",
+          "email": "noreply@github.com",
+          "time": 1781635640000
+        },
+        "branch": "main"
+      },
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/runner/work/purseinator-app/purseinator-app/test-results",
+        "repeatEach": 1,
+        "retries": 2,
+        "metadata": {
+          "ci": {
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5f23bb9e52d2e9569cf33d67328c51fd46611030",
+            "commitHash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27640269430"
+          },
+          "gitCommit": {
+            "shortHash": "5f23bb9",
+            "hash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
+            "subject": "ci: run Playwright selectively on UI/presentation changes (#192)",
+            "body": "ci: run Playwright selectively on UI/presentation changes (#192)\n\n* ci: run Playwright selectively on UI/presentation changes\n\nWire the e2e (Playwright) suite into CI as a separate job that only runs\nwhen the view layer changed, detected via dorny/paths-filter:\n\n- `changes` job outputs `ui=true` for src/app/** (minus src/app/api/**),\n  components/features/hooks, design tokens, CSS, tailwind/postcss/next\n  config, and e2e/playwright config.\n- `e2e` job runs only `if: needs.changes.outputs.ui == 'true'`. When the UI\n  isn't touched it's skipped (reported as success), so it can be a required\n  check without blocking server/db-only PRs.\n- Reuses e2e/fixtures/test-db.sh (postgres:16 on :5433) via Playwright's\n  globalSetup; installs chromium + webkit (mobile devices are WebKit).\n\nThe one-line comment tweak in src/app/page.tsx is a UI-path change that\nexercises this new gate end-to-end on its own PR.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: grant pull-requests:read to the UI-detection job\n\ndorny/paths-filter lists the PR's changed files via the GitHub API, which\nfails with 'Resource not accessible by integration' under the repo's default\nread-only token. Scope contents+pull-requests read to the changes job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: always keep e2e report + render inline summary dashboard\n\nPreviously the Playwright report uploaded only on failure, so green runs\nkept nothing. Now:\n- upload the full HTML report (traces/screenshots) on every non-cancelled\n  run as the 'playwright-report' artifact (downloadable dashboard);\n- add a JSON reporter and render a pass/fail/flaky/skip/duration table into\n  the GitHub Actions run summary (inline dashboard, no download).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test: add v8 coverage reporting to vitest\n\nAdd @vitest/coverage-v8 and a coverage block (html + json-summary +\ntext-summary). Reflects unit/component tests only; the DB integration suite\nruns in a separate CI job and is not counted here. Prep for publishing the\ncoverage report to the Pages dashboard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: run coverage in the gate job and upload it as an artifact\n\ngate now runs test:ci with --coverage and uploads the coverage/ report\n(unit/component only). Feeds the Pages dashboard's coverage page.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add Pages dashboard landing page\n\nStatic landing for the test-reports site: links to the e2e and coverage\nreports, notes that coverage excludes the DB suite. Copied to the site root\nby the deploy-report job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: publish e2e + coverage + trends dashboard to gh-pages\n\ndeploy-report job (main only) assembles a reports site and pushes it to\ngh-pages with plain git + GITHUB_TOKEN — no third-party Pages action. Each\ndeploy overwrites only the report subdir it built, so the other survives.\nappend-history.mjs records a metrics row per main deploy (coverage %, e2e\npass/duration) and regenerates a trends page for current-vs-past comparison.\n\nVerified locally: history dedupe + carry-forward, and keep-files across a\nnon-UI deploy.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "author": {
+              "name": "Kimberly Garmoe",
+              "email": "kagarmoe@gmail.com",
+              "time": 1781635640000
+            },
+            "committer": {
+              "name": "GitHub",
+              "email": "noreply@github.com",
+              "time": 1781635640000
+            },
+            "branch": "main"
+          },
+          "actualWorkers": 1
+        },
+        "id": "setup",
+        "name": "setup",
+        "testDir": "/home/runner/work/purseinator-app/purseinator-app/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/auth.setup.ts"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/home/runner/work/purseinator-app/purseinator-app/test-results",
+        "repeatEach": 1,
+        "retries": 2,
+        "metadata": {
+          "ci": {
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5f23bb9e52d2e9569cf33d67328c51fd46611030",
+            "commitHash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27640269430"
+          },
+          "gitCommit": {
+            "shortHash": "5f23bb9",
+            "hash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
+            "subject": "ci: run Playwright selectively on UI/presentation changes (#192)",
+            "body": "ci: run Playwright selectively on UI/presentation changes (#192)\n\n* ci: run Playwright selectively on UI/presentation changes\n\nWire the e2e (Playwright) suite into CI as a separate job that only runs\nwhen the view layer changed, detected via dorny/paths-filter:\n\n- `changes` job outputs `ui=true` for src/app/** (minus src/app/api/**),\n  components/features/hooks, design tokens, CSS, tailwind/postcss/next\n  config, and e2e/playwright config.\n- `e2e` job runs only `if: needs.changes.outputs.ui == 'true'`. When the UI\n  isn't touched it's skipped (reported as success), so it can be a required\n  check without blocking server/db-only PRs.\n- Reuses e2e/fixtures/test-db.sh (postgres:16 on :5433) via Playwright's\n  globalSetup; installs chromium + webkit (mobile devices are WebKit).\n\nThe one-line comment tweak in src/app/page.tsx is a UI-path change that\nexercises this new gate end-to-end on its own PR.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: grant pull-requests:read to the UI-detection job\n\ndorny/paths-filter lists the PR's changed files via the GitHub API, which\nfails with 'Resource not accessible by integration' under the repo's default\nread-only token. Scope contents+pull-requests read to the changes job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: always keep e2e report + render inline summary dashboard\n\nPreviously the Playwright report uploaded only on failure, so green runs\nkept nothing. Now:\n- upload the full HTML report (traces/screenshots) on every non-cancelled\n  run as the 'playwright-report' artifact (downloadable dashboard);\n- add a JSON reporter and render a pass/fail/flaky/skip/duration table into\n  the GitHub Actions run summary (inline dashboard, no download).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test: add v8 coverage reporting to vitest\n\nAdd @vitest/coverage-v8 and a coverage block (html + json-summary +\ntext-summary). Reflects unit/component tests only; the DB integration suite\nruns in a separate CI job and is not counted here. Prep for publishing the\ncoverage report to the Pages dashboard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: run coverage in the gate job and upload it as an artifact\n\ngate now runs test:ci with --coverage and uploads the coverage/ report\n(unit/component only). Feeds the Pages dashboard's coverage page.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add Pages dashboard landing page\n\nStatic landing for the test-reports site: links to the e2e and coverage\nreports, notes that coverage excludes the DB suite. Copied to the site root\nby the deploy-report job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: publish e2e + coverage + trends dashboard to gh-pages\n\ndeploy-report job (main only) assembles a reports site and pushes it to\ngh-pages with plain git + GITHUB_TOKEN — no third-party Pages action. Each\ndeploy overwrites only the report subdir it built, so the other survives.\nappend-history.mjs records a metrics row per main deploy (coverage %, e2e\npass/duration) and regenerates a trends page for current-vs-past comparison.\n\nVerified locally: history dedupe + carry-forward, and keep-files across a\nnon-UI deploy.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "author": {
+              "name": "Kimberly Garmoe",
+              "email": "kagarmoe@gmail.com",
+              "time": 1781635640000
+            },
+            "committer": {
+              "name": "GitHub",
+              "email": "noreply@github.com",
+              "time": 1781635640000
+            },
+            "branch": "main"
+          },
+          "actualWorkers": 1
+        },
+        "id": "tablet",
+        "name": "tablet",
+        "testDir": "/home/runner/work/purseinator-app/purseinator-app/e2e",
+        "testIgnore": [
+          "**/auth.setup.ts"
+        ],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/home/runner/work/purseinator-app/purseinator-app/test-results",
+        "repeatEach": 1,
+        "retries": 2,
+        "metadata": {
+          "ci": {
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5f23bb9e52d2e9569cf33d67328c51fd46611030",
+            "commitHash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27640269430"
+          },
+          "gitCommit": {
+            "shortHash": "5f23bb9",
+            "hash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
+            "subject": "ci: run Playwright selectively on UI/presentation changes (#192)",
+            "body": "ci: run Playwright selectively on UI/presentation changes (#192)\n\n* ci: run Playwright selectively on UI/presentation changes\n\nWire the e2e (Playwright) suite into CI as a separate job that only runs\nwhen the view layer changed, detected via dorny/paths-filter:\n\n- `changes` job outputs `ui=true` for src/app/** (minus src/app/api/**),\n  components/features/hooks, design tokens, CSS, tailwind/postcss/next\n  config, and e2e/playwright config.\n- `e2e` job runs only `if: needs.changes.outputs.ui == 'true'`. When the UI\n  isn't touched it's skipped (reported as success), so it can be a required\n  check without blocking server/db-only PRs.\n- Reuses e2e/fixtures/test-db.sh (postgres:16 on :5433) via Playwright's\n  globalSetup; installs chromium + webkit (mobile devices are WebKit).\n\nThe one-line comment tweak in src/app/page.tsx is a UI-path change that\nexercises this new gate end-to-end on its own PR.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: grant pull-requests:read to the UI-detection job\n\ndorny/paths-filter lists the PR's changed files via the GitHub API, which\nfails with 'Resource not accessible by integration' under the repo's default\nread-only token. Scope contents+pull-requests read to the changes job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: always keep e2e report + render inline summary dashboard\n\nPreviously the Playwright report uploaded only on failure, so green runs\nkept nothing. Now:\n- upload the full HTML report (traces/screenshots) on every non-cancelled\n  run as the 'playwright-report' artifact (downloadable dashboard);\n- add a JSON reporter and render a pass/fail/flaky/skip/duration table into\n  the GitHub Actions run summary (inline dashboard, no download).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test: add v8 coverage reporting to vitest\n\nAdd @vitest/coverage-v8 and a coverage block (html + json-summary +\ntext-summary). Reflects unit/component tests only; the DB integration suite\nruns in a separate CI job and is not counted here. Prep for publishing the\ncoverage report to the Pages dashboard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: run coverage in the gate job and upload it as an artifact\n\ngate now runs test:ci with --coverage and uploads the coverage/ report\n(unit/component only). Feeds the Pages dashboard's coverage page.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add Pages dashboard landing page\n\nStatic landing for the test-reports site: links to the e2e and coverage\nreports, notes that coverage excludes the DB suite. Copied to the site root\nby the deploy-report job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: publish e2e + coverage + trends dashboard to gh-pages\n\ndeploy-report job (main only) assembles a reports site and pushes it to\ngh-pages with plain git + GITHUB_TOKEN — no third-party Pages action. Each\ndeploy overwrites only the report subdir it built, so the other survives.\nappend-history.mjs records a metrics row per main deploy (coverage %, e2e\npass/duration) and regenerates a trends page for current-vs-past comparison.\n\nVerified locally: history dedupe + carry-forward, and keep-files across a\nnon-UI deploy.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "author": {
+              "name": "Kimberly Garmoe",
+              "email": "kagarmoe@gmail.com",
+              "time": 1781635640000
+            },
+            "committer": {
+              "name": "GitHub",
+              "email": "noreply@github.com",
+              "time": 1781635640000
+            },
+            "branch": "main"
+          },
+          "actualWorkers": 1
+        },
+        "id": "phone",
+        "name": "phone",
+        "testDir": "/home/runner/work/purseinator-app/purseinator-app/e2e",
+        "testIgnore": [
+          "**/auth.setup.ts"
+        ],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/home/runner/work/purseinator-app/purseinator-app/test-results",
+        "repeatEach": 1,
+        "retries": 2,
+        "metadata": {
+          "ci": {
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5f23bb9e52d2e9569cf33d67328c51fd46611030",
+            "commitHash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27640269430"
+          },
+          "gitCommit": {
+            "shortHash": "5f23bb9",
+            "hash": "5f23bb9e52d2e9569cf33d67328c51fd46611030",
+            "subject": "ci: run Playwright selectively on UI/presentation changes (#192)",
+            "body": "ci: run Playwright selectively on UI/presentation changes (#192)\n\n* ci: run Playwright selectively on UI/presentation changes\n\nWire the e2e (Playwright) suite into CI as a separate job that only runs\nwhen the view layer changed, detected via dorny/paths-filter:\n\n- `changes` job outputs `ui=true` for src/app/** (minus src/app/api/**),\n  components/features/hooks, design tokens, CSS, tailwind/postcss/next\n  config, and e2e/playwright config.\n- `e2e` job runs only `if: needs.changes.outputs.ui == 'true'`. When the UI\n  isn't touched it's skipped (reported as success), so it can be a required\n  check without blocking server/db-only PRs.\n- Reuses e2e/fixtures/test-db.sh (postgres:16 on :5433) via Playwright's\n  globalSetup; installs chromium + webkit (mobile devices are WebKit).\n\nThe one-line comment tweak in src/app/page.tsx is a UI-path change that\nexercises this new gate end-to-end on its own PR.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: grant pull-requests:read to the UI-detection job\n\ndorny/paths-filter lists the PR's changed files via the GitHub API, which\nfails with 'Resource not accessible by integration' under the repo's default\nread-only token. Scope contents+pull-requests read to the changes job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: always keep e2e report + render inline summary dashboard\n\nPreviously the Playwright report uploaded only on failure, so green runs\nkept nothing. Now:\n- upload the full HTML report (traces/screenshots) on every non-cancelled\n  run as the 'playwright-report' artifact (downloadable dashboard);\n- add a JSON reporter and render a pass/fail/flaky/skip/duration table into\n  the GitHub Actions run summary (inline dashboard, no download).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test: add v8 coverage reporting to vitest\n\nAdd @vitest/coverage-v8 and a coverage block (html + json-summary +\ntext-summary). Reflects unit/component tests only; the DB integration suite\nruns in a separate CI job and is not counted here. Prep for publishing the\ncoverage report to the Pages dashboard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: run coverage in the gate job and upload it as an artifact\n\ngate now runs test:ci with --coverage and uploads the coverage/ report\n(unit/component only). Feeds the Pages dashboard's coverage page.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add Pages dashboard landing page\n\nStatic landing for the test-reports site: links to the e2e and coverage\nreports, notes that coverage excludes the DB suite. Copied to the site root\nby the deploy-report job.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ci: publish e2e + coverage + trends dashboard to gh-pages\n\ndeploy-report job (main only) assembles a reports site and pushes it to\ngh-pages with plain git + GITHUB_TOKEN — no third-party Pages action. Each\ndeploy overwrites only the report subdir it built, so the other survives.\nappend-history.mjs records a metrics row per main deploy (coverage %, e2e\npass/duration) and regenerates a trends page for current-vs-past comparison.\n\nVerified locally: history dedupe + carry-forward, and keep-files across a\nnon-UI deploy.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "author": {
+              "name": "Kimberly Garmoe",
+              "email": "kagarmoe@gmail.com",
+              "time": 1781635640000
+            },
+            "committer": {
+              "name": "GitHub",
+              "email": "noreply@github.com",
+              "time": 1781635640000
+            },
+            "branch": "main"
+          },
+          "actualWorkers": 1
+        },
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "/home/runner/work/purseinator-app/purseinator-app/e2e",
+        "testIgnore": [
+          "**/auth.setup.ts"
+        ],
+        "testMatch": [
+          "**/*.spec.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "html",
+        {
+          "open": "never"
+        }
+      ],
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "playwright-report/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.60.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run build && npx next start --hostname 127.0.0.1 --port 3100",
+      "url": "http://127.0.0.1:3100",
+      "reuseExistingServer": true,
+      "timeout": 180000,
+      "env": {
+        "DATABASE_URL": "postgresql://postgres:test@localhost:5433/app_test",
+        "AUTH_URL": "http://127.0.0.1:3100",
+        "AUTH_SECRET": "e2e-only-secret-at-least-32-characters-long-xx",
+        "VERCEL": ""
+      }
+    }
+  },
+  "suites": [
+    {
+      "title": "auth.setup.ts",
+      "file": "auth.setup.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "authenticate",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "setup",
+              "projectName": "setup",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1036,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:00.763Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "17e3fe6f4d9d8bd79c6b-60f085b113a677673906",
+          "file": "auth.setup.ts",
+          "line": 50,
+          "column": 6
+        }
+      ]
+    },
+    {
+      "title": "auth-navigation.spec.ts",
+      "file": "auth-navigation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "UI login redirects to /collections and the session survives middleware",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10831,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:02.465Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b1138252f0945470f4d3-ca2e3c643849ce5b5d71",
+          "file": "auth-navigation.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "after UI login, direct navigation to a protected route stays authenticated",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2060,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:14.679Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b1138252f0945470f4d3-8480ff2f7a6bd0d4c9b9",
+          "file": "auth-navigation.spec.ts",
+          "line": 30,
+          "column": 5
+        },
+        {
+          "title": "UI login redirects to /collections and the session survives middleware",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1635,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:28.119Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b1138252f0945470f4d3-467ddf582d825ed19e74",
+          "file": "auth-navigation.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "after UI login, direct navigation to a protected route stays authenticated",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2422,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:29.936Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b1138252f0945470f4d3-1f7a365e0571c9ffc317",
+          "file": "auth-navigation.spec.ts",
+          "line": 30,
+          "column": 5
+        },
+        {
+          "title": "UI login redirects to /collections and the session survives middleware",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2449,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:51:20.825Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b1138252f0945470f4d3-83cd2e625f3bd5b0b358",
+          "file": "auth-navigation.spec.ts",
+          "line": 18,
+          "column": 5
+        },
+        {
+          "title": "after UI login, direct navigation to a protected route stays authenticated",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1297,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:51:27.977Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b1138252f0945470f4d3-6484a857429d3654d964",
+          "file": "auth-navigation.spec.ts",
+          "line": 30,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "auth.spec.ts",
+      "file": "auth.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "login with bad credentials establishes no session and shows an error",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1665,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:16.783Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d748ac400d08b85935ef-cb9633d59c79e5c77512",
+          "file": "auth.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "login with good credentials signs in as that user",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1629,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:18.510Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d748ac400d08b85935ef-ddc953d797155f876bad",
+          "file": "auth.spec.ts",
+          "line": 39,
+          "column": 5
+        },
+        {
+          "title": "signup creates a fresh account and signs in as that user",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2282,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:20.163Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d748ac400d08b85935ef-1bd41243c405b4feb577",
+          "file": "auth.spec.ts",
+          "line": 49,
+          "column": 5
+        },
+        {
+          "title": "login with bad credentials establishes no session and shows an error",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1520,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:32.398Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d748ac400d08b85935ef-2438b0427b936d6ca147",
+          "file": "auth.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "login with good credentials signs in as that user",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2346,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:33.980Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d748ac400d08b85935ef-6fec20b46adfc0797b0c",
+          "file": "auth.spec.ts",
+          "line": 39,
+          "column": 5
+        },
+        {
+          "title": "signup creates a fresh account and signs in as that user",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3933,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:36.348Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d748ac400d08b85935ef-3cbaf6843510b925ce7a",
+          "file": "auth.spec.ts",
+          "line": 49,
+          "column": 5
+        },
+        {
+          "title": "login with bad credentials establishes no session and shows an error",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 864,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:51:29.316Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d748ac400d08b85935ef-55cf5fa65de27042f41c",
+          "file": "auth.spec.ts",
+          "line": 25,
+          "column": 5
+        },
+        {
+          "title": "login with good credentials signs in as that user",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 920,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:51:30.227Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d748ac400d08b85935ef-d7f1bcb627ac8e665cce",
+          "file": "auth.spec.ts",
+          "line": 39,
+          "column": 5
+        },
+        {
+          "title": "signup creates a fresh account and signs in as that user",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1299,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:51:31.165Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d748ac400d08b85935ef-aa390cb8429d62fdbb30",
+          "file": "auth.spec.ts",
+          "line": 49,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "layout.spec.ts",
+      "file": "layout.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "login page fits the viewport and has tap-sized controls",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 893,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:22.476Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9f98fd8c8d1538f5ebbb-328c5ef9ece0935c24d9",
+          "file": "layout.spec.ts",
+          "line": 20,
+          "column": 5
+        },
+        {
+          "title": "collections page renders the grid without overflow when authenticated",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 845,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:23.422Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9f98fd8c8d1538f5ebbb-3d79aa2a02cf6674e064",
+          "file": "layout.spec.ts",
+          "line": 45,
+          "column": 5
+        },
+        {
+          "title": "login page fits the viewport and has tap-sized controls",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2943,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:40.312Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9f98fd8c8d1538f5ebbb-f46530266e454942181b",
+          "file": "layout.spec.ts",
+          "line": 20,
+          "column": 5
+        },
+        {
+          "title": "collections page renders the grid without overflow when authenticated",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1258,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:45.130Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9f98fd8c8d1538f5ebbb-4e131dd4163d8033f6df",
+          "file": "layout.spec.ts",
+          "line": 45,
+          "column": 5
+        },
+        {
+          "title": "login page fits the viewport and has tap-sized controls",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 356,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:51:32.500Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9f98fd8c8d1538f5ebbb-eab969e61ee8e2e95e8b",
+          "file": "layout.spec.ts",
+          "line": 20,
+          "column": 5
+        },
+        {
+          "title": "collections page renders the grid without overflow when authenticated",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 496,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:51:32.920Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9f98fd8c8d1538f5ebbb-1653d871c0a7a3765176",
+          "file": "layout.spec.ts",
+          "line": 45,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "smoke.spec.ts",
+      "file": "smoke.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "/ redirects to /login when logged out",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1151,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:24.302Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4219922fea2e2bd3c691-87374521e11ce0354589",
+          "file": "smoke.spec.ts",
+          "line": 15,
+          "column": 5
+        },
+        {
+          "title": "/collections redirects to /login when logged out",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 949,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:25.495Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4219922fea2e2bd3c691-1fc64d0843f181d20143",
+          "file": "smoke.spec.ts",
+          "line": 22,
+          "column": 5
+        },
+        {
+          "title": "/login renders the email + password fields without overflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 863,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:26.469Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4219922fea2e2bd3c691-ef5035bf91554b56af59",
+          "file": "smoke.spec.ts",
+          "line": 27,
+          "column": 5
+        },
+        {
+          "title": "/ redirects to /login when logged out",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 800,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:46.777Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4219922fea2e2bd3c691-d185031ca4b01504d2c0",
+          "file": "smoke.spec.ts",
+          "line": 15,
+          "column": 5
+        },
+        {
+          "title": "/collections redirects to /login when logged out",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 923,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:47.621Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4219922fea2e2bd3c691-e0676efdd55636cc2f7c",
+          "file": "smoke.spec.ts",
+          "line": 22,
+          "column": 5
+        },
+        {
+          "title": "/login renders the email + password fields without overflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1261,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:50:48.572Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4219922fea2e2bd3c691-4cdf817765ae4cf1661a",
+          "file": "smoke.spec.ts",
+          "line": 27,
+          "column": 5
+        },
+        {
+          "title": "/ redirects to /login when logged out",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 288,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:51:33.451Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4219922fea2e2bd3c691-8783ff5886e3e7ddde2c",
+          "file": "smoke.spec.ts",
+          "line": 15,
+          "column": 5
+        },
+        {
+          "title": "/collections redirects to /login when logged out",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 271,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:51:33.757Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4219922fea2e2bd3c691-aae3cb023cce785b2180",
+          "file": "smoke.spec.ts",
+          "line": 22,
+          "column": 5
+        },
+        {
+          "title": "/login renders the email + password fields without overflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 247,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-16T18:51:34.042Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4219922fea2e2bd3c691-65d7b33080ed94bbb3eb",
+          "file": "smoke.spec.ts",
+          "line": 27,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-06-16T18:48:58.708Z",
+    "duration": 155857.646,
+    "expected": 31,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
