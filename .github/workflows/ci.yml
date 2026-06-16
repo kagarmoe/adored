@@ -35,8 +35,18 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Unit tests
-        run: npm run test:ci
+      - name: Unit tests (with coverage)
+        run: npm run test:ci -- --coverage
+
+      # Coverage for the dashboard. Unit/component only — the DB integration
+      # suite runs in the db-tests job and is not reflected here.
+      - name: Upload coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
 
       - name: Build
         run: npm run build
