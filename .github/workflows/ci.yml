@@ -198,3 +198,67 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # Publish the reports dashboard to the gh-pages branch (main only). Plain git
+  # push with the built-in GITHUB_TOKEN — no third-party Pages action. Coverage
+  # refreshes on every main push; the e2e report refreshes only when e2e ran;
+  # each deploy overwrites just the subdir(s) it built, so the other report
+  # survives (the "keep_files" behaviour, done by hand). Also appends a metrics
+  # row and regenerates the trends page.
+  deploy-report:
+    name: Publish reports dashboard
+    needs: [changes, gate, e2e]
+    # Run on main pushes whenever the gate passed, even if e2e was skipped
+    # (non-UI push) or failed (we still want to publish the failure report).
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && !cancelled() && needs.gate.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: _artifacts/coverage
+
+      - name: Download e2e artifact (absent on non-UI pushes)
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: playwright-report
+          path: _artifacts/e2e
+
+      - name: Assemble site and push to gh-pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          rm -rf site
+          if git ls-remote --exit-code --heads "$REMOTE" gh-pages >/dev/null 2>&1; then
+            git clone --quiet --branch gh-pages --depth 1 "$REMOTE" site
+          else
+            mkdir site && git -C site init --quiet && git -C site checkout --quiet -b gh-pages
+          fi
+          # Landing page always latest; .nojekyll so report asset dirs aren't mangled.
+          cp .github/pages/index.html site/index.html
+          touch site/.nojekyll
+          if [ -d _artifacts/coverage ] && [ -n "$(ls -A _artifacts/coverage 2>/dev/null)" ]; then
+            rm -rf site/coverage && cp -r _artifacts/coverage site/coverage
+          fi
+          if [ -d _artifacts/e2e ] && [ -n "$(ls -A _artifacts/e2e 2>/dev/null)" ]; then
+            rm -rf site/e2e && cp -r _artifacts/e2e site/e2e
+          fi
+          node .github/pages/append-history.mjs site _artifacts
+          cd site
+          git add -A
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit --quiet -m "reports: ${GITHUB_SHA::7}" || { echo "no changes to publish"; exit 0; }
+          git push --quiet "$REMOTE" gh-pages
