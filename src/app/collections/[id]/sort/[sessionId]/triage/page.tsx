@@ -33,7 +33,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
     prefRepo.findByCollection(collection.id, session.user.id),
   ]);
 
-  if (!sortSession) {
+  if (!sortSession || sortSession.collectionId !== collection.id) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 

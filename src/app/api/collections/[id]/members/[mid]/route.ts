@@ -1,86 +1,61 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
+import { getDb } from "@/lib/db";
+import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { MemberController } from "@/server/api/members";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
-import { getDb } from "@/lib/db";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string; mid: string } }
-) {
-  try {
-    await requireAuth();
-    const db = getDb();
-    const membershipRepo = new MembershipRepository(db);
-    const collectionRepo = new CollectionRepository(db);
-    const controller = new MemberController(membershipRepo, collectionRepo);
-
-    const member = await controller.getMember(params.mid);
-    return NextResponse.json(member);
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
-  }
+// Verify the [mid] membership row actually belongs to collection [id] (belongs-to-parent).
+async function membershipBelongsToCollection(db: ReturnType<typeof getDb>, mid: string, collectionId: string) {
+  const row = await new MembershipRepository(db).findById(mid);
+  return !!row && row.collectionId === collectionId;
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string; mid: string } }
-) {
-  try {
-    const user = await requireAuth();
-    const body = await request.json();
-
-    const db = getDb();
-    const membershipRepo = new MembershipRepository(db);
-    const collectionRepo = new CollectionRepository(db);
-    const controller = new MemberController(membershipRepo, collectionRepo);
-
-    // Check if user is collection manager
-    const isManager = await controller.isCollectionManager(params.id, user.id);
-    if (!isManager) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const member = await controller.updateMember(params.mid, body);
-    return NextResponse.json(member);
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+export async function GET(_request: NextRequest, { params }: { params: { id: string; mid: string } }) {
+  const session = await getSession();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const db = getDb();
+  const access = await requireApiCollectionAccess(db, params.id, session.user.id);
+  if (access instanceof NextResponse) return access;
+  if (!(await membershipBelongsToCollection(db, params.mid, params.id))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+  const ctrl = new MemberController(new MembershipRepository(db), new CollectionRepository(db));
+  return NextResponse.json(await ctrl.getMember(params.mid));
 }
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string; mid: string } }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: { id: string; mid: string } }) {
+  const session = await getSession();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  let body: unknown;
   try {
-    const user = await requireAuth();
-    const db = getDb();
-    const membershipRepo = new MembershipRepository(db);
-    const collectionRepo = new CollectionRepository(db);
-    const controller = new MemberController(membershipRepo, collectionRepo);
-
-    // Check if user is collection manager
-    const isManager = await controller.isCollectionManager(params.id, user.id);
-    if (!isManager) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    await controller.removeMember(params.mid);
-    return NextResponse.json({ message: "Member removed" });
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  const db = getDb();
+  if (!(await membershipBelongsToCollection(db, params.mid, params.id))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  const ctrl = new MemberController(new MembershipRepository(db), new CollectionRepository(db));
+  if (!(await ctrl.isCollectionManager(params.id, session.user.id))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  return NextResponse.json(await ctrl.updateMember(params.mid, body));
+}
+
+export async function DELETE(_request: NextRequest, { params }: { params: { id: string; mid: string } }) {
+  const session = await getSession();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const db = getDb();
+  if (!(await membershipBelongsToCollection(db, params.mid, params.id))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  const ctrl = new MemberController(new MembershipRepository(db), new CollectionRepository(db));
+  if (!(await ctrl.isCollectionManager(params.id, session.user.id))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  await ctrl.removeMember(params.mid);
+  return NextResponse.json({ message: "Member removed" });
 }

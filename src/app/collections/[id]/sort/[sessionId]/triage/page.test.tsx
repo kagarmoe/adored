@@ -32,7 +32,7 @@ beforeEach(() => {
   mockGetSession.mockResolvedValue({ user: { id: "u1" } });
   mockRequireAccess.mockResolvedValue(COLLECTION);
   itemRepo.findByCollection.mockResolvedValue([ITEM]);
-  sessionRepo.findById.mockResolvedValue({ id: "sess_1", status: "active" });
+  sessionRepo.findById.mockResolvedValue({ id: "sess_1", collectionId: "coll_01ABCDEF", status: "active" });
   prefRepo.findByCollection.mockResolvedValue([]);
   photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map([["item_1", { id: "photo_1", itemId: "item_1" }]]));
 });

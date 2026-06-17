@@ -36,7 +36,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
     decisionRepo.findBySession(params.sessionId),
   ]);
 
-  if (!sortSession) {
+  if (!sortSession || sortSession.collectionId !== collection.id) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 

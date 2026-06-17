@@ -1,49 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
+import { getDb } from "@/lib/db";
+import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { ItemController } from "@/server/api/items";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { getDb } from "@/lib/db";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await requireAuth();
-    const db = getDb();
-    const itemRepo = new ItemRepository(db);
-    const controller = new ItemController(itemRepo);
-
-    const items = await controller.listItems(params.id);
-    return NextResponse.json(items);
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
-  }
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+  const session = await getSession();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const db = getDb();
+  const access = await requireApiCollectionAccess(db, params.id, session.user.id);
+  if (access instanceof NextResponse) return access;
+  const items = await new ItemController(new ItemRepository(db)).listItems(params.id);
+  return NextResponse.json(items);
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+  const session = await getSession();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  let body: unknown;
   try {
-    await requireAuth();
-    const body = await request.json();
-    const db = getDb();
-    const itemRepo = new ItemRepository(db);
-    const controller = new ItemController(itemRepo);
-
-    const item = await controller.createItem(params.id, body);
-    return NextResponse.json(item, { status: 201 });
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  const db = getDb();
+  const access = await requireApiCollectionAccess(db, params.id, session.user.id);
+  if (access instanceof NextResponse) return access;
+  const item = await new ItemController(new ItemRepository(db)).createItem(params.id, body);
+  return NextResponse.json(item, { status: 201 });
 }
