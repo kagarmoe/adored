@@ -1,34 +1,52 @@
-# API Authz Cluster Implementation Plan
+# API Authz Cluster Implementation Plan (v2 — post adversarial-review)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Close cross-tenant write/IDOR holes in the `/api/sort-results/**`, `/api/sessions` list, and `/api/preferences` route families by reusing the two existing guard tiers — no new DAL, no role-model change.
 
-**Architecture:** Add one `requireApiResultAccess` helper (sibling of `requireApiCollectionAccess`) that resolves a result then gates on collection-access **and** curator ownership. Apply it across the sort-results subtree. Curator-scope the session-list GETs via the existing `findByCollectionAndCurator`. Add the missing `requireApiCollectionAccess` membership gate to the preferences routes. Delete the dead `DecisionController`.
+**Architecture:** Add one `requireApiResultAccess` helper (sibling of `requireApiCollectionAccess`) that resolves a result then gates on collection-access **and** curator ownership. Apply it across the sort-results subtree by **injecting a guard into each handler's existing shape** (keep the current `try/catch` + `requireAuth`/`getSession` idiom; narrow with `instanceof NextResponse` — the proven `authorizeSession` pattern). Add belongs-to-parent checks where a child id (`rid`, `sid`) is resolved independently. Curator-scope the session-list GETs via the existing `findByCollectionAndCurator`. Add the missing membership gate to the preferences routes. Gate `<SharePanel>` render on curator ownership so the now-curator-scoped shares API can't 403 a rendered button. Delete the dead `DecisionController`.
 
 **Tech Stack:** Next.js App Router route handlers, Drizzle, Vitest, ephemeral Postgres (Docker) behind `RUN_DB_TESTS=1`.
 
+## Adversarial-review findings folded into v2
+
+| # | Finding | Resolution |
+|---|---------|-----------|
+| F1 (Security, BLOCK) | `shares/[sid]` GET/PATCH/DELETE resolve the share by `sid` alone → IDOR (revoke/read any tenant's share via your own result id). | Task 3: add belongs-to-parent (`share.sortResultId !== params.id → 404`), symmetric with `items/[rid]`. + test. |
+| F2 (Architect, HIGH) | Results detail page only collection-scopes, renders `<SharePanel>` for any finalized result → non-curator gets 403-on-click after the API is curator-scoped. | **Task 4b (new):** gate `<SharePanel>` render on `result.curatorId === session.user.id`. + page test. |
+| Convergent (all 4) | Plan's `new SortResultItemRepository(db).delete?.(rid)` calls a method that doesn't exist (fabricated). | Task 3: remove it; keep the existing `controller.deleteResultItem()` no-op behind the guard, with a `// ponytail:` note + follow-up bead (pre-existing stub, out of authz scope). |
+| Convergent (Architect F1/F6, QA, Craftsman C1) | `{ res?, userId? }` guard envelope doesn't narrow under strict TS; wholesale handler rewrite dropped the `try/catch`, losing structured error responses + risking stack leaks. | Tasks 2–4: **don't rewrite handlers.** Inject `requireApiResultAccess` inline, keep the existing `try/catch` + idiom, narrow via `instanceof NextResponse`. |
+| F-QA (BLOCK) | belongs-to-parent test seeded `itemId: generateId("item")` → FK violation `23503` at setup (`sort_result_items.item_id` → `items.id`). | Task 3 test: create a real item via `ItemRepository.create({ collectionId })` and use `item.id`. |
+| F-QA (coverage) | shares/items/reset guards untested; prefs DELETE self-scope unverified. | Task 3 + Task 6: add 403 tests for shares + items-list + reset; add prefs DELETE member-200/self-scope test. |
+| Craftsman C5 | Task 4 leaves `sortResultsTable` + `generateId` imports dead after routing through the repo. | Task 4: remove the dead imports. |
+| Caller analysis | Live callers: PATCH `[id]`, POST `finalize`, POST `shares`, DELETE `shares/[sid]`. The rest (GET/DELETE `[id]`, `items/**`, `supersede`, `shares` GET, `shares/[sid]` GET/PATCH) are dead-but-reachable. | Honor the decided "guard the whole subtree." **Deletion** of dead stub routes is deferred to a follow-up bead (a product call about the results feature's intended surface — not for a security PR). |
+
 ## Global Constraints
 
-- **Guard tiers (reuse, do not reinvent):** Tier 1 `requireApiCollectionAccess(db, collectionId, userId)` (404 absent / 403 non-member); Tier 2 `if (entity.curatorId !== userId) return 403` (curator ownership).
-- **Ownership model (decided):** sort-results are **curator-scoped** — only `result.curatorId` may read/modify/finalize/share/supersede. Session-LIST GETs are **curator-scoped**.
-- **Status codes:** 401 unauth, 404 absent (also for cross-tenant existence-hiding where the pattern already 404s), 403 member-but-forbidden / non-member.
-- **DB tests:** live in `src/lib/db/*.integration.test.ts`, gated `const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;`. Mock **only** `@/lib/auth` (flat-replace: `vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }))` — the spread form pulls in uninstalled nodemailer) and `@/lib/db` (`vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }))`). Everything else hits the real DB.
+- **Guard tiers (reuse, do not reinvent):** Tier 1 `requireApiCollectionAccess(db, collectionId, userId)` (404 absent / 403 non-member); Tier 2 `if (entity.curatorId !== userId) return 403` — both bundled into the new `requireApiResultAccess`.
+- **Guard injection pattern (the only sanctioned shape):** inside each handler's existing `try`, after resolving the user + `db`:
+  ```ts
+  const result = await requireApiResultAccess(db, params.id, user.id);
+  if (result instanceof NextResponse) return result;
+  ```
+  Keep the handler's existing `try/catch` and its existing auth call (`requireAuth()` or `getSession()`); do not rewrite the rest. `requireApiResultAccess` returns a `NextResponse` (403/404) that is returned directly (bypasses the catch); `requireAuth()`'s "Unauthorized" throw is still mapped to 401 by the existing catch.
+- **Ownership model (decided):** sort-results are **curator-scoped** — only `result.curatorId` (who must also be a collection member) may read/modify/finalize/share/supersede. Session-LIST GETs are **curator-scoped**.
+- **DB tests:** `src/lib/db/*.integration.test.ts`, gated `const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;` (auto-collected by the CI `db-tests` job glob `src/lib/db` and `e2e/fixtures/run-db-tests.sh`). Mock **only** `@/lib/auth` (flat-replace; spread form pulls in nodemailer) and `@/lib/db`. Everything else hits the real DB. Seed real FK parents (collections, items) before inserting children.
 - **No `// eslint-disable @typescript-eslint/no-explicit-any`** (rule unregistered → lint error). Plain `as any` is fine.
-- **Branch:** `security/authz-api-cluster-axn-51h-33u` (already created). Commit per task; never commit to main.
-- **Pre-merge gates:** `npm run build`, `test:ci`, `lint`, `auth:verify`, `test:db` (Docker up). Judge **new** `tsc` errors only (~5 pre-existing in e2e specs + ScoringService.test.ts).
+- **Branch:** `security/authz-api-cluster-axn-51h-33u` (created). Commit per task; never to main.
+- **Pre-merge gates:** `npm run build`, `test:ci`, `lint`, `auth:verify`, `RUN_DB_TESTS=1 npm run test:db` (Docker up). Judge **new** `tsc` errors only (~5 pre-existing in e2e specs + ScoringService.test.ts).
 
 ---
 
 ### Task 1: `requireApiResultAccess` helper
 
 **Files:**
-- Modify: `src/server/dal/collection-access.ts` (append helper)
+- Modify: `src/server/dal/collection-access.ts` (append helper; extend the `@/types` import with `SortResult`)
 - Test: `src/lib/db/sort-results-authz.integration.test.ts` (create; helper-level cases)
 
 **Interfaces:**
-- Consumes: `requireApiCollectionAccess(db, collectionId, userId)`, `SortResultRepository.findById(id)`, `SortResult` type (`{ id, collectionId, curatorId, ... }`).
-- Produces: `requireApiResultAccess(db: Database, resultId: string, userId: string): Promise<SortResult | NextResponse>` — returns the result, or a `NextResponse` (404 absent, 403 non-member-or-non-curator).
+- Consumes: `requireApiCollectionAccess(db, collectionId, userId)`, `SortResultRepository.findById(id)`, `SortResult` (`{ id, collectionId, curatorId, ... }`).
+- Produces: `requireApiResultAccess(db: Database, resultId: string, userId: string): Promise<SortResult | NextResponse>` — the result, or 404 (absent) / 403 (non-member or non-curator).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -44,11 +62,21 @@ import { sql } from "drizzle-orm";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline } from "../../../e2e/fixtures/seed";
 import { generateId } from "@/lib/id";
+import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
+import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 
 const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
-vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
+// Flat-replace BOTH exports the routes use, derived from one spy (spread form pulls in nodemailer).
+vi.mock("@/lib/auth", () => ({
+  getSession: mockGetSession,
+  requireAuth: async () => {
+    const s = await mockGetSession();
+    if (!s?.user) throw new Error("Unauthorized");
+    return s.user;
+  },
+}));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
 import { requireApiResultAccess } from "@/server/dal/collection-access";
@@ -69,14 +97,15 @@ async function seedResult(ownerId: string, curatorId: string) {
   return { collectionId, resultId: result.id };
 }
 
-async function addMember(collectionId: string, role: "curator" = "curator"): Promise<string> {
+/** Add a distinct member (curator role, full sort access) to the collection. */
+async function addMember(collectionId: string): Promise<string> {
   const { db } = getTestDb();
   const memberId = generateId("user");
   await db.insert((await import("@/lib/db/schema")).user).values({
     id: memberId, email: `m-${memberId}@adored.test`, name: "Member",
   });
   await new MembershipRepository(db).create({
-    collectionId, userId: memberId, role,
+    collectionId, userId: memberId, role: "curator",
     canManageCollection: false, canInviteMembers: false, canAddItems: true,
     canEditMetadata: true, canAddPhotos: true, canDeletePhotos: false,
     canSort: true, canViewOutputs: true,
@@ -97,7 +126,7 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
     expect((out as any).id).toBe(resultId);
   });
 
-  it("403s a member of the collection who is NOT the result's curator (curator-scope)", async () => {
+  it("403s a collection member who is NOT the result's curator (curator-scope)", async () => {
     const { db } = getTestDb();
     const { collectionId, resultId } = await seedResult(ownerId, ownerId);
     const memberId = await addMember(collectionId);
@@ -127,12 +156,9 @@ Expected: FAIL — `requireApiResultAccess` is not exported.
 
 - [ ] **Step 3: Implement the helper**
 
-Append to `src/server/dal/collection-access.ts` (add imports for `SortResult` type and `SortResultRepository`):
+In `src/server/dal/collection-access.ts`: change `import type { Collection } from "@/types";` to `import type { Collection, SortResult } from "@/types";`, add `import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";`, then append:
 
 ```ts
-import type { Collection, SortResult } from "@/types";
-import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
-
 // Resolve a sort-result, then gate by collection access AND curator ownership
 // (results are curator-scoped — each curator sorts independently, per t9l).
 // Returns the result when the caller may act on it, else a NextResponse to return.
@@ -152,12 +178,9 @@ export async function requireApiResultAccess(
 }
 ```
 
-(Merge the `SortResult` import into the existing `import type { Collection } from "@/types"` line.)
-
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `RUN_DB_TESTS=1 npm run test:db -- sort-results-authz`
-Expected: PASS (4 tests).
+Run: `RUN_DB_TESTS=1 npm run test:db -- sort-results-authz` → PASS (4).
 
 - [ ] **Step 5: Commit**
 
@@ -168,21 +191,19 @@ git commit -m "feat(purses-axn): requireApiResultAccess guard (collection + cura
 
 ---
 
-### Task 2: Guard sort-results `[id]` core routes (GET/PATCH/DELETE, finalize, supersede)
+### Task 2: Guard sort-results `[id]` routes (GET/PATCH/DELETE, finalize, supersede) — inline injection
 
 **Files:**
-- Modify: `src/app/api/sort-results/[id]/route.ts` (GET, PATCH, DELETE)
-- Modify: `src/app/api/sort-results/[id]/finalize/route.ts` (POST)
-- Modify: `src/app/api/sort-results/[id]/supersede/route.ts` (POST)
-- Test: `src/lib/db/sort-results-authz.integration.test.ts` (extend — route-level)
+- Modify: `src/app/api/sort-results/[id]/route.ts`, `.../finalize/route.ts`, `.../supersede/route.ts`
+- Test: extend `sort-results-authz.integration.test.ts`
 
 **Interfaces:**
-- Consumes: `requireApiResultAccess` (Task 1), `getSession` from `@/lib/auth`.
-- Produces: each handler now does `getSession`→401, `requireApiResultAccess(db, params.id, userId)`→return on `NextResponse`, then proceeds with the existing controller call.
+- Consumes: `requireApiResultAccess` (Task 1), existing `requireAuth()`.
+- Produces: each handler returns 401 (unauth), 404 (absent), 403 (non-member/non-curator) before its controller call; otherwise unchanged behavior + error handling.
 
 - [ ] **Step 1: Write the failing route tests**
 
-Append to `src/lib/db/sort-results-authz.integration.test.ts` (inside the same `describeDb`, add a nested block). Import the handlers at top of file:
+Append to `sort-results-authz.integration.test.ts` (add handler imports at top):
 
 ```ts
 import { GET as getResult, PATCH as patchResult, DELETE as deleteResult } from "@/app/api/sort-results/[id]/route";
@@ -198,18 +219,16 @@ describe("sort-results [id] route handlers", () => {
     });
   }
 
-  it("PATCH 403s a non-member (IDOR) and leaves the name unchanged", async () => {
+  it("PATCH 403s a non-member and leaves the name unchanged (IDOR)", async () => {
     const { db } = getTestDb();
     const { resultId } = await seedResult(ownerId, ownerId);
     mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
     const res = await patchResult(jsonReq({ name: "HACKED" }) as any, { params: { id: resultId } });
     expect(res.status).toBe(403);
-    const after = await new SortResultRepository(db).findById(resultId);
-    expect(after!.name).toBe("R");
+    expect((await new SortResultRepository(db).findById(resultId))!.name).toBe("R");
   });
 
   it("PATCH 403s a member who is not the curator (curator-scope)", async () => {
-    const { db } = getTestDb();
     const { collectionId, resultId } = await seedResult(ownerId, ownerId);
     const memberId = await addMember(collectionId);
     mockGetSession.mockResolvedValue({ user: { id: memberId } });
@@ -223,18 +242,16 @@ describe("sort-results [id] route handlers", () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await patchResult(jsonReq({ name: "Renamed" }) as any, { params: { id: resultId } });
     expect(res.status).toBe(200);
-    const after = await new SortResultRepository(db).findById(resultId);
-    expect(after!.name).toBe("Renamed");
+    expect((await new SortResultRepository(db).findById(resultId))!.name).toBe("Renamed");
   });
 
-  it("finalize 403s a non-member; stays draft", async () => {
+  it("finalize 403s a non-member; result stays draft", async () => {
     const { db } = getTestDb();
     const { resultId } = await seedResult(ownerId, ownerId);
     mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
     const res = await finalizeResult(jsonReq() as any, { params: { id: resultId } });
     expect(res.status).toBe(403);
-    const after = await new SortResultRepository(db).findById(resultId);
-    expect(after!.status).toBe("draft");
+    expect((await new SortResultRepository(db).findById(resultId))!.status).toBe("draft");
   });
 
   it("GET 404s an absent result", async () => {
@@ -248,83 +265,41 @@ describe("sort-results [id] route handlers", () => {
 - [ ] **Step 2: Run to verify it fails**
 
 Run: `RUN_DB_TESTS=1 npm run test:db -- sort-results-authz`
-Expected: FAIL — handlers still `requireAuth()` only (PATCH by intruder returns 200/500, not 403).
+Expected: FAIL — intruder PATCH returns 200, not 403.
 
-- [ ] **Step 3: Rewrite `src/app/api/sort-results/[id]/route.ts`**
+- [ ] **Step 3: Inject the guard into `[id]/route.ts`**
+
+In each of GET/PATCH/DELETE, add `import { requireApiResultAccess } from "@/server/dal/collection-access";`, capture the user, and inject the guard. Example GET (apply the same two-line injection to PATCH and DELETE, keeping their existing bodies/catches):
 
 ```ts
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { getDb } from "@/lib/db";
-import { requireApiResultAccess } from "@/server/dal/collection-access";
-import { ResultController } from "@/server/api/results";
-import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
-
-async function guard(db: ReturnType<typeof getDb>, id: string) {
-  const session = await getSession();
-  if (!session?.user) return { res: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
-  const access = await requireApiResultAccess(db, id, session.user.id);
-  if (access instanceof NextResponse) return { res: access };
-  return { userId: session.user.id };
-}
-
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
-  const db = getDb();
-  const g = await guard(db, params.id);
-  if (g.res) return g.res;
-  const controller = new ResultController(new SortResultRepository(db));
-  return NextResponse.json(await controller.getResult(params.id));
-}
-
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
-  const db = getDb();
-  const g = await guard(db, params.id);
-  if (g.res) return g.res;
-  let body: unknown;
-  try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
-  const controller = new ResultController(new SortResultRepository(db));
-  return NextResponse.json(await controller.updateResult(params.id, body));
-}
-
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
-  const db = getDb();
-  const g = await guard(db, params.id);
-  if (g.res) return g.res;
-  const controller = new ResultController(new SortResultRepository(db));
-  await controller.deleteResult(params.id);
-  return NextResponse.json({ message: "Result deleted" });
+  try {
+    const user = await requireAuth();
+    const db = getDb();
+    const access = await requireApiResultAccess(db, params.id, user.id);
+    if (access instanceof NextResponse) return access;
+    const resultRepo = new SortResultRepository(db);
+    const controller = new ResultController(resultRepo);
+    const result = await controller.getResult(params.id);
+    return NextResponse.json(result);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
+    );
+  }
 }
 ```
 
-- [ ] **Step 4: Rewrite `finalize/route.ts` and `supersede/route.ts`**
+> `requireAuth()` already returns the user; reuse its result for `user.id`. Do **not** remove the `try/catch` — it preserves the controller-error → 500 / SyntaxError → 400 mapping (Architect F6).
 
-`src/app/api/sort-results/[id]/finalize/route.ts`:
+- [ ] **Step 4: Inject the guard into `finalize/route.ts` and `supersede/route.ts`**
 
-```ts
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { getDb } from "@/lib/db";
-import { requireApiResultAccess } from "@/server/dal/collection-access";
-import { ResultController } from "@/server/api/results";
-import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
+Same injection after `await requireAuth()` / inside the existing `try`. `supersede` keeps calling `controller.supersedeResult(params.id)` (still throws "not implemented" — unchanged, now behind the guard). For `finalize`, capture the user from `requireAuth()` to pass `user.id`.
 
-export async function POST(_request: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getSession();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const db = getDb();
-  const access = await requireApiResultAccess(db, params.id, session.user.id);
-  if (access instanceof NextResponse) return access;
-  const controller = new ResultController(new SortResultRepository(db));
-  return NextResponse.json(await controller.finalizeResult(params.id));
-}
-```
-
-`src/app/api/sort-results/[id]/supersede/route.ts` — same shape, calling `controller.supersedeResult(params.id)` (keep the existing controller method; it throws "not implemented" — that's unchanged behavior, now behind the guard).
-
-- [ ] **Step 5: Run tests; then commit**
+- [ ] **Step 5: Run tests; commit**
 
 Run: `RUN_DB_TESTS=1 npm run test:db -- sort-results-authz` → PASS.
-Run: `npx vitest run src/app/api/sort-results` → existing route unit tests still green (or updated if they asserted the old `requireAuth` shape).
 
 ```bash
 git add src/app/api/sort-results/\[id\]/route.ts src/app/api/sort-results/\[id\]/finalize/route.ts src/app/api/sort-results/\[id\]/supersede/route.ts src/lib/db/sort-results-authz.integration.test.ts
@@ -333,107 +308,129 @@ git commit -m "fix(purses-axn): guard sort-results [id] core routes (collection+
 
 ---
 
-### Task 3: Guard sort-results `items` + `shares` routes (+ belongs-to-parent)
+### Task 3: Guard sort-results `items` + `shares` routes (+ belongs-to-parent for `[rid]` and `[sid]`)
 
 **Files:**
-- Modify: `src/app/api/sort-results/[id]/items/route.ts` (GET)
-- Modify: `src/app/api/sort-results/[id]/items/[rid]/route.ts` (GET/PATCH/DELETE)
-- Modify: `src/app/api/sort-results/[id]/items/[rid]/reset/route.ts` (POST)
-- Modify: `src/app/api/sort-results/[id]/shares/route.ts` (GET/POST)
-- Modify: `src/app/api/sort-results/[id]/shares/[sid]/route.ts` (GET/PATCH/DELETE)
-- Test: `src/lib/db/sort-results-authz.integration.test.ts` (extend — items/[rid] belongs-to-parent)
+- Modify: `src/app/api/sort-results/[id]/items/route.ts` (GET), `.../items/[rid]/route.ts` (GET/PATCH/DELETE), `.../items/[rid]/reset/route.ts` (POST), `.../shares/route.ts` (GET/POST), `.../shares/[sid]/route.ts` (GET/PATCH/DELETE)
+- Test: extend `sort-results-authz.integration.test.ts`
 
 **Interfaces:**
-- Consumes: `requireApiResultAccess` (Task 1), `SortResultItemRepository.findById(id)` → `SortResultItem { id, sortResultId, ... }`.
-- Produces: every handler guards on `requireApiResultAccess(db, params.id, userId)`; `items/[rid]` additionally rejects an `rid` whose `sortResultId !== params.id` with 404.
+- Consumes: `requireApiResultAccess`, `SortResultItemRepository.findById(id)` → `{ id, sortResultId, ... }`, `SortResultShareRepository.findById(id)` → `{ id, sortResultId, ... }`.
+- Produces: every handler guards on `requireApiResultAccess(db, params.id, userId)`. `items/[rid]` rejects `rid` whose `sortResultId !== params.id` (404); `shares/[sid]` rejects `sid` whose `sortResultId !== params.id` (404).
 
-- [ ] **Step 1: Write the failing belongs-to-parent test**
+- [ ] **Step 1: Write the failing belongs-to-parent tests (real FK parents)**
 
-Append to `sort-results-authz.integration.test.ts`:
+Append (add imports for the items handlers + a shares handler):
 
 ```ts
-import { GET as getItem, PATCH as patchItem } from "@/app/api/sort-results/[id]/items/[rid]/route";
-import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
+import { GET as getItem } from "@/app/api/sort-results/[id]/items/[rid]/route";
+import { GET as listShares, POST as createShare } from "@/app/api/sort-results/[id]/shares/route";
+import { DELETE as deleteShare } from "@/app/api/sort-results/[id]/shares/[sid]/route";
+import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 
-describe("sort-results [id]/items/[rid] belongs-to-parent", () => {
-  it("404s a result-item that belongs to a DIFFERENT result", async () => {
+describe("sort-results children: guard + belongs-to-parent", () => {
+  it("items/[rid] GET 404s a result-item that belongs to a DIFFERENT result", async () => {
     const { db } = getTestDb();
     const { collectionId, resultId } = await seedResult(ownerId, ownerId);
-    // A second result in the same collection, with its own item.
+    const item = await new ItemRepository(db).create({ collectionId }); // real FK parent
     const other = await new SortResultRepository(db).create({ collectionId, curatorId: ownerId, name: "Other", status: "draft" });
     const otherItem = await new SortResultItemRepository(db).create({
-      sortResultId: other.id, itemId: generateId("item"), computedRank: 1, computedBucket: "top",
+      sortResultId: other.id, itemId: item.id, computedRank: 1, computedBucket: "top",
     });
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    // Caller can access `resultId`, but asks for an item under `other.id`.
+    // Caller can access resultId, but asks for an item under `other.id`.
     const res = await getItem(new Request("http://localhost/x") as any, { params: { id: resultId, rid: otherItem.id } });
+    expect(res.status).toBe(404);
+  });
+
+  it("items list GET 403s a non-member (IDOR)", async () => {
+    const { resultId } = await seedResult(ownerId, ownerId);
+    mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
+    const { GET } = await import("@/app/api/sort-results/[id]/items/route");
+    const res = await GET(new Request("http://localhost/x") as any, { params: { id: resultId } });
+    expect(res.status).toBe(403);
+  });
+
+  it("shares list 403s a non-member (IDOR)", async () => {
+    const { resultId } = await seedResult(ownerId, ownerId);
+    mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
+    const res = await listShares(new Request("http://localhost/x") as any, { params: { id: resultId } });
+    expect(res.status).toBe(403);
+  });
+
+  it("shares/[sid] DELETE 404s a share that belongs to a DIFFERENT result (IDOR)", async () => {
+    const { db } = getTestDb();
+    const { collectionId, resultId } = await seedResult(ownerId, ownerId);
+    const other = await new SortResultRepository(db).create({ collectionId, curatorId: ownerId, name: "Other", status: "finalized" });
+    const victimShare = await new SortResultShareRepository(db).create({ sortResultId: other.id });
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    // Caller owns `resultId`, tries to revoke a share under `other.id` via the path id.
+    const res = await deleteShare(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: { id: resultId, sid: victimShare.id } });
     expect(res.status).toBe(404);
   });
 });
 ```
 
-(Adjust `SortResultItemRepository.create` arg names to the real signature — read it first; use the same fields its `create` requires.)
+> Confirm `SortResultShareRepository.create` arg shape before writing (it takes `{ sortResultId, ... }`; pass whatever its signature requires). Confirm `SortResultItemRepository.create` field names.
 
 - [ ] **Step 2: Run to verify it fails**
 
 Run: `RUN_DB_TESTS=1 npm run test:db -- sort-results-authz`
-Expected: FAIL — `items/[rid]` GET returns 200 for a mismatched parent.
+Expected: FAIL — items/[rid] GET 200s on a mismatched parent; shares list 200s for an intruder; shares/[sid] DELETE 200s on a foreign share.
 
-- [ ] **Step 3: Rewrite the items routes**
+- [ ] **Step 3: Guard the items routes**
 
-`items/[rid]/route.ts` GET/PATCH/DELETE — pattern (shown for GET; PATCH/DELETE identical guard, then their existing controller call). DELETE must act on the verified `rid`:
+`items/route.ts` (GET list): inject `requireApiResultAccess(db, params.id, user.id)` after `requireAuth()`, inside the existing try.
+
+`items/[rid]/route.ts` (GET/PATCH/DELETE): after the result guard, add the belongs-to-parent check. Example GET:
 
 ```ts
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { getDb } from "@/lib/db";
-import { requireApiResultAccess } from "@/server/dal/collection-access";
-import { ResultItemController } from "@/server/api/result-items";
-import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
-
-async function guardItem(db: ReturnType<typeof getDb>, resultId: string, rid: string) {
-  const session = await getSession();
-  if (!session?.user) return { res: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
-  const access = await requireApiResultAccess(db, resultId, session.user.id);
-  if (access instanceof NextResponse) return { res: access };
-  const item = await new SortResultItemRepository(db).findById(rid);
-  if (!item || item.sortResultId !== resultId) return { res: NextResponse.json({ error: "Not found" }, { status: 404 }) };
-  return { item };
-}
-
 export async function GET(_request: NextRequest, { params }: { params: { id: string; rid: string } }) {
-  const db = getDb();
-  const g = await guardItem(db, params.id, params.rid);
-  if (g.res) return g.res;
-  return NextResponse.json(g.item);
-}
-
-export async function PATCH(request: NextRequest, { params }: { params: { id: string; rid: string } }) {
-  const db = getDb();
-  const g = await guardItem(db, params.id, params.rid);
-  if (g.res) return g.res;
-  let body: unknown;
-  try { body = await request.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
-  const controller = new ResultItemController(new SortResultItemRepository(db));
-  return NextResponse.json(await controller.updateResultItem(params.rid, body));
-}
-
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string; rid: string } }) {
-  const db = getDb();
-  const g = await guardItem(db, params.id, params.rid);
-  if (g.res) return g.res;
-  await new SortResultItemRepository(db).delete?.(params.rid); // ponytail: controller.deleteResultItem() is a no-op stub; if no repo.delete exists, leave the stub call but keep the guard. Confirm during impl.
-  return NextResponse.json({ message: "Item removed from result" });
+  try {
+    const user = await requireAuth();
+    const db = getDb();
+    const access = await requireApiResultAccess(db, params.id, user.id);
+    if (access instanceof NextResponse) return access;
+    const item = await new SortResultItemRepository(db).findById(params.rid);
+    if (!item || item.sortResultId !== params.id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    return NextResponse.json(item);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
+    );
+  }
 }
 ```
 
-> Note: `ResultItemController.deleteResultItem()` is a no-op TODO. Do **not** add new delete business logic here (out of scope) — keep whatever the route did, but behind the guard. If `SortResultItemRepository` has no `delete`, revert the DELETE body to the original `controller.deleteResultItem()` call; the security fix is the guard, not the stub.
+PATCH: same guard + belongs-to-parent, then the existing `controller.updateResultItem(params.rid, body)`.
+DELETE: same guard + belongs-to-parent, then **keep the existing** `controller.deleteResultItem()` call (do NOT invent `repo.delete?.()`):
 
-`items/route.ts` (GET list) and `items/[rid]/reset/route.ts` (POST): add `getSession`→401 + `requireApiResultAccess(db, params.id, userId)` before the existing controller call (no belongs-to-parent needed for the list; for `reset`, reuse `guardItem`).
+```ts
+    // ponytail: controller.deleteResultItem() is a pre-existing no-op stub; this PR
+    // only adds the authz guard. Real deletion tracked in the follow-up bead.
+    await controller.deleteResultItem();
+    return NextResponse.json({ message: "Item removed from result" });
+```
 
-- [ ] **Step 4: Rewrite the shares routes**
+`items/[rid]/reset/route.ts` (POST): inject the result guard + belongs-to-parent before `controller.resetResultItem(params.rid)`.
 
-`shares/route.ts` (GET/POST) and `shares/[sid]/route.ts` (GET/PATCH/DELETE): add `getSession`→401 + `requireApiResultAccess(db, params.id, userId)` before the existing `ShareController` call. (Share-by-`sid` belongs-to-parent is a nice-to-have; the result-level curator guard already blocks cross-tenant access. Keep it minimal: result-level guard only.)
+- [ ] **Step 4: Guard the shares routes (+ belongs-to-parent for `[sid]`)**
+
+`shares/route.ts`: GET takes no params today — **add `{ params }: { params: { id: string } }`** and inject `requireApiResultAccess(db, params.id, user.id)`. POST: inject the same before `controller.createShare(params.id, body)`.
+
+`shares/[sid]/route.ts` (GET/PATCH/DELETE): inject the result guard, then belongs-to-parent:
+
+```ts
+    const share = await new SortResultShareRepository(db).findById(params.sid);
+    if (!share || share.sortResultId !== params.id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+```
+
+then the existing `controller.getShare/updateShare/revokeShare(params.sid)` call. (Import `SortResultShareRepository`.)
 
 - [ ] **Step 5: Run tests; commit**
 
@@ -441,7 +438,7 @@ Run: `RUN_DB_TESTS=1 npm run test:db -- sort-results-authz` → PASS.
 
 ```bash
 git add src/app/api/sort-results/\[id\]/items src/app/api/sort-results/\[id\]/shares src/lib/db/sort-results-authz.integration.test.ts
-git commit -m "fix(purses-axn): guard sort-results items+shares routes; items/[rid] belongs-to-parent"
+git commit -m "fix(purses-axn): guard sort-results items+shares; belongs-to-parent for [rid] and [sid]"
 ```
 
 ---
@@ -449,16 +446,14 @@ git commit -m "fix(purses-axn): guard sort-results items+shares routes; items/[r
 ### Task 4: Fix + guard `POST /api/sort-results` (route through repo, allocate number)
 
 **Files:**
-- Modify: `src/app/api/sort-results/route.ts` (POST)
-- Test: `src/lib/db/sort-results-authz.integration.test.ts` (extend — POST)
+- Modify: `src/app/api/sort-results/route.ts` (POST) — also delete now-dead `sortResultsTable` + `generateId` imports
+- Test: extend `sort-results-authz.integration.test.ts`
 
 **Interfaces:**
-- Consumes: `requireApiCollectionAccess` (Tier 1), `SortResultRepository.create({ collectionId, curatorId, name, status })` (allocates `number`).
-- Produces: POST that 403s a non-member, and on success returns a result with a **non-null `number`** and `curatorId === caller`.
+- Consumes: `requireApiCollectionAccess`, `SortResultRepository.create({ collectionId, curatorId, name, status })` (allocates `number`).
+- Produces: POST 403s a non-member; on success returns a result with a **non-null `number`** and `curatorId === caller`.
 
 - [ ] **Step 1: Write the failing test**
-
-Append:
 
 ```ts
 import { POST as createResult } from "@/app/api/sort-results/route";
@@ -492,7 +487,7 @@ describe("POST /api/sort-results", () => {
 - [ ] **Step 2: Run to verify it fails**
 
 Run: `RUN_DB_TESTS=1 npm run test:db -- sort-results-authz`
-Expected: FAIL — intruder gets 201 (no access check); `number` is null.
+Expected: FAIL — intruder gets 201; `number` is null.
 
 - [ ] **Step 3: Rewrite `src/app/api/sort-results/route.ts`**
 
@@ -528,10 +523,12 @@ export async function POST(req: NextRequest) {
 }
 ```
 
-- [ ] **Step 4: Run tests; update `SessionCompleteScreen.test.tsx` if it asserts the old body shape (drops `sessionId`); commit**
+(This removes the raw insert, so `sortResultsTable` and `generateId` are no longer imported — confirm no other reference remains in the file.)
+
+- [ ] **Step 4: Run tests; commit**
 
 Run: `RUN_DB_TESTS=1 npm run test:db -- sort-results-authz` → PASS.
-Run: `npx vitest run src/features/sessions/SessionCompleteScreen` → green (the screen still POSTs `{ sessionId, collectionId, name }`; the route now ignores `sessionId` — harmless).
+Run: `npx vitest run src/features/sessions/SessionCompleteScreen` → green (screen still POSTs `{ sessionId, collectionId, name }`; route ignores `sessionId`).
 
 ```bash
 git add src/app/api/sort-results/route.ts src/lib/db/sort-results-authz.integration.test.ts
@@ -540,16 +537,64 @@ git commit -m "fix(purses-axn): POST /api/sort-results routes through repo + col
 
 ---
 
+### Task 4b: Gate `<SharePanel>` render on curator ownership (fixes Architect F2)
+
+**Files:**
+- Modify: `src/app/collections/[id]/results/[resultNumber]/page.tsx:145`
+- Test: `src/app/collections/[id]/results/[resultNumber]/page.test.tsx`
+
+**Interfaces:**
+- Consumes: `result.curatorId`, `session.user.id` (both already in scope on the page).
+- Produces: `<SharePanel>` renders only when the viewer is the result's curator.
+
+- [ ] **Step 1: Write the failing test**
+
+In `page.test.tsx`, add a case: a finalized result whose `curatorId` is someone else, viewed by the session user → the rendered output contains **no** SharePanel (assert on a SharePanel signifier, e.g. its "Create Link"/share heading text, absent). Mirror the existing finalize/page.test curator cases (`curatorId: "someone_else"`).
+
+```ts
+it("hides SharePanel for a non-curator viewing a finalized result", async () => {
+  resultRepo.findByCollectionAndNumber.mockResolvedValue({
+    id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "finalized", curatorId: "someone_else",
+  });
+  // session user is the test default (not "someone_else")
+  const ui = await ResultDetailPage({ params: { id: "coll_01ABCDEF", resultNumber: "1" } });
+  render(ui);
+  expect(screen.queryByRole("heading", { name: /share/i })).toBeNull(); // adjust to SharePanel's actual signifier
+});
+```
+
+> Read `SharePanel.tsx` for a stable, unique signifier (heading/button text) to assert on. If the page reads the session via a server helper, follow the existing `page.test.tsx` mock setup for `getSession`.
+
+- [ ] **Step 2: Run to verify it fails** — SharePanel still renders (assertion finds the signifier).
+
+- [ ] **Step 3: Gate the render** — change line 145:
+
+```tsx
+{result.status === "finalized" && result.curatorId === session.user.id && (
+  <SharePanel resultId={result.id} initialShares={shares} />
+)}
+```
+
+- [ ] **Step 4: Run page tests; commit**
+
+Run: `npx vitest run src/app/collections/\[id\]/results/\[resultNumber\]/page` → PASS (new + existing).
+
+```bash
+git add src/app/collections/\[id\]/results/\[resultNumber\]/page.tsx src/app/collections/\[id\]/results/\[resultNumber\]/page.test.tsx
+git commit -m "fix(purses-axn): render SharePanel only for the result's curator (no 403-on-click)"
+```
+
+---
+
 ### Task 5: Curator-scope the session-LIST GETs (purses-33u #1)
 
 **Files:**
-- Modify: `src/app/api/sessions/route.ts` (GET)
-- Modify: `src/app/api/collections/[id]/sessions/route.ts` (GET)
+- Modify: `src/app/api/sessions/route.ts` (GET; drop unused `sessionsTable`/`eq`), `src/app/api/collections/[id]/sessions/route.ts` (GET)
 - Test: `src/lib/db/session-list-authz.integration.test.ts` (create)
 
 **Interfaces:**
 - Consumes: `requireApiCollectionAccess`, `SessionRepository.findByCollectionAndCurator(collectionId, userId)`.
-- Produces: both list GETs return only the caller's own sessions.
+- Produces: both list GETs return only the caller's own sessions; non-member → 403.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -591,7 +636,6 @@ describeDb("session-list curator scope (route -> DB) — purses-33u", () => {
       canManageCollection: false, canInviteMembers: false, canAddItems: true, canEditMetadata: true,
       canAddPhotos: true, canDeletePhotos: false, canSort: true, canViewOutputs: true,
     });
-    // Owner has a session; member has a session — same collection.
     await new SessionRepository(db).create({ collectionId, curatorId: ownerId });
     await new SessionRepository(db).create({ collectionId, curatorId: memberId });
   });
@@ -622,23 +666,18 @@ describeDb("session-list curator scope (route -> DB) — purses-33u", () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
-
-Run: `RUN_DB_TESTS=1 npm run test:db -- session-list-authz`
-Expected: FAIL — each list returns 2 sessions (both curators).
+- [ ] **Step 2: Run to verify it fails** — each list returns 2 sessions.
 
 - [ ] **Step 3: Curator-scope the GETs**
 
-In `src/app/api/sessions/route.ts` GET, replace the raw select:
+`src/app/api/sessions/route.ts` GET — replace the raw select; remove now-unused `sessionsTable`/`eq` imports:
 
 ```ts
   const sessions = await new SessionRepository(db).findByCollectionAndCurator(collectionId, session.user.id);
   return NextResponse.json(sessions);
 ```
 
-(Remove the now-unused `sessionsTable`/`eq` imports.)
-
-In `src/app/api/collections/[id]/sessions/route.ts` GET, replace `listSessions`:
+`src/app/api/collections/[id]/sessions/route.ts` GET — replace `listSessions`:
 
 ```ts
   const sessions = await new SessionRepository(db).findByCollectionAndCurator(params.id, session.user.id);
@@ -659,87 +698,61 @@ git commit -m "fix(purses-33u): curator-scope session-list GETs (close cross-cur
 ### Task 6: Add membership gate to preferences routes (purses-51h)
 
 **Files:**
-- Modify: `src/app/api/preferences/[collectionId]/route.ts` (GET)
-- Modify: `src/app/api/collections/[id]/preferences/route.ts` (GET, DELETE)
+- Modify: `src/app/api/preferences/[collectionId]/route.ts` (GET), `src/app/api/collections/[id]/preferences/route.ts` (GET, DELETE)
 - Test: `src/lib/db/preferences-authz.integration.test.ts` (create)
 
 **Interfaces:**
-- Consumes: `requireApiCollectionAccess`, `getSession`.
+- Consumes: `requireApiCollectionAccess`, existing `requireAuth()`.
 - Produces: GET + DELETE 403 a non-member; 200 a member; DELETE still self-scopes to `user.id`.
 
 - [ ] **Step 1: Write the failing test**
 
-Create `src/lib/db/preferences-authz.integration.test.ts`:
+Create `src/lib/db/preferences-authz.integration.test.ts` (auth mock provides both `getSession` + `requireAuth` from one spy, as in Task 1). Cases:
+- flat GET 403s a non-member;
+- nested GET 200s the owner;
+- nested DELETE 403s a non-member;
+- **nested DELETE 200s the owner and clears only the owner's prefs** (self-scope): seed a preference row for the owner via `CollectionPreferenceItemRepository`, DELETE as owner → 200, then assert the owner's prefs are gone (and, if a second member's prefs were seeded, that they remain).
 
 ```ts
-// purses-51h: preferences routes were requireAuth()-only (no membership gate).
-import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { sql } from "drizzle-orm";
-import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
-import { seedBaseline } from "../../../e2e/fixtures/seed";
-import { generateId } from "@/lib/id";
-
-const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
-vi.mock("@/lib/auth", () => {
-  const m = mockGetSession;
-  return { getSession: m, requireAuth: async () => { const s = await m(); if (!s?.user) throw new Error("Unauthorized"); return s.user; } };
-});
-vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
-
+// (header: same mock shape as sort-results-authz Task 1 — getSession + requireAuth from one spy)
 import { GET as flatPrefs } from "@/app/api/preferences/[collectionId]/route";
 import { GET as nestedPrefs, DELETE as clearPrefs } from "@/app/api/collections/[id]/preferences/route";
+// ...seed collection (owner) in beforeEach...
 
-const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
-
-describeDb("preferences route membership gate — purses-51h", () => {
-  let ownerId: string, collectionId: string;
-  beforeEach(async () => {
-    await resetDb();
-    ownerId = await seedBaseline();
-    const { db } = getTestDb();
-    collectionId = generateId("col");
-    await db.execute(sql`INSERT INTO collections (id, owner_id, name, status, created_at, updated_at)
-      VALUES (${collectionId}, ${ownerId}, 'Prefs gate', 'active', now(), now())`);
-  });
-  afterAll(async () => { await closeDb(); });
-
-  it("flat GET 403s a non-member", async () => {
-    mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
-    const res = await flatPrefs(new Request("http://localhost/x") as any, { params: { collectionId } });
-    expect(res.status).toBe(403);
-  });
-
-  it("nested GET 200s the owner", async () => {
-    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    const res = await nestedPrefs(new Request("http://localhost/x") as any, { params: { id: collectionId } });
-    expect(res.status).toBe(200);
-  });
-
-  it("nested DELETE 403s a non-member", async () => {
-    mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
-    const res = await clearPrefs(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: { id: collectionId } });
-    expect(res.status).toBe(403);
-  });
+it("flat GET 403s a non-member", async () => {
+  mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
+  const res = await flatPrefs(new Request("http://localhost/x") as any, { params: { collectionId } });
+  expect(res.status).toBe(403);
+});
+it("nested GET 200s the owner", async () => {
+  mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+  const res = await nestedPrefs(new Request("http://localhost/x") as any, { params: { id: collectionId } });
+  expect(res.status).toBe(200);
+});
+it("nested DELETE 403s a non-member", async () => {
+  mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
+  const res = await clearPrefs(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: { id: collectionId } });
+  expect(res.status).toBe(403);
+});
+it("nested DELETE 200s the owner (self-scoped clear)", async () => {
+  mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+  const res = await clearPrefs(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: { id: collectionId } });
+  expect(res.status).toBe(200);
 });
 ```
 
-> Note: these routes use `requireAuth()`, not `getSession()`. The mock above provides **both**, derived from the same `mockGetSession`, so existing `requireAuth` behavior (throw → 401) is preserved while the new `requireApiCollectionAccess` reads the same identity. Keep the `requireAuth()` call AND add the collection gate.
-
-- [ ] **Step 2: Run to verify it fails**
-
-Run: `RUN_DB_TESTS=1 npm run test:db -- preferences-authz`
-Expected: FAIL — non-member gets 200 (no gate).
+- [ ] **Step 2: Run to verify it fails** — non-member gets 200 (no gate).
 
 - [ ] **Step 3: Add the gate to each handler**
 
-In each handler, after `const user = await requireAuth();` and `const db = getDb();`, insert:
+After `const user = await requireAuth();` and `const db = getDb();`, insert (import `requireApiCollectionAccess`, `NextResponse`):
 
 ```ts
   const access = await requireApiCollectionAccess(db, /* params.collectionId | params.id */, user.id);
   if (access instanceof NextResponse) return access;
 ```
 
-Import `requireApiCollectionAccess` from `@/server/dal/collection-access`. Flat route uses `params.collectionId`; nested route uses `params.id` (both GET and DELETE).
+Flat route → `params.collectionId`; nested route (GET + DELETE) → `params.id`. Keep `requireAuth()` and the existing `try/catch` (minimal diff; getSession↔requireAuth unification deferred — out of authz scope).
 
 - [ ] **Step 4: Run tests; commit**
 
@@ -754,80 +767,46 @@ git commit -m "fix(purses-51h): add membership gate to preferences GET/DELETE ro
 
 ### Task 7: Delete dead `DecisionController` (purses-33u #2)
 
-**Files:**
-- Delete: `src/server/api/decisions.ts`
-- Delete (if exists): `src/server/api/decisions.test.ts`
-- Verify: nothing imports `DecisionController` / `CreateDecisionInput`.
+**Files:** Delete `src/server/api/decisions.ts` (+ its test if any).
 
-- [ ] **Step 1: Confirm dead**
-
-Run: `grep -rn "DecisionController\|CreateDecisionInput\|api/decisions" src/ e2e/`
-Expected: only the definition file (and possibly its own test). If any **other** importer exists, STOP — guard instead of delete, and note it.
-
-- [ ] **Step 2: Delete**
-
-```bash
-git rm src/server/api/decisions.ts
-git rm src/server/api/decisions.test.ts 2>/dev/null || true
-```
-
-- [ ] **Step 3: Verify build/lint**
-
-Run: `npx tsc --noEmit 2>&1 | grep -v -E "e2e/|ScoringService.test" | grep "decisions" || echo "no new decisions errors"`
-Run: `npm run lint`
-Expected: no new errors referencing decisions.
-
-- [ ] **Step 4: Commit**
-
-```bash
-git commit -m "chore(purses-33u): delete dead DecisionController (live route guards its own writes)"
-```
+- [ ] **Step 1: Confirm dead** — `grep -rn "DecisionController\|CreateDecisionInput\|api/decisions" src/ e2e/` → only the definition (+ its own test). If any other importer exists, STOP — guard instead, and note it.
+- [ ] **Step 2: Delete** — `git rm src/server/api/decisions.ts` (+ `decisions.test.ts` if present).
+- [ ] **Step 3: Verify** — `npx tsc --noEmit 2>&1 | grep decisions || echo "no decisions errors"`; `npm run lint`.
+- [ ] **Step 4: Commit** — `git commit -m "chore(purses-33u): delete dead DecisionController (live route guards its own writes)"`
 
 ---
 
-### Task 8: Full gate run + follow-up beads
+### Task 8: Full gate run + follow-up beads + PR
 
-- [ ] **Step 1: Run the full gate suite**
+- [ ] **Step 1: Full gates**
 
 ```bash
-npm run build
-npm run test:ci
-npm run lint
-npm run auth:verify
-RUN_DB_TESTS=1 npm run test:db
+npm run build && npm run test:ci && npm run lint && npm run auth:verify && RUN_DB_TESTS=1 npm run test:db
 ```
 
-Expected: build OK; unit + DB tests green; lint clean; auth:verify OK. `tsc --noEmit` shows only the ~5 pre-existing errors (e2e specs + ScoringService.test.ts) — **no new** errors.
+Expected: all green; `tsc --noEmit` shows only the ~5 pre-existing errors (e2e specs + ScoringService.test.ts) — **no new** errors.
 
-- [ ] **Step 2: File follow-up beads**
+- [ ] **Step 2: Final adversarial-review of the IMPLEMENTATION** (multi-persona) → fix → re-review (per project workflow). Run vibe-security + adversarial-review Security on the diff.
+
+- [ ] **Step 3: File follow-up beads**
 
 ```bash
 bd create "Remove unused flat-vs-nested duplicate session-list + preferences routes (post-DAL g6o)" -t chore -p 3
-bd create "Sort-result sub-routes (shares/supersede/items) have stub controllers — confirm live or delete" -t chore -p 3
+bd create "Dead-but-reachable sort-result sub-routes (supersede throws, items DELETE no-op, shares GET stub) — delete or implement" -t chore -p 3
 ```
 
-- [ ] **Step 3: Commit any remaining test/snapshot updates; push branch; open PR**
-
-```bash
-git push -u origin security/authz-api-cluster-axn-51h-33u
-gh pr create --title "Close authz holes in sort-results / sessions / preferences APIs (purses-axn, 51h, 33u)" --body "<summary + test evidence>"
-```
-
-(PR opened **after** the adversarial code review of the implementation, per the project workflow. Note: E2E (Playwright) check SKIPS for API-only diffs — expected.)
+- [ ] **Step 4: Push branch; open PR** (after the review passes). E2E (Playwright) check SKIPS for API-only diffs — expected. PR body: summary + per-bead mapping + DB-test evidence.
 
 ---
 
-## Self-Review
+## Self-Review (v2)
 
-**Spec coverage:**
-- axn (sort-results subtree) → Tasks 1–4. ✅ (helper, [id] core, items+shares, POST fix)
-- 33u #1 (session-list leak) → Task 5. ✅
-- 33u #2 (dead DecisionController) → Task 7. ✅
-- 51h (preferences gate) → Task 6. ✅ (consolidation deliberately deferred — see spec "scope boundaries"; follow-up bead in Task 8)
-- Tests un-mocked against ephemeral PG → Tasks 1,2,3,4,5,6 each add `*.integration.test.ts`. ✅
+**Spec coverage:** axn (whole subtree) → Tasks 1–4 + 4b; 33u#1 → Task 5; 33u#2 → Task 7; 51h → Task 6. Tests un-mocked vs ephemeral PG → Tasks 1,2,3,4,5,6. ✅
 
-**Placeholder scan:** One `ponytail:` note in Task 3 DELETE flags a real uncertainty (stub `deleteResultItem`) with an explicit fallback ("revert to the original call; the security fix is the guard") — not a placeholder for missing content. The Task 8 PR body `<summary>` is filled at PR time from the review. Otherwise no TBD/TODO.
+**Review findings:** F1 (shares/[sid] IDOR) → Task 3 belongs-to-parent + test. F2 (SharePanel regression) → Task 4b + test. Fabricated `repo.delete?.()` → removed (Task 3 keeps existing no-op behind guard). `{res,userId}` envelope + dropped try/catch → replaced with inline-injection keeping try/catch (Tasks 2–4, 6). FK-violating test seed → real `ItemRepository.create` (Task 3). Coverage gaps → shares/items/reset 403 tests (Task 3) + prefs DELETE self-scope (Task 6). Dead imports → Task 4/5. ✅
 
-**Type consistency:** `requireApiResultAccess(db, resultId, userId): Promise<SortResult | NextResponse>` used identically in Tasks 1–4. `findByCollectionAndCurator(collectionId, userId)` matches the repo signature. `SortResultItem.sortResultId` matches `findByResult(sortResultId)`. `SortResultRepository.create({collectionId, curatorId, name, status})` matches the repo. ✅
+**Placeholder scan:** Two `/* params.collectionId | params.id */` markers in Task 6 Step 3 are explicit per-route choices, not TBDs. Task 4b's SharePanel signifier and Task 3's `SortResultShareRepository.create` arg shape are flagged "read before writing" — real impl-time confirmations, not missing content. No TBD/TODO.
 
-**Known impl-time confirmations (call out, don't guess):** real arg names for `SortResultItemRepository.create` (Task 3 test) and whether `SortResultItemRepository` has a `delete` (Task 3 DELETE) — read before writing; fall back to the stub call if absent.
+**Type consistency:** `requireApiResultAccess(db, resultId, userId): Promise<SortResult | NextResponse>` + `instanceof NextResponse` narrowing used uniformly (matches `requireApiCollectionAccess`/`authorizeSession`). `SortResultItem.sortResultId`, `SortResultShare.sortResultId`, `SessionRepository.findByCollectionAndCurator(collectionId, userId)`, `SortResultRepository.create({collectionId,curatorId,name,status})` all match real signatures. ✅
+
+**Impl-time confirmations (read, don't guess):** `SortResultShareRepository.create` arg shape (Task 3 test); `SortResultItemRepository.create` field names; SharePanel's render signifier (Task 4b test); whether the results detail `page.test.tsx` mocks the session (Task 4b).
