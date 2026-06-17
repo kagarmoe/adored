@@ -1,69 +1,53 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
+import { getDb } from "@/lib/db";
+import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { SessionController } from "@/server/api/sessions";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
-import { getDb } from "@/lib/db";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await requireAuth();
-    const db = getDb();
-    const sessionRepo = new SessionRepository(db);
-    const controller = new SessionController(sessionRepo);
-
-    const session = await controller.getSession(params.id);
-    return NextResponse.json(session);
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
-  }
+// Load the session, then authorize its collection. Returns the controller-ready
+// repo + a typed guard outcome, or a NextResponse to return immediately.
+async function authorizeSession(db: ReturnType<typeof getDb>, sessionId: string, userId: string) {
+  const sessionRepo = new SessionRepository(db);
+  const sortSession = await sessionRepo.findById(sessionId);
+  if (!sortSession) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const access = await requireApiCollectionAccess(db, sortSession.collectionId, userId);
+  if (access instanceof NextResponse) return access;
+  return { sessionRepo };
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await requireAuth();
-    const body = await request.json();
-    const db = getDb();
-    const sessionRepo = new SessionRepository(db);
-    const controller = new SessionController(sessionRepo);
-
-    const session = await controller.updateSession(params.id, body);
-    return NextResponse.json(session);
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
-  }
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+  const session = await getSession();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const db = getDb();
+  const guard = await authorizeSession(db, params.id, session.user.id);
+  if (guard instanceof NextResponse) return guard;
+  const result = await new SessionController(guard.sessionRepo).getSession(params.id);
+  return NextResponse.json(result);
 }
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+  const session = await getSession();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  let body: unknown;
   try {
-    await requireAuth();
-    const db = getDb();
-    const sessionRepo = new SessionRepository(db);
-    const controller = new SessionController(sessionRepo);
-
-    await controller.deleteSession(params.id);
-    return NextResponse.json({ message: "Session deleted" });
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  const db = getDb();
+  const guard = await authorizeSession(db, params.id, session.user.id);
+  if (guard instanceof NextResponse) return guard;
+  const result = await new SessionController(guard.sessionRepo).updateSession(params.id, body);
+  return NextResponse.json(result);
+}
+
+export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+  const session = await getSession();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const db = getDb();
+  const guard = await authorizeSession(db, params.id, session.user.id);
+  if (guard instanceof NextResponse) return guard;
+  await new SessionController(guard.sessionRepo).deleteSession(params.id);
+  return NextResponse.json({ message: "Session deleted" });
 }
