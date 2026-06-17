@@ -178,6 +178,7 @@ export const sessionsTable = pgTable(
     curatorId: text("curator_id")
       .notNull()
       .references(() => user.id),
+    number: integer("number"),
     status: text("status").default("active").notNull(),
     goal: text("goal"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -190,6 +191,10 @@ export const sessionsTable = pgTable(
     activeIdx: uniqueIndex("sessions_active_unique").on(
       table.collectionId,
       table.curatorId,
+    ),
+    collectionNumberUnique: uniqueIndex("sessions_collection_number_unique").on(
+      table.collectionId,
+      table.number,
     ),
   }),
 );
@@ -256,6 +261,7 @@ export const sortResultsTable = pgTable(
     curatorId: text("curator_id")
       .notNull()
       .references(() => user.id),
+    number: integer("number"),
     status: text("status").default("draft").notNull(),
     name: text("name").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -265,6 +271,10 @@ export const sortResultsTable = pgTable(
   (table) => ({
     collectionIdx: index("sort_results_collection_id_idx").on(table.collectionId),
     curatorIdx: index("sort_results_curator_id_idx").on(table.curatorId),
+    collectionNumberUnique: uniqueIndex("sort_results_collection_number_unique").on(
+      table.collectionId,
+      table.number,
+    ),
   }),
 );
 
