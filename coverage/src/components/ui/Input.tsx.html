@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">37.14% </span>
+                <span class="strong">88.57% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>13/35</span>
+                <span class='fraction'>31/35</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">25% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>1/4</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">37.14% </span>
+                <span class="strong">88.57% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>13/35</span>
+                <span class='fraction'>31/35</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -106,28 +106,28 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -141,28 +141,28 @@ interface InputProps extends React.InputHTMLAttributes&lt;HTMLInputElement&gt; {
 }
 &nbsp;
 const Input = React.forwardRef&lt;HTMLInputElement, InputProps&gt;(({ label, error, className = "", ...props }, ref) =&gt; (
-<span class="cstat-no" title="statement not covered" >  &lt;div className="w-full"&gt;</span>
-<span class="cstat-no" title="statement not covered" >    {label &amp;&amp; (</span>
+  &lt;div className="w-full"&gt;
+    {<span class="branch-0 cbranch-no" title="branch not covered" >label &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >      &lt;label className="block text-sm font-medium text-ink mb-2"&gt;</span>
 <span class="cstat-no" title="statement not covered" >        {label}</span>
 <span class="cstat-no" title="statement not covered" >        {props.required &amp;&amp; &lt;span className="text-error"&gt;*&lt;/span&gt;}</span>
 <span class="cstat-no" title="statement not covered" >      &lt;/label&gt;</span>
-<span class="cstat-no" title="statement not covered" >    )}</span>
-<span class="cstat-no" title="statement not covered" >    &lt;input</span>
-<span class="cstat-no" title="statement not covered" >      className={`</span>
-<span class="cstat-no" title="statement not covered" >        w-full bg-surface border border-hairline rounded-control px-4 py-3 text-ink</span>
-<span class="cstat-no" title="statement not covered" >        transition-shadow duration-200 ease-gentle</span>
-<span class="cstat-no" title="statement not covered" >        placeholder:text-ink-soft focus:outline-none focus:ring-2 focus:ring-primary</span>
-<span class="cstat-no" title="statement not covered" >        focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed</span>
-<span class="cstat-no" title="statement not covered" >        h-12 min-h-12</span>
-<span class="cstat-no" title="statement not covered" >        ${error ? "border-error focus:ring-error" : ""}</span>
-<span class="cstat-no" title="statement not covered" >        ${className}</span>
-<span class="cstat-no" title="statement not covered" >      `}</span>
-<span class="cstat-no" title="statement not covered" >      ref={ref}</span>
-<span class="cstat-no" title="statement not covered" >      {...props}</span>
-<span class="cstat-no" title="statement not covered" >    /&gt;</span>
-<span class="cstat-no" title="statement not covered" >    {error &amp;&amp; &lt;p className="text-error text-sm mt-2"&gt;{error}&lt;/p&gt;}</span>
-<span class="cstat-no" title="statement not covered" >  &lt;/div&gt;</span>
+    )}
+    &lt;input
+      className={`
+        w-full bg-surface border border-hairline rounded-control px-4 py-3 text-ink
+        transition-shadow duration-200 ease-gentle
+        placeholder:text-ink-soft focus:outline-none focus:ring-2 focus:ring-primary
+        focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed
+        h-12 min-h-12
+        ${<span class="branch-0 cbranch-no" title="branch not covered" >error ? "border-error focus:ring-error" : "</span>"}
+        ${className}
+      `}
+      ref={ref}
+      {...props}
+    /&gt;
+    {<span class="branch-0 cbranch-no" title="branch not covered" >error &amp;&amp; &lt;p className="text-error text-sm mt-2"&gt;{error}&lt;/p&gt;}</span>
+  &lt;/div&gt;
 ));
 Input.displayName = "Input";
 &nbsp;
@@ -175,7 +175,7 @@ export type { InputProps };
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-17T16:39:11.425Z
+                at 2026-06-17T19:48:34.704Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
