@@ -1,4 +1,4 @@
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, sql } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { sessionsTable } from "@/lib/db/schema";
 import type { ISessionRepository } from "../SessionRepository";
@@ -14,21 +14,34 @@ export class SessionRepository implements ISessionRepository {
     curatorId: string;
     goal?: string;
   }): Promise<Session> {
-    const id = data.id || generateId("sess");
-    const [session] = await this.db
-      .insert(sessionsTable)
-      .values({
-        id,
-        collectionId: data.collectionId,
-        curatorId: data.curatorId,
-        status: "active",
-        goal: data.goal || null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        deletedAt: null,
-      })
-      .returning();
-    return this.mapToSession(session);
+    const base = {
+      id: data.id || generateId("sess"),
+      collectionId: data.collectionId,
+      curatorId: data.curatorId,
+      status: "active",
+      goal: data.goal || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+    };
+
+    // Auto-allocate MAX+1, retry on the UNIQUE(collection_id, number) race
+    // (neon-http is stateless — no long transaction to lock the max). Any other
+    // unique violation (e.g. sessions_active_unique) surfaces, not retried.
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const number = await this.getNextSessionNumber(data.collectionId);
+      try {
+        const [session] = await this.db
+          .insert(sessionsTable)
+          .values({ ...base, number })
+          .returning();
+        return this.mapToSession(session);
+      } catch (error) {
+        if (isSessionNumberConflict(error) && attempt < 4) continue;
+        throw error;
+      }
+    }
+    throw new Error("Could not allocate a session number");
   }
 
   async findById(id: string): Promise<Session | null> {
@@ -37,6 +50,34 @@ export class SessionRepository implements ISessionRepository {
       .from(sessionsTable)
       .where(and(eq(sessionsTable.id, id), isNull(sessionsTable.deletedAt)));
     return session ? this.mapToSession(session) : null;
+  }
+
+  async findByCollectionAndNumber(
+    collectionId: string,
+    number: number,
+  ): Promise<Session | null> {
+    const [session] = await this.db
+      .select()
+      .from(sessionsTable)
+      .where(
+        and(
+          eq(sessionsTable.collectionId, collectionId),
+          eq(sessionsTable.number, number),
+          isNull(sessionsTable.deletedAt),
+        ),
+      );
+    return session ? this.mapToSession(session) : null;
+  }
+
+  async getNextSessionNumber(collectionId: string): Promise<number> {
+    // MAX over ALL rows (incl. soft-deleted) — a deleted session still holds its
+    // number in the UNIQUE(collection_id, number) index, so reusing it would
+    // collide. Resolution (findByCollectionAndNumber) excludes deleted rows.
+    const [row] = await this.db
+      .select({ max: sql<number | null>`max(${sessionsTable.number})` })
+      .from(sessionsTable)
+      .where(eq(sessionsTable.collectionId, collectionId));
+    return (row?.max ?? 0) + 1;
   }
 
   async findActive(collectionId: string, curatorId: string): Promise<Session | null> {
@@ -65,10 +106,7 @@ export class SessionRepository implements ISessionRepository {
   async update(id: string, data: Partial<Session>): Promise<Session> {
     const [session] = await this.db
       .update(sessionsTable)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
+      .set({ ...data, updatedAt: new Date() })
       .where(eq(sessionsTable.id, id))
       .returning();
     return this.mapToSession(session);
@@ -77,10 +115,7 @@ export class SessionRepository implements ISessionRepository {
   async softDelete(id: string): Promise<Session> {
     const [session] = await this.db
       .update(sessionsTable)
-      .set({
-        deletedAt: new Date(),
-        updatedAt: new Date(),
-      })
+      .set({ deletedAt: new Date(), updatedAt: new Date() })
       .where(eq(sessionsTable.id, id))
       .returning();
     return this.mapToSession(session);
@@ -91,6 +126,7 @@ export class SessionRepository implements ISessionRepository {
       id: row.id,
       collectionId: row.collectionId,
       curatorId: row.curatorId,
+      number: row.number ?? null,
       status: row.status as "active" | "paused" | "completed" | "abandoned" | "deleted",
       goal: row.goal,
       createdAt: row.createdAt,
@@ -98,4 +134,12 @@ export class SessionRepository implements ISessionRepository {
       deletedAt: row.deletedAt,
     };
   }
+}
+
+function isSessionNumberConflict(error: unknown): boolean {
+  // Retry ONLY the UNIQUE(collection_id, number) race — any other unique
+  // violation (incl. sessions_active_unique) is a real condition and must surface.
+  const code = (error as { code?: string })?.code;
+  const message = (error as { message?: string })?.message ?? "";
+  return code === "23505" && message.includes("sessions_collection_number_unique");
 }
