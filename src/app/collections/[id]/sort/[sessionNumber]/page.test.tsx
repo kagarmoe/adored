@@ -54,4 +54,8 @@ describe("SessionDetailPage resolution + integrity guard", () => {
     render(ui);
     expect(redirectMock).not.toHaveBeenCalled();
   });
+  it("redirects when the user is not the session's curator — independent sort (purses-t9l)", async () => {
+    sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "s1", collectionId: "coll_REAL", number: 1, status: "active", curatorId: "someone_else" });
+    await expect(SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } })).rejects.toThrow("REDIRECT");
+  });
 });

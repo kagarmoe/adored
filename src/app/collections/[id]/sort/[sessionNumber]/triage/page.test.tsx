@@ -42,6 +42,11 @@ describe("TriagePage integrity guard", () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_x", collectionId: "coll_OTHER", number: 1, status: "active", curatorId: "u1" });
     await expect(TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } })).rejects.toThrow("REDIRECT");
   });
+
+  it("redirects (and halts) when the user is not the session's curator — independent sort (purses-t9l)", async () => {
+    sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_x", collectionId: "coll_01ABCDEF", number: 1, status: "active", curatorId: "someone_else" });
+    await expect(TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } })).rejects.toThrow("REDIRECT");
+  });
 });
 
 describe("TriagePage hero image", () => {

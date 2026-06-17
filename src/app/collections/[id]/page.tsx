@@ -26,7 +26,9 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   const resultRepo = new SortResultRepository(db);
   const [items, sessions, results] = await Promise.all([
     itemRepo.findByCollection(collection.id),
-    sessionRepo.findByCollection(collection.id),
+    // purses-t9l: each user sorts independently — the active-session card + count
+    // reflect only this user's own sessions, never another curator's.
+    sessionRepo.findByCollectionAndCurator(collection.id, session.user.id),
     resultRepo.findByCollection(collection.id),
   ]);
 

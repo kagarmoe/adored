@@ -21,7 +21,8 @@ export default async function SortPage({ params }: SortPageProps) {
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const sessionRepo = new SessionRepository(db);
 
-  const sessions = await sessionRepo.findByCollection(collection.id);
+  // purses-t9l: each user sorts independently — show only this user's own sessions.
+  const sessions = await sessionRepo.findByCollectionAndCurator(collection.id, session.user.id);
   const activeSession = sessions.find((sortSession) => sortSession.status === "active");
 
   return (

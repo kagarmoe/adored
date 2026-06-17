@@ -41,6 +41,11 @@ export default async function TriagePage({ params }: TriagePageProps) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
+  // purses-t9l: each user sorts independently — only the session's curator may triage it.
+  if (sortSession.curatorId !== session.user.id) {
+    redirect(`/collections/${collection.slug ?? collection.id}/sort`);
+  }
+
   const preferencesByItemId = new Map(preferences.map((p) => [p.itemId, p]));
   const item = items.find((i) => !preferencesByItemId.has(i.id)) || null;
 

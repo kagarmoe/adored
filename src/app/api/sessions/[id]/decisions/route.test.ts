@@ -29,7 +29,8 @@ beforeEach(() => {
   // db.insert(...).values(...).returning() chain
   insertReturning.mockResolvedValue([{ id: "event1" }]);
   mockGetDb.mockReturnValue({ insert: () => ({ values: () => ({ returning: insertReturning }) }) });
-  sessionRepo.findById.mockResolvedValue({ id: "s1", collectionId: "c1" });
+  // Default: the requester (u1) IS the session's curator.
+  sessionRepo.findById.mockResolvedValue({ id: "s1", collectionId: "c1", curatorId: "u1" });
   collectionRepo.findById.mockResolvedValue({ id: "c1", ownerId: "u9" });
   membershipRepo.findByUser.mockResolvedValue({ id: "m1" });
 });
@@ -51,9 +52,16 @@ describe("POST decisions", () => {
     expect(res.status).toBe(403);
     expect(insertReturning).not.toHaveBeenCalled();
   });
-  it("201 and writes for a member", async () => {
+  it("201 and writes when the requester IS the session's curator", async () => {
     const res = await POST(req({ type: "triage", decision: {} }), { params: { id: "s1" } });
     expect(res.status).toBe(201);
     expect(insertReturning).toHaveBeenCalled();
+  });
+  it("403 when a member who is NOT the session's curator tries to decide — and does NOT write (purses-t9l)", async () => {
+    // Member has collection access, but the session belongs to another curator.
+    sessionRepo.findById.mockResolvedValue({ id: "s1", collectionId: "c1", curatorId: "u9" });
+    const res = await POST(req({ type: "triage", decision: {} }), { params: { id: "s1" } });
+    expect(res.status).toBe(403);
+    expect(insertReturning).not.toHaveBeenCalled();
   });
 });

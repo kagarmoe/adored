@@ -6,7 +6,7 @@ import { render, screen } from "@testing-library/react";
 const { mockGetSession, mockRequireAccess, sessionRepo } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockRequireAccess: vi.fn(),
-  sessionRepo: { findByCollection: vi.fn() },
+  sessionRepo: { findByCollectionAndCurator: vi.fn() },
 }));
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
@@ -21,8 +21,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockGetSession.mockResolvedValue({ user: { id: "u1" } });
   mockRequireAccess.mockResolvedValue({ id: "coll_01ABC", slug: "summer-bags", name: "Summer Bags" });
-  sessionRepo.findByCollection.mockResolvedValue([
-    { id: "sess_zzz", number: 3, goal: "Discover", status: "completed", createdAt: new Date("2026-01-03") },
+  sessionRepo.findByCollectionAndCurator.mockResolvedValue([
+    { id: "sess_zzz", number: 3, curatorId: "u1", goal: "Discover", status: "completed", createdAt: new Date("2026-01-03") },
   ]);
 });
 
@@ -36,8 +36,8 @@ describe("SortPage session links", () => {
   });
 
   it("active-session Resume/Details links use the session number, not the ULID", async () => {
-    sessionRepo.findByCollection.mockResolvedValue([
-      { id: "sess_active", number: 4, goal: "Discover", status: "active", createdAt: new Date("2026-01-04") },
+    sessionRepo.findByCollectionAndCurator.mockResolvedValue([
+      { id: "sess_active", number: 4, curatorId: "u1", goal: "Discover", status: "active", createdAt: new Date("2026-01-04") },
     ]);
     const ui = await SortPage({ params: { id: "summer-bags" } });
     render(ui);

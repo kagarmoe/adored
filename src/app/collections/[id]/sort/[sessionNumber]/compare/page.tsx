@@ -40,6 +40,11 @@ export default async function ComparePage({ params }: ComparePageProps) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
+  // purses-t9l: each user sorts independently — only the session's curator may compare in it.
+  if (sortSession.curatorId !== session.user.id) {
+    redirect(`/collections/${collection.slug ?? collection.id}/sort`);
+  }
+
   const [items, preferences, decisions] = await Promise.all([
     itemRepo.findByCollection(collection.id),
     prefRepo.findByCollection(collection.id, session.user.id),
