@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import type { Item } from "@/types";
 import { itemDisplayName, itemInitial } from "@/lib/items";
-import { Button } from "@/components/ui";
+import { Button, CardImage } from "@/components/ui";
 
 interface CompareChoiceProps {
   sessionId: string;
@@ -64,19 +63,15 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
             className="group flex flex-col overflow-hidden rounded-card border border-hairline bg-surface text-left transition-shadow duration-200 ease-gentle hover:shadow-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-accent-aqua">
-              {hero ? (
-                <Image
-                  src={hero}
-                  alt={itemDisplayName(item)}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
-              ) : (
-                <span className="font-display text-6xl text-ink-soft" aria-hidden>
-                  {itemInitial(item)}
-                </span>
-              )}
+              <CardImage
+                src={hero}
+                alt={itemDisplayName(item)}
+                fallback={
+                  <span className="font-display text-6xl text-ink-soft" aria-hidden>
+                    {itemInitial(item)}
+                  </span>
+                }
+              />
             </div>
             <div className="p-4">
               <h3 className="text-ink">{pending === key ? "Saving…" : itemDisplayName(item)}</h3>

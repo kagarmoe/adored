@@ -25,6 +25,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // Stub next/image in unit tests so URL normalization doesn't interfere.
+      "next/image": path.resolve(__dirname, "./src/__mocks__/next-image.tsx"),
     },
   },
 });

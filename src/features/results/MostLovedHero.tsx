@@ -1,8 +1,7 @@
 import type { Item } from "@/types";
 import { itemDisplayName, itemInitial } from "@/lib/items";
-import { Card } from "@/components/ui";
+import { Card, CardImage } from "@/components/ui";
 import Link from "next/link";
-import Image from "next/image";
 
 interface MostLovedHeroProps {
   item: Item;
@@ -19,19 +18,15 @@ export function MostLovedHero({ item, collectionId, heroPhotoUrl }: MostLovedHer
         <div className="flex flex-col md:flex-row">
           {/* The photograph is the loudest thing on screen. */}
           <div className="relative aspect-[4/3] md:aspect-auto md:w-2/5 md:self-stretch bg-accent-aqua flex items-center justify-center overflow-hidden">
-            {heroPhotoUrl ? (
-              <Image
-                src={heroPhotoUrl}
-                alt={itemDisplayName(item)}
-                fill
-                className="object-cover"
-                unoptimized
-              />
-            ) : (
-              <span className="font-display text-7xl text-ink-soft/70" aria-hidden>
-                {itemInitial(item)}
-              </span>
-            )}
+            <CardImage
+              src={heroPhotoUrl}
+              alt={itemDisplayName(item)}
+              fallback={
+                <span className="font-display text-7xl text-ink-soft/70" aria-hidden>
+                  {itemInitial(item)}
+                </span>
+              }
+            />
           </div>
 
           {/* The affirmation, held in calm. */}

@@ -3,6 +3,9 @@ import { eq } from "drizzle-orm";
 import { user, collectionsTable } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
 import { getTestDb, resetDb, closeDb } from "./db";
+import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 
 // A known user every spec can log in as via the Credentials provider.
 export const BASELINE_USER = {
@@ -58,6 +61,40 @@ export async function seedCollections(
     ids.push(id);
   }
   return ids;
+}
+
+/**
+ * Seed a complete triage scenario owned by `ownerId`: a collection (with slug),
+ * one item, one hero photo (placeholder blobKey — the e2e intercepts /file), and
+ * an active sort session. Returns the ids the spec needs.
+ */
+export async function seedTriageScenario(ownerId: string): Promise<{
+  collectionId: string;
+  slug: string;
+  sessionId: string;
+}> {
+  const { db } = getTestDb();
+  const collectionId = generateId("col");
+  const slug = `e2e-triage-bags-${collectionId}`;
+  await db.insert(collectionsTable).values({
+    id: collectionId,
+    ownerId,
+    name: "E2E Triage Bags",
+    slug,
+  });
+  const item = await new ItemRepository(db).create({ collectionId });
+  await new PhotoRepository(db).create({
+    itemId: item.id,
+    collectionId,
+    blobKey: "e2e-placeholder",
+    filename: "e2e-placeholder.jpg",
+    mimeType: "image/jpeg",
+    fileSize: 1,
+    uploadedBy: ownerId,
+    isHero: true,
+  });
+  const session = await new SessionRepository(db).create({ collectionId, curatorId: ownerId });
+  return { collectionId, slug, sessionId: session.id };
 }
 
 // Allow running directly (tsx e2e/fixtures/seed.ts) for manual verification.

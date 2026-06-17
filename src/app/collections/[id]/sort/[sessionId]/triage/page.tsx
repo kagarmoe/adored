@@ -5,6 +5,8 @@ import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
+import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
 import { Card, EmptyState } from "@/components/ui";
 import { DecisionControls } from "@/features/sorting/DecisionControls";
@@ -37,6 +39,12 @@ export default async function TriagePage({ params }: TriagePageProps) {
 
   const preferencesByItemId = new Map(preferences.map((p) => [p.itemId, p]));
   const item = items.find((i) => !preferencesByItemId.has(i.id)) || null;
+
+  const photoRepo = new PhotoRepository(db);
+  const covers = item ? await photoRepo.findCoverPhotosByItemIds([item.id]) : new Map();
+  const cover = item ? covers.get(item.id) : undefined;
+  const heroPhotoUrl = cover ? getPhotoAssetUrlForPhoto(cover, collection.id) : undefined;
+
   const totalItems = items.length;
   const triaged = preferences.length;
 
@@ -70,7 +78,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
           <EmptyState heading="All items triaged!" message="You&apos;ve completed triage for all items. View results to see your ranked order." />
         ) : (
           <>
-            <ItemCard item={item} collectionId={collection.slug ?? collection.id} imageClassName="h-64" />
+            <ItemCard item={item} collectionId={collection.slug ?? collection.id} heroPhotoUrl={heroPhotoUrl} imageClassName="h-64" />
             <Card padding="lg">
               <DecisionControls
                 sessionId={params.sessionId}
