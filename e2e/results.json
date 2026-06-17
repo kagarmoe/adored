@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f23682d60244cb4a78e746cdc77fe8f56c0fd3db",
-        "commitHash": "f23682d60244cb4a78e746cdc77fe8f56c0fd3db",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27663161041"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/e5b1c185bb3154fa8393cea8101832cd489fcdd5",
+        "commitHash": "e5b1c185bb3154fa8393cea8101832cd489fcdd5",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27704584676"
       },
       "gitCommit": {
-        "shortHash": "f23682d",
-        "hash": "f23682d60244cb4a78e746cdc77fe8f56c0fd3db",
-        "subject": "Cards render hero photos on triage/compare/results (purses-nkp) (#195)",
-        "body": "Cards render hero photos on triage/compare/results (purses-nkp) (#195)\n\n* docs(purses-nkp): design spec for card image rendering\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): raise testing bar — route + UI tests for every touched surface\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): fold in CC0 image fixtures + hermetic browser image test\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): harden spec per adversarial review\n\n- add un-mocked DB-backed /file authz test (slug 404 / id 200 / IDOR 403)\n- broken-image onError fallback to initial (tone)\n- page-level slug-vs-id guard with distinct fixtures\n- enumerate per-page mocks (page render tests are net-new)\n- trim redundant component tests (components already done)\n- surface results-grid catalog tension for design gate\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): implementation plan (9 tasks, TDD)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): fix /file test import depth; simplify PhotoRepository mock\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): plan review fixes — DB test runs in CI; results empty-state noted\n\n- relocate /file authz test to src/lib/db so CI db-tests job collects it\n- note intentional EmptyState behavior change on results\n- clarify red-first assertion on triage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-nkp): CardImage leaf — photo with graceful fallback\n\n* refactor(purses-nkp): cards render via CardImage (onError-safe)\n\n* feat(purses-nkp): triage renders item hero photo\n\n* feat(purses-nkp): compare renders both hero photos\n\n* feat(purses-nkp): results renders hero + ranked photos via collection.id\n\n* test(purses-nkp): DB-backed /file authz seam (slug 404 / id 200 / IDOR 403)\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-nkp): add ~10 CC0/public-domain image fixtures + LICENSES\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-nkp): e2e triage hero image via fixture interception\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-nkp): assert slug-absence on heroB, results grid, and e2e /file URL\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* fix(purses-nkp): unique e2e triage slug so 3-project Playwright run doesn't collide\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "e5b1c18",
+        "hash": "e5b1c185bb3154fa8393cea8101832cd489fcdd5",
+        "subject": "P0: close live cross-tenant authz holes in the API (purses-uxh) (#196)",
+        "body": "P0: close live cross-tenant authz holes in the API (purses-uxh) (#196)\n\n* docs(purses-uxh): P0 authz hotfix plan (guard under src/server/dal)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-uxh): requireApiCollectionAccess member-or-owner API guard\n\n* fix(purses-uxh): scope+authorize collection invitations (token leak / self-invite)\n\n* fix(purses-uxh): authorize session before recording decisions (cross-tenant write)\n\n* fix(purses-uxh): authorize collection on session create/list\n\n* fix(purses-uxh): authorize session's collection on get/update/delete\n\n* fix(purses-uxh): authorize collection on item list/create\n\n* fix(purses-uxh): set-hero verifies item/photo belong to collection + access\n\n* fix(purses-uxh): members/[mid] belongs-to-parent + guard GET\n\n* fix(purses-uxh): sort pages verify session belongs to the resolved collection\n\n* fix(purses-uxh): guard collection-scoped session routes (list/create/active) + set-hero test assertion\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1781665806000
+          "time": 1781714277000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1781665806000
+          "time": 1781714277000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f23682d60244cb4a78e746cdc77fe8f56c0fd3db",
-            "commitHash": "f23682d60244cb4a78e746cdc77fe8f56c0fd3db",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27663161041"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/e5b1c185bb3154fa8393cea8101832cd489fcdd5",
+            "commitHash": "e5b1c185bb3154fa8393cea8101832cd489fcdd5",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27704584676"
           },
           "gitCommit": {
-            "shortHash": "f23682d",
-            "hash": "f23682d60244cb4a78e746cdc77fe8f56c0fd3db",
-            "subject": "Cards render hero photos on triage/compare/results (purses-nkp) (#195)",
-            "body": "Cards render hero photos on triage/compare/results (purses-nkp) (#195)\n\n* docs(purses-nkp): design spec for card image rendering\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): raise testing bar — route + UI tests for every touched surface\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): fold in CC0 image fixtures + hermetic browser image test\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): harden spec per adversarial review\n\n- add un-mocked DB-backed /file authz test (slug 404 / id 200 / IDOR 403)\n- broken-image onError fallback to initial (tone)\n- page-level slug-vs-id guard with distinct fixtures\n- enumerate per-page mocks (page render tests are net-new)\n- trim redundant component tests (components already done)\n- surface results-grid catalog tension for design gate\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): implementation plan (9 tasks, TDD)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): fix /file test import depth; simplify PhotoRepository mock\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): plan review fixes — DB test runs in CI; results empty-state noted\n\n- relocate /file authz test to src/lib/db so CI db-tests job collects it\n- note intentional EmptyState behavior change on results\n- clarify red-first assertion on triage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-nkp): CardImage leaf — photo with graceful fallback\n\n* refactor(purses-nkp): cards render via CardImage (onError-safe)\n\n* feat(purses-nkp): triage renders item hero photo\n\n* feat(purses-nkp): compare renders both hero photos\n\n* feat(purses-nkp): results renders hero + ranked photos via collection.id\n\n* test(purses-nkp): DB-backed /file authz seam (slug 404 / id 200 / IDOR 403)\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-nkp): add ~10 CC0/public-domain image fixtures + LICENSES\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-nkp): e2e triage hero image via fixture interception\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-nkp): assert slug-absence on heroB, results grid, and e2e /file URL\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* fix(purses-nkp): unique e2e triage slug so 3-project Playwright run doesn't collide\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "e5b1c18",
+            "hash": "e5b1c185bb3154fa8393cea8101832cd489fcdd5",
+            "subject": "P0: close live cross-tenant authz holes in the API (purses-uxh) (#196)",
+            "body": "P0: close live cross-tenant authz holes in the API (purses-uxh) (#196)\n\n* docs(purses-uxh): P0 authz hotfix plan (guard under src/server/dal)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-uxh): requireApiCollectionAccess member-or-owner API guard\n\n* fix(purses-uxh): scope+authorize collection invitations (token leak / self-invite)\n\n* fix(purses-uxh): authorize session before recording decisions (cross-tenant write)\n\n* fix(purses-uxh): authorize collection on session create/list\n\n* fix(purses-uxh): authorize session's collection on get/update/delete\n\n* fix(purses-uxh): authorize collection on item list/create\n\n* fix(purses-uxh): set-hero verifies item/photo belong to collection + access\n\n* fix(purses-uxh): members/[mid] belongs-to-parent + guard GET\n\n* fix(purses-uxh): sort pages verify session belongs to the resolved collection\n\n* fix(purses-uxh): guard collection-scoped session routes (list/create/active) + set-hero test assertion\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781665806000
+              "time": 1781714277000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781665806000
+              "time": 1781714277000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f23682d60244cb4a78e746cdc77fe8f56c0fd3db",
-            "commitHash": "f23682d60244cb4a78e746cdc77fe8f56c0fd3db",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27663161041"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/e5b1c185bb3154fa8393cea8101832cd489fcdd5",
+            "commitHash": "e5b1c185bb3154fa8393cea8101832cd489fcdd5",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27704584676"
           },
           "gitCommit": {
-            "shortHash": "f23682d",
-            "hash": "f23682d60244cb4a78e746cdc77fe8f56c0fd3db",
-            "subject": "Cards render hero photos on triage/compare/results (purses-nkp) (#195)",
-            "body": "Cards render hero photos on triage/compare/results (purses-nkp) (#195)\n\n* docs(purses-nkp): design spec for card image rendering\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): raise testing bar — route + UI tests for every touched surface\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): fold in CC0 image fixtures + hermetic browser image test\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): harden spec per adversarial review\n\n- add un-mocked DB-backed /file authz test (slug 404 / id 200 / IDOR 403)\n- broken-image onError fallback to initial (tone)\n- page-level slug-vs-id guard with distinct fixtures\n- enumerate per-page mocks (page render tests are net-new)\n- trim redundant component tests (components already done)\n- surface results-grid catalog tension for design gate\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): implementation plan (9 tasks, TDD)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): fix /file test import depth; simplify PhotoRepository mock\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): plan review fixes — DB test runs in CI; results empty-state noted\n\n- relocate /file authz test to src/lib/db so CI db-tests job collects it\n- note intentional EmptyState behavior change on results\n- clarify red-first assertion on triage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-nkp): CardImage leaf — photo with graceful fallback\n\n* refactor(purses-nkp): cards render via CardImage (onError-safe)\n\n* feat(purses-nkp): triage renders item hero photo\n\n* feat(purses-nkp): compare renders both hero photos\n\n* feat(purses-nkp): results renders hero + ranked photos via collection.id\n\n* test(purses-nkp): DB-backed /file authz seam (slug 404 / id 200 / IDOR 403)\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-nkp): add ~10 CC0/public-domain image fixtures + LICENSES\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-nkp): e2e triage hero image via fixture interception\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-nkp): assert slug-absence on heroB, results grid, and e2e /file URL\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* fix(purses-nkp): unique e2e triage slug so 3-project Playwright run doesn't collide\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "e5b1c18",
+            "hash": "e5b1c185bb3154fa8393cea8101832cd489fcdd5",
+            "subject": "P0: close live cross-tenant authz holes in the API (purses-uxh) (#196)",
+            "body": "P0: close live cross-tenant authz holes in the API (purses-uxh) (#196)\n\n* docs(purses-uxh): P0 authz hotfix plan (guard under src/server/dal)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-uxh): requireApiCollectionAccess member-or-owner API guard\n\n* fix(purses-uxh): scope+authorize collection invitations (token leak / self-invite)\n\n* fix(purses-uxh): authorize session before recording decisions (cross-tenant write)\n\n* fix(purses-uxh): authorize collection on session create/list\n\n* fix(purses-uxh): authorize session's collection on get/update/delete\n\n* fix(purses-uxh): authorize collection on item list/create\n\n* fix(purses-uxh): set-hero verifies item/photo belong to collection + access\n\n* fix(purses-uxh): members/[mid] belongs-to-parent + guard GET\n\n* fix(purses-uxh): sort pages verify session belongs to the resolved collection\n\n* fix(purses-uxh): guard collection-scoped session routes (list/create/active) + set-hero test assertion\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781665806000
+              "time": 1781714277000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781665806000
+              "time": 1781714277000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f23682d60244cb4a78e746cdc77fe8f56c0fd3db",
-            "commitHash": "f23682d60244cb4a78e746cdc77fe8f56c0fd3db",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27663161041"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/e5b1c185bb3154fa8393cea8101832cd489fcdd5",
+            "commitHash": "e5b1c185bb3154fa8393cea8101832cd489fcdd5",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27704584676"
           },
           "gitCommit": {
-            "shortHash": "f23682d",
-            "hash": "f23682d60244cb4a78e746cdc77fe8f56c0fd3db",
-            "subject": "Cards render hero photos on triage/compare/results (purses-nkp) (#195)",
-            "body": "Cards render hero photos on triage/compare/results (purses-nkp) (#195)\n\n* docs(purses-nkp): design spec for card image rendering\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): raise testing bar — route + UI tests for every touched surface\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): fold in CC0 image fixtures + hermetic browser image test\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): harden spec per adversarial review\n\n- add un-mocked DB-backed /file authz test (slug 404 / id 200 / IDOR 403)\n- broken-image onError fallback to initial (tone)\n- page-level slug-vs-id guard with distinct fixtures\n- enumerate per-page mocks (page render tests are net-new)\n- trim redundant component tests (components already done)\n- surface results-grid catalog tension for design gate\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): implementation plan (9 tasks, TDD)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): fix /file test import depth; simplify PhotoRepository mock\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): plan review fixes — DB test runs in CI; results empty-state noted\n\n- relocate /file authz test to src/lib/db so CI db-tests job collects it\n- note intentional EmptyState behavior change on results\n- clarify red-first assertion on triage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-nkp): CardImage leaf — photo with graceful fallback\n\n* refactor(purses-nkp): cards render via CardImage (onError-safe)\n\n* feat(purses-nkp): triage renders item hero photo\n\n* feat(purses-nkp): compare renders both hero photos\n\n* feat(purses-nkp): results renders hero + ranked photos via collection.id\n\n* test(purses-nkp): DB-backed /file authz seam (slug 404 / id 200 / IDOR 403)\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-nkp): add ~10 CC0/public-domain image fixtures + LICENSES\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-nkp): e2e triage hero image via fixture interception\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-nkp): assert slug-absence on heroB, results grid, and e2e /file URL\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* fix(purses-nkp): unique e2e triage slug so 3-project Playwright run doesn't collide\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "e5b1c18",
+            "hash": "e5b1c185bb3154fa8393cea8101832cd489fcdd5",
+            "subject": "P0: close live cross-tenant authz holes in the API (purses-uxh) (#196)",
+            "body": "P0: close live cross-tenant authz holes in the API (purses-uxh) (#196)\n\n* docs(purses-uxh): P0 authz hotfix plan (guard under src/server/dal)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-uxh): requireApiCollectionAccess member-or-owner API guard\n\n* fix(purses-uxh): scope+authorize collection invitations (token leak / self-invite)\n\n* fix(purses-uxh): authorize session before recording decisions (cross-tenant write)\n\n* fix(purses-uxh): authorize collection on session create/list\n\n* fix(purses-uxh): authorize session's collection on get/update/delete\n\n* fix(purses-uxh): authorize collection on item list/create\n\n* fix(purses-uxh): set-hero verifies item/photo belong to collection + access\n\n* fix(purses-uxh): members/[mid] belongs-to-parent + guard GET\n\n* fix(purses-uxh): sort pages verify session belongs to the resolved collection\n\n* fix(purses-uxh): guard collection-scoped session routes (list/create/active) + set-hero test assertion\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781665806000
+              "time": 1781714277000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781665806000
+              "time": 1781714277000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f23682d60244cb4a78e746cdc77fe8f56c0fd3db",
-            "commitHash": "f23682d60244cb4a78e746cdc77fe8f56c0fd3db",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27663161041"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/e5b1c185bb3154fa8393cea8101832cd489fcdd5",
+            "commitHash": "e5b1c185bb3154fa8393cea8101832cd489fcdd5",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27704584676"
           },
           "gitCommit": {
-            "shortHash": "f23682d",
-            "hash": "f23682d60244cb4a78e746cdc77fe8f56c0fd3db",
-            "subject": "Cards render hero photos on triage/compare/results (purses-nkp) (#195)",
-            "body": "Cards render hero photos on triage/compare/results (purses-nkp) (#195)\n\n* docs(purses-nkp): design spec for card image rendering\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): raise testing bar — route + UI tests for every touched surface\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): fold in CC0 image fixtures + hermetic browser image test\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): harden spec per adversarial review\n\n- add un-mocked DB-backed /file authz test (slug 404 / id 200 / IDOR 403)\n- broken-image onError fallback to initial (tone)\n- page-level slug-vs-id guard with distinct fixtures\n- enumerate per-page mocks (page render tests are net-new)\n- trim redundant component tests (components already done)\n- surface results-grid catalog tension for design gate\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): implementation plan (9 tasks, TDD)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): fix /file test import depth; simplify PhotoRepository mock\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-nkp): plan review fixes — DB test runs in CI; results empty-state noted\n\n- relocate /file authz test to src/lib/db so CI db-tests job collects it\n- note intentional EmptyState behavior change on results\n- clarify red-first assertion on triage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-nkp): CardImage leaf — photo with graceful fallback\n\n* refactor(purses-nkp): cards render via CardImage (onError-safe)\n\n* feat(purses-nkp): triage renders item hero photo\n\n* feat(purses-nkp): compare renders both hero photos\n\n* feat(purses-nkp): results renders hero + ranked photos via collection.id\n\n* test(purses-nkp): DB-backed /file authz seam (slug 404 / id 200 / IDOR 403)\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-nkp): add ~10 CC0/public-domain image fixtures + LICENSES\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-nkp): e2e triage hero image via fixture interception\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-nkp): assert slug-absence on heroB, results grid, and e2e /file URL\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* fix(purses-nkp): unique e2e triage slug so 3-project Playwright run doesn't collide\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "e5b1c18",
+            "hash": "e5b1c185bb3154fa8393cea8101832cd489fcdd5",
+            "subject": "P0: close live cross-tenant authz holes in the API (purses-uxh) (#196)",
+            "body": "P0: close live cross-tenant authz holes in the API (purses-uxh) (#196)\n\n* docs(purses-uxh): P0 authz hotfix plan (guard under src/server/dal)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-uxh): requireApiCollectionAccess member-or-owner API guard\n\n* fix(purses-uxh): scope+authorize collection invitations (token leak / self-invite)\n\n* fix(purses-uxh): authorize session before recording decisions (cross-tenant write)\n\n* fix(purses-uxh): authorize collection on session create/list\n\n* fix(purses-uxh): authorize session's collection on get/update/delete\n\n* fix(purses-uxh): authorize collection on item list/create\n\n* fix(purses-uxh): set-hero verifies item/photo belong to collection + access\n\n* fix(purses-uxh): members/[mid] belongs-to-parent + guard GET\n\n* fix(purses-uxh): sort pages verify session belongs to the resolved collection\n\n* fix(purses-uxh): guard collection-scoped session routes (list/create/active) + set-hero test assertion\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781665806000
+              "time": 1781714277000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781665806000
+              "time": 1781714277000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 800,
+                  "duration": 950,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:12:55.393Z",
+                  "startTime": "2026-06-17T16:41:10.996Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -303,12 +303,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3388,
+                  "duration": 5203,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:12:56.704Z",
+                  "startTime": "2026-06-17T16:41:12.627Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -337,12 +337,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1624,
+                  "duration": 2271,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:00.523Z",
+                  "startTime": "2026-06-17T16:41:18.535Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -371,12 +371,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1276,
+                  "duration": 1623,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:11.968Z",
+                  "startTime": "2026-06-17T16:41:33.481Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -405,12 +405,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1844,
+                  "duration": 2441,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:13.391Z",
+                  "startTime": "2026-06-17T16:41:35.283Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -439,12 +439,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 910,
+                  "duration": 1051,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:24.630Z",
+                  "startTime": "2026-06-17T16:41:49.148Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -473,12 +473,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1005,
+                  "duration": 1141,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:25.828Z",
+                  "startTime": "2026-06-17T16:41:50.522Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -515,12 +515,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1345,
+                  "duration": 1666,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:02.182Z",
+                  "startTime": "2026-06-17T16:41:20.837Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -549,12 +549,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1309,
+                  "duration": 1514,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:03.577Z",
+                  "startTime": "2026-06-17T16:41:22.555Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -583,12 +583,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1898,
+                  "duration": 2341,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:04.916Z",
+                  "startTime": "2026-06-17T16:41:24.102Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -617,12 +617,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1247,
+                  "duration": 1513,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:15.267Z",
+                  "startTime": "2026-06-17T16:41:37.769Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -651,12 +651,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1247,
+                  "duration": 1566,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:16.558Z",
+                  "startTime": "2026-06-17T16:41:39.336Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -685,12 +685,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1385,
+                  "duration": 1730,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:17.828Z",
+                  "startTime": "2026-06-17T16:41:40.932Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -719,12 +719,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 643,
+                  "duration": 747,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:26.852Z",
+                  "startTime": "2026-06-17T16:41:51.712Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -753,12 +753,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 623,
+                  "duration": 735,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:27.532Z",
+                  "startTime": "2026-06-17T16:41:52.498Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -787,12 +787,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 940,
+                  "duration": 1151,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:28.169Z",
+                  "startTime": "2026-06-17T16:41:53.258Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -829,12 +829,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 633,
+                  "duration": 854,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:06.846Z",
+                  "startTime": "2026-06-17T16:41:26.477Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -863,12 +863,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 737,
+                  "duration": 929,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:07.542Z",
+                  "startTime": "2026-06-17T16:41:27.382Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -897,12 +897,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 641,
+                  "duration": 833,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:19.240Z",
+                  "startTime": "2026-06-17T16:41:42.698Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -931,12 +931,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 711,
+                  "duration": 807,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:19.934Z",
+                  "startTime": "2026-06-17T16:41:43.607Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -965,12 +965,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 229,
+                  "duration": 303,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:29.127Z",
+                  "startTime": "2026-06-17T16:41:54.437Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -999,12 +999,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 324,
+                  "duration": 406,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:29.395Z",
+                  "startTime": "2026-06-17T16:41:54.780Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1041,12 +1041,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 949,
+                  "duration": 1163,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:08.303Z",
+                  "startTime": "2026-06-17T16:41:28.336Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1075,12 +1075,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 687,
+                  "duration": 1104,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:09.271Z",
+                  "startTime": "2026-06-17T16:41:29.535Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1109,12 +1109,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 629,
+                  "duration": 836,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:09.982Z",
+                  "startTime": "2026-06-17T16:41:30.672Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1143,12 +1143,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 697,
+                  "duration": 732,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:20.674Z",
+                  "startTime": "2026-06-17T16:41:44.451Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1177,12 +1177,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 592,
+                  "duration": 627,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:21.396Z",
+                  "startTime": "2026-06-17T16:41:45.209Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1211,12 +1211,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 626,
+                  "duration": 876,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:22.009Z",
+                  "startTime": "2026-06-17T16:41:45.871Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1245,12 +1245,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 216,
+                  "duration": 261,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:29.736Z",
+                  "startTime": "2026-06-17T16:41:55.209Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1279,12 +1279,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 219,
+                  "duration": 264,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:29.964Z",
+                  "startTime": "2026-06-17T16:41:55.487Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1313,12 +1313,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 256,
+                  "duration": 282,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T03:13:30.195Z",
+                  "startTime": "2026-06-17T16:41:55.766Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1362,12 +1362,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 708,
+                      "duration": 1190,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-17T03:13:10.630Z",
+                      "startTime": "2026-06-17T16:41:31.543Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1396,12 +1396,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1031,
+                      "duration": 1285,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-17T03:13:22.668Z",
+                      "startTime": "2026-06-17T16:41:46.772Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1430,12 +1430,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 391,
+                      "duration": 469,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-17T03:13:30.466Z",
+                      "startTime": "2026-06-17T16:41:56.066Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1455,8 +1455,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-17T03:11:57.060Z",
-    "duration": 94086.569,
+    "startTime": "2026-06-17T16:40:04.447Z",
+    "duration": 112408.06599999999,
     "expected": 34,
     "skipped": 0,
     "unexpected": 0,
