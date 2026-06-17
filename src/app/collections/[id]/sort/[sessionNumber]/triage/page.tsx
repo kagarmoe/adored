@@ -13,7 +13,7 @@ import { DecisionControls } from "@/features/sorting/DecisionControls";
 import { ItemCard } from "@/features/items/ItemCard";
 
 interface TriagePageProps {
-  params: { id: string; sessionId: string };
+  params: { id: string; sessionNumber: string };
 }
 
 export default async function TriagePage({ params }: TriagePageProps) {
@@ -27,9 +27,13 @@ export default async function TriagePage({ params }: TriagePageProps) {
   const itemRepo = new ItemRepository(db);
   const sessionRepo = new SessionRepository(db);
   const prefRepo = new CollectionPreferenceItemRepository(db);
+
+  const sessionNumber = Number(params.sessionNumber);
   const [items, sortSession, preferences] = await Promise.all([
     itemRepo.findByCollection(collection.id),
-    sessionRepo.findById(params.sessionId),
+    sessionNumber > 0 && Number.isInteger(sessionNumber)
+      ? sessionRepo.findByCollectionAndNumber(collection.id, sessionNumber)
+      : Promise.resolve(null),
     prefRepo.findByCollection(collection.id, session.user.id),
   ]);
 
@@ -53,7 +57,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
         { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${params.sessionId}` },
+        { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}` },
         { label: "Triage" },
       ]}
     >
@@ -81,7 +85,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
             <ItemCard item={item} collectionId={collection.slug ?? collection.id} heroPhotoUrl={heroPhotoUrl} imageClassName="h-64" />
             <Card padding="lg">
               <DecisionControls
-                sessionId={params.sessionId}
+                sessionId={sortSession.id}
                 type="triage"
                 decisions={[
                   { label: "Love", decision: { itemId: item.id, result: "top" } },

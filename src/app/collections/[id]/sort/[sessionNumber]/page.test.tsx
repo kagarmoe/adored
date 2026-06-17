@@ -7,7 +7,7 @@ const { mockGetSession, mockRequireAccess, redirectMock, sessionRepo, decisionRe
   mockGetSession: vi.fn(),
   mockRequireAccess: vi.fn(),
   redirectMock: vi.fn(() => { throw new Error("REDIRECT"); }),
-  sessionRepo: { findById: vi.fn() },
+  sessionRepo: { findByCollectionAndNumber: vi.fn() },
   decisionRepo: { findBySession: vi.fn() },
   itemRepo: { findByCollection: vi.fn() },
   prefRepo: { findByCollection: vi.fn() },
@@ -34,15 +34,23 @@ beforeEach(() => {
   decisionRepo.findBySession.mockResolvedValue([]);
 });
 
-describe("SessionDetailPage session/collection integrity", () => {
-  it("redirects when the session belongs to a different collection", async () => {
-    sessionRepo.findById.mockResolvedValue({ id: "s1", collectionId: "coll_OTHER", status: "active" });
-    await expect(SessionDetailPage({ params: { id: "summer-bags", sessionId: "s1" } })).rejects.toThrow("REDIRECT");
+describe("SessionDetailPage resolution + integrity guard", () => {
+  it("redirects when the resolved session belongs to a different collection (guard survives)", async () => {
+    sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "s1", collectionId: "coll_OTHER", number: 1, status: "active", curatorId: "u1" });
+    await expect(SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } })).rejects.toThrow("REDIRECT");
     expect(redirectMock).toHaveBeenCalled();
   });
+  it("redirects when no session has that number", async () => {
+    sessionRepo.findByCollectionAndNumber.mockResolvedValue(null);
+    await expect(SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "9" } })).rejects.toThrow("REDIRECT");
+  });
+  it("redirects on a non-numeric segment without hitting the repo", async () => {
+    await expect(SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "abc" } })).rejects.toThrow("REDIRECT");
+    expect(sessionRepo.findByCollectionAndNumber).not.toHaveBeenCalled();
+  });
   it("renders when the session belongs to the resolved collection", async () => {
-    sessionRepo.findById.mockResolvedValue({ id: "s1", collectionId: "coll_REAL", status: "active" });
-    const ui = await SessionDetailPage({ params: { id: "summer-bags", sessionId: "s1" } });
+    sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "s1", collectionId: "coll_REAL", number: 1, status: "active", curatorId: "u1" });
+    const ui = await SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } });
     render(ui);
     expect(redirectMock).not.toHaveBeenCalled();
   });
