@@ -25,6 +25,145 @@ Every task implicitly includes these. Values copied verbatim.
 - **UI PRs ship light + dark screenshots** (`docs/cookbook/add-images-to-pr.md` / `/github-pr-screenshots`). Seed photo rows directly with private blobs if images are needed (Vercel-Blob client-upload callback can't reach localhost).
 - **Beads/gh-sync is OFF.** Manage beads manually; do not re-enable.
 
+## Review revisions (folded in after adversarial review, 2026-06-17)
+
+The adversarial review returned **CONCERNS** (no BLOCK). These deltas supersede the
+corresponding task steps; apply them when you reach each task.
+
+**R1 — (Architect, MEDIUM) Kill the null-number deploy window.** After the migration
+deploys but before the backfill runs, legacy sessions/results have `number = NULL`, so
+list links render `/sort/null` / "Result #null" and clicking bounces to the list (no
+fallback exists for numbers). **Fix:** fold the idempotent backfill into the deploy. In
+`package.json`, change `vercel-build` from `npm run db:migrate && next build` to:
+
+```json
+    "vercel-build": "npm run db:migrate && npm run db:backfill-numbers && next build",
+```
+
+The backfill is idempotent (`WHERE number IS NULL` → no-op once done), so it is safe to
+leave in permanently. Also add to Task 11 Step 5 smoke: "a **legacy (null-number)** session
+in the list links to a real number after deploy, not `/sort/null`." (Do this in Task 6.)
+
+**R2 — (QA, HIGH) Triage integrity-guard test must prove the guard *halts*.** Task 7 Step 7's
+triage guard test reuses triage's non-throwing `redirect` mock, so the page keeps executing
+and renders a cross-tenant UI while the test only checks `redirect` was called. **Fix:** in
+`triage/page.test.tsx` AND `compare/page.test.tsx`, switch the `next/navigation` mock to the
+throwing form and assert `rejects.toThrow`:
+
+```tsx
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn(() => { throw new Error("REDIRECT"); }),
+  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
+}));
+```
+```tsx
+  it("redirects (and halts) when the resolved session belongs to a different collection", async () => {
+    sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_x", collectionId: "coll_OTHER", number: 1, status: "active", curatorId: "u1" });
+    await expect(TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } })).rejects.toThrow("REDIRECT");
+  });
+```
+The hero happy-path tests still pass (matching collection → no redirect → no throw).
+
+**R3 — (QA, MED) Backfill test must cover `sort_results`.** Task 6 Step 1 only exercises
+`sessionsTable`. Add a second `it` (same file) for the no-`deletedAt` table:
+
+```ts
+  it("numbers sort_results oldest-first per collection (no deletedAt column)", async () => {
+    const { db } = getTestDb();
+    const { sortResultsTable } = await import("@/lib/db/schema");
+    const c = await new CollectionRepository(db).create({ id: generateId("coll"), ownerId: "u_bf", name: "BF2" });
+    const raw = (createdAt: Date, name: string) => db.insert(sortResultsTable).values({
+      id: generateId("result"), collectionId: c.id, curatorId: "u_bf", status: "draft",
+      name, number: null, createdAt, updatedAt: createdAt, finalizedAt: null,
+    });
+    await raw(new Date("2026-02-02"), "B");
+    await raw(new Date("2026-02-01"), "A");
+    await backfillTable(db, sortResultsTable);
+    const rows = await db.select({ number: sortResultsTable.number, name: sortResultsTable.name })
+      .from(sortResultsTable).where(eq(sortResultsTable.collectionId, c.id)).orderBy(asc(sortResultsTable.createdAt));
+    expect(rows.map((r) => r.number)).toEqual([1, 2]); // A (older) = 1, B = 2
+  });
+```
+
+**R4 — (Architect/Data, MED) Backfill ordering determinism + the soft-delete invariant.** In
+`src/lib/db/backfill-numbers.ts`, make ordering deterministic on `createdAt` ties and pin why
+`deletedAt` is intentionally NOT filtered:
+
+```ts
+  const rows = await db
+    .select({ id: table.id, collectionId: table.collectionId })
+    .from(table)
+    // No deletedAt filter: a soft-deleted session still owns its slot in the
+    // (collection_id, number) unique index; numbering it (like getNextSessionNumber's
+    // MAX-over-all-rows) prevents future number reuse/collision. asc(id) breaks
+    // same-millisecond createdAt ties for deterministic numbering.
+    .where(isNull(table.number))
+    .orderBy(asc(table.createdAt), asc(table.id));
+```
+
+**R5 — (QA, MED) Race-retry unit test must prove the number is *recomputed*.** In BOTH
+`SessionRepository.alloc.test.ts` and `SortResultRepository.alloc.test.ts`, capture the
+`values()` arg and vary the stubbed max so the retry recomputes. Replace the db stub + retry
+test (session shown; mirror for results with `sort_results_collection_number_unique` + `row(4)`):
+
+```ts
+const { selectWhere, valuesSpy, insertReturning } = vi.hoisted(() => ({
+  selectWhere: vi.fn(),
+  valuesSpy: vi.fn(() => ({ returning: insertReturningRef.fn })),
+  insertReturning: vi.fn(),
+}));
+// simpler: keep insertReturning, make valuesSpy return the returning chain:
+const insertReturning = vi.fn();
+const valuesSpy = vi.fn(() => ({ returning: insertReturning }));
+const db = {
+  select: () => ({ from: () => ({ where: selectWhere }) }),
+  insert: () => ({ values: valuesSpy }),
+} as any;
+```
+```ts
+  it("retries on the (collection,number) race AND recomputes the next number", async () => {
+    selectWhere.mockResolvedValueOnce([{ max: 5 }]).mockResolvedValueOnce([{ max: 6 }]);
+    insertReturning
+      .mockRejectedValueOnce({ code: "23505", message: 'unique constraint "sessions_collection_number_unique"' })
+      .mockResolvedValueOnce([row(7)]);
+    const s = await new SessionRepository(db).create({ collectionId: "c1", curatorId: "u1" });
+    expect(s.number).toBe(7);
+    expect(valuesSpy.mock.calls[0][0].number).toBe(6); // first attempt tried 6
+    expect(valuesSpy.mock.calls[1][0].number).toBe(7); // retry recomputed to 7
+  });
+```
+(Keep the happy-path and the "does NOT retry sessions_active_unique/unrelated" tests; set their
+`selectWhere` per-test instead of in `beforeEach`.)
+
+**R6 — (Data, low) Non-concurrent index note.** In Task 1 Step 4, add: the `CREATE UNIQUE
+INDEX` is built **non-concurrently** (drizzle-kit + the transactional postgres-js migrator
+can't emit `CONCURRENTLY`), so it briefly write-locks the table — acceptable only because
+`sessions`/`sort_results` are tiny; do not copy this pattern onto a large table.
+
+**R7 — (Architect, low) Notes for the PR body.** (a) A **third** session-create path exists —
+`/api/collections/[id]/sessions` POST → `SessionController.createSession` → `repo.create()` —
+so it inherits number allocation for free once Task 3 lands; confirm its `route.test.ts` still
+passes (it returns the repo entity). (b) New sessions created via `/api/sessions` now use the
+repo's `sess_` id prefix instead of `session_`; IDs are opaque and never parsed, so historical
+`session_` IDs keep resolving. (c) Tighten the existing `src/app/api/sessions/route.test.ts`
+`selectWhere` stub to `[{ max: 0 }]` for honesty (currently `[{ id: "s1" }]` works only via
+`?? 0`).
+
+**R8 — (QA, optional) Un-mocked page→repo→DB resolver+guard test.** The page→repo seam is only
+ever mocked. The repo→DB resolution is covered un-mocked (Tasks 3c/4c), and arg-order is
+type-checked, so this is optional — but if added, follow the `src/lib/db/file-route-authz.integration.test.ts`
+precedent (import a real route/repo pair, seed a cross-collection row, assert the guard).
+
+**R9 — DECISION PENDING (Craftsman/QA): SessionCompleteScreen + `/api/sort-results` POST.**
+`SessionCompleteScreen` is **dead code** (zero call sites; sole caller of `POST /api/sort-results`,
+which itself currently has no callers reachable in the UI). Task 9 Steps 4–5 add props + a test
+to it, and Task 5 Step 2 adds an authz guard to that endpoint. The authz fix is P1-security work
+with a dedicated home (`purses-51h` under epic `purses-pv9`). **Resolve before implementing
+Tasks 5 & 9** — see the two beads filed (`purses-*`) and the kickoff summary. Until resolved,
+do **not** implement Task 9 Steps 4–5 or Task 5 Step 2.
+
+---
+
 ## File Structure
 
 **Created:**
