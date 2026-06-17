@@ -41,31 +41,31 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   const dashboardLinks = [
     {
       label: "Items",
-      href: `/collections/${collection.id}/items`,
+      href: `/collections/${collection.slug ?? collection.id}/items`,
       description: "Manage items in this collection",
       icon: "📦",
     },
     {
       label: "Sort",
-      href: `/collections/${collection.id}/sort`,
+      href: `/collections/${collection.slug ?? collection.id}/sort`,
       description: "Start a sorting session",
       icon: "📊",
     },
     {
       label: "Results",
-      href: `/collections/${collection.id}/results`,
+      href: `/collections/${collection.slug ?? collection.id}/results`,
       description: "View sorting results",
       icon: "🎯",
     },
     {
       label: "Members",
-      href: `/collections/${collection.id}/members`,
+      href: `/collections/${collection.slug ?? collection.id}/members`,
       description: "Manage collaborators",
       icon: "👥",
     },
     {
       label: "Settings",
-      href: `/collections/${collection.id}/edit`,
+      href: `/collections/${collection.slug ?? collection.id}/edit`,
       description: "Edit collection details",
       icon: "⚙️",
     },
@@ -112,7 +112,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
                 </p>
               </div>
               <div className="flex gap-2">
-                <Link href={`/collections/${collection.id}/sort/${activeSession.id}`}>
+                <Link href={`/collections/${collection.slug ?? collection.id}/sort/${activeSession.number}`}>
                   <Button>Resume</Button>
                 </Link>
                 <Button variant="secondary">Abandon</Button>

@@ -45,11 +45,11 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         ) : (
           <div className="space-y-3">
             {results.map((result) => (
-              <Link key={result.id} href={`/collections/${collection.slug ?? collection.id}/results/${result.id}`}>
+              <Link key={result.id} href={`/collections/${collection.slug ?? collection.id}/results/${result.number}`}>
                 <Card interactive padding="md">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-ink">Result #{result.id.slice(0, 8)}</p>
+                      <p className="font-semibold text-ink">Result #{result.number}</p>
                       <p className="text-sm text-ink-soft">{result.name}</p>
                       <div className="mt-2">
                         <Badge variant={result.status}>{result.status}</Badge>

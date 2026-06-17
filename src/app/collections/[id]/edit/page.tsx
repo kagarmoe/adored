@@ -22,7 +22,7 @@ export default async function EditCollectionPage({ params }: EditPageProps) {
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.id}` },
+        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
         { label: "Edit" },
       ]}
     >
