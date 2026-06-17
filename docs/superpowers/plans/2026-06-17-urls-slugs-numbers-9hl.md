@@ -154,13 +154,14 @@ ever mocked. The repo→DB resolution is covered un-mocked (Tasks 3c/4c), and ar
 type-checked, so this is optional — but if added, follow the `src/lib/db/file-route-authz.integration.test.ts`
 precedent (import a real route/repo pair, seed a cross-collection row, assert the guard).
 
-**R9 — DECISION PENDING (Craftsman/QA): SessionCompleteScreen + `/api/sort-results` POST.**
-`SessionCompleteScreen` is **dead code** (zero call sites; sole caller of `POST /api/sort-results`,
-which itself currently has no callers reachable in the UI). Task 9 Steps 4–5 add props + a test
-to it, and Task 5 Step 2 adds an authz guard to that endpoint. The authz fix is P1-security work
-with a dedicated home (`purses-51h` under epic `purses-pv9`). **Resolve before implementing
-Tasks 5 & 9** — see the two beads filed (`purses-*`) and the kickoff summary. Until resolved,
-do **not** implement Task 9 Steps 4–5 or Task 5 Step 2.
+**R9 — RESOLVED (Option A): SessionCompleteScreen kept+fixed; `/api/sort-results` POST deferred.**
+`SessionCompleteScreen` is dead code but the bead names it, so 9hl **keeps** Task 9 Steps 4–5
+(fix its slug+number URL generation + the component test; its `fetch` response is mocked, so the
+test is valid even though the component is unmounted). 9hl does **NOT** touch `/api/sort-results`
+POST: routing it through the repo AND adding the missing collection-access guard are **moved to
+`purses-axn`** (P1 security). Task 5 below is now **sessions-only** — its old sort-results step
+and the sort-results route test are removed. The sessions POST (the live session-create path)
+stays in 9hl.
 
 ---
 
@@ -175,7 +176,6 @@ do **not** implement Task 9 Steps 4–5 or Task 5 Step 2.
 - `src/lib/db/backfill-numbers.integration.test.ts` (DB-gated)
 - `src/server/repositories/implementations/SessionRepository.alloc.test.ts` (unit; number alloc + race retry)
 - `src/server/repositories/implementations/SortResultRepository.alloc.test.ts` (unit)
-- `src/app/api/sort-results/route.test.ts` (route handler test — currently none)
 - Net-new page/component tests: `results/page.test.tsx`, `sort/page.test.tsx`, `collections/[id]/page.test.tsx`, `results/[resultNumber]/finalize/page.test.tsx`, `StartSessionForm.test.tsx`, `FinalizeResultForm.test.tsx`, `SessionCompleteScreen.test.tsx`
 
 **Renamed (directory + co-located test):**
@@ -964,16 +964,16 @@ git commit -m "feat(purses-9hl): SortResultRepository number allocation + findBy
 
 ---
 
-## Task 5: Route the POST handlers through the repositories (so numbers are allocated)
+## Task 5: Route the sessions POST through the repository (so session numbers are allocated)
 
-Both POST handlers currently insert directly via `db.insert(...)`, bypassing the repos — so without this task a session/result created in the live app gets `number = NULL` and is unreachable by number. Route them through `repo.create()`, the single source of allocation.
+The `/api/sessions` POST currently inserts directly via `db.insert(...)`, bypassing the repo — so without this a session created on the live path (StartSessionForm → `/api/sessions`) gets `number = NULL` and is unreachable by number. Route it through `SessionRepository.create()`, where allocation lives.
+
+> **Scope (review R9):** the `/api/sort-results` POST changes (repo-routing + the missing collection-access guard) are **deferred to `purses-axn`** (P1 security), NOT done here. 9hl does not touch `/api/sort-results`. Its only caller, `SessionCompleteScreen`, is dead; its URL generation is still fixed in Task 9.
 
 **Files:**
 - Modify: `src/app/api/sessions/route.ts`
-- Modify: `src/app/api/sort-results/route.ts`
-- Create: `src/app/api/sort-results/route.test.ts`
 
-**Interfaces consumed:** `SessionRepository.create({collectionId, curatorId, goal})` and `SortResultRepository.create({collectionId, curatorId, name, status})` from Tasks 3–4.
+**Interfaces consumed:** `SessionRepository.create({collectionId, curatorId, goal})` from Task 3.
 
 - [ ] **Step 1: `/api/sessions` POST → `SessionRepository.create`**
 
@@ -1009,114 +1009,19 @@ export async function POST(req: NextRequest) {
 
 (Leave `GET` unchanged.)
 
-- [ ] **Step 2: `/api/sort-results` POST → `SortResultRepository.create` + add the missing access guard**
+- [ ] **Step 2: Verify the existing sessions route test still passes + tighten the stub (R7c)**
 
-This handler today has **no collection-access check** (a cross-tenant write hole) and its only caller is the unmounted `SessionCompleteScreen`. While routing it through the repo, add the same owner-or-member guard `/api/sessions` uses. This is a deliberate, minimal drive-by security fix — flag it for the security gate.
+The new POST constructs `new SessionRepository(db)`, whose `create` calls `db.select` (getNextSessionNumber) then `db.insert` — both already stubbed by the existing test's `getDb` mock, so it passes unchanged (confirmed in review). For honesty, update the `selectWhere` stub in `src/app/api/sessions/route.test.ts` (line ~23) from `[{ id: "s1" }]` to `[{ max: 0 }]`.
 
-Replace `src/app/api/sort-results/route.ts`:
+Run: `npx vitest run src/app/api/sessions/route.test.ts`
+Expected: PASS (POST 401/403/201, GET 400/403/200).
 
-```ts
-import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
-import { getSession } from "@/lib/auth";
-import { requireApiCollectionAccess } from "@/server/dal/collection-access";
-import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
-
-interface CreateResultRequest {
-  sessionId: string;
-  collectionId: string;
-  name: string;
-}
-
-export async function POST(req: NextRequest) {
-  const session = await getSession();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const body: CreateResultRequest = await req.json();
-  if (!body.collectionId) return NextResponse.json({ error: "collectionId is required" }, { status: 400 });
-  const db = getDb();
-  const access = await requireApiCollectionAccess(db, body.collectionId, session.user.id);
-  if (access instanceof NextResponse) return access;
-
-  const result = await new SortResultRepository(db).create({
-    collectionId: body.collectionId,
-    curatorId: session.user.id,
-    name: body.name,
-    status: "draft",
-  });
-  return NextResponse.json(result, { status: 201 });
-}
-```
-
-- [ ] **Step 3: Write the `/api/sort-results` route test**
-
-```ts
-// src/app/api/sort-results/route.test.ts
-import { describe, expect, it, vi, beforeEach } from "vitest";
-
-const { mockGetSession, mockGetDb, selectWhere, insertReturning, collectionRepo, membershipRepo } = vi.hoisted(() => ({
-  mockGetSession: vi.fn(),
-  mockGetDb: vi.fn(),
-  selectWhere: vi.fn(),
-  insertReturning: vi.fn(),
-  collectionRepo: { findById: vi.fn() },
-  membershipRepo: { findByUser: vi.fn() },
-}));
-vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
-vi.mock("@/lib/db", () => ({ getDb: mockGetDb }));
-vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({ CollectionRepository: vi.fn(() => collectionRepo) }));
-vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({ MembershipRepository: vi.fn(() => membershipRepo) }));
-
-import { POST } from "./route";
-
-beforeEach(() => {
-  vi.clearAllMocks();
-  mockGetSession.mockResolvedValue({ user: { id: "u1" } });
-  selectWhere.mockResolvedValue([{ max: 0 }]);
-  insertReturning.mockResolvedValue([{ id: "res_1", number: 1 }]);
-  mockGetDb.mockReturnValue({
-    select: () => ({ from: () => ({ where: selectWhere }) }),
-    insert: () => ({ values: () => ({ returning: insertReturning }) }),
-  });
-  collectionRepo.findById.mockResolvedValue({ id: "c1", ownerId: "u9" });
-  membershipRepo.findByUser.mockResolvedValue({ id: "m1" });
-});
-
-const postReq = (body: any) => ({ json: async () => body }) as any;
-
-describe("POST /api/sort-results", () => {
-  it("401 unauthenticated", async () => {
-    mockGetSession.mockResolvedValue(null);
-    expect((await POST(postReq({ collectionId: "c1", name: "R" }))).status).toBe(401);
-  });
-  it("400 without collectionId", async () => {
-    expect((await POST(postReq({ name: "R" }))).status).toBe(400);
-  });
-  it("403 when not member or owner — and does NOT insert", async () => {
-    membershipRepo.findByUser.mockResolvedValue(null);
-    const res = await POST(postReq({ collectionId: "c1", name: "R" }));
-    expect(res.status).toBe(403);
-    expect(insertReturning).not.toHaveBeenCalled();
-  });
-  it("201 for a member, returning the numbered result", async () => {
-    const res = await POST(postReq({ collectionId: "c1", name: "R" }));
-    expect(res.status).toBe(201);
-    expect((await res.json()).number).toBe(1);
-  });
-});
-```
-
-- [ ] **Step 4: Run the route tests (sessions test must still pass unchanged)**
-
-Run: `npx vitest run src/app/api/sessions/route.test.ts src/app/api/sort-results/route.test.ts`
-Expected: both PASS. (The existing `sessions` route test's `getDb` mock already stubs both `select` and `insert`, so `SessionRepository.create` works through it unchanged.)
-
-- [ ] **Step 5: Type-check + commit**
+- [ ] **Step 3: Type-check + commit**
 
 ```bash
 npx tsc --noEmit
-git add src/app/api/sessions/route.ts src/app/api/sort-results/route.ts src/app/api/sort-results/route.test.ts
-git commit -m "feat(purses-9hl): allocate numbers via repo on session/result create; guard sort-results POST"
+git add src/app/api/sessions/route.ts src/app/api/sessions/route.test.ts
+git commit -m "feat(purses-9hl): allocate session number via repo on /api/sessions POST"
 ```
 
 ---
@@ -2335,16 +2240,17 @@ git commit -am "chore(purses-9hl): verification sweep — no residual raw-ULID U
 - **Backfill 1..n by createdAt, idempotent (A):** Task 6 + DB test. ✓
 - **Route renames + parse-int + resolve + redirect-on-miss + pass ULID down (B):** Tasks 7–8 mirror the proven `items/[itemNumber]` pattern; clients get `sortSession.id` / `result.id`. ✓
 - **#196 guard preserved + tested (constraint):** Tasks 7–8 keep `entity.collectionId !== collection.id` and add a test that returns a mismatched-collection entity → redirect. No `params.id` comparison anywhere. ✓
-- **API stays ULID-only (B):** Task 5 routes POSTs through repos but bodies/paths stay ULID; component tests assert API calls use the ULID, not the number. ✓
+- **API stays ULID-only (B):** Task 5 routes the **sessions** POST through the repo (sort-results POST deferred to `purses-axn`, review R9); bodies/paths stay ULID; component tests assert API calls use the ULID, not the number. ✓
 - **Fix the 4 generators #190 missed (D):** `StartSessionForm` (T9), `collections/[id]/page.tsx` resume (T10), `FinalizeResultForm` (T8), `SessionCompleteScreen` (T9). Plus `results/page.tsx:52` label uses `result.number` (T10). ✓ — and the broader sweep also fixes the *partial*-ULID generators #190 left (`sort/page.tsx`, `results/page.tsx` links, dashboard tiles, edit breadcrumb) so the "no raw ULIDs" goal actually holds.
 - **Backward-compat (B):** old session/result number-miss → redirect to list (T7/T8 NaN + null tests); old collection ULID → resolver fallback (unchanged). ✓
 - **Testing bar:** every touched route + UI element has a real `test:ci` test; DB tests in `src/lib/db/`; auth mock is the flat-replace form throughout. ✓
 
 ## Observations surfaced (NOT in this bead — for follow-up)
 
-1. **`SessionCompleteScreen` is dead code** (rendered nowhere) and appears to be the *only* trigger for creating sort-results. So results may never be created in the live app today. Worth a bead to wire it (or confirm another creation path). This plan fixes its URLs + adds the missing `/api/sort-results` POST guard regardless.
-2. **`/api/sort-results` POST had no collection-access check** (cross-tenant write hole). Task 5 adds the owner-or-member guard as a minimal drive-by fix; flag it for the `vibe-security` / `adversarial-review` gate.
-3. **Triage decisions bug** — tracked separately as **purses-t9l** (decision saves but item may not advance; suspects: 500 in preference recalc, or a curatorId mismatch in `ScoringService.computePreferences`). Unrelated to these URL changes.
+1. **`SessionCompleteScreen` is dead code** (rendered nowhere) and is the *only* trigger for creating sort-results — so results may never be created in the live app today. Tracked as **`purses-r7p`** (verify/repair the results-creation flow). This plan still fixes its URL generation + tests it (decision R9, Option A), since the bead names it and it'll be ready when wired.
+2. **`/api/sort-results` POST/PATCH/finalize lack collection-access checks** (cross-tenant write / IDOR). **Moved out of 9hl** (decision R9) and tracked as **`purses-axn`** (P1, under epic `purses-pv9`); 9hl no longer touches these endpoints.
+3. **Allocation idiom now in 4 repos** (verbatim copy, correct for this PR) — possible future unification tracked as **`purses-2q2`** (P3).
+4. **Triage decisions bug** — tracked separately as **purses-t9l** (decision saves but item may not advance; suspects: 500 in preference recalc, or a curatorId mismatch in `ScoringService.computePreferences`). Unrelated to these URL changes.
 
 ## Done criteria (maps to bead acceptance)
 
