@@ -71,7 +71,7 @@ export async function seedCollections(
 export async function seedTriageScenario(ownerId: string): Promise<{
   collectionId: string;
   slug: string;
-  sessionId: string;
+  sessionNumber: number;
 }> {
   const { db } = getTestDb();
   const collectionId = generateId("col");
@@ -94,7 +94,9 @@ export async function seedTriageScenario(ownerId: string): Promise<{
     isHero: true,
   });
   const session = await new SessionRepository(db).create({ collectionId, curatorId: ownerId });
-  return { collectionId, slug, sessionId: session.id };
+  // URLs resolve sessions by their per-collection number now (#purses-9hl), not the ULID.
+  if (session.number == null) throw new Error("seedTriageScenario: session.number was not allocated");
+  return { collectionId, slug, sessionNumber: session.number };
 }
 
 // Allow running directly (tsx e2e/fixtures/seed.ts) for manual verification.
