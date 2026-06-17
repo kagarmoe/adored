@@ -3,13 +3,17 @@ import { requireAuth } from "@/lib/auth";
 import { ShareController } from "@/server/api/shares";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { getDb } from "@/lib/db";
+import { requireApiResultAccess } from "@/server/dal/collection-access";
 
 export async function GET(
-  _request: NextRequest
+  _request: NextRequest,
+  { params }: { params: { id: string } }
 ) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const db = getDb();
+    const access = await requireApiResultAccess(db, params.id, user.id);
+    if (access instanceof NextResponse) return access;
     const shareRepo = new SortResultShareRepository(db);
     const controller = new ShareController(shareRepo);
     const shares = await controller.listShares();
@@ -27,9 +31,11 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const body = await request.json();
     const db = getDb();
+    const access = await requireApiResultAccess(db, params.id, user.id);
+    if (access instanceof NextResponse) return access;
     const shareRepo = new SortResultShareRepository(db);
     const controller = new ShareController(shareRepo);
     const share = await controller.createShare(params.id, body);
