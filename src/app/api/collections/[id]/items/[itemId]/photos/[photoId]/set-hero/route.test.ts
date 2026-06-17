@@ -44,7 +44,9 @@ describe("POST set-hero", () => {
   });
   it("404 when the photo is not on the item", async () => {
     photoRepo.findById.mockResolvedValue({ id: "p1", itemId: "OTHER" });
-    expect((await call()).status).toBe(404);
+    const res = await call();
+    expect(res.status).toBe(404);
+    expect(photoRepo.setHero).not.toHaveBeenCalled();
   });
   it("403 when not member or owner — and does NOT set hero", async () => {
     membershipRepo.findByUser.mockResolvedValue(null);
