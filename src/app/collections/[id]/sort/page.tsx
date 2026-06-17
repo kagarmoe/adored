@@ -53,10 +53,10 @@ export default async function SortPage({ params }: SortPageProps) {
                 </p>
               </div>
               <div className="flex gap-3">
-                <Link href={`/collections/${collection.slug ?? collection.id}/sort/${activeSession.id}`}>
+                <Link href={`/collections/${collection.slug ?? collection.id}/sort/${activeSession.number}`}>
                   <Button>Resume</Button>
                 </Link>
-                <Link href={`/collections/${collection.slug ?? collection.id}/sort/${activeSession.id}`}>
+                <Link href={`/collections/${collection.slug ?? collection.id}/sort/${activeSession.number}`}>
                   <Button variant="secondary">Details</Button>
                 </Link>
               </div>
@@ -76,7 +76,7 @@ export default async function SortPage({ params }: SortPageProps) {
         ) : (
           <div className="space-y-3">
             {sessions.map((s) => (
-              <Link key={s.id} href={`/collections/${collection.slug ?? collection.id}/sort/${s.id}`}>
+              <Link key={s.id} href={`/collections/${collection.slug ?? collection.id}/sort/${s.number}`}>
                 <Card interactive padding="md">
                   <div className="flex items-center justify-between">
                     <div>

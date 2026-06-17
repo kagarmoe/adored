@@ -14,7 +14,7 @@ import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepo
 import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
 
 interface ComparePageProps {
-  params: { id: string; sessionId: string };
+  params: { id: string; sessionNumber: string };
 }
 
 export default async function ComparePage({ params }: ComparePageProps) {
@@ -29,16 +29,22 @@ export default async function ComparePage({ params }: ComparePageProps) {
   const sessionRepo = new SessionRepository(db);
   const prefRepo = new CollectionPreferenceItemRepository(db);
   const decisionRepo = new DecisionEventRepository(db);
-  const [items, sortSession, preferences, decisions] = await Promise.all([
-    itemRepo.findByCollection(collection.id),
-    sessionRepo.findById(params.sessionId),
-    prefRepo.findByCollection(collection.id, session.user.id),
-    decisionRepo.findBySession(params.sessionId),
-  ]);
+
+  const sessionNumber = Number(params.sessionNumber);
+  const sortSession =
+    sessionNumber > 0 && Number.isInteger(sessionNumber)
+      ? await sessionRepo.findByCollectionAndNumber(collection.id, sessionNumber)
+      : null;
 
   if (!sortSession || sortSession.collectionId !== collection.id) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
+
+  const [items, preferences, decisions] = await Promise.all([
+    itemRepo.findByCollection(collection.id),
+    prefRepo.findByCollection(collection.id, session.user.id),
+    decisionRepo.findBySession(sortSession.id),
+  ]);
 
   if (items.length < 2) {
     return (
@@ -46,7 +52,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
         breadcrumbs={[
           { label: "Collections", href: "/collections" },
           { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-          { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${params.sessionId}` },
+          { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}` },
           { label: "Compare" },
         ]}
       >
@@ -79,7 +85,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
         breadcrumbs={[
           { label: "Collections", href: "/collections" },
           { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-          { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${params.sessionId}` },
+          { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}` },
           { label: "Compare" },
         ]}
       >
@@ -105,7 +111,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
         { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${params.sessionId}` },
+        { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}` },
         { label: "Compare" },
       ]}
     >
@@ -119,7 +125,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
           <EmptyState heading="Need at least two items" message="Add more items to use pairwise comparison" />
         ) : (
           <CompareChoice
-            sessionId={params.sessionId}
+            sessionId={sortSession.id}
             itemA={itemA}
             itemB={itemB}
             heroA={heroA}

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { sessionsTable } from "@/lib/db/schema";
-import { generateId } from "@/lib/id";
 import { getSession } from "@/lib/auth";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
+import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
@@ -16,13 +16,11 @@ export async function POST(req: NextRequest) {
   const access = await requireApiCollectionAccess(db, collectionId, session.user.id);
   if (access instanceof NextResponse) return access;
 
-  const [newSession] = await db.insert(sessionsTable).values({
-    id: generateId("session"),
+  const newSession = await new SessionRepository(db).create({
     collectionId,
     curatorId: session.user.id,
     goal,
-    status: "active",
-  }).returning();
+  });
   return NextResponse.json(newSession, { status: 201 });
 }
 

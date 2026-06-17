@@ -12,7 +12,7 @@ import { SessionAnalytics } from "@/features/sessions/SessionAnalytics";
 import Link from "next/link";
 
 interface SessionPageProps {
-  params: { id: string; sessionId: string };
+  params: { id: string; sessionNumber: string };
 }
 
 export default async function SortSessionPage({ params }: SessionPageProps) {
@@ -27,18 +27,24 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
   const sessionRepo = new SessionRepository(db);
   const prefRepo = new CollectionPreferenceItemRepository(db);
   const decisionRepo = new DecisionEventRepository(db);
+
+  const sessionNumber = Number(params.sessionNumber);
   const [items, sortSession] = await Promise.all([
     itemRepo.findByCollection(collection.id),
-    sessionRepo.findById(params.sessionId),
+    sessionNumber > 0 && Number.isInteger(sessionNumber)
+      ? sessionRepo.findByCollectionAndNumber(collection.id, sessionNumber)
+      : Promise.resolve(null),
   ]);
 
+  // #196 integrity guard — kept verbatim; redundant with the resolver but defends
+  // against any future resolver change. Never compare against params.id.
   if (!sortSession || sortSession.collectionId !== collection.id) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
   const [preferences, decisions] = await Promise.all([
     prefRepo.findByCollection(collection.id, sortSession.curatorId),
-    decisionRepo.findBySession(params.sessionId),
+    decisionRepo.findBySession(sortSession.id),
   ]);
 
   const bucketCounts = {
@@ -107,7 +113,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
         </Card>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <Link href={`/collections/${collection.slug ?? collection.id}/sort/${params.sessionId}/triage`}>
+          <Link href={`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}/triage`}>
             <Card interactive padding="lg">
               <h2 className="text-lg text-ink">Triage</h2>
               <p className="mt-2 text-sm text-ink-soft">Quickly bucket one item at a time.</p>
@@ -116,7 +122,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
               </div>
             </Card>
           </Link>
-          <Link href={`/collections/${collection.slug ?? collection.id}/sort/${params.sessionId}/compare`}>
+          <Link href={`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}/compare`}>
             <Card interactive padding="lg">
               <h2 className="text-lg text-ink">Compare</h2>
               <p className="mt-2 text-sm text-ink-soft">Pick between pairs to refine ranking.</p>

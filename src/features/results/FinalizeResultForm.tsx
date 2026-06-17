@@ -8,10 +8,11 @@ import { Button, Card, Input } from "@/components/ui";
 interface FinalizeResultFormProps {
   collectionId: string;
   resultId: string;
+  resultNumber: number | null;
   defaultName: string;
 }
 
-export function FinalizeResultForm({ collectionId, resultId, defaultName }: FinalizeResultFormProps) {
+export function FinalizeResultForm({ collectionId, resultId, resultNumber, defaultName }: FinalizeResultFormProps) {
   const router = useRouter();
   const [name, setName] = useState(defaultName);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +44,7 @@ export function FinalizeResultForm({ collectionId, resultId, defaultName }: Fina
       return;
     }
 
-    router.push(`/collections/${collectionId}/results/${resultId}`);
+    router.push(`/collections/${collectionId}/results/${resultNumber}`);
     router.refresh();
   }
 

@@ -3,10 +3,11 @@ import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-const { mockGetSession, mockRequireAccess, resultRepo, resultItemRepo, itemRepo, shareRepo, photoRepo } = vi.hoisted(() => ({
+const { mockGetSession, mockRequireAccess, redirectMock, resultRepo, resultItemRepo, itemRepo, shareRepo, photoRepo } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockRequireAccess: vi.fn(),
-  resultRepo: { findById: vi.fn() },
+  redirectMock: vi.fn(() => { throw new Error("REDIRECT"); }),
+  resultRepo: { findByCollectionAndNumber: vi.fn() },
   resultItemRepo: { findByResult: vi.fn() },
   itemRepo: { findByCollection: vi.fn() },
   shareRepo: { findByResult: vi.fn() },
@@ -15,7 +16,7 @@ const { mockGetSession, mockRequireAccess, resultRepo, resultItemRepo, itemRepo,
 
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
-vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
+vi.mock("next/navigation", () => ({ redirect: redirectMock }));
 vi.mock("@/components/layout", () => ({ AppLayout: ({ children }: any) => <div>{children}</div> }));
 vi.mock("@/lib/collection-access", () => ({ requireCollectionAccess: mockRequireAccess }));
 vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({ SortResultRepository: vi.fn(() => resultRepo) }));
@@ -34,7 +35,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockGetSession.mockResolvedValue({ user: { id: "u1" } });
   mockRequireAccess.mockResolvedValue(COLLECTION);
-  resultRepo.findById.mockResolvedValue({ id: "res_1", collectionId: "coll_01ABCDEF", name: "My ranking", status: "draft" });
+  resultRepo.findByCollectionAndNumber.mockResolvedValue({ id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "My ranking", status: "draft" });
   resultItemRepo.findByResult.mockResolvedValue([
     { id: "ri_1", itemId: "item_hero", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null },
     { id: "ri_2", itemId: "item_rest", computedRank: 2, manualRank: null, computedBucket: "high", manualBucket: null },
@@ -49,16 +50,29 @@ beforeEach(() => {
   );
 });
 
-describe("ResultDetailPage hero images", () => {
+describe("ResultDetailPage hero images (nkp) + resolution", () => {
   it("renders hero + ranked images using collection.id, batch-loaded once", async () => {
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultId: "res_1" } });
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
     render(ui);
     const hero = await screen.findByRole("img", { name: "Hero Bag" });
     const rest = await screen.findByRole("img", { name: "Rest Bag" });
     expect(hero.getAttribute("src")).toContain("coll_01ABCDEF");
     expect(hero.getAttribute("src")).not.toContain("summer-bags");
     expect(rest.getAttribute("src")).toContain("coll_01ABCDEF");
-    expect(rest.getAttribute("src")).not.toContain("summer-bags");
     expect(photoRepo.findCoverPhotosByItemIds).toHaveBeenCalledTimes(1);
+    expect(resultItemRepo.findByResult).toHaveBeenCalledWith("res_1"); // dependent query uses the ULID
+  });
+
+  it("redirects when the resolved result belongs to a different collection (guard survives)", async () => {
+    resultRepo.findByCollectionAndNumber.mockResolvedValue({ id: "res_x", collectionId: "coll_OTHER", number: 1, name: "X", status: "draft" });
+    await expect(ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } })).rejects.toThrow("REDIRECT");
+  });
+  it("redirects when no result has that number", async () => {
+    resultRepo.findByCollectionAndNumber.mockResolvedValue(null);
+    await expect(ResultDetailPage({ params: { id: "summer-bags", resultNumber: "5" } })).rejects.toThrow("REDIRECT");
+  });
+  it("redirects on a non-numeric segment without hitting the repo", async () => {
+    await expect(ResultDetailPage({ params: { id: "summer-bags", resultNumber: "abc" } })).rejects.toThrow("REDIRECT");
+    expect(resultRepo.findByCollectionAndNumber).not.toHaveBeenCalled();
   });
 });

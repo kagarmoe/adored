@@ -5,11 +5,11 @@ import { seedBaseline, seedTriageScenario } from "./fixtures/seed";
 test.describe("triage hero image", () => {
   let collectionId: string;
   let slug: string;
-  let sessionId: string;
+  let sessionNumber: number;
 
   test.beforeAll(async () => {
     const ownerId = await seedBaseline();
-    ({ collectionId, slug, sessionId } = await seedTriageScenario(ownerId));
+    ({ collectionId, slug, sessionNumber } = await seedTriageScenario(ownerId));
   });
 
   test("renders the item's hero photo, requested via the collection ULID", async ({ page }) => {
@@ -21,7 +21,7 @@ test.describe("triage hero image", () => {
     const fileRequest = page.waitForRequest(
       (r) => r.url().includes("/file") && r.url().includes(collectionId) && !r.url().includes(slug),
     );
-    await page.goto(`/collections/${slug}/sort/${sessionId}/triage`);
+    await page.goto(`/collections/${slug}/sort/${sessionNumber}/triage`);
     await fileRequest; // the image URL carried collection.id (ULID), not the slug
 
     await expect(page.getByRole("img").first()).toBeVisible();

@@ -6,7 +6,9 @@ import { Button, Card } from "@/components/ui";
 
 interface SessionCompleteScreenProps {
   sessionId: string;
+  sessionNumber: number | null;
   collectionId: string;
+  collectionSlug: string;
   decisionCount: number;
   bucketCounts: {
     top: number;
@@ -18,7 +20,9 @@ interface SessionCompleteScreenProps {
 
 export function SessionCompleteScreen({
   sessionId,
+  sessionNumber,
   collectionId,
+  collectionSlug,
   decisionCount,
   bucketCounts,
 }: SessionCompleteScreenProps) {
@@ -48,7 +52,7 @@ export function SessionCompleteScreen({
       }
 
       const result = await response.json();
-      router.push(`/collections/${collectionId}/results/${result.id}`);
+      router.push(`/collections/${collectionSlug}/results/${result.number}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate results");
       setLoading(false);
@@ -99,7 +103,7 @@ export function SessionCompleteScreen({
         <div className="flex gap-3 flex-col sm:flex-row">
           <Button
             variant="secondary"
-            onClick={() => router.push(`/collections/${collectionId}/sort/${sessionId}`)}
+            onClick={() => router.push(`/collections/${collectionSlug}/sort/${sessionNumber}`)}
             disabled={loading}
             className="flex-1"
           >

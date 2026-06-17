@@ -9,6 +9,7 @@ export interface ISessionRepository {
   findById(id: string): Promise<Session | null>;
   findActive(collectionId: string, curatorId: string): Promise<Session | null>;
   findByCollection(collectionId: string): Promise<Session[]>;
+  findByCollectionAndNumber(collectionId: string, number: number): Promise<Session | null>;
   update(id: string, data: Partial<Omit<Session, "id" | "createdAt">>): Promise<Session>;
   softDelete(id: string): Promise<Session>;
 }

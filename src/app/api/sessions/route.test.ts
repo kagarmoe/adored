@@ -20,7 +20,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockGetSession.mockResolvedValue({ user: { id: "u1" } });
   insertReturning.mockResolvedValue([{ id: "s1" }]);
-  selectWhere.mockResolvedValue([{ id: "s1" }]);
+  selectWhere.mockResolvedValue([{ max: 0 }]);
   mockGetDb.mockReturnValue({
     insert: () => ({ values: () => ({ returning: insertReturning }) }),
     select: () => ({ from: () => ({ where: selectWhere }) }),
