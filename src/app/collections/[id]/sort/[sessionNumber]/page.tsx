@@ -42,6 +42,11 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
+  // purses-t9l: each user sorts independently — only the session's curator may open it.
+  if (sortSession.curatorId !== session.user.id) {
+    redirect(`/collections/${collection.slug ?? collection.id}/sort`);
+  }
+
   const [preferences, decisions] = await Promise.all([
     prefRepo.findByCollection(collection.id, sortSession.curatorId),
     decisionRepo.findBySession(sortSession.id),

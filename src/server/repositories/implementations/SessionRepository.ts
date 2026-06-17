@@ -103,6 +103,25 @@ export class SessionRepository implements ISessionRepository {
     return sessions.map((s) => this.mapToSession(s));
   }
 
+  // purses-t9l: each user sorts independently — the sort list/dashboard show only
+  // the current user's own sessions, never another curator's.
+  async findByCollectionAndCurator(
+    collectionId: string,
+    curatorId: string,
+  ): Promise<Session[]> {
+    const sessions = await this.db
+      .select()
+      .from(sessionsTable)
+      .where(
+        and(
+          eq(sessionsTable.collectionId, collectionId),
+          eq(sessionsTable.curatorId, curatorId),
+          isNull(sessionsTable.deletedAt),
+        ),
+      );
+    return sessions.map((s) => this.mapToSession(s));
+  }
+
   async update(id: string, data: Partial<Session>): Promise<Session> {
     const [session] = await this.db
       .update(sessionsTable)

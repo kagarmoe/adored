@@ -27,6 +27,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const access = await requireApiCollectionAccess(db, sortSession.collectionId, session.user.id);
   if (access instanceof NextResponse) return access;
 
+  // purses-t9l: each user sorts independently — you may only record decisions in
+  // your OWN session. Cross-curator triage is forbidden, blocked before any write.
+  if (sortSession.curatorId !== session.user.id) {
+    return NextResponse.json(
+      { error: "You can only record decisions in your own sorting session" },
+      { status: 403 },
+    );
+  }
+
   const body: DecisionRequest = await req.json();
   try {
     const [event] = await db.insert(decisionEventsTable).values({

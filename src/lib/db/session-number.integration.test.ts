@@ -64,4 +64,22 @@ describeDb("session number allocation (repo -> DB)", () => {
     await repo.softDelete(s1.id);
     expect(await repo.findByCollectionAndNumber(collection.id, 1)).toBeNull();
   });
+
+  it("findByCollectionAndCurator returns only that curator's sessions in the collection (purses-t9l)", async () => {
+    await seedOwner("u_a", "a@t.dev");
+    await seedOwner("u_b", "b@t.dev");
+    const { db } = getTestDb();
+    const c1 = await newCollection("u_a");
+    const c2 = await newCollection("u_a");
+    const repo = new SessionRepository(db);
+    const a1 = await repo.create({ collectionId: c1.id, curatorId: "u_a" });
+    await repo.create({ collectionId: c1.id, curatorId: "u_b" }); // other curator, same collection
+    await repo.create({ collectionId: c2.id, curatorId: "u_a" }); // same curator, other collection
+
+    const mine = await repo.findByCollectionAndCurator(c1.id, "u_a");
+    expect(mine.map((s) => s.id)).toEqual([a1.id]); // only u_a's session in c1
+
+    await repo.softDelete(a1.id);
+    expect(await repo.findByCollectionAndCurator(c1.id, "u_a")).toHaveLength(0);
+  });
 });

@@ -7,7 +7,7 @@ const { mockGetSession, mockRequireAccess, itemRepo, sessionRepo, resultRepo } =
   mockGetSession: vi.fn(),
   mockRequireAccess: vi.fn(),
   itemRepo: { findByCollection: vi.fn() },
-  sessionRepo: { findByCollection: vi.fn() },
+  sessionRepo: { findByCollectionAndCurator: vi.fn() },
   resultRepo: { findByCollection: vi.fn() },
 }));
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
@@ -26,7 +26,7 @@ beforeEach(() => {
   mockGetSession.mockResolvedValue({ user: { id: "u1" } });
   mockRequireAccess.mockResolvedValue({ id: "coll_01ABC", slug: "summer-bags", name: "Summer Bags", description: null, createdAt: new Date() });
   itemRepo.findByCollection.mockResolvedValue([]);
-  sessionRepo.findByCollection.mockResolvedValue([{ id: "sess_zzz", number: 5, status: "active", goal: "Go" }]);
+  sessionRepo.findByCollectionAndCurator.mockResolvedValue([{ id: "sess_zzz", number: 5, curatorId: "u1", status: "active", goal: "Go" }]);
   resultRepo.findByCollection.mockResolvedValue([]);
 });
 
@@ -39,5 +39,7 @@ describe("CollectionPage nav links", () => {
     expect(hrefs).toContain("/collections/summer-bags/sort/5"); // active session resume
     expect(hrefs.every((h) => !h.includes("coll_01ABC"))).toBe(true);
     expect(hrefs.every((h) => !h.includes("sess_zzz"))).toBe(true);
+    // purses-t9l: the active-session card is scoped to THIS user's sessions.
+    expect(sessionRepo.findByCollectionAndCurator).toHaveBeenCalledWith("coll_01ABC", "u1");
   });
 });
