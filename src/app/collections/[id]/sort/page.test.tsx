@@ -33,6 +33,8 @@ describe("SortPage session links", () => {
     const links = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
     expect(links).toContain("/collections/summer-bags/sort/3");
     expect(links.some((h) => h?.includes("sess_zzz"))).toBe(false);
+    // purses-t9l: the list is scoped to THIS user's sessions (collection.id + the user id).
+    expect(sessionRepo.findByCollectionAndCurator).toHaveBeenCalledWith("coll_01ABC", "u1");
   });
 
   it("active-session Resume/Details links use the session number, not the ULID", async () => {

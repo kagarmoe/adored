@@ -39,5 +39,7 @@ describe("CollectionPage nav links", () => {
     expect(hrefs).toContain("/collections/summer-bags/sort/5"); // active session resume
     expect(hrefs.every((h) => !h.includes("coll_01ABC"))).toBe(true);
     expect(hrefs.every((h) => !h.includes("sess_zzz"))).toBe(true);
+    // purses-t9l: the active-session card is scoped to THIS user's sessions.
+    expect(sessionRepo.findByCollectionAndCurator).toHaveBeenCalledWith("coll_01ABC", "u1");
   });
 });

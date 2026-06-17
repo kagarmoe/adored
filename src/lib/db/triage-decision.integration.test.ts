@@ -44,7 +44,8 @@ function decisionReq(body: unknown): Request {
 }
 
 /**
- * Mirror of the triage page's "current item" predicate (triage/page.tsx:44-45):
+ * Mirror of the triage page's "current item" predicate (the
+ * `items.find(i => !preferencesByItemId.has(i.id))` line in triage/page.tsx):
  * an item is still untriaged for `userId` iff no preferences row exists for
  * (item, userId). Returns the untriaged item ids for the collection+user.
  */

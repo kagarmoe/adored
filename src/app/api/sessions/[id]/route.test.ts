@@ -23,7 +23,8 @@ const req = (body?: any) => ({ json: async () => body }) as any;
 beforeEach(() => {
   vi.clearAllMocks();
   mockGetSession.mockResolvedValue({ user: { id: "u1" } });
-  sessionRepo.findById.mockResolvedValue({ id: "s1", collectionId: "c1" });
+  // Default: the requester (u1) IS the session's curator.
+  sessionRepo.findById.mockResolvedValue({ id: "s1", collectionId: "c1", curatorId: "u1" });
   collectionRepo.findById.mockResolvedValue({ id: "c1", ownerId: "u9" });
   membershipRepo.findByUser.mockResolvedValue({ id: "m1" });
   ctrl.getSession.mockResolvedValue({ id: "s1" });
@@ -40,7 +41,7 @@ describe("/api/sessions/[id]", () => {
     membershipRepo.findByUser.mockResolvedValue(null);
     expect((await GET(req(), { params: { id: "s1" } })).status).toBe(403);
   });
-  it("GET 200 for a member", async () => {
+  it("GET 200 for the session's curator", async () => {
     expect((await GET(req(), { params: { id: "s1" } })).status).toBe(200);
   });
   it("PATCH 403 when not accessible — and does NOT update", async () => {
@@ -55,9 +56,28 @@ describe("/api/sessions/[id]", () => {
     expect(res.status).toBe(403);
     expect(ctrl.deleteSession).not.toHaveBeenCalled();
   });
-  it("DELETE 200 for the owner without a membership row", async () => {
+  it("DELETE 200 for the owner who is also the session's curator (no membership row)", async () => {
     membershipRepo.findByUser.mockResolvedValue(null);
     collectionRepo.findById.mockResolvedValue({ id: "c1", ownerId: "u1" });
     expect((await DELETE(req(), { params: { id: "s1" } })).status).toBe(200);
+  });
+
+  // purses-t9l: each user sorts independently — a member who is not the session's
+  // curator may not read/update/delete it, even with collection access.
+  it("GET 403 when the requester is not the session's curator", async () => {
+    sessionRepo.findById.mockResolvedValue({ id: "s1", collectionId: "c1", curatorId: "u9" });
+    expect((await GET(req(), { params: { id: "s1" } })).status).toBe(403);
+  });
+  it("PATCH 403 when the requester is not the session's curator — and does NOT update", async () => {
+    sessionRepo.findById.mockResolvedValue({ id: "s1", collectionId: "c1", curatorId: "u9" });
+    const res = await PATCH(req({ goal: "x" }), { params: { id: "s1" } });
+    expect(res.status).toBe(403);
+    expect(ctrl.updateSession).not.toHaveBeenCalled();
+  });
+  it("DELETE 403 when the requester is not the session's curator — and does NOT delete", async () => {
+    sessionRepo.findById.mockResolvedValue({ id: "s1", collectionId: "c1", curatorId: "u9" });
+    const res = await DELETE(req(), { params: { id: "s1" } });
+    expect(res.status).toBe(403);
+    expect(ctrl.deleteSession).not.toHaveBeenCalled();
   });
 });

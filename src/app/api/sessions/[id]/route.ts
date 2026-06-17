@@ -13,6 +13,14 @@ async function authorizeSession(db: ReturnType<typeof getDb>, sessionId: string,
   if (!sortSession) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const access = await requireApiCollectionAccess(db, sortSession.collectionId, userId);
   if (access instanceof NextResponse) return access;
+  // purses-t9l: each user sorts independently — only the session's curator may
+  // read, update, or delete it (even other collection members/owners may not).
+  if (sortSession.curatorId !== userId) {
+    return NextResponse.json(
+      { error: "You can only access your own sorting session" },
+      { status: 403 },
+    );
+  }
   return { sessionRepo };
 }
 
