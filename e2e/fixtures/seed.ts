@@ -75,7 +75,7 @@ export async function seedTriageScenario(ownerId: string): Promise<{
 }> {
   const { db } = getTestDb();
   const collectionId = generateId("col");
-  const slug = "e2e-triage-bags";
+  const slug = `e2e-triage-bags-${collectionId}`;
   await db.insert(collectionsTable).values({
     id: collectionId,
     ownerId,
