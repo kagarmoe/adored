@@ -32,7 +32,7 @@ export default async function NewSortSessionPage({ params }: NewSortSessionPageP
           <h1 className="text-3xl text-ink">New Sorting Session</h1>
           <p className="mt-2 text-ink-soft">Choose the goal, scope, and pace for this pass.</p>
         </div>
-        <StartSessionForm collectionId={collection.id} />
+        <StartSessionForm collectionId={collection.id} collectionSlug={collection.slug ?? collection.id} />
       </div>
     </AppLayout>
   );

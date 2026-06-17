@@ -7,9 +7,10 @@ import { Button, Card, Input, Select } from "@/components/ui";
 
 interface StartSessionFormProps {
   collectionId: string;
+  collectionSlug: string;
 }
 
-export function StartSessionForm({ collectionId }: StartSessionFormProps) {
+export function StartSessionForm({ collectionId, collectionSlug }: StartSessionFormProps) {
   const router = useRouter();
   const [goal, setGoal] = useState("Discover favorites");
   const [scope, setScope] = useState("all");
@@ -35,8 +36,8 @@ export function StartSessionForm({ collectionId }: StartSessionFormProps) {
       return;
     }
 
-    const session = await response.json();
-    router.push(`/collections/${collectionId}/sort/${session.id}`);
+    const newSession = await response.json();
+    router.push(`/collections/${collectionSlug}/sort/${newSession.number}`);
     router.refresh();
   }
 
