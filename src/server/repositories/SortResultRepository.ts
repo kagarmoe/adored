@@ -9,6 +9,7 @@ export interface ISortResultRepository {
   }): Promise<SortResult>;
   findById(id: string): Promise<SortResult | null>;
   findByCollection(collectionId: string): Promise<SortResult[]>;
+  findByCollectionAndNumber(collectionId: string, number: number): Promise<SortResult | null>;
   findDraft(collectionId: string, curatorId: string): Promise<SortResult | null>;
   update(id: string, data: Partial<SortResult>): Promise<SortResult>;
 }

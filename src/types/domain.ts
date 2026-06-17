@@ -115,6 +115,7 @@ export interface Session {
   id: string;
   collectionId: string;
   curatorId: string;
+  number: number | null;
   status: SessionStatus;
   goal: string | null;
   createdAt: Date;
@@ -170,6 +171,7 @@ export interface SortResult {
   id: string;
   collectionId: string;
   curatorId: string;
+  number: number | null;
   status: SortResultStatus;
   name: string;
   createdAt: Date;
