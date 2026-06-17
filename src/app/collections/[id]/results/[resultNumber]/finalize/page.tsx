@@ -7,7 +7,7 @@ import { AppLayout } from "@/components/layout";
 import { FinalizeResultForm } from "@/features/results/FinalizeResultForm";
 
 interface FinalizePageProps {
-  params: { id: string; resultId: string };
+  params: { id: string; resultNumber: string };
 }
 
 export default async function FinalizePage({ params }: FinalizePageProps) {
@@ -19,7 +19,12 @@ export default async function FinalizePage({ params }: FinalizePageProps) {
   const db = getDb();
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const resultRepo = new SortResultRepository(db);
-  const result = await resultRepo.findById(params.resultId);
+
+  const resultNumber = Number(params.resultNumber);
+  const result =
+    resultNumber > 0 && Number.isInteger(resultNumber)
+      ? await resultRepo.findByCollectionAndNumber(collection.id, resultNumber)
+      : null;
 
   if (!result || result.collectionId !== collection.id || result.curatorId !== session.user.id) {
     redirect(`/collections/${collection.slug ?? collection.id}/results`);
@@ -39,7 +44,12 @@ export default async function FinalizePage({ params }: FinalizePageProps) {
           <h1 className="text-3xl text-ink">Finalize Results</h1>
           <p className="mt-2 text-ink-soft">Lock the current order and make this result ready to share.</p>
         </div>
-        <FinalizeResultForm collectionId={collection.slug ?? collection.id} resultId={params.resultId} defaultName={result.name} />
+        <FinalizeResultForm
+          collectionId={collection.slug ?? collection.id}
+          resultId={result.id}
+          resultNumber={result.number}
+          defaultName={result.name}
+        />
       </div>
     </AppLayout>
   );

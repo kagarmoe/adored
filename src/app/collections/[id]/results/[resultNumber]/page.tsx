@@ -16,7 +16,7 @@ import { SharePanel } from "@/features/results/SharePanel";
 import Link from "next/link";
 
 interface ResultDetailPageProps {
-  params: { id: string; resultId: string };
+  params: { id: string; resultNumber: string };
 }
 
 const bucketLabels = {
@@ -46,16 +46,22 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
   const resultItemRepo = new SortResultItemRepository(db);
   const itemRepo = new ItemRepository(db);
   const shareRepo = new SortResultShareRepository(db);
-  const [result, resultItems, items, shares] = await Promise.all([
-    resultRepo.findById(params.resultId),
-    resultItemRepo.findByResult(params.resultId),
-    itemRepo.findByCollection(collection.id),
-    shareRepo.findByResult(params.resultId),
-  ]);
+
+  const resultNumber = Number(params.resultNumber);
+  const result =
+    resultNumber > 0 && Number.isInteger(resultNumber)
+      ? await resultRepo.findByCollectionAndNumber(collection.id, resultNumber)
+      : null;
 
   if (!result || result.collectionId !== collection.id) {
     redirect(`/collections/${collection.slug ?? collection.id}/results`);
   }
+
+  const [resultItems, items, shares] = await Promise.all([
+    resultItemRepo.findByResult(result.id),
+    itemRepo.findByCollection(collection.id),
+    shareRepo.findByResult(result.id),
+  ]);
 
   const itemById = new Map(items.map((item) => [item.id, item]));
   const sortedResultItems = [...resultItems].sort((a, b) => (a.manualRank ?? a.computedRank) - (b.manualRank ?? b.computedRank));
@@ -92,7 +98,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
             </div>
           </div>
           {result.status === "draft" && (
-            <Link href={`/collections/${collection.slug ?? collection.id}/results/${params.resultId}/finalize`}>
+            <Link href={`/collections/${collection.slug ?? collection.id}/results/${result.number}/finalize`}>
               <Button>Finalize</Button>
             </Link>
           )}
@@ -138,7 +144,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
 
         {result.status === "finalized" && (
           <SharePanel
-            resultId={params.resultId}
+            resultId={result.id}
             initialShares={shares}
           />
         )}
