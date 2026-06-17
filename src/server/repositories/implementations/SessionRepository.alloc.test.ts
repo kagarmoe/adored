@@ -48,6 +48,7 @@ describe("SessionRepository.create number allocation", () => {
     expect(s.number).toBe(7);
     expect((valuesSpy.mock.calls as any[][])[0]![0].number).toBe(6); // first attempt tried 6
     expect((valuesSpy.mock.calls as any[][])[1]![0].number).toBe(7); // retry recomputed to 7
+    expect(selectWhere).toHaveBeenCalledTimes(2);
   });
 
   it("does NOT retry the one-session-per-curator constraint — it surfaces", async () => {

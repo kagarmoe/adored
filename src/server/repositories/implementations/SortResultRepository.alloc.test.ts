@@ -49,6 +49,7 @@ describe("SortResultRepository.create number allocation", () => {
     expect(r.number).toBe(4);
     expect((valuesSpy.mock.calls as any[][])[0]![0].number).toBe(3); // first attempt tried 3
     expect((valuesSpy.mock.calls as any[][])[1]![0].number).toBe(4); // retry recomputed to 4
+    expect(selectWhere).toHaveBeenCalledTimes(2);
   });
 
   it("does NOT retry an unrelated unique violation", async () => {

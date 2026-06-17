@@ -59,3 +59,10 @@ describe("ComparePage hero images", () => {
     expect(photoRepo.findCoverPhotosByItemIds).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("ComparePage integrity guard", () => {
+  it("redirects (and halts) when the resolved session belongs to a different collection", async () => {
+    sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_x", collectionId: "coll_OTHER", number: 1, status: "active", curatorId: "u1" });
+    await expect(ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } })).rejects.toThrow("REDIRECT");
+  });
+});

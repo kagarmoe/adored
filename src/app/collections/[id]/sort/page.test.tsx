@@ -34,4 +34,15 @@ describe("SortPage session links", () => {
     expect(links).toContain("/collections/summer-bags/sort/3");
     expect(links.some((h) => h?.includes("sess_zzz"))).toBe(false);
   });
+
+  it("active-session Resume/Details links use the session number, not the ULID", async () => {
+    sessionRepo.findByCollection.mockResolvedValue([
+      { id: "sess_active", number: 4, goal: "Discover", status: "active", createdAt: new Date("2026-01-04") },
+    ]);
+    const ui = await SortPage({ params: { id: "summer-bags" } });
+    render(ui);
+    const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href") ?? "");
+    expect(hrefs.filter((h) => h === "/collections/summer-bags/sort/4").length).toBeGreaterThanOrEqual(1);
+    expect(hrefs.every((h) => !h.includes("sess_active"))).toBe(true);
+  });
 });
