@@ -46,9 +46,7 @@ describe("SessionRepository.create number allocation", () => {
       .mockResolvedValueOnce([row(7)]);
     const s = await new SessionRepository(db).create({ collectionId: "c1", curatorId: "u1" });
     expect(s.number).toBe(7);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((valuesSpy.mock.calls as any[][])[0]![0].number).toBe(6); // first attempt tried 6
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((valuesSpy.mock.calls as any[][])[1]![0].number).toBe(7); // retry recomputed to 7
   });
 

@@ -36,7 +36,6 @@ describe("SortResultRepository.create number allocation", () => {
     const r = await new SortResultRepository(db).create({ collectionId: "c1", curatorId: "u1", name: "R", status: "draft" });
     expect(r.number).toBe(3);
     expect(valuesSpy).toHaveBeenCalledTimes(1);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((valuesSpy.mock.calls as any[][])[0]![0].number).toBe(3);
     expect(insertReturning).toHaveBeenCalledTimes(1);
   });
@@ -48,9 +47,7 @@ describe("SortResultRepository.create number allocation", () => {
       .mockResolvedValueOnce([row(4)]);
     const r = await new SortResultRepository(db).create({ collectionId: "c1", curatorId: "u1", name: "R", status: "draft" });
     expect(r.number).toBe(4);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((valuesSpy.mock.calls as any[][])[0]![0].number).toBe(3); // first attempt tried 3
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((valuesSpy.mock.calls as any[][])[1]![0].number).toBe(4); // retry recomputed to 4
   });
 
