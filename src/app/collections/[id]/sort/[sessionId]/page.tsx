@@ -32,7 +32,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
     sessionRepo.findById(params.sessionId),
   ]);
 
-  if (!sortSession) {
+  if (!sortSession || sortSession.collectionId !== collection.id) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
