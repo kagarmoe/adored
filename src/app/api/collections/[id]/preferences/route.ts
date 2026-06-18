@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
+import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { PreferenceController } from "@/server/api/preferences";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
@@ -15,6 +16,8 @@ export async function GET(
   try {
     const user = await requireAuth();
     const db = getDb();
+    const access = await requireApiCollectionAccess(db, params.id, user.id);
+    if (access instanceof NextResponse) return access;
     const prefRepo = new CollectionPreferenceItemRepository(db);
     const decisionRepo = new DecisionEventRepository(db);
     const sessionRepo = new SessionRepository(db);
@@ -38,6 +41,8 @@ export async function DELETE(
   try {
     const user = await requireAuth();
     const db = getDb();
+    const access = await requireApiCollectionAccess(db, params.id, user.id);
+    if (access instanceof NextResponse) return access;
     const prefRepo = new CollectionPreferenceItemRepository(db);
     const decisionRepo = new DecisionEventRepository(db);
     const sessionRepo = new SessionRepository(db);
