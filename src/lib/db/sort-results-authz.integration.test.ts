@@ -29,10 +29,11 @@ import { requireApiResultAccess } from "@/server/dal/collection-access";
 import { POST as createResult } from "@/app/api/sort-results/route";
 import { GET as getResult, PATCH as patchResult, DELETE as deleteResult } from "@/app/api/sort-results/[id]/route";
 import { POST as finalizeResult } from "@/app/api/sort-results/[id]/finalize/route";
-import { GET as getItem } from "@/app/api/sort-results/[id]/items/[rid]/route";
+import { GET as getItem, PATCH as patchItem, DELETE as deleteItem } from "@/app/api/sort-results/[id]/items/[rid]/route";
+import { POST as resetItem } from "@/app/api/sort-results/[id]/items/[rid]/reset/route";
 import { GET as listItems } from "@/app/api/sort-results/[id]/items/route";
-import { GET as listShares } from "@/app/api/sort-results/[id]/shares/route";
-import { DELETE as deleteShare } from "@/app/api/sort-results/[id]/shares/[sid]/route";
+import { GET as listShares, POST as createShare } from "@/app/api/sort-results/[id]/shares/route";
+import { GET as getShare, PATCH as patchShare, DELETE as deleteShare } from "@/app/api/sort-results/[id]/shares/[sid]/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -148,6 +149,15 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       const res = await getResult(new Request("http://localhost/x") as any, { params: { id: "res_missing" } });
       expect(res.status).toBe(404);
     });
+
+    it("DELETE 403s a non-member and the result still exists (IDOR)", async () => {
+      const { db } = getTestDb();
+      const { resultId } = await seedResult(ownerId, ownerId);
+      mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
+      const res = await deleteResult(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: { id: resultId } });
+      expect(res.status).toBe(403);
+      expect(await new SortResultRepository(db).findById(resultId)).not.toBeNull();
+    });
   });
 
   describe("sort-results children: guard + belongs-to-parent", () => {
@@ -165,6 +175,42 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       expect(res.status).toBe(404);
     });
 
+    /** A result-item under a DIFFERENT (same-owner) result; the caller can access `resultId`. */
+    async function seedForeignResultItem() {
+      const { db } = getTestDb();
+      const { collectionId, resultId } = await seedResult(ownerId, ownerId);
+      const item = await new ItemRepository(db).create({ collectionId }); // real FK parent
+      const other = await new SortResultRepository(db).create({ collectionId, curatorId: ownerId, name: "Other", status: "draft" });
+      const otherItem = await new SortResultItemRepository(db).create({
+        sortResultId: other.id, itemId: item.id, computedRank: 1, computedBucket: "top",
+      });
+      return { resultId, foreignItemId: otherItem.id };
+    }
+
+    it("items/[rid] PATCH 404s a result-item that belongs to a DIFFERENT result", async () => {
+      const { resultId, foreignItemId } = await seedForeignResultItem();
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const req = new Request("http://localhost/x", {
+        method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ manualBucket: "top" }),
+      });
+      const res = await patchItem(req as any, { params: { id: resultId, rid: foreignItemId } });
+      expect(res.status).toBe(404);
+    });
+
+    it("items/[rid] DELETE 404s a result-item that belongs to a DIFFERENT result", async () => {
+      const { resultId, foreignItemId } = await seedForeignResultItem();
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const res = await deleteItem(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: { id: resultId, rid: foreignItemId } });
+      expect(res.status).toBe(404);
+    });
+
+    it("items/[rid]/reset POST 404s a result-item that belongs to a DIFFERENT result", async () => {
+      const { resultId, foreignItemId } = await seedForeignResultItem();
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const res = await resetItem(new Request("http://localhost/x", { method: "POST" }) as any, { params: { id: resultId, rid: foreignItemId } });
+      expect(res.status).toBe(404);
+    });
+
     it("items list GET 403s a non-member (IDOR)", async () => {
       const { resultId } = await seedResult(ownerId, ownerId);
       mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
@@ -179,16 +225,49 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       expect(res.status).toBe(403);
     });
 
-    it("shares/[sid] DELETE 404s a share that belongs to a DIFFERENT result (IDOR)", async () => {
+    /** A share under a DIFFERENT (same-owner) result; the caller can access `resultId`. */
+    async function seedForeignShare() {
       const { db } = getTestDb();
       const { collectionId, resultId } = await seedResult(ownerId, ownerId);
       const other = await new SortResultRepository(db).create({ collectionId, curatorId: ownerId, name: "Other", status: "finalized" });
       // create() requires a shareToken — pass a unique one (the share repo has no default).
       const victimShare = await new SortResultShareRepository(db).create({ sortResultId: other.id, shareToken: generateId("tok") });
+      return { resultId, foreignShareId: victimShare.id };
+    }
+
+    it("shares/[sid] GET 404s a share that belongs to a DIFFERENT result (IDOR)", async () => {
+      const { resultId, foreignShareId } = await seedForeignShare();
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const res = await getShare(new Request("http://localhost/x") as any, { params: { id: resultId, sid: foreignShareId } });
+      expect(res.status).toBe(404);
+    });
+
+    it("shares/[sid] PATCH 404s a share that belongs to a DIFFERENT result (IDOR)", async () => {
+      const { resultId, foreignShareId } = await seedForeignShare();
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const req = new Request("http://localhost/x", {
+        method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ status: "revoked" }),
+      });
+      const res = await patchShare(req as any, { params: { id: resultId, sid: foreignShareId } });
+      expect(res.status).toBe(404);
+    });
+
+    it("shares/[sid] DELETE 404s a share that belongs to a DIFFERENT result (IDOR)", async () => {
+      const { resultId, foreignShareId } = await seedForeignShare();
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       // Caller owns `resultId`, tries to revoke a share under `other.id` via the path id.
-      const res = await deleteShare(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: { id: resultId, sid: victimShare.id } });
+      const res = await deleteShare(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: { id: resultId, sid: foreignShareId } });
       expect(res.status).toBe(404);
+    });
+
+    it("shares POST 403s a non-member (IDOR)", async () => {
+      const { resultId } = await seedResult(ownerId, ownerId);
+      mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
+      const req = new Request("http://localhost/x", {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({}),
+      });
+      const res = await createShare(req as any, { params: { id: resultId } });
+      expect(res.status).toBe(403);
     });
   });
 
