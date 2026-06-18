@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
-import { sortResultsTable } from "@/lib/db/schema";
-import { generateId } from "@/lib/id";
 import { getSession } from "@/lib/auth";
+import { getDb } from "@/lib/db";
+import { requireApiCollectionAccess } from "@/server/dal/collection-access";
+import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 
 interface CreateResultRequest {
-  sessionId: string;
   collectionId: string;
   name: string;
 }
@@ -14,16 +13,24 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body: CreateResultRequest = await req.json();
-  const db = getDb();
+  let body: CreateResultRequest;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  if (!body.collectionId) return NextResponse.json({ error: "collectionId is required" }, { status: 400 });
+  if (!body.name) return NextResponse.json({ error: "name is required" }, { status: 400 });
 
-  const [result] = await db.insert(sortResultsTable).values({
-    id: generateId("result"),
+  const db = getDb();
+  const access = await requireApiCollectionAccess(db, body.collectionId, session.user.id);
+  if (access instanceof NextResponse) return access;
+
+  const result = await new SortResultRepository(db).create({
     collectionId: body.collectionId,
     curatorId: session.user.id,
-    status: "draft",
     name: body.name,
-  }).returning();
-
+    status: "draft",
+  });
   return NextResponse.json(result, { status: 201 });
 }

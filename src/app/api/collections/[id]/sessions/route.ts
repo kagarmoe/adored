@@ -14,7 +14,7 @@ export async function GET(
   const db = getDb();
   const access = await requireApiCollectionAccess(db, params.id, session.user.id);
   if (access instanceof NextResponse) return access;
-  const sessions = await new SessionController(new SessionRepository(db)).listSessions(params.id);
+  const sessions = await new SessionRepository(db).findByCollectionAndCurator(params.id, session.user.id);
   return NextResponse.json(sessions);
 }
 

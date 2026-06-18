@@ -3,17 +3,21 @@ import { requireAuth } from "@/lib/auth";
 import { ShareController } from "@/server/api/shares";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { getDb } from "@/lib/db";
+import { requireApiResultAccess } from "@/server/dal/collection-access";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: { id: string; sid: string } }
 ) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const db = getDb();
-    const shareRepo = new SortResultShareRepository(db);
-    const controller = new ShareController(shareRepo);
-    const share = await controller.getShare(params.sid);
+    const access = await requireApiResultAccess(db, params.id, user.id);
+    if (access instanceof NextResponse) return access;
+    const share = await new SortResultShareRepository(db).findById(params.sid);
+    if (!share || share.sortResultId !== params.id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     return NextResponse.json(share);
   } catch (error) {
     return NextResponse.json(
@@ -28,9 +32,15 @@ export async function PATCH(
   { params }: { params: { id: string; sid: string } }
 ) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const body = await request.json();
     const db = getDb();
+    const access = await requireApiResultAccess(db, params.id, user.id);
+    if (access instanceof NextResponse) return access;
+    const existing = await new SortResultShareRepository(db).findById(params.sid);
+    if (!existing || existing.sortResultId !== params.id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     const shareRepo = new SortResultShareRepository(db);
     const controller = new ShareController(shareRepo);
     const share = await controller.updateShare(params.sid, body);
@@ -51,8 +61,14 @@ export async function DELETE(
   { params }: { params: { id: string; sid: string } }
 ) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const db = getDb();
+    const access = await requireApiResultAccess(db, params.id, user.id);
+    if (access instanceof NextResponse) return access;
+    const existing = await new SortResultShareRepository(db).findById(params.sid);
+    if (!existing || existing.sortResultId !== params.id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     const shareRepo = new SortResultShareRepository(db);
     const controller = new ShareController(shareRepo);
     await controller.revokeShare(params.sid);

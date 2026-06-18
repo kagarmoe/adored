@@ -142,7 +142,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
           </div>
         )}
 
-        {result.status === "finalized" && (
+        {result.status === "finalized" && result.curatorId === session.user.id && (
           <SharePanel
             resultId={result.id}
             initialShares={shares}

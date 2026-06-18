@@ -1,18 +1,21 @@
 // src/app/api/collections/[id]/sessions/route.test.ts
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { mockGetSession, mockGetDb, collectionRepo, membershipRepo, ctrl } = vi.hoisted(() => ({
+// GET is curator-scoped via SessionRepository.findByCollectionAndCurator (purses-33u);
+// only POST still goes through SessionController.
+const { mockGetSession, mockGetDb, collectionRepo, membershipRepo, sessionRepo, ctrl } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockGetDb: vi.fn(() => ({})),
   collectionRepo: { findById: vi.fn() },
   membershipRepo: { findByUser: vi.fn() },
-  ctrl: { listSessions: vi.fn(), createSession: vi.fn() },
+  sessionRepo: { findByCollectionAndCurator: vi.fn() },
+  ctrl: { createSession: vi.fn() },
 }));
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: mockGetDb }));
 vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({ CollectionRepository: vi.fn(() => collectionRepo) }));
 vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({ MembershipRepository: vi.fn(() => membershipRepo) }));
-vi.mock("@/server/repositories/implementations/SessionRepository", () => ({ SessionRepository: vi.fn(() => ({})) }));
+vi.mock("@/server/repositories/implementations/SessionRepository", () => ({ SessionRepository: vi.fn(() => sessionRepo) }));
 vi.mock("@/server/api/sessions", () => ({ SessionController: vi.fn(() => ctrl) }));
 
 import { GET, POST } from "./route";
@@ -24,7 +27,7 @@ beforeEach(() => {
   mockGetSession.mockResolvedValue({ user: { id: "u1" } });
   collectionRepo.findById.mockResolvedValue({ id: "c1", ownerId: "u9" });
   membershipRepo.findByUser.mockResolvedValue({ id: "m1" });
-  ctrl.listSessions.mockResolvedValue([]);
+  sessionRepo.findByCollectionAndCurator.mockResolvedValue([]);
   ctrl.createSession.mockResolvedValue({ id: "s1" });
 });
 
@@ -39,8 +42,10 @@ describe("GET /api/collections/[id]/sessions", () => {
     expect((await GET(req(), { params: { id: "c1" } })).status).toBe(403);
   });
 
-  it("200 for a member", async () => {
-    expect((await GET(req(), { params: { id: "c1" } })).status).toBe(200);
+  it("200 for a member — scoped to the caller's own sessions (purses-33u)", async () => {
+    const res = await GET(req(), { params: { id: "c1" } });
+    expect(res.status).toBe(200);
+    expect(sessionRepo.findByCollectionAndCurator).toHaveBeenCalledWith("c1", "u1");
   });
 
   it("200 for the owner without a membership row", async () => {
