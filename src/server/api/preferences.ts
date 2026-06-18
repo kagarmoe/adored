@@ -6,13 +6,6 @@ export class PreferenceController {
     private preferenceService: PreferenceStateService,
   ) {}
 
-  async getPreferenceSummary(
-    collectionId: string,
-    curatorId: string,
-  ): Promise<{ totalItems: number; averageScore: number; distribution: Record<string, number> }> {
-    return this.preferenceService.getPreferenceSummary(collectionId, curatorId);
-  }
-
   async listItemPreferences(
     collectionId: string,
     curatorId: string,
@@ -30,9 +23,5 @@ export class PreferenceController {
     curatorId: string,
   ): Promise<CollectionPreferenceItem[]> {
     return this.preferenceService.recalculatePreferences(collectionId, curatorId);
-  }
-
-  async clearPreferences(collectionId: string, curatorId: string): Promise<void> {
-    return this.preferenceService.clearPreferences(collectionId, curatorId);
   }
 }

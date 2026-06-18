@@ -17,10 +17,6 @@ export type UpdateSessionInput = z.infer<typeof UpdateSessionSchema>;
 export class SessionController {
   constructor(private sessionRepo: ISessionRepository) {}
 
-  async listSessions(collectionId: string): Promise<Session[]> {
-    return this.sessionRepo.findByCollection(collectionId);
-  }
-
   async createSession(
     collectionId: string,
     curatorId: string,
@@ -32,10 +28,6 @@ export class SessionController {
       curatorId,
       goal: parsed.goal,
     });
-  }
-
-  async getActiveSession(collectionId: string, curatorId: string): Promise<Session | null> {
-    return this.sessionRepo.findActive(collectionId, curatorId);
   }
 
   async getSession(sessionId: string): Promise<Session> {

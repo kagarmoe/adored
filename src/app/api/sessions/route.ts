@@ -21,17 +21,3 @@ export async function POST(req: NextRequest) {
   });
   return NextResponse.json(newSession, { status: 201 });
 }
-
-export async function GET(req: NextRequest) {
-  const session = await getSession();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const collectionId = new URL(req.url).searchParams.get("collectionId");
-  if (!collectionId) return NextResponse.json({ error: "collectionId is required" }, { status: 400 });
-  const db = getDb();
-  const access = await requireApiCollectionAccess(db, collectionId, session.user.id);
-  if (access instanceof NextResponse) return access;
-
-  const sessions = await new SessionRepository(db).findByCollectionAndCurator(collectionId, session.user.id);
-  return NextResponse.json(sessions);
-}
