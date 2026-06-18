@@ -76,3 +76,23 @@ describe("ResultDetailPage hero images (nkp) + resolution", () => {
     expect(resultRepo.findByCollectionAndNumber).not.toHaveBeenCalled();
   });
 });
+
+describe("ResultDetailPage SharePanel curator gate (axn)", () => {
+  it("shows SharePanel for the result's curator viewing a finalized result", async () => {
+    resultRepo.findByCollectionAndNumber.mockResolvedValue({
+      id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "finalized", curatorId: "u1",
+    });
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.getByRole("heading", { name: /share this result/i })).toBeInTheDocument();
+  });
+
+  it("hides SharePanel for a non-curator viewing a finalized result", async () => {
+    resultRepo.findByCollectionAndNumber.mockResolvedValue({
+      id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "finalized", curatorId: "someone_else",
+    });
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.queryByRole("heading", { name: /share this result/i })).toBeNull();
+  });
+});
