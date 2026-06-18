@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">10.97% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/66</span>
+                <span class='fraction'>9/82</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>0/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">10.97% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/66</span>
+                <span class='fraction'>9/82</span>
             </div>
         
             
@@ -129,7 +129,29 @@
 <a name='L64'></a><a href='#L64'>64</a>
 <a name='L65'></a><a href='#L65'>65</a>
 <a name='L66'></a><a href='#L66'>66</a>
-<a name='L67'></a><a href='#L67'>67</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -151,6 +173,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -179,6 +202,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -195,22 +219,34 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import { NextRequest, NextResponse } from "next/server";<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
-<span class="cstat-no" title="statement not covered" >import { requireAuth } from "@/lib/auth";</span>
-<span class="cstat-no" title="statement not covered" >import { ShareController } from "@/server/api/shares";</span>
-<span class="cstat-no" title="statement not covered" >import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";</span>
-<span class="cstat-no" title="statement not covered" >import { getDb } from "@/lib/db";</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export async function GET(</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth";
+import { ShareController } from "@/server/api/shares";
+import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
+import { getDb } from "@/lib/db";
+import { requireApiResultAccess } from "@/server/dal/collection-access";
+&nbsp;
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export async function GET(</span></span>
 <span class="cstat-no" title="statement not covered" >  _request: NextRequest,</span>
 <span class="cstat-no" title="statement not covered" >  { params }: { params: { id: string; sid: string } }</span>
 <span class="cstat-no" title="statement not covered" >) {</span>
 <span class="cstat-no" title="statement not covered" >  try {</span>
-<span class="cstat-no" title="statement not covered" >    await requireAuth();</span>
+<span class="cstat-no" title="statement not covered" >    const user = await requireAuth();</span>
 <span class="cstat-no" title="statement not covered" >    const db = getDb();</span>
-<span class="cstat-no" title="statement not covered" >    const shareRepo = new SortResultShareRepository(db);</span>
-<span class="cstat-no" title="statement not covered" >    const controller = new ShareController(shareRepo);</span>
-<span class="cstat-no" title="statement not covered" >    const share = await controller.getShare(params.sid);</span>
+<span class="cstat-no" title="statement not covered" >    const access = await requireApiResultAccess(db, params.id, user.id);</span>
+<span class="cstat-no" title="statement not covered" >    if (access instanceof NextResponse) return access;</span>
+<span class="cstat-no" title="statement not covered" >    const share = await new SortResultShareRepository(db).findById(params.sid);</span>
+<span class="cstat-no" title="statement not covered" >    if (!share || share.sortResultId !== params.id) {</span>
+<span class="cstat-no" title="statement not covered" >      return NextResponse.json({ error: "Not found" }, { status: 404 });</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >    return NextResponse.json(share);</span>
 <span class="cstat-no" title="statement not covered" >  } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >    return NextResponse.json(</span>
@@ -219,15 +255,21 @@
 <span class="cstat-no" title="statement not covered" >    );</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export async function PATCH(</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export async function PATCH(</span></span>
 <span class="cstat-no" title="statement not covered" >  request: NextRequest,</span>
 <span class="cstat-no" title="statement not covered" >  { params }: { params: { id: string; sid: string } }</span>
 <span class="cstat-no" title="statement not covered" >) {</span>
 <span class="cstat-no" title="statement not covered" >  try {</span>
-<span class="cstat-no" title="statement not covered" >    await requireAuth();</span>
+<span class="cstat-no" title="statement not covered" >    const user = await requireAuth();</span>
 <span class="cstat-no" title="statement not covered" >    const body = await request.json();</span>
 <span class="cstat-no" title="statement not covered" >    const db = getDb();</span>
+<span class="cstat-no" title="statement not covered" >    const access = await requireApiResultAccess(db, params.id, user.id);</span>
+<span class="cstat-no" title="statement not covered" >    if (access instanceof NextResponse) return access;</span>
+<span class="cstat-no" title="statement not covered" >    const existing = await new SortResultShareRepository(db).findById(params.sid);</span>
+<span class="cstat-no" title="statement not covered" >    if (!existing || existing.sortResultId !== params.id) {</span>
+<span class="cstat-no" title="statement not covered" >      return NextResponse.json({ error: "Not found" }, { status: 404 });</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >    const shareRepo = new SortResultShareRepository(db);</span>
 <span class="cstat-no" title="statement not covered" >    const controller = new ShareController(shareRepo);</span>
 <span class="cstat-no" title="statement not covered" >    const share = await controller.updateShare(params.sid, body);</span>
@@ -242,14 +284,20 @@
 <span class="cstat-no" title="statement not covered" >    );</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export async function DELETE(</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export async function DELETE(</span></span>
 <span class="cstat-no" title="statement not covered" >  _request: NextRequest,</span>
 <span class="cstat-no" title="statement not covered" >  { params }: { params: { id: string; sid: string } }</span>
 <span class="cstat-no" title="statement not covered" >) {</span>
 <span class="cstat-no" title="statement not covered" >  try {</span>
-<span class="cstat-no" title="statement not covered" >    await requireAuth();</span>
+<span class="cstat-no" title="statement not covered" >    const user = await requireAuth();</span>
 <span class="cstat-no" title="statement not covered" >    const db = getDb();</span>
+<span class="cstat-no" title="statement not covered" >    const access = await requireApiResultAccess(db, params.id, user.id);</span>
+<span class="cstat-no" title="statement not covered" >    if (access instanceof NextResponse) return access;</span>
+<span class="cstat-no" title="statement not covered" >    const existing = await new SortResultShareRepository(db).findById(params.sid);</span>
+<span class="cstat-no" title="statement not covered" >    if (!existing || existing.sortResultId !== params.id) {</span>
+<span class="cstat-no" title="statement not covered" >      return NextResponse.json({ error: "Not found" }, { status: 404 });</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >    const shareRepo = new SortResultShareRepository(db);</span>
 <span class="cstat-no" title="statement not covered" >    const controller = new ShareController(shareRepo);</span>
 <span class="cstat-no" title="statement not covered" >    await controller.revokeShare(params.sid);</span>
@@ -268,7 +316,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-17T21:06:23.338Z
+                at 2026-06-18T21:02:43.414Z
             </div>
         <script src="../../../../../../../prettify.js"></script>
         <script>

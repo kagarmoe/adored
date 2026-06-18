@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/d38674b4c8003f7f7464004701e3054b861f113f",
-        "commitHash": "d38674b4c8003f7f7464004701e3054b861f113f",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27715336325"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9615648933cccd744d739e67c4eabc64ec8cff2c",
+        "commitHash": "9615648933cccd744d739e67c4eabc64ec8cff2c",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27789055176"
       },
       "gitCommit": {
-        "shortHash": "d38674b",
-        "hash": "d38674b4c8003f7f7464004701e3054b861f113f",
-        "subject": "feat(purses-9hl): slug + number URLs for sessions & results (no raw ULIDs) (#197)",
-        "body": "feat(purses-9hl): slug + number URLs for sessions & results (no raw ULIDs) (#197)\n\n* docs(purses-9hl): implementation plan for slug+number URLs\n\n* docs(purses-9hl): fold adversarial-review findings into plan (CONCERNS, no BLOCK)\n\n* docs(purses-9hl): scope decision R9 — sessions-only Task 5; sort-results work -> purses-axn\n\n* feat(purses-9hl): add number column + unique index to sessions & sort_results\n\n* feat(purses-9hl): Session/SortResult.number type + findByCollectionAndNumber interface\n\n* feat(purses-9hl): SessionRepository number allocation + findByCollectionAndNumber\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): SortResultRepository number allocation + findByCollectionAndNumber\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): allocate session number via repo on /api/sessions POST\n\n* feat(purses-9hl): idempotent backfill for session & result numbers\n\nOne-shot backfill assigns per-collection sequential numbers (1..n by\ncreatedAt, asc(id) tiebreaker) to existing sessions and sort_results rows\nwhose number is NULL. Idempotent (WHERE number IS NULL, continues past MAX).\nFolded into vercel-build so the prod null-number window cannot be forgotten.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): resolve sort sessions by number; keep #196 guard; ULID to clients\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* fix(purses-9hl): drop eslint-disable for unregistered no-explicit-any rule in alloc tests\n\nDeleted 5 instances of // eslint-disable-next-line @typescript-eslint/no-explicit-any\nfrom SessionRepository.alloc.test.ts (2) and SortResultRepository.alloc.test.ts (3).\nThe no-explicit-any rule is not registered in this project's ESLint config, so the\ndisable comments were themselves lint errors. The as any[][] casts remain and lint\ncleanly without the comments.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-9hl): resolve results by number; finalize redirects by number; keep guards\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): create/complete generators emit slug + number\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): list + dashboard nav links use slug and number\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-9hl): compare guard test, active-session links, R5 selectWhere count (final-review fixes)\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* fix(purses-9hl): e2e triage navigates by session number after route rename\n\n---------\n\nCo-authored-by: Claude Sonnet 4.6 <noreply@anthropic.com>",
+        "shortHash": "9615648",
+        "hash": "9615648933cccd744d739e67c4eabc64ec8cff2c",
+        "subject": "Close authz holes in sort-results / sessions / preferences APIs (purses-axn, 51h, 33u) (#200)",
+        "body": "Close authz holes in sort-results / sessions / preferences APIs (purses-axn, 51h, 33u) (#200)\n\n* docs(purses-axn): design spec for API authz cluster (axn+51h+33u)\n\nClose cross-tenant write/IDOR holes across the whole /api/sort-results/**\nsubtree, curator-scope session-list GETs (33u), add the missing membership\ngate to preferences routes (51h), delete dead DecisionController (33u).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-axn): implementation plan for API authz cluster\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-axn): plan v2 — fold in adversarial-review findings (shares IDOR, SharePanel gate, inline guard)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-axn): requireApiResultAccess guard (collection + curator scope)\n\n* fix(purses-axn): guard sort-results [id] core routes (collection+curator)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-axn): guard sort-results items+shares; belongs-to-parent for [rid] and [sid]\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-axn): POST /api/sort-results routes through repo + collection guard (allocates number)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-axn): render SharePanel only for the result's curator (no 403-on-click)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-33u): curator-scope session-list GETs (close cross-curator read leak)\n\nGET /api/sessions and GET /api/collections/[id]/sessions passed the\ncollection-access gate but returned ALL curators' sessions to any member\n(a within-collection read leak). Scope both list GETs to the caller's own\nsessions via SessionRepository.findByCollectionAndCurator, matching the\nalready-curator-scoped pages (t9l). Tier-1 access gate preserved; POST\nuntouched. Remove now-dead sessionsTable/eq imports from the flat route.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-51h): add membership gate to preferences GET/DELETE routes\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(purses-33u): delete dead DecisionController (live route guards its own writes)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(purses-axn): cover belongs-to-parent on all child methods + DELETE/shares-POST authz (final-review gap)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1781725629000
+          "time": 1781816473000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1781725629000
+          "time": 1781816473000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/d38674b4c8003f7f7464004701e3054b861f113f",
-            "commitHash": "d38674b4c8003f7f7464004701e3054b861f113f",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27715336325"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9615648933cccd744d739e67c4eabc64ec8cff2c",
+            "commitHash": "9615648933cccd744d739e67c4eabc64ec8cff2c",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27789055176"
           },
           "gitCommit": {
-            "shortHash": "d38674b",
-            "hash": "d38674b4c8003f7f7464004701e3054b861f113f",
-            "subject": "feat(purses-9hl): slug + number URLs for sessions & results (no raw ULIDs) (#197)",
-            "body": "feat(purses-9hl): slug + number URLs for sessions & results (no raw ULIDs) (#197)\n\n* docs(purses-9hl): implementation plan for slug+number URLs\n\n* docs(purses-9hl): fold adversarial-review findings into plan (CONCERNS, no BLOCK)\n\n* docs(purses-9hl): scope decision R9 — sessions-only Task 5; sort-results work -> purses-axn\n\n* feat(purses-9hl): add number column + unique index to sessions & sort_results\n\n* feat(purses-9hl): Session/SortResult.number type + findByCollectionAndNumber interface\n\n* feat(purses-9hl): SessionRepository number allocation + findByCollectionAndNumber\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): SortResultRepository number allocation + findByCollectionAndNumber\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): allocate session number via repo on /api/sessions POST\n\n* feat(purses-9hl): idempotent backfill for session & result numbers\n\nOne-shot backfill assigns per-collection sequential numbers (1..n by\ncreatedAt, asc(id) tiebreaker) to existing sessions and sort_results rows\nwhose number is NULL. Idempotent (WHERE number IS NULL, continues past MAX).\nFolded into vercel-build so the prod null-number window cannot be forgotten.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): resolve sort sessions by number; keep #196 guard; ULID to clients\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* fix(purses-9hl): drop eslint-disable for unregistered no-explicit-any rule in alloc tests\n\nDeleted 5 instances of // eslint-disable-next-line @typescript-eslint/no-explicit-any\nfrom SessionRepository.alloc.test.ts (2) and SortResultRepository.alloc.test.ts (3).\nThe no-explicit-any rule is not registered in this project's ESLint config, so the\ndisable comments were themselves lint errors. The as any[][] casts remain and lint\ncleanly without the comments.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-9hl): resolve results by number; finalize redirects by number; keep guards\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): create/complete generators emit slug + number\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): list + dashboard nav links use slug and number\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-9hl): compare guard test, active-session links, R5 selectWhere count (final-review fixes)\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* fix(purses-9hl): e2e triage navigates by session number after route rename\n\n---------\n\nCo-authored-by: Claude Sonnet 4.6 <noreply@anthropic.com>",
+            "shortHash": "9615648",
+            "hash": "9615648933cccd744d739e67c4eabc64ec8cff2c",
+            "subject": "Close authz holes in sort-results / sessions / preferences APIs (purses-axn, 51h, 33u) (#200)",
+            "body": "Close authz holes in sort-results / sessions / preferences APIs (purses-axn, 51h, 33u) (#200)\n\n* docs(purses-axn): design spec for API authz cluster (axn+51h+33u)\n\nClose cross-tenant write/IDOR holes across the whole /api/sort-results/**\nsubtree, curator-scope session-list GETs (33u), add the missing membership\ngate to preferences routes (51h), delete dead DecisionController (33u).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-axn): implementation plan for API authz cluster\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-axn): plan v2 — fold in adversarial-review findings (shares IDOR, SharePanel gate, inline guard)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-axn): requireApiResultAccess guard (collection + curator scope)\n\n* fix(purses-axn): guard sort-results [id] core routes (collection+curator)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-axn): guard sort-results items+shares; belongs-to-parent for [rid] and [sid]\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-axn): POST /api/sort-results routes through repo + collection guard (allocates number)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-axn): render SharePanel only for the result's curator (no 403-on-click)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-33u): curator-scope session-list GETs (close cross-curator read leak)\n\nGET /api/sessions and GET /api/collections/[id]/sessions passed the\ncollection-access gate but returned ALL curators' sessions to any member\n(a within-collection read leak). Scope both list GETs to the caller's own\nsessions via SessionRepository.findByCollectionAndCurator, matching the\nalready-curator-scoped pages (t9l). Tier-1 access gate preserved; POST\nuntouched. Remove now-dead sessionsTable/eq imports from the flat route.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-51h): add membership gate to preferences GET/DELETE routes\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(purses-33u): delete dead DecisionController (live route guards its own writes)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(purses-axn): cover belongs-to-parent on all child methods + DELETE/shares-POST authz (final-review gap)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781725629000
+              "time": 1781816473000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781725629000
+              "time": 1781816473000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/d38674b4c8003f7f7464004701e3054b861f113f",
-            "commitHash": "d38674b4c8003f7f7464004701e3054b861f113f",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27715336325"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9615648933cccd744d739e67c4eabc64ec8cff2c",
+            "commitHash": "9615648933cccd744d739e67c4eabc64ec8cff2c",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27789055176"
           },
           "gitCommit": {
-            "shortHash": "d38674b",
-            "hash": "d38674b4c8003f7f7464004701e3054b861f113f",
-            "subject": "feat(purses-9hl): slug + number URLs for sessions & results (no raw ULIDs) (#197)",
-            "body": "feat(purses-9hl): slug + number URLs for sessions & results (no raw ULIDs) (#197)\n\n* docs(purses-9hl): implementation plan for slug+number URLs\n\n* docs(purses-9hl): fold adversarial-review findings into plan (CONCERNS, no BLOCK)\n\n* docs(purses-9hl): scope decision R9 — sessions-only Task 5; sort-results work -> purses-axn\n\n* feat(purses-9hl): add number column + unique index to sessions & sort_results\n\n* feat(purses-9hl): Session/SortResult.number type + findByCollectionAndNumber interface\n\n* feat(purses-9hl): SessionRepository number allocation + findByCollectionAndNumber\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): SortResultRepository number allocation + findByCollectionAndNumber\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): allocate session number via repo on /api/sessions POST\n\n* feat(purses-9hl): idempotent backfill for session & result numbers\n\nOne-shot backfill assigns per-collection sequential numbers (1..n by\ncreatedAt, asc(id) tiebreaker) to existing sessions and sort_results rows\nwhose number is NULL. Idempotent (WHERE number IS NULL, continues past MAX).\nFolded into vercel-build so the prod null-number window cannot be forgotten.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): resolve sort sessions by number; keep #196 guard; ULID to clients\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* fix(purses-9hl): drop eslint-disable for unregistered no-explicit-any rule in alloc tests\n\nDeleted 5 instances of // eslint-disable-next-line @typescript-eslint/no-explicit-any\nfrom SessionRepository.alloc.test.ts (2) and SortResultRepository.alloc.test.ts (3).\nThe no-explicit-any rule is not registered in this project's ESLint config, so the\ndisable comments were themselves lint errors. The as any[][] casts remain and lint\ncleanly without the comments.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-9hl): resolve results by number; finalize redirects by number; keep guards\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): create/complete generators emit slug + number\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): list + dashboard nav links use slug and number\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-9hl): compare guard test, active-session links, R5 selectWhere count (final-review fixes)\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* fix(purses-9hl): e2e triage navigates by session number after route rename\n\n---------\n\nCo-authored-by: Claude Sonnet 4.6 <noreply@anthropic.com>",
+            "shortHash": "9615648",
+            "hash": "9615648933cccd744d739e67c4eabc64ec8cff2c",
+            "subject": "Close authz holes in sort-results / sessions / preferences APIs (purses-axn, 51h, 33u) (#200)",
+            "body": "Close authz holes in sort-results / sessions / preferences APIs (purses-axn, 51h, 33u) (#200)\n\n* docs(purses-axn): design spec for API authz cluster (axn+51h+33u)\n\nClose cross-tenant write/IDOR holes across the whole /api/sort-results/**\nsubtree, curator-scope session-list GETs (33u), add the missing membership\ngate to preferences routes (51h), delete dead DecisionController (33u).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-axn): implementation plan for API authz cluster\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-axn): plan v2 — fold in adversarial-review findings (shares IDOR, SharePanel gate, inline guard)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-axn): requireApiResultAccess guard (collection + curator scope)\n\n* fix(purses-axn): guard sort-results [id] core routes (collection+curator)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-axn): guard sort-results items+shares; belongs-to-parent for [rid] and [sid]\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-axn): POST /api/sort-results routes through repo + collection guard (allocates number)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-axn): render SharePanel only for the result's curator (no 403-on-click)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-33u): curator-scope session-list GETs (close cross-curator read leak)\n\nGET /api/sessions and GET /api/collections/[id]/sessions passed the\ncollection-access gate but returned ALL curators' sessions to any member\n(a within-collection read leak). Scope both list GETs to the caller's own\nsessions via SessionRepository.findByCollectionAndCurator, matching the\nalready-curator-scoped pages (t9l). Tier-1 access gate preserved; POST\nuntouched. Remove now-dead sessionsTable/eq imports from the flat route.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-51h): add membership gate to preferences GET/DELETE routes\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(purses-33u): delete dead DecisionController (live route guards its own writes)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(purses-axn): cover belongs-to-parent on all child methods + DELETE/shares-POST authz (final-review gap)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781725629000
+              "time": 1781816473000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781725629000
+              "time": 1781816473000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/d38674b4c8003f7f7464004701e3054b861f113f",
-            "commitHash": "d38674b4c8003f7f7464004701e3054b861f113f",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27715336325"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9615648933cccd744d739e67c4eabc64ec8cff2c",
+            "commitHash": "9615648933cccd744d739e67c4eabc64ec8cff2c",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27789055176"
           },
           "gitCommit": {
-            "shortHash": "d38674b",
-            "hash": "d38674b4c8003f7f7464004701e3054b861f113f",
-            "subject": "feat(purses-9hl): slug + number URLs for sessions & results (no raw ULIDs) (#197)",
-            "body": "feat(purses-9hl): slug + number URLs for sessions & results (no raw ULIDs) (#197)\n\n* docs(purses-9hl): implementation plan for slug+number URLs\n\n* docs(purses-9hl): fold adversarial-review findings into plan (CONCERNS, no BLOCK)\n\n* docs(purses-9hl): scope decision R9 — sessions-only Task 5; sort-results work -> purses-axn\n\n* feat(purses-9hl): add number column + unique index to sessions & sort_results\n\n* feat(purses-9hl): Session/SortResult.number type + findByCollectionAndNumber interface\n\n* feat(purses-9hl): SessionRepository number allocation + findByCollectionAndNumber\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): SortResultRepository number allocation + findByCollectionAndNumber\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): allocate session number via repo on /api/sessions POST\n\n* feat(purses-9hl): idempotent backfill for session & result numbers\n\nOne-shot backfill assigns per-collection sequential numbers (1..n by\ncreatedAt, asc(id) tiebreaker) to existing sessions and sort_results rows\nwhose number is NULL. Idempotent (WHERE number IS NULL, continues past MAX).\nFolded into vercel-build so the prod null-number window cannot be forgotten.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): resolve sort sessions by number; keep #196 guard; ULID to clients\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* fix(purses-9hl): drop eslint-disable for unregistered no-explicit-any rule in alloc tests\n\nDeleted 5 instances of // eslint-disable-next-line @typescript-eslint/no-explicit-any\nfrom SessionRepository.alloc.test.ts (2) and SortResultRepository.alloc.test.ts (3).\nThe no-explicit-any rule is not registered in this project's ESLint config, so the\ndisable comments were themselves lint errors. The as any[][] casts remain and lint\ncleanly without the comments.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-9hl): resolve results by number; finalize redirects by number; keep guards\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): create/complete generators emit slug + number\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): list + dashboard nav links use slug and number\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-9hl): compare guard test, active-session links, R5 selectWhere count (final-review fixes)\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* fix(purses-9hl): e2e triage navigates by session number after route rename\n\n---------\n\nCo-authored-by: Claude Sonnet 4.6 <noreply@anthropic.com>",
+            "shortHash": "9615648",
+            "hash": "9615648933cccd744d739e67c4eabc64ec8cff2c",
+            "subject": "Close authz holes in sort-results / sessions / preferences APIs (purses-axn, 51h, 33u) (#200)",
+            "body": "Close authz holes in sort-results / sessions / preferences APIs (purses-axn, 51h, 33u) (#200)\n\n* docs(purses-axn): design spec for API authz cluster (axn+51h+33u)\n\nClose cross-tenant write/IDOR holes across the whole /api/sort-results/**\nsubtree, curator-scope session-list GETs (33u), add the missing membership\ngate to preferences routes (51h), delete dead DecisionController (33u).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-axn): implementation plan for API authz cluster\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-axn): plan v2 — fold in adversarial-review findings (shares IDOR, SharePanel gate, inline guard)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-axn): requireApiResultAccess guard (collection + curator scope)\n\n* fix(purses-axn): guard sort-results [id] core routes (collection+curator)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-axn): guard sort-results items+shares; belongs-to-parent for [rid] and [sid]\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-axn): POST /api/sort-results routes through repo + collection guard (allocates number)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-axn): render SharePanel only for the result's curator (no 403-on-click)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-33u): curator-scope session-list GETs (close cross-curator read leak)\n\nGET /api/sessions and GET /api/collections/[id]/sessions passed the\ncollection-access gate but returned ALL curators' sessions to any member\n(a within-collection read leak). Scope both list GETs to the caller's own\nsessions via SessionRepository.findByCollectionAndCurator, matching the\nalready-curator-scoped pages (t9l). Tier-1 access gate preserved; POST\nuntouched. Remove now-dead sessionsTable/eq imports from the flat route.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-51h): add membership gate to preferences GET/DELETE routes\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(purses-33u): delete dead DecisionController (live route guards its own writes)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(purses-axn): cover belongs-to-parent on all child methods + DELETE/shares-POST authz (final-review gap)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781725629000
+              "time": 1781816473000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781725629000
+              "time": 1781816473000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/d38674b4c8003f7f7464004701e3054b861f113f",
-            "commitHash": "d38674b4c8003f7f7464004701e3054b861f113f",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27715336325"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9615648933cccd744d739e67c4eabc64ec8cff2c",
+            "commitHash": "9615648933cccd744d739e67c4eabc64ec8cff2c",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27789055176"
           },
           "gitCommit": {
-            "shortHash": "d38674b",
-            "hash": "d38674b4c8003f7f7464004701e3054b861f113f",
-            "subject": "feat(purses-9hl): slug + number URLs for sessions & results (no raw ULIDs) (#197)",
-            "body": "feat(purses-9hl): slug + number URLs for sessions & results (no raw ULIDs) (#197)\n\n* docs(purses-9hl): implementation plan for slug+number URLs\n\n* docs(purses-9hl): fold adversarial-review findings into plan (CONCERNS, no BLOCK)\n\n* docs(purses-9hl): scope decision R9 — sessions-only Task 5; sort-results work -> purses-axn\n\n* feat(purses-9hl): add number column + unique index to sessions & sort_results\n\n* feat(purses-9hl): Session/SortResult.number type + findByCollectionAndNumber interface\n\n* feat(purses-9hl): SessionRepository number allocation + findByCollectionAndNumber\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): SortResultRepository number allocation + findByCollectionAndNumber\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): allocate session number via repo on /api/sessions POST\n\n* feat(purses-9hl): idempotent backfill for session & result numbers\n\nOne-shot backfill assigns per-collection sequential numbers (1..n by\ncreatedAt, asc(id) tiebreaker) to existing sessions and sort_results rows\nwhose number is NULL. Idempotent (WHERE number IS NULL, continues past MAX).\nFolded into vercel-build so the prod null-number window cannot be forgotten.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): resolve sort sessions by number; keep #196 guard; ULID to clients\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* fix(purses-9hl): drop eslint-disable for unregistered no-explicit-any rule in alloc tests\n\nDeleted 5 instances of // eslint-disable-next-line @typescript-eslint/no-explicit-any\nfrom SessionRepository.alloc.test.ts (2) and SortResultRepository.alloc.test.ts (3).\nThe no-explicit-any rule is not registered in this project's ESLint config, so the\ndisable comments were themselves lint errors. The as any[][] casts remain and lint\ncleanly without the comments.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-9hl): resolve results by number; finalize redirects by number; keep guards\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): create/complete generators emit slug + number\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* feat(purses-9hl): list + dashboard nav links use slug and number\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* test(purses-9hl): compare guard test, active-session links, R5 selectWhere count (final-review fixes)\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* fix(purses-9hl): e2e triage navigates by session number after route rename\n\n---------\n\nCo-authored-by: Claude Sonnet 4.6 <noreply@anthropic.com>",
+            "shortHash": "9615648",
+            "hash": "9615648933cccd744d739e67c4eabc64ec8cff2c",
+            "subject": "Close authz holes in sort-results / sessions / preferences APIs (purses-axn, 51h, 33u) (#200)",
+            "body": "Close authz holes in sort-results / sessions / preferences APIs (purses-axn, 51h, 33u) (#200)\n\n* docs(purses-axn): design spec for API authz cluster (axn+51h+33u)\n\nClose cross-tenant write/IDOR holes across the whole /api/sort-results/**\nsubtree, curator-scope session-list GETs (33u), add the missing membership\ngate to preferences routes (51h), delete dead DecisionController (33u).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-axn): implementation plan for API authz cluster\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(purses-axn): plan v2 — fold in adversarial-review findings (shares IDOR, SharePanel gate, inline guard)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(purses-axn): requireApiResultAccess guard (collection + curator scope)\n\n* fix(purses-axn): guard sort-results [id] core routes (collection+curator)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-axn): guard sort-results items+shares; belongs-to-parent for [rid] and [sid]\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-axn): POST /api/sort-results routes through repo + collection guard (allocates number)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-axn): render SharePanel only for the result's curator (no 403-on-click)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-33u): curator-scope session-list GETs (close cross-curator read leak)\n\nGET /api/sessions and GET /api/collections/[id]/sessions passed the\ncollection-access gate but returned ALL curators' sessions to any member\n(a within-collection read leak). Scope both list GETs to the caller's own\nsessions via SessionRepository.findByCollectionAndCurator, matching the\nalready-curator-scoped pages (t9l). Tier-1 access gate preserved; POST\nuntouched. Remove now-dead sessionsTable/eq imports from the flat route.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses-51h): add membership gate to preferences GET/DELETE routes\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(purses-33u): delete dead DecisionController (live route guards its own writes)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(purses-axn): cover belongs-to-parent on all child methods + DELETE/shares-POST authz (final-review gap)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781725629000
+              "time": 1781816473000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781725629000
+              "time": 1781816473000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 935,
+                  "duration": 1013,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:31:28.730Z",
+                  "startTime": "2026-06-18T21:12:22.140Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -303,12 +303,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6949,
+                  "duration": 5440,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:31:30.325Z",
+                  "startTime": "2026-06-18T21:12:23.807Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -337,12 +337,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2267,
+                  "duration": 2250,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:31:38.031Z",
+                  "startTime": "2026-06-18T21:12:29.872Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -371,12 +371,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1572,
+                  "duration": 1632,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:31:52.923Z",
+                  "startTime": "2026-06-18T21:12:44.648Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -405,12 +405,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2261,
+                  "duration": 2378,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:31:54.672Z",
+                  "startTime": "2026-06-18T21:12:46.465Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -439,12 +439,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 967,
+                  "duration": 1022,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:07.325Z",
+                  "startTime": "2026-06-18T21:13:00.247Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -473,12 +473,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1054,
+                  "duration": 1178,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:08.622Z",
+                  "startTime": "2026-06-18T21:13:01.986Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -515,12 +515,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1647,
+                  "duration": 1677,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:31:40.352Z",
+                  "startTime": "2026-06-18T21:12:32.157Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -549,12 +549,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1432,
+                  "duration": 1534,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:31:42.062Z",
+                  "startTime": "2026-06-18T21:12:33.888Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -583,12 +583,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2227,
+                  "duration": 2400,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:31:43.518Z",
+                  "startTime": "2026-06-18T21:12:35.442Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -617,12 +617,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1488,
+                  "duration": 1563,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:31:56.983Z",
+                  "startTime": "2026-06-18T21:12:48.884Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -651,12 +651,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1465,
+                  "duration": 1547,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:31:58.541Z",
+                  "startTime": "2026-06-18T21:12:50.512Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -685,12 +685,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1703,
+                  "duration": 1897,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:00.030Z",
+                  "startTime": "2026-06-18T21:12:52.076Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -719,12 +719,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 695,
+                  "duration": 785,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:09.710Z",
+                  "startTime": "2026-06-18T21:13:03.192Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -753,12 +753,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 762,
+                  "duration": 810,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:10.442Z",
+                  "startTime": "2026-06-18T21:13:04.013Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -787,12 +787,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1066,
+                  "duration": 1199,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:11.237Z",
+                  "startTime": "2026-06-18T21:13:04.850Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -829,12 +829,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 850,
+                  "duration": 797,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:31:45.773Z",
+                  "startTime": "2026-06-18T21:12:37.885Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -863,12 +863,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 888,
+                  "duration": 900,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:31:46.694Z",
+                  "startTime": "2026-06-18T21:12:38.739Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -897,12 +897,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 808,
+                  "duration": 869,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:01.773Z",
+                  "startTime": "2026-06-18T21:12:54.012Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -931,12 +931,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 758,
+                  "duration": 780,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:02.664Z",
+                  "startTime": "2026-06-18T21:12:54.953Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -965,12 +965,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 265,
+                  "duration": 276,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:12.324Z",
+                  "startTime": "2026-06-18T21:13:06.074Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -999,12 +999,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 373,
+                  "duration": 369,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:12.628Z",
+                  "startTime": "2026-06-18T21:13:06.391Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1041,12 +1041,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1222,
+                  "duration": 1265,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:31:47.618Z",
+                  "startTime": "2026-06-18T21:12:39.676Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1075,12 +1075,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1011,
+                  "duration": 1039,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:31:48.876Z",
+                  "startTime": "2026-06-18T21:12:40.984Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1109,12 +1109,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 785,
+                  "duration": 846,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:31:49.923Z",
+                  "startTime": "2026-06-18T21:12:42.050Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1143,12 +1143,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 714,
+                  "duration": 637,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:03.459Z",
+                  "startTime": "2026-06-18T21:12:55.772Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1177,12 +1177,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 693,
+                  "duration": 627,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:04.197Z",
+                  "startTime": "2026-06-18T21:12:56.451Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1211,12 +1211,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 727,
+                  "duration": 734,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:04.924Z",
+                  "startTime": "2026-06-18T21:12:57.101Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1245,12 +1245,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 252,
+                  "duration": 263,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:13.019Z",
+                  "startTime": "2026-06-18T21:13:06.778Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1279,12 +1279,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 245,
+                  "duration": 237,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:13.288Z",
+                  "startTime": "2026-06-18T21:13:07.055Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1313,12 +1313,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 268,
+                  "duration": 253,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-17T20:32:13.548Z",
+                  "startTime": "2026-06-18T21:13:07.308Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1362,12 +1362,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1294,
+                      "duration": 890,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-17T20:31:50.737Z",
+                      "startTime": "2026-06-18T21:12:42.922Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1396,12 +1396,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 813,
+                      "duration": 1312,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-17T20:32:05.681Z",
+                      "startTime": "2026-06-18T21:12:57.866Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1430,12 +1430,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 437,
+                      "duration": 417,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-17T20:32:13.834Z",
+                      "startTime": "2026-06-18T21:13:07.575Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1455,8 +1455,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-17T20:30:25.536Z",
-    "duration": 109019.127,
+    "startTime": "2026-06-18T21:11:19.827Z",
+    "duration": 108455.304,
     "expected": 34,
     "skipped": 0,
     "unexpected": 0,
