@@ -26,6 +26,7 @@ vi.mock("@/lib/auth", () => ({
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
 import { requireApiResultAccess } from "@/server/dal/collection-access";
+import { POST as createResult } from "@/app/api/sort-results/route";
 import { GET as getResult, PATCH as patchResult, DELETE as deleteResult } from "@/app/api/sort-results/[id]/route";
 import { POST as finalizeResult } from "@/app/api/sort-results/[id]/finalize/route";
 import { GET as getItem } from "@/app/api/sort-results/[id]/items/[rid]/route";
@@ -188,6 +189,31 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       // Caller owns `resultId`, tries to revoke a share under `other.id` via the path id.
       const res = await deleteShare(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: { id: resultId, sid: victimShare.id } });
       expect(res.status).toBe(404);
+    });
+  });
+
+  describe("POST /api/sort-results", () => {
+    function postReq(body: unknown) {
+      return new Request("http://localhost/api/sort-results", {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
+      });
+    }
+
+    it("403s creating a result in a collection the caller is not a member of", async () => {
+      const { collectionId } = await seedResult(ownerId, ownerId);
+      mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
+      const res = await createResult(postReq({ collectionId, name: "X" }) as any);
+      expect(res.status).toBe(403);
+    });
+
+    it("201s for a member and allocates a non-null number with curatorId = caller", async () => {
+      const { collectionId } = await seedResult(ownerId, ownerId);
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const res = await createResult(postReq({ collectionId, name: "My ranking" }) as any);
+      expect(res.status).toBe(201);
+      const json = await res.json();
+      expect(json.number).toEqual(expect.any(Number));
+      expect(json.curatorId).toBe(ownerId);
     });
   });
 });
