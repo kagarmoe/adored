@@ -26,17 +26,20 @@ they are green-as-expected-failure (`test.fails`/`it.fails`) or `test.fixme`.
 
 ### Tripwire inventory (`grep -rn "test.fails\|it.fails\|test.fixme\|BROKEN(" src e2e`)
 
-Eight pinned breaks across six files:
+Nine pinned tripwires across seven files (the e2e `test.fixme` runs ×3 Playwright
+projects, so a `grep`/run that counts project instances reports more — these are the
+distinct test *definitions*):
 
 1. `src/app/api/sort-results/route.test.ts:116` — `test.fails` (POST materializes one item per preference).
 2. `src/app/api/sort-results/[id]/supersede/route.test.ts:100` — `it.fails` (supersede 201 + clones items).
 3. `src/app/api/sort-results/[id]/items/[rid]/route.test.ts:204` — `it.fails` (DELETE removes the item).
-4. `src/app/api/sort-results/[id]/shares/route.test.ts:76` — `it.fails` (listShares scoped to the result id).
-5. `src/app/collections/[id]/results/[resultNumber]/page.test.tsx:150` — `it.fails` + `BROKEN(purses-xca)` (low tier reads "Onward", not "Release").
-6. `src/lib/db/sort-results-authz.integration.test.ts:306` — `it.fails` (live `POST` → non-empty items; the always-on seam guard).
-7. `e2e/sort-session.spec.ts:115` — `test.fixme` + `BROKEN:` (StartSessionForm lands on `/triage`).
+4. `src/app/api/sort-results/[id]/route.test.ts:182` — `it.fails` (DELETE actually removes the result — the `deleteResult` aggregate no-op; see Finding 3a).
+5. `src/app/api/sort-results/[id]/shares/route.test.ts:76` — `it.fails` (listShares scoped to the result id).
+6. `src/app/collections/[id]/results/[resultNumber]/page.test.tsx:150` — `it.fails` + `BROKEN(purses-xca)` (low tier reads "Onward", not "Release").
+7. `src/lib/db/sort-results-authz.integration.test.ts:306` — `it.fails` (live `POST` → non-empty items; the always-on seam guard).
+8. `e2e/sort-session.spec.ts:115` — `test.fixme` + `BROKEN:` (StartSessionForm lands on `/triage`).
 
-(Items 1 and 6 are two tripwires — unit and integration — on the **same** headline break, pinning it at two layers.)
+(Items 1 and 7 are two tripwires — unit and integration — on the **same** headline break, pinning it at two layers.)
 
 ---
 
@@ -109,6 +112,27 @@ findByResult/update), so deletion cannot be implemented without first adding a r
 **Tripwire:** `src/app/api/sort-results/[id]/items/[rid]/route.test.ts:204` `it.fails`
 ("DELETE removes the result item") — store-backed repo, asserts the item is gone after DELETE.
 Flipped to `it`: `AssertionError: expected { Object (id, sortResultId, …) } to be null`.
+
+### 3a. deleteResult — the *aggregate* DELETE is the same no-op that lies with 200
+
+**Symptom:** `DELETE /api/sort-results/[id]` returns 200 `{ message: "Result deleted" }`,
+but the `SortResult` (and its items) are still there. Same lie as Finding 3, one level up:
+deleting the *whole result*, not a single item.
+
+**Cause:** The route (`src/app/api/sort-results/[id]/route.ts:65`) calls
+`controller.deleteResult(params.id)`, whose body validates the result exists and is a draft,
+then ends at `// TODO: Implement hard delete for draft result` (`src/server/api/results.ts:73`)
+— it never deletes. The route returns 200 regardless. (`ISortResultRepository` likewise has no
+`delete` method, so — as with Finding 3 — deletion can't be implemented without first adding a
+repo delete path.)
+
+**Tripwire:** `src/app/api/sort-results/[id]/route.test.ts:182` `it.fails`
+("DELETE actually removes the result") — store-backed repo, asserts the result is gone after
+DELETE (`findById` returns null). Flipped to `it`:
+`AssertionError: expected { id: 'sr1', collectionId: 'c1', …(7) } to be null`. Green-as-`it.fails`
+today; errors the moment hard-delete ships. This replaces the previously mock-deep "deletes a
+draft result on success" test (renamed to the honest status-only "DELETE /sort-results/[id]
+returns 200"), which asserted only 200 + message and so rubber-stamped the no-op.
 
 ### 4. listShares — TODO stub returns hardcoded `[]`, unscoped to the result
 
@@ -189,8 +213,9 @@ session route, or add a "see your results" control on the session-detail page). 
 `ResultController.createDraftResult` (the wired-but-stubbed path) as the thing to either delegate
 to the service or delete, so there is a single source of truth rather than two half-paths. With
 the populating path live, clear the adjacent stubs in the same lifecycle: route supersede to the
-complete `SortResultService.supersedeResult` (Finding 2); add a repo `delete` and a real
-`deleteResultItem` (Finding 3); implement `ShareController.listShares(resultId)` against a
+complete `SortResultService.supersedeResult` (Finding 2); add a repo `delete` and real
+`deleteResultItem` / `deleteResult` hard deletes (Findings 3 and 3a — both ride the same missing
+repo delete path); implement `ShareController.listShares(resultId)` against a
 `findByResult` scope (Finding 4); relabel `ItemCard` low → "Onward" (Finding 5, purses-xca); and
 have `StartSessionForm` push to `/triage` (Finding 6). Each repair flips its tripwire from
 green-as-expected-failure to an **error**, which is the regression guard: the failing-as-expected

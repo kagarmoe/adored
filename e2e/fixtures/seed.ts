@@ -105,7 +105,10 @@ export async function seedTriageScenario(ownerId: string): Promise<{
 
 /** Score/confidence/comparisonCount don't matter for presentation — only the
  *  bucket placement does (it drives which tier card and which rank an item lands
- *  in). One item per bucket spans the full ramp: Love → Onward. */
+ *  in). Seeds three of the four buckets — top/high/low — leaving `medium` (Maybe)
+ *  intentionally unpopulated; the page renders all four tier *labels* regardless of
+ *  whether a bucket has items. (The low tier's live label is "Release", not the
+ *  not-yet-shipped "Onward".) */
 const SORT_SCENARIO_BUCKETS = ["top", "high", "low"] as const;
 
 /**

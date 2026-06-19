@@ -52,7 +52,10 @@ test.describe("results page (renderer-only, seeded populated result)", () => {
     );
     expect(page.url()).not.toMatch(/\/collections\/col_[^/]+\/results/);
 
-    // The four tier sections of the value ramp render with their labels.
+    // The four tier sections of the value ramp render with their labels. This
+    // asserts the tier-section *chrome* renders, not per-bucket population: the
+    // fixture seeds only top/high/low (Maybe is intentionally empty), yet every
+    // tier label is present because the page renders all four sections regardless.
     for (const tier of ["Love", "Like", "Maybe", "Onward"]) {
       await expect(page.getByText(tier, { exact: true }).first()).toBeVisible();
     }

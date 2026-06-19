@@ -165,9 +165,27 @@ describe("DELETE /api/sort-results/[id]", () => {
     expect(res.status).toBe(403);
   });
 
-  it("deletes a draft result on success", async () => {
+  // Status-only: the route returns 200 with the "deleted" envelope regardless of
+  // whether anything was actually removed. Named honestly so it does NOT claim the
+  // row is gone — that contract is pinned by the RED tripwire below.
+  it("DELETE /sort-results/[id] returns 200", async () => {
     const res = await DELETE(getReq(), params);
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ message: "Result deleted" });
+  });
+
+  // RED tripwire — asserts the intended contract (the result is actually removed),
+  // not today's no-op. A store-backed repo lets us observe whether the result is
+  // gone after the request; ResultController.deleteResult() is a no-op
+  // (`// TODO: Implement hard delete`) so it survives -> fails. Mirrors the
+  // deleteResultItem tripwire in items/[rid]/route.test.ts.
+  it.fails("DELETE actually removes the result", async () => {
+    const store = new Map<string, typeof DRAFT_RESULT>([["sr1", DRAFT_RESULT]]);
+    sortResultRepo.findById.mockImplementation(async (id: string) => store.get(id) ?? null);
+
+    const res = await DELETE(getReq(), params);
+    expect(res.status).toBe(200);
+    // The result must be gone from the store after deletion.
+    expect(await sortResultRepo.findById("sr1")).toBeNull();
   });
 });
