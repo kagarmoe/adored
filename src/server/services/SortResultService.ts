@@ -2,6 +2,14 @@ import type { SortResult, SortResultItem } from "@/types";
 import type { ISortResultRepository, ISortResultItemRepository } from "@/server/repositories/SortResultRepository";
 import type { ICollectionPreferenceItemRepository } from "@/server/repositories/CollectionPreferenceItemRepository";
 
+/** Thrown when supersede targets a result that is not finalized; the route maps it to 409. */
+export class SupersedeStateError extends Error {
+  constructor() {
+    super("Can only supersede finalized results");
+    this.name = "SupersedeStateError";
+  }
+}
+
 export class SortResultService {
   constructor(
     private sortResultRepo: ISortResultRepository,
@@ -96,6 +104,7 @@ export class SortResultService {
   async supersedeResult(id: string): Promise<SortResult | null> {
     const oldResult = await this.sortResultRepo.findById(id);
     if (!oldResult) return null;
+    if (oldResult.status !== "finalized") throw new SupersedeStateError();
 
     const newResult = await this.sortResultRepo.create({
       collectionId: oldResult.collectionId,

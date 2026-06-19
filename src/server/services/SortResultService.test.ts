@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { SortResultService } from "./SortResultService";
+import { SortResultService, SupersedeStateError } from "./SortResultService";
 import type {
   CollectionPreferenceItem,
   SortResult,
@@ -151,7 +151,7 @@ describe("SortResultService.finalizeResult", () => {
 
 describe("SortResultService.supersedeResult", () => {
   it("supersedeResult clones computed items into a new draft named '(Revision)'", async () => {
-    const oldResult = sortResult({ id: "res-1", name: "Spring sort" });
+    const oldResult = sortResult({ id: "res-1", name: "Spring sort", status: "finalized" });
     const newResult = sortResult({ id: "res-2", name: "Spring sort (Revision)" });
     const oldItems = [
       sortResultItem({ itemId: "a", computedRank: 0, computedBucket: "top" }),
@@ -210,6 +210,23 @@ describe("SortResultService.supersedeResult", () => {
     ).supersedeResult("missing");
 
     expect(result).toBeNull();
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("supersedeResult throws SupersedeStateError when the source is not finalized", async () => {
+    const create = vi.fn();
+    const sortResultRepo = {
+      findById: async () => sortResult({ status: "draft" }),
+      create,
+    } as unknown as ISortResultRepository;
+
+    await expect(
+      new SortResultService(
+        sortResultRepo,
+        {} as unknown as ISortResultItemRepository,
+        {} as unknown as ICollectionPreferenceItemRepository,
+      ).supersedeResult("res-1"),
+    ).rejects.toBeInstanceOf(SupersedeStateError);
     expect(create).not.toHaveBeenCalled();
   });
 });

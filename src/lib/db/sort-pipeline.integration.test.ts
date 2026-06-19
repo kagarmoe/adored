@@ -187,4 +187,49 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     expect(byRank[1].itemId).toBe(lowItem.id);
     expect(byRank[1].computedRank).toBe(1);
   });
+
+  it("supersedeResult clones a finalized result's items into a new draft", async () => {
+    // Un-mocked clone proof across the real DB seam: a finalized result's items
+    // must be copied verbatim into a fresh draft. Same item count, status "draft".
+    const { db } = getTestDb();
+    const collectionId = generateId("col");
+    await db.execute(sql`
+      INSERT INTO collections (id, owner_id, name, status, created_at, updated_at)
+      VALUES (${collectionId}, ${ownerId}, 'Supersede clone', 'active', now(), now())
+    `);
+    const itemRepo = new ItemRepository(db);
+    const lowItem = await itemRepo.create({ collectionId });
+    const highItem = await itemRepo.create({ collectionId });
+
+    const prefRepo = new CollectionPreferenceItemRepository(db);
+    await prefRepo.create({
+      collectionId, curatorId: ownerId, itemId: lowItem.id,
+      score: 0.375, confidence: 1, rankBucket: "medium", comparisonCount: 0,
+    });
+    await prefRepo.create({
+      collectionId, curatorId: ownerId, itemId: highItem.id,
+      score: 0.875, confidence: 1, rankBucket: "top", comparisonCount: 0,
+    });
+
+    const service = new SortResultService(
+      new SortResultRepository(db),
+      new SortResultItemRepository(db),
+      prefRepo,
+    );
+
+    // Populate a draft, finalize it, then supersede it.
+    const draft = await service.createDraftResult(collectionId, ownerId, "To finalize");
+    const sourceItems = await new SortResultItemRepository(db).findByResult(draft.id);
+    expect(sourceItems).toHaveLength(2);
+    await service.finalizeResult(draft.id);
+
+    const revision = await service.supersedeResult(draft.id);
+    expect(revision).not.toBeNull();
+    expect(revision!.status).toBe("draft");
+    expect(revision!.id).not.toBe(draft.id);
+
+    // The revision is a fresh draft carrying the SAME item count as the source.
+    const revisionItems = await new SortResultItemRepository(db).findByResult(revision!.id);
+    expect(revisionItems).toHaveLength(sourceItems.length);
+  });
 });

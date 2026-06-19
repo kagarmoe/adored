@@ -50,18 +50,4 @@ export class ResultController {
     }
     // TODO: Implement hard delete for draft result
   }
-
-  async supersedeResult(resultId: string): Promise<SortResult> {
-    const result = await this.resultRepo.findById(resultId);
-    if (!result) {
-      throw new Error("Result not found");
-    }
-    if (result.status !== "finalized") {
-      throw new Error("Can only supersede finalized results");
-    }
-    // Create new draft from finalized result
-    // TODO: Copy all SortResultItems to new result (without manual overrides)
-    // TODO: Create new draft with same curator/collection
-    throw new Error("Supersede not yet implemented - requires SortResultItems copy logic");
-  }
 }
