@@ -27,8 +27,9 @@ const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
-// Route imported via the @/ alias ([id] is a real dir).
+// Routes imported via the @/ alias ([id] is a real dir).
 import { POST as recordDecision } from "@/app/api/sessions/[id]/decisions/route";
+import { POST as createResult } from "@/app/api/sort-results/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -84,6 +85,61 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     expect(pref).not.toBeNull();
     expect(pref!.collectionId).toBe(collectionId);
     expect(pref!.rankBucket).toBe("top");
+  });
+
+  it("live POST /api/sort-results ranks the pairwise winner above the loser (triage + compare)", async () => {
+    // End-to-end across the real seam, BOTH decision types: triage seeds itemA and
+    // itemB into the SAME tier (so triage alone leaves them tied), then a pairwise
+    // compare with itemA the winner breaks the tie. The live POST /api/sort-results
+    // must then materialize result items whose computed ranks reflect that order:
+    // the winner outranks the loser. computedRank is 0-based (0 = best).
+    const { db } = getTestDb();
+    const collectionId = generateId("col");
+    await db.execute(sql`
+      INSERT INTO collections (id, owner_id, name, status, created_at, updated_at)
+      VALUES (${collectionId}, ${ownerId}, 'Pairwise pipeline', 'active', now(), now())
+    `);
+    const itemRepo = new ItemRepository(db);
+    const itemA = await itemRepo.create({ collectionId });
+    const itemB = await itemRepo.create({ collectionId });
+    const session = await new SessionRepository(db).create({ collectionId, curatorId: ownerId });
+
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    // Triage both into the SAME tier ("high") — tied on triage alone.
+    for (const itemId of [itemA.id, itemB.id]) {
+      const triageRes = await recordDecision(
+        decisionReq({ type: "triage", decision: { itemId, result: "high" } }) as any,
+        { params: { id: session.id } },
+      );
+      expect(triageRes.status).toBe(201);
+    }
+
+    // Pairwise compare breaks the tie: itemA wins over itemB.
+    const compareRes = await recordDecision(
+      decisionReq({
+        type: "pairwise_compare",
+        decision: { itemAId: itemA.id, itemBId: itemB.id, result: "item_a" },
+      }) as any,
+      { params: { id: session.id } },
+    );
+    expect(compareRes.status).toBe(201);
+
+    // Drive the live POST /api/sort-results route (the repaired seam).
+    const res = await createResult(
+      new Request("http://localhost/api/sort-results", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ collectionId, name: "Pairwise ranking" }),
+      }) as any,
+    );
+    expect(res.status).toBe(201);
+    const resultId = (await res.json()).id as string;
+
+    const items = await new SortResultItemRepository(db).findByResult(resultId);
+    const winner = items.find((i) => i.itemId === itemA.id)!;
+    const loser = items.find((i) => i.itemId === itemB.id)!;
+    expect(winner.computedRank).toBeLessThan(loser.computedRank);
   });
 
   it("createDraftResult materializes one item per preference, ranked by score", async () => {

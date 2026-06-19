@@ -2,15 +2,10 @@ import { z } from "zod";
 import type { SortResult } from "@/types";
 import type { ISortResultRepository } from "@/server/repositories/SortResultRepository";
 
-const CreateResultSchema = z.object({
-  name: z.string().min(1),
-});
-
 const UpdateResultSchema = z.object({
   name: z.string().min(1).optional(),
 });
 
-export type CreateResultInput = z.infer<typeof CreateResultSchema>;
 export type UpdateResultInput = z.infer<typeof UpdateResultSchema>;
 
 export class ResultController {
@@ -18,23 +13,6 @@ export class ResultController {
 
   async listResults(collectionId: string): Promise<SortResult[]> {
     return this.resultRepo.findByCollection(collectionId);
-  }
-
-  async createDraftResult(
-    collectionId: string,
-    curatorId: string,
-    data: unknown,
-  ): Promise<SortResult> {
-    const parsed = CreateResultSchema.parse(data);
-    // Create draft result from preferences
-    // TODO: Integrate with PreferenceStateService to compute preferences first
-    // TODO: Create SortResultItems from computed preferences
-    return this.resultRepo.create({
-      collectionId,
-      curatorId,
-      name: parsed.name,
-      status: "draft",
-    });
   }
 
   async getResult(resultId: string): Promise<SortResult> {

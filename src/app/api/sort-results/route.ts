@@ -3,6 +3,9 @@ import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
+import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
+import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
+import { SortResultService } from "@/server/services/SortResultService";
 
 interface CreateResultRequest {
   collectionId: string;
@@ -26,11 +29,13 @@ export async function POST(req: NextRequest) {
   const access = await requireApiCollectionAccess(db, body.collectionId, session.user.id);
   if (access instanceof NextResponse) return access;
 
-  const result = await new SortResultRepository(db).create({
-    collectionId: body.collectionId,
-    curatorId: session.user.id,
-    name: body.name,
-    status: "draft",
-  });
+  // Curator is ALWAYS the session user, never the request body. The service reads
+  // the curator's preferences and materializes one ranked SortResultItem per row.
+  const service = new SortResultService(
+    new SortResultRepository(db),
+    new SortResultItemRepository(db),
+    new CollectionPreferenceItemRepository(db),
+  );
+  const result = await service.createDraftResult(body.collectionId, session.user.id, body.name);
   return NextResponse.json(result, { status: 201 });
 }

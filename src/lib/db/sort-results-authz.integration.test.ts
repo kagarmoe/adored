@@ -296,14 +296,11 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       expect(json.curatorId).toBe(ownerId);
     });
 
-    // SEAM TRIPWIRE (Task 12, always-on db-tests tier). Asserts the INTENDED behavior:
-    // a live POST that creates a result should materialize one SortResultItem per the
-    // curator's preference. It is RED today — the route calls SortResultRepository.create
-    // directly and never SortResultService.createDraftResult, so findByResult is []. We
-    // pin that broken seam with test.fails(): GREEN while the break exists (the body
-    // throws on the empty assertion), and it ERRORS the moment the route is wired to
-    // materialize items — forcing this guard to flip to a plain `it`.
-    it.fails(
+    // SEAM PROOF (always-on db-tests tier). Asserts the INTENDED behavior: a live POST
+    // that creates a result materializes one SortResultItem per the curator's preference.
+    // The route delegates to SortResultService.createDraftResult, which reads preferences
+    // and writes one item per preference, so findByResult is non-empty.
+    it(
       "live POST /api/sort-results materializes one SortResultItem per preference",
       async () => {
         const { db } = getTestDb();
