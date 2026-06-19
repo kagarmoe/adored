@@ -79,4 +79,7 @@ next-env.d.ts
 # installed skill content and the symlinks into it — reconstructable from the
 # lock, like node_modules. (See skills-lock.json for the pinned sources/hashes.)
 /.agents/
-/.claude/skills/
+/.claude/skills/*
+# Project automation skills — committed for now; move upstream once proven.
+!/.claude/skills/sync-docs/
+!/.claude/skills/close-out/
