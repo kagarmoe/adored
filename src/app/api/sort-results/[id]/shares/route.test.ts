@@ -9,7 +9,7 @@ const { mockRequireAuth, mockGetDb, mockRequireResultAccess, shareRepo } = vi.ho
   mockRequireAuth: vi.fn(),
   mockGetDb: vi.fn(),
   mockRequireResultAccess: vi.fn(),
-  shareRepo: { create: vi.fn(), findById: vi.fn(), update: vi.fn(), findByToken: vi.fn() },
+  shareRepo: { create: vi.fn(), findById: vi.fn(), update: vi.fn(), findByToken: vi.fn(), findByResult: vi.fn() },
 }));
 vi.mock("@/lib/auth", () => ({ requireAuth: mockRequireAuth }));
 vi.mock("@/lib/db", () => ({ getDb: mockGetDb }));
@@ -38,6 +38,8 @@ beforeEach(() => {
     shareToken: "ignored-by-controller",
     status: "active",
   });
+  // Default: this result has no shares yet (scoped lookup returns an empty array).
+  shareRepo.findByResult.mockResolvedValue([]);
 });
 
 describe("GET /api/sort-results/[id]/shares (list shares)", () => {
@@ -69,18 +71,15 @@ describe("GET /api/sort-results/[id]/shares (list shares)", () => {
     expect(Array.isArray(await res.json())).toBe(true);
   });
 
-  // BROKEN: intended — GET list returns the shares that belong to THIS result
-  // (scoped by params.id); actual — controller.listShares() is called with no
-  // arguments and returns a hardcoded [] (TODO stub), so it ignores params.id and
-  // never surfaces a result's shares. Quarantined: asserts intended behavior.
-  it.fails(
+  it(
     "lists the shares scoped to this result id",
     async () => {
       const scopedShare = { id: "share-1", sortResultId: RESULT_ID, status: "active" };
-      shareRepo.findById.mockResolvedValue(scopedShare);
+      shareRepo.findByResult.mockResolvedValue([scopedShare]);
       const res = await GET({} as any, ctx);
       const body = await res.json();
       expect(body).toEqual([scopedShare]);
+      expect(shareRepo.findByResult).toHaveBeenCalledWith(RESULT_ID);
     },
   );
 });

@@ -226,6 +226,21 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       expect(res.status).toBe(403);
     });
 
+    it("shares list 200s for the curator and returns only this result's shares (scoped)", async () => {
+      const { db } = getTestDb();
+      const { collectionId, resultId } = await seedResult(ownerId, ownerId);
+      // A share under THIS result, plus a share under a different same-owner result.
+      const mine = await new SortResultShareRepository(db).create({ sortResultId: resultId, shareToken: generateId("tok") });
+      const other = await new SortResultRepository(db).create({ collectionId, curatorId: ownerId, name: "Other", status: "finalized" });
+      await new SortResultShareRepository(db).create({ sortResultId: other.id, shareToken: generateId("tok") });
+
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const res = await listShares(new Request("http://localhost/x") as any, { params: { id: resultId } });
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.map((s: { id: string }) => s.id)).toEqual([mine.id]);
+    });
+
     /** A share under a DIFFERENT (same-owner) result; the caller can access `resultId`. */
     async function seedForeignShare() {
       const { db } = getTestDb();
