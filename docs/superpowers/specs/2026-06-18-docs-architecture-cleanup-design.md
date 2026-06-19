@@ -11,7 +11,7 @@
 ## Decisions (locked with the user)
 
 1. **Create a single `docs/ARCHITECTURE.md`** — the orientation source-of-truth. Sections: **Where we are** (architecture + shipped) → **How we got here** (9-phase narrative + a decisions log) → **Where we're going** (roadmap). It *links to* PRODUCT/TONE/DESIGN/README rather than absorbing them.
-2. **Aggressive deletion (35 docs).** Delete the 30 shipped-and-superseded plans/specs + 2 abandoned onboarding docs + the 2 legacy `purseinator_*` top-level specs + `neon-migration.md`. **Keep 4** living references + update `DEPLOYMENT.md`.
+2. **Aggressive deletion (35 docs).** Delete the shipped-and-superseded plans/specs + 2 abandoned onboarding docs + `neon-migration.md`. **Keep** the living references + update `DEPLOYMENT.md`. **[v2, post-review]** The 2 legacy `purseinator_*` top-level specs are **KEPT, not deleted** — the adversarial review found they are the only written record of the 9 permission flags (which epic pv9 migrates), the entity model, the share-visibility matrix, the DB invariants, and the **unbuilt purge contract** (`purgeCollection` is a TODO stub). They remain the standing contract until pv9 supersedes them in code.
 3. **Targeted root-doc fixes.** Fix README's real drift (env-var names). PRODUCT + TONE are fresh — leave them. DESIGN is fresh (its `contrast.test.ts` ref is valid). Add a cross-link to `ARCHITECTURE.md` from each.
 
 ## Critical sequencing (the one rule that matters)
@@ -30,9 +30,9 @@ Length target: thorough but skimmable (headings + lists). Links: PRODUCT.md (why
 
 ## Docs changes
 
-**DELETE (35):** all of `docs/plans/*` **except** `2026-06-09-visual-regression-screenshots.md` and `2026-06-10-bulk-upload-pool-design.md`; all of `docs/superpowers/plans/*` and `docs/superpowers/specs/*` from the shipped work (the 8 superpowers files: slugs plan+design, authz-hotfix plan, card-images plan+design, authz-api-cluster plan+design, urls-slugs-numbers plan — **but NOT this 2026-06-18 spec**); plus `docs/purseinator_mvp_api_spec.md` and `docs/purseinator_app_infra_spec.md`. (Exact list enumerated in the implementation plan, derived from the audit's DELETE set + the 3 reclassified KEEPs.)
+**DELETE (35):** all of `docs/plans/*` **except** `2026-06-09-visual-regression-screenshots.md` and `2026-06-10-bulk-upload-pool-design.md`; all of `docs/superpowers/plans/*` and `docs/superpowers/specs/*` from the shipped work (the 8 superpowers files: slugs plan+design, authz-hotfix plan, card-images plan+design, authz-api-cluster plan+design, urls-slugs-numbers plan — **but NOT this 2026-06-18 spec/plan**). **[v2] `docs/purseinator_mvp_api_spec.md` and `docs/purseinator_app_infra_spec.md` are KEPT** (see Decision 2). Net DELETE = 35; exact list enumerated in the implementation plan.
 
-**KEEP (4):** `docs/plans/2026-06-09-visual-regression-screenshots.md` (unshipped plan — live), `docs/plans/2026-06-10-bulk-upload-pool-design.md` (pool architecture reference), `docs/cookbook/add-images-to-pr.md`, `docs/Adored_wireframes.pdf`. (Link the pool-design + wireframes from ARCHITECTURE.md.)
+**KEEP (6):** `docs/plans/2026-06-09-visual-regression-screenshots.md` (unshipped plan — live), `docs/plans/2026-06-10-bulk-upload-pool-design.md` (pool architecture reference), `docs/cookbook/add-images-to-pr.md`, `docs/Adored_wireframes.pdf`, **`docs/purseinator_app_infra_spec.md`** + **`docs/purseinator_mvp_api_spec.md`** (v2 — standing domain/permission/invariant/purge contract). Link the pool-design, wireframes, and both legacy specs from ARCHITECTURE.md's Reference deep-dives.
 
 **UPDATE:** `docs/DEPLOYMENT.md` — refresh against current deploy reality (verify env vars, Neon branches, Vercel config).
 
