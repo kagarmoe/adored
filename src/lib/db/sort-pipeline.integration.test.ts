@@ -337,4 +337,32 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     expect(after).toHaveLength(before.length - 1);
     expect(after.some((i) => i.id === victim.id)).toBe(false);
   });
+
+  it("DELETE /api/sort-results/[id]/items/[rid] rejects a finalized result with 409 and leaves the item intact", async () => {
+    const { db } = getTestDb();
+    const draft = await seedPopulatedDraft();
+
+    const before = await new SortResultItemRepository(db).findByResult(draft.id);
+    expect(before.length).toBeGreaterThan(0);
+    const victim = before[0];
+
+    const service = new SortResultService(
+      new SortResultRepository(db),
+      new SortResultItemRepository(db),
+      new CollectionPreferenceItemRepository(db),
+    );
+    await service.finalizeResult(draft.id);
+
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await deleteResultItemRoute(
+      new Request(`http://localhost/api/sort-results/${draft.id}/items/${victim.id}`, {
+        method: "DELETE",
+      }) as any,
+      { params: { id: draft.id, rid: victim.id } },
+    );
+    expect(res.status).toBe(409);
+
+    // The item on a finalized result must survive the delete attempt.
+    expect(await new SortResultItemRepository(db).findById(victim.id)).not.toBeNull();
+  });
 });

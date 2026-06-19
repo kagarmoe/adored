@@ -162,6 +162,13 @@ describe("PATCH /api/sort-results/[id]/items/[rid]", () => {
     expect(itemRepo.update).not.toHaveBeenCalled();
   });
 
+  it("409 when the parent result is finalized (no mutation)", async () => {
+    mockRequireApiResultAccess.mockResolvedValue({ ...RESULT, status: "finalized" });
+    const res = await PATCH(patchReq({ manualRank: 2 }), params);
+    expect(res.status).toBe(409);
+    expect(itemRepo.update).not.toHaveBeenCalled();
+  });
+
   it("updates the item on success", async () => {
     const res = await PATCH(patchReq({ manualRank: 2 }), params);
     expect(res.status).toBe(200);
@@ -197,6 +204,13 @@ describe("DELETE /api/sort-results/[id]/items/[rid]", () => {
     itemRepo.findById.mockResolvedValue({ ...makeItem(), sortResultId: "OTHER" });
     const res = await DELETE(getReq(), params);
     expect(res.status).toBe(404);
+  });
+
+  it("409 when the parent result is finalized (no delete)", async () => {
+    mockRequireApiResultAccess.mockResolvedValue({ ...RESULT, status: "finalized" });
+    const res = await DELETE(getReq(), params);
+    expect(res.status).toBe(409);
+    expect(itemRepo.delete).not.toHaveBeenCalled();
   });
 
   // Asserts the intended contract (the row is actually removed), not just a 200.
