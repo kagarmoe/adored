@@ -19,7 +19,7 @@ The sort session is **known broken**, but TDD was skipped when it was built, so 
 Rev-1 said both "failures are the deliverable" *and* "pin actual broken behavior green." Those contradict, and pinning-green buries the diagnosis + inverts into a test that fails on the fix. Resolution:
 
 - **Assert intended behavior. Let it go RED at the break.** The red test *is* the localization and the repair's regression tripwire.
-- **Quarantine known reds so required CI stays green:** mark each known-failing diagnostic test `test.fails()` (vitest — the suite passes while the body fails, and **errors the moment the body starts passing**, i.e. when the bug is fixed, forcing the repairer to promote it to a normal passing test). Where `test.fails()` doesn't fit (e.g. a thrown 500), use `test.fixme`/`it.skip` with a `// BROKEN(purses-r7p): intended X, actual Y` tag. Either way the break is a *named test*, not a buried comment, and never a green assertion of broken behavior.
+- **Quarantine known reds so required CI stays green:** mark each known-failing diagnostic test `test.fails()` (vitest — the suite passes while the body fails, and **errors the moment the body starts passing**, i.e. when the bug is fixed, forcing the repairer to promote it to a normal passing test). Where `test.fails()` doesn't fit, use `it.skip` (vitest 1.6.1 has no `test.fixme`) with a `// BROKEN(purses-r7p): intended X, actual Y` tag. Either way the break is a *named test*, not a buried comment, and never a green assertion of broken behavior.
 - **Balanced pyramid** (owner decision): logic/branches/error-paths at unit/integration; e2e only for what a browser proves (tap, image rendering, slug/number routing, auth).
 - **Seam-first ordering** (rev-1 had it backwards): the load-bearing seam assertions (result-creation) come **first**, not after 9 unit tasks — they carry the diagnosis; the unit coverage is debt-repayment around them.
 - **Coverage bar:** every public behavior, branch, error path, claimed invariant, seam. Real assertions over mock-call assertions; ≥1 un-mocked cross-layer test per seam.
@@ -30,7 +30,7 @@ The review read the code and confirmed the break is **result creation**, but the
 
 - `POST /api/sort-results` (`src/app/api/sort-results/route.ts:29`) calls `SortResultRepository.create({status:"draft"})` **directly** → an empty draft, **zero `SortResultItem`s materialized**.
 - `SortResultService.createDraftResult` (the path that *does* materialize items from preferences) is **fully orphaned — never instantiated anywhere** in `src/` or `e2e/`. Not "called only by `SessionCompleteScreen`."
-- A **second** populating path, `ResultController.createDraftResult` (`src/server/api/results.ts:23`), **is** wired into the `[id]` route tree but is a **stub** (`// TODO: create SortResultItems`) — it materializes nothing.
+- A **second** populating method, `ResultController.createDraftResult` (`src/server/api/results.ts:23`), exists on the controller that **is** wired into the `[id]` route tree — but it is a **stub** (`// TODO: create SortResultItems`) and **no route calls it**; the live create path remains the top-level `POST /api/sort-results` (above).
 - `finalize` route → `ResultController.finalizeResult` (sets status, no items). `supersede` route → `ResultController.supersedeResult` which **throws "not implemented"** (`results.ts:~87`). The correct `SortResultService.supersedeResult` (clones items) is never reached.
 - `SessionCompleteScreen.tsx:40` `fetch`es the empty `POST /api/sort-results` route — and is itself **dead** (mounted by no page; no `complete` segment in the sort route tree).
 - **Net live failure mode: no `SortResult` is created through any live UI path at all** (the sole caller is dead) → Results is empty/absent. The route, called directly (as tests do), produces an *empty* result.
@@ -44,12 +44,13 @@ So the diagnosis is essentially known; the suite's job is to (a) pin these break
 - **`PairingService`** — ✅ **DONE** (committed, 6/6 green; layer sound).
 - **`PreferenceStateService`** — ✅ **DONE** (committed, 4/4 green; layer sound).
 - **`SessionService` / `SortResultService` / `DecisionEventService` / `SortResultShareService`**: test non-trivial methods (status transitions; `createDraftResult` materialization; `finalize`/`supersede` clone rules; share token/expiry); skip pure pass-throughs (note them). These pin the **correct** service behavior the routes fail to call.
-- **`sort-results` route handlers**: per-route `route.test.ts` for `POST` + `[id]` GET/PATCH/DELETE + `finalize` + `supersede` + `items` + `items/[rid]` GET/PATCH/DELETE + `reset` + `shares` + `shares/[sid]` — assert 401/403/404 (incl. belongs-to-parent)/400/success per the established mocked pattern. **RED tripwires:** `POST` asserts items are materialized (`test.fails` — currently 0); `supersede` asserts 201 + cloned items (`test.fails`/`fixme` — currently throws 500); the no-op `items/[rid] DELETE` asserts deletion (`test.fails` — currently no-op 200).
+- **`sort-results` route handlers**: per-route `route.test.ts` for `POST` + `[id]` GET/PATCH/DELETE + `finalize` + `supersede` + `items` + `items/[rid]` GET/PATCH/DELETE + `reset` + `shares` + `shares/[sid]` — assert 401/403/404 (incl. belongs-to-parent)/400/success per the established mocked pattern. **RED tripwires:** `POST` asserts items are materialized (`test.fails` — currently 0); `supersede` asserts 201 + cloned items (`test.fails` — route catches the throw, returns 500, so the assertion fails cleanly); the no-op `items/[rid] DELETE` asserts deletion (`test.fails` — currently no-op 200).
 - **Interactive component gaps**: only what existing page tests miss (triage tier buttons, compare tap-target, results tier + Onward sections) — no redundant re-tests.
 
 ### Tier 2 — DB integration (`src/lib/db/*.integration.test.ts`, `RUN_DB_TESTS=1`, ephemeral Postgres; mock only auth) — the always-on seam guard
 - **The seam tripwire goes here, not e2e** (the e2e job is skippable — see CI). Drive the **real** `POST /api/sort-results` handler un-mocked, then assert `SortResultItemRepository.findByResult(newId)` materializes items (`test.fails` — currently `[]`). This is ~one assertion added to the **existing** `src/lib/db/sort-results-authz.integration.test.ts` (which already drives live POST un-mocked) **or** a small new `sort-pipeline.integration.test.ts` — do NOT duplicate the authz file's setup.
-- New end-to-end-of-the-real-seam assertions worth their keep: triage decision → persisted preference bucket → `SortResultService.createDraftResult` materializes `SortResultItem`s. Assert **persistence and direction**, not the exact scoring arithmetic (already covered by `ScoringService`'s 10 unit tests — do not re-derive).
+- New end-to-end-of-the-real-seam assertions worth their keep: triage decision → persisted preference bucket. Assert **persistence and direction**, not the exact scoring arithmetic (already covered by `ScoringService`'s 10 unit tests — do not re-derive).
+- A separate assertion exercises `SortResultService.createDraftResult` → `SortResultItem`s. **Label it as characterizing the intended-but-unwired path** (the service is orphaned — this is a future-repair target, not a live-seam guard; the live-seam tripwire is the `POST`-route assertion above).
 
 ### Tier 3 — E2E (Playwright; one robust journey per flow + cross-cutting)
 - **session**: start → triage at the slug/number URL → persists/resumes. (No `complete` screen exists — do not assert one.)
@@ -72,7 +73,7 @@ So the diagnosis is essentially known; the suite's job is to (a) pin these break
 
 ## Decisions resolved
 
-- Bug handling: **characterize-only = no fixes.** Diagnostic tests assert **intended** behavior and are **RED-quarantined** (`test.fails`/`fixme`), never pinned green to broken behavior. (Supersedes the rev-1 "pin actual" rule.)
+- Bug handling: **characterize-only = no fixes.** Diagnostic tests assert **intended** behavior and are **RED-quarantined** (`test.fails`/`it.skip`), never pinned green to broken behavior. (Supersedes the rev-1 "pin actual" rule.)
 - Pyramid: **balanced**; **seam-first** ordering.
 - Seam guard lives in the **always-on integration tier**, not the skippable e2e job.
 
