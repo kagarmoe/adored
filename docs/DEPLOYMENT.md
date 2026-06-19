@@ -111,6 +111,34 @@ vercel logs
 # 3. Check Vercel logs for magic link output (development only)
 ```
 
+## Skipping the `gh-pages` reports branch
+
+The repo publishes its review/report artifacts to a `gh-pages` branch. That branch is
+**not** a deployable app, so Vercel must be told to skip building it — otherwise every
+push to `gh-pages` triggers a Vercel build that **errors**.
+
+**The fix lives in the Vercel dashboard, not in `vercel.json`.** Configure
+**Settings → Git → Ignored Build Step** with the command:
+
+```bash
+bash -c 'if [ "$VERCEL_GIT_COMMIT_REF" = "gh-pages" ]; then exit 0; else exit 1; fi'
+```
+
+Exit code `0` tells Vercel to **skip** the build; exit `1` tells it to **proceed**. So
+this skips `gh-pages` and builds every other branch.
+
+**Why not `vercel.json`?** The obvious-looking approach —
+
+```json
+{ "git": { "deploymentEnabled": { "gh-pages": false } } }
+```
+
+— does **nothing** here. Vercel reads `vercel.json` from the branch *being deployed*. The
+`gh-pages` reports branch contains only published artifacts and has **no `vercel.json`**,
+so the exclusion is never seen and `gh-pages` still deploys (and errors). The non-functional
+block was removed in #199; the Ignored Build Step above is the working replacement because
+it is configured on the project, not read from the deployed branch.
+
 ## Feature Integration on Vercel
 
 ### Photo Upload (Vercel Blob)
