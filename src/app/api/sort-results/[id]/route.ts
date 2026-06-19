@@ -39,6 +39,12 @@ export async function PATCH(
     const db = getDb();
     const access = await requireApiResultAccess(db, params.id, user.id);
     if (access instanceof NextResponse) return access;
+    if (access.status === "finalized") {
+      return NextResponse.json(
+        { error: "Result is finalized" },
+        { status: 409 },
+      );
+    }
     const resultRepo = new SortResultRepository(db);
     const controller = new ResultController(resultRepo);
     const result = await controller.updateResult(params.id, body);
