@@ -291,7 +291,7 @@ Curator-scoped sorting sessions. `goal` is optional free text.
 Curator-private results, gated by `requireApiResultAccess` (member-or-owner **and** owning curator). Children also enforce belongs-to-parent.
 
 ### `POST /api/sort-results`
-`getSession` + `requireApiCollectionAccess(body.collectionId)`. **Body:** `{ collectionId, name }` (`400` if either missing, or invalid JSON). `curatorId` from session, `status: "draft"`. Delegates to `SortResultService.createDraftResult`, which reads the curator's `CollectionPreferenceItem` rows for the collection and **materializes one `SortResultItem` per preference** (ranked by descending score, carrying each row's bucket) before returning. `201 SortResult` (the created draft; items are fetched via `GET …/[id]/items`).
+`getSession` + `requireApiCollectionAccess(body.collectionId)`. **Body:** `{ collectionId, name }` (`400` if either missing, or invalid JSON). `curatorId` from session, `status: "draft"`. Delegates to `SortResultService.createDraftResult`, which reads the curator's `CollectionPreferenceItem` rows for the collection and **materializes one `SortResultItem` per preference** (ranked by descending score, carrying each row's bucket) before returning. **Materialization is atomic** — the result row + all item rows are written in one `withTransaction`, so a mid-materialization failure commits nothing (`purses-nea`). `201 SortResult` (the created draft; items are fetched via `GET …/[id]/items`).
 
 ### `GET·PATCH·DELETE /api/sort-results/[id]`
 `requireAuth` + `requireApiResultAccess` (`401`/`403`/`404`). `GET` → `SortResult`; `PATCH` body → updated `SortResult` (`400` invalid JSON), but rejects a **finalized** result with **`409`** (`"Result is finalized"`) — a finalized result is immutable, name included (infra §11.3; `purses-gmn`, mirroring `purses-526`'s item-level guards). `DELETE` delegates to `SortResultService.deleteResult`, which **hard-deletes a draft result and its child items** (children first — the `sort_result_items → sort_results` FK has no `ON DELETE CASCADE`; no transaction): `200 { message }` when a draft was deleted; **`409`** (`"Can only delete draft results"`) if the result is finalized; **`404`** if absent.
@@ -300,7 +300,7 @@ Curator-private results, gated by `requireApiResultAccess` (member-or-owner **an
 `requireApiResultAccess`. Finalizes the result. Returns `SortResult` (`200`).
 
 ### `POST /api/sort-results/[id]/supersede`
-`requireAuth` + `requireApiResultAccess`. Delegates to `SortResultService.supersedeResult`. When the source is **finalized**, creates a new **draft** result (`name` = `"<source name> (Revision)"`) with the source's items **cloned** (computed rank/bucket carried over) → **`201`** the new draft `SortResult`. **`409`** (`"Can only supersede finalized results"`) if the source is not finalized; **`404`** if the source is absent.
+`requireAuth` + `requireApiResultAccess`. Delegates to `SortResultService.supersedeResult`. When the source is **finalized**, creates a new **draft** result (`name` = `"<source name> (Revision)"`) with the source's items **cloned** (computed rank/bucket carried over) **atomically** (result + items in one transaction — `purses-nea`) → **`201`** the new draft `SortResult`. **`409`** (`"Can only supersede finalized results"`) if the source is not finalized; **`404`** if the source is absent.
 
 ### `GET /api/sort-results/[id]/items`
 `requireApiResultAccess`. Returns `SortResultItem[]`.
