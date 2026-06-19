@@ -5,15 +5,14 @@
 // images, and the Onward tier. It proves PRESENTATION on already-correct data
 // only.
 //
-// It carries ZERO diagnostic signal about the live sort→result break: the result
-// here is materialised directly by SortResultService.createDraftResult inside
-// seedSortScenario (the same code the real finalize flow uses), deliberately
-// bypassing the live sort UI. There is intentionally NO "fresh sort via live UI
-// → empty result" test, because no live UI path creates a result — the
-// SessionCompleteScreen that would have done so is dead code (no route renders
-// it). See the Task 14 report for the live-results-affordance observation; the
-// authoritative proof of the sort→result seam is Task 12's integration tripwire,
-// not this renderer test.
+// It deliberately carries no diagnostic signal about the live sort→result seam:
+// the result here is materialised directly by SortResultService.createDraftResult
+// inside seedSortScenario (the same code the real flow uses), bypassing the live
+// sort UI so this spec proves PRESENTATION only. The live UI path that creates a
+// result — the SeeResultsCard trigger on the session-detail page → POST
+// /api/sort-results → results page — is exercised end-to-end by the journey test
+// in sort-session.spec.ts. (Earlier the trigger was an inert "View Results" link
+// and the dead SessionCompleteScreen; both are gone.)
 //
 // Mirrors sort-images.spec.ts: seedBaseline + seedSortScenario, slug/number
 // URLs, and the protected-image intercept. Authenticated via the shared
