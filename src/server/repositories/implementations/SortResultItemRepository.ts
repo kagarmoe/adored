@@ -61,6 +61,16 @@ export class SortResultItemRepository implements ISortResultItemRepository {
     return this.mapToResultItem(item);
   }
 
+  async delete(id: string): Promise<void> {
+    await this.db.delete(sortResultItemsTable).where(eq(sortResultItemsTable.id, id));
+  }
+
+  async deleteByResult(sortResultId: string): Promise<void> {
+    await this.db
+      .delete(sortResultItemsTable)
+      .where(eq(sortResultItemsTable.sortResultId, sortResultId));
+  }
+
   private mapToResultItem(row: any): SortResultItem {
     return {
       id: row.id,

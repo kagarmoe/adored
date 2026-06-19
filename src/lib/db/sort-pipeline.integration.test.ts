@@ -24,12 +24,22 @@ import { SortResultService } from "@/server/services/SortResultService";
 
 const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
 // Flat-replace form: the spread form pulls in uninstalled nodemailer and errors.
-vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
+// requireAuth mirrors the real impl (getSession -> user, else throw) so routes
+// that gate via requireAuth (e.g. the DELETE handler) work under the same mock.
+vi.mock("@/lib/auth", () => ({
+  getSession: mockGetSession,
+  requireAuth: async () => {
+    const session = await mockGetSession();
+    if (!session?.user) throw new Error("Unauthorized");
+    return session.user;
+  },
+}));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
 // Routes imported via the @/ alias ([id] is a real dir).
 import { POST as recordDecision } from "@/app/api/sessions/[id]/decisions/route";
 import { POST as createResult } from "@/app/api/sort-results/route";
+import { DELETE as deleteResultRoute } from "@/app/api/sort-results/[id]/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -231,5 +241,75 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     // The revision is a fresh draft carrying the SAME item count as the source.
     const revisionItems = await new SortResultItemRepository(db).findByResult(revision!.id);
     expect(revisionItems).toHaveLength(sourceItems.length);
+  });
+
+  /** Seed a populated draft result (one item per preference) owned by `ownerId`. */
+  async function seedPopulatedDraft() {
+    const { db } = getTestDb();
+    const collectionId = generateId("col");
+    await db.execute(sql`
+      INSERT INTO collections (id, owner_id, name, status, created_at, updated_at)
+      VALUES (${collectionId}, ${ownerId}, 'Delete repro', 'active', now(), now())
+    `);
+    const itemRepo = new ItemRepository(db);
+    const lowItem = await itemRepo.create({ collectionId });
+    const highItem = await itemRepo.create({ collectionId });
+
+    const prefRepo = new CollectionPreferenceItemRepository(db);
+    await prefRepo.create({
+      collectionId, curatorId: ownerId, itemId: lowItem.id,
+      score: 0.375, confidence: 1, rankBucket: "medium", comparisonCount: 0,
+    });
+    await prefRepo.create({
+      collectionId, curatorId: ownerId, itemId: highItem.id,
+      score: 0.875, confidence: 1, rankBucket: "top", comparisonCount: 0,
+    });
+
+    const service = new SortResultService(
+      new SortResultRepository(db),
+      new SortResultItemRepository(db),
+      prefRepo,
+    );
+    return service.createDraftResult(collectionId, ownerId, "To delete");
+  }
+
+  it("DELETE /api/sort-results/[id] removes a draft and ALL its items (zero orphans)", async () => {
+    const { db } = getTestDb();
+    const draft = await seedPopulatedDraft();
+
+    // The draft is populated before deletion (the FK constraint makes a bare
+    // result delete fail unless children are removed first).
+    expect((await new SortResultItemRepository(db).findByResult(draft.id)).length).toBeGreaterThan(0);
+
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await deleteResultRoute(new Request(`http://localhost/api/sort-results/${draft.id}`, {
+      method: "DELETE",
+    }) as any, { params: { id: draft.id } });
+    expect(res.status).toBe(200);
+
+    // Result row gone AND no orphaned child items left behind.
+    expect(await new SortResultRepository(db).findById(draft.id)).toBeNull();
+    expect(await new SortResultItemRepository(db).findByResult(draft.id)).toEqual([]);
+  });
+
+  it("DELETE /api/sort-results/[id] rejects a finalized result with 409 and leaves it intact", async () => {
+    const { db } = getTestDb();
+    const draft = await seedPopulatedDraft();
+
+    const service = new SortResultService(
+      new SortResultRepository(db),
+      new SortResultItemRepository(db),
+      new CollectionPreferenceItemRepository(db),
+    );
+    await service.finalizeResult(draft.id);
+
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await deleteResultRoute(new Request(`http://localhost/api/sort-results/${draft.id}`, {
+      method: "DELETE",
+    }) as any, { params: { id: draft.id } });
+    expect(res.status).toBe(409);
+
+    // Finalized result must survive a delete attempt.
+    expect(await new SortResultRepository(db).findById(draft.id)).not.toBeNull();
   });
 });

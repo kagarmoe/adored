@@ -39,15 +39,4 @@ export class ResultController {
       finalizedAt: new Date(),
     });
   }
-
-  async deleteResult(resultId: string): Promise<void> {
-    const result = await this.resultRepo.findById(resultId);
-    if (!result) {
-      throw new Error("Result not found");
-    }
-    if (result.status !== "draft") {
-      throw new Error("Cannot delete finalized result");
-    }
-    // TODO: Implement hard delete for draft result
-  }
 }

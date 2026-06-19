@@ -8,16 +8,26 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
 
-const { mockRequireAuth, mockGetDb, mockRequireApiResultAccess, sortResultRepo } =
-  vi.hoisted(() => ({
-    mockRequireAuth: vi.fn(),
-    mockGetDb: vi.fn(),
-    mockRequireApiResultAccess: vi.fn(),
-    sortResultRepo: {
-      findById: vi.fn(),
-      update: vi.fn(),
-    },
-  }));
+const {
+  mockRequireAuth,
+  mockGetDb,
+  mockRequireApiResultAccess,
+  sortResultRepo,
+  sortResultItemRepo,
+} = vi.hoisted(() => ({
+  mockRequireAuth: vi.fn(),
+  mockGetDb: vi.fn(),
+  mockRequireApiResultAccess: vi.fn(),
+  sortResultRepo: {
+    findById: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
+  sortResultItemRepo: {
+    findByResult: vi.fn(),
+    deleteByResult: vi.fn(),
+  },
+}));
 
 vi.mock("@/lib/auth", () => ({
   requireAuth: mockRequireAuth,
@@ -30,6 +40,12 @@ vi.mock("@/server/dal/collection-access", () => ({
 }));
 vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
   SortResultRepository: vi.fn(() => sortResultRepo),
+}));
+vi.mock("@/server/repositories/implementations/SortResultItemRepository", () => ({
+  SortResultItemRepository: vi.fn(() => sortResultItemRepo),
+}));
+vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({
+  CollectionPreferenceItemRepository: vi.fn(() => ({})),
 }));
 
 import { GET, PATCH, DELETE } from "./route";
@@ -65,6 +81,9 @@ beforeEach(() => {
   mockRequireApiResultAccess.mockResolvedValue(DRAFT_RESULT);
   sortResultRepo.findById.mockResolvedValue(DRAFT_RESULT);
   sortResultRepo.update.mockResolvedValue({ ...DRAFT_RESULT, name: "Renamed" });
+  sortResultRepo.delete.mockResolvedValue(undefined);
+  sortResultItemRepo.findByResult.mockResolvedValue([]);
+  sortResultItemRepo.deleteByResult.mockResolvedValue(undefined);
 });
 
 const unauthorized = () => {
@@ -174,14 +193,17 @@ describe("DELETE /api/sort-results/[id]", () => {
     expect(await res.json()).toMatchObject({ message: "Result deleted" });
   });
 
-  // RED tripwire — asserts the intended contract (the result is actually removed),
-  // not today's no-op. A store-backed repo lets us observe whether the result is
-  // gone after the request; ResultController.deleteResult() is a no-op
-  // (`// TODO: Implement hard delete`) so it survives -> fails. Mirrors the
-  // deleteResultItem tripwire in items/[rid]/route.test.ts.
-  it.fails("DELETE actually removes the result", async () => {
+  // Contract: a DELETE on a draft actually removes the result. A store-backed repo
+  // lets us observe that the row is gone after the request — the route now delegates
+  // to SortResultService.deleteResult (children-first hard delete), so findById
+  // returns null afterward. The un-mocked zero-orphan proof lives in
+  // sort-pipeline.integration.test.ts.
+  it("DELETE actually removes the result", async () => {
     const store = new Map<string, typeof DRAFT_RESULT>([["sr1", DRAFT_RESULT]]);
     sortResultRepo.findById.mockImplementation(async (id: string) => store.get(id) ?? null);
+    sortResultRepo.delete.mockImplementation(async (id: string) => {
+      store.delete(id);
+    });
 
     const res = await DELETE(getReq(), params);
     expect(res.status).toBe(200);

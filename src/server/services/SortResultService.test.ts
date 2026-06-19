@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { SortResultService, SupersedeStateError } from "./SortResultService";
+import {
+  SortResultService,
+  SupersedeStateError,
+  DeleteResultStateError,
+} from "./SortResultService";
 import type {
   CollectionPreferenceItem,
   SortResult,
@@ -228,6 +232,75 @@ describe("SortResultService.supersedeResult", () => {
       ).supersedeResult("res-1"),
     ).rejects.toBeInstanceOf(SupersedeStateError);
     expect(create).not.toHaveBeenCalled();
+  });
+});
+
+describe("SortResultService deleteResult", () => {
+  it("returns false when the result is absent (no deletes attempted)", async () => {
+    const deleteResultRow = vi.fn();
+    const deleteByResult = vi.fn();
+    const sortResultRepo = {
+      findById: async () => null,
+      delete: deleteResultRow,
+    } as unknown as ISortResultRepository;
+    const itemRepo = { deleteByResult } as unknown as ISortResultItemRepository;
+
+    const deleted = await new SortResultService(
+      sortResultRepo,
+      itemRepo,
+      {} as unknown as ICollectionPreferenceItemRepository,
+    ).deleteResult("missing");
+
+    expect(deleted).toBe(false);
+    expect(deleteByResult).not.toHaveBeenCalled();
+    expect(deleteResultRow).not.toHaveBeenCalled();
+  });
+
+  it("throws DeleteResultStateError when the result is finalized (no deletes attempted)", async () => {
+    const deleteResultRow = vi.fn();
+    const deleteByResult = vi.fn();
+    const sortResultRepo = {
+      findById: async () => sortResult({ status: "finalized" }),
+      delete: deleteResultRow,
+    } as unknown as ISortResultRepository;
+    const itemRepo = { deleteByResult } as unknown as ISortResultItemRepository;
+
+    await expect(
+      new SortResultService(
+        sortResultRepo,
+        itemRepo,
+        {} as unknown as ICollectionPreferenceItemRepository,
+      ).deleteResult("res-1"),
+    ).rejects.toBeInstanceOf(DeleteResultStateError);
+    expect(deleteByResult).not.toHaveBeenCalled();
+    expect(deleteResultRow).not.toHaveBeenCalled();
+  });
+
+  it("deletes children BEFORE the result row (FK-safe order) for a draft", async () => {
+    const calls: string[] = [];
+    const deleteByResult = vi.fn(async () => {
+      calls.push("children");
+    });
+    const deleteResultRow = vi.fn(async () => {
+      calls.push("result");
+    });
+    const sortResultRepo = {
+      findById: async () => sortResult({ status: "draft" }),
+      delete: deleteResultRow,
+    } as unknown as ISortResultRepository;
+    const itemRepo = { deleteByResult } as unknown as ISortResultItemRepository;
+
+    const deleted = await new SortResultService(
+      sortResultRepo,
+      itemRepo,
+      {} as unknown as ICollectionPreferenceItemRepository,
+    ).deleteResult("res-1");
+
+    expect(deleted).toBe(true);
+    expect(deleteByResult).toHaveBeenCalledWith("res-1");
+    expect(deleteResultRow).toHaveBeenCalledWith("res-1");
+    // Children-first: the sort_result_items -> sort_results FK has no cascade.
+    expect(calls).toEqual(["children", "result"]);
   });
 });
 
