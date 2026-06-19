@@ -85,7 +85,7 @@ export function SessionCompleteScreen({
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-ink">{bucketCounts.low}</p>
-            <p className="text-xs text-ink-soft mt-1">Release</p>
+            <p className="text-xs text-ink-soft mt-1">Onward</p>
           </div>
         </div>
 

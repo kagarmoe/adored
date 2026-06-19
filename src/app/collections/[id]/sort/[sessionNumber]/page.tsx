@@ -104,7 +104,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
                 <p className="text-lg font-bold text-ink">{bucketCounts.medium}</p>
               </div>
               <div>
-                <p className="text-ink-soft">Release</p>
+                <p className="text-ink-soft">Onward</p>
                 <p className="text-lg font-bold text-ink">{bucketCounts.low}</p>
               </div>
             </div>

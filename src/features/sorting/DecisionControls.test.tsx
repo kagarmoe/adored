@@ -10,12 +10,12 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh }),
 }));
 
-// The triage tiers exactly as the triage page wires them (Love→top … Release→low).
+// The triage tiers exactly as the triage page wires them (Love→top … Onward→low).
 const TRIAGE_DECISIONS = [
   { label: "Love", decision: { itemId: "item_1", result: "top" } },
   { label: "Like", decision: { itemId: "item_1", result: "high" } },
   { label: "Maybe", decision: { itemId: "item_1", result: "medium" } },
-  { label: "Release", decision: { itemId: "item_1", result: "low" } },
+  { label: "Onward", decision: { itemId: "item_1", result: "low" } },
 ];
 
 beforeEach(() => {
@@ -29,7 +29,7 @@ afterEach(() => {
 describe("DecisionControls triage tier tap", () => {
   it("renders one button per tier with its human label", () => {
     render(<DecisionControls sessionId="sess_1" type="triage" decisions={TRIAGE_DECISIONS} />);
-    for (const label of ["Love", "Like", "Maybe", "Release"]) {
+    for (const label of ["Love", "Like", "Maybe", "Onward"]) {
       expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
     }
   });
@@ -95,10 +95,10 @@ describe("DecisionControls triage tier tap", () => {
     const user = userEvent.setup();
     render(<DecisionControls sessionId="sess_1" type="triage" decisions={TRIAGE_DECISIONS} />);
 
-    await user.click(screen.getByRole("button", { name: "Release" }));
+    await user.click(screen.getByRole("button", { name: "Onward" }));
 
     expect(await screen.findByText("Failed to save decision")).toBeInTheDocument();
     // Re-enabled so the user can retry — not stuck on "Saving...".
-    expect(screen.getByRole("button", { name: "Release" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Onward" })).toBeEnabled();
   });
 });

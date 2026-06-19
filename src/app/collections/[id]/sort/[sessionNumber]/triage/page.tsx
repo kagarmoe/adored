@@ -96,7 +96,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
                   { label: "Love", decision: { itemId: item.id, result: "top" } },
                   { label: "Like", decision: { itemId: item.id, result: "high" } },
                   { label: "Maybe", decision: { itemId: item.id, result: "medium" } },
-                  { label: "Release", decision: { itemId: item.id, result: "low" } },
+                  { label: "Onward", decision: { itemId: item.id, result: "low" } },
                 ]}
               />
             </Card>
