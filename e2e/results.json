@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/cd54b4b0539cb993286bf2f1eb4701f99935d335",
-        "commitHash": "cd54b4b0539cb993286bf2f1eb4701f99935d335",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27846692306"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5c3ed41f36b174a6ba662514d97b41b6c5224908",
+        "commitHash": "5c3ed41f36b174a6ba662514d97b41b6c5224908",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27851232774"
       },
       "gitCommit": {
-        "shortHash": "cd54b4b",
-        "hash": "cd54b4b0539cb993286bf2f1eb4701f99935d335",
-        "subject": "fix: repair sessions→sort→results workflow (purses-r7p) (#208)",
-        "body": "fix: repair sessions→sort→results workflow (purses-r7p) (#208)\n\n* docs(spec): sort-flow repair design (canonical TDD)\n\nConsolidate the SortResult lifecycle on SortResultService (Architect decision);\nrepair the inert session-detail results trigger + delete dead SessionCompleteScreen\n(UX decision); add repo delete(); canonical Red-Green-Refactor per behavior,\npromoting each it.fails tripwire as it goes green. Tests verify BOTH triage and\ncompare decisions reach a populated result. Out of scope: listShares/xca/o93/start-form.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): rev-2 — fold spec-review BLOCK + acceptance criteria\n\nAcceptance: 0 it.fails (all tripwires fixed+promoted), avoid mocking (un-mocked\nintegration/e2e proof), all tests pass, app works in Playwright e2e. Scope\nexpands to every tripwire (listShares/xca/start-form). Resolutions: supersede\nkeeps finalized-only guard (else 409); deleteResult does explicit transactional\nchild-delete (schema has NO FK cascade) + zero-orphan integration assertion +\nhard-delete justified (derived state) + draft-only 409; canonical-owner claim\nscoped to create/supersede/delete (working get/patch/finalize stay); pairwise\nproven by rank-order within a shared tier.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): rev-3 — fold re-review (deleteResult no-txn children-first; route 404/409 mapping; rank direction; start-form product decision)\n\nResolves the Data BLOCK by relaxing the unimplementable atomicity promise to a\nchildren-first ordered delete (codebase has no transactions; single-curator\ndraft delete is FK-safe + recoverable). Adds the required route status-mapping\n(null->404, status-guard->409, replacing the current ->500); pins the pairwise\nrank assertion direction (winner.computedRank < loser.computedRank); makes the\nstart-form->triage landing an explicit product decision.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(plan): sort-flow repair — 8 TDD tasks, un-mocked proof, 0-it.fails gate\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): materialize result items on POST /api/sort-results (purses-r7p)\n\n* fix(sort): supersede clones a finalized result into a new draft (409 otherwise)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): deleteResult removes a draft and its items, children-first (409 if finalized)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): deleteResultItem removes a single result item\n\nDELETE /api/sort-results/[id]/items/[rid] was a no-op stub: it returned\n200 while the row survived. Wire it to SortResultService.deleteResultItem\n-> ISortResultItemRepository.delete(rid), preserving requireApiResultAccess\nand the belongs-to-parent guard (404 when item.sortResultId !== id).\n\nRemove the dead ResultItemController.deleteResultItem stub (no callers).\n\nTests (RED-first): promote the unit DELETE tripwire to assert the row is\ngone, and add an un-mocked DB integration test driving the real route that\nproves the targeted item is removed while the others remain.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): scope listShares to the result via findByResult\n\nGET /api/sort-results/[id]/shares returned a hardcoded [] (unscoped\nTODO stub). Change ShareController.listShares() -> listShares(resultId)\nto call shareRepo.findByResult(resultId), and pass params.id from the\nroute GET. Promote the quarantined tripwire to a live test asserting the\ncreated share for the result appears in the response, and add an\nun-mocked DB integration test proving the list is scoped to the result.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): low tier reads 'Onward' not 'Release' (purses-xca)\n\nTone contract requires affirmation framing, not letting-go. Relabel\nevery user-facing low-tier 'Release' label to 'Onward':\n- ItemCard bucketLabels.low (badge title rendered on results)\n- sort session bucket-count grid\n- triage decision button\n- session-complete bucket-count grid\nInternal bucket key stays 'low'. Promotes the purses-xca results-page\ntripwire from it.fails to a live regression guard, and updates the\nDecisionControls test fixture to match the new triage label.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): start session lands directly on triage\n\nAfter POST /api/sessions, StartSessionForm now router.push()es straight to\n/sort/{number}/triage instead of the session-detail page. The detail page\nstays reachable via the breadcrumb. Promote the quarantined e2e fixme into the\nlanding test (folded with the conflicting detail-landing assertion so there is\none landing contract), and update the StartSessionForm unit test to the triage\npush target.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): reachable 'See what you love most' trigger creates a populated result; remove dead SessionCompleteScreen\n\nReplace the inert 'Ready to see results?' card (which linked to the results\nLIST and created nothing) with SeeResultsCard, a client trigger that POSTs\n/api/sort-results to materialize a populated draft result and navigates to it.\nOn failure it shows a soft, reversible message and re-enables — nothing lost.\n\nDelete the dead SessionCompleteScreen (+ test): no route mounted it.\n\nAdd an end-to-end journey e2e (triage a decision -> compare a pair -> the\ntrigger creates a populated result and lands on it) and an error-state test\n(route-intercept 500 -> soft message, button re-enables, stays on session).\n\npurses-ais: rename the stale 'Release' triage-button assertion to 'Onward' and\nfix the now-stale low-tier comment in the e2e seed fixture.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses): re-enable triage tiers after a successful decision (U2)\n\nDecisionControls reset pendingLabel only on the error path. On a\nsuccessful save it called router.refresh() (or onDecisionMade) but left\npendingLabel set. The triage page mounts DecisionControls with no\nper-item key, so the client instance + its pendingLabel survive the soft\nrouter.refresh() to the next item — keeping every tier disabled\n(disabled={pendingLabel !== null}) and one button stuck on \"Saving...\".\nA normal user could not triage past the first item.\n\nFix: reset pendingLabel on the success path so the controls re-enable\nfor the next item. The error path is unchanged; CompareChoice is a\nseparate component and is unaffected.\n\nTests:\n- DecisionControls.test.tsx: regression test proving the tiers\n  re-enable after a successful save on the router.refresh() path.\n- e2e/sort-session.spec.ts: the journey test now triages TWO items\n  consecutively (tap item 1 -> assert advance + tiers re-enabled -> tap\n  item 2 -> 2 of 2), an honest multi-item demonstration that a user can\n  actually sort.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(test): refresh stale POST tripwire comment (now wired + passing)\n\n* docs(api): sync sort-results route behaviors (materialize/supersede/delete/shares) — purses-u3p\n\n* chore(graphify): refresh graph for sort-flow repair\n\n* docs(arch): note draft sort-result hard-delete (children-first, no FK cascade) — purses-r7p\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "5c3ed41",
+        "hash": "5c3ed41f36b174a6ba662514d97b41b6c5224908",
+        "subject": "cleanup: finalized-result item-immutability (526), keyed triage reset (h75), gh-pages deploy fix (#199) (#209)",
+        "body": "cleanup: finalized-result item-immutability (526), keyed triage reset (h75), gh-pages deploy fix (#199) (#209)\n\n* fix(sort): reject item mutations on a finalized result with 409 (purses-526)\n\nFinalized sort-results are immutable (infra spec §11.3), but the three\nitem-mutation routes (PATCH/DELETE on [rid], POST on [rid]/reset) let you\nmutate or delete an item on a FINALIZED result. Add a guard after the\nrequireApiResultAccess gate: when the resolved parent result's status is\n\"finalized\", return 409 and do not mutate.\n\nUn-mocked proof: a new describeDb test drives the real DELETE route against\na finalized result and asserts 409 + the item still exists. Route unit tests\ncover all three handlers.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* refactor(sort): key DecisionControls by item.id for structural next-item reset (purses-h75)\n\nThe triage stuck-button bug (a lingering pendingLabel keeps every tier\ndisabled across router.refresh(), blocking the next item) was previously\nfixed by resetting pendingLabel on success — timing-dependent. Make it\nstructural: key the <DecisionControls> element to the current triage item's\nid so each item gets a fresh control instance (fresh pendingLabel=null) on\nremount. The on-success setPendingLabel(null) is retained as belt-and-\nsuspenders (the error path still needs its own reset for the same item).\n\nCovered by the existing 2-item triage journey in e2e/sort-session.spec.ts.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(vercel): drop non-functional gh-pages deploymentEnabled; document Ignored Build Step (#199)\n\nvercel.json's git.deploymentEnabled.gh-pages=false did nothing: Vercel reads\nvercel.json from the branch being deployed, and the gh-pages reports branch\nhas no vercel.json, so the exclusion never applied and gh-pages still deployed\nand errored. Remove the dead \"git\" block.\n\nDocument the real fix in docs/DEPLOYMENT.md (doc-ownership maps vercel.json ::\ndocs/DEPLOYMENT.md): skip gh-pages via the Vercel dashboard Ignored Build Step\n(Settings -> Git) with a command that exits 0 (skip) only when\nVERCEL_GIT_COMMIT_REF is gh-pages, because that is configured on the project\nrather than read from the deployed branch.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(api): item mutations on a finalized result return 409 (purses-526)\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1781900418000
+          "time": 1781908074000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1781900418000
+          "time": 1781908074000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/cd54b4b0539cb993286bf2f1eb4701f99935d335",
-            "commitHash": "cd54b4b0539cb993286bf2f1eb4701f99935d335",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27846692306"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5c3ed41f36b174a6ba662514d97b41b6c5224908",
+            "commitHash": "5c3ed41f36b174a6ba662514d97b41b6c5224908",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27851232774"
           },
           "gitCommit": {
-            "shortHash": "cd54b4b",
-            "hash": "cd54b4b0539cb993286bf2f1eb4701f99935d335",
-            "subject": "fix: repair sessions→sort→results workflow (purses-r7p) (#208)",
-            "body": "fix: repair sessions→sort→results workflow (purses-r7p) (#208)\n\n* docs(spec): sort-flow repair design (canonical TDD)\n\nConsolidate the SortResult lifecycle on SortResultService (Architect decision);\nrepair the inert session-detail results trigger + delete dead SessionCompleteScreen\n(UX decision); add repo delete(); canonical Red-Green-Refactor per behavior,\npromoting each it.fails tripwire as it goes green. Tests verify BOTH triage and\ncompare decisions reach a populated result. Out of scope: listShares/xca/o93/start-form.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): rev-2 — fold spec-review BLOCK + acceptance criteria\n\nAcceptance: 0 it.fails (all tripwires fixed+promoted), avoid mocking (un-mocked\nintegration/e2e proof), all tests pass, app works in Playwright e2e. Scope\nexpands to every tripwire (listShares/xca/start-form). Resolutions: supersede\nkeeps finalized-only guard (else 409); deleteResult does explicit transactional\nchild-delete (schema has NO FK cascade) + zero-orphan integration assertion +\nhard-delete justified (derived state) + draft-only 409; canonical-owner claim\nscoped to create/supersede/delete (working get/patch/finalize stay); pairwise\nproven by rank-order within a shared tier.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): rev-3 — fold re-review (deleteResult no-txn children-first; route 404/409 mapping; rank direction; start-form product decision)\n\nResolves the Data BLOCK by relaxing the unimplementable atomicity promise to a\nchildren-first ordered delete (codebase has no transactions; single-curator\ndraft delete is FK-safe + recoverable). Adds the required route status-mapping\n(null->404, status-guard->409, replacing the current ->500); pins the pairwise\nrank assertion direction (winner.computedRank < loser.computedRank); makes the\nstart-form->triage landing an explicit product decision.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(plan): sort-flow repair — 8 TDD tasks, un-mocked proof, 0-it.fails gate\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): materialize result items on POST /api/sort-results (purses-r7p)\n\n* fix(sort): supersede clones a finalized result into a new draft (409 otherwise)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): deleteResult removes a draft and its items, children-first (409 if finalized)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): deleteResultItem removes a single result item\n\nDELETE /api/sort-results/[id]/items/[rid] was a no-op stub: it returned\n200 while the row survived. Wire it to SortResultService.deleteResultItem\n-> ISortResultItemRepository.delete(rid), preserving requireApiResultAccess\nand the belongs-to-parent guard (404 when item.sortResultId !== id).\n\nRemove the dead ResultItemController.deleteResultItem stub (no callers).\n\nTests (RED-first): promote the unit DELETE tripwire to assert the row is\ngone, and add an un-mocked DB integration test driving the real route that\nproves the targeted item is removed while the others remain.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): scope listShares to the result via findByResult\n\nGET /api/sort-results/[id]/shares returned a hardcoded [] (unscoped\nTODO stub). Change ShareController.listShares() -> listShares(resultId)\nto call shareRepo.findByResult(resultId), and pass params.id from the\nroute GET. Promote the quarantined tripwire to a live test asserting the\ncreated share for the result appears in the response, and add an\nun-mocked DB integration test proving the list is scoped to the result.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): low tier reads 'Onward' not 'Release' (purses-xca)\n\nTone contract requires affirmation framing, not letting-go. Relabel\nevery user-facing low-tier 'Release' label to 'Onward':\n- ItemCard bucketLabels.low (badge title rendered on results)\n- sort session bucket-count grid\n- triage decision button\n- session-complete bucket-count grid\nInternal bucket key stays 'low'. Promotes the purses-xca results-page\ntripwire from it.fails to a live regression guard, and updates the\nDecisionControls test fixture to match the new triage label.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): start session lands directly on triage\n\nAfter POST /api/sessions, StartSessionForm now router.push()es straight to\n/sort/{number}/triage instead of the session-detail page. The detail page\nstays reachable via the breadcrumb. Promote the quarantined e2e fixme into the\nlanding test (folded with the conflicting detail-landing assertion so there is\none landing contract), and update the StartSessionForm unit test to the triage\npush target.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): reachable 'See what you love most' trigger creates a populated result; remove dead SessionCompleteScreen\n\nReplace the inert 'Ready to see results?' card (which linked to the results\nLIST and created nothing) with SeeResultsCard, a client trigger that POSTs\n/api/sort-results to materialize a populated draft result and navigates to it.\nOn failure it shows a soft, reversible message and re-enables — nothing lost.\n\nDelete the dead SessionCompleteScreen (+ test): no route mounted it.\n\nAdd an end-to-end journey e2e (triage a decision -> compare a pair -> the\ntrigger creates a populated result and lands on it) and an error-state test\n(route-intercept 500 -> soft message, button re-enables, stays on session).\n\npurses-ais: rename the stale 'Release' triage-button assertion to 'Onward' and\nfix the now-stale low-tier comment in the e2e seed fixture.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses): re-enable triage tiers after a successful decision (U2)\n\nDecisionControls reset pendingLabel only on the error path. On a\nsuccessful save it called router.refresh() (or onDecisionMade) but left\npendingLabel set. The triage page mounts DecisionControls with no\nper-item key, so the client instance + its pendingLabel survive the soft\nrouter.refresh() to the next item — keeping every tier disabled\n(disabled={pendingLabel !== null}) and one button stuck on \"Saving...\".\nA normal user could not triage past the first item.\n\nFix: reset pendingLabel on the success path so the controls re-enable\nfor the next item. The error path is unchanged; CompareChoice is a\nseparate component and is unaffected.\n\nTests:\n- DecisionControls.test.tsx: regression test proving the tiers\n  re-enable after a successful save on the router.refresh() path.\n- e2e/sort-session.spec.ts: the journey test now triages TWO items\n  consecutively (tap item 1 -> assert advance + tiers re-enabled -> tap\n  item 2 -> 2 of 2), an honest multi-item demonstration that a user can\n  actually sort.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(test): refresh stale POST tripwire comment (now wired + passing)\n\n* docs(api): sync sort-results route behaviors (materialize/supersede/delete/shares) — purses-u3p\n\n* chore(graphify): refresh graph for sort-flow repair\n\n* docs(arch): note draft sort-result hard-delete (children-first, no FK cascade) — purses-r7p\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "5c3ed41",
+            "hash": "5c3ed41f36b174a6ba662514d97b41b6c5224908",
+            "subject": "cleanup: finalized-result item-immutability (526), keyed triage reset (h75), gh-pages deploy fix (#199) (#209)",
+            "body": "cleanup: finalized-result item-immutability (526), keyed triage reset (h75), gh-pages deploy fix (#199) (#209)\n\n* fix(sort): reject item mutations on a finalized result with 409 (purses-526)\n\nFinalized sort-results are immutable (infra spec §11.3), but the three\nitem-mutation routes (PATCH/DELETE on [rid], POST on [rid]/reset) let you\nmutate or delete an item on a FINALIZED result. Add a guard after the\nrequireApiResultAccess gate: when the resolved parent result's status is\n\"finalized\", return 409 and do not mutate.\n\nUn-mocked proof: a new describeDb test drives the real DELETE route against\na finalized result and asserts 409 + the item still exists. Route unit tests\ncover all three handlers.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* refactor(sort): key DecisionControls by item.id for structural next-item reset (purses-h75)\n\nThe triage stuck-button bug (a lingering pendingLabel keeps every tier\ndisabled across router.refresh(), blocking the next item) was previously\nfixed by resetting pendingLabel on success — timing-dependent. Make it\nstructural: key the <DecisionControls> element to the current triage item's\nid so each item gets a fresh control instance (fresh pendingLabel=null) on\nremount. The on-success setPendingLabel(null) is retained as belt-and-\nsuspenders (the error path still needs its own reset for the same item).\n\nCovered by the existing 2-item triage journey in e2e/sort-session.spec.ts.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(vercel): drop non-functional gh-pages deploymentEnabled; document Ignored Build Step (#199)\n\nvercel.json's git.deploymentEnabled.gh-pages=false did nothing: Vercel reads\nvercel.json from the branch being deployed, and the gh-pages reports branch\nhas no vercel.json, so the exclusion never applied and gh-pages still deployed\nand errored. Remove the dead \"git\" block.\n\nDocument the real fix in docs/DEPLOYMENT.md (doc-ownership maps vercel.json ::\ndocs/DEPLOYMENT.md): skip gh-pages via the Vercel dashboard Ignored Build Step\n(Settings -> Git) with a command that exits 0 (skip) only when\nVERCEL_GIT_COMMIT_REF is gh-pages, because that is configured on the project\nrather than read from the deployed branch.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(api): item mutations on a finalized result return 409 (purses-526)\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781900418000
+              "time": 1781908074000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781900418000
+              "time": 1781908074000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/cd54b4b0539cb993286bf2f1eb4701f99935d335",
-            "commitHash": "cd54b4b0539cb993286bf2f1eb4701f99935d335",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27846692306"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5c3ed41f36b174a6ba662514d97b41b6c5224908",
+            "commitHash": "5c3ed41f36b174a6ba662514d97b41b6c5224908",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27851232774"
           },
           "gitCommit": {
-            "shortHash": "cd54b4b",
-            "hash": "cd54b4b0539cb993286bf2f1eb4701f99935d335",
-            "subject": "fix: repair sessions→sort→results workflow (purses-r7p) (#208)",
-            "body": "fix: repair sessions→sort→results workflow (purses-r7p) (#208)\n\n* docs(spec): sort-flow repair design (canonical TDD)\n\nConsolidate the SortResult lifecycle on SortResultService (Architect decision);\nrepair the inert session-detail results trigger + delete dead SessionCompleteScreen\n(UX decision); add repo delete(); canonical Red-Green-Refactor per behavior,\npromoting each it.fails tripwire as it goes green. Tests verify BOTH triage and\ncompare decisions reach a populated result. Out of scope: listShares/xca/o93/start-form.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): rev-2 — fold spec-review BLOCK + acceptance criteria\n\nAcceptance: 0 it.fails (all tripwires fixed+promoted), avoid mocking (un-mocked\nintegration/e2e proof), all tests pass, app works in Playwright e2e. Scope\nexpands to every tripwire (listShares/xca/start-form). Resolutions: supersede\nkeeps finalized-only guard (else 409); deleteResult does explicit transactional\nchild-delete (schema has NO FK cascade) + zero-orphan integration assertion +\nhard-delete justified (derived state) + draft-only 409; canonical-owner claim\nscoped to create/supersede/delete (working get/patch/finalize stay); pairwise\nproven by rank-order within a shared tier.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): rev-3 — fold re-review (deleteResult no-txn children-first; route 404/409 mapping; rank direction; start-form product decision)\n\nResolves the Data BLOCK by relaxing the unimplementable atomicity promise to a\nchildren-first ordered delete (codebase has no transactions; single-curator\ndraft delete is FK-safe + recoverable). Adds the required route status-mapping\n(null->404, status-guard->409, replacing the current ->500); pins the pairwise\nrank assertion direction (winner.computedRank < loser.computedRank); makes the\nstart-form->triage landing an explicit product decision.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(plan): sort-flow repair — 8 TDD tasks, un-mocked proof, 0-it.fails gate\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): materialize result items on POST /api/sort-results (purses-r7p)\n\n* fix(sort): supersede clones a finalized result into a new draft (409 otherwise)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): deleteResult removes a draft and its items, children-first (409 if finalized)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): deleteResultItem removes a single result item\n\nDELETE /api/sort-results/[id]/items/[rid] was a no-op stub: it returned\n200 while the row survived. Wire it to SortResultService.deleteResultItem\n-> ISortResultItemRepository.delete(rid), preserving requireApiResultAccess\nand the belongs-to-parent guard (404 when item.sortResultId !== id).\n\nRemove the dead ResultItemController.deleteResultItem stub (no callers).\n\nTests (RED-first): promote the unit DELETE tripwire to assert the row is\ngone, and add an un-mocked DB integration test driving the real route that\nproves the targeted item is removed while the others remain.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): scope listShares to the result via findByResult\n\nGET /api/sort-results/[id]/shares returned a hardcoded [] (unscoped\nTODO stub). Change ShareController.listShares() -> listShares(resultId)\nto call shareRepo.findByResult(resultId), and pass params.id from the\nroute GET. Promote the quarantined tripwire to a live test asserting the\ncreated share for the result appears in the response, and add an\nun-mocked DB integration test proving the list is scoped to the result.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): low tier reads 'Onward' not 'Release' (purses-xca)\n\nTone contract requires affirmation framing, not letting-go. Relabel\nevery user-facing low-tier 'Release' label to 'Onward':\n- ItemCard bucketLabels.low (badge title rendered on results)\n- sort session bucket-count grid\n- triage decision button\n- session-complete bucket-count grid\nInternal bucket key stays 'low'. Promotes the purses-xca results-page\ntripwire from it.fails to a live regression guard, and updates the\nDecisionControls test fixture to match the new triage label.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): start session lands directly on triage\n\nAfter POST /api/sessions, StartSessionForm now router.push()es straight to\n/sort/{number}/triage instead of the session-detail page. The detail page\nstays reachable via the breadcrumb. Promote the quarantined e2e fixme into the\nlanding test (folded with the conflicting detail-landing assertion so there is\none landing contract), and update the StartSessionForm unit test to the triage\npush target.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): reachable 'See what you love most' trigger creates a populated result; remove dead SessionCompleteScreen\n\nReplace the inert 'Ready to see results?' card (which linked to the results\nLIST and created nothing) with SeeResultsCard, a client trigger that POSTs\n/api/sort-results to materialize a populated draft result and navigates to it.\nOn failure it shows a soft, reversible message and re-enables — nothing lost.\n\nDelete the dead SessionCompleteScreen (+ test): no route mounted it.\n\nAdd an end-to-end journey e2e (triage a decision -> compare a pair -> the\ntrigger creates a populated result and lands on it) and an error-state test\n(route-intercept 500 -> soft message, button re-enables, stays on session).\n\npurses-ais: rename the stale 'Release' triage-button assertion to 'Onward' and\nfix the now-stale low-tier comment in the e2e seed fixture.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses): re-enable triage tiers after a successful decision (U2)\n\nDecisionControls reset pendingLabel only on the error path. On a\nsuccessful save it called router.refresh() (or onDecisionMade) but left\npendingLabel set. The triage page mounts DecisionControls with no\nper-item key, so the client instance + its pendingLabel survive the soft\nrouter.refresh() to the next item — keeping every tier disabled\n(disabled={pendingLabel !== null}) and one button stuck on \"Saving...\".\nA normal user could not triage past the first item.\n\nFix: reset pendingLabel on the success path so the controls re-enable\nfor the next item. The error path is unchanged; CompareChoice is a\nseparate component and is unaffected.\n\nTests:\n- DecisionControls.test.tsx: regression test proving the tiers\n  re-enable after a successful save on the router.refresh() path.\n- e2e/sort-session.spec.ts: the journey test now triages TWO items\n  consecutively (tap item 1 -> assert advance + tiers re-enabled -> tap\n  item 2 -> 2 of 2), an honest multi-item demonstration that a user can\n  actually sort.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(test): refresh stale POST tripwire comment (now wired + passing)\n\n* docs(api): sync sort-results route behaviors (materialize/supersede/delete/shares) — purses-u3p\n\n* chore(graphify): refresh graph for sort-flow repair\n\n* docs(arch): note draft sort-result hard-delete (children-first, no FK cascade) — purses-r7p\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "5c3ed41",
+            "hash": "5c3ed41f36b174a6ba662514d97b41b6c5224908",
+            "subject": "cleanup: finalized-result item-immutability (526), keyed triage reset (h75), gh-pages deploy fix (#199) (#209)",
+            "body": "cleanup: finalized-result item-immutability (526), keyed triage reset (h75), gh-pages deploy fix (#199) (#209)\n\n* fix(sort): reject item mutations on a finalized result with 409 (purses-526)\n\nFinalized sort-results are immutable (infra spec §11.3), but the three\nitem-mutation routes (PATCH/DELETE on [rid], POST on [rid]/reset) let you\nmutate or delete an item on a FINALIZED result. Add a guard after the\nrequireApiResultAccess gate: when the resolved parent result's status is\n\"finalized\", return 409 and do not mutate.\n\nUn-mocked proof: a new describeDb test drives the real DELETE route against\na finalized result and asserts 409 + the item still exists. Route unit tests\ncover all three handlers.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* refactor(sort): key DecisionControls by item.id for structural next-item reset (purses-h75)\n\nThe triage stuck-button bug (a lingering pendingLabel keeps every tier\ndisabled across router.refresh(), blocking the next item) was previously\nfixed by resetting pendingLabel on success — timing-dependent. Make it\nstructural: key the <DecisionControls> element to the current triage item's\nid so each item gets a fresh control instance (fresh pendingLabel=null) on\nremount. The on-success setPendingLabel(null) is retained as belt-and-\nsuspenders (the error path still needs its own reset for the same item).\n\nCovered by the existing 2-item triage journey in e2e/sort-session.spec.ts.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(vercel): drop non-functional gh-pages deploymentEnabled; document Ignored Build Step (#199)\n\nvercel.json's git.deploymentEnabled.gh-pages=false did nothing: Vercel reads\nvercel.json from the branch being deployed, and the gh-pages reports branch\nhas no vercel.json, so the exclusion never applied and gh-pages still deployed\nand errored. Remove the dead \"git\" block.\n\nDocument the real fix in docs/DEPLOYMENT.md (doc-ownership maps vercel.json ::\ndocs/DEPLOYMENT.md): skip gh-pages via the Vercel dashboard Ignored Build Step\n(Settings -> Git) with a command that exits 0 (skip) only when\nVERCEL_GIT_COMMIT_REF is gh-pages, because that is configured on the project\nrather than read from the deployed branch.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(api): item mutations on a finalized result return 409 (purses-526)\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781900418000
+              "time": 1781908074000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781900418000
+              "time": 1781908074000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/cd54b4b0539cb993286bf2f1eb4701f99935d335",
-            "commitHash": "cd54b4b0539cb993286bf2f1eb4701f99935d335",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27846692306"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5c3ed41f36b174a6ba662514d97b41b6c5224908",
+            "commitHash": "5c3ed41f36b174a6ba662514d97b41b6c5224908",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27851232774"
           },
           "gitCommit": {
-            "shortHash": "cd54b4b",
-            "hash": "cd54b4b0539cb993286bf2f1eb4701f99935d335",
-            "subject": "fix: repair sessions→sort→results workflow (purses-r7p) (#208)",
-            "body": "fix: repair sessions→sort→results workflow (purses-r7p) (#208)\n\n* docs(spec): sort-flow repair design (canonical TDD)\n\nConsolidate the SortResult lifecycle on SortResultService (Architect decision);\nrepair the inert session-detail results trigger + delete dead SessionCompleteScreen\n(UX decision); add repo delete(); canonical Red-Green-Refactor per behavior,\npromoting each it.fails tripwire as it goes green. Tests verify BOTH triage and\ncompare decisions reach a populated result. Out of scope: listShares/xca/o93/start-form.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): rev-2 — fold spec-review BLOCK + acceptance criteria\n\nAcceptance: 0 it.fails (all tripwires fixed+promoted), avoid mocking (un-mocked\nintegration/e2e proof), all tests pass, app works in Playwright e2e. Scope\nexpands to every tripwire (listShares/xca/start-form). Resolutions: supersede\nkeeps finalized-only guard (else 409); deleteResult does explicit transactional\nchild-delete (schema has NO FK cascade) + zero-orphan integration assertion +\nhard-delete justified (derived state) + draft-only 409; canonical-owner claim\nscoped to create/supersede/delete (working get/patch/finalize stay); pairwise\nproven by rank-order within a shared tier.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): rev-3 — fold re-review (deleteResult no-txn children-first; route 404/409 mapping; rank direction; start-form product decision)\n\nResolves the Data BLOCK by relaxing the unimplementable atomicity promise to a\nchildren-first ordered delete (codebase has no transactions; single-curator\ndraft delete is FK-safe + recoverable). Adds the required route status-mapping\n(null->404, status-guard->409, replacing the current ->500); pins the pairwise\nrank assertion direction (winner.computedRank < loser.computedRank); makes the\nstart-form->triage landing an explicit product decision.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(plan): sort-flow repair — 8 TDD tasks, un-mocked proof, 0-it.fails gate\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): materialize result items on POST /api/sort-results (purses-r7p)\n\n* fix(sort): supersede clones a finalized result into a new draft (409 otherwise)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): deleteResult removes a draft and its items, children-first (409 if finalized)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): deleteResultItem removes a single result item\n\nDELETE /api/sort-results/[id]/items/[rid] was a no-op stub: it returned\n200 while the row survived. Wire it to SortResultService.deleteResultItem\n-> ISortResultItemRepository.delete(rid), preserving requireApiResultAccess\nand the belongs-to-parent guard (404 when item.sortResultId !== id).\n\nRemove the dead ResultItemController.deleteResultItem stub (no callers).\n\nTests (RED-first): promote the unit DELETE tripwire to assert the row is\ngone, and add an un-mocked DB integration test driving the real route that\nproves the targeted item is removed while the others remain.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): scope listShares to the result via findByResult\n\nGET /api/sort-results/[id]/shares returned a hardcoded [] (unscoped\nTODO stub). Change ShareController.listShares() -> listShares(resultId)\nto call shareRepo.findByResult(resultId), and pass params.id from the\nroute GET. Promote the quarantined tripwire to a live test asserting the\ncreated share for the result appears in the response, and add an\nun-mocked DB integration test proving the list is scoped to the result.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): low tier reads 'Onward' not 'Release' (purses-xca)\n\nTone contract requires affirmation framing, not letting-go. Relabel\nevery user-facing low-tier 'Release' label to 'Onward':\n- ItemCard bucketLabels.low (badge title rendered on results)\n- sort session bucket-count grid\n- triage decision button\n- session-complete bucket-count grid\nInternal bucket key stays 'low'. Promotes the purses-xca results-page\ntripwire from it.fails to a live regression guard, and updates the\nDecisionControls test fixture to match the new triage label.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): start session lands directly on triage\n\nAfter POST /api/sessions, StartSessionForm now router.push()es straight to\n/sort/{number}/triage instead of the session-detail page. The detail page\nstays reachable via the breadcrumb. Promote the quarantined e2e fixme into the\nlanding test (folded with the conflicting detail-landing assertion so there is\none landing contract), and update the StartSessionForm unit test to the triage\npush target.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): reachable 'See what you love most' trigger creates a populated result; remove dead SessionCompleteScreen\n\nReplace the inert 'Ready to see results?' card (which linked to the results\nLIST and created nothing) with SeeResultsCard, a client trigger that POSTs\n/api/sort-results to materialize a populated draft result and navigates to it.\nOn failure it shows a soft, reversible message and re-enables — nothing lost.\n\nDelete the dead SessionCompleteScreen (+ test): no route mounted it.\n\nAdd an end-to-end journey e2e (triage a decision -> compare a pair -> the\ntrigger creates a populated result and lands on it) and an error-state test\n(route-intercept 500 -> soft message, button re-enables, stays on session).\n\npurses-ais: rename the stale 'Release' triage-button assertion to 'Onward' and\nfix the now-stale low-tier comment in the e2e seed fixture.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses): re-enable triage tiers after a successful decision (U2)\n\nDecisionControls reset pendingLabel only on the error path. On a\nsuccessful save it called router.refresh() (or onDecisionMade) but left\npendingLabel set. The triage page mounts DecisionControls with no\nper-item key, so the client instance + its pendingLabel survive the soft\nrouter.refresh() to the next item — keeping every tier disabled\n(disabled={pendingLabel !== null}) and one button stuck on \"Saving...\".\nA normal user could not triage past the first item.\n\nFix: reset pendingLabel on the success path so the controls re-enable\nfor the next item. The error path is unchanged; CompareChoice is a\nseparate component and is unaffected.\n\nTests:\n- DecisionControls.test.tsx: regression test proving the tiers\n  re-enable after a successful save on the router.refresh() path.\n- e2e/sort-session.spec.ts: the journey test now triages TWO items\n  consecutively (tap item 1 -> assert advance + tiers re-enabled -> tap\n  item 2 -> 2 of 2), an honest multi-item demonstration that a user can\n  actually sort.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(test): refresh stale POST tripwire comment (now wired + passing)\n\n* docs(api): sync sort-results route behaviors (materialize/supersede/delete/shares) — purses-u3p\n\n* chore(graphify): refresh graph for sort-flow repair\n\n* docs(arch): note draft sort-result hard-delete (children-first, no FK cascade) — purses-r7p\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "5c3ed41",
+            "hash": "5c3ed41f36b174a6ba662514d97b41b6c5224908",
+            "subject": "cleanup: finalized-result item-immutability (526), keyed triage reset (h75), gh-pages deploy fix (#199) (#209)",
+            "body": "cleanup: finalized-result item-immutability (526), keyed triage reset (h75), gh-pages deploy fix (#199) (#209)\n\n* fix(sort): reject item mutations on a finalized result with 409 (purses-526)\n\nFinalized sort-results are immutable (infra spec §11.3), but the three\nitem-mutation routes (PATCH/DELETE on [rid], POST on [rid]/reset) let you\nmutate or delete an item on a FINALIZED result. Add a guard after the\nrequireApiResultAccess gate: when the resolved parent result's status is\n\"finalized\", return 409 and do not mutate.\n\nUn-mocked proof: a new describeDb test drives the real DELETE route against\na finalized result and asserts 409 + the item still exists. Route unit tests\ncover all three handlers.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* refactor(sort): key DecisionControls by item.id for structural next-item reset (purses-h75)\n\nThe triage stuck-button bug (a lingering pendingLabel keeps every tier\ndisabled across router.refresh(), blocking the next item) was previously\nfixed by resetting pendingLabel on success — timing-dependent. Make it\nstructural: key the <DecisionControls> element to the current triage item's\nid so each item gets a fresh control instance (fresh pendingLabel=null) on\nremount. The on-success setPendingLabel(null) is retained as belt-and-\nsuspenders (the error path still needs its own reset for the same item).\n\nCovered by the existing 2-item triage journey in e2e/sort-session.spec.ts.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(vercel): drop non-functional gh-pages deploymentEnabled; document Ignored Build Step (#199)\n\nvercel.json's git.deploymentEnabled.gh-pages=false did nothing: Vercel reads\nvercel.json from the branch being deployed, and the gh-pages reports branch\nhas no vercel.json, so the exclusion never applied and gh-pages still deployed\nand errored. Remove the dead \"git\" block.\n\nDocument the real fix in docs/DEPLOYMENT.md (doc-ownership maps vercel.json ::\ndocs/DEPLOYMENT.md): skip gh-pages via the Vercel dashboard Ignored Build Step\n(Settings -> Git) with a command that exits 0 (skip) only when\nVERCEL_GIT_COMMIT_REF is gh-pages, because that is configured on the project\nrather than read from the deployed branch.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(api): item mutations on a finalized result return 409 (purses-526)\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781900418000
+              "time": 1781908074000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781900418000
+              "time": 1781908074000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/cd54b4b0539cb993286bf2f1eb4701f99935d335",
-            "commitHash": "cd54b4b0539cb993286bf2f1eb4701f99935d335",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27846692306"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5c3ed41f36b174a6ba662514d97b41b6c5224908",
+            "commitHash": "5c3ed41f36b174a6ba662514d97b41b6c5224908",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27851232774"
           },
           "gitCommit": {
-            "shortHash": "cd54b4b",
-            "hash": "cd54b4b0539cb993286bf2f1eb4701f99935d335",
-            "subject": "fix: repair sessions→sort→results workflow (purses-r7p) (#208)",
-            "body": "fix: repair sessions→sort→results workflow (purses-r7p) (#208)\n\n* docs(spec): sort-flow repair design (canonical TDD)\n\nConsolidate the SortResult lifecycle on SortResultService (Architect decision);\nrepair the inert session-detail results trigger + delete dead SessionCompleteScreen\n(UX decision); add repo delete(); canonical Red-Green-Refactor per behavior,\npromoting each it.fails tripwire as it goes green. Tests verify BOTH triage and\ncompare decisions reach a populated result. Out of scope: listShares/xca/o93/start-form.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): rev-2 — fold spec-review BLOCK + acceptance criteria\n\nAcceptance: 0 it.fails (all tripwires fixed+promoted), avoid mocking (un-mocked\nintegration/e2e proof), all tests pass, app works in Playwright e2e. Scope\nexpands to every tripwire (listShares/xca/start-form). Resolutions: supersede\nkeeps finalized-only guard (else 409); deleteResult does explicit transactional\nchild-delete (schema has NO FK cascade) + zero-orphan integration assertion +\nhard-delete justified (derived state) + draft-only 409; canonical-owner claim\nscoped to create/supersede/delete (working get/patch/finalize stay); pairwise\nproven by rank-order within a shared tier.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): rev-3 — fold re-review (deleteResult no-txn children-first; route 404/409 mapping; rank direction; start-form product decision)\n\nResolves the Data BLOCK by relaxing the unimplementable atomicity promise to a\nchildren-first ordered delete (codebase has no transactions; single-curator\ndraft delete is FK-safe + recoverable). Adds the required route status-mapping\n(null->404, status-guard->409, replacing the current ->500); pins the pairwise\nrank assertion direction (winner.computedRank < loser.computedRank); makes the\nstart-form->triage landing an explicit product decision.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(plan): sort-flow repair — 8 TDD tasks, un-mocked proof, 0-it.fails gate\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): materialize result items on POST /api/sort-results (purses-r7p)\n\n* fix(sort): supersede clones a finalized result into a new draft (409 otherwise)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): deleteResult removes a draft and its items, children-first (409 if finalized)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): deleteResultItem removes a single result item\n\nDELETE /api/sort-results/[id]/items/[rid] was a no-op stub: it returned\n200 while the row survived. Wire it to SortResultService.deleteResultItem\n-> ISortResultItemRepository.delete(rid), preserving requireApiResultAccess\nand the belongs-to-parent guard (404 when item.sortResultId !== id).\n\nRemove the dead ResultItemController.deleteResultItem stub (no callers).\n\nTests (RED-first): promote the unit DELETE tripwire to assert the row is\ngone, and add an un-mocked DB integration test driving the real route that\nproves the targeted item is removed while the others remain.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): scope listShares to the result via findByResult\n\nGET /api/sort-results/[id]/shares returned a hardcoded [] (unscoped\nTODO stub). Change ShareController.listShares() -> listShares(resultId)\nto call shareRepo.findByResult(resultId), and pass params.id from the\nroute GET. Promote the quarantined tripwire to a live test asserting the\ncreated share for the result appears in the response, and add an\nun-mocked DB integration test proving the list is scoped to the result.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): low tier reads 'Onward' not 'Release' (purses-xca)\n\nTone contract requires affirmation framing, not letting-go. Relabel\nevery user-facing low-tier 'Release' label to 'Onward':\n- ItemCard bucketLabels.low (badge title rendered on results)\n- sort session bucket-count grid\n- triage decision button\n- session-complete bucket-count grid\nInternal bucket key stays 'low'. Promotes the purses-xca results-page\ntripwire from it.fails to a live regression guard, and updates the\nDecisionControls test fixture to match the new triage label.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): start session lands directly on triage\n\nAfter POST /api/sessions, StartSessionForm now router.push()es straight to\n/sort/{number}/triage instead of the session-detail page. The detail page\nstays reachable via the breadcrumb. Promote the quarantined e2e fixme into the\nlanding test (folded with the conflicting detail-landing assertion so there is\none landing contract), and update the StartSessionForm unit test to the triage\npush target.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): reachable 'See what you love most' trigger creates a populated result; remove dead SessionCompleteScreen\n\nReplace the inert 'Ready to see results?' card (which linked to the results\nLIST and created nothing) with SeeResultsCard, a client trigger that POSTs\n/api/sort-results to materialize a populated draft result and navigates to it.\nOn failure it shows a soft, reversible message and re-enables — nothing lost.\n\nDelete the dead SessionCompleteScreen (+ test): no route mounted it.\n\nAdd an end-to-end journey e2e (triage a decision -> compare a pair -> the\ntrigger creates a populated result and lands on it) and an error-state test\n(route-intercept 500 -> soft message, button re-enables, stays on session).\n\npurses-ais: rename the stale 'Release' triage-button assertion to 'Onward' and\nfix the now-stale low-tier comment in the e2e seed fixture.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(purses): re-enable triage tiers after a successful decision (U2)\n\nDecisionControls reset pendingLabel only on the error path. On a\nsuccessful save it called router.refresh() (or onDecisionMade) but left\npendingLabel set. The triage page mounts DecisionControls with no\nper-item key, so the client instance + its pendingLabel survive the soft\nrouter.refresh() to the next item — keeping every tier disabled\n(disabled={pendingLabel !== null}) and one button stuck on \"Saving...\".\nA normal user could not triage past the first item.\n\nFix: reset pendingLabel on the success path so the controls re-enable\nfor the next item. The error path is unchanged; CompareChoice is a\nseparate component and is unaffected.\n\nTests:\n- DecisionControls.test.tsx: regression test proving the tiers\n  re-enable after a successful save on the router.refresh() path.\n- e2e/sort-session.spec.ts: the journey test now triages TWO items\n  consecutively (tap item 1 -> assert advance + tiers re-enabled -> tap\n  item 2 -> 2 of 2), an honest multi-item demonstration that a user can\n  actually sort.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(test): refresh stale POST tripwire comment (now wired + passing)\n\n* docs(api): sync sort-results route behaviors (materialize/supersede/delete/shares) — purses-u3p\n\n* chore(graphify): refresh graph for sort-flow repair\n\n* docs(arch): note draft sort-result hard-delete (children-first, no FK cascade) — purses-r7p\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "5c3ed41",
+            "hash": "5c3ed41f36b174a6ba662514d97b41b6c5224908",
+            "subject": "cleanup: finalized-result item-immutability (526), keyed triage reset (h75), gh-pages deploy fix (#199) (#209)",
+            "body": "cleanup: finalized-result item-immutability (526), keyed triage reset (h75), gh-pages deploy fix (#199) (#209)\n\n* fix(sort): reject item mutations on a finalized result with 409 (purses-526)\n\nFinalized sort-results are immutable (infra spec §11.3), but the three\nitem-mutation routes (PATCH/DELETE on [rid], POST on [rid]/reset) let you\nmutate or delete an item on a FINALIZED result. Add a guard after the\nrequireApiResultAccess gate: when the resolved parent result's status is\n\"finalized\", return 409 and do not mutate.\n\nUn-mocked proof: a new describeDb test drives the real DELETE route against\na finalized result and asserts 409 + the item still exists. Route unit tests\ncover all three handlers.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* refactor(sort): key DecisionControls by item.id for structural next-item reset (purses-h75)\n\nThe triage stuck-button bug (a lingering pendingLabel keeps every tier\ndisabled across router.refresh(), blocking the next item) was previously\nfixed by resetting pendingLabel on success — timing-dependent. Make it\nstructural: key the <DecisionControls> element to the current triage item's\nid so each item gets a fresh control instance (fresh pendingLabel=null) on\nremount. The on-success setPendingLabel(null) is retained as belt-and-\nsuspenders (the error path still needs its own reset for the same item).\n\nCovered by the existing 2-item triage journey in e2e/sort-session.spec.ts.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(vercel): drop non-functional gh-pages deploymentEnabled; document Ignored Build Step (#199)\n\nvercel.json's git.deploymentEnabled.gh-pages=false did nothing: Vercel reads\nvercel.json from the branch being deployed, and the gh-pages reports branch\nhas no vercel.json, so the exclusion never applied and gh-pages still deployed\nand errored. Remove the dead \"git\" block.\n\nDocument the real fix in docs/DEPLOYMENT.md (doc-ownership maps vercel.json ::\ndocs/DEPLOYMENT.md): skip gh-pages via the Vercel dashboard Ignored Build Step\n(Settings -> Git) with a command that exits 0 (skip) only when\nVERCEL_GIT_COMMIT_REF is gh-pages, because that is configured on the project\nrather than read from the deployed branch.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(api): item mutations on a finalized result return 409 (purses-526)\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781900418000
+              "time": 1781908074000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781900418000
+              "time": 1781908074000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1071,
+                  "duration": 1017,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:23:14.759Z",
+                  "startTime": "2026-06-19T22:30:33.402Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -303,12 +303,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 9736,
+                  "duration": 5288,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:23:16.526Z",
+                  "startTime": "2026-06-19T22:30:35.079Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -337,12 +337,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2165,
+                  "duration": 2194,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:23:27.167Z",
+                  "startTime": "2026-06-19T22:30:41.004Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -371,12 +371,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1594,
+                  "duration": 1712,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:00.693Z",
+                  "startTime": "2026-06-19T22:31:42.558Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -405,12 +405,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2434,
+                  "duration": 2388,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:02.464Z",
+                  "startTime": "2026-06-19T22:31:44.467Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -439,12 +439,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 996,
+                  "duration": 1128,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:32.191Z",
+                  "startTime": "2026-06-19T22:32:14.623Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -473,12 +473,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1131,
+                  "duration": 1247,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:35.367Z",
+                  "startTime": "2026-06-19T22:32:16.917Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -515,12 +515,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1797,
+                  "duration": 1715,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:23:29.371Z",
+                  "startTime": "2026-06-19T22:30:43.234Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -549,12 +549,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1607,
+                  "duration": 2554,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:23:31.205Z",
+                  "startTime": "2026-06-19T22:30:45.001Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -583,12 +583,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2362,
+                  "duration": 3320,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:23:32.849Z",
+                  "startTime": "2026-06-19T22:30:47.580Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -617,12 +617,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1548,
+                  "duration": 1575,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:04.934Z",
+                  "startTime": "2026-06-19T22:31:46.893Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -651,12 +651,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1465,
+                  "duration": 1539,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:06.541Z",
+                  "startTime": "2026-06-19T22:31:48.529Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -685,12 +685,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1897,
+                  "duration": 1936,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:08.027Z",
+                  "startTime": "2026-06-19T22:31:50.095Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -719,12 +719,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 725,
+                  "duration": 782,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:36.545Z",
+                  "startTime": "2026-06-19T22:32:18.213Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -753,12 +753,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 871,
+                  "duration": 828,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:37.312Z",
+                  "startTime": "2026-06-19T22:32:19.042Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -787,12 +787,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1098,
+                  "duration": 1185,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:38.214Z",
+                  "startTime": "2026-06-19T22:32:19.903Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -836,12 +836,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1018,
+                      "duration": 2495,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:23:35.260Z",
+                      "startTime": "2026-06-19T22:30:51.354Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -870,12 +870,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1620,
+                      "duration": 4796,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:23:36.379Z",
+                      "startTime": "2026-06-19T22:31:04.332Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -904,12 +904,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1339,
+                      "duration": 6382,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:23:38.022Z",
+                      "startTime": "2026-06-19T22:31:09.158Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -938,12 +938,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 881,
+                      "duration": 903,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:09.966Z",
+                      "startTime": "2026-06-19T22:31:52.081Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -972,12 +972,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1287,
+                      "duration": 1364,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:10.954Z",
+                      "startTime": "2026-06-19T22:31:53.110Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1006,12 +1006,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 913,
+                      "duration": 889,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:12.270Z",
+                      "startTime": "2026-06-19T22:31:54.504Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1040,12 +1040,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 477,
+                      "duration": 501,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:39.338Z",
+                      "startTime": "2026-06-19T22:32:21.119Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1074,12 +1074,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 732,
+                      "duration": 781,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:39.895Z",
+                      "startTime": "2026-06-19T22:32:21.693Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1108,12 +1108,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 458,
+                      "duration": 499,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:40.652Z",
+                      "startTime": "2026-06-19T22:32:22.489Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1152,12 +1152,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 971,
+                  "duration": 929,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:23:39.434Z",
+                  "startTime": "2026-06-19T22:31:15.604Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1186,12 +1186,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 985,
+                  "duration": 1092,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:23:40.460Z",
+                  "startTime": "2026-06-19T22:31:16.618Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1220,12 +1220,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 766,
+                  "duration": 765,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:13.216Z",
+                  "startTime": "2026-06-19T22:31:55.438Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1254,12 +1254,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 917,
+                  "duration": 837,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:14.038Z",
+                  "startTime": "2026-06-19T22:31:56.248Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1288,12 +1288,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 285,
+                  "duration": 302,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:41.144Z",
+                  "startTime": "2026-06-19T22:32:23.007Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1322,12 +1322,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 533,
+                  "duration": 492,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:41.459Z",
+                  "startTime": "2026-06-19T22:32:23.341Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1371,12 +1371,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1774,
+                      "duration": 1435,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:23:41.471Z",
+                      "startTime": "2026-06-19T22:31:17.763Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1405,12 +1405,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 871,
+                      "duration": 894,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:14.986Z",
+                      "startTime": "2026-06-19T22:31:57.126Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1439,12 +1439,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 517,
+                      "duration": 566,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:42.015Z",
+                      "startTime": "2026-06-19T22:32:23.853Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1483,12 +1483,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1080,
+                  "duration": 987,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:23:43.358Z",
+                  "startTime": "2026-06-19T22:31:19.503Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1517,12 +1517,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 834,
+                  "duration": 852,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:23:44.475Z",
+                  "startTime": "2026-06-19T22:31:20.507Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1551,12 +1551,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 862,
+                  "duration": 1029,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:23:45.341Z",
+                  "startTime": "2026-06-19T22:31:21.403Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1585,12 +1585,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 819,
+                  "duration": 797,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:15.935Z",
+                  "startTime": "2026-06-19T22:31:58.103Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1619,12 +1619,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 722,
+                  "duration": 681,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:16.780Z",
+                  "startTime": "2026-06-19T22:31:58.938Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1653,12 +1653,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 808,
+                  "duration": 900,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:17.532Z",
+                  "startTime": "2026-06-19T22:31:59.638Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1687,12 +1687,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 248,
+                  "duration": 260,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:42.597Z",
+                  "startTime": "2026-06-19T22:32:24.481Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1721,12 +1721,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 248,
+                  "duration": 270,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:42.859Z",
+                  "startTime": "2026-06-19T22:32:24.755Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1755,12 +1755,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 246,
+                  "duration": 269,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T20:24:43.119Z",
+                  "startTime": "2026-06-19T22:32:25.041Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1804,12 +1804,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 881,
+                      "duration": 1499,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:23:46.231Z",
+                      "startTime": "2026-06-19T22:31:22.502Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1838,12 +1838,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1279,
+                      "duration": 1338,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:18.366Z",
+                      "startTime": "2026-06-19T22:32:00.566Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1872,12 +1872,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 422,
+                      "duration": 447,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:43.381Z",
+                      "startTime": "2026-06-19T22:32:25.329Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1923,12 +1923,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1195,
+                      "duration": 1424,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:23:47.215Z",
+                      "startTime": "2026-06-19T22:31:24.168Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1957,12 +1957,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1616,
+                      "duration": 1845,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:23:48.486Z",
+                      "startTime": "2026-06-19T22:31:25.735Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1991,12 +1991,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1407,
+                      "duration": 1751,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:23:50.126Z",
+                      "startTime": "2026-06-19T22:31:27.634Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2025,12 +2025,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1543,
+                      "duration": 1572,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:19.724Z",
+                      "startTime": "2026-06-19T22:32:01.988Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2059,12 +2059,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1688,
+                      "duration": 1714,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:21.339Z",
+                      "startTime": "2026-06-19T22:32:03.625Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2093,12 +2093,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1323,
+                      "duration": 1353,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:23.055Z",
+                      "startTime": "2026-06-19T22:32:05.375Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2127,12 +2127,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 453,
+                      "duration": 454,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:43.855Z",
+                      "startTime": "2026-06-19T22:32:25.820Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2161,12 +2161,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 665,
+                      "duration": 715,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:44.349Z",
+                      "startTime": "2026-06-19T22:32:26.320Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2195,12 +2195,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 477,
+                      "duration": 471,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:45.031Z",
+                      "startTime": "2026-06-19T22:32:27.055Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2237,12 +2237,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4862,
+                      "duration": 4798,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:23:51.560Z",
+                      "startTime": "2026-06-19T22:31:29.405Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2271,12 +2271,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1474,
+                      "duration": 1739,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:23:56.487Z",
+                      "startTime": "2026-06-19T22:31:34.348Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2305,12 +2305,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3409,
+                      "duration": 3392,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:24.411Z",
+                      "startTime": "2026-06-19T22:32:06.748Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2339,12 +2339,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1450,
+                      "duration": 1543,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:27.883Z",
+                      "startTime": "2026-06-19T22:32:10.212Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2373,12 +2373,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1455,
+                      "duration": 1615,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:45.526Z",
+                      "startTime": "2026-06-19T22:32:27.545Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2407,12 +2407,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 443,
+                      "duration": 513,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:47.023Z",
+                      "startTime": "2026-06-19T22:32:29.207Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2449,12 +2449,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1152,
+                      "duration": 1293,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:23:57.978Z",
+                      "startTime": "2026-06-19T22:31:36.138Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2483,12 +2483,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 780,
+                      "duration": 906,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:23:59.148Z",
+                      "startTime": "2026-06-19T22:31:37.472Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2517,12 +2517,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 937,
+                      "duration": 1340,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:29.357Z",
+                      "startTime": "2026-06-19T22:32:11.779Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2551,12 +2551,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1131,
+                      "duration": 758,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:30.314Z",
+                      "startTime": "2026-06-19T22:32:13.131Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2585,12 +2585,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 243,
+                      "duration": 244,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:47.485Z",
+                      "startTime": "2026-06-19T22:32:29.738Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2619,12 +2619,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 240,
+                      "duration": 255,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T20:24:47.742Z",
+                      "startTime": "2026-06-19T22:32:29.996Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2644,8 +2644,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-19T20:22:08.113Z",
-    "duration": 160155.421,
+    "startTime": "2026-06-19T22:29:26.658Z",
+    "duration": 183896.828,
     "expected": 67,
     "skipped": 0,
     "unexpected": 0,
