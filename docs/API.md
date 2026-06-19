@@ -306,10 +306,10 @@ Curator-private results, gated by `requireApiResultAccess` (member-or-owner **an
 `requireApiResultAccess`. Returns `SortResultItem[]`.
 
 ### `GET·PATCH·DELETE /api/sort-results/[id]/items/[rid]`
-`requireApiResultAccess` + belongs-to-parent (`item.sortResultId !== id` → `404`). `GET` → `SortResultItem`; `PATCH` body → updated item (`400` invalid JSON); `DELETE` removes the item via `SortResultService.deleteResultItem` → `200 { message }`.
+`requireApiResultAccess` + belongs-to-parent (`item.sortResultId !== id` → `404`). `PATCH`/`DELETE` reject a **finalized** parent result with **`409`** (finalized results are immutable — infra §11.3; `purses-526`). `GET` → `SortResultItem`; `PATCH` body → updated item (`400` invalid JSON); `DELETE` removes the item via `SortResultService.deleteResultItem` → `200 { message }`.
 
 ### `POST /api/sort-results/[id]/items/[rid]/reset`
-`requireApiResultAccess` + belongs-to-parent (`404`). Resets the item's placement. Returns the `SortResultItem`.
+`requireApiResultAccess` + belongs-to-parent (`404`); rejects a **finalized** parent result with **`409`** (`purses-526`). Resets the item's placement. Returns the `SortResultItem`.
 
 ## shares
 

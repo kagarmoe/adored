@@ -118,6 +118,13 @@ describe("POST /api/sort-results/[id]/items/[rid]/reset", () => {
     expect(itemRepo.update).not.toHaveBeenCalled();
   });
 
+  it("409 when the parent result is finalized (no mutation)", async () => {
+    mockRequireApiResultAccess.mockResolvedValue({ ...RESULT, status: "finalized" });
+    const res = await POST(postReq(), params);
+    expect(res.status).toBe(409);
+    expect(itemRepo.update).not.toHaveBeenCalled();
+  });
+
   it("clears the manual overrides on success", async () => {
     const res = await POST(postReq(), params);
     expect(res.status).toBe(200);

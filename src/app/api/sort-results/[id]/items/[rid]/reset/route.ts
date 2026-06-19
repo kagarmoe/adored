@@ -14,6 +14,12 @@ export async function POST(
     const db = getDb();
     const access = await requireApiResultAccess(db, params.id, user.id);
     if (access instanceof NextResponse) return access;
+    if (access.status === "finalized") {
+      return NextResponse.json(
+        { error: "Result is finalized" },
+        { status: 409 },
+      );
+    }
     const existing = await new SortResultItemRepository(db).findById(params.rid);
     if (!existing || existing.sortResultId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
