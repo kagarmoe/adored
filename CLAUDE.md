@@ -24,6 +24,18 @@ bd close <id>         # Complete work
 
 **Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
 
+## Agent Modes
+
+Agents and subagents MUST use one of these models:
+
+Anthropic/Claude:
+  model: Opus 4.8
+  effort: ultracode
+
+OpenAI/Codex:
+  model: gpt-5.5
+  effort: "xhigh"
+
 ## Agent Context Profiles
 
 The managed Beads block is task-tracking guidance, not permission to override repository, user, or orchestrator instructions.

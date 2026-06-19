@@ -1,0 +1,10 @@
+# transient graphify state + per-run ephemera + the regenerable HTML viz
+# (graph.html regenerates from graph.json via `graphify export html`)
+.graphify_*
+.chunklist_*
+.noncode.txt
+.detect_err
+cache/
+cost.json
+graph.html
+manifest.json

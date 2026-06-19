@@ -2,6 +2,8 @@
 
 The standard this product's expression is held to — voice, copy, color, motion, naming, and the felt quality of interaction.
 
+> This is the **first-order** contract. For background — architecture, project history, the decisions log — see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md); nothing there overrides this file.
+
 This contract is **first-order**: the app conforms to it, not the reverse.
 
 ## Scope

@@ -1,8 +1,8 @@
-# PurseInator Deployment Guide
+# Adored Deployment Guide
 
 ## Vercel Deployment
 
-PurseInator is optimized for deployment on [Vercel](https://vercel.com), with automatic environment variable validation and Vercel Blob storage integration for photo uploads.
+Adored is optimized for deployment on [Vercel](https://vercel.com), with automatic environment variable validation and Vercel Blob storage integration for photo uploads.
 
 ### Prerequisites
 
@@ -35,8 +35,8 @@ In Vercel Project Settings → Environment Variables, add:
 | Variable | Example | Notes |
 |----------|---------|-------|
 | `DATABASE_URL` | `postgresql://user:pass@host:5432/db` | Vercel Postgres or external DB connection string |
-| `NEXTAUTH_SECRET` | `(generated value)` | Generate: `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | `https://your-domain.vercel.app` | Production domain. Use `http://localhost:3000` for preview |
+| `AUTH_SECRET` | `(generated value)` | Generate: `openssl rand -base64 32`. Validated by `src/lib/env.ts`, bridged to `NEXTAUTH_SECRET` internally |
+| `AUTH_URL` | `https://your-domain.vercel.app` | Production domain. Previews derive it from `VERCEL_URL` if unset. Bridged to `NEXTAUTH_URL` internally |
 
 #### Optional (Production)
 
@@ -251,8 +251,8 @@ git push origin main
 ## Production Readiness Checklist
 
 - [ ] Database URL configured and migration run
-- [ ] NEXTAUTH_SECRET set and >= 32 characters
-- [ ] NEXTAUTH_URL matches production domain
+- [ ] AUTH_SECRET set and >= 32 characters
+- [ ] AUTH_URL matches production domain (or derived from VERCEL_URL on previews)
 - [ ] Email provider configured (if using transactional emails)
 - [ ] Custom domain added (if not using vercel.app domain)
 - [ ] SSL certificate verified

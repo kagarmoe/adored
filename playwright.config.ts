@@ -3,7 +3,7 @@ import { TEST_DATABASE_URL } from "./e2e/fixtures/db";
 
 // Full suite runs on three viewports (tablet-first, but must work on phone +
 // desktop too). Specs are behavioral; exact-layout assertions live in
-// layout.spec.ts. See docs/plans/2026-05-30-e2e-ui-testing.md.
+// layout.spec.ts. See docs/ARCHITECTURE.md (testing strategy).
 
 const DESKTOP = { viewport: { width: 1280, height: 800 } };
 
