@@ -72,12 +72,16 @@ test.describe("sort session → triage", () => {
     await expect(page.getByRole("button", { name: "Love" })).toBeVisible();
   });
 
-  test("StartSessionForm at /sort/new creates a session and lands on a numbered sort URL", async ({
+  // Product contract: starting a session lands the curator DIRECTLY on triage.
+  // The session-detail page stays reachable via the breadcrumb, but the create
+  // flow does not stop there — StartSessionForm POSTs /api/sessions then
+  // router.push()es straight to /sort/{number}/triage. Uses the sessionless
+  // collection so the create succeeds (the API enforces one active session per
+  // collection/curator); this collection has no slug, so it is addressed by its
+  // ULID — orthogonal to the slug check, which the triage test above pins.
+  test("StartSessionForm at /sort/new creates a session and lands DIRECTLY on triage", async ({
     page,
   }) => {
-    // Use the sessionless collection so the create succeeds (this collection has
-    // no slug, so it is addressed by its ULID — orthogonal to the slug check,
-    // which the triage test above pins).
     await page.goto(`/collections/${freshCollectionId}/sort/new`);
     await expect(
       page.getByRole("heading", { name: "New Sorting Session" }),
@@ -86,43 +90,22 @@ test.describe("sort session → triage", () => {
     const start = page.getByRole("button", { name: "Start Session" });
     await expect(start).toBeVisible();
 
-    // The form POSTs /api/sessions then router.push()es into the new session,
-    // addressed by its per-collection number.
     await Promise.all([
-      page.waitForURL(/\/sort\/\d+$/),
+      page.waitForURL(/\/sort\/\d+\/triage$/),
       start.click(),
     ]);
-    await expect(page).toHaveURL(/\/sort\/\d+$/);
+    await expect(page).toHaveURL(/\/sort\/\d+\/triage$/);
 
-    // From the landing page, triage for the new session is reachable and renders
-    // its screen (this fresh collection has no items, so it shows the empty
-    // state — the point here is the route resolves for the freshly-created
-    // session, not item rendering, which the first test pins).
-    const match = page.url().match(/\/sort\/(\d+)$/);
-    expect(match, "expected a numeric session in the landing URL").not.toBeNull();
-    const newNumber = match![1];
-    await page.goto(`/collections/${freshCollectionId}/sort/${newNumber}/triage`);
+    // The numbered session resolves and the triage screen renders for the freshly
+    // created session (this fresh collection has no items, so it shows the empty
+    // state — the point here is the route landed and resolved, not item
+    // rendering, which the first test pins).
+    expect(
+      page.url().match(/\/sort\/(\d+)\/triage$/),
+      "expected a numeric session in the triage landing URL",
+    ).not.toBeNull();
     await expect(page.getByRole("heading", { name: "Triage", exact: true })).toBeVisible();
   });
-
-  // BROKEN (intended-but-unmet contract): the brief's intended journey is "start a
-  // session → land directly on triage". StartSessionForm.handleSubmit actually
-  // router.push()es to /sort/{number} (the session detail page), which then links
-  // to triage — there is no auto-advance to /triage. Asserting the intended
-  // behaviour here would assert a contract the code does not fulfil, so it is
-  // quarantined rather than weakened to match the bug. The test above proves the
-  // real, reachable flow (start → session URL → triage renders).
-  test.fixme(
-    "StartSessionForm lands DIRECTLY on the triage screen",
-    async ({ page }) => {
-      await page.goto(`/collections/${slug}/sort/new`);
-      await Promise.all([
-        page.waitForURL(/\/sort\/\d+\/triage/),
-        page.getByRole("button", { name: "Start Session" }).click(),
-      ]);
-      await expect(page).toHaveURL(/\/sort\/\d+\/triage/);
-    },
-  );
 });
 
 test.describe("unauthenticated sort access", () => {

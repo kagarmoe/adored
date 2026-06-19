@@ -14,10 +14,10 @@ beforeEach(() => {
 });
 
 describe("StartSessionForm", () => {
-  it("POSTs the collection ULID, then redirects to slug + session number", async () => {
+  it("POSTs the collection ULID, then redirects DIRECTLY to triage (slug + session number)", async () => {
     render(<StartSessionForm collectionId="coll_01ULID" collectionSlug="summer-bags" />);
     fireEvent.click(screen.getByRole("button", { name: "Start Session" }));
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/collections/summer-bags/sort/4"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/collections/summer-bags/sort/4/triage"));
     const body = JSON.parse((fetch as any).mock.calls[0][1].body);
     expect(body.collectionId).toBe("coll_01ULID"); // API body uses the ULID, not the slug
   });
