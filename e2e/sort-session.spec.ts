@@ -135,16 +135,25 @@ test.describe("session detail → See what you love most → results", () => {
   test("triage a decision → compare a pair → the trigger creates a populated result and navigates to it", async ({
     page,
   }) => {
-    // 1. Land on triage and record a decision (tap a tier). The control POSTs the
-    //    decision then router.refresh()es, advancing to the next pending item —
-    //    so the "1 of 2" progress text appears once the preference is persisted.
+    // 1. Land on triage and triage BOTH items consecutively. This is the honest
+    //    multi-item demonstration (regression for U2): after a tier tap the
+    //    control POSTs the decision then router.refresh()es to the next item, and
+    //    the reused client instance MUST re-enable its tiers — otherwise a normal
+    //    user is stuck on item 1 with every button frozen on "Saving...".
     await page.goto(`/collections/${slug}/sort/${sessionNumber}/triage`);
     await expect(page.getByRole("heading", { name: "Triage", exact: true })).toBeVisible();
+
+    // Item 1: tap a tier, then confirm the page advanced (the second item is now
+    // pending) via the triaged-count, AND that the tiers re-enabled for item 2.
     await page.getByRole("button", { name: "Love" }).click();
-    // The decision persisted and the page advanced (the second item is now
-    // pending), which we observe via the triaged-count text rather than racing
-    // the transiently-disabled tier buttons across the refresh.
     await expect(page.getByText("1 of 2")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Love" })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Onward" })).toBeEnabled();
+
+    // Item 2: a second tap must succeed on the re-enabled control and complete
+    // triage (2 of 2) — the proof a user can actually sort past the first item.
+    await page.getByRole("button", { name: "Like" }).click();
+    await expect(page.getByText("2 of 2")).toBeVisible();
 
     // 2. Move to compare and choose one card (tapping a card IS the choice).
     await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
