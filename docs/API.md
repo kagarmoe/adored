@@ -50,7 +50,7 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 - **Curator-scoped** — `sessions` and `sort-results` (and children) are private to the creating curator, enforced on top of collection membership.
 - **`ownerId`/`curatorId` come from the session, never the body** — create routes force them from the authenticated user.
 - **Belongs-to-parent on child routes** — see Authorization model.
-- **Soft-delete vs purge** — `archive`/`restore` are reversible; `purge` is the permanent path (note: `purgeItem` and `deleteResultItem` are currently no-op stubs — see detail).
+- **Soft-delete vs purge** — `archive`/`restore` are reversible; `purge` is the permanent path (note: `purgeItem` is currently a no-op stub — see detail). `DELETE /api/sort-results/[id]` and `…/items/[rid]` are hard deletes restricted to **draft** results (see detail).
 
 ## Route index
 
@@ -291,22 +291,22 @@ Curator-scoped sorting sessions. `goal` is optional free text.
 Curator-private results, gated by `requireApiResultAccess` (member-or-owner **and** owning curator). Children also enforce belongs-to-parent.
 
 ### `POST /api/sort-results`
-`getSession` + `requireApiCollectionAccess(body.collectionId)`. **Body:** `{ collectionId, name }` (`400` if either missing, or invalid JSON). `curatorId` from session, `status: "draft"`. `201 SortResult`.
+`getSession` + `requireApiCollectionAccess(body.collectionId)`. **Body:** `{ collectionId, name }` (`400` if either missing, or invalid JSON). `curatorId` from session, `status: "draft"`. Delegates to `SortResultService.createDraftResult`, which reads the curator's `CollectionPreferenceItem` rows for the collection and **materializes one `SortResultItem` per preference** (ranked by descending score, carrying each row's bucket) before returning. `201 SortResult` (the created draft; items are fetched via `GET …/[id]/items`).
 
 ### `GET·PATCH·DELETE /api/sort-results/[id]`
-`requireAuth` + `requireApiResultAccess` (`401`/`403`/`404`). `GET` → `SortResult`; `PATCH` body → updated `SortResult` (`400` invalid JSON); `DELETE` → `{ message }`.
+`requireAuth` + `requireApiResultAccess` (`401`/`403`/`404`). `GET` → `SortResult`; `PATCH` body → updated `SortResult` (`400` invalid JSON). `DELETE` delegates to `SortResultService.deleteResult`, which **hard-deletes a draft result and its child items** (children first — the `sort_result_items → sort_results` FK has no `ON DELETE CASCADE`; no transaction): `200 { message }` when a draft was deleted; **`409`** (`"Can only delete draft results"`) if the result is finalized; **`404`** if absent.
 
 ### `POST /api/sort-results/[id]/finalize`
 `requireApiResultAccess`. Finalizes the result. Returns `SortResult` (`200`).
 
 ### `POST /api/sort-results/[id]/supersede`
-`requireApiResultAccess`. Creates a superseding result. `201 SortResult`.
+`requireAuth` + `requireApiResultAccess`. Delegates to `SortResultService.supersedeResult`. When the source is **finalized**, creates a new **draft** result (`name` = `"<source name> (Revision)"`) with the source's items **cloned** (computed rank/bucket carried over) → **`201`** the new draft `SortResult`. **`409`** (`"Can only supersede finalized results"`) if the source is not finalized; **`404`** if the source is absent.
 
 ### `GET /api/sort-results/[id]/items`
 `requireApiResultAccess`. Returns `SortResultItem[]`.
 
 ### `GET·PATCH·DELETE /api/sort-results/[id]/items/[rid]`
-`requireApiResultAccess` + belongs-to-parent (`item.sortResultId !== id` → `404`). `GET` → `SortResultItem`; `PATCH` body → updated item (`400` invalid JSON); `DELETE` → `{ message }` — **but `deleteResultItem()` is a no-op stub** (guard added, deletion not yet implemented).
+`requireApiResultAccess` + belongs-to-parent (`item.sortResultId !== id` → `404`). `GET` → `SortResultItem`; `PATCH` body → updated item (`400` invalid JSON); `DELETE` removes the item via `SortResultService.deleteResultItem` → `200 { message }`.
 
 ### `POST /api/sort-results/[id]/items/[rid]/reset`
 `requireApiResultAccess` + belongs-to-parent (`404`). Resets the item's placement. Returns the `SortResultItem`.
@@ -314,7 +314,7 @@ Curator-private results, gated by `requireApiResultAccess` (member-or-owner **an
 ## shares
 
 ### `GET·POST /api/sort-results/[id]/shares`
-`requireAuth` + `requireApiResultAccess`. `GET` → shares for the result. `POST` body → `201` `SortResultShare` (e.g. `{ expiresAt? }`, per `createShare`). `400` invalid JSON.
+`requireAuth` + `requireApiResultAccess`. `GET` → the result's `SortResultShare[]`, scoped via `SortResultShareRepository.findByResult(id)`. `POST` body → `201` `SortResultShare` (e.g. `{ expiresAt? }`, per `createShare`). `400` invalid JSON.
 
 ### `GET·PATCH·DELETE /api/sort-results/[id]/shares/[sid]`
 `requireApiResultAccess` + belongs-to-parent (`share.sortResultId !== id` → `404`). `GET` → share; `PATCH` body → updated share (`400` invalid JSON); `DELETE` → `{ message }`.
@@ -332,4 +332,4 @@ These routes enforce **authentication only** (no collection membership/ownership
 - `POST /api/items`, `GET·PATCH·DELETE /api/items/[id]`, `/restore`, `/purge` — act on any item by id (read/update/soft-delete). `purge` is additionally a no-op stub.
 - `GET·POST /api/collections/[id]/preferences/*` — no membership gate (but scoped to the caller's own data).
 
-Related stubs (return success without doing the work): `POST /api/items/[id]/purge`, `DELETE /api/sort-results/[id]/items/[rid]`.
+Related stubs (return success without doing the work): `POST /api/items/[id]/purge`. (The former sort-results no-op-success stubs — `DELETE /api/sort-results/[id]`, `DELETE /api/sort-results/[id]/items/[rid]`, and the empty `GET …/shares` listing — are now implemented; **purses-u3p** is resolved for the sort-results lifecycle.)
