@@ -134,12 +134,24 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
     expect(screen.queryByText("0")).toBeNull();
   });
 
-  it("labels the lowest tier as 'Onward' (no shaming 'Release'/'Discard' framing in results)", async () => {
+  it("labels the lowest tier as 'Onward' (the gentle visible label is present)", async () => {
     const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
     render(ui);
     expect(screen.getByText("Onward")).toBeInTheDocument();
-    expect(screen.queryByText("Release")).toBeNull();
     expect(screen.queryByText(/discard/i)).toBeNull();
+  });
+
+  // BROKEN(purses-xca): ItemCard low tier still labeled 'Release'. The results page's own
+  // tier cards say "Onward", but each low-tier ItemCard badge carries title="Release"
+  // (src/features/items/ItemCard.tsx bucketLabels.low). queryByText only matches text
+  // nodes, so the old assertion was false assurance — this honest tripwire scans the
+  // whole rendered output (including attributes) and FAILS today, so it is green-as-
+  // it.fails now and ERRORS the moment xca relabels low → "Onward".
+  it.fails("results carry no 'Release' framing — the low tier reads 'Onward' (purses-xca)", async () => {
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const { container } = render(ui);
+    expect(container.querySelector('[title="Release"]')).toBeNull();
+    expect(container.innerHTML).not.toContain("Release");
   });
 
   it("gives the rank-1 item the most-loved hero treatment (affirmation peak)", async () => {
