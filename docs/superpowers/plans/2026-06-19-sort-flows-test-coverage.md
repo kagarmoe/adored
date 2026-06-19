@@ -4,25 +4,32 @@
 
 **Goal:** Build a characterize-only diagnostic test suite for the Sorting Session / Triage / Compare / Results flows that localizes the known break.
 
-**Architecture:** Three tiers — vitest unit (services + sort-results route handlers, mock only auth/db/Blob), DB-backed integration (`src/lib/db/*.integration.test.ts`, `RUN_DB_TESTS=1`, ephemeral Postgres), Playwright e2e (journeys + routing/images/auth). Tests assert *intended* behavior; failures are the deliverable (a localization map). **No production-code fixes** — where code is wrong, the test pins current behavior and the divergence is reported.
+**Architecture:** Three tiers — vitest unit (services + sort-results route handlers, mock only auth/db/Blob), DB-backed integration (`src/lib/db/*.integration.test.ts`, `RUN_DB_TESTS=1`, ephemeral Postgres), Playwright e2e (journeys + routing/images/auth). Tests assert *intended* behavior and are left **RED at the break** (quarantined via `test.fails()`/`it.skip` so required CI stays green); the red tests are the localization map AND the repair's regression guard. **No production-code fixes** — never rewrite a test to assert broken behavior as correct.
 
 **Tech Stack:** Next.js App Router, vitest, Playwright, Drizzle, Neon/Postgres, `@vercel/blob`.
 
 ## Global Constraints
 
-- **Characterize-only.** No edits to `src/` production code. If an assertion of *intended* behavior fails, change the test to pin *actual* behavior, add a `// DIVERGENCE:` comment naming intended-vs-actual, and record it in the diagnosis log (Task 14). Never fix the product.
+- **Characterize-only = no `src/` production edits. RED-first:** assert *intended* behavior; where the code is broken, leave the test FAILING but quarantined — mark it `test.fails()` (vitest 1.6.1: green while the body fails, **errors when the body passes** = the repair tripwire) or `it.skip` with a `// BROKEN(purses-r7p): intended X, actual Y` tag. **Never rewrite a test to assert broken behavior as if correct** (that buries the diagnosis and inverts the guard). Record each in the diagnosis log (Task 14). Never fix the product.
 - **Mock only true boundaries** in unit tests: `@/lib/auth` (getSession/requireAuth), `@/lib/db` (getDb), `@vercel/blob`. Never mock the unit under test or your own service/repo layers in integration.
 - **Integration gate:** every `src/lib/db/*.integration.test.ts` wraps its suite in `const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;` and uses `e2e/fixtures/db` (`getTestDb`/`resetDb`/`closeDb`) + `e2e/fixtures/seed`.
 - **E2E** uses `seedBaseline` + a seed helper, intercepts `**/photos/**/file` with a local fixture, and navigates **slug + number** URLs (`/collections/{slug}/sort/{sessionNumber}/...`), never raw ULIDs.
-- **Test names are behavioral (DAMP):** the name states the contract (`"creates a result with zero items — DIVERGENCE: live route skips materialization"`), never `test 3`.
+- **Test names are behavioral (DAMP) and state the *intended* contract** (`"POST /sort-results materializes one item per preference"`, left `test.fails` while broken), never `test 3` and never a name that asserts the bug as the contract.
 - **CI:** unit/route → `npm run test:ci`; integration → `db-tests` job (`RUN_DB_TESTS=1 npx vitest run --no-file-parallelism src/lib/db`); e2e → the change-gated `e2e:` job. No new CI wiring needed — new files land in existing tiers.
 
-## Confirmed-at-read diagnosis (the executor + reviewer should expect these)
+## Confirmed diagnosis (verified in spec review — the RED tripwires pin these)
 
-- `POST /api/sort-results` (`src/app/api/sort-results/route.ts`) calls `SortResultRepository.create({status:"draft"})` directly — it does **not** call `SortResultService.createDraftResult`, so **no `SortResultItem`s are materialized**. Expected: Results empty via the live path.
-- `SortResultService.createDraftResult` (the correct, populating path) appears to have no live caller (`purses-r7p`: only `SessionCompleteScreen`, dead).
-- `DELETE /api/sort-results/[id]/items/[rid]` → `ResultItemController.deleteResultItem()` is a no-op stub (returns 200, deletes nothing).
-- `POST /api/items/[id]/purge` no-op (out of these flows' scope; ignore).
+- `POST /api/sort-results` (`route.ts:29`) calls `SortResultRepository.create({status:"draft"})` directly — **no `SortResultItem`s materialized** (empty draft).
+- `SortResultService.createDraftResult` (the path that *does* materialize) is **fully orphaned — never instantiated anywhere** in `src/`/`e2e/`. (Not "called only by SessionCompleteScreen.")
+- A second method `ResultController.createDraftResult` (`results.ts:23`) sits on the controller wired to the `[id]` routes but is a **stub** (`// TODO: create SortResultItems`) that no route calls.
+- `finalize` route → stub `ResultController.finalizeResult` (no items); `supersede` route → `ResultController.supersedeResult` which **throws "not implemented"** (`results.ts:~87`). The correct `SortResultService.supersedeResult` (clones items) is never reached.
+- `SessionCompleteScreen` (`tsx:40`) fetches the empty `POST` route and is itself **dead** (no page mounts it; no `complete` route). **Live failure = no `SortResult` is created through any live UI path at all** — Results empty/absent. (The route called directly, as tests do, makes an *empty* result.)
+- `items/[rid] DELETE` → `ResultItemController.deleteResultItem()` no-op (returns 200, deletes nothing). `ScoringService` = **10** green unit tests (math sound). `POST /api/items/[id]/purge` no-op (out of scope).
+
+## Execution status & order
+
+- **DONE — do not re-dispatch:** Task 1 `PairingService.test.ts` (6/6) and Task 2 `PreferenceStateService.test.ts` (4/4) — committed; those layers are sound.
+- **Seam-first:** the load-bearing RED tripwires come **first** — the live `POST`→empty-items assertion (one assertion added to the **existing** `src/lib/db/sort-results-authz.integration.test.ts`, see Task 12) and the `POST` route test (Task 7). The remaining service/route unit tasks are test-debt repayment around them.
 
 ## File structure (all new unless noted)
 
@@ -128,14 +135,14 @@ docs/diagnosis/2026-06-19-sort-flow-findings.md   (the localization report)
 ## Task 7: `sort-results` POST + `[id]` route tests (reveals the empty-result break)
 
 **Files:** Create `src/app/api/sort-results/route.test.ts` and `src/app/api/sort-results/[id]/route.test.ts`. Mirror `sessions/route.test.ts` `vi.hoisted` style; mock `getSession`, `getDb`, `requireApiCollectionAccess`/`requireApiResultAccess` (mock `@/server/dal/collection-access`) and the repos used.
-- [ ] **`route.test.ts` (POST) cases:** `"401 unauthenticated"`; `"400 when collectionId or name missing"`; `"403 when collection access denied"` (mock guard → NextResponse 403); `"201 forces curatorId from session and status draft"`; **`"creates the result with ZERO SortResultItems — DIVERGENCE: live POST skips SortResultService.createDraftResult materialization"`** — assert the item repo's `create` is never invoked by this route. This is the headline diagnostic.
+- [ ] **`route.test.ts` (POST) cases:** `"401 unauthenticated"`; `"400 when collectionId or name missing"`; `"403 when collection access denied"` (mock guard → NextResponse 403); `"201 forces curatorId from session and status draft"`; **RED tripwire — `"POST materializes one SortResultItem per preference"`** via `test.fails()` (the route's item-repo `create` is never invoked today → fails now, flips green when the route is wired to materialize). Name it for the INTENDED behavior, not the bug.
 - [ ] **`[id]/route.test.ts` cases:** GET/PATCH/DELETE each: `401`, `403/404` via `requireApiResultAccess`, success shape; PATCH `400` invalid JSON.
 - [ ] **Run** `npx vitest run src/app/api/sort-results/route.test.ts src/app/api/sort-results/\[id\]/route.test.ts`. **Commit** `test(sort): sort-results POST + [id] route coverage — pins empty-result divergence`.
 
 ## Task 8: `sort-results` finalize / supersede / items / items[rid] / reset route tests
 
 **Files:** Create `finalize/route.test.ts`, `supersede/route.test.ts`, `items/route.test.ts`, `items/[rid]/route.test.ts`, `items/[rid]/reset/route.test.ts`. Same mock pattern; all gated by `requireApiResultAccess`; children also belongs-to-parent (`item.sortResultId !== id → 404`).
-- [ ] **Cases per route:** `401`; `403/404` (guard); belongs-to-parent `404` for `[rid]` routes (item from another result); success status/shape; **`items/[rid] DELETE`: `"returns 200 but deletes nothing — DIVERGENCE: deleteResultItem is a no-op stub"`** (assert handler returns 200; note no deletion).
+- [ ] **Cases per route:** `401`; `403/404` (guard); belongs-to-parent `404` for `[rid]` routes; success status/shape. **RED tripwires (`test.fails()`, named for intended behavior):** `supersede` → `"supersede returns 201 and clones the result's items"` (route runs the stub `ResultController.supersedeResult` → returns 500 today, so it fails); `items/[rid] DELETE` → `"DELETE removes the result item"` (no-op 200 today → assert the row is gone / repo `delete` invoked, fails today).
 - [ ] **Run** the five files. **Commit** `test(sort): sort-results finalize/supersede/items/reset route coverage`.
 
 ## Task 9: `sort-results` shares route tests
@@ -151,18 +158,17 @@ docs/diagnosis/2026-06-19-sort-flow-findings.md   (the localization report)
 
 ## Task 11: Add `seedSortScenario` fixture
 
-**Files:** MODIFY `e2e/fixtures/seed.ts`. Add `seedSortScenario(ownerId)` that extends `seedTriageScenario`: seed a collection (slug) + **3 items each with a hero photo** + an active session, **and** pre-seed `CollectionPreferenceItem` rows for the owner across buckets (so Results/Compare have data without a live sort). Return `{collectionId, slug, sessionNumber, itemIds}`. Mirror `seedTriageScenario`; use `CollectionPreferenceItemRepository.create`. Also seed a `SortResult` via `SortResultService.createDraftResult` (the correct path) and return its `resultNumber`, so the results e2e can load a populated result regardless of the live-route bug.
+**Files:** MODIFY `e2e/fixtures/seed.ts`. Add `seedSortScenario(ownerId)` that extends `seedTriageScenario`: seed a collection (slug) + **3 items each with a hero photo** + an active session, **and** pre-seed `CollectionPreferenceItem` rows for the owner across buckets (so Results/Compare have data without a live sort). Return `{collectionId, slug, sessionNumber, itemIds}`. Mirror `seedTriageScenario`; use `CollectionPreferenceItemRepository.create`. Also seed a `SortResult` via `SortResultService.createDraftResult` (the correct path) and return its `resultNumber`. **This is renderer-only scaffolding** — it deliberately bypasses the broken live route, so the populated-results e2e proves presentation, not the seam (the seam is pinned in Task 12).
 - [ ] **Run** `RUN_DB_TESTS=1 npx tsx e2e/fixtures/seed.ts` (extend the `require.main` block to smoke `seedSortScenario`). **Commit** `test(sort): seedSortScenario e2e fixture`.
 
-## Task 12: `sort-pipeline` DB integration test (the seam diagnostic)
+## Task 12: DB integration — the seam tripwire (always-on tier)
 
-**Files:** Create `src/lib/db/sort-pipeline.integration.test.ts`. Mirror `triage-decision.integration.test.ts` (`describeDb`, `resetDb`, `seedBaseline`, real repos, mock only auth+db). Use real `PreferenceStateService`, `ScoringService`, `SortResultService`, repos.
-- [ ] **Cases (assert the intended end-to-end contract):**
-  1. `"triage decisions persist preferences with the right buckets"` — seed collection+items+session; record triage via `DecisionEventRepository`/route; `PreferenceStateService.recalculate`; assert `CollectionPreferenceItem` rows + buckets.
-  2. `"pairwise decisions update preference scores"` — record pairwise; recalc; assert score movement (mirror ScoringService expectations).
-  3. `"SortResultService.createDraftResult materializes one item per preference"` — call it; assert `SortResultItem` rows exist, ranked by score.
-  4. **`"the live POST /api/sort-results path yields a result with ZERO items — DIVERGENCE (purses-r7p): route bypasses createDraftResult"`** — drive the real `POST /api/sort-results` handler, then query `SortResultItemRepository.findByResult(newId)` → assert `[]`. Pins the break end-to-end.
-- [ ] **Run** `RUN_DB_TESTS=1 npx vitest run --no-file-parallelism src/lib/db/sort-pipeline.integration.test.ts`. **Commit** `test(sort): decision→preference→result pipeline integration — pins empty-result seam`.
+**The headline RED tripwire lives here** (the e2e job is skippable; this `db-tests` tier always runs). **Do NOT duplicate setup** — add the seam assertion to the **existing** `src/lib/db/sort-results-authz.integration.test.ts`, which already drives the real `POST /api/sort-results` un-mocked and imports `SortResultItemRepository`. Put the remaining new cases in `src/lib/db/sort-pipeline.integration.test.ts` (mirror `triage-decision.integration.test.ts`: `describeDb`, `resetDb`, `seedBaseline`, real repos, mock only auth+db).
+- [ ] **Seam tripwire (in the existing authz file):** **RED `test.fails()`** — `"live POST /api/sort-results materializes one SortResultItem per preference"`: after the existing live-POST 201, assert `SortResultItemRepository.findByResult(newId)` is non-empty. Fails today (`[]`); flips green when the route is fixed. Name it for the intended behavior, not "zero items".
+- [ ] **New pipeline cases (`sort-pipeline.integration.test.ts`):**
+  1. `"triage decision persists a preference in the right bucket"` — assert **persistence + bucket direction**, NOT exact scores (ScoringService's 10 unit tests own the arithmetic — don't re-derive).
+  2. `"createDraftResult materializes one item per preference, ranked by score"` — calls `SortResultService.createDraftResult` directly. **Label: characterizes the intended-but-unwired service path** (the service is orphaned — a future-repair target, not the live-seam guard above).
+- [ ] **Run** `RUN_DB_TESTS=1 npx vitest run --no-file-parallelism src/lib/db`. **Commit** `test(sort): seam tripwire (live POST → items) + pipeline integration`.
 
 ## Task 13: E2E journeys (session / triage / compare / results)
 
@@ -170,22 +176,22 @@ docs/diagnosis/2026-06-19-sort-flow-findings.md   (the localization report)
 - [ ] **session spec:** start at `/collections/{slug}/sort/new` (or the start form) → lands on triage at `/sort/{sessionNumber}/triage`; reload preserves session; unauth `goto` → redirect to `/login`.
 - [ ] **triage spec:** hero image visible; tap a tier button → URL/state advances to next item; reload shows the item no longer pending; graceful state when an item has no photo.
 - [ ] **compare spec:** `/sort/{sessionNumber}/compare` shows "Which do you love more?"; tap a card chooses it; Tie/Skip present as secondary; gentle progress text visible; after a tap the next pair (or completion) appears.
-- [ ] **results spec:** load the seeded populated result at `/collections/{slug}/results/{resultNumber}` → tier sections + hero images render + Onward section present. **Then** the divergence check: start a *fresh* sort via the live UI and assert Results is empty (the live path produces no items) — `// DIVERGENCE` + record in Task 14.
+- [ ] **results spec (renderer-only — label it):** load the **seeded** populated result at `/collections/{slug}/results/{resultNumber}` → tier sections + hero images + Onward render. Comment that this proves presentation on seeded data and carries **zero diagnostic signal about the break**. Do NOT attempt "fresh sort via live UI → empty" — no live UI path creates a result (`SessionCompleteScreen` is dead). If no reachable results-generation affordance exists, record that observation in Task 14; the authoritative seam proof is Task 12's integration tripwire.
 - [ ] **Run** `npx playwright test e2e/sort-session.spec.ts e2e/compare.spec.ts e2e/results.spec.ts`. **Commit** `test(sort): e2e journeys for session/triage/compare/results (purses-7dd)`.
 
 ## Task 14: Diagnosis report + full-suite run
 
 **Files:** Create `docs/diagnosis/2026-06-19-sort-flow-findings.md`.
 - [ ] Run the whole suite across tiers: `npm run test:ci`, `RUN_DB_TESTS=1 npx vitest run --no-file-parallelism src/lib/db`, `npx playwright test`.
-- [ ] Write the report **outside-in**: for each failing/diverging test, record `symptom → file:test → layer → likely cause`, grouped by flow. Lead with the confirmed `r7p` empty-result break (route bypasses `createDraftResult`) and the `deleteResultItem` no-op. End with a one-paragraph **repair-strategy starting point** (which layer to fix first). This file + the PR body are the deliverable.
+- [ ] Write the report **outside-in**, deriving each cause **from the actual test run** (not copied from this plan): for each RED/quarantined test, record `symptom → file:test → layer → cause`, grouped by flow. Lead with the result-creation break — name the **two orphaned populating paths** (`SortResultService` never instantiated; `ResultController.createDraftResult` stubbed), `supersede` throwing, the `deleteResultItem` no-op, and the dead `SessionCompleteScreen` (so no live path creates a result). End with a one-paragraph **repair-strategy starting point** (which path to make canonical + wire first). This file + the PR body are the deliverable.
 - [ ] **Commit** `docs(diagnosis): sort-flow failure localization map`.
 
 ---
 
 ## Self-review
 
-**Spec coverage:** unit (Tasks 1–6 services, 7–9 routes, 10 components) ✓; integration pipeline (12) ✓; e2e journeys + routing/images/auth (13) ✓; characterize-only + divergence handling (Global Constraints + Tasks 7/8/12/13/14) ✓; CI tiers (Global Constraints) ✓; diagnosis deliverable (14) ✓; fixtures (11) ✓. Out-of-scope items excluded.
+**Spec coverage:** unit (Tasks 1–6 services, 7–9 routes, 10 components) ✓; integration pipeline (12) ✓; e2e journeys + routing/images/auth (13) ✓; characterize-only + RED-first quarantine (Global Constraints + Tasks 7/8/12/13/14) ✓; seam tripwire on the always-on integration tier (12) ✓; CI tiers (Global Constraints) ✓; diagnosis deliverable (14) ✓; fixtures (11) ✓. Out-of-scope items excluded.
 
-**Placeholders:** none — every task names exact files, the mirror pattern, concrete `it` cases with arrange/act/assert intent, run command, and expected outcome (incl. predicted divergences). Task 10 explicitly forbids inventing redundant tests.
+**Placeholders:** none — every task names exact files, the mirror pattern, concrete `it` cases with arrange/act/assert intent, run command, and expected outcome (incl. predicted RED tripwires + their `test.fails`/`it.skip` quarantine). Task 10 explicitly forbids inventing redundant tests; Task 12 dedups against the existing authz integration test; Tasks 1–2 are marked DONE.
 
 **Type consistency:** service constructor signatures, repo method names (`findByCollection`, `findByItem`, `findByResult`, `findDraft`, `findActive`, `findByToken`, `create`, `update`), and the `CollectionPreferenceItem`/`SortResultItem` field names (`score`, `rankBucket`, `comparisonCount`, `computedRank`, `computedBucket`, `manualRank`, `manualBucket`) are used consistently and match the read sources.
