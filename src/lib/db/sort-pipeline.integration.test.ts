@@ -40,6 +40,7 @@ vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 import { POST as recordDecision } from "@/app/api/sessions/[id]/decisions/route";
 import { POST as createResult } from "@/app/api/sort-results/route";
 import { DELETE as deleteResultRoute } from "@/app/api/sort-results/[id]/route";
+import { DELETE as deleteResultItemRoute } from "@/app/api/sort-results/[id]/items/[rid]/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -311,5 +312,29 @@ describeDb("sort pipeline (route/service -> DB)", () => {
 
     // Finalized result must survive a delete attempt.
     expect(await new SortResultRepository(db).findById(draft.id)).not.toBeNull();
+  });
+
+  it("DELETE /api/sort-results/[id]/items/[rid] removes that one item and leaves the rest", async () => {
+    const { db } = getTestDb();
+    const draft = await seedPopulatedDraft();
+
+    const before = await new SortResultItemRepository(db).findByResult(draft.id);
+    expect(before.length).toBeGreaterThan(1);
+    const victim = before[0];
+
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await deleteResultItemRoute(
+      new Request(`http://localhost/api/sort-results/${draft.id}/items/${victim.id}`, {
+        method: "DELETE",
+      }) as any,
+      { params: { id: draft.id, rid: victim.id } },
+    );
+    expect(res.status).toBe(200);
+
+    // The targeted item is gone; every other item survives (count down by exactly 1).
+    expect(await new SortResultItemRepository(db).findById(victim.id)).toBeNull();
+    const after = await new SortResultItemRepository(db).findByResult(draft.id);
+    expect(after).toHaveLength(before.length - 1);
+    expect(after.some((i) => i.id === victim.id)).toBe(false);
   });
 });

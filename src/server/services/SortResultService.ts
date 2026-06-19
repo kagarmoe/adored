@@ -101,6 +101,10 @@ export class SortResultService {
     });
   }
 
+  async deleteResultItem(id: string): Promise<void> {
+    await this.sortResultItemRepo.delete(id);
+  }
+
   async finalizeResult(id: string): Promise<SortResult> {
     return this.sortResultRepo.update(id, {
       status: "finalized",

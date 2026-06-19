@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { ResultItemController } from "@/server/api/result-items";
+import { SortResultService } from "@/server/services/SortResultService";
+import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
+import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { getDb } from "@/lib/db";
 import { requireApiResultAccess } from "@/server/dal/collection-access";
 
@@ -70,11 +73,12 @@ export async function DELETE(
     if (!existing || existing.sortResultId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    const itemRepo = new SortResultItemRepository(db);
-    const controller = new ResultItemController(itemRepo);
-    // ponytail: controller.deleteResultItem() is a pre-existing no-op stub; this PR
-    // only adds the authz guard. Real deletion tracked in the follow-up bead.
-    await controller.deleteResultItem();
+    const service = new SortResultService(
+      new SortResultRepository(db),
+      new SortResultItemRepository(db),
+      new CollectionPreferenceItemRepository(db),
+    );
+    await service.deleteResultItem(params.rid);
     return NextResponse.json({ message: "Item removed from result" });
   } catch (error) {
     return NextResponse.json(

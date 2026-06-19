@@ -36,8 +36,4 @@ export class ResultItemController {
       manualBucket: null,
     });
   }
-
-  async deleteResultItem(): Promise<void> {
-    // TODO: Remove item from result
-  }
 }
