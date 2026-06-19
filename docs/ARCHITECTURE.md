@@ -44,7 +44,7 @@ Key invariants:
 
 - **`decision_events` is the immutable, append-only source of truth.** Scores, preferences, and rankings are *lazily derived* — never stored as authority on the Item.
 - **All mutations go through `src/app/api/**` routes** (no DB calls from the client). React calls APIs only.
-- **`deletedAt` soft-delete** throughout (users are the exception — see decisions); a tombstoned catalog number is never reused.
+- **`deletedAt` soft-delete** throughout (users are the exception — see decisions); a tombstoned catalog number is never reused. **Draft sort-results are the other exception — hard-deleted children-first** (`SortResultItemRepository.deleteByResult` → `SortResultRepository.delete`): they are derived/re-creatable state, and the `sort_result_items → sort_results` FK has no `ON DELETE` cascade, so children go first; no transaction (consistent with the no-long-txn model) — `purses-r7p`.
 
 **Shipped features (verified):** collections CRUD with owner+membership model and real cover photos; items (named/nameless, catalog numbers, soft-delete, hero photos); photo pool + bulk upload with grouping and unified "Move to…" reassignment; per-curator triage→pairwise sort with the ScoringService model; computed results with manual override, finalize/supersede; tokenized public result sharing; email invitations with per-invite permission flags + member management; slug + sequential-number URLs (no raw ULIDs); NextAuth email+password and magic-link with JWT sessions and middleware protection; substantial security hardening (see Phase 9); Vitest + DB-integration + Playwright test infrastructure wired into CI.
 
