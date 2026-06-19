@@ -31,7 +31,7 @@ A detached git hook can't read the Claude conversation, so the session-aware ste
 | Doc sync | `.claude/skills/sync-docs/SKILL.md` | agent skill; pre-push hook backstops it |
 | Graph update | existing `/graphify --update` | agent runs pre-push; CLAUDE.md line |
 | Close-out | `.claude/skills/close-out/SKILL.md` | agent skill, post-merge |
-| Backstop | `scripts/hooks/pre-push` + installer | deterministic git hook |
+| Backstop | doc-sync step in committed `.githooks/pre-push` (no installer) | deterministic git hook |
 | Spine | `CLAUDE.md` "PR lifecycle" section | protocol the agent follows |
 | Precision | `docs/doc-ownership.md` (the code-area→doc map) | read by both `/sync-docs` and the hook |
 
@@ -62,9 +62,9 @@ Run immediately after the merging agent confirms `gh pr merge`. Steps (idempoten
 - **Lessons:** scan the conversation + the ledger for durable lessons / recurring problems; for each, `bd remember --key <slug>` (dedupe against existing memories; update in place if present). Source priority: **chat first** (never clobbered), ledger second.
 - **Scratch:** delete this problem's `.git/sdd` scope (see namespacing below).
 
-### 4. `scripts/hooks/pre-push` + installer (deterministic backstop)
+### 4. doc-sync step in the committed `.githooks/pre-push` (deterministic backstop)
 
-On push, compute the pushed range's diff. If it touches a source glob in `doc-ownership.md` but the push touches **none** of that glob's mapped docs, **soft-block** with an overridable message: `"<file> changed but its docs (<docs>) weren't — run /sync-docs, or 'git push --no-verify' to override."` Warn-only for the graph (don't block on a stale graph). No husky exists today, so install via a committed `scripts/install-hooks.sh` wired to `package.json` `"prepare"` (runs on `npm install`); the script appends to any existing pre-push hook rather than clobbering. (Note: the gate pre-push the CLAUDE.md references doesn't actually exist as a committed hook — the gates run in CI; this spec adds the *doc backstop* pre-push, and optionally folds the gates in as a follow-up.)
+**[v2, post-review correction]** This repo uses `core.hooksPath=.githooks` and **already commits** `.githooks/pre-push` (the CI-mirror gate: lint + test:ci + build). Hooks are committed → there is **nothing to install** (no husky, no `package.json prepare` — that earlier premise was wrong, and a `prepare` installer would have mutated the *tracked* `.githooks/pre-push` on every `npm ci`). Instead, **add the doc-sync check as a step inside the committed `.githooks/pre-push`**. On push it reads the actual pushed range from the hook's stdin, and if a changed source file (per `doc-ownership.md`) has **none** of its mapped docs in the diff, it **soft-blocks** (exit 1) with an overridable message; `git push --no-verify` bypasses. Deletions are excluded. Match is exact-path-or-`dir/`-prefix (no globs).
 
 ### 5. CLAUDE.md "PR lifecycle" section
 
