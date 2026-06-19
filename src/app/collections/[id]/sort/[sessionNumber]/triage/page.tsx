@@ -90,6 +90,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
             <ItemCard item={item} collectionId={collection.slug ?? collection.id} heroPhotoUrl={heroPhotoUrl} imageClassName="h-64" />
             <Card padding="lg">
               <DecisionControls
+                key={item.id}
                 sessionId={sortSession.id}
                 type="triage"
                 decisions={[
