@@ -159,6 +159,16 @@ describe("PATCH /api/sort-results/[id]", () => {
     expect(sortResultRepo.update).toHaveBeenCalledWith("sr1", { name: "Renamed" });
     expect(await res.json()).toMatchObject({ name: "Renamed" });
   });
+
+  // A finalized result is fully immutable, including its name (purses-gmn,
+  // mirroring the item-level 526 guard). The rename must be rejected 409 and the
+  // update must never reach the repo.
+  it("409 when the result is finalized (rename rejected, update not called)", async () => {
+    mockRequireApiResultAccess.mockResolvedValue({ ...DRAFT_RESULT, status: "finalized" });
+    const res = await PATCH(patchReq({ name: "Renamed" }), params);
+    expect(res.status).toBe(409);
+    expect(sortResultRepo.update).not.toHaveBeenCalled();
+  });
 });
 
 describe("DELETE /api/sort-results/[id]", () => {

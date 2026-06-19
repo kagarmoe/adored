@@ -30,6 +30,13 @@ export default async function FinalizePage({ params }: FinalizePageProps) {
     redirect(`/collections/${collection.slug ?? collection.id}/results`);
   }
 
+  // A finalized result is immutable (name included, purses-gmn): the finalize
+  // form would PATCH-rename then re-finalize, both now 409. Send the curator to
+  // the read-only result instead of presenting actions that fail.
+  if (result.status === "finalized") {
+    redirect(`/collections/${collection.slug ?? collection.id}/results/${result.number}`);
+  }
+
   return (
     <AppLayout
       breadcrumbs={[

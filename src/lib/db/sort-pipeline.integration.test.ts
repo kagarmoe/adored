@@ -39,7 +39,7 @@ vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 // Routes imported via the @/ alias ([id] is a real dir).
 import { POST as recordDecision } from "@/app/api/sessions/[id]/decisions/route";
 import { POST as createResult } from "@/app/api/sort-results/route";
-import { DELETE as deleteResultRoute } from "@/app/api/sort-results/[id]/route";
+import { DELETE as deleteResultRoute, PATCH as patchResultRoute } from "@/app/api/sort-results/[id]/route";
 import { DELETE as deleteResultItemRoute } from "@/app/api/sort-results/[id]/items/[rid]/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
@@ -312,6 +312,35 @@ describeDb("sort pipeline (route/service -> DB)", () => {
 
     // Finalized result must survive a delete attempt.
     expect(await new SortResultRepository(db).findById(draft.id)).not.toBeNull();
+  });
+
+  it("PATCH /api/sort-results/[id] rejects renaming a finalized result with 409 and leaves the name intact", async () => {
+    const { db } = getTestDb();
+    const draft = await seedPopulatedDraft();
+    const originalName = (await new SortResultRepository(db).findById(draft.id))!.name;
+
+    const service = new SortResultService(
+      new SortResultRepository(db),
+      new SortResultItemRepository(db),
+      new CollectionPreferenceItemRepository(db),
+    );
+    await service.finalizeResult(draft.id);
+
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await patchResultRoute(
+      new Request(`http://localhost/api/sort-results/${draft.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: "Renamed" }),
+      }) as any,
+      { params: { id: draft.id } },
+    );
+    expect(res.status).toBe(409);
+
+    // The finalized result's name must be unchanged — not "Renamed".
+    const after = await new SortResultRepository(db).findById(draft.id);
+    expect(after!.name).toBe(originalName);
+    expect(after!.name).not.toBe("Renamed");
   });
 
   it("DELETE /api/sort-results/[id]/items/[rid] removes that one item and leaves the rest", async () => {
