@@ -1,11 +1,9 @@
 // src/app/api/sort-results/route.test.ts
 //
-// RED-first characterization of POST /api/sort-results. The non-broken auth /
-// validation / access cases are ordinary passing tests; the materialization case
-// is a `test.fails` tripwire: the route calls SortResultRepository.create directly
-// and never materializes a SortResultItem per preference, so asserting the
-// item-repo create path is invoked FAILS today (green-as-fails) and ERRORS the day
-// the route is wired to materialize — forcing promotion to a real passing test.
+// Tests for POST /api/sort-results: auth / validation / access cases plus the
+// materialization case — the route wires to SortResultService.createDraftResult,
+// which materializes a SortResultItem per preference. The un-mocked authoritative
+// proof of materialization lives in src/lib/db/*.integration.test.ts (real DB).
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
 
