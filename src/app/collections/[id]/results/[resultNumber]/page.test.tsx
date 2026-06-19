@@ -96,3 +96,90 @@ describe("ResultDetailPage SharePanel curator gate (axn)", () => {
     expect(screen.queryByRole("heading", { name: /share this result/i })).toBeNull();
   });
 });
+
+describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
+  // One item per bucket so each tier-count card, the Onward (low) tier, and the
+  // most-loved hero all have something to render.
+  const TOP = { id: "i_top", collectionId: "coll_01ABCDEF", number: 1, name: "Top Bag", brand: null, status: "active" };
+  const HIGH = { id: "i_high", collectionId: "coll_01ABCDEF", number: 2, name: "High Bag", brand: null, status: "active" };
+  const MED = { id: "i_med", collectionId: "coll_01ABCDEF", number: 3, name: "Med Bag", brand: null, status: "active" };
+  const LOW = { id: "i_low", collectionId: "coll_01ABCDEF", number: 4, name: "Low Bag", brand: null, status: "active" };
+
+  beforeEach(() => {
+    resultItemRepo.findByResult.mockResolvedValue([
+      { id: "ri_top", itemId: "i_top", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null },
+      { id: "ri_high", itemId: "i_high", computedRank: 2, manualRank: null, computedBucket: "high", manualBucket: null },
+      { id: "ri_med", itemId: "i_med", computedRank: 3, manualRank: null, computedBucket: "medium", manualBucket: null },
+      { id: "ri_low", itemId: "i_low", computedRank: 4, manualRank: null, computedBucket: "low", manualBucket: null },
+    ]);
+    itemRepo.findByCollection.mockResolvedValue([TOP, HIGH, MED, LOW]);
+    photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map());
+  });
+
+  it("renders all four tier-count cards with their human labels (Love/Like/Maybe/Onward)", async () => {
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    // "Love" is also the most-loved-hero copy ("What you love most"), so scope to the tier labels.
+    for (const label of ["Love", "Like", "Maybe", "Onward"]) {
+      expect(screen.getAllByText(label).length).toBeGreaterThan(0);
+    }
+  });
+
+  it("counts each tier independently (one item in each → every card shows 1, no zeros)", async () => {
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    // Four tier cards, each with exactly one item; the only counts on the page are 1s.
+    const ones = screen.getAllByText("1");
+    expect(ones.length).toBe(4);
+    expect(screen.queryByText("0")).toBeNull();
+  });
+
+  it("labels the lowest tier as 'Onward' (the gentle visible label is present)", async () => {
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.getByText("Onward")).toBeInTheDocument();
+    expect(screen.queryByText(/discard/i)).toBeNull();
+  });
+
+  // BROKEN(purses-xca): ItemCard low tier still labeled 'Release'. The results page's own
+  // tier cards say "Onward", but each low-tier ItemCard badge carries title="Release"
+  // (src/features/items/ItemCard.tsx bucketLabels.low). queryByText only matches text
+  // nodes, so the old assertion was false assurance — this honest tripwire scans the
+  // whole rendered output (including attributes) and FAILS today, so it is green-as-
+  // it.fails now and ERRORS the moment xca relabels low → "Onward".
+  it.fails("results carry no 'Release' framing — the low tier reads 'Onward' (purses-xca)", async () => {
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const { container } = render(ui);
+    expect(container.querySelector('[title="Release"]')).toBeNull();
+    expect(container.innerHTML).not.toContain("Release");
+  });
+
+  it("gives the rank-1 item the most-loved hero treatment (affirmation peak)", async () => {
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.getByText("What you love most")).toBeInTheDocument();
+    // The hero names the single highest-ranked item, not the whole pile.
+    const hero = screen.getByText("What you love most").closest("a");
+    expect(hero).not.toBeNull();
+    expect(hero!).toHaveTextContent("Top Bag");
+    // And it deep-links to that item by its catalog number.
+    expect(hero!.getAttribute("href")).toContain("/items/1");
+  });
+
+  it("renders the remaining items under 'The full ranking' (everything past the hero)", async () => {
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.getByRole("heading", { name: /the full ranking/i })).toBeInTheDocument();
+    for (const name of ["High Bag", "Med Bag", "Low Bag"]) {
+      expect(screen.getByText(name)).toBeInTheDocument();
+    }
+  });
+
+  it("shows the gentle empty state (not a broken hero) when the result has no ranked items", async () => {
+    resultItemRepo.findByResult.mockResolvedValue([]);
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.getByText(/no ranked items yet/i)).toBeInTheDocument();
+    expect(screen.queryByText("What you love most")).toBeNull();
+  });
+});
