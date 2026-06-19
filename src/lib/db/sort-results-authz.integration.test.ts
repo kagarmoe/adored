@@ -12,6 +12,7 @@ import { MembershipRepository } from "@/server/repositories/implementations/Memb
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
+import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 
 const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
 // Flat-replace BOTH exports the routes use, derived from one spy (spread form pulls in nodemailer).
@@ -294,5 +295,43 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       expect(json.number).toEqual(expect.any(Number));
       expect(json.curatorId).toBe(ownerId);
     });
+
+    // SEAM TRIPWIRE (Task 12, always-on db-tests tier). Asserts the INTENDED behavior:
+    // a live POST that creates a result should materialize one SortResultItem per the
+    // curator's preference. It is RED today — the route calls SortResultRepository.create
+    // directly and never SortResultService.createDraftResult, so findByResult is []. We
+    // pin that broken seam with test.fails(): GREEN while the break exists (the body
+    // throws on the empty assertion), and it ERRORS the moment the route is wired to
+    // materialize items — forcing this guard to flip to a plain `it`.
+    it.fails(
+      "live POST /api/sort-results materializes one SortResultItem per preference",
+      async () => {
+        const { db } = getTestDb();
+        const { collectionId } = await seedResult(ownerId, ownerId);
+
+        // Seed items + the curator's preference rows first, so materialization WOULD
+        // have rows to make (the break is the route never reading them, not empty input).
+        const itemA = await new ItemRepository(db).create({ collectionId });
+        const itemB = await new ItemRepository(db).create({ collectionId });
+        const prefRepo = new CollectionPreferenceItemRepository(db);
+        await prefRepo.create({
+          collectionId, curatorId: ownerId, itemId: itemA.id,
+          score: 0.875, confidence: 1, rankBucket: "top", comparisonCount: 0,
+        });
+        await prefRepo.create({
+          collectionId, curatorId: ownerId, itemId: itemB.id,
+          score: 0.375, confidence: 1, rankBucket: "medium", comparisonCount: 0,
+        });
+
+        mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+        const res = await createResult(postReq({ collectionId, name: "My ranking" }) as any);
+        expect(res.status).toBe(201);
+        const newId = (await res.json()).id as string;
+
+        // The intended postcondition: the result is populated. Fails today ([]).
+        const items = await new SortResultItemRepository(db).findByResult(newId);
+        expect(items.length).toBeGreaterThan(0);
+      },
+    );
   });
 });
