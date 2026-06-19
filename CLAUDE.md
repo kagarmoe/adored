@@ -126,6 +126,22 @@ optional:
 - **Close the branch with `superpowers:finishing-a-development-branch`** — don't hand-roll the
   merge/cleanup.
 
+## PR lifecycle automation
+
+- **Before pushing / opening a PR:** run `/sync-docs` (update the governance docs this branch's
+  changes affect, per `docs/doc-ownership.md`; never PRODUCT/TONE) and `/graphify --update` (refresh
+  the committed graph). The `.githooks/pre-push` doc-sync step soft-blocks a code push whose mapped
+  docs weren't touched — run `/sync-docs`, or `git push --no-verify` if no documented fact moved.
+- **Immediately after `gh pr merge` succeeds:** run `/close-out` — close the bead(s), harvest lessons
+  → `bd remember` (chat-first), delete this branch's `.git/sdd` scratch.
+- **Hard rule:** never close a bead or delete `.git/sdd` scratch before the merge is confirmed. The
+  bead is the "is it done?" truth; the scratch is the review loop's working context.
+- **Multiple problems per session:** write each problem's ledger to
+  `.git/sdd/$(git branch --show-current | tr '/' '-')/progress.md`, so a second problem never clobbers
+  an in-flight one's scratch. `/close-out` deletes exactly that per-branch path.
+- Hooks are committed in `.githooks/` (`core.hooksPath=.githooks`; enable once per clone:
+  `git config core.hooksPath .githooks`). Nothing to install.
+
 ## Conventions & Patterns
 
 **Review gate — `adversarial-review`.** Before merging substantial work, run the global
