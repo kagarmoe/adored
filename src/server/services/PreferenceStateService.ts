@@ -49,37 +49,6 @@ export class PreferenceStateService {
     return this.preferenceRepo.findByCollection(collectionId, curatorId);
   }
 
-  async clearPreferences(collectionId: string, curatorId: string): Promise<void> {
-    await this.preferenceRepo.clear(collectionId, curatorId);
-  }
-
-  async getPreferenceSummary(
-    collectionId: string,
-    curatorId: string,
-  ): Promise<{ totalItems: number; averageScore: number; distribution: Record<string, number> }> {
-    const prefs = await this.preferenceRepo.findByCollection(collectionId, curatorId);
-
-    const distribution = {
-      top: 0,
-      high: 0,
-      medium: 0,
-      low: 0,
-    };
-
-    let totalScore = 0;
-
-    for (const pref of prefs) {
-      totalScore += pref.score;
-      distribution[pref.rankBucket]++;
-    }
-
-    return {
-      totalItems: prefs.length,
-      averageScore: prefs.length > 0 ? totalScore / prefs.length : 0,
-      distribution,
-    };
-  }
-
   async getItemPreferences(
     collectionId: string,
     curatorId: string,

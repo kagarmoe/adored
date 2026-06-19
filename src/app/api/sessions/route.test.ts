@@ -14,7 +14,7 @@ vi.mock("@/lib/db", () => ({ getDb: mockGetDb }));
 vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({ CollectionRepository: vi.fn(() => collectionRepo) }));
 vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({ MembershipRepository: vi.fn(() => membershipRepo) }));
 
-import { POST, GET } from "./route";
+import { POST } from "./route";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -30,7 +30,6 @@ beforeEach(() => {
 });
 
 const postReq = (body: any) => ({ json: async () => body }) as any;
-const getReq = (cid?: string) => ({ url: `http://localhost/api/sessions${cid ? `?collectionId=${cid}` : ""}` }) as any;
 
 describe("POST /api/sessions", () => {
   it("401 unauthenticated", async () => {
@@ -45,18 +44,5 @@ describe("POST /api/sessions", () => {
   });
   it("201 for a member", async () => {
     expect((await POST(postReq({ collectionId: "c1" }))).status).toBe(201);
-  });
-});
-
-describe("GET /api/sessions", () => {
-  it("400 without collectionId", async () => {
-    expect((await GET(getReq())).status).toBe(400);
-  });
-  it("403 when not member or owner", async () => {
-    membershipRepo.findByUser.mockResolvedValue(null);
-    expect((await GET(getReq("c1"))).status).toBe(403);
-  });
-  it("200 for a member", async () => {
-    expect((await GET(getReq("c1"))).status).toBe(200);
   });
 });
