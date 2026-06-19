@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { SortResultService } from "./SortResultService";
+import {
+  SortResultService,
+  SupersedeStateError,
+  DeleteResultStateError,
+} from "./SortResultService";
 import type {
   CollectionPreferenceItem,
   SortResult,
@@ -151,7 +155,7 @@ describe("SortResultService.finalizeResult", () => {
 
 describe("SortResultService.supersedeResult", () => {
   it("supersedeResult clones computed items into a new draft named '(Revision)'", async () => {
-    const oldResult = sortResult({ id: "res-1", name: "Spring sort" });
+    const oldResult = sortResult({ id: "res-1", name: "Spring sort", status: "finalized" });
     const newResult = sortResult({ id: "res-2", name: "Spring sort (Revision)" });
     const oldItems = [
       sortResultItem({ itemId: "a", computedRank: 0, computedBucket: "top" }),
@@ -211,6 +215,92 @@ describe("SortResultService.supersedeResult", () => {
 
     expect(result).toBeNull();
     expect(create).not.toHaveBeenCalled();
+  });
+
+  it("supersedeResult throws SupersedeStateError when the source is not finalized", async () => {
+    const create = vi.fn();
+    const sortResultRepo = {
+      findById: async () => sortResult({ status: "draft" }),
+      create,
+    } as unknown as ISortResultRepository;
+
+    await expect(
+      new SortResultService(
+        sortResultRepo,
+        {} as unknown as ISortResultItemRepository,
+        {} as unknown as ICollectionPreferenceItemRepository,
+      ).supersedeResult("res-1"),
+    ).rejects.toBeInstanceOf(SupersedeStateError);
+    expect(create).not.toHaveBeenCalled();
+  });
+});
+
+describe("SortResultService deleteResult", () => {
+  it("returns false when the result is absent (no deletes attempted)", async () => {
+    const deleteResultRow = vi.fn();
+    const deleteByResult = vi.fn();
+    const sortResultRepo = {
+      findById: async () => null,
+      delete: deleteResultRow,
+    } as unknown as ISortResultRepository;
+    const itemRepo = { deleteByResult } as unknown as ISortResultItemRepository;
+
+    const deleted = await new SortResultService(
+      sortResultRepo,
+      itemRepo,
+      {} as unknown as ICollectionPreferenceItemRepository,
+    ).deleteResult("missing");
+
+    expect(deleted).toBe(false);
+    expect(deleteByResult).not.toHaveBeenCalled();
+    expect(deleteResultRow).not.toHaveBeenCalled();
+  });
+
+  it("throws DeleteResultStateError when the result is finalized (no deletes attempted)", async () => {
+    const deleteResultRow = vi.fn();
+    const deleteByResult = vi.fn();
+    const sortResultRepo = {
+      findById: async () => sortResult({ status: "finalized" }),
+      delete: deleteResultRow,
+    } as unknown as ISortResultRepository;
+    const itemRepo = { deleteByResult } as unknown as ISortResultItemRepository;
+
+    await expect(
+      new SortResultService(
+        sortResultRepo,
+        itemRepo,
+        {} as unknown as ICollectionPreferenceItemRepository,
+      ).deleteResult("res-1"),
+    ).rejects.toBeInstanceOf(DeleteResultStateError);
+    expect(deleteByResult).not.toHaveBeenCalled();
+    expect(deleteResultRow).not.toHaveBeenCalled();
+  });
+
+  it("deletes children BEFORE the result row (FK-safe order) for a draft", async () => {
+    const calls: string[] = [];
+    const deleteByResult = vi.fn(async () => {
+      calls.push("children");
+    });
+    const deleteResultRow = vi.fn(async () => {
+      calls.push("result");
+    });
+    const sortResultRepo = {
+      findById: async () => sortResult({ status: "draft" }),
+      delete: deleteResultRow,
+    } as unknown as ISortResultRepository;
+    const itemRepo = { deleteByResult } as unknown as ISortResultItemRepository;
+
+    const deleted = await new SortResultService(
+      sortResultRepo,
+      itemRepo,
+      {} as unknown as ICollectionPreferenceItemRepository,
+    ).deleteResult("res-1");
+
+    expect(deleted).toBe(true);
+    expect(deleteByResult).toHaveBeenCalledWith("res-1");
+    expect(deleteResultRow).toHaveBeenCalledWith("res-1");
+    // Children-first: the sort_result_items -> sort_results FK has no cascade.
+    expect(calls).toEqual(["children", "result"]);
   });
 });
 

@@ -1,12 +1,10 @@
 // src/app/api/sort-results/route.test.ts
 //
-// RED-first characterization of POST /api/sort-results. The non-broken auth /
-// validation / access cases are ordinary passing tests; the materialization case
-// is a `test.fails` tripwire: the route calls SortResultRepository.create directly
-// and never materializes a SortResultItem per preference, so asserting the
-// item-repo create path is invoked FAILS today (green-as-fails) and ERRORS the day
-// the route is wired to materialize — forcing promotion to a real passing test.
-import { describe, expect, it, test, vi, beforeEach } from "vitest";
+// Tests for POST /api/sort-results: auth / validation / access cases plus the
+// materialization case — the route wires to SortResultService.createDraftResult,
+// which materializes a SortResultItem per preference. The un-mocked authoritative
+// proof of materialization lives in src/lib/db/*.integration.test.ts (real DB).
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
 
 const {
@@ -15,12 +13,14 @@ const {
   mockRequireApiCollectionAccess,
   sortResultRepo,
   sortResultItemRepo,
+  preferenceRepo,
 } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockGetDb: vi.fn(),
   mockRequireApiCollectionAccess: vi.fn(),
   sortResultRepo: { create: vi.fn() },
   sortResultItemRepo: { create: vi.fn() },
+  preferenceRepo: { findByCollection: vi.fn() },
 }));
 
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
@@ -33,6 +33,9 @@ vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
 }));
 vi.mock("@/server/repositories/implementations/SortResultItemRepository", () => ({
   SortResultItemRepository: vi.fn(() => sortResultItemRepo),
+}));
+vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({
+  CollectionPreferenceItemRepository: vi.fn(() => preferenceRepo),
 }));
 
 import { POST } from "./route";
@@ -53,6 +56,10 @@ beforeEach(() => {
     status: "draft",
   });
   sortResultItemRepo.create.mockResolvedValue({ id: "sri1" });
+  // One preference so createDraftResult materializes ≥1 SortResultItem.
+  preferenceRepo.findByCollection.mockResolvedValue([
+    { itemId: "i1", score: 0.875, rankBucket: "top" },
+  ]);
 });
 
 const postReq = (body: any) => ({ json: async () => body }) as any;
@@ -108,12 +115,10 @@ describe("POST /api/sort-results", () => {
     );
   });
 
-  // RED tripwire — intended behavior. The route does not materialize result items
-  // today (no SortResultItemRepository.create call), so this body FAILS now and the
-  // `test.fails` wrapper keeps the suite green. When the route is wired to compute
-  // preferences and materialize one SortResultItem per preference, this body passes
-  // and `test.fails` ERRORS, forcing promotion to a plain `it(...)`.
-  test.fails(
+  // Intended behavior: the route delegates to SortResultService.createDraftResult,
+  // which reads the curator's preferences and materializes one SortResultItem per
+  // preference. With one seeded preference, the item-repo create path is invoked.
+  it(
     "POST /sort-results materializes one SortResultItem per preference",
     async () => {
       const res = await POST(postReq({ collectionId: "c1", name: "My Sort" }));

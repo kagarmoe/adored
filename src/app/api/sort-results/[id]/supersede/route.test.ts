@@ -2,27 +2,38 @@
 //
 // Characterization of POST /api/sort-results/[id]/supersede. Auth is via
 // requireAuth (rejects "Unauthorized" -> 401); access is gated by
-// requireApiResultAccess (returns a NextResponse on 403/404). The real
-// ResultController runs unmocked over a mocked SortResultRepository.
+// requireApiResultAccess (returns a NextResponse on 403/404). The route builds
+// a 3-repo SortResultService over mocked repositories.
 //
-// RED tripwire: ResultController.supersedeResult is a stub that throws
-// "Supersede not yet implemented", so the route catches it and returns 500.
-// The success test asserts the INTENDED contract (201 + a cloned draft of the
-// finalized result's items) via test.fails(): it fails cleanly today and will
-// error (signalling "fix shipped, promote me") once supersede is implemented.
+// Contract: a FINALIZED result clones into a new draft (201 + status "draft");
+// a non-finalized result is rejected with 409 (SupersedeStateError). The
+// un-mocked clone proof lives in sort-pipeline.integration.test.ts.
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
 
-const { mockRequireAuth, mockGetDb, mockRequireApiResultAccess, sortResultRepo } =
-  vi.hoisted(() => ({
-    mockRequireAuth: vi.fn(),
-    mockGetDb: vi.fn(),
-    mockRequireApiResultAccess: vi.fn(),
-    sortResultRepo: {
-      findById: vi.fn(),
-      create: vi.fn(),
-    },
-  }));
+const {
+  mockRequireAuth,
+  mockGetDb,
+  mockRequireApiResultAccess,
+  sortResultRepo,
+  sortResultItemRepo,
+  preferenceRepo,
+} = vi.hoisted(() => ({
+  mockRequireAuth: vi.fn(),
+  mockGetDb: vi.fn(),
+  mockRequireApiResultAccess: vi.fn(),
+  sortResultRepo: {
+    findById: vi.fn(),
+    create: vi.fn(),
+  },
+  sortResultItemRepo: {
+    findByResult: vi.fn(),
+    create: vi.fn(),
+  },
+  preferenceRepo: {
+    findByCollection: vi.fn(),
+  },
+}));
 
 vi.mock("@/lib/auth", () => ({
   requireAuth: mockRequireAuth,
@@ -32,8 +43,15 @@ vi.mock("@/lib/db", () => ({ getDb: mockGetDb }));
 vi.mock("@/server/dal/collection-access", () => ({
   requireApiResultAccess: mockRequireApiResultAccess,
 }));
+// The route builds a 3-repo SortResultService; mock all three constructors.
 vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
   SortResultRepository: vi.fn(() => sortResultRepo),
+}));
+vi.mock("@/server/repositories/implementations/SortResultItemRepository", () => ({
+  SortResultItemRepository: vi.fn(() => sortResultItemRepo),
+}));
+vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({
+  CollectionPreferenceItemRepository: vi.fn(() => preferenceRepo),
 }));
 
 import { POST } from "./route";
@@ -48,6 +66,12 @@ const FINALIZED_RESULT = {
   createdAt: new Date(),
   updatedAt: new Date(),
   finalizedAt: new Date(),
+};
+
+const DRAFT_RESULT = {
+  ...FINALIZED_RESULT,
+  status: "draft",
+  finalizedAt: null,
 };
 
 const params = { params: { id: "sr1" } };
@@ -67,6 +91,8 @@ beforeEach(() => {
     finalizedAt: null,
     ...data,
   }));
+  sortResultItemRepo.findByResult.mockResolvedValue([]);
+  sortResultItemRepo.create.mockImplementation(async (data: any) => ({ id: "sri", ...data }));
 });
 
 const unauthorized = () => {
@@ -96,10 +122,16 @@ describe("POST /api/sort-results/[id]/supersede", () => {
     expect(res.status).toBe(403);
   });
 
-  // RED tripwire — asserts the intended contract, not today's 500.
-  it.fails("supersede returns 201 and clones the result's items", async () => {
+  it("supersede returns 201 and clones the result's items", async () => {
     const res = await POST(postReq(), params);
     expect(res.status).toBe(201);
     expect(await res.json()).toMatchObject({ status: "draft" });
+  });
+
+  it("supersede rejects a non-finalized result with 409", async () => {
+    mockRequireApiResultAccess.mockResolvedValue(DRAFT_RESULT);
+    sortResultRepo.findById.mockResolvedValue(DRAFT_RESULT);
+    const res = await POST(postReq(), params);
+    expect(res.status).toBe(409);
   });
 });

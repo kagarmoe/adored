@@ -12,6 +12,7 @@ export interface ISortResultRepository {
   findByCollectionAndNumber(collectionId: string, number: number): Promise<SortResult | null>;
   findDraft(collectionId: string, curatorId: string): Promise<SortResult | null>;
   update(id: string, data: Partial<SortResult>): Promise<SortResult>;
+  delete(id: string): Promise<void>;
 }
 
 export interface ISortResultItemRepository {
@@ -24,4 +25,6 @@ export interface ISortResultItemRepository {
   findById(id: string): Promise<SortResultItem | null>;
   findByResult(sortResultId: string): Promise<SortResultItem[]>;
   update(id: string, data: Partial<SortResultItem>): Promise<SortResultItem>;
+  delete(id: string): Promise<void>;
+  deleteByResult(sortResultId: string): Promise<void>;
 }

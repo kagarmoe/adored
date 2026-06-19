@@ -18,9 +18,8 @@ export type UpdateShareInput = z.infer<typeof UpdateShareSchema>;
 export class ShareController {
   constructor(private shareRepo: ISortResultShareRepository) {}
 
-  async listShares(): Promise<SortResultShare[]> {
-    // TODO: Implement when ShareRepository.findByResult available
-    return [];
+  async listShares(resultId: string): Promise<SortResultShare[]> {
+    return this.shareRepo.findByResult(resultId);
   }
 
   async createShare(resultId: string, data: unknown): Promise<SortResultShare & { shareToken: string }> {

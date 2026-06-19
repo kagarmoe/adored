@@ -109,6 +109,10 @@ export class SortResultRepository implements ISortResultRepository {
     return this.mapToResult(result);
   }
 
+  async delete(id: string): Promise<void> {
+    await this.db.delete(sortResultsTable).where(eq(sortResultsTable.id, id));
+  }
+
   private mapToResult(row: any): SortResult {
     return {
       id: row.id,

@@ -16,7 +16,7 @@ export async function GET(
     if (access instanceof NextResponse) return access;
     const shareRepo = new SortResultShareRepository(db);
     const controller = new ShareController(shareRepo);
-    const shares = await controller.listShares();
+    const shares = await controller.listShares(params.id);
     return NextResponse.json(shares);
   } catch (error) {
     return NextResponse.json(

@@ -37,7 +37,7 @@ export function StartSessionForm({ collectionId, collectionSlug }: StartSessionF
     }
 
     const newSession = await response.json();
-    router.push(`/collections/${collectionSlug}/sort/${newSession.number}`);
+    router.push(`/collections/${collectionSlug}/sort/${newSession.number}/triage`);
     router.refresh();
   }
 

@@ -226,6 +226,21 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       expect(res.status).toBe(403);
     });
 
+    it("shares list 200s for the curator and returns only this result's shares (scoped)", async () => {
+      const { db } = getTestDb();
+      const { collectionId, resultId } = await seedResult(ownerId, ownerId);
+      // A share under THIS result, plus a share under a different same-owner result.
+      const mine = await new SortResultShareRepository(db).create({ sortResultId: resultId, shareToken: generateId("tok") });
+      const other = await new SortResultRepository(db).create({ collectionId, curatorId: ownerId, name: "Other", status: "finalized" });
+      await new SortResultShareRepository(db).create({ sortResultId: other.id, shareToken: generateId("tok") });
+
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const res = await listShares(new Request("http://localhost/x") as any, { params: { id: resultId } });
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.map((s: { id: string }) => s.id)).toEqual([mine.id]);
+    });
+
     /** A share under a DIFFERENT (same-owner) result; the caller can access `resultId`. */
     async function seedForeignShare() {
       const { db } = getTestDb();
@@ -296,14 +311,11 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       expect(json.curatorId).toBe(ownerId);
     });
 
-    // SEAM TRIPWIRE (Task 12, always-on db-tests tier). Asserts the INTENDED behavior:
-    // a live POST that creates a result should materialize one SortResultItem per the
-    // curator's preference. It is RED today — the route calls SortResultRepository.create
-    // directly and never SortResultService.createDraftResult, so findByResult is []. We
-    // pin that broken seam with test.fails(): GREEN while the break exists (the body
-    // throws on the empty assertion), and it ERRORS the moment the route is wired to
-    // materialize items — forcing this guard to flip to a plain `it`.
-    it.fails(
+    // SEAM PROOF (always-on db-tests tier). Asserts the INTENDED behavior: a live POST
+    // that creates a result materializes one SortResultItem per the curator's preference.
+    // The route delegates to SortResultService.createDraftResult, which reads preferences
+    // and writes one item per preference, so findByResult is non-empty.
+    it(
       "live POST /api/sort-results materializes one SortResultItem per preference",
       async () => {
         const { db } = getTestDb();

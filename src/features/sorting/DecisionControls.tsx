@@ -36,6 +36,11 @@ export function DecisionControls({
         throw new Error("Failed to save decision");
       }
 
+      // Re-enable the tiers before advancing: the triage page reuses this client
+      // instance across the soft router.refresh(), so a lingering pendingLabel
+      // would keep every tier disabled and block triaging the next item (U2).
+      setPendingLabel(null);
+
       if (onDecisionMade) {
         onDecisionMade();
       } else {

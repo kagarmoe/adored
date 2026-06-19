@@ -10,12 +10,12 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh }),
 }));
 
-// The triage tiers exactly as the triage page wires them (Love→top … Release→low).
+// The triage tiers exactly as the triage page wires them (Love→top … Onward→low).
 const TRIAGE_DECISIONS = [
   { label: "Love", decision: { itemId: "item_1", result: "top" } },
   { label: "Like", decision: { itemId: "item_1", result: "high" } },
   { label: "Maybe", decision: { itemId: "item_1", result: "medium" } },
-  { label: "Release", decision: { itemId: "item_1", result: "low" } },
+  { label: "Onward", decision: { itemId: "item_1", result: "low" } },
 ];
 
 beforeEach(() => {
@@ -29,7 +29,7 @@ afterEach(() => {
 describe("DecisionControls triage tier tap", () => {
   it("renders one button per tier with its human label", () => {
     render(<DecisionControls sessionId="sess_1" type="triage" decisions={TRIAGE_DECISIONS} />);
-    for (const label of ["Love", "Like", "Maybe", "Release"]) {
+    for (const label of ["Love", "Like", "Maybe", "Onward"]) {
       expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
     }
   });
@@ -72,6 +72,27 @@ describe("DecisionControls triage tier tap", () => {
     await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
   });
 
+  it("re-enables the tiers after a successful save on the refresh path (so the next item is triageable)", async () => {
+    // Regression for U2: the success branch called router.refresh() but never
+    // reset pendingLabel. Because the triage page reuses this client instance
+    // across the soft refresh, every tier stayed disabled forever and a normal
+    // user could not triage past the first item.
+    const user = userEvent.setup();
+    render(<DecisionControls sessionId="sess_1" type="triage" decisions={TRIAGE_DECISIONS} />);
+
+    await user.click(screen.getByRole("button", { name: "Love" }));
+
+    // The save resolved ok and the route refreshed; the controls must return to
+    // their resting, enabled state — no button stuck on "Saving...".
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    await waitFor(() => {
+      for (const label of ["Love", "Like", "Maybe", "Onward"]) {
+        expect(screen.getByRole("button", { name: label })).toBeEnabled();
+      }
+    });
+    expect(screen.queryByRole("button", { name: "Saving..." })).not.toBeInTheDocument();
+  });
+
   it("calls onDecisionMade instead of router.refresh when a callback is provided", async () => {
     const onDecisionMade = vi.fn();
     const user = userEvent.setup();
@@ -95,10 +116,10 @@ describe("DecisionControls triage tier tap", () => {
     const user = userEvent.setup();
     render(<DecisionControls sessionId="sess_1" type="triage" decisions={TRIAGE_DECISIONS} />);
 
-    await user.click(screen.getByRole("button", { name: "Release" }));
+    await user.click(screen.getByRole("button", { name: "Onward" }));
 
     expect(await screen.findByText("Failed to save decision")).toBeInTheDocument();
     // Re-enabled so the user can retry — not stuck on "Saving...".
-    expect(screen.getByRole("button", { name: "Release" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Onward" })).toBeEnabled();
   });
 });

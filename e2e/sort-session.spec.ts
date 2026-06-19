@@ -6,7 +6,12 @@
 // keeps these tests authenticated; the unauth-redirect block opts out via
 // test.use({ storageState: LOGGED_OUT }).
 import { test, expect } from "@playwright/test";
-import { seedBaseline, seedCollections, seedTriageScenario } from "./fixtures/seed";
+import {
+  seedBaseline,
+  seedCollections,
+  seedJourneyScenario,
+  seedTriageScenario,
+} from "./fixtures/seed";
 import { ROUTE } from "./fixtures/ui";
 
 // Fulfil every protected /file request with a local fixture so triage's hero
@@ -52,7 +57,7 @@ test.describe("sort session → triage", () => {
     await expect(page.getByRole("img").first()).toBeVisible();
     // Tier buttons are the tap-first affordance.
     await expect(page.getByRole("button", { name: "Love" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Release" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Onward" })).toBeVisible();
   });
 
   test("reload preserves the session (still on triage, same item)", async ({
@@ -72,12 +77,16 @@ test.describe("sort session → triage", () => {
     await expect(page.getByRole("button", { name: "Love" })).toBeVisible();
   });
 
-  test("StartSessionForm at /sort/new creates a session and lands on a numbered sort URL", async ({
+  // Product contract: starting a session lands the curator DIRECTLY on triage.
+  // The session-detail page stays reachable via the breadcrumb, but the create
+  // flow does not stop there — StartSessionForm POSTs /api/sessions then
+  // router.push()es straight to /sort/{number}/triage. Uses the sessionless
+  // collection so the create succeeds (the API enforces one active session per
+  // collection/curator); this collection has no slug, so it is addressed by its
+  // ULID — orthogonal to the slug check, which the triage test above pins.
+  test("StartSessionForm at /sort/new creates a session and lands DIRECTLY on triage", async ({
     page,
   }) => {
-    // Use the sessionless collection so the create succeeds (this collection has
-    // no slug, so it is addressed by its ULID — orthogonal to the slug check,
-    // which the triage test above pins).
     await page.goto(`/collections/${freshCollectionId}/sort/new`);
     await expect(
       page.getByRole("heading", { name: "New Sorting Session" }),
@@ -86,43 +95,120 @@ test.describe("sort session → triage", () => {
     const start = page.getByRole("button", { name: "Start Session" });
     await expect(start).toBeVisible();
 
-    // The form POSTs /api/sessions then router.push()es into the new session,
-    // addressed by its per-collection number.
     await Promise.all([
-      page.waitForURL(/\/sort\/\d+$/),
+      page.waitForURL(/\/sort\/\d+\/triage$/),
       start.click(),
     ]);
-    await expect(page).toHaveURL(/\/sort\/\d+$/);
+    await expect(page).toHaveURL(/\/sort\/\d+\/triage$/);
 
-    // From the landing page, triage for the new session is reachable and renders
-    // its screen (this fresh collection has no items, so it shows the empty
-    // state — the point here is the route resolves for the freshly-created
-    // session, not item rendering, which the first test pins).
-    const match = page.url().match(/\/sort\/(\d+)$/);
-    expect(match, "expected a numeric session in the landing URL").not.toBeNull();
-    const newNumber = match![1];
-    await page.goto(`/collections/${freshCollectionId}/sort/${newNumber}/triage`);
+    // The numbered session resolves and the triage screen renders for the freshly
+    // created session (this fresh collection has no items, so it shows the empty
+    // state — the point here is the route landed and resolved, not item
+    // rendering, which the first test pins).
+    expect(
+      page.url().match(/\/sort\/(\d+)\/triage$/),
+      "expected a numeric session in the triage landing URL",
+    ).not.toBeNull();
     await expect(page.getByRole("heading", { name: "Triage", exact: true })).toBeVisible();
   });
+});
 
-  // BROKEN (intended-but-unmet contract): the brief's intended journey is "start a
-  // session → land directly on triage". StartSessionForm.handleSubmit actually
-  // router.push()es to /sort/{number} (the session detail page), which then links
-  // to triage — there is no auto-advance to /triage. Asserting the intended
-  // behaviour here would assert a contract the code does not fulfil, so it is
-  // quarantined rather than weakened to match the bug. The test above proves the
-  // real, reachable flow (start → session URL → triage renders).
-  test.fixme(
-    "StartSessionForm lands DIRECTLY on the triage screen",
-    async ({ page }) => {
-      await page.goto(`/collections/${slug}/sort/new`);
-      await Promise.all([
-        page.waitForURL(/\/sort\/\d+\/triage/),
-        page.getByRole("button", { name: "Start Session" }).click(),
-      ]);
-      await expect(page).toHaveURL(/\/sort\/\d+\/triage/);
-    },
-  );
+// The live results affordance: the whole sort → results seam exercised through
+// the real UI (real API, real DB) — triage a decision, compare a pair, return to
+// the session, then the SeeResultsCard creates a populated result and lands on
+// it. Uses seedJourneyScenario (fresh, untriaged) so nothing is pre-baked.
+test.describe("session detail → See what you love most → results", () => {
+  let slug: string;
+  let sessionNumber: number;
+
+  test.beforeAll(async () => {
+    const ownerId = await seedBaseline();
+    ({ slug, sessionNumber } = await seedJourneyScenario(ownerId, 2));
+  });
+
+  test.beforeEach(async ({ page }) => {
+    await page.route("**/photos/**/file", (route) =>
+      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/jpeg" }),
+    );
+  });
+
+  test("triage a decision → compare a pair → the trigger creates a populated result and navigates to it", async ({
+    page,
+  }) => {
+    // 1. Land on triage and triage BOTH items consecutively. This is the honest
+    //    multi-item demonstration (regression for U2): after a tier tap the
+    //    control POSTs the decision then router.refresh()es to the next item, and
+    //    the reused client instance MUST re-enable its tiers — otherwise a normal
+    //    user is stuck on item 1 with every button frozen on "Saving...".
+    await page.goto(`/collections/${slug}/sort/${sessionNumber}/triage`);
+    await expect(page.getByRole("heading", { name: "Triage", exact: true })).toBeVisible();
+
+    // Item 1: tap a tier, then confirm the page advanced (the second item is now
+    // pending) via the triaged-count, AND that the tiers re-enabled for item 2.
+    await page.getByRole("button", { name: "Love" }).click();
+    await expect(page.getByText("1 of 2")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Love" })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Onward" })).toBeEnabled();
+
+    // Item 2: a second tap must succeed on the re-enabled control and complete
+    // triage (2 of 2) — the proof a user can actually sort past the first item.
+    await page.getByRole("button", { name: "Like" }).click();
+    await expect(page.getByText("2 of 2")).toBeVisible();
+
+    // 2. Move to compare and choose one card (tapping a card IS the choice).
+    await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
+    await expect(
+      page.getByRole("heading", { name: "Which do you love more?" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: /^Choose / }).first().click();
+
+    // 3. Return to the session detail (the breadcrumb's "Session" target).
+    await page.getByRole("link", { name: "Session" }).first().click();
+    await expect(page.getByRole("heading", { name: "Sorting Session" })).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/collections/${slug}/sort/${sessionNumber}$`));
+
+    // 4. The inert "View Results" card is gone; the reachable trigger is present.
+    await expect(page.getByText("See what you love most")).toBeVisible();
+    const trigger = page.getByRole("button", { name: "Show me what I love" });
+    await expect(trigger).toBeVisible();
+
+    // 5. Tap it → POST /api/sort-results materializes a draft and we land on it.
+    await Promise.all([
+      page.waitForURL(new RegExp(`/collections/${slug}/results/\\d+$`)),
+      trigger.click(),
+    ]);
+    await expect(page).toHaveURL(new RegExp(`/collections/${slug}/results/\\d+$`));
+
+    // 6. The results page shows ranked items (≥1 tier populated): the most-loved
+    //    hero renders for the top-ranked item.
+    await expect(page.getByText("What you love most")).toBeVisible();
+    await expect(page.getByRole("img").first()).toBeVisible();
+  });
+
+  test("if the result can't be created, a soft message appears, the button re-enables, and we stay put", async ({
+    page,
+  }) => {
+    await page.goto(`/collections/${slug}/sort/${sessionNumber}`);
+    await expect(page.getByRole("heading", { name: "Sorting Session" })).toBeVisible();
+
+    // Force the create to fail at the network edge (real UI, no unit mock).
+    await page.route("**/api/sort-results", (route) =>
+      route.fulfill({ status: 500, contentType: "application/json", body: "{}" }),
+    );
+
+    const trigger = page.getByRole("button", { name: "Show me what I love" });
+    await trigger.click();
+
+    // Soft, reversible, nothing-lost copy — and we never left the session page.
+    await expect(
+      page.getByText(
+        "That didn't come together just now. Nothing was lost — try again whenever you like.",
+      ),
+    ).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/collections/${slug}/sort/${sessionNumber}$`));
+    // The button is re-enabled (and back to its resting label), so the person can retry.
+    await expect(page.getByRole("button", { name: "Show me what I love" })).toBeEnabled();
+  });
 });
 
 test.describe("unauthenticated sort access", () => {

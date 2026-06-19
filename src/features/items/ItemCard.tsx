@@ -24,7 +24,7 @@ const bucketLabels = {
   top: "Love",
   high: "Like",
   medium: "Maybe",
-  low: "Release",
+  low: "Onward",
 };
 
 export function ItemCard({ item, collectionId, heroPhotoUrl, bucket, imageClassName = "aspect-square" }: ItemCardProps) {

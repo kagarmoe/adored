@@ -107,9 +107,55 @@ export async function seedTriageScenario(ownerId: string): Promise<{
  *  bucket placement does (it drives which tier card and which rank an item lands
  *  in). Seeds three of the four buckets — top/high/low — leaving `medium` (Maybe)
  *  intentionally unpopulated; the page renders all four tier *labels* regardless of
- *  whether a bucket has items. (The low tier's live label is "Release", not the
- *  not-yet-shipped "Onward".) */
+ *  whether a bucket has items. (The low tier's live label is "Onward".) */
 const SORT_SCENARIO_BUCKETS = ["top", "high", "low"] as const;
+
+/**
+ * Seed a fresh, UNTRIAGED journey scenario owned by `ownerId`: a collection
+ * (with slug), `count` items each with a hero photo (placeholder blobKey — the
+ * e2e intercepts /file), and an active sort session — but NO preferences. This
+ * is the live-flow fixture: the journey test drives triage → compare →
+ * SeeResultsCard → results entirely through the real UI/API, so the data must
+ * start empty (no buckets), unlike seedSortScenario which pre-materializes a
+ * result. `count` defaults to 2 so the compare step has a pair to choose from.
+ * Returns the ids the spec needs.
+ */
+export async function seedJourneyScenario(
+  ownerId: string,
+  count = 2,
+): Promise<{ collectionId: string; slug: string; sessionNumber: number; itemIds: string[] }> {
+  const { db } = getTestDb();
+  const collectionId = generateId("col");
+  const slug = `e2e-journey-bags-${collectionId}`;
+  await db.insert(collectionsTable).values({
+    id: collectionId,
+    ownerId,
+    name: "E2E Journey Bags",
+    slug,
+  });
+
+  const itemRepo = new ItemRepository(db);
+  const photoRepo = new PhotoRepository(db);
+  const itemIds: string[] = [];
+  for (let i = 0; i < count; i++) {
+    const item = await itemRepo.create({ collectionId, name: `E2E Journey Item ${i + 1}` });
+    await photoRepo.create({
+      itemId: item.id,
+      collectionId,
+      blobKey: "e2e-placeholder",
+      filename: "e2e-placeholder.jpg",
+      mimeType: "image/jpeg",
+      fileSize: 1,
+      uploadedBy: ownerId,
+      isHero: true,
+    });
+    itemIds.push(item.id);
+  }
+
+  const session = await new SessionRepository(db).create({ collectionId, curatorId: ownerId });
+  if (session.number == null) throw new Error("seedJourneyScenario: session.number was not allocated");
+  return { collectionId, slug, sessionNumber: session.number, itemIds };
+}
 
 /**
  * Seed a fully-populated sort *result* scenario owned by `ownerId`: a collection

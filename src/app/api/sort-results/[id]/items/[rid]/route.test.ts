@@ -7,10 +7,10 @@
 // item whose sortResultId === params.id, else 404. The real ResultItemController
 // runs unmocked over a mocked SortResultItemRepository.
 //
-// RED tripwire (DELETE): ResultItemController.deleteResultItem() is a no-op stub,
-// so the route returns 200 while the row survives. The success test asserts the
-// INTENDED contract (the item is actually gone afterward) via test.fails(): it
-// fails today against a store-backed repo and will error once deletion ships.
+// DELETE delegates to SortResultService.deleteResultItem -> repo.delete(rid). The
+// success test uses a store-backed repo mock to assert the INTENDED contract: the
+// row is actually gone after the request (not merely a 200). The DB-seam proof is
+// the un-mocked test in src/lib/db/sort-pipeline.integration.test.ts.
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
 
@@ -23,6 +23,7 @@ const { mockRequireAuth, mockGetDb, mockRequireApiResultAccess, itemRepo } =
       findById: vi.fn(),
       findByResult: vi.fn(),
       update: vi.fn(),
+      delete: vi.fn(),
     },
   }));
 
@@ -198,15 +199,18 @@ describe("DELETE /api/sort-results/[id]/items/[rid]", () => {
     expect(res.status).toBe(404);
   });
 
-  // RED tripwire — asserts the intended contract (the row is actually removed),
-  // not today's no-op. A store-backed repo lets us observe whether the item is
-  // gone after the request; deleteResultItem() is a no-op so it survives -> fails.
-  it.fails("DELETE removes the result item", async () => {
+  // Asserts the intended contract (the row is actually removed), not just a 200.
+  // A store-backed repo lets us observe that the item is gone after the request.
+  it("DELETE removes the result item", async () => {
     const store = new Map<string, ReturnType<typeof makeItem>>([["ri1", makeItem()]]);
     itemRepo.findById.mockImplementation(async (id: string) => store.get(id) ?? null);
+    itemRepo.delete.mockImplementation(async (id: string) => {
+      store.delete(id);
+    });
 
     const res = await DELETE(getReq(), params);
     expect(res.status).toBe(200);
+    expect(itemRepo.delete).toHaveBeenCalledWith("ri1");
     // The item must be gone from the store after deletion.
     expect(await itemRepo.findById("ri1")).toBeNull();
   });
