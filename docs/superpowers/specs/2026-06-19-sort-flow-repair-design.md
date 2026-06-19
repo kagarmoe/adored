@@ -26,7 +26,7 @@ Diagnosed in PR #207 (`docs/diagnosis/2026-06-19-sort-flow-findings.md`, bd memo
 
 **supersede keeps the finalized-only invariant (Architect finding 1).** Today's `ResultController.supersedeResult` guards `status === "finalized"`; `SortResultService.supersedeResult` has **no guard**. The repair **adds** the guard to the service: supersede a non-finalized result → **409** (superseding a draft is meaningless and litters duplicate drafts). The route maps service `null` (absent) → 404.
 
-**`deleteResult` — explicit transactional child-delete, hard delete, draft-only (Architect 2; Data 1, 2, 4).** The `sort_result_items → sort_results` FK is `ON DELETE no action` (`schema.ts`, `drizzle/0000…:292`) — **no DB cascade** — so a bare result delete FK-violates (`23503`) on any populated draft. Therefore `deleteResult` **explicitly deletes the child `SortResultItem` rows first, then the result, in one transaction**. **Hard delete, justified:** a draft `SortResult` is *derived, re-creatable* state (regenerated from `CollectionPreferenceItem` rows), not archived user content with blobs — so it is exempt from the `softDelete`/`deletedAt` precedent and the infra §11.4 `purge` (owner-only/confirm) model, which govern user content. **Draft-only:** finalized results are immutable (infra §11.3) → **409**.
+**`deleteResult` — explicit transactional child-delete, hard delete, draft-only (Architect 2; Data 1, 2, 4).** The `sort_result_items → sort_results` FK is `ON DELETE no action` (`schema.ts`, `drizzle/0000…:292`) — **no DB cascade** — so a bare result delete FK-violates (`23503`) on any populated draft. Therefore `deleteResult` **explicitly deletes the child `SortResultItem` rows first, then the result** (children-first is FK-safe; parent-first would FK-violate). **No transaction** — the codebase uses none (`withTransaction` has zero callers; repos bind their own connection at construction), and introducing the first transaction + a service/repo `tx`-rebind refactor is unwarranted for a single-curator draft delete: children-first cannot orphan rows, and a mid-delete failure leaves a *recoverable empty draft* (re-deletable), not corruption. (Strict atomicity, if ever needed for multi-curator or finalized purge, is a follow-up.) **Hard delete, justified:** a draft `SortResult` is *derived, re-creatable* state (regenerated from `CollectionPreferenceItem` rows), not archived user content with blobs — so it is exempt from the `softDelete`/`deletedAt` precedent and the infra §11.4 `purge` (owner-only/confirm) model, which govern user content. **Draft-only:** finalized results are immutable (infra §11.3) → **409**.
 
 **Repo additions.** `ISortResultRepository.delete(id)`; `ISortResultItemRepository.delete(id)` **and `deleteByResult(resultId)`** (for the transactional cascade); + implementations. **No schema migration** (DELETE queries only; we deliberately do *not* add `ON DELETE CASCADE`).
 
@@ -35,7 +35,7 @@ Diagnosed in PR #207 (`docs/diagnosis/2026-06-19-sort-flow-findings.md`, bd memo
 **Peripheral fixes (to reach 0 `it.fails`).**
 - `listShares`: add `SortResultShareRepository.findByResult(resultId)`; the `shares` GET passes `params.id` so the list is scoped to the result (not hardcoded `[]`).
 - `Release→Onward`: `ItemCard` low-tier label `"Release"` → `"Onward"` (and any sibling "Release" label in the sort/results UI), satisfying `purses-xca`.
-- `StartSessionForm`→`/triage`: the start flow lands the curator on `/sort/{number}/triage` so the e2e `fixme` promotes (confirm against the intended flow; the adjacent passing test pins the prior detail-landing — replace it with the triage-landing contract).
+- `StartSessionForm`→`/triage` (**product decision**): starting a session lands the curator **directly on `/sort/{number}/triage`** — the point of starting is to sort; the session-detail page stays reachable via breadcrumb. `StartSessionForm` redirects to triage; the e2e `fixme` promotes; the adjacent detail-landing test is **deliberately replaced** by the triage-landing contract (a chosen behavior change, not a hedge).
 
 ## Wiring (route → owner)
 
@@ -61,10 +61,10 @@ Each behavior is one **Red → Green → Refactor** cycle; **a fresh failing tes
 - **POST materialize** → the un-mocked `db-tests` seam (`sort-results-authz.integration.test.ts:306`: live POST → `findByResult(newId)` non-empty) + the e2e journey.
 - **deleteResult** → a `db-tests` test asserting the result is gone **and `findByResult(id)` returns `[]` (zero orphaned child rows)** (Data finding 5), plus a real test for finalized→409.
 - **supersede** → a test asserting finalized→409 and that a finalized result produces a new draft with **cloned items** (real rows, not a status-only check).
-- **both decision types** → a `db-tests` test recording a **triage** and a **pairwise** decision, then asserting **pairwise rank-order within a shared tier**: two items triaged to the *same* tier, one wins the pairwise → its `computedRank` is above the loser's (the only fact attributable to pairwise, since same-tier triage alone leaves them tied) (QA finding B).
+- **both decision types** → a `db-tests` test recording a **triage** and a **pairwise** decision, then asserting **pairwise rank-order within a shared tier**: two items triaged to the *same* tier, one wins the pairwise → assert `winner.computedRank < loser.computedRank` (`computedRank` is 0-based, **0 = best**) — the only fact attributable to pairwise, since same-tier triage alone leaves them tied (QA finding B).
 - **UI trigger** → the e2e journey (happy path) + an error-state check via a Playwright **route-intercept** forcing the POST to fail (real UI, no unit mock), asserting the soft message + re-enable + nothing lost.
 
-The implementer report must show **red-then-green** per behavior; no test+code written together.
+The implementer report must show **red-then-green** per behavior; no test+code written together. When a route is rewired from a 1-repo controller to the 3-repo `SortResultService`, its promoted route unit test must gain the `SortResultItemRepository` + `CollectionPreferenceItemRepository` mocks at construction (or lean on the un-mocked integration proof) — note this at promotion (Architect finding 5).
 
 ## Sequence (TDD order)
 
@@ -88,7 +88,7 @@ The implementer report must show **red-then-green** per behavior; no test+code w
 
 ## Error handling
 
-Route authz guards unchanged. `deleteResult`/`supersede` 409 on wrong status. POST forces `curatorId` from session, 400 on missing fields. The delete transaction rolls back on failure (no partial child-delete). UI trigger error is gentle/reversible, state preserved.
+Route authz guards unchanged. POST forces `curatorId` from session, 400 on missing fields. **Route status-mapping (required, Architect N1):** the supersede/delete route handlers today map any non-`Unauthorized` error → 500; the repair updates them to map service `null`→**404** and the status-guard rejection (non-draft/non-finalized)→**409** (each tested). Delete is children-first ordered (not transactional — see Resolved decisions); a mid-delete failure leaves a recoverable empty draft, not orphaned rows. UI trigger error is gentle/reversible, state preserved.
 
 ## Advances
 
