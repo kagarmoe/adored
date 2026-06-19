@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">90.96% </span>
+                <span class="strong">95.59% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>151/166</span>
+                <span class='fraction'>152/159</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">90.96% </span>
+                <span class="strong">95.59% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>151/166</span>
+                <span class='fraction'>152/159</span>
             </div>
         
             
@@ -222,14 +222,8 @@
 <a name='L157'></a><a href='#L157'>157</a>
 <a name='L158'></a><a href='#L158'>158</a>
 <a name='L159'></a><a href='#L159'>159</a>
-<a name='L160'></a><a href='#L160'>160</a>
-<a name='L161'></a><a href='#L161'>161</a>
-<a name='L162'></a><a href='#L162'>162</a>
-<a name='L163'></a><a href='#L163'>163</a>
-<a name='L164'></a><a href='#L164'>164</a>
-<a name='L165'></a><a href='#L165'>165</a>
-<a name='L166'></a><a href='#L166'>166</a>
-<a name='L167'></a><a href='#L167'>167</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L160'></a><a href='#L160'>160</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -375,14 +369,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
@@ -406,6 +392,7 @@ import { DecisionEventRepository } from "@/server/repositories/implementations/D
 import { AppLayout } from "@/components/layout";
 import { Badge, Button, Card } from "@/components/ui";
 import { SessionAnalytics } from "@/features/sessions/SessionAnalytics";
+import { SeeResultsCard } from "@/features/sessions/SeeResultsCard";
 import Link from "next/link";
 &nbsp;
 interface SessionPageProps {
@@ -501,7 +488,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
                 &lt;p className="text-lg font-bold text-ink"&gt;{bucketCounts.medium}&lt;/p&gt;
               &lt;/div&gt;
               &lt;div&gt;
-                &lt;p className="text-ink-soft"&gt;Release&lt;/p&gt;
+                &lt;p className="text-ink-soft"&gt;Onward&lt;/p&gt;
                 &lt;p className="text-lg font-bold text-ink"&gt;{bucketCounts.low}&lt;/p&gt;
               &lt;/div&gt;
             &lt;/div&gt;
@@ -536,19 +523,11 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
         &lt;/div&gt;
 &nbsp;
         {bucketed &gt; <span class="branch-0 cbranch-no" title="branch not covered" >0 &amp;&amp; (</span>
-<span class="cstat-no" title="statement not covered" >          &lt;Card padding="lg" className="border-hairline bg-accent-aqua"&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;div&gt;</span>
-<span class="cstat-no" title="statement not covered" >                &lt;h2 className="text-lg text-ink"&gt;Ready to see results?&lt;/h2&gt;</span>
-<span class="cstat-no" title="statement not covered" >                &lt;p className="mt-1 text-sm text-ink"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                  You&amp;apos;ve made {bucketed} decision{bucketed !== 1 ? "s" : ""}. Generate a draft result to see the ranked order.</span>
-<span class="cstat-no" title="statement not covered" >                &lt;/p&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;/div&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;Link href={`/collections/${collection.slug ?? collection.id}/results`}&gt;</span>
-<span class="cstat-no" title="statement not covered" >                &lt;Button&gt;View Results&lt;/Button&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;/Link&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;/div&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;/Card&gt;</span>
+<span class="cstat-no" title="statement not covered" >          &lt;SeeResultsCard</span>
+<span class="cstat-no" title="statement not covered" >            collectionId={collection.id}</span>
+<span class="cstat-no" title="statement not covered" >            collectionSlug={collection.slug ?? collection.id}</span>
+<span class="cstat-no" title="statement not covered" >            bucketed={bucketed}</span>
+<span class="cstat-no" title="statement not covered" >          /&gt;</span>
         )}
 &nbsp;
         &lt;SessionAnalytics
@@ -568,7 +547,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-19T10:06:28.779Z
+                at 2026-06-19T20:21:58.903Z
             </div>
         <script src="../../../../../../prettify.js"></script>
         <script>
