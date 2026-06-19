@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/fa760073f0cd893bb2aaa3c2b05cc9feed9835a9",
-        "commitHash": "fa760073f0cd893bb2aaa3c2b05cc9feed9835a9",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27802033412"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/af9e955d272148a9ce7b5945061d2b5a06b8877a",
+        "commitHash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27804752364"
       },
       "gitCommit": {
-        "shortHash": "fa76007",
-        "hash": "fa760073f0cd893bb2aaa3c2b05cc9feed9835a9",
-        "subject": "chore(purses-jz4): remove dead duplicate session-list + preferences routes (#201)",
-        "body": "chore(purses-jz4): remove dead duplicate session-list + preferences routes (#201)\n\nAll had zero callers (no client fetch, no server import, no e2e ref):\n- DELETE flat GET /api/sessions (kept the live POST)\n- DELETE nested /api/collections/[id]/sessions (GET+POST) + .../sessions/active\n- DELETE flat /api/preferences/[collectionId] + nested /api/collections/[id]/preferences (base GET+DELETE)\n- KEEP the live preferences children (items, recalculate) and the flat POST /api/sessions\n\nCascade: removed the methods these routes orphaned —\nSessionController.listSessions/getActiveSession, PreferenceController +\nPreferenceStateService getPreferenceSummary/clearPreferences. Deleted the\nnow-routeless session-list-authz + preferences-authz integration tests\n(added in #200 to guard these routes); trimmed the flat sessions GET unit test.\n\nShrinks the surface g6o (DAL migration) must cover.\n\nGates: build, test:ci 278, lint 0 err, test:db 90; tsc shows only the 5\npre-existing errors (e2e specs + ScoringService.test.ts), no new.\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "af9e955",
+        "hash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
+        "subject": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)",
+        "body": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)\n\n* docs: design spec for ARCHITECTURE.md + docs/beads cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: spec v2 — keep the 2 legacy purseinator_* specs (adversarial-review finding)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: implementation plan v2 for ARCHITECTURE.md + cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add ARCHITECTURE.md (state, 9-phase history, decisions log, roadmap)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: fix README facts (AUTH_* env, 15 tables, 9 flags, credentials auth), cross-link ARCHITECTURE.md, repoint refs off to-be-deleted plans\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: delete 35 superseded plans/specs (rationale preserved in ARCHITECTURE.md; 2 legacy specs kept)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: add graphify knowledge graph of the repo (post-cleanup, 1420 nodes / 97 communities)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: CLAUDE.md — agent model policy + graphify integration\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1781836797000
+          "time": 1781842071000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1781836797000
+          "time": 1781842071000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/fa760073f0cd893bb2aaa3c2b05cc9feed9835a9",
-            "commitHash": "fa760073f0cd893bb2aaa3c2b05cc9feed9835a9",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27802033412"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/af9e955d272148a9ce7b5945061d2b5a06b8877a",
+            "commitHash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27804752364"
           },
           "gitCommit": {
-            "shortHash": "fa76007",
-            "hash": "fa760073f0cd893bb2aaa3c2b05cc9feed9835a9",
-            "subject": "chore(purses-jz4): remove dead duplicate session-list + preferences routes (#201)",
-            "body": "chore(purses-jz4): remove dead duplicate session-list + preferences routes (#201)\n\nAll had zero callers (no client fetch, no server import, no e2e ref):\n- DELETE flat GET /api/sessions (kept the live POST)\n- DELETE nested /api/collections/[id]/sessions (GET+POST) + .../sessions/active\n- DELETE flat /api/preferences/[collectionId] + nested /api/collections/[id]/preferences (base GET+DELETE)\n- KEEP the live preferences children (items, recalculate) and the flat POST /api/sessions\n\nCascade: removed the methods these routes orphaned —\nSessionController.listSessions/getActiveSession, PreferenceController +\nPreferenceStateService getPreferenceSummary/clearPreferences. Deleted the\nnow-routeless session-list-authz + preferences-authz integration tests\n(added in #200 to guard these routes); trimmed the flat sessions GET unit test.\n\nShrinks the surface g6o (DAL migration) must cover.\n\nGates: build, test:ci 278, lint 0 err, test:db 90; tsc shows only the 5\npre-existing errors (e2e specs + ScoringService.test.ts), no new.\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "af9e955",
+            "hash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
+            "subject": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)",
+            "body": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)\n\n* docs: design spec for ARCHITECTURE.md + docs/beads cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: spec v2 — keep the 2 legacy purseinator_* specs (adversarial-review finding)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: implementation plan v2 for ARCHITECTURE.md + cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add ARCHITECTURE.md (state, 9-phase history, decisions log, roadmap)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: fix README facts (AUTH_* env, 15 tables, 9 flags, credentials auth), cross-link ARCHITECTURE.md, repoint refs off to-be-deleted plans\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: delete 35 superseded plans/specs (rationale preserved in ARCHITECTURE.md; 2 legacy specs kept)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: add graphify knowledge graph of the repo (post-cleanup, 1420 nodes / 97 communities)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: CLAUDE.md — agent model policy + graphify integration\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781836797000
+              "time": 1781842071000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781836797000
+              "time": 1781842071000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/fa760073f0cd893bb2aaa3c2b05cc9feed9835a9",
-            "commitHash": "fa760073f0cd893bb2aaa3c2b05cc9feed9835a9",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27802033412"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/af9e955d272148a9ce7b5945061d2b5a06b8877a",
+            "commitHash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27804752364"
           },
           "gitCommit": {
-            "shortHash": "fa76007",
-            "hash": "fa760073f0cd893bb2aaa3c2b05cc9feed9835a9",
-            "subject": "chore(purses-jz4): remove dead duplicate session-list + preferences routes (#201)",
-            "body": "chore(purses-jz4): remove dead duplicate session-list + preferences routes (#201)\n\nAll had zero callers (no client fetch, no server import, no e2e ref):\n- DELETE flat GET /api/sessions (kept the live POST)\n- DELETE nested /api/collections/[id]/sessions (GET+POST) + .../sessions/active\n- DELETE flat /api/preferences/[collectionId] + nested /api/collections/[id]/preferences (base GET+DELETE)\n- KEEP the live preferences children (items, recalculate) and the flat POST /api/sessions\n\nCascade: removed the methods these routes orphaned —\nSessionController.listSessions/getActiveSession, PreferenceController +\nPreferenceStateService getPreferenceSummary/clearPreferences. Deleted the\nnow-routeless session-list-authz + preferences-authz integration tests\n(added in #200 to guard these routes); trimmed the flat sessions GET unit test.\n\nShrinks the surface g6o (DAL migration) must cover.\n\nGates: build, test:ci 278, lint 0 err, test:db 90; tsc shows only the 5\npre-existing errors (e2e specs + ScoringService.test.ts), no new.\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "af9e955",
+            "hash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
+            "subject": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)",
+            "body": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)\n\n* docs: design spec for ARCHITECTURE.md + docs/beads cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: spec v2 — keep the 2 legacy purseinator_* specs (adversarial-review finding)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: implementation plan v2 for ARCHITECTURE.md + cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add ARCHITECTURE.md (state, 9-phase history, decisions log, roadmap)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: fix README facts (AUTH_* env, 15 tables, 9 flags, credentials auth), cross-link ARCHITECTURE.md, repoint refs off to-be-deleted plans\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: delete 35 superseded plans/specs (rationale preserved in ARCHITECTURE.md; 2 legacy specs kept)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: add graphify knowledge graph of the repo (post-cleanup, 1420 nodes / 97 communities)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: CLAUDE.md — agent model policy + graphify integration\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781836797000
+              "time": 1781842071000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781836797000
+              "time": 1781842071000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/fa760073f0cd893bb2aaa3c2b05cc9feed9835a9",
-            "commitHash": "fa760073f0cd893bb2aaa3c2b05cc9feed9835a9",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27802033412"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/af9e955d272148a9ce7b5945061d2b5a06b8877a",
+            "commitHash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27804752364"
           },
           "gitCommit": {
-            "shortHash": "fa76007",
-            "hash": "fa760073f0cd893bb2aaa3c2b05cc9feed9835a9",
-            "subject": "chore(purses-jz4): remove dead duplicate session-list + preferences routes (#201)",
-            "body": "chore(purses-jz4): remove dead duplicate session-list + preferences routes (#201)\n\nAll had zero callers (no client fetch, no server import, no e2e ref):\n- DELETE flat GET /api/sessions (kept the live POST)\n- DELETE nested /api/collections/[id]/sessions (GET+POST) + .../sessions/active\n- DELETE flat /api/preferences/[collectionId] + nested /api/collections/[id]/preferences (base GET+DELETE)\n- KEEP the live preferences children (items, recalculate) and the flat POST /api/sessions\n\nCascade: removed the methods these routes orphaned —\nSessionController.listSessions/getActiveSession, PreferenceController +\nPreferenceStateService getPreferenceSummary/clearPreferences. Deleted the\nnow-routeless session-list-authz + preferences-authz integration tests\n(added in #200 to guard these routes); trimmed the flat sessions GET unit test.\n\nShrinks the surface g6o (DAL migration) must cover.\n\nGates: build, test:ci 278, lint 0 err, test:db 90; tsc shows only the 5\npre-existing errors (e2e specs + ScoringService.test.ts), no new.\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "af9e955",
+            "hash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
+            "subject": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)",
+            "body": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)\n\n* docs: design spec for ARCHITECTURE.md + docs/beads cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: spec v2 — keep the 2 legacy purseinator_* specs (adversarial-review finding)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: implementation plan v2 for ARCHITECTURE.md + cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add ARCHITECTURE.md (state, 9-phase history, decisions log, roadmap)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: fix README facts (AUTH_* env, 15 tables, 9 flags, credentials auth), cross-link ARCHITECTURE.md, repoint refs off to-be-deleted plans\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: delete 35 superseded plans/specs (rationale preserved in ARCHITECTURE.md; 2 legacy specs kept)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: add graphify knowledge graph of the repo (post-cleanup, 1420 nodes / 97 communities)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: CLAUDE.md — agent model policy + graphify integration\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781836797000
+              "time": 1781842071000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781836797000
+              "time": 1781842071000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/fa760073f0cd893bb2aaa3c2b05cc9feed9835a9",
-            "commitHash": "fa760073f0cd893bb2aaa3c2b05cc9feed9835a9",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27802033412"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/af9e955d272148a9ce7b5945061d2b5a06b8877a",
+            "commitHash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27804752364"
           },
           "gitCommit": {
-            "shortHash": "fa76007",
-            "hash": "fa760073f0cd893bb2aaa3c2b05cc9feed9835a9",
-            "subject": "chore(purses-jz4): remove dead duplicate session-list + preferences routes (#201)",
-            "body": "chore(purses-jz4): remove dead duplicate session-list + preferences routes (#201)\n\nAll had zero callers (no client fetch, no server import, no e2e ref):\n- DELETE flat GET /api/sessions (kept the live POST)\n- DELETE nested /api/collections/[id]/sessions (GET+POST) + .../sessions/active\n- DELETE flat /api/preferences/[collectionId] + nested /api/collections/[id]/preferences (base GET+DELETE)\n- KEEP the live preferences children (items, recalculate) and the flat POST /api/sessions\n\nCascade: removed the methods these routes orphaned —\nSessionController.listSessions/getActiveSession, PreferenceController +\nPreferenceStateService getPreferenceSummary/clearPreferences. Deleted the\nnow-routeless session-list-authz + preferences-authz integration tests\n(added in #200 to guard these routes); trimmed the flat sessions GET unit test.\n\nShrinks the surface g6o (DAL migration) must cover.\n\nGates: build, test:ci 278, lint 0 err, test:db 90; tsc shows only the 5\npre-existing errors (e2e specs + ScoringService.test.ts), no new.\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "af9e955",
+            "hash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
+            "subject": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)",
+            "body": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)\n\n* docs: design spec for ARCHITECTURE.md + docs/beads cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: spec v2 — keep the 2 legacy purseinator_* specs (adversarial-review finding)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: implementation plan v2 for ARCHITECTURE.md + cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add ARCHITECTURE.md (state, 9-phase history, decisions log, roadmap)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: fix README facts (AUTH_* env, 15 tables, 9 flags, credentials auth), cross-link ARCHITECTURE.md, repoint refs off to-be-deleted plans\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: delete 35 superseded plans/specs (rationale preserved in ARCHITECTURE.md; 2 legacy specs kept)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: add graphify knowledge graph of the repo (post-cleanup, 1420 nodes / 97 communities)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: CLAUDE.md — agent model policy + graphify integration\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781836797000
+              "time": 1781842071000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781836797000
+              "time": 1781842071000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 937,
+                  "duration": 946,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:42:38.515Z",
+                  "startTime": "2026-06-19T04:10:39.959Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -303,12 +303,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 7491,
+                  "duration": 11551,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:42:40.096Z",
+                  "startTime": "2026-06-19T04:10:41.565Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -337,12 +337,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2127,
+                  "duration": 2191,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:42:48.412Z",
+                  "startTime": "2026-06-19T04:10:54.510Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -371,12 +371,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1540,
+                  "duration": 1583,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:02.778Z",
+                  "startTime": "2026-06-19T04:11:09.464Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -405,12 +405,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2382,
+                  "duration": 2326,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:04.488Z",
+                  "startTime": "2026-06-19T04:11:11.247Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -439,12 +439,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 959,
+                  "duration": 961,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:18.043Z",
+                  "startTime": "2026-06-19T04:11:24.901Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -473,12 +473,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1026,
+                  "duration": 1087,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:19.332Z",
+                  "startTime": "2026-06-19T04:11:27.765Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -515,12 +515,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1625,
+                  "duration": 1638,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:42:50.574Z",
+                  "startTime": "2026-06-19T04:10:56.734Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -549,12 +549,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1474,
+                  "duration": 1536,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:42:52.251Z",
+                  "startTime": "2026-06-19T04:10:58.434Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -583,12 +583,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2267,
+                  "duration": 2266,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:42:53.744Z",
+                  "startTime": "2026-06-19T04:10:59.998Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -617,12 +617,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1536,
+                  "duration": 1525,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:06.912Z",
+                  "startTime": "2026-06-19T04:11:13.608Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -651,12 +651,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1478,
+                  "duration": 1433,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:08.548Z",
+                  "startTime": "2026-06-19T04:11:15.191Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -685,12 +685,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1719,
+                  "duration": 1836,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:10.060Z",
+                  "startTime": "2026-06-19T04:11:16.658Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -719,12 +719,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 734,
+                  "duration": 739,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:20.393Z",
+                  "startTime": "2026-06-19T04:11:28.878Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -753,12 +753,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 825,
+                  "duration": 730,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:21.161Z",
+                  "startTime": "2026-06-19T04:11:29.651Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -787,12 +787,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1059,
+                  "duration": 1076,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:22.003Z",
+                  "startTime": "2026-06-19T04:11:30.404Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -829,12 +829,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 827,
+                  "duration": 782,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:42:56.029Z",
+                  "startTime": "2026-06-19T04:11:02.287Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -863,12 +863,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 891,
+                  "duration": 935,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:42:56.925Z",
+                  "startTime": "2026-06-19T04:11:03.130Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -897,12 +897,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 795,
+                  "duration": 767,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:11.812Z",
+                  "startTime": "2026-06-19T04:11:18.526Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -931,12 +931,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 760,
+                  "duration": 934,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:12.674Z",
+                  "startTime": "2026-06-19T04:11:19.349Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -965,12 +965,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 295,
+                  "duration": 262,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:23.089Z",
+                  "startTime": "2026-06-19T04:11:31.513Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -999,12 +999,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 377,
+                  "duration": 395,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:23.426Z",
+                  "startTime": "2026-06-19T04:11:31.820Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1041,12 +1041,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1055,
+                  "duration": 1129,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:42:57.842Z",
+                  "startTime": "2026-06-19T04:11:04.100Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1075,12 +1075,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1071,
+                  "duration": 1170,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:42:58.923Z",
+                  "startTime": "2026-06-19T04:11:05.251Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1109,12 +1109,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 802,
+                  "duration": 772,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:00.024Z",
+                  "startTime": "2026-06-19T04:11:06.444Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1143,12 +1143,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 732,
+                  "duration": 614,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:13.466Z",
+                  "startTime": "2026-06-19T04:11:20.317Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1177,12 +1177,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 716,
+                  "duration": 808,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:14.219Z",
+                  "startTime": "2026-06-19T04:11:20.949Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1211,12 +1211,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 745,
+                  "duration": 749,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:14.962Z",
+                  "startTime": "2026-06-19T04:11:21.782Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1245,12 +1245,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 243,
+                  "duration": 246,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:23.822Z",
+                  "startTime": "2026-06-19T04:11:32.249Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1279,12 +1279,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 250,
+                  "duration": 246,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:24.079Z",
+                  "startTime": "2026-06-19T04:11:32.510Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1313,12 +1313,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 254,
+                  "duration": 265,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T02:43:24.346Z",
+                  "startTime": "2026-06-19T04:11:32.769Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1362,12 +1362,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1132,
+                      "duration": 1233,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T02:43:00.866Z",
+                      "startTime": "2026-06-19T04:11:07.245Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1396,12 +1396,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1212,
+                      "duration": 1312,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T02:43:15.742Z",
+                      "startTime": "2026-06-19T04:11:22.558Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1430,12 +1430,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 420,
+                      "duration": 449,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T02:43:24.618Z",
+                      "startTime": "2026-06-19T04:11:33.051Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1455,8 +1455,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-19T02:41:33.507Z",
-    "duration": 111827.565,
+    "startTime": "2026-06-19T04:09:36.306Z",
+    "duration": 117483.91900000001,
     "expected": 34,
     "skipped": 0,
     "unexpected": 0,
