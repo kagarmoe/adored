@@ -10,6 +10,20 @@
 
 set -e
 
+# Doc-sync backstop (soft): soft-block a push whose changed source files have
+# un-synced docs (docs/doc-ownership.md). Override: git push --no-verify.
+echo "pre-push: doc-sync check…"
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+  [ "$local_sha" = "0000000000000000000000000000000000000000" ] && continue   # deleting a ref
+  case "$remote_sha" in
+    *[!0]*) base="$remote_sha" ;;                                             # existing remote branch
+    *) base=$(git merge-base origin/main "$local_sha" 2>/dev/null \
+              || git rev-list --max-parents=0 "$local_sha" | tail -1) ;;      # new branch
+  esac
+  files=$(git diff --name-only --diff-filter=ACMRT "$base".."$local_sha")
+  [ -n "$files" ] && printf '%s\n' "$files" | node scripts/hooks/doc-check.mjs
+done
+
 echo "pre-push: lint…"
 npm run lint
 
