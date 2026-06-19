@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">44.44% </span>
+                <span class="strong">76.38% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>32/72</span>
+                <span class='fraction'>55/72</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">62.5% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>5/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">71.42% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>5/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">44.44% </span>
+                <span class="strong">76.38% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>32/72</span>
+                <span class='fraction'>55/72</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -156,28 +156,20 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -186,15 +178,23 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -225,23 +225,23 @@ export type CreateShareInput = z.infer&lt;typeof CreateShareSchema&gt;;
 export type UpdateShareInput = z.infer&lt;typeof UpdateShareSchema&gt;;
 &nbsp;
 export class ShareController {
-<span class="fstat-no" title="function not covered" >  constructor(private shareRepo: ISortResultShareRepository) {}</span>
+  constructor(private shareRepo: ISortResultShareRepository) {}
 &nbsp;
-<span class="fstat-no" title="function not covered" >  async listShares(): Promise&lt;SortResultShare[]&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    // TODO: Implement when ShareRepository.findByResult available</span>
-<span class="cstat-no" title="statement not covered" >    return [];</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+  async listShares(): Promise&lt;SortResultShare[]&gt; {
+    // TODO: Implement when ShareRepository.findByResult available
+    return [];
+  }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  async createShare(resultId: string, data: unknown): Promise&lt;SortResultShare &amp; { shareToken: string }&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    const parsed = CreateShareSchema.parse(data);</span>
-<span class="cstat-no" title="statement not covered" >    const token = randomBytes(32).toString("hex");</span>
-<span class="cstat-no" title="statement not covered" >    const share = await this.shareRepo.create({</span>
-<span class="cstat-no" title="statement not covered" >      sortResultId: resultId,</span>
-<span class="cstat-no" title="statement not covered" >      shareToken: token,</span>
-<span class="cstat-no" title="statement not covered" >      expiresAt: parsed.expiresAt ? new Date(parsed.expiresAt) : undefined,</span>
-<span class="cstat-no" title="statement not covered" >    });</span>
-<span class="cstat-no" title="statement not covered" >    return { ...share, shareToken: token };</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+  async createShare(resultId: string, data: unknown): Promise&lt;SortResultShare &amp; { shareToken: string }&gt; {
+    const parsed = CreateShareSchema.parse(data);
+    const token = randomBytes(32).toString("hex");
+    const share = await this.shareRepo.create({
+      sortResultId: resultId,
+      shareToken: token,
+      expiresAt: parsed.<span class="branch-0 cbranch-no" title="branch not covered" >expiresAt ? new Date(parsed.expiresAt) : u</span>ndefined,
+    });
+    return { ...share, shareToken: token };
+  }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  async getShare(shareId: string): Promise&lt;SortResultShare&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const share = await this.shareRepo.findById(shareId);</span>
@@ -251,22 +251,22 @@ export class ShareController {
 <span class="cstat-no" title="statement not covered" >    return share;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="fstat-no" title="function not covered" >  async updateShare(shareId: string, data: unknown): Promise&lt;SortResultShare&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    const parsed = UpdateShareSchema.parse(data);</span>
-<span class="cstat-no" title="statement not covered" >    const updateData: Partial&lt;SortResultShare&gt; = {</span>
-<span class="cstat-no" title="statement not covered" >      status: parsed.status,</span>
-<span class="cstat-no" title="statement not covered" >      expiresAt: parsed.expiresAt ? new Date(parsed.expiresAt) : undefined,</span>
-<span class="cstat-no" title="statement not covered" >    };</span>
-<span class="cstat-no" title="statement not covered" >    return this.shareRepo.update(shareId, updateData);</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+  async updateShare(shareId: string, data: unknown): Promise&lt;SortResultShare&gt; {
+    const parsed = UpdateShareSchema.parse(data);
+    const updateData: Partial&lt;SortResultShare&gt; = {
+      status: parsed.status,
+      expiresAt: parsed.<span class="branch-0 cbranch-no" title="branch not covered" >expiresAt ? new Date(parsed.expiresAt) : u</span>ndefined,
+    };
+    return this.shareRepo.update(shareId, updateData);
+  }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  async revokeShare(shareId: string): Promise&lt;void&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    const share = await this.shareRepo.findById(shareId);</span>
-<span class="cstat-no" title="statement not covered" >    if (!share) {</span>
+  async revokeShare(shareId: string): Promise&lt;void&gt; {
+    const share = await this.shareRepo.findById(shareId);
+    if (!share) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error("Share not found");</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >    await this.shareRepo.update(shareId, { status: "revoked" });</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+    await this.shareRepo.update(shareId, { status: "revoked" });
+  }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  async viewSharedResult(token: string): Promise&lt;SortResultShare&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const share = await this.shareRepo.findByToken(token);</span>
@@ -286,7 +286,7 @@ export class ShareController {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-19T08:16:39.367Z
+                at 2026-06-19T10:06:28.779Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

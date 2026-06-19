@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/af9e955d272148a9ce7b5945061d2b5a06b8877a",
-        "commitHash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27804752364"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/8b7ece3ab5b367ed0bb209e2cd6df30047509c7f",
+        "commitHash": "8b7ece3ab5b367ed0bb209e2cd6df30047509c7f",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27819228986"
       },
       "gitCommit": {
-        "shortHash": "af9e955",
-        "hash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
-        "subject": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)",
-        "body": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)\n\n* docs: design spec for ARCHITECTURE.md + docs/beads cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: spec v2 — keep the 2 legacy purseinator_* specs (adversarial-review finding)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: implementation plan v2 for ARCHITECTURE.md + cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add ARCHITECTURE.md (state, 9-phase history, decisions log, roadmap)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: fix README facts (AUTH_* env, 15 tables, 9 flags, credentials auth), cross-link ARCHITECTURE.md, repoint refs off to-be-deleted plans\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: delete 35 superseded plans/specs (rationale preserved in ARCHITECTURE.md; 2 legacy specs kept)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: add graphify knowledge graph of the repo (post-cleanup, 1420 nodes / 97 communities)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: CLAUDE.md — agent model policy + graphify integration\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "8b7ece3",
+        "hash": "8b7ece3ab5b367ed0bb209e2cd6df30047509c7f",
+        "subject": "test(sort): RED-first diagnostic suite localizing the broken sort→results flow (#207)",
+        "body": "test(sort): RED-first diagnostic suite localizing the broken sort→results flow (#207)\n\n* docs: design spec — diagnostic test coverage for the sort flows\n\nCharacterize-only (no fixes) diagnostic suite across unit/integration/e2e for\nSorting Session/Triage/Compare/Results; outside-in ordering to localize the\nknown break; prime suspect purses-r7p (orphaned SortResult creation).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: implementation plan — sort-flow diagnostic test suite\n\n14 tasks across unit/integration/e2e (characterize-only). Pins the confirmed\nr7p empty-result break (POST /api/sort-results bypasses createDraftResult) and\nthe deleteResultItem no-op. Subagent-driven execution.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): PairingService unit coverage (purses-7io)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): PreferenceStateService unit coverage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): rev-2 — fold spec-review BLOCK\n\nRED-first (test.fails/fixme tripwires, not pin-green); corrected diagnosis\n(SortResultService fully orphaned, second stubbed ResultController path,\nsupersede throws, live mode = no result created at all); reconciled state\n(Pairing/PreferenceState done, ScoringService=10 tests); seam tripwire moved\nto the always-on integration tier + dedup with existing authz integration;\ne2e divergence rewritten to observable live truth; seam-first ordering.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): fold spec re-review nits (it.skip not test.fixme; seam-label tightening)\n\n* docs(plan): rev-2 — RED-first, corrected diagnosis, seam-first order, dedup\n\nGlobal Constraints now RED-first (test.fails/it.skip quarantine, never pin\nbroken behavior green). Confirmed diagnosis corrected (two orphaned populating\npaths; supersede throws; live mode = no result created). Tasks 1-2 marked DONE;\nseam tripwire moved to the always-on integration tier and dedup'd onto the\nexisting sort-results-authz.integration.test.ts; e2e results spec relabeled\nrenderer-only + divergence rewritten; report cause derived from the run.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): sort-results POST + [id] route coverage — RED tripwire on materialization\n\nPOST cases: 401 unauth, 400 missing collectionId/name, 403 access denied,\n201 forces curatorId+status draft, and a test.fails tripwire asserting the\nintended 'materializes one SortResultItem per preference' behavior — the route\ncalls SortResultRepository.create directly and never materializes items today,\nso the body fails now (suite green) and ERRORS when the route is wired to\nmaterialize, forcing promotion.\n\n[id] cases: GET/PATCH/DELETE each cover 401 / 403 / 404 / success; PATCH adds\n400 invalid JSON. Real ResultController runs over a mocked SortResultRepository.\n\nTest files only; no src/** production changes.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): integration seam tripwire (live POST -> items) + pipeline cases\n\nAdd the always-on db-tests seam tripwire and pipeline characterization for\nthe result-creation break.\n\n- sort-results-authz.integration.test.ts: RED it.fails() tripwire\n  \"live POST /api/sort-results materializes one SortResultItem per preference\".\n  Seeds items + the curator's CollectionPreferenceItem rows, drives the real\n  POST un-mocked, then asserts findByResult(newId) is non-empty. Fails today\n  (route calls SortResultRepository.create directly, never createDraftResult,\n  so [] ); green-as-test.fails now, ERRORS when the route is wired.\n- sort-pipeline.integration.test.ts (new): triage decision persists a\n  preference in the right bucket (persistence + bucket direction, not scores);\n  SortResultService.createDraftResult materializes one item per preference\n  ranked by score (characterizes the intended-but-unwired service path).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): finalize/supersede/items/reset route coverage + RED tripwires (supersede, deleteResultItem)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): SessionService/SortResultService/DecisionEventService/SortResultShareService unit coverage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): sort-results shares route coverage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): component interaction gaps + seedSortScenario e2e fixture\n\nTask 10 — fill compare/triage/results interaction gaps (no src changes):\n- DecisionControls.test.tsx (new): triage tier tap POSTs the right `result`\n  (Love→top … Release→low), router.refresh vs onDecisionMade, error re-enable.\n- CompareChoice.test.tsx: card tap chooses item_a/item_b, Tie/Skip results,\n  refresh on success, gentle error + re-enable.\n- results/[resultNumber]/page.test.tsx: tier-count cards (Love/Like/Maybe/Onward),\n  per-tier counts, Onward (no \"Release\"/\"Discard\") framing, most-loved hero +\n  deep-link, full-ranking section, empty state.\n\nTask 11 — seedSortScenario(ownerId) in e2e/fixtures/seed.ts:\n- 3 items each with a hero photo + active session + CollectionPreferenceItem rows\n  across buckets (top/high/low) + a draft SortResult via\n  SortResultService.createDraftResult (the correct path). Renderer-only\n  scaffolding that bypasses the broken live route on purpose.\n- Returns {collectionId, slug, sessionNumber, itemIds, resultNumber};\n  require.main smoke extended to exercise it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): honest RED tripwire for 'Release' tone violation in results (purses-xca)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): e2e journeys for session/triage/compare/results (purses-7dd)\n\nAdd three RED-first, characterize-only Playwright journey specs mirroring\nsort-images.spec.ts (seedBaseline + seed helper, /file image intercept,\nslug/number URLs, shared storageState auth):\n\n- sort-session.spec.ts: start a session via StartSessionForm/sort/new lands\n  on a numbered sort URL and triage resolves; reload preserves the session;\n  unauth goto of protected sort/compare URLs redirects to /login. The\n  \"lands DIRECTLY on triage\" contract is quarantined test.fixme (the form\n  pushes to the session detail page, not /triage).\n- compare.spec.ts: \"Which do you love more?\", tap-to-choose, quiet Tie/Skip,\n  gentle progress text, next-pair-or-graceful-end advance.\n- results.spec.ts: renderer-only on a seeded populated result — tier sections,\n  hero images, most-loved hero, full ranking. Zero diagnostic signal about the\n  live sort->result break (no live UI path creates a result; SessionComplete\n  is dead). Authoritative seam proof is Task 12's integration tripwire.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(diagnosis): sort-flow failure localization map\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): pin deleteResult no-op (final-review) + fix fixture/report rot\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1781842071000
+          "time": 1781863496000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1781842071000
+          "time": 1781863496000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/af9e955d272148a9ce7b5945061d2b5a06b8877a",
-            "commitHash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27804752364"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/8b7ece3ab5b367ed0bb209e2cd6df30047509c7f",
+            "commitHash": "8b7ece3ab5b367ed0bb209e2cd6df30047509c7f",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27819228986"
           },
           "gitCommit": {
-            "shortHash": "af9e955",
-            "hash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
-            "subject": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)",
-            "body": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)\n\n* docs: design spec for ARCHITECTURE.md + docs/beads cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: spec v2 — keep the 2 legacy purseinator_* specs (adversarial-review finding)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: implementation plan v2 for ARCHITECTURE.md + cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add ARCHITECTURE.md (state, 9-phase history, decisions log, roadmap)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: fix README facts (AUTH_* env, 15 tables, 9 flags, credentials auth), cross-link ARCHITECTURE.md, repoint refs off to-be-deleted plans\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: delete 35 superseded plans/specs (rationale preserved in ARCHITECTURE.md; 2 legacy specs kept)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: add graphify knowledge graph of the repo (post-cleanup, 1420 nodes / 97 communities)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: CLAUDE.md — agent model policy + graphify integration\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "8b7ece3",
+            "hash": "8b7ece3ab5b367ed0bb209e2cd6df30047509c7f",
+            "subject": "test(sort): RED-first diagnostic suite localizing the broken sort→results flow (#207)",
+            "body": "test(sort): RED-first diagnostic suite localizing the broken sort→results flow (#207)\n\n* docs: design spec — diagnostic test coverage for the sort flows\n\nCharacterize-only (no fixes) diagnostic suite across unit/integration/e2e for\nSorting Session/Triage/Compare/Results; outside-in ordering to localize the\nknown break; prime suspect purses-r7p (orphaned SortResult creation).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: implementation plan — sort-flow diagnostic test suite\n\n14 tasks across unit/integration/e2e (characterize-only). Pins the confirmed\nr7p empty-result break (POST /api/sort-results bypasses createDraftResult) and\nthe deleteResultItem no-op. Subagent-driven execution.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): PairingService unit coverage (purses-7io)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): PreferenceStateService unit coverage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): rev-2 — fold spec-review BLOCK\n\nRED-first (test.fails/fixme tripwires, not pin-green); corrected diagnosis\n(SortResultService fully orphaned, second stubbed ResultController path,\nsupersede throws, live mode = no result created at all); reconciled state\n(Pairing/PreferenceState done, ScoringService=10 tests); seam tripwire moved\nto the always-on integration tier + dedup with existing authz integration;\ne2e divergence rewritten to observable live truth; seam-first ordering.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): fold spec re-review nits (it.skip not test.fixme; seam-label tightening)\n\n* docs(plan): rev-2 — RED-first, corrected diagnosis, seam-first order, dedup\n\nGlobal Constraints now RED-first (test.fails/it.skip quarantine, never pin\nbroken behavior green). Confirmed diagnosis corrected (two orphaned populating\npaths; supersede throws; live mode = no result created). Tasks 1-2 marked DONE;\nseam tripwire moved to the always-on integration tier and dedup'd onto the\nexisting sort-results-authz.integration.test.ts; e2e results spec relabeled\nrenderer-only + divergence rewritten; report cause derived from the run.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): sort-results POST + [id] route coverage — RED tripwire on materialization\n\nPOST cases: 401 unauth, 400 missing collectionId/name, 403 access denied,\n201 forces curatorId+status draft, and a test.fails tripwire asserting the\nintended 'materializes one SortResultItem per preference' behavior — the route\ncalls SortResultRepository.create directly and never materializes items today,\nso the body fails now (suite green) and ERRORS when the route is wired to\nmaterialize, forcing promotion.\n\n[id] cases: GET/PATCH/DELETE each cover 401 / 403 / 404 / success; PATCH adds\n400 invalid JSON. Real ResultController runs over a mocked SortResultRepository.\n\nTest files only; no src/** production changes.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): integration seam tripwire (live POST -> items) + pipeline cases\n\nAdd the always-on db-tests seam tripwire and pipeline characterization for\nthe result-creation break.\n\n- sort-results-authz.integration.test.ts: RED it.fails() tripwire\n  \"live POST /api/sort-results materializes one SortResultItem per preference\".\n  Seeds items + the curator's CollectionPreferenceItem rows, drives the real\n  POST un-mocked, then asserts findByResult(newId) is non-empty. Fails today\n  (route calls SortResultRepository.create directly, never createDraftResult,\n  so [] ); green-as-test.fails now, ERRORS when the route is wired.\n- sort-pipeline.integration.test.ts (new): triage decision persists a\n  preference in the right bucket (persistence + bucket direction, not scores);\n  SortResultService.createDraftResult materializes one item per preference\n  ranked by score (characterizes the intended-but-unwired service path).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): finalize/supersede/items/reset route coverage + RED tripwires (supersede, deleteResultItem)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): SessionService/SortResultService/DecisionEventService/SortResultShareService unit coverage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): sort-results shares route coverage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): component interaction gaps + seedSortScenario e2e fixture\n\nTask 10 — fill compare/triage/results interaction gaps (no src changes):\n- DecisionControls.test.tsx (new): triage tier tap POSTs the right `result`\n  (Love→top … Release→low), router.refresh vs onDecisionMade, error re-enable.\n- CompareChoice.test.tsx: card tap chooses item_a/item_b, Tie/Skip results,\n  refresh on success, gentle error + re-enable.\n- results/[resultNumber]/page.test.tsx: tier-count cards (Love/Like/Maybe/Onward),\n  per-tier counts, Onward (no \"Release\"/\"Discard\") framing, most-loved hero +\n  deep-link, full-ranking section, empty state.\n\nTask 11 — seedSortScenario(ownerId) in e2e/fixtures/seed.ts:\n- 3 items each with a hero photo + active session + CollectionPreferenceItem rows\n  across buckets (top/high/low) + a draft SortResult via\n  SortResultService.createDraftResult (the correct path). Renderer-only\n  scaffolding that bypasses the broken live route on purpose.\n- Returns {collectionId, slug, sessionNumber, itemIds, resultNumber};\n  require.main smoke extended to exercise it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): honest RED tripwire for 'Release' tone violation in results (purses-xca)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): e2e journeys for session/triage/compare/results (purses-7dd)\n\nAdd three RED-first, characterize-only Playwright journey specs mirroring\nsort-images.spec.ts (seedBaseline + seed helper, /file image intercept,\nslug/number URLs, shared storageState auth):\n\n- sort-session.spec.ts: start a session via StartSessionForm/sort/new lands\n  on a numbered sort URL and triage resolves; reload preserves the session;\n  unauth goto of protected sort/compare URLs redirects to /login. The\n  \"lands DIRECTLY on triage\" contract is quarantined test.fixme (the form\n  pushes to the session detail page, not /triage).\n- compare.spec.ts: \"Which do you love more?\", tap-to-choose, quiet Tie/Skip,\n  gentle progress text, next-pair-or-graceful-end advance.\n- results.spec.ts: renderer-only on a seeded populated result — tier sections,\n  hero images, most-loved hero, full ranking. Zero diagnostic signal about the\n  live sort->result break (no live UI path creates a result; SessionComplete\n  is dead). Authoritative seam proof is Task 12's integration tripwire.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(diagnosis): sort-flow failure localization map\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): pin deleteResult no-op (final-review) + fix fixture/report rot\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781842071000
+              "time": 1781863496000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781842071000
+              "time": 1781863496000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/af9e955d272148a9ce7b5945061d2b5a06b8877a",
-            "commitHash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27804752364"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/8b7ece3ab5b367ed0bb209e2cd6df30047509c7f",
+            "commitHash": "8b7ece3ab5b367ed0bb209e2cd6df30047509c7f",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27819228986"
           },
           "gitCommit": {
-            "shortHash": "af9e955",
-            "hash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
-            "subject": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)",
-            "body": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)\n\n* docs: design spec for ARCHITECTURE.md + docs/beads cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: spec v2 — keep the 2 legacy purseinator_* specs (adversarial-review finding)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: implementation plan v2 for ARCHITECTURE.md + cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add ARCHITECTURE.md (state, 9-phase history, decisions log, roadmap)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: fix README facts (AUTH_* env, 15 tables, 9 flags, credentials auth), cross-link ARCHITECTURE.md, repoint refs off to-be-deleted plans\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: delete 35 superseded plans/specs (rationale preserved in ARCHITECTURE.md; 2 legacy specs kept)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: add graphify knowledge graph of the repo (post-cleanup, 1420 nodes / 97 communities)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: CLAUDE.md — agent model policy + graphify integration\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "8b7ece3",
+            "hash": "8b7ece3ab5b367ed0bb209e2cd6df30047509c7f",
+            "subject": "test(sort): RED-first diagnostic suite localizing the broken sort→results flow (#207)",
+            "body": "test(sort): RED-first diagnostic suite localizing the broken sort→results flow (#207)\n\n* docs: design spec — diagnostic test coverage for the sort flows\n\nCharacterize-only (no fixes) diagnostic suite across unit/integration/e2e for\nSorting Session/Triage/Compare/Results; outside-in ordering to localize the\nknown break; prime suspect purses-r7p (orphaned SortResult creation).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: implementation plan — sort-flow diagnostic test suite\n\n14 tasks across unit/integration/e2e (characterize-only). Pins the confirmed\nr7p empty-result break (POST /api/sort-results bypasses createDraftResult) and\nthe deleteResultItem no-op. Subagent-driven execution.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): PairingService unit coverage (purses-7io)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): PreferenceStateService unit coverage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): rev-2 — fold spec-review BLOCK\n\nRED-first (test.fails/fixme tripwires, not pin-green); corrected diagnosis\n(SortResultService fully orphaned, second stubbed ResultController path,\nsupersede throws, live mode = no result created at all); reconciled state\n(Pairing/PreferenceState done, ScoringService=10 tests); seam tripwire moved\nto the always-on integration tier + dedup with existing authz integration;\ne2e divergence rewritten to observable live truth; seam-first ordering.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): fold spec re-review nits (it.skip not test.fixme; seam-label tightening)\n\n* docs(plan): rev-2 — RED-first, corrected diagnosis, seam-first order, dedup\n\nGlobal Constraints now RED-first (test.fails/it.skip quarantine, never pin\nbroken behavior green). Confirmed diagnosis corrected (two orphaned populating\npaths; supersede throws; live mode = no result created). Tasks 1-2 marked DONE;\nseam tripwire moved to the always-on integration tier and dedup'd onto the\nexisting sort-results-authz.integration.test.ts; e2e results spec relabeled\nrenderer-only + divergence rewritten; report cause derived from the run.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): sort-results POST + [id] route coverage — RED tripwire on materialization\n\nPOST cases: 401 unauth, 400 missing collectionId/name, 403 access denied,\n201 forces curatorId+status draft, and a test.fails tripwire asserting the\nintended 'materializes one SortResultItem per preference' behavior — the route\ncalls SortResultRepository.create directly and never materializes items today,\nso the body fails now (suite green) and ERRORS when the route is wired to\nmaterialize, forcing promotion.\n\n[id] cases: GET/PATCH/DELETE each cover 401 / 403 / 404 / success; PATCH adds\n400 invalid JSON. Real ResultController runs over a mocked SortResultRepository.\n\nTest files only; no src/** production changes.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): integration seam tripwire (live POST -> items) + pipeline cases\n\nAdd the always-on db-tests seam tripwire and pipeline characterization for\nthe result-creation break.\n\n- sort-results-authz.integration.test.ts: RED it.fails() tripwire\n  \"live POST /api/sort-results materializes one SortResultItem per preference\".\n  Seeds items + the curator's CollectionPreferenceItem rows, drives the real\n  POST un-mocked, then asserts findByResult(newId) is non-empty. Fails today\n  (route calls SortResultRepository.create directly, never createDraftResult,\n  so [] ); green-as-test.fails now, ERRORS when the route is wired.\n- sort-pipeline.integration.test.ts (new): triage decision persists a\n  preference in the right bucket (persistence + bucket direction, not scores);\n  SortResultService.createDraftResult materializes one item per preference\n  ranked by score (characterizes the intended-but-unwired service path).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): finalize/supersede/items/reset route coverage + RED tripwires (supersede, deleteResultItem)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): SessionService/SortResultService/DecisionEventService/SortResultShareService unit coverage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): sort-results shares route coverage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): component interaction gaps + seedSortScenario e2e fixture\n\nTask 10 — fill compare/triage/results interaction gaps (no src changes):\n- DecisionControls.test.tsx (new): triage tier tap POSTs the right `result`\n  (Love→top … Release→low), router.refresh vs onDecisionMade, error re-enable.\n- CompareChoice.test.tsx: card tap chooses item_a/item_b, Tie/Skip results,\n  refresh on success, gentle error + re-enable.\n- results/[resultNumber]/page.test.tsx: tier-count cards (Love/Like/Maybe/Onward),\n  per-tier counts, Onward (no \"Release\"/\"Discard\") framing, most-loved hero +\n  deep-link, full-ranking section, empty state.\n\nTask 11 — seedSortScenario(ownerId) in e2e/fixtures/seed.ts:\n- 3 items each with a hero photo + active session + CollectionPreferenceItem rows\n  across buckets (top/high/low) + a draft SortResult via\n  SortResultService.createDraftResult (the correct path). Renderer-only\n  scaffolding that bypasses the broken live route on purpose.\n- Returns {collectionId, slug, sessionNumber, itemIds, resultNumber};\n  require.main smoke extended to exercise it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): honest RED tripwire for 'Release' tone violation in results (purses-xca)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): e2e journeys for session/triage/compare/results (purses-7dd)\n\nAdd three RED-first, characterize-only Playwright journey specs mirroring\nsort-images.spec.ts (seedBaseline + seed helper, /file image intercept,\nslug/number URLs, shared storageState auth):\n\n- sort-session.spec.ts: start a session via StartSessionForm/sort/new lands\n  on a numbered sort URL and triage resolves; reload preserves the session;\n  unauth goto of protected sort/compare URLs redirects to /login. The\n  \"lands DIRECTLY on triage\" contract is quarantined test.fixme (the form\n  pushes to the session detail page, not /triage).\n- compare.spec.ts: \"Which do you love more?\", tap-to-choose, quiet Tie/Skip,\n  gentle progress text, next-pair-or-graceful-end advance.\n- results.spec.ts: renderer-only on a seeded populated result — tier sections,\n  hero images, most-loved hero, full ranking. Zero diagnostic signal about the\n  live sort->result break (no live UI path creates a result; SessionComplete\n  is dead). Authoritative seam proof is Task 12's integration tripwire.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(diagnosis): sort-flow failure localization map\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): pin deleteResult no-op (final-review) + fix fixture/report rot\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781842071000
+              "time": 1781863496000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781842071000
+              "time": 1781863496000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/af9e955d272148a9ce7b5945061d2b5a06b8877a",
-            "commitHash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27804752364"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/8b7ece3ab5b367ed0bb209e2cd6df30047509c7f",
+            "commitHash": "8b7ece3ab5b367ed0bb209e2cd6df30047509c7f",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27819228986"
           },
           "gitCommit": {
-            "shortHash": "af9e955",
-            "hash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
-            "subject": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)",
-            "body": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)\n\n* docs: design spec for ARCHITECTURE.md + docs/beads cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: spec v2 — keep the 2 legacy purseinator_* specs (adversarial-review finding)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: implementation plan v2 for ARCHITECTURE.md + cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add ARCHITECTURE.md (state, 9-phase history, decisions log, roadmap)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: fix README facts (AUTH_* env, 15 tables, 9 flags, credentials auth), cross-link ARCHITECTURE.md, repoint refs off to-be-deleted plans\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: delete 35 superseded plans/specs (rationale preserved in ARCHITECTURE.md; 2 legacy specs kept)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: add graphify knowledge graph of the repo (post-cleanup, 1420 nodes / 97 communities)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: CLAUDE.md — agent model policy + graphify integration\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "8b7ece3",
+            "hash": "8b7ece3ab5b367ed0bb209e2cd6df30047509c7f",
+            "subject": "test(sort): RED-first diagnostic suite localizing the broken sort→results flow (#207)",
+            "body": "test(sort): RED-first diagnostic suite localizing the broken sort→results flow (#207)\n\n* docs: design spec — diagnostic test coverage for the sort flows\n\nCharacterize-only (no fixes) diagnostic suite across unit/integration/e2e for\nSorting Session/Triage/Compare/Results; outside-in ordering to localize the\nknown break; prime suspect purses-r7p (orphaned SortResult creation).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: implementation plan — sort-flow diagnostic test suite\n\n14 tasks across unit/integration/e2e (characterize-only). Pins the confirmed\nr7p empty-result break (POST /api/sort-results bypasses createDraftResult) and\nthe deleteResultItem no-op. Subagent-driven execution.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): PairingService unit coverage (purses-7io)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): PreferenceStateService unit coverage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): rev-2 — fold spec-review BLOCK\n\nRED-first (test.fails/fixme tripwires, not pin-green); corrected diagnosis\n(SortResultService fully orphaned, second stubbed ResultController path,\nsupersede throws, live mode = no result created at all); reconciled state\n(Pairing/PreferenceState done, ScoringService=10 tests); seam tripwire moved\nto the always-on integration tier + dedup with existing authz integration;\ne2e divergence rewritten to observable live truth; seam-first ordering.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): fold spec re-review nits (it.skip not test.fixme; seam-label tightening)\n\n* docs(plan): rev-2 — RED-first, corrected diagnosis, seam-first order, dedup\n\nGlobal Constraints now RED-first (test.fails/it.skip quarantine, never pin\nbroken behavior green). Confirmed diagnosis corrected (two orphaned populating\npaths; supersede throws; live mode = no result created). Tasks 1-2 marked DONE;\nseam tripwire moved to the always-on integration tier and dedup'd onto the\nexisting sort-results-authz.integration.test.ts; e2e results spec relabeled\nrenderer-only + divergence rewritten; report cause derived from the run.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): sort-results POST + [id] route coverage — RED tripwire on materialization\n\nPOST cases: 401 unauth, 400 missing collectionId/name, 403 access denied,\n201 forces curatorId+status draft, and a test.fails tripwire asserting the\nintended 'materializes one SortResultItem per preference' behavior — the route\ncalls SortResultRepository.create directly and never materializes items today,\nso the body fails now (suite green) and ERRORS when the route is wired to\nmaterialize, forcing promotion.\n\n[id] cases: GET/PATCH/DELETE each cover 401 / 403 / 404 / success; PATCH adds\n400 invalid JSON. Real ResultController runs over a mocked SortResultRepository.\n\nTest files only; no src/** production changes.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): integration seam tripwire (live POST -> items) + pipeline cases\n\nAdd the always-on db-tests seam tripwire and pipeline characterization for\nthe result-creation break.\n\n- sort-results-authz.integration.test.ts: RED it.fails() tripwire\n  \"live POST /api/sort-results materializes one SortResultItem per preference\".\n  Seeds items + the curator's CollectionPreferenceItem rows, drives the real\n  POST un-mocked, then asserts findByResult(newId) is non-empty. Fails today\n  (route calls SortResultRepository.create directly, never createDraftResult,\n  so [] ); green-as-test.fails now, ERRORS when the route is wired.\n- sort-pipeline.integration.test.ts (new): triage decision persists a\n  preference in the right bucket (persistence + bucket direction, not scores);\n  SortResultService.createDraftResult materializes one item per preference\n  ranked by score (characterizes the intended-but-unwired service path).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): finalize/supersede/items/reset route coverage + RED tripwires (supersede, deleteResultItem)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): SessionService/SortResultService/DecisionEventService/SortResultShareService unit coverage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): sort-results shares route coverage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): component interaction gaps + seedSortScenario e2e fixture\n\nTask 10 — fill compare/triage/results interaction gaps (no src changes):\n- DecisionControls.test.tsx (new): triage tier tap POSTs the right `result`\n  (Love→top … Release→low), router.refresh vs onDecisionMade, error re-enable.\n- CompareChoice.test.tsx: card tap chooses item_a/item_b, Tie/Skip results,\n  refresh on success, gentle error + re-enable.\n- results/[resultNumber]/page.test.tsx: tier-count cards (Love/Like/Maybe/Onward),\n  per-tier counts, Onward (no \"Release\"/\"Discard\") framing, most-loved hero +\n  deep-link, full-ranking section, empty state.\n\nTask 11 — seedSortScenario(ownerId) in e2e/fixtures/seed.ts:\n- 3 items each with a hero photo + active session + CollectionPreferenceItem rows\n  across buckets (top/high/low) + a draft SortResult via\n  SortResultService.createDraftResult (the correct path). Renderer-only\n  scaffolding that bypasses the broken live route on purpose.\n- Returns {collectionId, slug, sessionNumber, itemIds, resultNumber};\n  require.main smoke extended to exercise it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): honest RED tripwire for 'Release' tone violation in results (purses-xca)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): e2e journeys for session/triage/compare/results (purses-7dd)\n\nAdd three RED-first, characterize-only Playwright journey specs mirroring\nsort-images.spec.ts (seedBaseline + seed helper, /file image intercept,\nslug/number URLs, shared storageState auth):\n\n- sort-session.spec.ts: start a session via StartSessionForm/sort/new lands\n  on a numbered sort URL and triage resolves; reload preserves the session;\n  unauth goto of protected sort/compare URLs redirects to /login. The\n  \"lands DIRECTLY on triage\" contract is quarantined test.fixme (the form\n  pushes to the session detail page, not /triage).\n- compare.spec.ts: \"Which do you love more?\", tap-to-choose, quiet Tie/Skip,\n  gentle progress text, next-pair-or-graceful-end advance.\n- results.spec.ts: renderer-only on a seeded populated result — tier sections,\n  hero images, most-loved hero, full ranking. Zero diagnostic signal about the\n  live sort->result break (no live UI path creates a result; SessionComplete\n  is dead). Authoritative seam proof is Task 12's integration tripwire.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(diagnosis): sort-flow failure localization map\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): pin deleteResult no-op (final-review) + fix fixture/report rot\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781842071000
+              "time": 1781863496000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781842071000
+              "time": 1781863496000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/af9e955d272148a9ce7b5945061d2b5a06b8877a",
-            "commitHash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27804752364"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/8b7ece3ab5b367ed0bb209e2cd6df30047509c7f",
+            "commitHash": "8b7ece3ab5b367ed0bb209e2cd6df30047509c7f",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27819228986"
           },
           "gitCommit": {
-            "shortHash": "af9e955",
-            "hash": "af9e955d272148a9ce7b5945061d2b5a06b8877a",
-            "subject": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)",
-            "body": "docs: ARCHITECTURE.md + prune 35 superseded docs + repo knowledge graph (#202)\n\n* docs: design spec for ARCHITECTURE.md + docs/beads cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: spec v2 — keep the 2 legacy purseinator_* specs (adversarial-review finding)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: implementation plan v2 for ARCHITECTURE.md + cleanup\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: add ARCHITECTURE.md (state, 9-phase history, decisions log, roadmap)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: fix README facts (AUTH_* env, 15 tables, 9 flags, credentials auth), cross-link ARCHITECTURE.md, repoint refs off to-be-deleted plans\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: delete 35 superseded plans/specs (rationale preserved in ARCHITECTURE.md; 2 legacy specs kept)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: add graphify knowledge graph of the repo (post-cleanup, 1420 nodes / 97 communities)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore: CLAUDE.md — agent model policy + graphify integration\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "8b7ece3",
+            "hash": "8b7ece3ab5b367ed0bb209e2cd6df30047509c7f",
+            "subject": "test(sort): RED-first diagnostic suite localizing the broken sort→results flow (#207)",
+            "body": "test(sort): RED-first diagnostic suite localizing the broken sort→results flow (#207)\n\n* docs: design spec — diagnostic test coverage for the sort flows\n\nCharacterize-only (no fixes) diagnostic suite across unit/integration/e2e for\nSorting Session/Triage/Compare/Results; outside-in ordering to localize the\nknown break; prime suspect purses-r7p (orphaned SortResult creation).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: implementation plan — sort-flow diagnostic test suite\n\n14 tasks across unit/integration/e2e (characterize-only). Pins the confirmed\nr7p empty-result break (POST /api/sort-results bypasses createDraftResult) and\nthe deleteResultItem no-op. Subagent-driven execution.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): PairingService unit coverage (purses-7io)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): PreferenceStateService unit coverage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): rev-2 — fold spec-review BLOCK\n\nRED-first (test.fails/fixme tripwires, not pin-green); corrected diagnosis\n(SortResultService fully orphaned, second stubbed ResultController path,\nsupersede throws, live mode = no result created at all); reconciled state\n(Pairing/PreferenceState done, ScoringService=10 tests); seam tripwire moved\nto the always-on integration tier + dedup with existing authz integration;\ne2e divergence rewritten to observable live truth; seam-first ordering.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): fold spec re-review nits (it.skip not test.fixme; seam-label tightening)\n\n* docs(plan): rev-2 — RED-first, corrected diagnosis, seam-first order, dedup\n\nGlobal Constraints now RED-first (test.fails/it.skip quarantine, never pin\nbroken behavior green). Confirmed diagnosis corrected (two orphaned populating\npaths; supersede throws; live mode = no result created). Tasks 1-2 marked DONE;\nseam tripwire moved to the always-on integration tier and dedup'd onto the\nexisting sort-results-authz.integration.test.ts; e2e results spec relabeled\nrenderer-only + divergence rewritten; report cause derived from the run.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): sort-results POST + [id] route coverage — RED tripwire on materialization\n\nPOST cases: 401 unauth, 400 missing collectionId/name, 403 access denied,\n201 forces curatorId+status draft, and a test.fails tripwire asserting the\nintended 'materializes one SortResultItem per preference' behavior — the route\ncalls SortResultRepository.create directly and never materializes items today,\nso the body fails now (suite green) and ERRORS when the route is wired to\nmaterialize, forcing promotion.\n\n[id] cases: GET/PATCH/DELETE each cover 401 / 403 / 404 / success; PATCH adds\n400 invalid JSON. Real ResultController runs over a mocked SortResultRepository.\n\nTest files only; no src/** production changes.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): integration seam tripwire (live POST -> items) + pipeline cases\n\nAdd the always-on db-tests seam tripwire and pipeline characterization for\nthe result-creation break.\n\n- sort-results-authz.integration.test.ts: RED it.fails() tripwire\n  \"live POST /api/sort-results materializes one SortResultItem per preference\".\n  Seeds items + the curator's CollectionPreferenceItem rows, drives the real\n  POST un-mocked, then asserts findByResult(newId) is non-empty. Fails today\n  (route calls SortResultRepository.create directly, never createDraftResult,\n  so [] ); green-as-test.fails now, ERRORS when the route is wired.\n- sort-pipeline.integration.test.ts (new): triage decision persists a\n  preference in the right bucket (persistence + bucket direction, not scores);\n  SortResultService.createDraftResult materializes one item per preference\n  ranked by score (characterizes the intended-but-unwired service path).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): finalize/supersede/items/reset route coverage + RED tripwires (supersede, deleteResultItem)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): SessionService/SortResultService/DecisionEventService/SortResultShareService unit coverage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): sort-results shares route coverage\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): component interaction gaps + seedSortScenario e2e fixture\n\nTask 10 — fill compare/triage/results interaction gaps (no src changes):\n- DecisionControls.test.tsx (new): triage tier tap POSTs the right `result`\n  (Love→top … Release→low), router.refresh vs onDecisionMade, error re-enable.\n- CompareChoice.test.tsx: card tap chooses item_a/item_b, Tie/Skip results,\n  refresh on success, gentle error + re-enable.\n- results/[resultNumber]/page.test.tsx: tier-count cards (Love/Like/Maybe/Onward),\n  per-tier counts, Onward (no \"Release\"/\"Discard\") framing, most-loved hero +\n  deep-link, full-ranking section, empty state.\n\nTask 11 — seedSortScenario(ownerId) in e2e/fixtures/seed.ts:\n- 3 items each with a hero photo + active session + CollectionPreferenceItem rows\n  across buckets (top/high/low) + a draft SortResult via\n  SortResultService.createDraftResult (the correct path). Renderer-only\n  scaffolding that bypasses the broken live route on purpose.\n- Returns {collectionId, slug, sessionNumber, itemIds, resultNumber};\n  require.main smoke extended to exercise it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): honest RED tripwire for 'Release' tone violation in results (purses-xca)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): e2e journeys for session/triage/compare/results (purses-7dd)\n\nAdd three RED-first, characterize-only Playwright journey specs mirroring\nsort-images.spec.ts (seedBaseline + seed helper, /file image intercept,\nslug/number URLs, shared storageState auth):\n\n- sort-session.spec.ts: start a session via StartSessionForm/sort/new lands\n  on a numbered sort URL and triage resolves; reload preserves the session;\n  unauth goto of protected sort/compare URLs redirects to /login. The\n  \"lands DIRECTLY on triage\" contract is quarantined test.fixme (the form\n  pushes to the session detail page, not /triage).\n- compare.spec.ts: \"Which do you love more?\", tap-to-choose, quiet Tie/Skip,\n  gentle progress text, next-pair-or-graceful-end advance.\n- results.spec.ts: renderer-only on a seeded populated result — tier sections,\n  hero images, most-loved hero, full ranking. Zero diagnostic signal about the\n  live sort->result break (no live UI path creates a result; SessionComplete\n  is dead). Authoritative seam proof is Task 12's integration tripwire.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(diagnosis): sort-flow failure localization map\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sort): pin deleteResult no-op (final-review) + fix fixture/report rot\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781842071000
+              "time": 1781863496000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781842071000
+              "time": 1781863496000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 946,
+                  "duration": 957,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:10:39.959Z",
+                  "startTime": "2026-06-19T10:07:52.458Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -303,12 +303,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 11551,
+                  "duration": 21475,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:10:41.565Z",
+                  "startTime": "2026-06-19T10:07:54.100Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -337,12 +337,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2191,
+                  "duration": 2244,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:10:54.510Z",
+                  "startTime": "2026-06-19T10:08:17.739Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -371,12 +371,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1583,
+                  "duration": 1717,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:09.464Z",
+                  "startTime": "2026-06-19T10:09:32.710Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -405,12 +405,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2326,
+                  "duration": 2587,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:11.247Z",
+                  "startTime": "2026-06-19T10:09:34.637Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -439,12 +439,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 961,
+                  "duration": 1265,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:24.901Z",
+                  "startTime": "2026-06-19T10:10:00.945Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -473,12 +473,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1087,
+                  "duration": 1258,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:27.765Z",
+                  "startTime": "2026-06-19T10:10:05.796Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -515,12 +515,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1638,
+                  "duration": 1891,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:10:56.734Z",
+                  "startTime": "2026-06-19T10:08:20.022Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -549,12 +549,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1536,
+                  "duration": 1585,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:10:58.434Z",
+                  "startTime": "2026-06-19T10:08:21.984Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -583,12 +583,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2266,
+                  "duration": 2403,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:10:59.998Z",
+                  "startTime": "2026-06-19T10:08:23.614Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -617,12 +617,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1525,
+                  "duration": 1664,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:13.608Z",
+                  "startTime": "2026-06-19T10:09:37.283Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -651,12 +651,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1433,
+                  "duration": 1709,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:15.191Z",
+                  "startTime": "2026-06-19T10:09:39.033Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -685,12 +685,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1836,
+                  "duration": 1876,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:16.658Z",
+                  "startTime": "2026-06-19T10:09:40.769Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -719,12 +719,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 739,
+                  "duration": 805,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:28.878Z",
+                  "startTime": "2026-06-19T10:10:07.109Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -753,12 +753,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 730,
+                  "duration": 786,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:29.651Z",
+                  "startTime": "2026-06-19T10:10:07.951Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -787,12 +787,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1076,
+                  "duration": 1185,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:30.404Z",
+                  "startTime": "2026-06-19T10:10:08.769Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -804,6 +804,329 @@
           "file": "auth.spec.ts",
           "line": 49,
           "column": 5
+        }
+      ]
+    },
+    {
+      "title": "compare.spec.ts",
+      "file": "compare.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "compare — which do you love more?",
+          "file": "compare.spec.ts",
+          "line": 14,
+          "column": 6,
+          "specs": [
+            {
+              "title": "renders the prompt, two choice cards, and quiet Tie/Skip escapes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1065,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:08:26.055Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bc75bd59fd35184b0d5e-8a5b000607c73594b35c",
+              "file": "compare.spec.ts",
+              "line": 29,
+              "column": 7
+            },
+            {
+              "title": "tapping a card chooses it and the next pair (or a graceful end) appears",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1638,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:08:27.222Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bc75bd59fd35184b0d5e-e371f8ea58158a051d8c",
+              "file": "compare.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "gentle progress text appears after a comparison is made",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1397,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:08:28.888Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bc75bd59fd35184b0d5e-6265aa6b0518c48c1535",
+              "file": "compare.spec.ts",
+              "line": 105,
+              "column": 7
+            },
+            {
+              "title": "renders the prompt, two choice cards, and quiet Tie/Skip escapes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 887,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:09:42.713Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bc75bd59fd35184b0d5e-a5024ad0f3e456745db0",
+              "file": "compare.spec.ts",
+              "line": 29,
+              "column": 7
+            },
+            {
+              "title": "tapping a card chooses it and the next pair (or a graceful end) appears",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1461,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:09:43.699Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bc75bd59fd35184b0d5e-1a33c91a0da4b5c83406",
+              "file": "compare.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "gentle progress text appears after a comparison is made",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1022,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:09:45.189Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bc75bd59fd35184b0d5e-2fa4de7164749ed3c698",
+              "file": "compare.spec.ts",
+              "line": 105,
+              "column": 7
+            },
+            {
+              "title": "renders the prompt, two choice cards, and quiet Tie/Skip escapes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 582,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:10:09.981Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bc75bd59fd35184b0d5e-be53babd34fc20d79de1",
+              "file": "compare.spec.ts",
+              "line": 29,
+              "column": 7
+            },
+            {
+              "title": "tapping a card chooses it and the next pair (or a graceful end) appears",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 818,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:10:10.644Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bc75bd59fd35184b0d5e-5b6a471ab604b3206dd9",
+              "file": "compare.spec.ts",
+              "line": 61,
+              "column": 7
+            },
+            {
+              "title": "gentle progress text appears after a comparison is made",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 486,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:10:11.481Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "bc75bd59fd35184b0d5e-217f7d68f330f3466238",
+              "file": "compare.spec.ts",
+              "line": 105,
+              "column": 7
+            }
+          ]
         }
       ]
     },
@@ -829,12 +1152,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 782,
+                  "duration": 1064,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:02.287Z",
+                  "startTime": "2026-06-19T10:08:30.321Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -863,12 +1186,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 935,
+                  "duration": 1043,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:03.130Z",
+                  "startTime": "2026-06-19T10:08:31.460Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -897,12 +1220,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 767,
+                  "duration": 796,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:18.526Z",
+                  "startTime": "2026-06-19T10:09:46.240Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -931,12 +1254,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 934,
+                  "duration": 881,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:19.349Z",
+                  "startTime": "2026-06-19T10:09:47.086Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -965,12 +1288,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 262,
+                  "duration": 316,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:31.513Z",
+                  "startTime": "2026-06-19T10:10:12.003Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -999,12 +1322,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 395,
+                  "duration": 526,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:31.820Z",
+                  "startTime": "2026-06-19T10:10:12.352Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1016,6 +1339,125 @@
           "file": "layout.spec.ts",
           "line": 45,
           "column": 5
+        }
+      ]
+    },
+    {
+      "title": "results.spec.ts",
+      "file": "results.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "results page (renderer-only, seeded populated result)",
+          "file": "results.spec.ts",
+          "line": 26,
+          "column": 6,
+          "specs": [
+            {
+              "title": "renders tier sections, hero images, and the Onward tier via slug/number URLs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2102,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:08:32.542Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fbc70143e18771724c2b-75ef61ff39d69d7b8ef2",
+              "file": "results.spec.ts",
+              "line": 42,
+              "column": 7
+            },
+            {
+              "title": "renders tier sections, hero images, and the Onward tier via slug/number URLs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 912,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:09:47.998Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fbc70143e18771724c2b-83c8f7828aa13d9774da",
+              "file": "results.spec.ts",
+              "line": 42,
+              "column": 7
+            },
+            {
+              "title": "renders tier sections, hero images, and the Onward tier via slug/number URLs",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 572,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:10:12.898Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "fbc70143e18771724c2b-bb1fd5967d1b4affddbe",
+              "file": "results.spec.ts",
+              "line": 42,
+              "column": 7
+            }
+          ]
         }
       ]
     },
@@ -1041,12 +1483,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1129,
+                  "duration": 993,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:04.100Z",
+                  "startTime": "2026-06-19T10:08:34.783Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1075,12 +1517,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1170,
+                  "duration": 1246,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:05.251Z",
+                  "startTime": "2026-06-19T10:08:35.806Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1109,12 +1551,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 772,
+                  "duration": 1562,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:06.444Z",
+                  "startTime": "2026-06-19T10:08:37.095Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1143,12 +1585,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 614,
+                  "duration": 848,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:20.317Z",
+                  "startTime": "2026-06-19T10:09:49.022Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1177,12 +1619,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 808,
+                  "duration": 784,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:20.949Z",
+                  "startTime": "2026-06-19T10:09:49.903Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1211,12 +1653,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 749,
+                  "duration": 874,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:21.782Z",
+                  "startTime": "2026-06-19T10:09:50.707Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1245,12 +1687,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 246,
+                  "duration": 321,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:32.249Z",
+                  "startTime": "2026-06-19T10:10:13.536Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1279,12 +1721,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 246,
+                  "duration": 322,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:32.510Z",
+                  "startTime": "2026-06-19T10:10:13.876Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1313,12 +1755,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 265,
+                  "duration": 314,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T04:11:32.769Z",
+                  "startTime": "2026-06-19T10:10:14.219Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1362,12 +1804,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1233,
+                      "duration": 1895,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T04:11:07.245Z",
+                      "startTime": "2026-06-19T10:08:38.756Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1396,12 +1838,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1312,
+                      "duration": 863,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T04:11:22.558Z",
+                      "startTime": "2026-06-19T10:09:51.600Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1430,12 +1872,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 449,
+                      "duration": 502,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T04:11:33.051Z",
+                      "startTime": "2026-06-19T10:10:14.555Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1451,14 +1893,705 @@
           ]
         }
       ]
+    },
+    {
+      "title": "sort-session.spec.ts",
+      "file": "sort-session.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "sort session → triage",
+          "file": "sort-session.spec.ts",
+          "line": 16,
+          "column": 6,
+          "specs": [
+            {
+              "title": "triage renders the current item via slug/number URLs (never a raw ULID)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1736,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:08:41.607Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-7fde91c4bb70a17f902d",
+              "file": "sort-session.spec.ts",
+              "line": 36,
+              "column": 7
+            },
+            {
+              "title": "reload preserves the session (still on triage, same item)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4280,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:08:48.353Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-d5c93dda98c1c5ad0c45",
+              "file": "sort-session.spec.ts",
+              "line": 58,
+              "column": 7
+            },
+            {
+              "title": "StartSessionForm at /sort/new creates a session and lands on a numbered sort URL",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2785,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:08:52.660Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-4af9db2b6c8df701b877",
+              "file": "sort-session.spec.ts",
+              "line": 75,
+              "column": 7
+            },
+            {
+              "title": "StartSessionForm lands DIRECTLY on the triage screen",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "fixme",
+                      "location": {
+                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts",
+                        "line": 115,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:08:55.589Z",
+                      "annotations": [
+                        {
+                          "type": "fixme",
+                          "location": {
+                            "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts",
+                            "line": 115,
+                            "column": 8
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-1eb79bfa07291e2bcc35",
+              "file": "sort-session.spec.ts",
+              "line": 115,
+              "column": 8
+            },
+            {
+              "title": "triage renders the current item via slug/number URLs (never a raw ULID)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1413,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:09:52.558Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-d3b67f7536d441ec697e",
+              "file": "sort-session.spec.ts",
+              "line": 36,
+              "column": 7
+            },
+            {
+              "title": "reload preserves the session (still on triage, same item)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1783,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:09:54.044Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-119521884711dcec3dbe",
+              "file": "sort-session.spec.ts",
+              "line": 58,
+              "column": 7
+            },
+            {
+              "title": "StartSessionForm at /sort/new creates a session and lands on a numbered sort URL",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1750,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:09:55.862Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-589d469c26274ac565c6",
+              "file": "sort-session.spec.ts",
+              "line": 75,
+              "column": 7
+            },
+            {
+              "title": "StartSessionForm lands DIRECTLY on the triage screen",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "fixme",
+                      "location": {
+                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts",
+                        "line": 115,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:09:57.663Z",
+                      "annotations": [
+                        {
+                          "type": "fixme",
+                          "location": {
+                            "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts",
+                            "line": 115,
+                            "column": 8
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-605640045ab32fbe7b96",
+              "file": "sort-session.spec.ts",
+              "line": 115,
+              "column": 8
+            },
+            {
+              "title": "triage renders the current item via slug/number URLs (never a raw ULID)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 510,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:10:15.113Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-0756f8c242d309961387",
+              "file": "sort-session.spec.ts",
+              "line": 36,
+              "column": 7
+            },
+            {
+              "title": "reload preserves the session (still on triage, same item)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 768,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:10:15.671Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-86e359196e5dc530e1be",
+              "file": "sort-session.spec.ts",
+              "line": 58,
+              "column": 7
+            },
+            {
+              "title": "StartSessionForm at /sort/new creates a session and lands on a numbered sort URL",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 829,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:10:16.462Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-ba1869f9b9aefa33833a",
+              "file": "sort-session.spec.ts",
+              "line": 75,
+              "column": 7
+            },
+            {
+              "title": "StartSessionForm lands DIRECTLY on the triage screen",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "fixme",
+                      "location": {
+                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts",
+                        "line": 115,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:10:17.304Z",
+                      "annotations": [
+                        {
+                          "type": "fixme",
+                          "location": {
+                            "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts",
+                            "line": 115,
+                            "column": 8
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-acea0078e1b1f6741212",
+              "file": "sort-session.spec.ts",
+              "line": 115,
+              "column": 8
+            }
+          ]
+        },
+        {
+          "title": "unauthenticated sort access",
+          "file": "sort-session.spec.ts",
+          "line": 128,
+          "column": 6,
+          "specs": [
+            {
+              "title": "goto of a protected sort URL redirects to /login",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2588,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:08:55.589Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-9bb3942df70c7129a71d",
+              "file": "sort-session.spec.ts",
+              "line": 134,
+              "column": 7
+            },
+            {
+              "title": "goto of a protected compare URL redirects to /login",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 6523,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:08:58.221Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-799c753cb3c5e734bd8c",
+              "file": "sort-session.spec.ts",
+              "line": 141,
+              "column": 7
+            },
+            {
+              "title": "goto of a protected sort URL redirects to /login",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1261,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:09:57.665Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-6c15e3d3d3f634c625ec",
+              "file": "sort-session.spec.ts",
+              "line": 134,
+              "column": 7
+            },
+            {
+              "title": "goto of a protected compare URL redirects to /login",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1175,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:09:58.963Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-fa40638cb15efe21cf9a",
+              "file": "sort-session.spec.ts",
+              "line": 141,
+              "column": 7
+            },
+            {
+              "title": "goto of a protected sort URL redirects to /login",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 280,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:10:17.304Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-2a8fa4066ac1bd25a5ae",
+              "file": "sort-session.spec.ts",
+              "line": 134,
+              "column": 7
+            },
+            {
+              "title": "goto of a protected compare URL redirects to /login",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 269,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-19T10:10:17.608Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d87e823e04d4a9cf7490-da4dc3bdb3804675cfc6",
+              "file": "sort-session.spec.ts",
+              "line": 141,
+              "column": 7
+            }
+          ]
+        }
+      ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-19T04:09:36.306Z",
-    "duration": 117483.91900000001,
-    "expected": 34,
-    "skipped": 0,
+    "startTime": "2026-06-19T10:06:43.690Z",
+    "duration": 214484.424,
+    "expected": 61,
+    "skipped": 3,
     "unexpected": 0,
     "flaky": 0
   }

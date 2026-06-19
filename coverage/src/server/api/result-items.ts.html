@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">55.81% </span>
+                <span class="strong">86.04% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>24/43</span>
+                <span class='fraction'>37/43</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">83.33% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>5/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">55.81% </span>
+                <span class="strong">86.04% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>24/43</span>
+                <span class='fraction'>37/43</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -121,8 +121,8 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -133,21 +133,21 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { z } from "zod";
 import type { SortResultItem } from "@/types";
@@ -161,11 +161,11 @@ const UpdateResultItemSchema = z.object({
 export type UpdateResultItemInput = z.infer&lt;typeof UpdateResultItemSchema&gt;;
 &nbsp;
 export class ResultItemController {
-<span class="fstat-no" title="function not covered" >  constructor(private resultItemRepo: ISortResultItemRepository) {}</span>
+  constructor(private resultItemRepo: ISortResultItemRepository) {}
 &nbsp;
-<span class="fstat-no" title="function not covered" >  async listResultItems(resultId: string): Promise&lt;SortResultItem[]&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    return this.resultItemRepo.findByResult(resultId);</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+  async listResultItems(resultId: string): Promise&lt;SortResultItem[]&gt; {
+    return this.resultItemRepo.findByResult(resultId);
+  }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  async getResultItem(resultItemId: string): Promise&lt;SortResultItem&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const item = await this.resultItemRepo.findById(resultItemId);</span>
@@ -175,22 +175,22 @@ export class ResultItemController {
 <span class="cstat-no" title="statement not covered" >    return item;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="fstat-no" title="function not covered" >  async updateResultItem(resultItemId: string, data: unknown): Promise&lt;SortResultItem&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    const parsed = UpdateResultItemSchema.parse(data);</span>
-<span class="cstat-no" title="statement not covered" >    return this.resultItemRepo.update(resultItemId, parsed);</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+  async updateResultItem(resultItemId: string, data: unknown): Promise&lt;SortResultItem&gt; {
+    const parsed = UpdateResultItemSchema.parse(data);
+    return this.resultItemRepo.update(resultItemId, parsed);
+  }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  async resetResultItem(resultItemId: string): Promise&lt;SortResultItem&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    // Clear manual overrides, revert to computed rank/bucket</span>
-<span class="cstat-no" title="statement not covered" >    return this.resultItemRepo.update(resultItemId, {</span>
-<span class="cstat-no" title="statement not covered" >      manualRank: null,</span>
-<span class="cstat-no" title="statement not covered" >      manualBucket: null,</span>
-<span class="cstat-no" title="statement not covered" >    });</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+  async resetResultItem(resultItemId: string): Promise&lt;SortResultItem&gt; {
+    // Clear manual overrides, revert to computed rank/bucket
+    return this.resultItemRepo.update(resultItemId, {
+      manualRank: null,
+      manualBucket: null,
+    });
+  }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  async deleteResultItem(): Promise&lt;void&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    // TODO: Remove item from result</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+  async deleteResultItem(): Promise&lt;void&gt; {
+    // TODO: Remove item from result
+  }
 }
 &nbsp;</pre></td></tr></table></pre>
 
@@ -199,7 +199,7 @@ export class ResultItemController {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-19T08:16:39.367Z
+                at 2026-06-19T10:06:28.779Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
