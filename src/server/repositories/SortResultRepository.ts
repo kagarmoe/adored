@@ -7,6 +7,14 @@ export interface ISortResultRepository {
     name: string;
     status: "draft" | "finalized";
   }): Promise<SortResult>;
+  insertWithNumber(data: {
+    collectionId: string;
+    curatorId: string;
+    name: string;
+    status: "draft" | "finalized";
+    number: number;
+  }): Promise<SortResult>;
+  getNextResultNumber(collectionId: string): Promise<number>;
   findById(id: string): Promise<SortResult | null>;
   findByCollection(collectionId: string): Promise<SortResult[]>;
   findByCollectionAndNumber(collectionId: string, number: number): Promise<SortResult | null>;

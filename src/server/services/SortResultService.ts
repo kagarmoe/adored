@@ -18,6 +18,18 @@ export class DeleteResultStateError extends Error {
   }
 }
 
+/**
+ * Thrown when the (collection, number) race could not be won within the retry
+ * budget. Distinct from a mid-transaction failure so ops can tell "retry storm
+ * lost" apart from "DB fell over". The route maps it to 500.
+ */
+export class ResultNumberExhaustedError extends Error {
+  constructor() {
+    super("Could not allocate a result number");
+    this.name = "ResultNumberExhaustedError";
+  }
+}
+
 export class SortResultService {
   constructor(
     private sortResultRepo: ISortResultRepository,
