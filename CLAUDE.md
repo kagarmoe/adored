@@ -106,25 +106,37 @@ Next.js is opinionated. Follow its conventions, not workarounds:
 
 ## Workflow
 
-Use the **superpowers** workflow for substantive work: `brainstorming` → `writing-plans` →
-`executing-plans`, with `test-driven-development` and `systematic-debugging`. Track work in **beads**
-(`bd`), never TodoWrite. Then close out properly — the two steps most easily skipped are gates, not
-optional:
+Use the **superpowers** skills for all substantive work, in this order — each arrow is a gate, don't
+skip ahead. Track work in **beads** (`bd`), never TodoWrite.
 
+1. **`brainstorming`** → design spec to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`.
+2. **Review the spec FIRST.** Before any plan or code, run `adversarial-review` on the spec (personas
+   scaled via the lens→engine table below), then `superpowers:receiving-code-review` to fold the
+   findings back in. A spec that hasn't been adversarially reviewed does not proceed to planning.
+3. **`writing-plans`** → task-by-task plan to `docs/superpowers/plans/YYYY-MM-DD-<topic>.md`.
+4. **Execute** with `superpowers:subagent-driven-development` (same session) or `executing-plans`
+   (parallel session): fresh subagent per task, `test-driven-development` within each task (failing
+   test first), `systematic-debugging` for any bug *before* proposing a fix, plus the per-task
+   spec+quality review.
+5. **Review every change with the personas.** Each review — per-task and the final whole-branch one —
+   runs `adversarial-review` (guilty-until-proven; scale the persona set to the diff via the lens→engine
+   table below) wrapped in the `superpowers:requesting-code-review` → `receiving-code-review` cycle.
+   Review is a GATE before merge; no substantial change merges without it.
+6. **`superpowers:verification-before-completion`** before claiming anything done/passing/fixed —
+   evidence (the command + its output), never assertion.
+7. **`superpowers:finishing-a-development-branch`** to merge/PR/clean up — don't hand-roll it.
+
+**Reviews always call the adversarial-review personas** — spec (step 2), per-task, and whole-branch.
+Generic review rubber-stamps; scale the persona set to what changed (lens→engine table under
+*Conventions & Patterns*). The spec review is the first review of every effort.
+
+**Git discipline:**
 - **Branch:** feature branch off `main` → PR → squash-merge → Vercel auto-deploys prod. Never commit
   directly to `main`.
-- **Isolate concurrent work:** multiple agents may run here at once, and a branch switch in a *shared*
-  working tree silently discards another agent's uncommitted changes. For substantial or parallel work,
-  branch into your own git worktree (or the `EnterWorktree` tool); never switch branches with
-  uncommitted changes (commit or stash first).
-- **Commit:** frequent, one logical change per commit; don't leave work parked only in the working tree.
-- **Verify before claiming done:** run the gates above. Evidence before assertions
-  (`superpowers:verification-before-completion`).
-- **Code review is a GATE before merging any major feature** — run the `adversarial-review` skill (see
-  the lens→engine routing under *Conventions & Patterns* below), optionally alongside
-  `superpowers:requesting-code-review`. Do not merge a major feature without it.
-- **Close the branch with `superpowers:finishing-a-development-branch`** — don't hand-roll the
-  merge/cleanup.
+- **Isolate concurrent work:** a branch switch in a *shared* working tree silently discards another
+  agent's uncommitted changes. For substantial/parallel work, branch into your own git worktree (or
+  `EnterWorktree`); never switch branches with uncommitted changes (commit or stash first).
+- **Commit:** frequent, one logical change per commit; don't park work only in the working tree.
 
 ## PR lifecycle automation
 
@@ -200,3 +212,13 @@ Deviate whenever a better flow serves the user — the governing authorities are
 The wireframes per-screen layouts (collections grid, item grid, card-based sorting, bucketed results)
 are useful reference, but the **flow may change** — e.g. uploading photos before metadata, deferring
 metadata to fill in later, and bulk-uploading images.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
