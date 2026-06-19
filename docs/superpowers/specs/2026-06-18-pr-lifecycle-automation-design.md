@@ -77,11 +77,11 @@ The spine, ~8 lines:
 
 Because `.git/sdd/` is one shared dir, starting problem B while A's PR is in review **overwrites A's ledger/briefs** before A merges. Fix: namespace scratch per branch — `.git/sdd/<sanitized-branch>/...` — so concurrent problems don't collide, and `/close-out` deletes only its own branch's scope. This is a change to how the agent uses the SDD scratch (codified in CLAUDE.md), since the superpowers SDD scripts write flat paths by default. Lessons still harvest from the chat first, so a missed namespace never loses lessons — only review-loop convenience.
 
-## Open decisions for review
+## Resolved decisions (user-approved 2026-06-18)
 
-1. **Hook install:** committed `scripts/install-hooks.sh` + `package.json` `"prepare"` (auto on `npm install`) — recommended — vs manual install documented in README.
-2. **pre-push severity:** soft-block-with-`--no-verify` (recommended; a real backstop) vs warn-only (lower friction, easily ignored).
-3. **sdd namespacing:** include now (recommended; it's the clobber fix) vs defer until overlapping-problems actually bite.
+1. **Hook install:** committed `scripts/install-hooks.sh` + `package.json` `"prepare"` (auto on `npm install`).
+2. **pre-push severity:** soft-block with `--no-verify` override (a real backstop, not warn-only).
+3. **sdd namespacing:** include now (the clobber fix).
 
 ## Verification
 
