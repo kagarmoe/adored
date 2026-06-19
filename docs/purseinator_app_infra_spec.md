@@ -1,5 +1,7 @@
 # PurseInator MVP App and Infrastructure Specification
 
+> **Status — design intent, not current state.** This is the original design/domain spec. The *implemented* state lives in [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) and [`docs/API.md`](API.md). Some sections have aged: §16's repo structure is aspirational, and the membership permission flags (§5.3 / §9) are being collapsed to owner/curator roles (`purses-crt`). The enduring invariants still govern — the domain model (§5), share-visibility matrix (§8), authz rules (§9, §18), and DB/purge contracts (§11).
+
 ## 1. Purpose
 
 PurseInator is a private-first curatorial sorting application for physical collections.
@@ -488,7 +490,7 @@ General rules:
 
 ## 10. API Surface
 
-The API is defined separately in `purseinator_mvp_api_spec.md`.
+The current API surface is documented in [`docs/API.md`](API.md) (agent-first reference). _(The historical `purseinator_mvp_api_spec.md` endpoint table was removed — it had drifted from the implementation.)_
 
 Main resource groups:
 
