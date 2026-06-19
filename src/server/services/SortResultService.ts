@@ -103,10 +103,15 @@ export class SortResultService {
           return result;
         });
       } catch (error) {
-        if (isResultNumberConflict(error) && attempt < 4) continue;
+        if (isResultNumberConflict(error)) {
+          if (attempt < 4) continue;
+          throw new ResultNumberExhaustedError();
+        }
         throw error;
       }
     }
+    // Defensive fallback for TS's return-type analysis; unreachable in practice
+    // (the final-attempt conflict throws above; success returns from the try).
     throw new ResultNumberExhaustedError();
   }
 

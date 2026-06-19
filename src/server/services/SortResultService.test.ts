@@ -6,13 +6,14 @@ import { fakeTxDb } from "@/test-support/fakeTxDb";
 // injected repos. Mock the tx-bound repo constructors (mirroring the route
 // tests) to observe the in-transaction writes; the AUTHORITATIVE atomicity proof
 // is the un-mocked integration rollback test in sort-pipeline.integration.test.ts.
-const { txResultRepo, txItemRepo } = vi.hoisted(() => ({
+const { txResultRepo, txItemRepo, isResultNumberConflict } = vi.hoisted(() => ({
   txResultRepo: { getNextResultNumber: vi.fn(), insertWithNumber: vi.fn() },
   txItemRepo: { create: vi.fn() },
+  isResultNumberConflict: vi.fn(() => false),
 }));
 vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
   SortResultRepository: vi.fn(() => txResultRepo),
-  isResultNumberConflict: () => false,
+  isResultNumberConflict,
 }));
 vi.mock("@/server/repositories/implementations/SortResultItemRepository", () => ({
   SortResultItemRepository: vi.fn(() => txItemRepo),
@@ -22,6 +23,7 @@ import {
   SortResultService,
   SupersedeStateError,
   DeleteResultStateError,
+  ResultNumberExhaustedError,
 } from "./SortResultService";
 import type {
   CollectionPreferenceItem,
@@ -93,6 +95,9 @@ function sortResultItem(
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // clearAllMocks wipes the hoisted predicate's implementation too; restore the
+  // default (no conflict) so only the exhaustion test opts into retries.
+  isResultNumberConflict.mockReturnValue(false);
   txResultRepo.getNextResultNumber.mockResolvedValue(1);
   txResultRepo.insertWithNumber.mockResolvedValue(sortResult());
   txItemRepo.create.mockResolvedValue(sortResultItem());
@@ -144,6 +149,33 @@ describe("SortResultService.createDraftResult", () => {
       computedRank: 1,
       computedBucket: "medium",
     });
+  });
+
+  it("throws ResultNumberExhaustedError when the number race loses all 5 attempts", async () => {
+    // Real-shaped conflict the production predicate matches (code 23505 +
+    // the unique-index name); the test predicate returns true for it.
+    const conflict = Object.assign(
+      new Error(
+        'duplicate key value violates unique constraint "sort_results_collection_number_unique"',
+      ),
+      { code: "23505" },
+    );
+    isResultNumberConflict.mockReturnValue(true);
+    txResultRepo.insertWithNumber.mockRejectedValue(conflict);
+    const preferenceRepo = {
+      findByCollection: async () => [],
+    } as unknown as ICollectionPreferenceItemRepository;
+
+    await expect(
+      new SortResultService(
+        {} as unknown as ISortResultRepository,
+        {} as unknown as ISortResultItemRepository,
+        preferenceRepo,
+        txDb,
+      ).createDraftResult(COLLECTION, CURATOR, "Spring sort"),
+    ).rejects.toBeInstanceOf(ResultNumberExhaustedError);
+    // 5 attempts: each opens a tx and tries the allocation insert once.
+    expect(txResultRepo.insertWithNumber).toHaveBeenCalledTimes(5);
   });
 
   it("createDraftResult with no preferences creates a result but zero items", async () => {
