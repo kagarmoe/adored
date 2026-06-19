@@ -10,6 +10,7 @@
 // un-mocked clone proof lives in sort-pipeline.integration.test.ts.
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
+import { fakeTxDb } from "@/test-support/fakeTxDb";
 
 const {
   mockRequireAuth,
@@ -22,9 +23,12 @@ const {
   mockRequireAuth: vi.fn(),
   mockGetDb: vi.fn(),
   mockRequireApiResultAccess: vi.fn(),
+  // findById = pre-tx guard read; getNextResultNumber + insertWithNumber =
+  // tx-bound writes inside createResultWithItems.
   sortResultRepo: {
     findById: vi.fn(),
-    create: vi.fn(),
+    getNextResultNumber: vi.fn(),
+    insertWithNumber: vi.fn(),
   },
   sortResultItemRepo: {
     findByResult: vi.fn(),
@@ -80,13 +84,14 @@ const postReq = () => ({}) as any;
 beforeEach(() => {
   vi.clearAllMocks();
   mockRequireAuth.mockResolvedValue({ id: "u1", email: "u1@example.com" });
-  mockGetDb.mockReturnValue({});
+  // The route opens a transaction to clone; fakeTxDb runs the body on the mocks.
+  mockGetDb.mockReturnValue(fakeTxDb());
   mockRequireApiResultAccess.mockResolvedValue(FINALIZED_RESULT);
   sortResultRepo.findById.mockResolvedValue(FINALIZED_RESULT);
-  sortResultRepo.create.mockImplementation(async (data: any) => ({
+  sortResultRepo.getNextResultNumber.mockResolvedValue(2);
+  sortResultRepo.insertWithNumber.mockImplementation(async (data: any) => ({
     ...FINALIZED_RESULT,
     id: "sr2",
-    number: 2,
     status: "draft",
     finalizedAt: null,
     ...data,

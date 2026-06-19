@@ -20,6 +20,7 @@ export async function POST(
       new SortResultRepository(db),
       new SortResultItemRepository(db),
       new CollectionPreferenceItemRepository(db),
+      db,
     );
     const result = await service.supersedeResult(params.id);
     if (!result) {

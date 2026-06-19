@@ -228,6 +228,7 @@ export async function seedSortScenario(ownerId: string): Promise<{
     new SortResultRepository(db),
     new SortResultItemRepository(db),
     prefRepo,
+    db,
   );
   const result = await service.createDraftResult(collectionId, ownerId, "E2E Sort Result");
   if (result.number == null) throw new Error("seedSortScenario: result.number was not allocated");

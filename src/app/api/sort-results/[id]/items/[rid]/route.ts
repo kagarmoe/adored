@@ -89,6 +89,7 @@ export async function DELETE(
       new SortResultRepository(db),
       new SortResultItemRepository(db),
       new CollectionPreferenceItemRepository(db),
+      db,
     );
     await service.deleteResultItem(params.rid);
     return NextResponse.json({ message: "Item removed from result" });
