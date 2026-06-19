@@ -8,6 +8,34 @@ import { generateId } from "@/lib/id";
 export class SortResultRepository implements ISortResultRepository {
   constructor(private db: Database) {}
 
+  // Single INSERT with a caller-supplied number; NO recompute, NO retry. The
+  // number race is handled by callers (create's wrapper, or the service's
+  // whole-transaction retry) so the two retry sites share one predicate.
+  async insertWithNumber(data: {
+    id?: string;
+    collectionId: string;
+    curatorId: string;
+    name: string;
+    status: "draft" | "finalized";
+    number: number;
+  }): Promise<SortResult> {
+    const [result] = await this.db
+      .insert(sortResultsTable)
+      .values({
+        id: data.id || generateId("result"),
+        collectionId: data.collectionId,
+        curatorId: data.curatorId,
+        name: data.name,
+        status: data.status,
+        number: data.number,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        finalizedAt: null,
+      })
+      .returning();
+    return this.mapToResult(result);
+  }
+
   async create(data: {
     id?: string;
     collectionId: string;
@@ -15,28 +43,14 @@ export class SortResultRepository implements ISortResultRepository {
     name: string;
     status: "draft" | "finalized";
   }): Promise<SortResult> {
-    const base = {
-      id: data.id || generateId("result"),
-      collectionId: data.collectionId,
-      curatorId: data.curatorId,
-      name: data.name,
-      status: data.status,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      finalizedAt: null,
-    };
-
-    // Auto-allocate MAX+1, retry on the UNIQUE(collection_id, number) race
-    // (neon-http is stateless — no long transaction to lock the max). Any other
-    // unique violation surfaces, not retried.
+    // Auto-allocate MAX+1, recomputing the number EACH attempt, retrying only
+    // on the UNIQUE(collection_id, number) race. postgres-js autocommits each
+    // statement here, so a conflicting INSERT can be retried in place. Any
+    // other unique violation surfaces, not retried.
     for (let attempt = 0; attempt < 5; attempt++) {
       const number = await this.getNextResultNumber(data.collectionId);
       try {
-        const [result] = await this.db
-          .insert(sortResultsTable)
-          .values({ ...base, number })
-          .returning();
-        return this.mapToResult(result);
+        return await this.insertWithNumber({ ...data, number });
       } catch (error) {
         if (isResultNumberConflict(error) && attempt < 4) continue;
         throw error;
@@ -128,7 +142,7 @@ export class SortResultRepository implements ISortResultRepository {
   }
 }
 
-function isResultNumberConflict(error: unknown): boolean {
+export function isResultNumberConflict(error: unknown): boolean {
   // Retry ONLY the UNIQUE(collection_id, number) race — any other unique
   // violation is a real condition and must surface.
   const code = (error as { code?: string })?.code;

@@ -21,6 +21,7 @@ import { CollectionPreferenceItemRepository } from "@/server/repositories/implem
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import { SortResultService } from "@/server/services/SortResultService";
+import type { CollectionPreferenceItem } from "@/types";
 
 const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
 // Flat-replace form: the spread form pulls in uninstalled nodemailer and errors.
@@ -184,6 +185,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
       new SortResultRepository(db),
       new SortResultItemRepository(db),
       prefRepo,
+      db,
     );
     const result = await service.createDraftResult(collectionId, ownerId, "Draft");
 
@@ -197,6 +199,68 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     expect(byRank[0].computedRank).toBe(0);
     expect(byRank[1].itemId).toBe(lowItem.id);
     expect(byRank[1].computedRank).toBe(1);
+  });
+
+  it("createDraftResult rolls back the whole materialization when an item INSERT fails (atomicity)", async () => {
+    // AUTHORITATIVE un-mocked transactional-rollback proof. We seed ONE real
+    // item + a real high-score preference for it (this is the row-0
+    // sort_result_items INSERT that succeeds inside the tx), and feed the
+    // service a SECOND, lower-score preference whose itemId is fabricated and
+    // does NOT exist in `items` — so its sort_result_items INSERT trips the
+    // item_id FK (23503) on attempt 1 (23503 is NOT a number conflict, so it
+    // propagates, no retry). The fabricated preference is an in-memory object,
+    // never persisted: preferences.item_id is itself a hard FK to items.id, so
+    // a dangling preference row is impossible at the DB level. Only the
+    // upstream preference READ is faked; the entire WRITE path (result row +
+    // both item INSERTs) runs on the REAL db/tx with real tx-bound repos.
+    const { db } = getTestDb();
+    const collectionId = generateId("col");
+    await db.execute(sql`
+      INSERT INTO collections (id, owner_id, name, status, created_at, updated_at)
+      VALUES (${collectionId}, ${ownerId}, 'Rollback repro', 'active', now(), now())
+    `);
+    const realItem = await new ItemRepository(db).create({ collectionId });
+
+    const ghostItemId = generateId("item"); // never inserted into `items`
+    const now = new Date();
+    const fakePreferenceRepo = {
+      findByCollection: async (): Promise<CollectionPreferenceItem[]> => [
+        // Higher score → computedRank 0 → inserted FIRST (succeeds).
+        {
+          id: generateId("pref"), collectionId, curatorId: ownerId,
+          itemId: realItem.id, score: 0.9, confidence: 1, rankBucket: "top",
+          comparisonCount: 0, lastSeen: now, createdAt: now, updatedAt: now,
+        },
+        // Lower score → computedRank 1 → inserted SECOND, FK-fails (23503).
+        {
+          id: generateId("pref"), collectionId, curatorId: ownerId,
+          itemId: ghostItemId, score: 0.1, confidence: 1, rankBucket: "low",
+          comparisonCount: 0, lastSeen: now, createdAt: now, updatedAt: now,
+        },
+      ],
+    } as unknown as CollectionPreferenceItemRepository;
+
+    const service = new SortResultService(
+      new SortResultRepository(db),
+      new SortResultItemRepository(db),
+      fakePreferenceRepo,
+      db,
+    );
+
+    await expect(
+      service.createDraftResult(collectionId, ownerId, "Doomed draft"),
+    ).rejects.toThrow();
+
+    // Nothing committed: no result row for the collection, and no item rows.
+    // Collection-scoped emptiness — the call threw, so there is no returned id.
+    expect(await new SortResultRepository(db).findByCollection(collectionId)).toEqual([]);
+    const [{ count }] = await db.execute(sql`
+      SELECT COUNT(*)::int AS count
+      FROM sort_result_items sri
+      JOIN sort_results sr ON sr.id = sri.sort_result_id
+      WHERE sr.collection_id = ${collectionId}
+    `);
+    expect(count).toBe(0);
   });
 
   it("supersedeResult clones a finalized result's items into a new draft", async () => {
@@ -226,6 +290,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
       new SortResultRepository(db),
       new SortResultItemRepository(db),
       prefRepo,
+      db,
     );
 
     // Populate a draft, finalize it, then supersede it.
@@ -270,6 +335,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
       new SortResultRepository(db),
       new SortResultItemRepository(db),
       prefRepo,
+      db,
     );
     return service.createDraftResult(collectionId, ownerId, "To delete");
   }
@@ -301,6 +367,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
       new SortResultRepository(db),
       new SortResultItemRepository(db),
       new CollectionPreferenceItemRepository(db),
+      db,
     );
     await service.finalizeResult(draft.id);
 
@@ -323,6 +390,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
       new SortResultRepository(db),
       new SortResultItemRepository(db),
       new CollectionPreferenceItemRepository(db),
+      db,
     );
     await service.finalizeResult(draft.id);
 
@@ -379,6 +447,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
       new SortResultRepository(db),
       new SortResultItemRepository(db),
       new CollectionPreferenceItemRepository(db),
+      db,
     );
     await service.finalizeResult(draft.id);
 

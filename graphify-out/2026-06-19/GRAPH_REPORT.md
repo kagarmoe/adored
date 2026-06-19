@@ -1,7 +1,7 @@
 # Graph Report - purseinator-app  (2026-06-19)
 
 ## Corpus Check
-- 344 files · ~407,141 words
+- 344 files · ~407,515 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `94d66f6c`
+- Built from commit: `c363abcf`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -199,12 +199,12 @@ Cohesion: 0.08
 Nodes (6): ResultItemController, ResultController, isResultNumberConflict(), SortResultService, SortResult, SortResultItem
 
 ### Community 2 - "DB access layer"
-Cohesion: 0.08
-Nodes (45): GET(), POST(), POST(), GET(), POST(), requireApiResultAccess(), POST(), PATCH() (+37 more)
+Cohesion: 0.09
+Nodes (37): GET(), POST(), POST(), GET(), POST(), POST(), PATCH(), requireAuth() (+29 more)
 
 ### Community 3 - "Authorization guards"
 Cohesion: 0.08
-Nodes (29): Home(), EditCollectionPage(), EditPageProps, ItemEditPage(), ItemEditPageProps, CollectionPage(), CollectionPageProps, { mockGetSession, mockRequireAccess, itemRepo, sessionRepo, resultRepo } (+21 more)
+Nodes (28): Home(), EditCollectionPage(), EditPageProps, ItemEditPage(), ItemEditPageProps, CollectionPage(), CollectionPageProps, { mockGetSession, mockRequireAccess, itemRepo, sessionRepo, resultRepo } (+20 more)
 
 ### Community 4 - "Architecture & project docs"
 Cohesion: 0.19
@@ -256,8 +256,8 @@ Cohesion: 0.11
 Nodes (19): canvasToJpegBlob(), convertHeifToJpeg(), loadImage(), buildJpegFileName(), HEIF_MIME_TYPES, isHeifFile(), partitionPoolFiles(), POOL_ALLOWED_CONTENT_TYPES (+11 more)
 
 ### Community 13 - "seed.ts"
-Cohesion: 0.24
-Nodes (5): getPoolPhotoAssetUrl(), PoolActionBar(), PoolPhoto, PoolPhotoGrid(), PHOTOS
+Cohesion: 0.17
+Nodes (5): collections, BadgeProps, badgeVariants, CardProps, paddingMap
 
 ### Community 14 - "getTestDb()"
 Cohesion: 0.05
@@ -280,8 +280,8 @@ Cohesion: 0.08
 Nodes (24): devDependencies, autoprefixer, culori, esbuild-register, eslint, eslint-config-next, jsdom, @playwright/test (+16 more)
 
 ### Community 19 - "CollectionForm.tsx"
-Cohesion: 0.12
-Nodes (19): CollectionFormProps, collectionSchema, InviteFormProps, inviteSchema, PermissionCheckboxes(), PermissionCheckboxesProps, permissionDescriptions, ItemFormProps (+11 more)
+Cohesion: 0.07
+Nodes (37): CollectionFormProps, collectionSchema, InviteFormProps, inviteSchema, PermissionCheckboxes(), PermissionCheckboxesProps, permissionDescriptions, ItemFormProps (+29 more)
 
 ### Community 20 - "CollectionMembership"
 Cohesion: 0.16
@@ -296,8 +296,8 @@ Cohesion: 0.14
 Nodes (8): ItemCardProps, ItemEditFormProps, ItemMetadata(), ItemMetadataProps, MostLovedHeroProps, ItemService, CompareChoiceProps, Item
 
 ### Community 23 - "index.ts"
-Cohesion: 0.06
-Nodes (31): CollectionCard(), collection, CollectionFilters(), CollectionFiltersProps, filters, CollectionsPage(), CollectionsPageProps, collections (+23 more)
+Cohesion: 0.12
+Nodes (16): CollectionCard(), collection, CollectionFilters(), CollectionFiltersProps, filters, CollectionsPage(), CollectionsPageProps, bucketLabels (+8 more)
 
 ### Community 24 - "members.ts"
 Cohesion: 0.26
@@ -328,8 +328,8 @@ Cohesion: 0.17
 Nodes (15): Beads Repository Configuration, Adversarial Review Gate (lens → engine routing), Project Instructions for AI Agents (CLAUDE.md), Beads (bd) Issue Tracker, Feature Branch → PR → Squash-Merge Workflow, DB-Backed Tests (RUN_DB_TESTS=1, CI db-tests job), Align with Next.js Opinions (App Router conventions), PRODUCT.md — Realizing What You Love (affirmation, not discard) (+7 more)
 
 ### Community 31 - "Button"
-Cohesion: 0.11
-Nodes (12): addMember(), { mockGetSession }, DELETE(), GET(), PATCH(), { mockRequireAuth, mockGetDb, mockRequireApiResultAccess, itemRepo }, params, RESULT (+4 more)
+Cohesion: 0.09
+Nodes (22): UpdateResultItemInput, UpdateResultItemSchema, requireApiResultAccess(), addMember(), { mockGetSession }, POST(), DELETE(), GET() (+14 more)
 
 ### Community 32 - "route.ts"
 Cohesion: 0.24
@@ -352,8 +352,8 @@ Cohesion: 0.14
 Nodes (9): cov, covCells, durCells, e2e, entry, histPath, rows, sha (+1 more)
 
 ### Community 38 - "page.tsx"
-Cohesion: 0.13
-Nodes (13): PhotoGallery(), PhotoGalleryProps, OTHER_ITEMS, PHOTOS, MoveDestination, MoveTarget, PhotoMoveBar(), PhotoUpload() (+5 more)
+Cohesion: 0.16
+Nodes (11): PhotoGallery(), PhotoGalleryProps, OTHER_ITEMS, PHOTOS, MoveDestination, MoveTarget, PhotoMoveBar(), PhotoUpload() (+3 more)
 
 ### Community 40 - "Bucket Assign Screen (4"
 Cohesion: 0.26
@@ -380,8 +380,8 @@ Cohesion: 0.11
 Nodes (24): account, decisionEventsTable, invitationsTable, itemsTable, membershipsTable, photosTable, preferencesTable, session (+16 more)
 
 ### Community 48 - "InviteForm.tsx"
-Cohesion: 0.10
-Nodes (15): UpdateResultItemInput, UpdateResultItemSchema, UpdateResultInput, UpdateResultSchema, SortResultItemRepository, SortResultRepository, ISortResultItemRepository, ISortResultRepository (+7 more)
+Cohesion: 0.11
+Nodes (13): UpdateResultInput, UpdateResultSchema, SortResultItemRepository, SortResultRepository, ISortResultItemRepository, ISortResultRepository, DeleteResultStateError, SupersedeStateError (+5 more)
 
 ### Community 49 - "move-photos.integration.test.ts"
 Cohesion: 0.40
@@ -436,8 +436,8 @@ Cohesion: 0.11
 Nodes (18): Adored — Curatorial Collection Sorting App, Architecture, Contributing, Database Schema, Deployment, Development Commands, Features, Known Limitations (+10 more)
 
 ### Community 65 - "PairingService"
-Cohesion: 0.32
-Nodes (5): NewSortSessionPage(), NewSortSessionPageProps, StartSessionForm(), StartSessionFormProps, push
+Cohesion: 0.29
+Nodes (5): SessionPageProps, SortSessionPage(), { mockGetSession, mockRequireAccess, redirectMock, sessionRepo, decisionRepo, itemRepo, prefRepo }, SeeResultsCard(), SeeResultsCardProps
 
 ### Community 66 - "POST()"
 Cohesion: 0.12
@@ -617,8 +617,8 @@ Cohesion: 0.33
 Nodes (3): DRAFT_RESULT, { mockRequireAuth, mockGetDb, mockRequireApiResultAccess, sortResultRepo }, params
 
 ### Community 141 - "Community 141"
-Cohesion: 0.12
-Nodes (17): ComparePage(), ComparePageProps, selectNextPair(), getPhotoAssetUrl(), getPhotoAssetUrlForPhoto(), bucketLabels, bucketRamp, ResultDetailPage() (+9 more)
+Cohesion: 0.11
+Nodes (17): ComparePage(), ComparePageProps, selectNextPair(), getPhotoAssetUrl(), getPhotoAssetUrlForPhoto(), getPoolPhotoAssetUrl(), PoolActionBar(), PoolPhoto (+9 more)
 
 ### Community 142 - "Community 142"
 Cohesion: 0.40

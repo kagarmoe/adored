@@ -1,8 +1,29 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { fakeTxDb } from "@/test-support/fakeTxDb";
+
+// Materialization writes happen on tx-bound repos the service constructs itself
+// (`new SortResultRepository(tx)`), so the unit test can't observe them via the
+// injected repos. Mock the tx-bound repo constructors (mirroring the route
+// tests) to observe the in-transaction writes; the AUTHORITATIVE atomicity proof
+// is the un-mocked integration rollback test in sort-pipeline.integration.test.ts.
+const { txResultRepo, txItemRepo, isResultNumberConflict } = vi.hoisted(() => ({
+  txResultRepo: { getNextResultNumber: vi.fn(), insertWithNumber: vi.fn() },
+  txItemRepo: { create: vi.fn() },
+  isResultNumberConflict: vi.fn(() => false),
+}));
+vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
+  SortResultRepository: vi.fn(() => txResultRepo),
+  isResultNumberConflict,
+}));
+vi.mock("@/server/repositories/implementations/SortResultItemRepository", () => ({
+  SortResultItemRepository: vi.fn(() => txItemRepo),
+}));
+
 import {
   SortResultService,
   SupersedeStateError,
   DeleteResultStateError,
+  ResultNumberExhaustedError,
 } from "./SortResultService";
 import type {
   CollectionPreferenceItem,
@@ -14,6 +35,9 @@ import type {
   ISortResultItemRepository,
 } from "@/server/repositories/SortResultRepository";
 import type { ICollectionPreferenceItemRepository } from "@/server/repositories/CollectionPreferenceItemRepository";
+import type { Database } from "@/lib/db";
+
+const txDb = fakeTxDb() as unknown as Database;
 
 const COLLECTION = "col-1";
 const CURATOR = "cur-1";
@@ -69,16 +93,24 @@ function sortResultItem(
   };
 }
 
+beforeEach(() => {
+  vi.clearAllMocks();
+  // clearAllMocks wipes the hoisted predicate's implementation too; restore the
+  // default (no conflict) so only the exhaustion test opts into retries.
+  isResultNumberConflict.mockReturnValue(false);
+  txResultRepo.getNextResultNumber.mockResolvedValue(1);
+  txResultRepo.insertWithNumber.mockResolvedValue(sortResult());
+  txItemRepo.create.mockResolvedValue(sortResultItem());
+});
+
 describe("SortResultService.createDraftResult", () => {
-  it("createDraftResult materializes one ranked item per preference, sorted by score desc", async () => {
+  // The score-desc/rank/bucket mapping is owned by rankPreferencesToItems
+  // (sortResultMaterialization.test.ts) and the un-mocked materialization by the
+  // integration suite. Here we prove the wiring: the pure ranking output flows
+  // into the transactional primitive's tx-bound writes.
+  it("ranks preferences (score desc) and inserts one tx item per preference", async () => {
     const created = sortResult();
-    const itemCreate = vi.fn(async () => sortResultItem());
-    const sortResultRepo = {
-      create: async () => created,
-    } as unknown as ISortResultRepository;
-    const sortResultItemRepo = {
-      create: itemCreate,
-    } as unknown as ISortResultItemRepository;
+    txResultRepo.insertWithNumber.mockResolvedValue(created);
     // Deliberately out of order to prove the service sorts by score desc.
     const preferenceRepo = {
       findByCollection: async () => [
@@ -87,20 +119,31 @@ describe("SortResultService.createDraftResult", () => {
       ],
     } as unknown as ICollectionPreferenceItemRepository;
 
-    await new SortResultService(
-      sortResultRepo,
-      sortResultItemRepo,
+    const result = await new SortResultService(
+      {} as unknown as ISortResultRepository,
+      {} as unknown as ISortResultItemRepository,
       preferenceRepo,
+      txDb,
     ).createDraftResult(COLLECTION, CURATOR, "Spring sort");
 
-    expect(itemCreate).toHaveBeenCalledTimes(2);
-    expect(itemCreate).toHaveBeenNthCalledWith(1, {
+    expect(result).toBe(created);
+    expect(txResultRepo.insertWithNumber).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collectionId: COLLECTION,
+        curatorId: CURATOR,
+        name: "Spring sort",
+        status: "draft",
+        number: 1,
+      }),
+    );
+    expect(txItemRepo.create).toHaveBeenCalledTimes(2);
+    expect(txItemRepo.create).toHaveBeenNthCalledWith(1, {
       sortResultId: created.id,
       itemId: "a",
       computedRank: 0,
       computedBucket: "top",
     });
-    expect(itemCreate).toHaveBeenNthCalledWith(2, {
+    expect(txItemRepo.create).toHaveBeenNthCalledWith(2, {
       sortResultId: created.id,
       itemId: "b",
       computedRank: 1,
@@ -108,27 +151,49 @@ describe("SortResultService.createDraftResult", () => {
     });
   });
 
+  it("throws ResultNumberExhaustedError when the number race loses all 5 attempts", async () => {
+    // Real-shaped conflict the production predicate matches (code 23505 +
+    // the unique-index name); the test predicate returns true for it.
+    const conflict = Object.assign(
+      new Error(
+        'duplicate key value violates unique constraint "sort_results_collection_number_unique"',
+      ),
+      { code: "23505" },
+    );
+    isResultNumberConflict.mockReturnValue(true);
+    txResultRepo.insertWithNumber.mockRejectedValue(conflict);
+    const preferenceRepo = {
+      findByCollection: async () => [],
+    } as unknown as ICollectionPreferenceItemRepository;
+
+    await expect(
+      new SortResultService(
+        {} as unknown as ISortResultRepository,
+        {} as unknown as ISortResultItemRepository,
+        preferenceRepo,
+        txDb,
+      ).createDraftResult(COLLECTION, CURATOR, "Spring sort"),
+    ).rejects.toBeInstanceOf(ResultNumberExhaustedError);
+    // 5 attempts: each opens a tx and tries the allocation insert once.
+    expect(txResultRepo.insertWithNumber).toHaveBeenCalledTimes(5);
+  });
+
   it("createDraftResult with no preferences creates a result but zero items", async () => {
     const created = sortResult();
-    const itemCreate = vi.fn();
-    const sortResultRepo = {
-      create: async () => created,
-    } as unknown as ISortResultRepository;
-    const sortResultItemRepo = {
-      create: itemCreate,
-    } as unknown as ISortResultItemRepository;
+    txResultRepo.insertWithNumber.mockResolvedValue(created);
     const preferenceRepo = {
       findByCollection: async () => [],
     } as unknown as ICollectionPreferenceItemRepository;
 
     const result = await new SortResultService(
-      sortResultRepo,
-      sortResultItemRepo,
+      {} as unknown as ISortResultRepository,
+      {} as unknown as ISortResultItemRepository,
       preferenceRepo,
+      txDb,
     ).createDraftResult(COLLECTION, CURATOR, "Empty sort");
 
     expect(result).toBe(created);
-    expect(itemCreate).not.toHaveBeenCalled();
+    expect(txItemRepo.create).not.toHaveBeenCalled();
   });
 });
 
@@ -141,6 +206,7 @@ describe("SortResultService.finalizeResult", () => {
       sortResultRepo,
       {} as unknown as ISortResultItemRepository,
       {} as unknown as ICollectionPreferenceItemRepository,
+      txDb,
     ).finalizeResult("res-1");
 
     expect(update).toHaveBeenCalledWith(
@@ -154,74 +220,72 @@ describe("SortResultService.finalizeResult", () => {
 });
 
 describe("SortResultService.supersedeResult", () => {
-  it("supersedeResult clones computed items into a new draft named '(Revision)'", async () => {
+  it("clones a finalized source's items into a new '(Revision)' draft via the tx primitive", async () => {
     const oldResult = sortResult({ id: "res-1", name: "Spring sort", status: "finalized" });
     const newResult = sortResult({ id: "res-2", name: "Spring sort (Revision)" });
+    txResultRepo.insertWithNumber.mockResolvedValue(newResult);
     const oldItems = [
       sortResultItem({ itemId: "a", computedRank: 0, computedBucket: "top" }),
       sortResultItem({ itemId: "b", computedRank: 1, computedBucket: "low" }),
     ];
-
-    const resultCreate = vi.fn(async () => newResult);
-    const itemCreate = vi.fn(async () => sortResultItem());
+    // findById + findByResult are pre-tx reads on the INJECTED repos.
     const sortResultRepo = {
       findById: async () => oldResult,
-      create: resultCreate,
     } as unknown as ISortResultRepository;
     const sortResultItemRepo = {
       findByResult: async () => oldItems,
-      create: itemCreate,
     } as unknown as ISortResultItemRepository;
 
     const result = await new SortResultService(
       sortResultRepo,
       sortResultItemRepo,
       {} as unknown as ICollectionPreferenceItemRepository,
+      txDb,
     ).supersedeResult("res-1");
 
-    expect(resultCreate).toHaveBeenCalledWith({
-      collectionId: oldResult.collectionId,
-      curatorId: oldResult.curatorId,
-      name: "Spring sort (Revision)",
-      status: "draft",
-    });
-    expect(itemCreate).toHaveBeenNthCalledWith(1, {
+    expect(result).toBe(newResult);
+    // The tx primitive inserts the revision result + the cloned computed items.
+    expect(txResultRepo.insertWithNumber).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collectionId: oldResult.collectionId,
+        curatorId: oldResult.curatorId,
+        name: "Spring sort (Revision)",
+        status: "draft",
+      }),
+    );
+    expect(txItemRepo.create).toHaveBeenNthCalledWith(1, {
       sortResultId: newResult.id,
       itemId: "a",
       computedRank: 0,
       computedBucket: "top",
     });
-    expect(itemCreate).toHaveBeenNthCalledWith(2, {
+    expect(txItemRepo.create).toHaveBeenNthCalledWith(2, {
       sortResultId: newResult.id,
       itemId: "b",
       computedRank: 1,
       computedBucket: "low",
     });
-    expect(result).toBe(newResult);
   });
 
-  it("supersedeResult returns null when the source is absent", async () => {
-    const create = vi.fn();
+  it("guard: returns null when the source is absent (never opens a tx)", async () => {
     const sortResultRepo = {
       findById: async () => null,
-      create,
     } as unknown as ISortResultRepository;
 
     const result = await new SortResultService(
       sortResultRepo,
       {} as unknown as ISortResultItemRepository,
       {} as unknown as ICollectionPreferenceItemRepository,
+      txDb,
     ).supersedeResult("missing");
 
     expect(result).toBeNull();
-    expect(create).not.toHaveBeenCalled();
+    expect(txResultRepo.insertWithNumber).not.toHaveBeenCalled();
   });
 
-  it("supersedeResult throws SupersedeStateError when the source is not finalized", async () => {
-    const create = vi.fn();
+  it("guard: throws SupersedeStateError when the source is not finalized (never opens a tx)", async () => {
     const sortResultRepo = {
       findById: async () => sortResult({ status: "draft" }),
-      create,
     } as unknown as ISortResultRepository;
 
     await expect(
@@ -229,9 +293,10 @@ describe("SortResultService.supersedeResult", () => {
         sortResultRepo,
         {} as unknown as ISortResultItemRepository,
         {} as unknown as ICollectionPreferenceItemRepository,
+        txDb,
       ).supersedeResult("res-1"),
     ).rejects.toBeInstanceOf(SupersedeStateError);
-    expect(create).not.toHaveBeenCalled();
+    expect(txResultRepo.insertWithNumber).not.toHaveBeenCalled();
   });
 });
 
@@ -249,6 +314,7 @@ describe("SortResultService deleteResult", () => {
       sortResultRepo,
       itemRepo,
       {} as unknown as ICollectionPreferenceItemRepository,
+      txDb,
     ).deleteResult("missing");
 
     expect(deleted).toBe(false);
@@ -270,6 +336,7 @@ describe("SortResultService deleteResult", () => {
         sortResultRepo,
         itemRepo,
         {} as unknown as ICollectionPreferenceItemRepository,
+        txDb,
       ).deleteResult("res-1"),
     ).rejects.toBeInstanceOf(DeleteResultStateError);
     expect(deleteByResult).not.toHaveBeenCalled();
@@ -294,6 +361,7 @@ describe("SortResultService deleteResult", () => {
       sortResultRepo,
       itemRepo,
       {} as unknown as ICollectionPreferenceItemRepository,
+      txDb,
     ).deleteResult("res-1");
 
     expect(deleted).toBe(true);
@@ -317,6 +385,7 @@ describe("SortResultService manual override", () => {
       {} as unknown as ISortResultRepository,
       setRepo,
       {} as unknown as ICollectionPreferenceItemRepository,
+      txDb,
     ).setManualOverride("item-a", 3, "top");
 
     expect(setUpdate).toHaveBeenCalledWith(
@@ -333,6 +402,7 @@ describe("SortResultService manual override", () => {
       {} as unknown as ISortResultRepository,
       resetRepo,
       {} as unknown as ICollectionPreferenceItemRepository,
+      txDb,
     ).resetManualOverride("item-a");
 
     expect(resetUpdate).toHaveBeenCalledWith(

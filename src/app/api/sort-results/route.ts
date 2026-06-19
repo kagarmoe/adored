@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
     new SortResultRepository(db),
     new SortResultItemRepository(db),
     new CollectionPreferenceItemRepository(db),
+    db,
   );
   const result = await service.createDraftResult(body.collectionId, session.user.id, body.name);
   return NextResponse.json(result, { status: 201 });

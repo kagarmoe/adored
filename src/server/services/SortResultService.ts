@@ -1,6 +1,18 @@
 import type { SortResult, SortResultItem } from "@/types";
 import type { ISortResultRepository, ISortResultItemRepository } from "@/server/repositories/SortResultRepository";
 import type { ICollectionPreferenceItemRepository } from "@/server/repositories/CollectionPreferenceItemRepository";
+import type { Database } from "@/lib/db";
+import { withTransaction } from "@/lib/transactions";
+import {
+  SortResultRepository,
+  isResultNumberConflict,
+} from "@/server/repositories/implementations/SortResultRepository";
+import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
+import {
+  rankPreferencesToItems,
+  cloneItemsFrom,
+  type MaterializedItem,
+} from "./sortResultMaterialization";
 
 /** Thrown when supersede targets a result that is not finalized; the route maps it to 409. */
 export class SupersedeStateError extends Error {
@@ -18,11 +30,24 @@ export class DeleteResultStateError extends Error {
   }
 }
 
+/**
+ * Thrown when the (collection, number) race could not be won within the retry
+ * budget. Distinct from a mid-transaction failure so ops can tell "retry storm
+ * lost" apart from "DB fell over". The route maps it to 500.
+ */
+export class ResultNumberExhaustedError extends Error {
+  constructor() {
+    super("Could not allocate a result number");
+    this.name = "ResultNumberExhaustedError";
+  }
+}
+
 export class SortResultService {
   constructor(
     private sortResultRepo: ISortResultRepository,
     private sortResultItemRepo: ISortResultItemRepository,
     private preferenceRepo: ICollectionPreferenceItemRepository,
+    private db: Database,
   ) {}
 
   async createDraftResult(
@@ -30,36 +55,64 @@ export class SortResultService {
     curatorId: string,
     name: string,
   ): Promise<SortResult> {
-    const result = await this.sortResultRepo.create({
-      collectionId,
-      curatorId,
-      name,
-      status: "draft",
-    });
-
     const preferences = await this.preferenceRepo.findByCollection(
       collectionId,
       curatorId,
     );
+    const items = rankPreferencesToItems(preferences);
+    return this.createResultWithItems(collectionId, curatorId, name, items);
+  }
 
-    const rankedItems = preferences
-      .sort((a, b) => b.score - a.score)
-      .map((pref, index) => ({
-        itemId: pref.itemId,
-        rank: index,
-        bucket: pref.rankBucket,
-      }));
-
-    for (const item of rankedItems) {
-      await this.sortResultItemRepo.create({
-        sortResultId: result.id,
-        itemId: item.itemId,
-        computedRank: item.rank,
-        computedBucket: item.bucket,
-      });
+  /**
+   * The one transactional materialization primitive, reused by create + supersede.
+   * Writes the result row + all item rows ATOMICALLY: a mid-materialization
+   * failure rolls the whole transaction back, leaving no result and no items.
+   *
+   * Invariant: every write inside the transaction goes to tx-bound repos
+   * (`new SortResultRepository(tx)` / `new SortResultItemRepository(tx)`), never
+   * the injected `this.sortResultRepo`/`this.sortResultItemRepo` — a non-tx
+   * write would not roll back.
+   *
+   * The (collection, number) race aborts the whole transaction, so it is retried
+   * at the transaction boundary, recomputing the number each attempt, gated on
+   * the SINGLE `isResultNumberConflict` predicate (shared with the repo wrapper).
+   * Exhaustion after 5 attempts throws ResultNumberExhaustedError.
+   */
+  private async createResultWithItems(
+    collectionId: string,
+    curatorId: string,
+    name: string,
+    items: MaterializedItem[],
+  ): Promise<SortResult> {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        return await withTransaction(this.db, async (tx) => {
+          const resultRepo = new SortResultRepository(tx);
+          const itemRepo = new SortResultItemRepository(tx);
+          const number = await resultRepo.getNextResultNumber(collectionId);
+          const result = await resultRepo.insertWithNumber({
+            collectionId,
+            curatorId,
+            name,
+            status: "draft",
+            number,
+          });
+          for (const item of items) {
+            await itemRepo.create({ sortResultId: result.id, ...item });
+          }
+          return result;
+        });
+      } catch (error) {
+        if (isResultNumberConflict(error)) {
+          if (attempt < 4) continue;
+          throw new ResultNumberExhaustedError();
+        }
+        throw error;
+      }
     }
-
-    return result;
+    // Defensive fallback for TS's return-type analysis; unreachable in practice
+    // (the final-attempt conflict throws above; success returns from the try).
+    throw new ResultNumberExhaustedError();
   }
 
   async getDraftResult(collectionId: string, curatorId: string): Promise<SortResult | null> {
@@ -114,28 +167,19 @@ export class SortResultService {
   }
 
   async supersedeResult(id: string): Promise<SortResult | null> {
-    const oldResult = await this.sortResultRepo.findById(id);
-    if (!oldResult) return null;
-    if (oldResult.status !== "finalized") throw new SupersedeStateError();
+    const source = await this.sortResultRepo.findById(id);
+    if (!source) return null;
+    if (source.status !== "finalized") throw new SupersedeStateError();
 
-    const newResult = await this.sortResultRepo.create({
-      collectionId: oldResult.collectionId,
-      curatorId: oldResult.curatorId,
-      name: `${oldResult.name} (Revision)`,
-      status: "draft",
-    });
-
-    const items = await this.sortResultItemRepo.findByResult(id);
-    for (const item of items) {
-      await this.sortResultItemRepo.create({
-        sortResultId: newResult.id,
-        itemId: item.itemId,
-        computedRank: item.computedRank,
-        computedBucket: item.computedBucket,
-      });
-    }
-
-    return newResult;
+    // Source is finalized/immutable, so reading its items pre-tx is benign.
+    const sourceItems = await this.sortResultItemRepo.findByResult(id);
+    const items = cloneItemsFrom(sourceItems);
+    return this.createResultWithItems(
+      source.collectionId,
+      source.curatorId,
+      `${source.name} (Revision)`,
+      items,
+    );
   }
 
   /**

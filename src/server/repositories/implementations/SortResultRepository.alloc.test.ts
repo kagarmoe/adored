@@ -61,3 +61,40 @@ describe("SortResultRepository.create number allocation", () => {
     expect(valuesSpy).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("SortResultRepository.insertWithNumber", () => {
+  it("inserts a single row with the given number and does NOT retry on 23505 (propagates)", async () => {
+    insertReturning.mockRejectedValueOnce({
+      code: "23505",
+      message: 'unique constraint "sort_results_collection_number_unique"',
+    });
+    await expect(
+      new SortResultRepository(db).insertWithNumber({
+        collectionId: "c1",
+        curatorId: "u1",
+        name: "R",
+        status: "draft",
+        number: 7,
+      }),
+    ).rejects.toMatchObject({ code: "23505" });
+    // One INSERT attempt, no recompute, no retry.
+    expect(valuesSpy).toHaveBeenCalledTimes(1);
+    expect((valuesSpy.mock.calls as any[][])[0]![0].number).toBe(7);
+    expect(selectWhere).not.toHaveBeenCalled();
+  });
+
+  it("inserts a single row with the caller-supplied number on the happy path", async () => {
+    insertReturning.mockResolvedValue([row(7)]);
+    const r = await new SortResultRepository(db).insertWithNumber({
+      collectionId: "c1",
+      curatorId: "u1",
+      name: "R",
+      status: "draft",
+      number: 7,
+    });
+    expect(r.number).toBe(7);
+    expect(valuesSpy).toHaveBeenCalledTimes(1);
+    expect(insertReturning).toHaveBeenCalledTimes(1);
+    expect(selectWhere).not.toHaveBeenCalled();
+  });
+});

@@ -73,6 +73,7 @@ export async function DELETE(
       new SortResultRepository(db),
       new SortResultItemRepository(db),
       new CollectionPreferenceItemRepository(db),
+      db,
     );
     const deleted = await service.deleteResult(params.id);
     if (!deleted) {

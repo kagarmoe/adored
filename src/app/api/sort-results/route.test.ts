@@ -6,6 +6,7 @@
 // proof of materialization lives in src/lib/db/*.integration.test.ts (real DB).
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
+import { fakeTxDb } from "@/test-support/fakeTxDb";
 
 const {
   mockGetSession,
@@ -18,7 +19,9 @@ const {
   mockGetSession: vi.fn(),
   mockGetDb: vi.fn(),
   mockRequireApiCollectionAccess: vi.fn(),
-  sortResultRepo: { create: vi.fn() },
+  // Materialization now runs inside withTransaction via tx-bound repos:
+  // getNextResultNumber + insertWithNumber (NOT create).
+  sortResultRepo: { getNextResultNumber: vi.fn(), insertWithNumber: vi.fn() },
   sortResultItemRepo: { create: vi.fn() },
   preferenceRepo: { findByCollection: vi.fn() },
 }));
@@ -45,15 +48,19 @@ const COLLECTION = { id: "c1", ownerId: "u1" } as any;
 beforeEach(() => {
   vi.clearAllMocks();
   mockGetSession.mockResolvedValue({ user: { id: "u1" } });
-  mockGetDb.mockReturnValue({});
+  // The route opens a transaction; fakeTxDb().transaction(cb) runs the body and
+  // the mocked repo constructors return these mock repos for `new …(tx)`.
+  mockGetDb.mockReturnValue(fakeTxDb());
   // Default: access granted, returns the collection (not a NextResponse).
   mockRequireApiCollectionAccess.mockResolvedValue(COLLECTION);
-  sortResultRepo.create.mockResolvedValue({
+  sortResultRepo.getNextResultNumber.mockResolvedValue(1);
+  sortResultRepo.insertWithNumber.mockResolvedValue({
     id: "sr1",
     collectionId: "c1",
     curatorId: "u1",
     name: "My Sort",
     status: "draft",
+    number: 1,
   });
   sortResultItemRepo.create.mockResolvedValue({ id: "sri1" });
   // One preference so createDraftResult materializes ≥1 SortResultItem.
@@ -69,19 +76,19 @@ describe("POST /api/sort-results", () => {
     mockGetSession.mockResolvedValue(null);
     const res = await POST(postReq({ collectionId: "c1", name: "My Sort" }));
     expect(res.status).toBe(401);
-    expect(sortResultRepo.create).not.toHaveBeenCalled();
+    expect(sortResultRepo.insertWithNumber).not.toHaveBeenCalled();
   });
 
   it("400 when collectionId is missing", async () => {
     const res = await POST(postReq({ name: "My Sort" }));
     expect(res.status).toBe(400);
-    expect(sortResultRepo.create).not.toHaveBeenCalled();
+    expect(sortResultRepo.insertWithNumber).not.toHaveBeenCalled();
   });
 
   it("400 when name is missing", async () => {
     const res = await POST(postReq({ collectionId: "c1" }));
     expect(res.status).toBe(400);
-    expect(sortResultRepo.create).not.toHaveBeenCalled();
+    expect(sortResultRepo.insertWithNumber).not.toHaveBeenCalled();
   });
 
   it("403 when collection access is denied", async () => {
@@ -90,12 +97,14 @@ describe("POST /api/sort-results", () => {
     );
     const res = await POST(postReq({ collectionId: "c1", name: "My Sort" }));
     expect(res.status).toBe(403);
-    expect(sortResultRepo.create).not.toHaveBeenCalled();
+    expect(sortResultRepo.insertWithNumber).not.toHaveBeenCalled();
   });
 
   it("201 forces curatorId from session and status draft", async () => {
     // A spoofed curatorId / status in the body must be ignored: the route owns
     // both — curator is the session user, a freshly created result is a draft.
+    // The tx-bound insert hard-codes status "draft" and receives the session
+    // curator (createResultWithItems sets these, not the request body).
     const res = await POST(
       postReq({
         collectionId: "c1",
@@ -105,12 +114,13 @@ describe("POST /api/sort-results", () => {
       }),
     );
     expect(res.status).toBe(201);
-    expect(sortResultRepo.create).toHaveBeenCalledWith(
+    expect(sortResultRepo.insertWithNumber).toHaveBeenCalledWith(
       expect.objectContaining({
         collectionId: "c1",
         curatorId: "u1",
         name: "My Sort",
         status: "draft",
+        number: 1,
       }),
     );
   });
