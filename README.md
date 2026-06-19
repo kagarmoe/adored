@@ -2,6 +2,8 @@
 
 A full-featured web application for managing collections and sorting items through guided preference sessions. Built with Next.js 14, TypeScript, Drizzle ORM, and Tailwind CSS.
 
+> **Architecture & project history:** see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — current architecture, how the project got here, the decisions log, and the roadmap.
+
 ## Features
 
 - **Collections Management** — Create and manage curated collections with team members
@@ -39,10 +41,12 @@ A full-featured web application for managing collections and sorting items throu
    
    ```
    DATABASE_URL=postgresql://postgres:password@localhost:5432/adored
-   NEXTAUTH_URL=http://localhost:3000
-   NEXTAUTH_SECRET=$(openssl rand -base64 32)
+   AUTH_URL=http://localhost:3000
+   AUTH_SECRET=$(openssl rand -base64 32)
    EMAIL_FROM=noreply@localhost
    ```
+
+   > Auth uses the Vercel-style `AUTH_URL`/`AUTH_SECRET` names; `src/lib/env.ts` validates these and bridges them to NextAuth v4's internal `NEXTAUTH_URL`/`NEXTAUTH_SECRET` at runtime. Do **not** put Vercel system vars (`VERCEL`, `VERCEL_ENV`, …) in `.env.local` — see the `__Secure-` cookie note in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 3. **Set up PostgreSQL database:**
    ```bash
@@ -143,8 +147,8 @@ src/
 - Domain types in `src/types/domain.ts`
 
 **Authentication:**
-- NextAuth v4 with email magic-link provider
-- Session-based auth with JWT tokens
+- NextAuth v4 — **email + password (Credentials)** is the primary sign-in; an email magic-link provider also exists (the production magic-link send is not yet wired — dev logs the link to the console)
+- JWT session strategy (not database sessions)
 - Permission checks via `usePermissions()` hook
 
 **UI:**
@@ -155,21 +159,23 @@ src/
 
 ## Database Schema
 
-8 tables with full relationships:
+The Drizzle schema (`src/lib/db/schema.ts`) defines 15 tables. The core domain tables:
 - **collections** — Curated collections with metadata
 - **items** — Collection items (handbags, shoes, etc.)
 - **photos** — Item photos with hero photo support
-- **members** — Collection team members with 8 permission flags
+- **memberships** — Collection team members with 9 permission flags
 - **sessions** — Sorting sessions with decision tracking
-- **decisions** — Append-only decision events (triage, pairwise)
-- **results** — Finalized sorting results with ranking
+- **decision_events** — Append-only decision events (triage, pairwise)
+- **sort_results** / **sort_result_items** / **sort_result_shares** — finalized rankings + tokenized public shares
+- **collection_preference_items** — per-curator computed preferences
 - **invitations** — Email invitations with expiring tokens
+- plus the NextAuth tables (**user**, **account**, **session**, **verification_token**)
 
 All tables include soft-delete support (`deletedAt` column) for data safety.
 
 ## Permissions
 
-8 granular boolean flags (not roles):
+9 granular boolean flags (not roles), on the `memberships` table:
 - `canManageCollection` — Full collection management
 - `canInviteMembers` — Invite new members
 - `canAddItems` — Add items to collection
@@ -190,8 +196,8 @@ The app is optimized for Vercel with native integrations:
 2. **Environment Variables:**
    ```
    DATABASE_URL=<neon-postgres-connection-string>
-   NEXTAUTH_URL=https://yourdomain.vercel.app
-   NEXTAUTH_SECRET=<generated-secret>
+   AUTH_URL=https://yourdomain.vercel.app
+   AUTH_SECRET=<generated-secret>
    BLOB_READ_WRITE_TOKEN=<vercel-blob-token>
    ```
 3. **Deploy** — Vercel auto-detects Next.js and builds

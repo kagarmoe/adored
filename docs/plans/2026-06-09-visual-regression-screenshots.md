@@ -119,5 +119,5 @@ a "failure" until someone re-baselines, and that accept step must be explicit or
 ## Prior art in this repo
 
 - `e2e/` (Playwright), `e2e/auth.setup.ts`, `e2e/fixtures/{seed,db}.ts`, `e2e/fixtures/test-db.sh`.
-- `docs/plans/2026-05-30-e2e-ui-testing.md` (existing e2e plan).
+- `docs/ARCHITECTURE.md` (testing strategy / decisions log).
 - `assets` branch (current PR-screenshot store).

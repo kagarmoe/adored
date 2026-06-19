@@ -1,6 +1,6 @@
 // Canonical token tables for the luminous design system (light + dark).
 // Source of truth for the AA contrast test and the globals.css variables.
-// See docs/plans/2026-06-09-luminous-design-system-design.md.
+// See DESIGN.md (the Luminous design system).
 
 export type Hex = `#${string}`;
 
