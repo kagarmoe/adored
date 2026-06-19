@@ -13,8 +13,9 @@ src/lib/auth.ts :: README.md, docs/ARCHITECTURE.md
 src/middleware.ts :: docs/ARCHITECTURE.md
 src/lib/db/schema.ts :: README.md, docs/ARCHITECTURE.md, docs/purseinator_app_infra_spec.md
 drizzle/ :: docs/ARCHITECTURE.md
-src/server/dal/ :: docs/ARCHITECTURE.md
+src/server/dal/ :: docs/ARCHITECTURE.md, docs/API.md
 src/server/repositories/ :: docs/ARCHITECTURE.md
+src/app/api/ :: docs/API.md
 src/lib/design/ :: DESIGN.md
 src/app/globals.css :: DESIGN.md
 vercel.json :: docs/DEPLOYMENT.md

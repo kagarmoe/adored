@@ -1,6 +1,6 @@
 ---
 name: sync-docs
-description: Use before pushing / opening a PR — update the governance docs (ARCHITECTURE/DEPLOYMENT/DESIGN/README; never PRODUCT/TONE) that this branch's changes affect, per docs/doc-ownership.md. Surgical, incremental.
+description: Use before pushing / opening a PR — update the governance docs (ARCHITECTURE/DEPLOYMENT/DESIGN/README/API; never PRODUCT/TONE) that this branch's changes affect, per docs/doc-ownership.md. Surgical, incremental.
 ---
 
 # /sync-docs
