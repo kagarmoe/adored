@@ -72,8 +72,4 @@ export class ItemController {
       updatedAt: new Date(),
     });
   }
-
-  async purgeItem(): Promise<void> {
-    // TODO: Implement full purge (delete item + all photos from blob)
-  }
 }
