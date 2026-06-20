@@ -97,6 +97,10 @@ export class InvitationRepository implements IInvitationRepository {
     await this.db.delete(invitationsTable).where(eq(invitationsTable.id, id));
   }
 
+  async deleteByCollection(collectionId: string): Promise<void> {
+    await this.db.delete(invitationsTable).where(eq(invitationsTable.collectionId, collectionId));
+  }
+
   private mapToInvitation(row: any): Invitation {
     return {
       id: row.id,

@@ -71,6 +71,20 @@ export class SortResultItemRepository implements ISortResultItemRepository {
       .where(eq(sortResultItemsTable.sortResultId, sortResultId));
   }
 
+  // Delete every result-item of this collection's results (result-items have no
+  // collection_id — scope via the parent sort_results). Purge-only.
+  async deleteByCollection(collectionId: string): Promise<void> {
+    await this.db.delete(sortResultItemsTable).where(
+      inArray(
+        sortResultItemsTable.sortResultId,
+        this.db
+          .select({ id: sortResultsTable.id })
+          .from(sortResultsTable)
+          .where(eq(sortResultsTable.collectionId, collectionId)),
+      ),
+    );
+  }
+
   // True iff ANY sort_result_item references the item (any result, any status).
   // The purge 409 guard. LIMIT 1 — existence only.
   async existsByItem(itemId: string): Promise<boolean> {

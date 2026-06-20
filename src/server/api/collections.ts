@@ -14,10 +14,6 @@ const UpdateCollectionSchema = z.object({
   status: z.enum(["active", "archived", "deleted"]).optional(),
 });
 
-const PurgeConfirmSchema = z.object({
-  confirm: z.enum(["PURGE"]),
-});
-
 export type CreateCollectionInput = z.infer<typeof CreateCollectionSchema>;
 export type UpdateCollectionInput = z.infer<typeof UpdateCollectionSchema>;
 
@@ -80,23 +76,6 @@ export class CollectionController {
 
   async deleteCollection(collectionId: string): Promise<Collection> {
     return this.collectionRepo.softDelete(collectionId);
-  }
-
-  async purgeCollection(
-    collectionId: string,
-    data: unknown,
-  ): Promise<{ message: string }> {
-    // Zod validation ensures confirm === "PURGE"
-    PurgeConfirmSchema.parse(data);
-    // TODO: Implement full purge:
-    // - Delete all decisions for collection sessions
-    // - Delete all sort results and result items
-    // - Delete all items and their photos from blob storage
-    // - Delete all sessions
-    // - Delete all memberships and invitations
-    // - Finally delete the collection
-    await this.collectionRepo.softDelete(collectionId);
-    return { message: "Collection purged successfully" };
   }
 
   async canManageCollection(

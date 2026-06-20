@@ -147,6 +147,17 @@ export class ItemRepository implements IItemRepository {
     await this.db.delete(itemsTable).where(eq(itemsTable.id, id));
   }
 
+  // Permanently DELETE every item of the collection (active AND soft-deleted),
+  // returning the affected count. Caller has already removed FK-referencing
+  // children (photos, result-items, preferences). Purge-only.
+  async hardDeleteByCollection(collectionId: string): Promise<number> {
+    const rows = await this.db
+      .delete(itemsTable)
+      .where(eq(itemsTable.collectionId, collectionId))
+      .returning({ id: itemsTable.id });
+    return rows.length;
+  }
+
   private mapToItem(row: any): Item {
     return {
       id: row.id,

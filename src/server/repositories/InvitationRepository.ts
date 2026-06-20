@@ -20,4 +20,6 @@ export interface IInvitationRepository {
   findByEmail(email: string, collectionId: string): Promise<Invitation | null>;
   update(id: string, data: Partial<Invitation>): Promise<Invitation>;
   delete(id: string): Promise<void>;
+  // Delete every invitation of the collection (direct collection_id). Purge-only.
+  deleteByCollection(collectionId: string): Promise<void>;
 }

@@ -104,6 +104,22 @@ export class CollectionRepository implements ICollectionRepository {
     return this.mapToCollection(collection);
   }
 
+  // Resolve a collection WITHOUT the deletedAt filter — purge must find a
+  // soft-deleted collection too (findById can't, so it can't be reused here).
+  async findByIdIncludingDeleted(id: string): Promise<Collection | null> {
+    const [collection] = await this.db
+      .select()
+      .from(collectionsTable)
+      .where(eq(collectionsTable.id, id));
+    return collection ? this.mapToCollection(collection) : null;
+  }
+
+  // Permanent DELETE (purge). Caller has already removed every FK-referencing
+  // child (items, photos, sessions, results, memberships, invitations, …).
+  async hardDelete(id: string): Promise<void> {
+    await this.db.delete(collectionsTable).where(eq(collectionsTable.id, id));
+  }
+
   /**
    * First free value among `base`, `base-2`, `base-3`, … where "free" means not
    * reserved and not present in ANY row (incl. soft-deleted, which still hold

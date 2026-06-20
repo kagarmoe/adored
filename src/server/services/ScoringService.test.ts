@@ -41,11 +41,11 @@ function buildService(decisions: DecisionEvent[]): ScoringService {
   const sessionRepo: ISessionRepository = {
     findByCollection: async () =>
       [{ id: SESSION, curatorId: CURATOR }] as unknown as Session[],
-  } as ISessionRepository;
+  } as unknown as ISessionRepository;
 
   const decisionRepo: IDecisionEventRepository = {
     findBySession: async () => decisions,
-  } as IDecisionEventRepository;
+  } as unknown as IDecisionEventRepository;
 
   return new ScoringService(decisionRepo, sessionRepo);
 }

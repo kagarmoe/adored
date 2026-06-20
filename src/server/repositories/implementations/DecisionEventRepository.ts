@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import type { Database } from "@/lib/db";
-import { decisionEventsTable } from "@/lib/db/schema";
+import { decisionEventsTable, sessionsTable } from "@/lib/db/schema";
 import type { IDecisionEventRepository } from "../DecisionEventRepository";
 import type { DecisionEvent, TriageDecision, PairwiseDecision } from "@/types";
 import { generateId } from "@/lib/id";
@@ -42,6 +42,20 @@ export class DecisionEventRepository implements IDecisionEventRepository {
       .from(decisionEventsTable)
       .where(eq(decisionEventsTable.sessionId, sessionId));
     return events.map((e) => this.mapToDecisionEvent(e));
+  }
+
+  // Delete every decision of this collection's sessions (decisions have no
+  // collection_id — scope via the parent sessions). Purge-only.
+  async deleteByCollection(collectionId: string): Promise<void> {
+    await this.db.delete(decisionEventsTable).where(
+      inArray(
+        decisionEventsTable.sessionId,
+        this.db
+          .select({ id: sessionsTable.id })
+          .from(sessionsTable)
+          .where(eq(sessionsTable.collectionId, collectionId)),
+      ),
+    );
   }
 
   private mapToDecisionEvent(row: any): DecisionEvent {

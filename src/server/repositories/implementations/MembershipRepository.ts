@@ -92,6 +92,10 @@ export class MembershipRepository implements IMembershipRepository {
     await this.db.delete(membershipsTable).where(eq(membershipsTable.id, id));
   }
 
+  async deleteByCollection(collectionId: string): Promise<void> {
+    await this.db.delete(membershipsTable).where(eq(membershipsTable.collectionId, collectionId));
+  }
+
   private mapToMembership(row: any): CollectionMembership {
     return {
       id: row.id,

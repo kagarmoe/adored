@@ -13,4 +13,6 @@ export interface ISessionRepository {
   findByCollectionAndNumber(collectionId: string, number: number): Promise<Session | null>;
   update(id: string, data: Partial<Omit<Session, "id" | "createdAt">>): Promise<Session>;
   softDelete(id: string): Promise<Session>;
+  // Delete every session of the collection (direct collection_id). Purge-only.
+  deleteByCollection(collectionId: string): Promise<void>;
 }
