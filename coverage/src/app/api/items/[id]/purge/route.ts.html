@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">24.19% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/33</span>
+                <span class='fraction'>15/62</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">24.19% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/33</span>
+                <span class='fraction'>15/62</span>
             </div>
         
             
@@ -96,7 +96,50 @@
 <a name='L31'></a><a href='#L31'>31</a>
 <a name='L32'></a><a href='#L32'>32</a>
 <a name='L33'></a><a href='#L33'>33</a>
-<a name='L34'></a><a href='#L34'>34</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -129,36 +172,80 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import { NextRequest, NextResponse } from "next/server";</span></span></span>
-<span class="cstat-no" title="statement not covered" >import { z } from "zod";</span>
-<span class="cstat-no" title="statement not covered" >import { requireAuth } from "@/lib/auth";</span>
-<span class="cstat-no" title="statement not covered" >import { ItemController } from "@/server/api/items";</span>
-<span class="cstat-no" title="statement not covered" >import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";</span>
-<span class="cstat-no" title="statement not covered" >import { getDb } from "@/lib/db";</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >const PurgeConfirmSchema = z.object({ confirm: z.enum(["PURGE"]) });</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export async function POST(</span>
-<span class="cstat-no" title="statement not covered" >  request: NextRequest</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { requireAuth } from "@/lib/auth";
+import { getDb } from "@/lib/db";
+import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
+import { requireApiCollectionOwner } from "@/server/dal/collection-access";
+import { ItemPurgeService, ItemInResultError } from "@/server/services/ItemPurgeService";
+&nbsp;
+const PurgeConfirmSchema = z.object({ confirm: z.literal("PURGE") });
+&nbsp;
+// Permanent owner-only purge. Order matters for security: authenticate, resolve
+// the item (including soft-deleted), gate as the COLLECTION OWNER, and ONLY THEN
+// parse the confirm body. A non-owner with a malformed body must get 403, never a
+// 400 that would leak body validity as an existence/permission oracle.
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export async function POST(</span></span>
+<span class="cstat-no" title="statement not covered" >  request: NextRequest,</span>
+<span class="cstat-no" title="statement not covered" >  { params }: { params: { id: string } },</span>
 <span class="cstat-no" title="statement not covered" >) {</span>
 <span class="cstat-no" title="statement not covered" >  try {</span>
-<span class="cstat-no" title="statement not covered" >    await requireAuth();</span>
-<span class="cstat-no" title="statement not covered" >    const body = await request.json();</span>
-<span class="cstat-no" title="statement not covered" >    PurgeConfirmSchema.parse(body);</span>
-<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >    const user = await requireAuth();</span>
 <span class="cstat-no" title="statement not covered" >    const db = getDb();</span>
-<span class="cstat-no" title="statement not covered" >    const itemRepo = new ItemRepository(db);</span>
-<span class="cstat-no" title="statement not covered" >    const controller = new ItemController(itemRepo);</span>
 <span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >    await controller.purgeItem();</span>
-<span class="cstat-no" title="statement not covered" >    return NextResponse.json({ message: "Item purged successfully" });</span>
-<span class="cstat-no" title="statement not covered" >  } catch (error) {</span>
-<span class="cstat-no" title="statement not covered" >    if (error instanceof SyntaxError) {</span>
+<span class="cstat-no" title="statement not covered" >    const item = await new ItemRepository(db).findByIdIncludingDeleted(params.id);</span>
+<span class="cstat-no" title="statement not covered" >    if (!item) {</span>
+<span class="cstat-no" title="statement not covered" >      return NextResponse.json({ error: "Not found" }, { status: 404 });</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >    const owned = await requireApiCollectionOwner(db, item.collectionId, user.id);</span>
+<span class="cstat-no" title="statement not covered" >    if (owned instanceof NextResponse) return owned; // 404 (absent) / 403 (not owner)</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >    // Authz passed — only now parse + validate the confirm body.</span>
+<span class="cstat-no" title="statement not covered" >    let body: unknown;</span>
+<span class="cstat-no" title="statement not covered" >    try {</span>
+<span class="cstat-no" title="statement not covered" >      body = await request.json();</span>
+<span class="cstat-no" title="statement not covered" >    } catch {</span>
 <span class="cstat-no" title="statement not covered" >      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" >    if (!PurgeConfirmSchema.safeParse(body).success) {</span>
+<span class="cstat-no" title="statement not covered" >      return NextResponse.json({ error: "Confirmation required" }, { status: 400 });</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >    const service = new ItemPurgeService(db, new SortResultItemRepository(db));</span>
+<span class="cstat-no" title="statement not covered" >    try {</span>
+<span class="cstat-no" title="statement not covered" >      await service.purge(item.id);</span>
+<span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
+<span class="cstat-no" title="statement not covered" >      if (error instanceof ItemInResultError) {</span>
+<span class="cstat-no" title="statement not covered" >        return NextResponse.json({ error: error.message }, { status: 409 });</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >      throw error;</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >    return NextResponse.json({ message: "Item purged" });</span>
+<span class="cstat-no" title="statement not covered" >  } catch (error) {</span>
+<span class="cstat-no" title="statement not covered" >    const status =</span>
+<span class="cstat-no" title="statement not covered" >      error instanceof Error &amp;&amp; error.message === "Unauthorized" ? 401 : 500;</span>
 <span class="cstat-no" title="statement not covered" >    return NextResponse.json(</span>
 <span class="cstat-no" title="statement not covered" >      { error: error instanceof Error ? error.message : "Unknown error" },</span>
-<span class="cstat-no" title="statement not covered" >      { status: error instanceof Error &amp;&amp; error.message === "Unauthorized" ? 401 : 500 }</span>
+<span class="cstat-no" title="statement not covered" >      { status },</span>
 <span class="cstat-no" title="statement not covered" >    );</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
@@ -169,7 +256,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-19T23:57:30.964Z
+                at 2026-06-20T02:56:12.153Z
             </div>
         <script src="../../../../../../prettify.js"></script>
         <script>
