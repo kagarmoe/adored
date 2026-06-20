@@ -183,11 +183,11 @@ export class SortResultService {
   }
 
   /**
-   * Hard-delete a DRAFT result and its items. Children first: the
-   * sort_result_items -> sort_results FK has no ON DELETE CASCADE, so a bare
-   * result delete would FK-violate on a populated draft. No transaction (the
-   * codebase uses none; a single-curator draft delete is FK-safe and
-   * recoverable by re-running the sort).
+   * Hard-delete a DRAFT result and its items, ATOMICALLY via withTransaction:
+   * children first (the sort_result_items -> sort_results FK has no
+   * ON DELETE CASCADE), so the two deletes commit or roll back together and a
+   * mid-delete failure leaves nothing changed (purses-nea established the
+   * transaction pattern; prod runs postgres-js).
    *
    * Returns false when the result is absent (route -> 404); throws
    * DeleteResultStateError when the result is not a draft (route -> 409).
@@ -197,8 +197,10 @@ export class SortResultService {
     if (!result) return false;
     if (result.status !== "draft") throw new DeleteResultStateError();
 
-    await this.sortResultItemRepo.deleteByResult(id);
-    await this.sortResultRepo.delete(id);
+    await withTransaction(this.db, async (tx) => {
+      await new SortResultItemRepository(tx).deleteByResult(id);
+      await new SortResultRepository(tx).delete(id);
+    });
     return true;
   }
 
