@@ -41,29 +41,3 @@ export function selectNextPair(options: SelectionOptions): [Item, Item] | null {
   // All meaningful pairs have been decided
   return null;
 }
-
-/**
- * Get pairs that need more comparison (low confidence items)
- */
-export function getLowConfidencePairs(preferences: CollectionPreferenceItem[]): string[] {
-  // Items with confidence < 0.7 need more comparison
-  return preferences
-    .filter((p) => p.confidence < 0.7)
-    .sort((a, b) => a.confidence - b.confidence)
-    .map((p) => p.itemId);
-}
-
-/**
- * Get comparison priorities based on confidence and score proximity
- */
-export function getComparisonPriorities(
-  preferences: CollectionPreferenceItem[]
-): { itemId: string; priority: number }[] {
-  return preferences
-    .map((p) => ({
-      itemId: p.itemId,
-      priority: (1 - p.confidence) * Math.max(1, p.comparisonCount),
-    }))
-    .sort((a, b) => b.priority - a.priority)
-    .slice(0, 10);
-}

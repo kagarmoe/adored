@@ -21,7 +21,7 @@ const MAX_SCALE = 4;
 const STEP = 0.5;
 
 /** Tap-first photo lightbox: zoom (+/-), drag-to-pan when zoomed, and persisted
- *  rotate. No swipe. Reuses the ConfirmDialog modal idiom. Portaled to <body> so
+ *  rotate. No swipe. Standard modal idiom (scrim + bg-surface panel). Portaled to <body> so
  *  the card's `isolate` stacking context can't trap it. */
 export function ImageViewer({ photo, onClose }: { photo: ViewerPhoto; onClose: () => void }) {
   const router = useRouter();
