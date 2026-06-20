@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">32.14% </span>
+                <span class="strong">31.42% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>18/56</span>
+                <span class='fraction'>22/70</span>
             </div>
         
             
@@ -39,14 +39,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/5</span>
+                <span class='fraction'>0/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">32.14% </span>
+                <span class="strong">31.42% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>18/56</span>
+                <span class='fraction'>22/70</span>
             </div>
         
             
@@ -119,7 +119,21 @@
 <a name='L54'></a><a href='#L54'>54</a>
 <a name='L55'></a><a href='#L55'>55</a>
 <a name='L56'></a><a href='#L56'>56</a>
-<a name='L57'></a><a href='#L57'>57</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -166,6 +180,10 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -175,9 +193,19 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { eq } from "drizzle-orm";
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { eq, inArray } from "drizzle-orm";
 import type { Database } from "@/lib/db";
-import { decisionEventsTable } from "@/lib/db/schema";
+import { decisionEventsTable, sessionsTable } from "@/lib/db/schema";
 import type { IDecisionEventRepository } from "../DecisionEventRepository";
 import type { DecisionEvent, TriageDecision, PairwiseDecision } from "@/types";
 import { generateId } from "@/lib/id";
@@ -221,6 +249,20 @@ export class DecisionEventRepository implements IDecisionEventRepository {
 <span class="cstat-no" title="statement not covered" >    return events.map((e) =&gt; this.mapToDecisionEvent(e));</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
+  // Delete every decision of this collection's sessions (decisions have no
+  // collection_id — scope via the parent sessions). Purge-only.
+<span class="fstat-no" title="function not covered" >  async deleteByCollection(collectionId: string): Promise&lt;void&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    await this.db.delete(decisionEventsTable).where(</span>
+<span class="cstat-no" title="statement not covered" >      inArray(</span>
+<span class="cstat-no" title="statement not covered" >        decisionEventsTable.sessionId,</span>
+<span class="cstat-no" title="statement not covered" >        this.db</span>
+<span class="cstat-no" title="statement not covered" >          .select({ id: sessionsTable.id })</span>
+<span class="cstat-no" title="statement not covered" >          .from(sessionsTable)</span>
+<span class="cstat-no" title="statement not covered" >          .where(eq(sessionsTable.collectionId, collectionId)),</span>
+<span class="cstat-no" title="statement not covered" >      ),</span>
+<span class="cstat-no" title="statement not covered" >    );</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
+&nbsp;
   private <span class="fstat-no" title="function not covered" >mapToDecisionEvent(row: any): DecisionEvent {</span>
 <span class="cstat-no" title="statement not covered" >    return {</span>
 <span class="cstat-no" title="statement not covered" >      id: row.id,</span>
@@ -238,7 +280,7 @@ export class DecisionEventRepository implements IDecisionEventRepository {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-20T06:58:02.505Z
+                at 2026-06-20T20:16:03.169Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>
