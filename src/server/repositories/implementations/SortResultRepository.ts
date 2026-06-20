@@ -127,6 +127,10 @@ export class SortResultRepository implements ISortResultRepository {
     await this.db.delete(sortResultsTable).where(eq(sortResultsTable.id, id));
   }
 
+  async deleteByCollection(collectionId: string): Promise<void> {
+    await this.db.delete(sortResultsTable).where(eq(sortResultsTable.collectionId, collectionId));
+  }
+
   private mapToResult(row: any): SortResult {
     return {
       id: row.id,

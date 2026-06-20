@@ -29,4 +29,7 @@ export interface IPhotoRepository {
   // Permanently DELETE every photo of an item (active AND soft-deleted),
   // returning their blob keys so the caller can clean up blob storage. Purge-only.
   hardDeleteByItem(itemId: string): Promise<string[]>;
+  // Permanently DELETE every photo of the collection (active AND soft-deleted,
+  // assigned AND pooled), returning their blob keys for blob cleanup. Purge-only.
+  hardDeleteByCollection(collectionId: string): Promise<string[]>;
 }

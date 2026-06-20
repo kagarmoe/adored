@@ -20,4 +20,6 @@ export interface IMembershipRepository {
   findByCollection(collectionId: string): Promise<CollectionMembership[]>;
   update(id: string, data: Partial<CollectionMembership>): Promise<CollectionMembership>;
   delete(id: string): Promise<void>;
+  // Delete every membership of the collection (direct collection_id). Purge-only.
+  deleteByCollection(collectionId: string): Promise<void>;
 }

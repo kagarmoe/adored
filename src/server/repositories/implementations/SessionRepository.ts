@@ -140,6 +140,10 @@ export class SessionRepository implements ISessionRepository {
     return this.mapToSession(session);
   }
 
+  async deleteByCollection(collectionId: string): Promise<void> {
+    await this.db.delete(sessionsTable).where(eq(sessionsTable.collectionId, collectionId));
+  }
+
   private mapToSession(row: any): Session {
     return {
       id: row.id,

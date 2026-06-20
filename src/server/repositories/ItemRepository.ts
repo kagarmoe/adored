@@ -24,4 +24,8 @@ export interface IItemRepository {
   softDelete(id: string): Promise<Item>;
   // Permanent DELETE (purge). Caller has already removed FK-referencing children.
   hardDelete(id: string): Promise<void>;
+  // Permanently DELETE every item of the collection (active AND soft-deleted),
+  // returning the affected count. Caller has already removed FK-referencing
+  // children. Purge-only.
+  hardDeleteByCollection(collectionId: string): Promise<number>;
 }

@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import type { Database } from "@/lib/db";
-import { sortResultSharesTable } from "@/lib/db/schema";
+import { sortResultSharesTable, sortResultsTable } from "@/lib/db/schema";
 import type { ISortResultShareRepository } from "../SortResultShareRepository";
 import type { SortResultShare } from "@/types";
 import { generateId } from "@/lib/id";
@@ -64,6 +64,20 @@ export class SortResultShareRepository implements ISortResultShareRepository {
       .where(eq(sortResultSharesTable.id, id))
       .returning();
     return this.mapToShare(share);
+  }
+
+  // Delete every share of this collection's results (shares have no collection_id —
+  // scope via the parent sort_results). Purge-only.
+  async deleteByCollection(collectionId: string): Promise<void> {
+    await this.db.delete(sortResultSharesTable).where(
+      inArray(
+        sortResultSharesTable.sortResultId,
+        this.db
+          .select({ id: sortResultsTable.id })
+          .from(sortResultsTable)
+          .where(eq(sortResultsTable.collectionId, collectionId)),
+      ),
+    );
   }
 
   private mapToShare(row: any): SortResultShare {

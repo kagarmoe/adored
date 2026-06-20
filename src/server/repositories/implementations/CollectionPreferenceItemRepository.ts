@@ -114,6 +114,13 @@ export class CollectionPreferenceItemRepository
     return deleted.length;
   }
 
+  // Permanently DELETE every preference row of the collection, across ALL
+  // curators (distinct from clear, which is collection+curator-scoped, and from
+  // deleteByItem). Purge-only.
+  async deleteByCollection(collectionId: string): Promise<void> {
+    await this.db.delete(preferencesTable).where(eq(preferencesTable.collectionId, collectionId));
+  }
+
   private mapToPreference(row: any): CollectionPreferenceItem {
     return {
       id: row.id,

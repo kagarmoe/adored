@@ -10,4 +10,7 @@ export interface ISortResultShareRepository {
   findByToken(token: string): Promise<SortResultShare | null>;
   findByResult(sortResultId: string): Promise<SortResultShare[]>;
   update(id: string, data: Partial<SortResultShare>): Promise<SortResultShare>;
+  // Delete every share of the collection's results (scoped via the parent
+  // sort_results — no collection_id column). Purge-only.
+  deleteByCollection(collectionId: string): Promise<void>;
 }

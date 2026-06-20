@@ -26,4 +26,7 @@ export interface ICollectionPreferenceItemRepository {
   // item's derived preference state for everyone. Returns the affected count
   // (for the purge audit metadata). Purge-only.
   deleteByItem(itemId: string): Promise<number>;
+  // Delete every preference of the collection across ALL curators (distinct from
+  // clear, which is collection+curator-scoped). Purge-only.
+  deleteByCollection(collectionId: string): Promise<void>;
 }

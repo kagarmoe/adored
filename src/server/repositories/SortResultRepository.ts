@@ -21,6 +21,8 @@ export interface ISortResultRepository {
   findDraft(collectionId: string, curatorId: string): Promise<SortResult | null>;
   update(id: string, data: Partial<SortResult>): Promise<SortResult>;
   delete(id: string): Promise<void>;
+  // Delete every result of the collection (direct collection_id). Purge-only.
+  deleteByCollection(collectionId: string): Promise<void>;
 }
 
 export interface ISortResultItemRepository {
@@ -35,6 +37,9 @@ export interface ISortResultItemRepository {
   update(id: string, data: Partial<SortResultItem>): Promise<SortResultItem>;
   delete(id: string): Promise<void>;
   deleteByResult(sortResultId: string): Promise<void>;
+  // Delete every result-item of the collection's results (scoped via the parent
+  // sort_results — no collection_id column). Purge-only.
+  deleteByCollection(collectionId: string): Promise<void>;
   // True iff ANY sort_result_item references the item (any result, any status).
   // The purge 409 guard — an item in any result cannot be purged.
   existsByItem(itemId: string): Promise<boolean>;
