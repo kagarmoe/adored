@@ -1,7 +1,11 @@
 import type { Photo } from "@/types";
 
 export interface IPhotoRepository {
-  create(data: Omit<Photo, "id" | "createdAt" | "updatedAt" | "deletedAt">): Promise<Photo>;
+  create(
+    data: Omit<Photo, "id" | "createdAt" | "updatedAt" | "deletedAt" | "rotation"> & {
+      rotation?: number;
+    },
+  ): Promise<Photo>;
   findById(id: string): Promise<Photo | null>;
   findByIds(collectionId: string, photoIds: string[]): Promise<Photo[]>;
   findByItem(itemId: string): Promise<Photo[]>;

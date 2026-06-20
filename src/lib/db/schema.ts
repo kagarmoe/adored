@@ -155,6 +155,7 @@ export const photosTable = pgTable(
     fileSize: integer("file_size"),
     uploadedBy: text("uploaded_by").notNull(),
     isHero: boolean("is_hero").default(false),
+    rotation: integer("rotation").default(0).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),

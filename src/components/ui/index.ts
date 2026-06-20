@@ -32,3 +32,8 @@ export { ConfirmDialog } from "./ConfirmDialog";
 export type { ConfirmDialogProps } from "./ConfirmDialog";
 
 export { CardImage } from "./CardImage";
+
+export { ImageViewer } from "./ImageViewer";
+export type { ViewerPhoto } from "./ImageViewer";
+
+export { PhotoViewControl } from "./PhotoViewControl";

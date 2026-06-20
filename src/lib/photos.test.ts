@@ -19,6 +19,15 @@ describe("photo asset URL helpers", () => {
     );
   });
 
+  it("appends ?w=&v= when both are given (cache-bust)", () => {
+    expect(getPhotoAssetUrl("c", "i", "p", { w: 640, v: 7 })).toBe(
+      "/api/collections/c/items/i/photos/p/file?w=640&v=7",
+    );
+    expect(getPoolPhotoAssetUrl("c", "p", { v: 7 })).toBe(
+      "/api/collections/c/pool/photos/p/file?v=7",
+    );
+  });
+
   it("builds a pool photo URL with and without width", () => {
     expect(getPoolPhotoAssetUrl("c", "p")).toBe("/api/collections/c/pool/photos/p/file");
     expect(getPoolPhotoAssetUrl("c", "p", { w: 320 })).toBe(
@@ -26,14 +35,20 @@ describe("photo asset URL helpers", () => {
     );
   });
 
-  it("getPhotoAssetUrlForPhoto threads the width through", () => {
-    expect(getPhotoAssetUrlForPhoto({ id: "p", itemId: "i" }, "c", { w: 1280 })).toBe(
-      "/api/collections/c/items/i/photos/p/file?w=1280",
-    );
+  it("getPhotoAssetUrlForPhoto threads width and auto-derives v from updatedAt", () => {
+    expect(
+      getPhotoAssetUrlForPhoto(
+        { id: "p", itemId: "i", updatedAt: new Date(7) },
+        "c",
+        { w: 1280 },
+      ),
+    ).toBe("/api/collections/c/items/i/photos/p/file?w=1280&v=7");
   });
 
   it("getPhotoAssetUrlForPhoto throws for a pool (item-less) photo", () => {
-    expect(() => getPhotoAssetUrlForPhoto({ id: "p", itemId: null }, "c")).toThrow();
+    expect(() =>
+      getPhotoAssetUrlForPhoto({ id: "p", itemId: null, updatedAt: new Date(0) }, "c"),
+    ).toThrow();
   });
 
   it("every PHOTO_WIDTH value is an allowlisted resize width (or the route 400s it)", () => {

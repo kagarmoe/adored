@@ -87,6 +87,7 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 |---|---|---|
 | POST | `/api/collections/[id]/items/[itemId]/photos` | member (`canAddPhotos`/owner) |
 | DELETE | `…/photos/[photoId]` | member (`canDeletePhotos`/owner) |
+| PATCH | `…/photos/[photoId]` | member (`canAddPhotos`/owner) |
 | GET | `…/photos/[photoId]/file` | member |
 | POST | `…/photos/[photoId]/set-hero` | member |
 
@@ -207,6 +208,9 @@ Returns the `Collection` by id **without a membership check** — any signed-in 
 
 ### `GET /api/collections/[id]/items/[itemId]/photos/[photoId]/file`
 `getSession` + belongs-to-parent (`404`) + (member or owner) → `403`. Then delegates to `servePhotoFile` (`src/lib/photo-serving.ts`). Optional `?w=` selects a server-resized variant (allowlist `160|320|640|1280`; other/invalid → `400`); omitted → the full-resolution original streamed verbatim. Resized variants are EXIF auto-oriented `image/webp`; originals keep their stored `Content-Type`. Caching: `Cache-Control: private, max-age=300, must-revalidate` + a strong variant `ETag` (`"photoId:w|orig:updatedAtMs"`) compared **app-side** (the client `If-None-Match` is **not** forwarded to Vercel Blob) → `304`. Source over `RESIZE_MAX_SOURCE_BYTES` (25 MB) or excess decoded pixels → `400`; blob missing → `404`; processing failure → generic `500`; `401`. `runtime = "nodejs"` (sharp). `next/image` keeps `unoptimized` (private blobs + cookie auth).
+
+### `PATCH /api/collections/[id]/items/[itemId]/photos/[photoId]`
+Rotate a photo (persisted, non-destructive). **Body:** `{ rotation: 0|90|180|270 }` (absolute clockwise degrees). `getSession` + belongs-to-parent (`404`) resolved **before** the permission check, then **`canAddPhotos` or owner** (`403`) — a write tier, not the bare-member read tier (a view-only curator cannot re-orient shared photos). Validates `rotation` ∈ the set (else `400`, incl. bad/missing JSON); `PhotoRepository.update` runs only after authz+validation pass. `200 { rotation, updatedAt }` (the new `updatedAt` cache-busts the image URL). `401`. Applied at serve time by `servePhotoFile` (`.rotate()` EXIF then `.rotate(rotation)`); the blob is never rewritten.
 
 ### `POST /api/collections/[id]/items/[itemId]/photos/[photoId]/set-hero`
 `getSession` + belongs-to-parent (`404`) + `requireApiCollectionAccess` (`403`/`404`). Sets the item's hero photo. `200 { success: true }`. `400` on failure; `401`.

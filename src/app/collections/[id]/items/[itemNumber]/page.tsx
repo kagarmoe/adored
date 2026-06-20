@@ -5,7 +5,7 @@ import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { AppLayout } from "@/components/layout";
-import { Button, Card } from "@/components/ui";
+import { Button, Card, PhotoViewControl } from "@/components/ui";
 import { ItemMetadata } from "@/features/items/ItemMetadata";
 import Link from "next/link";
 import Image from "next/image";
@@ -70,7 +70,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
 
         {/* Hero Photo */}
         {heroPhoto ? (
-          <div className="bg-ground rounded-lg overflow-hidden h-96 flex items-center justify-center">
+          <div className="relative isolate bg-ground rounded-lg overflow-hidden h-96 flex items-center justify-center">
             <Image
               src={getPhotoAssetUrlForPhoto(heroPhoto, collection.id, { w: PHOTO_WIDTH.hero })}
               alt={itemDisplayName(item)}
@@ -79,6 +79,19 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
               priority
               unoptimized
             />
+            {heroPhoto.itemId && (
+              <PhotoViewControl
+                photo={{
+                  id: heroPhoto.id,
+                  itemId: heroPhoto.itemId,
+                  collectionId: heroPhoto.collectionId,
+                  rotation: heroPhoto.rotation,
+                  updatedAt: heroPhoto.updatedAt,
+                  alt: itemDisplayName(item),
+                }}
+                className="absolute right-3 top-3 z-20"
+              />
+            )}
           </div>
         ) : (
           <Card padding="lg" className="h-96 flex items-center justify-center">

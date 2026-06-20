@@ -73,6 +73,18 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
                   key={collection.id}
                   collection={collection}
                   coverPhotoUrl={cover ? getPhotoAssetUrlForPhoto(cover, collection.id, { w: PHOTO_WIDTH.card }) : undefined}
+                  viewerPhoto={
+                    cover && cover.itemId
+                      ? {
+                          id: cover.id,
+                          itemId: cover.itemId,
+                          collectionId: cover.collectionId,
+                          rotation: cover.rotation,
+                          updatedAt: cover.updatedAt,
+                          alt: collection.name,
+                        }
+                      : undefined
+                  }
                 />
               );
             })}

@@ -5,10 +5,16 @@ export function getBlobAccess(url: string): "private" | "public" {
 }
 
 /** Optional rendering hints for a photo asset URL. `w` selects a server-resized
- *  variant; omit it for the full-resolution original (zoom/download). */
+ *  variant; `v` is an opaque cache-bust (the server ignores it for content) so a
+ *  changed photo (e.g. rotation bumps updatedAt) yields a new URL within A's
+ *  max-age window. */
 export interface PhotoUrlOptions {
   w?: number;
+  v?: number;
 }
+
+/** Allowed clockwise rotation values (degrees) for the rotate PATCH endpoints. */
+export const ALLOWED_ROTATIONS = [0, 90, 180, 270] as const;
 
 /** Per-surface request widths (one per surface — `unoptimized` precludes srcset).
  *  Must be members of RESIZE_WIDTHS in photo-serving.ts. */
@@ -24,7 +30,11 @@ export const PHOTO_WIDTH = {
 } as const;
 
 function withQuery(base: string, opts?: PhotoUrlOptions): string {
-  return opts?.w ? `${base}?w=${opts.w}` : base;
+  const params = new URLSearchParams();
+  if (opts?.w) params.set("w", String(opts.w));
+  if (opts?.v) params.set("v", String(opts.v));
+  const qs = params.toString();
+  return qs ? `${base}?${qs}` : base;
 }
 
 export function getPhotoAssetUrl(
@@ -40,7 +50,7 @@ export function getPhotoAssetUrl(
 }
 
 export function getPhotoAssetUrlForPhoto(
-  photo: Pick<Photo, "id" | "itemId">,
+  photo: Pick<Photo, "id" | "itemId" | "updatedAt">,
   collectionId: string,
   opts?: PhotoUrlOptions
 ): string {
@@ -49,7 +59,12 @@ export function getPhotoAssetUrlForPhoto(
     // URLs arrive with the upload-to-pool work (purses-b1k, plans 2–3).
     throw new Error("Photo is not assigned to an item");
   }
-  return getPhotoAssetUrl(collectionId, photo.itemId, photo.id, opts);
+  // Auto-bust the cache on any photo change (rotation bumps updatedAt) so every
+  // item-photo surface refreshes within A's max-age window after a rotate.
+  return getPhotoAssetUrl(collectionId, photo.itemId, photo.id, {
+    ...opts,
+    v: opts?.v ?? photo.updatedAt?.getTime(),
+  });
 }
 
 export function getPoolPhotoAssetUrl(

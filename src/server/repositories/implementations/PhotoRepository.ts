@@ -9,7 +9,11 @@ export class PhotoRepository implements IPhotoRepository {
   constructor(private db: Database) {}
 
   async create(
-    data: Omit<Photo, "id" | "createdAt" | "updatedAt" | "deletedAt">
+    // rotation is optional at the create boundary (DB default 0) so existing
+    // callers that don't set it keep compiling.
+    data: Omit<Photo, "id" | "createdAt" | "updatedAt" | "deletedAt" | "rotation"> & {
+      rotation?: number;
+    }
   ): Promise<Photo> {
     const id = generateId("photo");
     const now = new Date();
@@ -26,6 +30,7 @@ export class PhotoRepository implements IPhotoRepository {
         fileSize: data.fileSize,
         uploadedBy: data.uploadedBy,
         isHero: data.isHero,
+        rotation: data.rotation ?? 0,
         createdAt: now,
         updatedAt: now,
         deletedAt: null,
@@ -329,6 +334,7 @@ export class PhotoRepository implements IPhotoRepository {
       fileSize: row.fileSize,
       uploadedBy: row.uploadedBy,
       isHero: row.isHero,
+      rotation: row.rotation,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       deletedAt: row.deletedAt,
