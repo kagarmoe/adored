@@ -1,100 +1,114 @@
-# Item purge — permanent hard-delete + blob cleanup (purses-u3p) — design (rev-2)
+# Item purge + remove-from-sorts (purses-u3p) — design (rev-3)
 
-**Date:** 2026-06-19 (rev-2 — folds the Security + Data spec reviews + the owner's block-vs-cascade decision)
+**Date:** 2026-06-19 (rev-3 — adds the owner-decided "remove from all sorts" companion op; folds the Security/Data re-reviews)
 **Bead:** purses-u3p (P2 bug). **Branch:** `fix/u3p-item-purge`.
 
 ## Why
 
-`POST /api/items/[id]/purge` `requireAuth()`s, validates `{confirm:"PURGE"}`, then calls `ItemController.purgeItem()` — an **empty stub that ignores `params.id` and deletes nothing** — yet returns `200 "Item purged successfully."` A success message that does nothing is a data-integrity/UX trap (PR #204 audit). Build the real purge ("the right way").
-
-Purge = the **permanent** tier (infra §11.4 / decision-13): hard-delete the item and its dependent rows + blobs, **owner-only**, confirmed. Today `Item`/`Photo` deletes are **soft only** (no hard delete exists). prod runs **postgres-js** (TCP) → real transactions (`withTransaction`, established by purses-nea); the repos' "neon-http is stateless" comments are stale.
+`POST /api/items/[id]/purge` is a no-op stub that returns a **false** `200 "purged successfully"` (PR #204 audit). Build the real **permanent** purge (§11.4 / decision-13): owner-only hard-delete of the item + its dependent rows + blobs. Purge **blocks (409)** when the item is part of any sort result (owner decision — preserves all results, consistent with finalized-immutability `purses-526`/`gmn`). To keep that block from being a dead-end, ship a companion **remove-from-sorts** op that detaches an item from all its **draft** results in one owner call (existing `deleteResultItem` only does one result at a time; finalized stays immutable). prod runs **postgres-js** → real transactions (`withTransaction`, from `purses-nea`).
 
 ## Goal & scope
 
-- **Goal:** `POST /api/items/[id]/purge` permanently removes an item, its preference rows, its photo rows (active + soft-deleted) and their blobs — owner-only, confirmed, atomic at the DB tier — **OR** refuses with **409** if the item is part of any sort result.
-- **In scope:** the route + a new `ItemPurgeService` + the new hard-delete repo methods + an owner-only DAL helper.
-- **Out of scope:** `purgeCollection` (separate bead). No UI — purge has **no caller today**; this makes the API real but UI-unreachable (a separate feature). No schema change (DELETE/SELECT only).
+- **A) Item purge:** `POST /api/items/[id]/purge` permanently removes an item, its preference rows, its photo rows (active + soft-deleted) + their blobs — owner-only, confirmed, DB-atomic — OR **409** if any `sort_result_item` references it.
+- **B) Remove from sorts (companion):** `POST /api/items/[id]/remove-from-sorts` — owner-only — deletes the item's `sort_result_item` rows that belong to **draft** results (across all curators), in one transaction; leaves **finalized** results untouched and preferences untouched. Lets the owner clear the purge-409 for draft-only items.
+- **Out of scope:** `purgeCollection` (separate bead); a purge/remove UI (no caller today — both ops become real but UI-unreachable). No schema change (DELETE/SELECT only).
 
-## The FK reality (the Data BLOCK that rev-1 missed)
+## The FK reality (the three `items.id` referrers — verified complete)
 
-`items.id` has **three** referrers (`schema.ts`), none with `ON DELETE CASCADE`:
-- `photos.item_id` (**nullable**) → cascade-delete (hard) + blob cleanup.
-- `preferences.item_id` (**`.notNull()`** — `schema.ts:232`) → cascade-delete (hard); derived per-curator triage state, re-derivable, safe to remove.
-- `sort_result_items.item_id` (**`.notNull()`** — `schema.ts:291`) → **BLOCK** (owner decision): purge **refuses with 409** if any `sort_result_item` references the item. This preserves every sort result (draft and finalized) — purge never silently mutates a result, consistent with the finalized-immutability shipped in `purses-526`/`gmn`. The owner must remove the item from its results first.
+`items.id` referrers (`schema.ts`), none with `ON DELETE CASCADE`:
+- `photos.item_id` (nullable, `:148`) → purge cascade-hard-deletes + blob cleanup.
+- `preferences.item_id` (`.notNull()`, `:232`) → purge cascade-hard-deletes (derived triage state).
+- `sort_result_items.item_id` (`.notNull()`, `:291`) → purge **blocks 409** if referenced; the remove-from-sorts op deletes the **draft** ones. (`decision_events` does NOT FK to items — it embeds the id in jsonb — so no dangling reference; verified there are no other referrers.)
 
-So a hard `DELETE FROM items` only runs for an item with **no** sort-result-item rows; the FK on `sort_result_items.item_id` is the integrity backstop for any concurrency race (a concurrently-created result-item makes the item DELETE `23503` → rollback → 500; rare, safe).
+## A) Purge — approach
 
-## Approach
+### Route — authz BEFORE any body parsing (Security), owner-only, confirm
 
-### Route — authz BEFORE any body parsing (Security F2), owner-only, confirm
-
-`POST /api/items/[id]/purge` (read `params.id`):
-1. `userId = await requireAuth()` → **401** if unauthenticated.
-2. Resolve the item **including soft-deleted** via `ItemRepository.findByIdIncludingDeleted(params.id)` (purge follows archive/soft-delete; `findById` filters `deletedAt` so it cannot be reused) → **404** if truly absent.
-3. **Owner-only authz** via a new DAL helper `requireApiCollectionOwner(db, item.collectionId, userId): Collection | NextResponse` — the collection id comes **only** from the server-resolved `item.collectionId` (never from the request body/path); returns the collection iff `collection.ownerId === userId`, else **404** (absent collection) / **403** (member-but-not-owner or non-member). Mirrors `requireApiCollectionAccess`'s 404/403 convention. **No request-body parsing happens before this gate passes** — a non-owner sending malformed JSON gets 403, not a 400 oracle.
-4. **Only now** parse + validate `{confirm:"PURGE"}` → **400** on missing/wrong/invalid JSON.
-5. `await itemPurgeService.purge(item.id)`; map a thrown `ItemInResultError` → **409** (`"Item is part of a sort result; remove it from results first"`).
+1. `userId = await requireAuth()` → **401**.
+2. Resolve item **including soft-deleted** via `ItemRepository.findByIdIncludingDeleted(params.id)` (`findById` filters `deletedAt`, can't be reused) → **404** if absent.
+3. **Owner-only** via `requireApiCollectionOwner(db, item.collectionId, userId)` — collection id sourced ONLY from the resolved `item.collectionId`; owner iff `collection.ownerId === userId`, else **404** (absent collection) / **403**. **No body parsing before this gate** (a non-owner with malformed JSON → 403, never a 400 oracle).
+4. Only now parse `{confirm:"PURGE"}` → **400** on missing/wrong/invalid JSON.
+5. `await itemPurgeService.purge(item.id)`; a thrown `ItemInResultError` → **409** (`"Item is part of a sort result — remove it from sorts first (POST /api/items/[id]/remove-from-sorts), or it is in a finalized result and cannot be purged"`).
 6. **200** `{ message: "Item purged" }`.
 
-### `ItemPurgeService.purge(itemId)` — the orchestration (Architect: a service, not the controller)
-
-The op coordinates four repos + a transaction + an external Blob side-effect with its own failure policy — too heavy for `ItemController`. New `src/server/services/ItemPurgeService.ts`:
+### `ItemPurgeService.purge(itemId)` (a service, not the controller)
 
 ```
 async purge(itemId) {
-  if (await this.sortResultItemRepo.existsByItem(itemId)) throw new ItemInResultError(); // → 409, no tx opened
+  if (await this.sortResultItemRepo.existsByItem(itemId)) throw new ItemInResultError(); // → 409, no tx
   const blobKeys = await withTransaction(this.db, async (tx) => {
-    const prefRepo  = new CollectionPreferenceItemRepository(tx);
-    const photoRepo = new PhotoRepository(tx);
-    const itemRepo  = new ItemRepository(tx);
-    await prefRepo.deleteByItem(itemId);                 // hard-delete preferences (children-first)
-    const keys = await photoRepo.hardDeleteByItem(itemId); // hard-delete photos, RETURNING blob_key
-    await itemRepo.hardDelete(itemId);                   // hard-delete the item
+    await new CollectionPreferenceItemRepository(tx).deleteByItem(itemId); // NEW method (not `clear`, which is curator-scoped)
+    const keys = await new PhotoRepository(tx).hardDeleteByItem(itemId);   // DELETE … RETURNING blob_key, ALL rows (incl. soft-deleted)
+    await new ItemRepository(tx).hardDelete(itemId);
     return keys;
   });
-  // after commit — best-effort, non-fatal:
-  await Promise.allSettled(
-    blobKeys.filter((k) => k.startsWith("http")).map((k) => del(k)),
-  ); // log any rejections
+  await Promise.allSettled(blobKeys.filter((k) => k.startsWith("http")).map((k) => del(k))); // best-effort, log rejections
 }
 ```
 
-- **Invariant:** inside the transaction, writes use ONLY tx-bound repos (`new …(tx)`), never injected ones.
-- **DB-atomic, blobs best-effort post-commit:** the row deletes commit-or-rollback together; `del()` runs after commit (an external side-effect that can't join the tx), best-effort with the `startsWith("http")` guard the existing single-photo delete route uses (`collections/[id]/items/[itemId]/photos/[photoId]/route.ts:48`) — non-URL keys are skipped; a `del` failure is logged, not fatal (orphaned blobs are inert/sweepable). DB-first ordering means no blob is deleted while its row survives.
-- **`hardDeleteByItem` returns ALL photo rows' blob keys (active + soft-deleted)** via `DELETE FROM photos WHERE item_id = $1 RETURNING blob_key` — `findByItem` filters `deletedAt`, so reusing it would orphan soft-deleted photos' blobs; the purge path must NOT filter `deletedAt`.
+- **Invariant:** inside the tx, only tx-bound repos write. Children-first (preferences + photos before the item — both carry the FK). DB-atomic; blobs best-effort post-commit with the `startsWith("http")` guard (matches `collections/[id]/items/[itemId]/photos/[photoId]/route.ts:48`); orphaned blobs on `del` failure are inert/sweepable. The `sort_result_items.item_id` FK is the backstop for the check-then-delete race (a concurrent result-item → item DELETE `23503` → rollback → 500).
 
-### New methods
+## B) Remove-from-sorts — approach
+
+### Route `POST /api/items/[id]/remove-from-sorts`
+
+1. `requireAuth()` → 401; resolve item (`findByIdIncludingDeleted`) → 404; `requireApiCollectionOwner` → 404/403 (owner-only — this detaches the item from *all* curators' draft results, a collection-owner action). No body required (no confirm — it's reversible-ish: a draft result-item, re-derivable by regenerating the draft).
+2. `const { removed, remainingInFinalized } = await sortResultService.removeItemFromDraftResults(item.id)`.
+3. **200** `{ removed, remainingInFinalized }` — `removed` = draft result-items deleted; `remainingInFinalized` = how many finalized results still reference it (so the caller knows whether purge will now succeed or is finalized-blocked).
+
+### `removeItemFromDraftResults(itemId)` (on `SortResultService`, which owns sort-result-item mutations)
+
+```
+async removeItemFromDraftResults(itemId) {
+  return withTransaction(this.db, async (tx) => {
+    const repo = new SortResultItemRepository(tx);
+    const removed = await repo.deleteByItemInDraftResults(itemId);          // DELETE … WHERE item_id=$1 AND sort_result_id IN (SELECT id FROM sort_results WHERE status='draft')
+    const remainingInFinalized = await repo.countByItemInFinalizedResults(itemId);
+    return { removed, remainingInFinalized };
+  });
+}
+```
+
+- Leaves **finalized** result-items and **preferences** untouched (preferences aren't a purge blocker; this op targets only the result-membership that blocks purge). Removing an item may leave a draft result with fewer (or zero) items — an empty draft is harmless (owner can `deleteResult` it). Single transaction; small N.
+
+## New methods
 
 - DAL: `requireApiCollectionOwner(db, collectionId, userId): Promise<Collection | NextResponse>`.
-- `IItemRepository`: `findByIdIncludingDeleted(id): Promise<Item | null>` (no `deletedAt` filter); `hardDelete(id): Promise<void>` (real `DELETE FROM items`).
-- `IPhotoRepository`: `hardDeleteByItem(itemId): Promise<string[]>` (real `DELETE … RETURNING blob_key`, all rows).
-- `ICollectionPreferenceItemRepository`: `deleteByItem(itemId): Promise<void>` (real `DELETE FROM preferences WHERE item_id = $1`).
-- `ISortResultItemRepository`: `existsByItem(itemId): Promise<boolean>` (the 409 block check; `SELECT 1 … WHERE item_id = $1 LIMIT 1`). Note: `sort_result_items` has no `item_id` index (only `result_id`), so this is a seq scan — N is tiny per item, acceptable; no schema change in scope.
+- `IItemRepository`: `findByIdIncludingDeleted(id)`; `hardDelete(id)`.
+- `IPhotoRepository`: `hardDeleteByItem(itemId): Promise<string[]>` (`DELETE … RETURNING blob_key`, all rows).
+- `ICollectionPreferenceItemRepository`: `deleteByItem(itemId): Promise<void>` (**new** — distinct from `clear(collectionId, curatorId)`).
+- `ISortResultItemRepository`: `existsByItem(itemId): Promise<boolean>`; `deleteByItemInDraftResults(itemId): Promise<number>`; `countByItemInFinalizedResults(itemId): Promise<number>`. (`sort_result_items` has no `item_id` index — seq scan; N tiny per item; acceptable, no schema change.)
 
 ## Error handling
 
-- 401 unauth; 404 absent item/collection; **403 non-owner** (incl. member-not-owner); 400 missing/wrong confirm or invalid JSON (**only after** authz passes); **409** item-in-a-sort-result (`ItemInResultError`, no rows touched); 500 on an unexpected DB failure (the cascade rolls back atomically). Blob deletion best-effort post-commit (logged, non-fatal).
+- Purge: 401 / 404 (item or collection) / 403 (non-owner) / 400 (confirm, after authz) / **409** (in a result) / 500 (atomic rollback). Blobs best-effort post-commit.
+- Remove-from-sorts: 401 / 404 / 403 (non-owner) / 200. No partial state (transaction).
 
-## Security (vibe-security — permanent destructive op)
+## Security (vibe-security)
 
-- **Owner-only**, server-resolved from `collections.ownerId`; a member (non-owner) → 403. `{confirm:"PURGE"}` gates accidental fire. Authz strictly **before** any body parsing (no 400 oracle to non-owners).
-- **IDOR/cross-tenant:** `params.id` (item) → server-resolved `item.collectionId` → owner check; no id trusted from the body; the collection id has a single source (`item.collectionId`). A non-owner of the item's collection → 403/404.
-- Permanent + irreversible: owner + explicit confirm (matches §11.4 "owner-only + explicit confirmation").
+- Both ops **owner-only**, server-resolved (`collections.ownerId`); a member/curator → 403; no body-trusted ids; collection id single-sourced from the resolved item. Purge confirm gate; authz strictly before body parsing.
+- **Existence-oracle note (low, convention-inherited):** resolving the item before the owner check yields 404-absent vs 403-exists-not-owner — the same 403/404 surface every `requireApiResultAccess` route already has; item ids are unguessable ULIDs. **Pin the test:** a non-owner targeting a *real* item id gets **403** and a *fake* id gets **404** (documented expectation, matching convention) — not silently "403/404." Not a new vuln; do not special-case.
+- **Audit gap (follow-up bead):** a permanent owner-only purge has no who-purged-what log (no audit infra exists anywhere). File a follow-up bead; out of scope here.
 
-## Testing
+## Testing (un-mocked DB integration is authoritative; mock only `@vercel/blob`)
 
-- **Un-mocked DB integration (`RUN_DB_TESTS`, authoritative) in `src/lib/db/`** (mock ONLY `@vercel/blob`'s `del`):
-  - **Owner purge (no results):** seed collection + item + ≥2 photos (real `blobKey`s incl. one soft-deleted photo) + ≥1 preference. Drive the real route as **owner** → 200; assert the item row is GONE (`findById`/`findByIdIncludingDeleted` null — hard), all photo rows gone (active + soft-deleted), all preference rows gone, and `del` called with all (http) blob keys.
-  - **Block (409):** seed an item that has a `sort_result_item` (generate a result) → owner purge → **409**, and the item + photos + preferences + the result-item all **survive** (nothing deleted).
-  - **Authz/contract:** non-owner member → **403** (item survives); non-member → 403/404; absent item → 404; **non-owner with malformed body → 403** (not 400 — proves authz precedes confirm parsing); missing/wrong confirm (as owner) → 400 (nothing deleted); unauth → 401.
-- **Unit:** `requireApiCollectionOwner` (owner→collection / member→403 / absent→404); the repo hard-delete + `existsByItem` signatures; `ItemPurgeService.purge` orchestration (existsByItem short-circuits to `ItemInResultError`; tx used; `del` called post-commit with the http filter) — mock repos + Blob, but the authoritative removal proof is the un-mocked integration test.
+- **Purge — owner, no results:** seed collection + item + ≥2 photos (real `blobKey`s incl. one soft-deleted) + ≥1 preference. Owner purge → 200; assert the item is GONE via **`findByIdIncludingDeleted` null** (the load-bearing *hard*-delete proof — `findById` null is non-distinguishing since it filters `deletedAt`), all photo rows gone (active + soft-deleted), all preference rows gone, `del` called with all http blob keys.
+- **Purge — block 409:** item with a `sort_result_item` (generate a result) → owner purge → **409**; item + photos + preferences + the result-item all survive.
+- **Purge — authz:** non-owner member → 403 (item survives); absent item → 404; **non-owner targeting a real item + malformed body → 403** (proves authz precedes confirm parsing); owner + missing/wrong confirm → 400 (nothing deleted); unauth → 401.
+- **Remove-from-sorts:** seed an item in a **draft** result and (separately) a **finalized** result → owner calls remove-from-sorts → 200 `{ removed: 1, remainingInFinalized: 1 }`; the draft result-item is GONE, the finalized result-item SURVIVES, preferences untouched. Then owner purge → still **409** (finalized). Second case: item in draft results only → remove-from-sorts → `remainingInFinalized: 0` → owner purge → **200** (the full un-block→purge chain). Authz: non-owner → 403.
+- **Unit:** `requireApiCollectionOwner`; the new repo methods' signatures; `ItemPurgeService.purge` (existsByItem short-circuit, tx, `del` http-filtered post-commit) and `removeItemFromDraftResults` (draft-only delete, finalized count) — mock repos + Blob; the authoritative removal proofs are the integration tests.
+
+- **Playwright e2e — the ENTIRE removal workflow (required, per the owner).** There is no UI for purge/remove-from-sorts, so these are **API-level** Playwright tests driving the real server via authenticated `page.request` (the harness's established pattern, like `auth.setup.ts`), end-to-end against the prod build + ephemeral Postgres, in a new spec (e.g. `e2e/item-removal.spec.ts`). A new e2e seed fixture sets up: an **owner** + a **non-owner** user, a collection, an item with photos, and that item placed in a **draft** result and in a **finalized** result. Cases:
+  1. **Full un-block → purge chain** (item in draft-only results): `POST …/purge` → **409**; `POST …/remove-from-sorts` → **200** `{ removed≥1, remainingInFinalized: 0 }`; `POST …/purge` → **200**; then `GET` the item → **404** (gone) and its photos endpoint → empty/404 (blobs cleaned).
+  2. **Finalized dead-end** (item also in a finalized result): `remove-from-sorts` → `{ removed: 1, remainingInFinalized: 1 }`; `purge` → **409** (the finalized result-item survives).
+  3. **Authz:** the **non-owner** gets **403** on BOTH ops, and the item + its results survive.
+  These run in CI's `e2e` (Playwright) job (the `src/app/api/**` change triggers it via the paths-filter). The Blob `del` boundary is exercised against the test environment; assert the API-observable outcomes (item 404, photos empty), not the blob store directly.
 
 ## Decisions resolved
-- **Block (409) on any sort-result membership** (owner choice) — preserve all results; cascade preferences + photos + item otherwise.
-- Orchestration in a dedicated `ItemPurgeService` (Architect).
-- `findByIdIncludingDeleted` is a firm requirement (Security/Data F1/F4).
-- Authz before body parsing (Security F2). Blob `del` keeps the `startsWith("http")` guard (Security/Data F5).
+- Purge **blocks 409 on any result membership**; the companion **remove-from-sorts** clears draft results (owner choice). Finalized-result items remain non-purgeable by design.
+- **The entire removal workflow has Playwright (API-level) e2e coverage** (owner directive) — the un-block→purge chain, the finalized dead-end, and authz.
+- Both ops owner-only; orchestration in `ItemPurgeService` (purge) + `SortResultService.removeItemFromDraftResults`.
+- `findByIdIncludingDeleted` firm; authz-before-confirm; blob `http` guard; `deleteByItem` is a new method (not `clear`). Audit-log gap → follow-up bead.
 
 ## Advances
-
-Closes `purses-u3p` (item-purge half; `purgeCollection` remains its own bead). Reuses `withTransaction` (purses-nea).
+Closes `purses-u3p`. Reuses `withTransaction` (purses-nea). Companion op complements `deleteResultItem` (single-result) with a bulk draft detach.
