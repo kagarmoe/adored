@@ -15,6 +15,9 @@ export async function GET(
     const controller = new ItemController(itemRepo);
 
     const item = await controller.getItem(params.id);
+    if (!item) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     return NextResponse.json(item);
   } catch (error) {
     return NextResponse.json(
