@@ -4,7 +4,9 @@ import {
   getPhotoAssetUrlForPhoto,
   getPoolPhotoAssetUrl,
   getBlobAccess,
+  PHOTO_WIDTH,
 } from "./photos";
+import { RESIZE_WIDTHS } from "./photo-serving";
 
 describe("photo asset URL helpers", () => {
   it("builds an item photo URL with no query when no width is given", () => {
@@ -32,6 +34,12 @@ describe("photo asset URL helpers", () => {
 
   it("getPhotoAssetUrlForPhoto throws for a pool (item-less) photo", () => {
     expect(() => getPhotoAssetUrlForPhoto({ id: "p", itemId: null }, "c")).toThrow();
+  });
+
+  it("every PHOTO_WIDTH value is an allowlisted resize width (or the route 400s it)", () => {
+    for (const w of Object.values(PHOTO_WIDTH)) {
+      expect(RESIZE_WIDTHS).toContain(w);
+    }
   });
 
   it("getBlobAccess distinguishes private vs public blob hosts", () => {

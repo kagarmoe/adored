@@ -5,7 +5,12 @@ import sharp from "sharp";
 
 vi.mock("@vercel/blob", () => ({ get: vi.fn() }));
 import { get } from "@vercel/blob";
-import { servePhotoFile, RESIZE_WIDTHS, RESIZE_MAX_SOURCE_BYTES } from "./photo-serving";
+import {
+  servePhotoFile,
+  readStreamCapped,
+  RESIZE_WIDTHS,
+  RESIZE_MAX_SOURCE_BYTES,
+} from "./photo-serving";
 
 const mockGet = get as unknown as ReturnType<typeof vi.fn>;
 
@@ -114,6 +119,26 @@ describe("servePhotoFile", () => {
     expect(meta.height!).toBeGreaterThan(meta.width!); // .rotate() applied
     expect(meta.orientation).toBeUndefined(); // EXIF orientation tag stripped
   });
+
+});
+
+describe("readStreamCapped", () => {
+  it("returns the full buffer when the stream is under the cap", async () => {
+    const stream = new Response(new Uint8Array([1, 2, 3])).body!;
+    const buf = await readStreamCapped(stream, 10);
+    expect(buf).not.toBeNull();
+    expect(buf!.byteLength).toBe(3);
+  });
+
+  it("returns null (no OOM) when the stream exceeds the cap", async () => {
+    const stream = new Response(new Uint8Array(20)).body!;
+    const buf = await readStreamCapped(stream, 10);
+    expect(buf).toBeNull();
+  });
+});
+
+describe("servePhotoFile (continued)", () => {
+  beforeEach(() => mockGet.mockReset());
 
   it("returns a generic 500 (no internal detail) when processing throws", async () => {
     mockGet.mockImplementation(async () => ({

@@ -27,6 +27,29 @@ function variantEtag(photoId: string, w: number | "orig", updatedAt: Date): stri
   return `"${photoId}:${w}:${updatedAt.getTime()}"`;
 }
 
+/** Read a web ReadableStream into a Buffer, returning null if it exceeds
+ *  `maxBytes`. Bounds memory even when the blob's reported size is missing or
+ *  wrong, so a mis-sized source can never OOM the function before the guard. */
+export async function readStreamCapped(
+  stream: ReadableStream<Uint8Array>,
+  maxBytes: number,
+): Promise<Buffer | null> {
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks);
+}
+
 /**
  * Serve a photo's bytes with caching + optional on-demand resize. Owns the
  * variant ETag end-to-end: it does NOT forward the client's If-None-Match into
@@ -71,11 +94,13 @@ export async function servePhotoFile(
       });
     }
 
+    // Fast-reject a known-huge blob without reading it; the capped reader then
+    // bounds the read for unknown/mis-reported sizes too.
     if (result.blob.size != null && result.blob.size > RESIZE_MAX_SOURCE_BYTES) {
       return NextResponse.json({ error: "Image too large to process" }, { status: 400 });
     }
-    const buf = Buffer.from(await new Response(result.stream).arrayBuffer());
-    if (buf.byteLength > RESIZE_MAX_SOURCE_BYTES) {
+    const buf = await readStreamCapped(result.stream, RESIZE_MAX_SOURCE_BYTES);
+    if (!buf) {
       return NextResponse.json({ error: "Image too large to process" }, { status: 400 });
     }
     const out = await sharp(buf, { limitInputPixels: LIMIT_INPUT_PIXELS, failOn: "truncated" })
