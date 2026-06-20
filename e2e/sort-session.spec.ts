@@ -33,7 +33,7 @@ test.describe("sort session → triage", () => {
   });
 
   test.beforeEach(async ({ page }) => {
-    await page.route("**/photos/**/file", (route) =>
+    await page.route("**/photos/**/file*", (route) =>
       route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/jpeg" }),
     );
   });
@@ -127,7 +127,7 @@ test.describe("session detail → See what you love most → results", () => {
   });
 
   test.beforeEach(async ({ page }) => {
-    await page.route("**/photos/**/file", (route) =>
+    await page.route("**/photos/**/file*", (route) =>
       route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/jpeg" }),
     );
   });
