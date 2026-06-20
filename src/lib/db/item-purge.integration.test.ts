@@ -215,4 +215,27 @@ describeDb("POST /api/items/[id]/purge (route -> service -> DB) — purses-u3p",
     expect(await prefRowCount(itemId)).toBe(1);
     expect(mockBlobDel).not.toHaveBeenCalled();
   });
+
+  it("(g) a blob `del` failure does NOT fail the purge — DB rows still gone, 200 (best-effort)", async () => {
+    // The blob store is an external best-effort boundary: the DB delete already
+    // committed, so a `del` rejection must be swallowed (Promise.allSettled), not
+    // propagated. A rejected del that 500'd the route would leave the item
+    // un-purgeable forever — the exact failure this regression pins.
+    const { db } = getTestDb();
+    const itemId = await seedItemWithChildren();
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    mockBlobDel.mockRejectedValue(new Error("blob store unreachable"));
+
+    const res = await purge(purgeReq({ confirm: "PURGE" }) as any, { params: { id: itemId } });
+    expect(res.status).toBe(200);
+
+    // The destructive DB work committed despite the blob failure.
+    expect(await new ItemRepository(db).findByIdIncludingDeleted(itemId)).toBeNull();
+    expect(await photoRowCount(itemId)).toBe(0);
+    expect(await prefRowCount(itemId)).toBe(0);
+
+    // del WAS attempted for both http keys (the failure is on the store side).
+    const delledKeys = mockBlobDel.mock.calls.map((c) => c[0]).sort();
+    expect(delledKeys).toEqual([HTTP_KEY_A, HTTP_KEY_B].sort());
+  });
 });
