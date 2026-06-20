@@ -42,7 +42,7 @@ export async function POST(
 
     const service = new ItemPurgeService(db, new SortResultItemRepository(db));
     try {
-      await service.purge(item.id);
+      await service.purge(item, user.id);
     } catch (error) {
       if (error instanceof ItemInResultError) {
         return NextResponse.json({ error: error.message }, { status: 409 });

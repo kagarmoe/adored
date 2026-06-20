@@ -216,6 +216,32 @@ export const decisionEventsTable = pgTable(
   }),
 );
 
+// ===== AUDIT LOG (append-only; permanent-purge trail) =====
+// No foreign keys: the targets (item, collection) are being deleted, so rows
+// reference them by id as a standalone historical record. Append-only — no
+// UPDATE/DELETE path. Index orders the only read query and is a TOTAL order
+// (id tie-breaks same-millisecond createdAt) so a future keyset cursor is safe.
+export const auditLogTable = pgTable(
+  "audit_log",
+  {
+    id: text("id").primaryKey(),
+    actorId: text("actor_id").notNull(),
+    action: text("action").notNull(),
+    targetType: text("target_type").notNull(),
+    targetId: text("target_id").notNull(),
+    collectionId: text("collection_id").notNull(),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    collectionCreatedIdx: index("audit_log_collection_created_idx").on(
+      table.collectionId,
+      table.createdAt,
+      table.id,
+    ),
+  }),
+);
+
 // ===== COLLECTION PREFERENCE ITEMS =====
 export const preferencesTable = pgTable(
   "preferences",

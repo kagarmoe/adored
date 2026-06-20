@@ -1,10 +1,12 @@
 import type { Database } from "@/lib/db";
+import type { Item } from "@/types/domain";
 import { withTransaction } from "@/lib/transactions";
 import { del } from "@vercel/blob";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
+import { AuditLogRepository } from "@/server/repositories/implementations/AuditLogRepository";
 
 /**
  * Thrown when purge targets an item that is referenced by any sort_result_item
@@ -45,15 +47,25 @@ export class ItemPurgeService {
     private sortResultItemRepo: SortResultItemRepository,
   ) {}
 
-  async purge(itemId: string): Promise<void> {
-    if (await this.sortResultItemRepo.existsByItem(itemId)) {
+  async purge(item: Item, actorId: string): Promise<void> {
+    if (await this.sortResultItemRepo.existsByItem(item.id)) {
       throw new ItemInResultError();
     }
 
     const blobKeys = await withTransaction(this.db, async (tx) => {
-      await new CollectionPreferenceItemRepository(tx).deleteByItem(itemId);
-      const keys = await new PhotoRepository(tx).hardDeleteByItem(itemId);
-      await new ItemRepository(tx).hardDelete(itemId);
+      const preferencesDeleted = await new CollectionPreferenceItemRepository(tx).deleteByItem(item.id);
+      const keys = await new PhotoRepository(tx).hardDeleteByItem(item.id);
+      await new ItemRepository(tx).hardDelete(item.id);
+      // Tx-bound by construction — a committed purge always has exactly one audit
+      // row; if this insert throws, the whole purge rolls back.
+      await new AuditLogRepository(tx).record({
+        actorId,
+        action: "item.purge",
+        targetType: "item",
+        targetId: item.id,
+        collectionId: item.collectionId,
+        metadata: { photosDeleted: keys.length, preferencesDeleted },
+      });
       return keys;
     });
 
