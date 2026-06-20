@@ -27,7 +27,7 @@ export class ItemService {
 
   // Make one item from selected pooled photos: pre-validate availability, then
   // create the (nameless, catalog-numbered) item and assign the photos with the
-  // first as hero. neon-http is stateless (no transaction), so we pre-check
+  // first as hero. The create→assign path is deliberately non-transactional, so we pre-check
   // availability before any write — a conflict must leave the pool untouched —
   // and keep the assign guard as a race backstop that compensates the item.
   async createItemFromPool(collectionId: string, photoIds: string[]): Promise<Item> {
@@ -41,8 +41,9 @@ export class ItemService {
 
     // Pre-validate availability BEFORE creating or assigning anything, so a
     // conflict leaves the pool untouched — no orphan item, no half-assigned
-    // photos. neon-http has no transaction; this check plus the assign guard
-    // below keep conflicts clean.
+    // photos — partial failure leaves at worst a harmless empty item; this check
+    // plus the assign guard below keep conflicts clean (a transaction would also
+    // work but isn't used here).
     const available = await this.photoRepo.countAvailablePooled(collectionId, ids);
     if (available !== ids.length) {
       throw new PoolGroupError(
@@ -121,8 +122,8 @@ export class ItemService {
 
   // Unified "Move to…": move/split/return-to-pool are all reassigning photos'
   // item_id. Reconciles hero on every affected item (a source whose hero moved
-  // away, or a heroless target) so display stays coherent. neon-http has no
-  // transaction; findByIds pre-validates so a conflict touches nothing.
+  // away, or a heroless target) so display stays coherent. This path is
+  // deliberately non-transactional; findByIds pre-validates so a conflict touches nothing.
   async reassignPhotos(
     collectionId: string,
     photoIds: string[],

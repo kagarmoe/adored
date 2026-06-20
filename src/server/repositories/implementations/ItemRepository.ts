@@ -48,7 +48,7 @@ export class ItemRepository implements IItemRepository {
     }
 
     // Auto-allocate MAX+1, retry on the UNIQUE(collection_id, number) race
-    // (neon-http is stateless — no long transaction to lock the max).
+    // (a retry-able insert — simpler than locking the max; a transaction is available but unnecessary here).
     for (let attempt = 0; attempt < 5; attempt++) {
       const number = await this.getNextCatalogNumber(data.collectionId);
       try {
