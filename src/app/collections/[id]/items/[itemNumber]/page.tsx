@@ -5,11 +5,11 @@ import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { AppLayout } from "@/components/layout";
-import { Button, Card, PhotoViewControl } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 import { ItemMetadata } from "@/features/items/ItemMetadata";
+import { ItemPhotoCarousel } from "@/features/items/ItemPhotoCarousel";
+import type { ViewerPhoto } from "@/components/ui";
 import Link from "next/link";
-import Image from "next/image";
-import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { hasName, itemDisplayName } from "@/lib/items";
 
 interface ItemDetailPageProps {
@@ -38,7 +38,30 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   }
 
   const photos = await photoRepo.findByItem(item.id);
-  const heroPhoto = photos.find((p) => p.isHero);
+  const nav = `/collections/${collection.slug ?? collection.id}/items/${item.number}`;
+  const editHref = `${nav}/edit`;
+  const photosHref = `${nav}/photos`;
+
+  // findByItem has no ORDER BY — order deterministically here: hero first, then oldest.
+  const orderedPhotos: ViewerPhoto[] = [...photos]
+    .sort(
+      (a, b) =>
+        Number(b.isHero) - Number(a.isHero) ||
+        +new Date(a.createdAt) - +new Date(b.createdAt) ||
+        (a.id < b.id ? -1 : 1),
+    )
+    .map((p) => ({
+      id: p.id,
+      itemId: item.id,
+      collectionId: collection.id,
+      rotation: p.rotation,
+      updatedAt: p.updatedAt,
+      alt: itemDisplayName(item),
+    }));
+
+  const hasMetadata = Boolean(
+    item.brand || item.style || item.color || item.material || item.category || item.notes,
+  );
 
   return (
     <AppLayout
@@ -56,103 +79,48 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
             {item.brand && <p className="mt-1 text-ink-soft">{item.brand}</p>}
             {!hasName(item) && (
               <Link
-                href={`/collections/${collection.slug ?? collection.id}/items/${item.number}/edit`}
+                href={editHref}
                 className="mt-1 inline-block text-ink-soft underline underline-offset-2"
               >
                 Add a name
               </Link>
             )}
           </div>
-          <Link href={`/collections/${collection.slug ?? collection.id}/items/${item.number}/edit`}>
+          <Link href={editHref}>
             <Button>Edit</Button>
           </Link>
         </div>
 
-        {/* Hero Photo */}
-        {heroPhoto ? (
-          <div className="relative isolate bg-ground rounded-lg overflow-hidden h-96 flex items-center justify-center">
-            <Image
-              src={getPhotoAssetUrlForPhoto(heroPhoto, collection.id, { w: PHOTO_WIDTH.hero })}
-              alt={itemDisplayName(item)}
-              fill
-              className="object-cover"
-              priority
-              unoptimized
-            />
-            {heroPhoto.itemId && (
-              <PhotoViewControl
-                photo={{
-                  id: heroPhoto.id,
-                  itemId: heroPhoto.itemId,
-                  collectionId: heroPhoto.collectionId,
-                  rotation: heroPhoto.rotation,
-                  updatedAt: heroPhoto.updatedAt,
-                  alt: itemDisplayName(item),
-                }}
-                className="absolute right-3 top-3 z-20"
-              />
-            )}
-          </div>
-        ) : (
-          <Card padding="lg" className="h-96 flex items-center justify-center">
-            <div className="text-center">
-              <span className="text-6xl block mb-2">📷</span>
-              <p className="text-ink-soft">No hero photo</p>
-              <Link href={`/collections/${collection.slug ?? collection.id}/items/${item.number}/photos`}>
-                <Button className="mt-4">Add Photos</Button>
+        <div className="grid gap-8 lg:grid-cols-[3fr_2fr]">
+          {/* Photos lead — flip through them all (tap-first, no swipe). */}
+          <ItemPhotoCarousel
+            photos={orderedPhotos}
+            collectionId={collection.id}
+            itemName={itemDisplayName(item)}
+            addPhotosHref={photosHref}
+          />
+
+          {/* Details — with a contextual edit affordance (purses-0gv). */}
+          <Card padding="lg" className="h-fit">
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h2 className="text-lg text-ink">Details</h2>
+              {hasMetadata && (
+                <Link href={editHref} className="text-sm text-primary underline underline-offset-2">
+                  Edit details
+                </Link>
+              )}
+            </div>
+            <ItemMetadata item={item} editHref={editHref} />
+            {photos.length > 0 && (
+              <Link
+                href={photosHref}
+                className="mt-6 inline-block text-sm text-ink-soft underline underline-offset-2"
+              >
+                Manage photos
               </Link>
-            </div>
+            )}
           </Card>
-        )}
-
-        {/* Item Metadata */}
-        <Card padding="lg">
-          <h2 className="text-lg text-ink mb-4">Details</h2>
-          <ItemMetadata item={item} />
-        </Card>
-
-        {/* Photo Gallery */}
-        {photos.length > 0 && (
-          <Card padding="lg">
-            <h2 className="text-lg text-ink mb-4">Photos</h2>
-            <div className="grid grid-cols-3 gap-4">
-              {photos.map((photo) => (
-                <div
-                  key={photo.id}
-                  className="bg-ground rounded-lg overflow-hidden aspect-square relative"
-                >
-                  <Image
-                    src={getPhotoAssetUrlForPhoto(photo, collection.id, { w: PHOTO_WIDTH.galleryTile })}
-                    alt="Item photo"
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                  {photo.isHero && (
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                      <span className="text-white text-sm font-semibold">Hero</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            <Link href={`/collections/${collection.slug ?? collection.id}/items/${item.number}/photos`}>
-              <Button className="mt-4" variant="secondary">
-                Manage Photos
-              </Button>
-            </Link>
-          </Card>
-        )}
-
-        {/* No Photos State */}
-        {photos.length === 0 && (
-          <Card padding="lg" className="text-center">
-            <p className="text-ink-soft mb-4">No photos yet</p>
-            <Link href={`/collections/${collection.slug ?? collection.id}/items/${item.number}/photos`}>
-              <Button>Add Photos</Button>
-            </Link>
-          </Card>
-        )}
+        </div>
       </div>
     </AppLayout>
   );
