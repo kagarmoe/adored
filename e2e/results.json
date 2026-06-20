@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/20afe8040dad1d34f2dc23091c467b185a4bbfb0",
-        "commitHash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27885151450"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/0ce2b90f4bd3e0cc76cf0543a90e373608e82915",
+        "commitHash": "0ce2b90f4bd3e0cc76cf0543a90e373608e82915",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27886500357"
       },
       "gitCommit": {
-        "shortHash": "20afe80",
-        "hash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
-        "subject": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)",
-        "body": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)\n\n* docs(spec): image performance design (sub-project A) — caching + on-demand resize\n\nFolds adversarial review (wf_fdebbbf1-a42): servePhotoFile owns the variant\nETag end-to-end (no If-None-Match passthrough to blob get); private,max-age=300,\nmust-revalidate instead of immutable (shared-tablet authz); sharp decode-bomb\nguards; runtime=nodejs; persisted-variant-cache deferred to a bead.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(plan): image performance implementation plan (sub-project A)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): servePhotoFile — variant ETag, max-age cache, guarded sharp resize\n\nOwns the variant ETag end-to-end (no If-None-Match passthrough to blob get).\nprivate,max-age=300,must-revalidate (shared-tablet authz). ?w= allowlist\n{160,320,640,1280}; decode-bomb guards (limitInputPixels + source-byte ceiling);\nEXIF auto-orient; generic 500. 12 tests, real sharp on real fixtures.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): photo URL helpers accept a width option\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): item /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): pool /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): request per-surface widths at every photo URL build site\n\nPHOTO_WIDTH map (card 640, poolTile 320, hero 1280, galleryTile 640) threaded\nthrough collections/items/results/compare/triage pages, item-detail hero+gallery,\nPhotoGallery, PoolPhotoGrid. next/image already lazy-loads non-priority tiles.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): assert per-surface image widths (card 640, hero 1280)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): airtight decode-bomb guard + invariant/pool-width tests (review fold)\n\nWhole-branch review (wf_16cceee2-403) folds:\n- bounded readStreamCapped() so an unknown/mis-reported blob size can't OOM\n  before the byte ceiling (Security+QA convergent minor); direct unit tests.\n- test PHOTO_WIDTH subset of RESIZE_WIDTHS (was comment-only invariant).\n- PoolPhotoGrid renders w=320 (pool tier render wiring; e2e only covered 640/1280).\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): API.md /file routes + ARCHITECTURE decision 14 (image cache/resize)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for image-perf changes\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): match /file* glob so interceptors catch resized ?w= URLs\n\nA's ?w= width param changed the image URL surface; the existing\n'**/photos/**/file' route globs no longer matched '.../file?w=640', so those\nrequests hit the real (blob-credential-less) route in CI -> 500 -> CardImage\nonError fallback -> getByRole('img') missing. Add the trailing * to all\ninterceptors. 34 e2e pass across tablet/phone/desktop.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "0ce2b90",
+        "hash": "0ce2b90f4bd3e0cc76cf0543a90e373608e82915",
+        "subject": "Image rotation (persisted) + zoom viewer (epic B — purses-u1lr.2) (#220)",
+        "body": "Image rotation (persisted) + zoom viewer (epic B — purses-u1lr.2) (#220)\n\n* docs(spec): rotation+zoom design (sub-project B)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(spec): fold B adversarial review (wf_19818d31-78d)\n\nwrite-tier authz (canAddPhotos|owner); orientation-correct passthrough;\ncreate() rotation optional; stretched-link card (no button-in-anchor);\nviewer token backplate + ConfirmDialog idiom + aria-live; update A's route\ndelegation tests for the rotation arg; EXIF+stored composition test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(plan): image rotation+zoom implementation plan (sub-project B)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): photos.rotation column + repo round-trip (B task 1)\n\ninteger default 0 not null (migration 0005); Photo.rotation; create() keeps\nrotation optional (DB default) so existing callers compile; mapToPhoto maps it.\nDB round-trip test (un-mocked).\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): apply stored rotation in servePhotoFile (resize + passthrough) (B task 2)\n\n.rotate() [EXIF] then .rotate(rotation) composes (verified: 0->portrait,\n90->landscape — not double-rotated). Passthrough re-encodes to oriented webp\nwhen rotation!=0, else streams verbatim. Both /file routes forward photo.rotation;\nroute delegation tests updated + non-zero forwarding case.\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): PATCH item photo rotation — write-tier authz, validated (B task 3)\n\ncanAddPhotos|owner (not bare member); belongs-to-parent 404 before 403;\nvalidate rotation in {0,90,180,270} after authz; update never runs on a\nrejected request (8 tests incl. member-without-canAddPhotos -> 403).\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): PATCH pool photo rotation — 3-conjunct IDOR guard + write-tier authz (B task 4)\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): v cache-bust param, auto-derived from updatedAt (B task 5)\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): ImageViewer (zoom + rotate) + stretched-link cards (B task 6)\n\nImageViewer lightbox (ConfirmDialog idiom): tap-first zoom +/-, optimistic rotate\n-> PATCH -> reconcile via img onLoad + returned updatedAt -> router.refresh, aria-live\nstatus, focus trap, Escape/backdrop close. PhotoViewControl overlays a token-backplate\nview button on each card via the stretched-link pattern (valid DOM, no button-in-anchor).\nWired: CollectionCard cover, ItemCard hero, item-detail hero. 6 component tests.\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): viewer rotate (persisted PATCH) + zoom; portal the viewer (B task 7)\n\ne2e surfaced that the card's isolate stacking context trapped the fixed overlay\n(WebKit/tablet/phone: <main> intercepted clicks) — render ImageViewer via\ncreatePortal(document.body). 7 e2e pass across tablet/phone/desktop.\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): fold B whole-branch review (wf_ca77ec29-699)\n\n- remove dead pool-rotate route + test + ImageViewer pool branches (2 personas\n  flagged orphaned; ViewerPhoto.itemId now string) — honors 'rotate once items\n  created' scope, less code.\n- drag-to-pan when zoomed (pointer events, touch-action none) — fixes the\n  center-zoom dead-end (UX major); reset pan on zoom-to-1/close.\n- PhotoViewControl opaque bg-surface + hairline ring (>=3:1 over any photo, both\n  themes) + focus-visible ring + focus restore to trigger on close.\n- ImageViewer focus trap excludes disabled controls; optimistic-turn reconcile guard.\n- tests: card-level view-control render (button+link valid DOM / absent), backdrop\n  close, focus-trap wrap, drag-pan; e2e asserts the image v= changed (persistence).\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): API.md PATCH rotation route + ARCHITECTURE decision 15 (rotation + viewer)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for rotation+zoom\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1781992806000
+          "time": 1781996349000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1781992806000
+          "time": 1781996349000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/20afe8040dad1d34f2dc23091c467b185a4bbfb0",
-            "commitHash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27885151450"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/0ce2b90f4bd3e0cc76cf0543a90e373608e82915",
+            "commitHash": "0ce2b90f4bd3e0cc76cf0543a90e373608e82915",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27886500357"
           },
           "gitCommit": {
-            "shortHash": "20afe80",
-            "hash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
-            "subject": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)",
-            "body": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)\n\n* docs(spec): image performance design (sub-project A) — caching + on-demand resize\n\nFolds adversarial review (wf_fdebbbf1-a42): servePhotoFile owns the variant\nETag end-to-end (no If-None-Match passthrough to blob get); private,max-age=300,\nmust-revalidate instead of immutable (shared-tablet authz); sharp decode-bomb\nguards; runtime=nodejs; persisted-variant-cache deferred to a bead.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(plan): image performance implementation plan (sub-project A)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): servePhotoFile — variant ETag, max-age cache, guarded sharp resize\n\nOwns the variant ETag end-to-end (no If-None-Match passthrough to blob get).\nprivate,max-age=300,must-revalidate (shared-tablet authz). ?w= allowlist\n{160,320,640,1280}; decode-bomb guards (limitInputPixels + source-byte ceiling);\nEXIF auto-orient; generic 500. 12 tests, real sharp on real fixtures.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): photo URL helpers accept a width option\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): item /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): pool /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): request per-surface widths at every photo URL build site\n\nPHOTO_WIDTH map (card 640, poolTile 320, hero 1280, galleryTile 640) threaded\nthrough collections/items/results/compare/triage pages, item-detail hero+gallery,\nPhotoGallery, PoolPhotoGrid. next/image already lazy-loads non-priority tiles.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): assert per-surface image widths (card 640, hero 1280)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): airtight decode-bomb guard + invariant/pool-width tests (review fold)\n\nWhole-branch review (wf_16cceee2-403) folds:\n- bounded readStreamCapped() so an unknown/mis-reported blob size can't OOM\n  before the byte ceiling (Security+QA convergent minor); direct unit tests.\n- test PHOTO_WIDTH subset of RESIZE_WIDTHS (was comment-only invariant).\n- PoolPhotoGrid renders w=320 (pool tier render wiring; e2e only covered 640/1280).\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): API.md /file routes + ARCHITECTURE decision 14 (image cache/resize)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for image-perf changes\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): match /file* glob so interceptors catch resized ?w= URLs\n\nA's ?w= width param changed the image URL surface; the existing\n'**/photos/**/file' route globs no longer matched '.../file?w=640', so those\nrequests hit the real (blob-credential-less) route in CI -> 500 -> CardImage\nonError fallback -> getByRole('img') missing. Add the trailing * to all\ninterceptors. 34 e2e pass across tablet/phone/desktop.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "0ce2b90",
+            "hash": "0ce2b90f4bd3e0cc76cf0543a90e373608e82915",
+            "subject": "Image rotation (persisted) + zoom viewer (epic B — purses-u1lr.2) (#220)",
+            "body": "Image rotation (persisted) + zoom viewer (epic B — purses-u1lr.2) (#220)\n\n* docs(spec): rotation+zoom design (sub-project B)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(spec): fold B adversarial review (wf_19818d31-78d)\n\nwrite-tier authz (canAddPhotos|owner); orientation-correct passthrough;\ncreate() rotation optional; stretched-link card (no button-in-anchor);\nviewer token backplate + ConfirmDialog idiom + aria-live; update A's route\ndelegation tests for the rotation arg; EXIF+stored composition test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(plan): image rotation+zoom implementation plan (sub-project B)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): photos.rotation column + repo round-trip (B task 1)\n\ninteger default 0 not null (migration 0005); Photo.rotation; create() keeps\nrotation optional (DB default) so existing callers compile; mapToPhoto maps it.\nDB round-trip test (un-mocked).\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): apply stored rotation in servePhotoFile (resize + passthrough) (B task 2)\n\n.rotate() [EXIF] then .rotate(rotation) composes (verified: 0->portrait,\n90->landscape — not double-rotated). Passthrough re-encodes to oriented webp\nwhen rotation!=0, else streams verbatim. Both /file routes forward photo.rotation;\nroute delegation tests updated + non-zero forwarding case.\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): PATCH item photo rotation — write-tier authz, validated (B task 3)\n\ncanAddPhotos|owner (not bare member); belongs-to-parent 404 before 403;\nvalidate rotation in {0,90,180,270} after authz; update never runs on a\nrejected request (8 tests incl. member-without-canAddPhotos -> 403).\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): PATCH pool photo rotation — 3-conjunct IDOR guard + write-tier authz (B task 4)\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): v cache-bust param, auto-derived from updatedAt (B task 5)\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): ImageViewer (zoom + rotate) + stretched-link cards (B task 6)\n\nImageViewer lightbox (ConfirmDialog idiom): tap-first zoom +/-, optimistic rotate\n-> PATCH -> reconcile via img onLoad + returned updatedAt -> router.refresh, aria-live\nstatus, focus trap, Escape/backdrop close. PhotoViewControl overlays a token-backplate\nview button on each card via the stretched-link pattern (valid DOM, no button-in-anchor).\nWired: CollectionCard cover, ItemCard hero, item-detail hero. 6 component tests.\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): viewer rotate (persisted PATCH) + zoom; portal the viewer (B task 7)\n\ne2e surfaced that the card's isolate stacking context trapped the fixed overlay\n(WebKit/tablet/phone: <main> intercepted clicks) — render ImageViewer via\ncreatePortal(document.body). 7 e2e pass across tablet/phone/desktop.\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): fold B whole-branch review (wf_ca77ec29-699)\n\n- remove dead pool-rotate route + test + ImageViewer pool branches (2 personas\n  flagged orphaned; ViewerPhoto.itemId now string) — honors 'rotate once items\n  created' scope, less code.\n- drag-to-pan when zoomed (pointer events, touch-action none) — fixes the\n  center-zoom dead-end (UX major); reset pan on zoom-to-1/close.\n- PhotoViewControl opaque bg-surface + hairline ring (>=3:1 over any photo, both\n  themes) + focus-visible ring + focus restore to trigger on close.\n- ImageViewer focus trap excludes disabled controls; optimistic-turn reconcile guard.\n- tests: card-level view-control render (button+link valid DOM / absent), backdrop\n  close, focus-trap wrap, drag-pan; e2e asserts the image v= changed (persistence).\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): API.md PATCH rotation route + ARCHITECTURE decision 15 (rotation + viewer)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for rotation+zoom\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781992806000
+              "time": 1781996349000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781992806000
+              "time": 1781996349000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/20afe8040dad1d34f2dc23091c467b185a4bbfb0",
-            "commitHash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27885151450"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/0ce2b90f4bd3e0cc76cf0543a90e373608e82915",
+            "commitHash": "0ce2b90f4bd3e0cc76cf0543a90e373608e82915",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27886500357"
           },
           "gitCommit": {
-            "shortHash": "20afe80",
-            "hash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
-            "subject": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)",
-            "body": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)\n\n* docs(spec): image performance design (sub-project A) — caching + on-demand resize\n\nFolds adversarial review (wf_fdebbbf1-a42): servePhotoFile owns the variant\nETag end-to-end (no If-None-Match passthrough to blob get); private,max-age=300,\nmust-revalidate instead of immutable (shared-tablet authz); sharp decode-bomb\nguards; runtime=nodejs; persisted-variant-cache deferred to a bead.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(plan): image performance implementation plan (sub-project A)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): servePhotoFile — variant ETag, max-age cache, guarded sharp resize\n\nOwns the variant ETag end-to-end (no If-None-Match passthrough to blob get).\nprivate,max-age=300,must-revalidate (shared-tablet authz). ?w= allowlist\n{160,320,640,1280}; decode-bomb guards (limitInputPixels + source-byte ceiling);\nEXIF auto-orient; generic 500. 12 tests, real sharp on real fixtures.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): photo URL helpers accept a width option\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): item /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): pool /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): request per-surface widths at every photo URL build site\n\nPHOTO_WIDTH map (card 640, poolTile 320, hero 1280, galleryTile 640) threaded\nthrough collections/items/results/compare/triage pages, item-detail hero+gallery,\nPhotoGallery, PoolPhotoGrid. next/image already lazy-loads non-priority tiles.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): assert per-surface image widths (card 640, hero 1280)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): airtight decode-bomb guard + invariant/pool-width tests (review fold)\n\nWhole-branch review (wf_16cceee2-403) folds:\n- bounded readStreamCapped() so an unknown/mis-reported blob size can't OOM\n  before the byte ceiling (Security+QA convergent minor); direct unit tests.\n- test PHOTO_WIDTH subset of RESIZE_WIDTHS (was comment-only invariant).\n- PoolPhotoGrid renders w=320 (pool tier render wiring; e2e only covered 640/1280).\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): API.md /file routes + ARCHITECTURE decision 14 (image cache/resize)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for image-perf changes\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): match /file* glob so interceptors catch resized ?w= URLs\n\nA's ?w= width param changed the image URL surface; the existing\n'**/photos/**/file' route globs no longer matched '.../file?w=640', so those\nrequests hit the real (blob-credential-less) route in CI -> 500 -> CardImage\nonError fallback -> getByRole('img') missing. Add the trailing * to all\ninterceptors. 34 e2e pass across tablet/phone/desktop.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "0ce2b90",
+            "hash": "0ce2b90f4bd3e0cc76cf0543a90e373608e82915",
+            "subject": "Image rotation (persisted) + zoom viewer (epic B — purses-u1lr.2) (#220)",
+            "body": "Image rotation (persisted) + zoom viewer (epic B — purses-u1lr.2) (#220)\n\n* docs(spec): rotation+zoom design (sub-project B)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(spec): fold B adversarial review (wf_19818d31-78d)\n\nwrite-tier authz (canAddPhotos|owner); orientation-correct passthrough;\ncreate() rotation optional; stretched-link card (no button-in-anchor);\nviewer token backplate + ConfirmDialog idiom + aria-live; update A's route\ndelegation tests for the rotation arg; EXIF+stored composition test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(plan): image rotation+zoom implementation plan (sub-project B)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): photos.rotation column + repo round-trip (B task 1)\n\ninteger default 0 not null (migration 0005); Photo.rotation; create() keeps\nrotation optional (DB default) so existing callers compile; mapToPhoto maps it.\nDB round-trip test (un-mocked).\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): apply stored rotation in servePhotoFile (resize + passthrough) (B task 2)\n\n.rotate() [EXIF] then .rotate(rotation) composes (verified: 0->portrait,\n90->landscape — not double-rotated). Passthrough re-encodes to oriented webp\nwhen rotation!=0, else streams verbatim. Both /file routes forward photo.rotation;\nroute delegation tests updated + non-zero forwarding case.\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): PATCH item photo rotation — write-tier authz, validated (B task 3)\n\ncanAddPhotos|owner (not bare member); belongs-to-parent 404 before 403;\nvalidate rotation in {0,90,180,270} after authz; update never runs on a\nrejected request (8 tests incl. member-without-canAddPhotos -> 403).\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): PATCH pool photo rotation — 3-conjunct IDOR guard + write-tier authz (B task 4)\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): v cache-bust param, auto-derived from updatedAt (B task 5)\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): ImageViewer (zoom + rotate) + stretched-link cards (B task 6)\n\nImageViewer lightbox (ConfirmDialog idiom): tap-first zoom +/-, optimistic rotate\n-> PATCH -> reconcile via img onLoad + returned updatedAt -> router.refresh, aria-live\nstatus, focus trap, Escape/backdrop close. PhotoViewControl overlays a token-backplate\nview button on each card via the stretched-link pattern (valid DOM, no button-in-anchor).\nWired: CollectionCard cover, ItemCard hero, item-detail hero. 6 component tests.\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): viewer rotate (persisted PATCH) + zoom; portal the viewer (B task 7)\n\ne2e surfaced that the card's isolate stacking context trapped the fixed overlay\n(WebKit/tablet/phone: <main> intercepted clicks) — render ImageViewer via\ncreatePortal(document.body). 7 e2e pass across tablet/phone/desktop.\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): fold B whole-branch review (wf_ca77ec29-699)\n\n- remove dead pool-rotate route + test + ImageViewer pool branches (2 personas\n  flagged orphaned; ViewerPhoto.itemId now string) — honors 'rotate once items\n  created' scope, less code.\n- drag-to-pan when zoomed (pointer events, touch-action none) — fixes the\n  center-zoom dead-end (UX major); reset pan on zoom-to-1/close.\n- PhotoViewControl opaque bg-surface + hairline ring (>=3:1 over any photo, both\n  themes) + focus-visible ring + focus restore to trigger on close.\n- ImageViewer focus trap excludes disabled controls; optimistic-turn reconcile guard.\n- tests: card-level view-control render (button+link valid DOM / absent), backdrop\n  close, focus-trap wrap, drag-pan; e2e asserts the image v= changed (persistence).\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): API.md PATCH rotation route + ARCHITECTURE decision 15 (rotation + viewer)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for rotation+zoom\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781992806000
+              "time": 1781996349000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781992806000
+              "time": 1781996349000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/20afe8040dad1d34f2dc23091c467b185a4bbfb0",
-            "commitHash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27885151450"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/0ce2b90f4bd3e0cc76cf0543a90e373608e82915",
+            "commitHash": "0ce2b90f4bd3e0cc76cf0543a90e373608e82915",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27886500357"
           },
           "gitCommit": {
-            "shortHash": "20afe80",
-            "hash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
-            "subject": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)",
-            "body": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)\n\n* docs(spec): image performance design (sub-project A) — caching + on-demand resize\n\nFolds adversarial review (wf_fdebbbf1-a42): servePhotoFile owns the variant\nETag end-to-end (no If-None-Match passthrough to blob get); private,max-age=300,\nmust-revalidate instead of immutable (shared-tablet authz); sharp decode-bomb\nguards; runtime=nodejs; persisted-variant-cache deferred to a bead.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(plan): image performance implementation plan (sub-project A)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): servePhotoFile — variant ETag, max-age cache, guarded sharp resize\n\nOwns the variant ETag end-to-end (no If-None-Match passthrough to blob get).\nprivate,max-age=300,must-revalidate (shared-tablet authz). ?w= allowlist\n{160,320,640,1280}; decode-bomb guards (limitInputPixels + source-byte ceiling);\nEXIF auto-orient; generic 500. 12 tests, real sharp on real fixtures.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): photo URL helpers accept a width option\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): item /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): pool /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): request per-surface widths at every photo URL build site\n\nPHOTO_WIDTH map (card 640, poolTile 320, hero 1280, galleryTile 640) threaded\nthrough collections/items/results/compare/triage pages, item-detail hero+gallery,\nPhotoGallery, PoolPhotoGrid. next/image already lazy-loads non-priority tiles.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): assert per-surface image widths (card 640, hero 1280)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): airtight decode-bomb guard + invariant/pool-width tests (review fold)\n\nWhole-branch review (wf_16cceee2-403) folds:\n- bounded readStreamCapped() so an unknown/mis-reported blob size can't OOM\n  before the byte ceiling (Security+QA convergent minor); direct unit tests.\n- test PHOTO_WIDTH subset of RESIZE_WIDTHS (was comment-only invariant).\n- PoolPhotoGrid renders w=320 (pool tier render wiring; e2e only covered 640/1280).\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): API.md /file routes + ARCHITECTURE decision 14 (image cache/resize)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for image-perf changes\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): match /file* glob so interceptors catch resized ?w= URLs\n\nA's ?w= width param changed the image URL surface; the existing\n'**/photos/**/file' route globs no longer matched '.../file?w=640', so those\nrequests hit the real (blob-credential-less) route in CI -> 500 -> CardImage\nonError fallback -> getByRole('img') missing. Add the trailing * to all\ninterceptors. 34 e2e pass across tablet/phone/desktop.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "0ce2b90",
+            "hash": "0ce2b90f4bd3e0cc76cf0543a90e373608e82915",
+            "subject": "Image rotation (persisted) + zoom viewer (epic B — purses-u1lr.2) (#220)",
+            "body": "Image rotation (persisted) + zoom viewer (epic B — purses-u1lr.2) (#220)\n\n* docs(spec): rotation+zoom design (sub-project B)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(spec): fold B adversarial review (wf_19818d31-78d)\n\nwrite-tier authz (canAddPhotos|owner); orientation-correct passthrough;\ncreate() rotation optional; stretched-link card (no button-in-anchor);\nviewer token backplate + ConfirmDialog idiom + aria-live; update A's route\ndelegation tests for the rotation arg; EXIF+stored composition test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(plan): image rotation+zoom implementation plan (sub-project B)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): photos.rotation column + repo round-trip (B task 1)\n\ninteger default 0 not null (migration 0005); Photo.rotation; create() keeps\nrotation optional (DB default) so existing callers compile; mapToPhoto maps it.\nDB round-trip test (un-mocked).\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): apply stored rotation in servePhotoFile (resize + passthrough) (B task 2)\n\n.rotate() [EXIF] then .rotate(rotation) composes (verified: 0->portrait,\n90->landscape — not double-rotated). Passthrough re-encodes to oriented webp\nwhen rotation!=0, else streams verbatim. Both /file routes forward photo.rotation;\nroute delegation tests updated + non-zero forwarding case.\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): PATCH item photo rotation — write-tier authz, validated (B task 3)\n\ncanAddPhotos|owner (not bare member); belongs-to-parent 404 before 403;\nvalidate rotation in {0,90,180,270} after authz; update never runs on a\nrejected request (8 tests incl. member-without-canAddPhotos -> 403).\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): PATCH pool photo rotation — 3-conjunct IDOR guard + write-tier authz (B task 4)\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): v cache-bust param, auto-derived from updatedAt (B task 5)\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): ImageViewer (zoom + rotate) + stretched-link cards (B task 6)\n\nImageViewer lightbox (ConfirmDialog idiom): tap-first zoom +/-, optimistic rotate\n-> PATCH -> reconcile via img onLoad + returned updatedAt -> router.refresh, aria-live\nstatus, focus trap, Escape/backdrop close. PhotoViewControl overlays a token-backplate\nview button on each card via the stretched-link pattern (valid DOM, no button-in-anchor).\nWired: CollectionCard cover, ItemCard hero, item-detail hero. 6 component tests.\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): viewer rotate (persisted PATCH) + zoom; portal the viewer (B task 7)\n\ne2e surfaced that the card's isolate stacking context trapped the fixed overlay\n(WebKit/tablet/phone: <main> intercepted clicks) — render ImageViewer via\ncreatePortal(document.body). 7 e2e pass across tablet/phone/desktop.\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): fold B whole-branch review (wf_ca77ec29-699)\n\n- remove dead pool-rotate route + test + ImageViewer pool branches (2 personas\n  flagged orphaned; ViewerPhoto.itemId now string) — honors 'rotate once items\n  created' scope, less code.\n- drag-to-pan when zoomed (pointer events, touch-action none) — fixes the\n  center-zoom dead-end (UX major); reset pan on zoom-to-1/close.\n- PhotoViewControl opaque bg-surface + hairline ring (>=3:1 over any photo, both\n  themes) + focus-visible ring + focus restore to trigger on close.\n- ImageViewer focus trap excludes disabled controls; optimistic-turn reconcile guard.\n- tests: card-level view-control render (button+link valid DOM / absent), backdrop\n  close, focus-trap wrap, drag-pan; e2e asserts the image v= changed (persistence).\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): API.md PATCH rotation route + ARCHITECTURE decision 15 (rotation + viewer)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for rotation+zoom\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781992806000
+              "time": 1781996349000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781992806000
+              "time": 1781996349000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/20afe8040dad1d34f2dc23091c467b185a4bbfb0",
-            "commitHash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27885151450"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/0ce2b90f4bd3e0cc76cf0543a90e373608e82915",
+            "commitHash": "0ce2b90f4bd3e0cc76cf0543a90e373608e82915",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27886500357"
           },
           "gitCommit": {
-            "shortHash": "20afe80",
-            "hash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
-            "subject": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)",
-            "body": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)\n\n* docs(spec): image performance design (sub-project A) — caching + on-demand resize\n\nFolds adversarial review (wf_fdebbbf1-a42): servePhotoFile owns the variant\nETag end-to-end (no If-None-Match passthrough to blob get); private,max-age=300,\nmust-revalidate instead of immutable (shared-tablet authz); sharp decode-bomb\nguards; runtime=nodejs; persisted-variant-cache deferred to a bead.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(plan): image performance implementation plan (sub-project A)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): servePhotoFile — variant ETag, max-age cache, guarded sharp resize\n\nOwns the variant ETag end-to-end (no If-None-Match passthrough to blob get).\nprivate,max-age=300,must-revalidate (shared-tablet authz). ?w= allowlist\n{160,320,640,1280}; decode-bomb guards (limitInputPixels + source-byte ceiling);\nEXIF auto-orient; generic 500. 12 tests, real sharp on real fixtures.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): photo URL helpers accept a width option\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): item /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): pool /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): request per-surface widths at every photo URL build site\n\nPHOTO_WIDTH map (card 640, poolTile 320, hero 1280, galleryTile 640) threaded\nthrough collections/items/results/compare/triage pages, item-detail hero+gallery,\nPhotoGallery, PoolPhotoGrid. next/image already lazy-loads non-priority tiles.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): assert per-surface image widths (card 640, hero 1280)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): airtight decode-bomb guard + invariant/pool-width tests (review fold)\n\nWhole-branch review (wf_16cceee2-403) folds:\n- bounded readStreamCapped() so an unknown/mis-reported blob size can't OOM\n  before the byte ceiling (Security+QA convergent minor); direct unit tests.\n- test PHOTO_WIDTH subset of RESIZE_WIDTHS (was comment-only invariant).\n- PoolPhotoGrid renders w=320 (pool tier render wiring; e2e only covered 640/1280).\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): API.md /file routes + ARCHITECTURE decision 14 (image cache/resize)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for image-perf changes\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): match /file* glob so interceptors catch resized ?w= URLs\n\nA's ?w= width param changed the image URL surface; the existing\n'**/photos/**/file' route globs no longer matched '.../file?w=640', so those\nrequests hit the real (blob-credential-less) route in CI -> 500 -> CardImage\nonError fallback -> getByRole('img') missing. Add the trailing * to all\ninterceptors. 34 e2e pass across tablet/phone/desktop.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "0ce2b90",
+            "hash": "0ce2b90f4bd3e0cc76cf0543a90e373608e82915",
+            "subject": "Image rotation (persisted) + zoom viewer (epic B — purses-u1lr.2) (#220)",
+            "body": "Image rotation (persisted) + zoom viewer (epic B — purses-u1lr.2) (#220)\n\n* docs(spec): rotation+zoom design (sub-project B)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(spec): fold B adversarial review (wf_19818d31-78d)\n\nwrite-tier authz (canAddPhotos|owner); orientation-correct passthrough;\ncreate() rotation optional; stretched-link card (no button-in-anchor);\nviewer token backplate + ConfirmDialog idiom + aria-live; update A's route\ndelegation tests for the rotation arg; EXIF+stored composition test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(plan): image rotation+zoom implementation plan (sub-project B)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): photos.rotation column + repo round-trip (B task 1)\n\ninteger default 0 not null (migration 0005); Photo.rotation; create() keeps\nrotation optional (DB default) so existing callers compile; mapToPhoto maps it.\nDB round-trip test (un-mocked).\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): apply stored rotation in servePhotoFile (resize + passthrough) (B task 2)\n\n.rotate() [EXIF] then .rotate(rotation) composes (verified: 0->portrait,\n90->landscape — not double-rotated). Passthrough re-encodes to oriented webp\nwhen rotation!=0, else streams verbatim. Both /file routes forward photo.rotation;\nroute delegation tests updated + non-zero forwarding case.\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): PATCH item photo rotation — write-tier authz, validated (B task 3)\n\ncanAddPhotos|owner (not bare member); belongs-to-parent 404 before 403;\nvalidate rotation in {0,90,180,270} after authz; update never runs on a\nrejected request (8 tests incl. member-without-canAddPhotos -> 403).\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): PATCH pool photo rotation — 3-conjunct IDOR guard + write-tier authz (B task 4)\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): v cache-bust param, auto-derived from updatedAt (B task 5)\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): ImageViewer (zoom + rotate) + stretched-link cards (B task 6)\n\nImageViewer lightbox (ConfirmDialog idiom): tap-first zoom +/-, optimistic rotate\n-> PATCH -> reconcile via img onLoad + returned updatedAt -> router.refresh, aria-live\nstatus, focus trap, Escape/backdrop close. PhotoViewControl overlays a token-backplate\nview button on each card via the stretched-link pattern (valid DOM, no button-in-anchor).\nWired: CollectionCard cover, ItemCard hero, item-detail hero. 6 component tests.\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): viewer rotate (persisted PATCH) + zoom; portal the viewer (B task 7)\n\ne2e surfaced that the card's isolate stacking context trapped the fixed overlay\n(WebKit/tablet/phone: <main> intercepted clicks) — render ImageViewer via\ncreatePortal(document.body). 7 e2e pass across tablet/phone/desktop.\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): fold B whole-branch review (wf_ca77ec29-699)\n\n- remove dead pool-rotate route + test + ImageViewer pool branches (2 personas\n  flagged orphaned; ViewerPhoto.itemId now string) — honors 'rotate once items\n  created' scope, less code.\n- drag-to-pan when zoomed (pointer events, touch-action none) — fixes the\n  center-zoom dead-end (UX major); reset pan on zoom-to-1/close.\n- PhotoViewControl opaque bg-surface + hairline ring (>=3:1 over any photo, both\n  themes) + focus-visible ring + focus restore to trigger on close.\n- ImageViewer focus trap excludes disabled controls; optimistic-turn reconcile guard.\n- tests: card-level view-control render (button+link valid DOM / absent), backdrop\n  close, focus-trap wrap, drag-pan; e2e asserts the image v= changed (persistence).\n\nBead: purses-u1lr.2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): API.md PATCH rotation route + ARCHITECTURE decision 15 (rotation + viewer)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for rotation+zoom\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781992806000
+              "time": 1781996349000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781992806000
+              "time": 1781996349000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 957,
+                  "duration": 1022,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:02:46.177Z",
+                  "startTime": "2026-06-20T23:01:37.689Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -303,12 +303,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6369,
+                  "duration": 7024,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:02:47.810Z",
+                  "startTime": "2026-06-20T23:01:39.384Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -337,12 +337,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2181,
+                  "duration": 2212,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:02:54.948Z",
+                  "startTime": "2026-06-20T23:01:47.199Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -371,12 +371,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1643,
+                  "duration": 1712,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:34.334Z",
+                  "startTime": "2026-06-20T23:02:35.288Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -405,12 +405,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2316,
+                  "duration": 2622,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:36.156Z",
+                  "startTime": "2026-06-20T23:02:37.193Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -439,12 +439,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1074,
+                  "duration": 1134,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:04:11.410Z",
+                  "startTime": "2026-06-20T23:03:51.052Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -473,12 +473,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1291,
+                  "duration": 1420,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:04:12.847Z",
+                  "startTime": "2026-06-20T23:03:53.870Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -515,12 +515,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1631,
+                  "duration": 1674,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:02:57.167Z",
+                  "startTime": "2026-06-20T23:01:49.455Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -549,12 +549,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1454,
+                  "duration": 1617,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:02:58.843Z",
+                  "startTime": "2026-06-20T23:01:51.193Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -583,12 +583,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2467,
+                  "duration": 2521,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:00.327Z",
+                  "startTime": "2026-06-20T23:01:52.828Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -617,12 +617,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1532,
+                  "duration": 2277,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:38.508Z",
+                  "startTime": "2026-06-20T23:02:39.869Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -651,12 +651,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1388,
+                  "duration": 1650,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:40.087Z",
+                  "startTime": "2026-06-20T23:02:42.227Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -685,12 +685,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1880,
+                  "duration": 1865,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:41.503Z",
+                  "startTime": "2026-06-20T23:02:43.900Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -719,12 +719,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 806,
+                  "duration": 824,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:04:14.176Z",
+                  "startTime": "2026-06-20T23:03:55.393Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -753,12 +753,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 827,
+                  "duration": 1023,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:04:15.018Z",
+                  "startTime": "2026-06-20T23:03:56.256Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -787,12 +787,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1155,
+                  "duration": 1355,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:04:15.870Z",
+                  "startTime": "2026-06-20T23:03:57.312Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -836,12 +836,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 986,
+                      "duration": 1004,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:02.841Z",
+                      "startTime": "2026-06-20T23:01:55.391Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -870,12 +870,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1530,
+                      "duration": 1619,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:03.952Z",
+                      "startTime": "2026-06-20T23:01:56.484Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -904,12 +904,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1369,
+                      "duration": 917,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:05.502Z",
+                      "startTime": "2026-06-20T23:01:58.138Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -938,12 +938,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 840,
+                      "duration": 1004,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:43.417Z",
+                      "startTime": "2026-06-20T23:02:45.790Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -972,12 +972,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1408,
+                      "duration": 1341,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:44.355Z",
+                      "startTime": "2026-06-20T23:02:46.908Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1006,12 +1006,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 892,
+                      "duration": 862,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:45.788Z",
+                      "startTime": "2026-06-20T23:02:48.274Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1040,12 +1040,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 518,
+                      "duration": 707,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:17.060Z",
+                      "startTime": "2026-06-20T23:03:58.703Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1074,12 +1074,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 808,
+                      "duration": 939,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:17.667Z",
+                      "startTime": "2026-06-20T23:03:59.584Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1108,12 +1108,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 467,
+                      "duration": 538,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:18.493Z",
+                      "startTime": "2026-06-20T23:04:00.552Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1159,12 +1159,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1081,
+                      "duration": 872,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:06.918Z",
+                      "startTime": "2026-06-20T23:01:59.086Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1193,12 +1193,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2929,
+                      "duration": 2231,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:08.094Z",
+                      "startTime": "2026-06-20T23:02:00.020Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1227,12 +1227,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 863,
+                      "duration": 775,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:46.720Z",
+                      "startTime": "2026-06-20T23:02:49.188Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1261,12 +1261,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 821,
+                      "duration": 1425,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:47.665Z",
+                      "startTime": "2026-06-20T23:02:50.029Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1295,12 +1295,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 523,
+                      "duration": 538,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:18.992Z",
+                      "startTime": "2026-06-20T23:04:01.135Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1329,12 +1329,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 670,
+                      "duration": 549,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:19.554Z",
+                      "startTime": "2026-06-20T23:04:01.757Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1345,6 +1345,227 @@
               "id": "af38cfc44e4f9b50eb98-0a2cf8c7f54a21270679",
               "file": "image-perf.spec.ts",
               "line": 27,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "image-rotate.spec.ts",
+      "file": "image-rotate.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "photo viewer: rotate + zoom",
+          "file": "image-rotate.spec.ts",
+          "line": 6,
+          "column": 6,
+          "specs": [
+            {
+              "title": "rotate from a card fires a persisted PATCH and announces the result",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3611,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-20T23:02:02.301Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ce3fd9d5a5a928312958-d60c564eedc7403b6af5",
+              "file": "image-rotate.spec.ts",
+              "line": 21,
+              "column": 7
+            },
+            {
+              "title": "zoom in changes the image scale",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4702,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-20T23:02:06.003Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ce3fd9d5a5a928312958-2d0703e93a33e662e269",
+              "file": "image-rotate.spec.ts",
+              "line": 42,
+              "column": 7
+            },
+            {
+              "title": "rotate from a card fires a persisted PATCH and announces the result",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3075,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-20T23:02:51.487Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ce3fd9d5a5a928312958-a50a090a458a5bb92095",
+              "file": "image-rotate.spec.ts",
+              "line": 21,
+              "column": 7
+            },
+            {
+              "title": "zoom in changes the image scale",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3254,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-20T23:02:54.619Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ce3fd9d5a5a928312958-d324df0446a271b3cda8",
+              "file": "image-rotate.spec.ts",
+              "line": 42,
+              "column": 7
+            },
+            {
+              "title": "rotate from a card fires a persisted PATCH and announces the result",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1125,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-20T23:04:02.335Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ce3fd9d5a5a928312958-79ebcb6a2d603d0880a9",
+              "file": "image-rotate.spec.ts",
+              "line": 21,
+              "column": 7
+            },
+            {
+              "title": "zoom in changes the image scale",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 944,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-20T23:04:03.564Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ce3fd9d5a5a928312958-7e5a41ac77713db5edd9",
+              "file": "image-rotate.spec.ts",
+              "line": 42,
               "column": 7
             }
           ]
@@ -1380,12 +1601,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1351,
+                      "duration": 1332,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:11.048Z",
+                      "startTime": "2026-06-20T23:02:10.739Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1414,12 +1635,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1062,
+                      "duration": 1184,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:12.409Z",
+                      "startTime": "2026-06-20T23:02:12.081Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1448,12 +1669,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1077,
+                      "duration": 1176,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:13.479Z",
+                      "startTime": "2026-06-20T23:02:13.274Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1482,12 +1703,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1190,
+                      "duration": 1315,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:48.537Z",
+                      "startTime": "2026-06-20T23:02:57.922Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1516,12 +1737,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1068,
+                      "duration": 1181,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:49.741Z",
+                      "startTime": "2026-06-20T23:02:59.251Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1550,12 +1771,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1057,
+                      "duration": 1176,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:50.816Z",
+                      "startTime": "2026-06-20T23:03:00.441Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1584,12 +1805,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1125,
+                      "duration": 1404,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:20.249Z",
+                      "startTime": "2026-06-20T23:04:04.549Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1618,12 +1839,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1075,
+                      "duration": 1345,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:21.382Z",
+                      "startTime": "2026-06-20T23:04:05.967Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1652,12 +1873,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1057,
+                      "duration": 1282,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:22.469Z",
+                      "startTime": "2026-06-20T23:04:07.324Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1696,12 +1917,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 799,
+                  "duration": 802,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:14.580Z",
+                  "startTime": "2026-06-20T23:02:14.475Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1730,12 +1951,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 976,
+                  "duration": 1025,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:15.424Z",
+                  "startTime": "2026-06-20T23:02:15.320Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1764,12 +1985,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 767,
+                  "duration": 745,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:51.898Z",
+                  "startTime": "2026-06-20T23:03:01.641Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1798,12 +2019,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 929,
+                  "duration": 866,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:52.712Z",
+                  "startTime": "2026-06-20T23:03:02.427Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1832,12 +2053,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 289,
+                  "duration": 320,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:04:23.552Z",
+                  "startTime": "2026-06-20T23:04:08.635Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1866,12 +2087,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 528,
+                  "duration": 663,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:04:23.882Z",
+                  "startTime": "2026-06-20T23:04:09.030Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1915,12 +2136,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1146,
+                      "duration": 1185,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:16.427Z",
+                      "startTime": "2026-06-20T23:02:16.371Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1949,12 +2170,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1147,
+                      "duration": 882,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:53.670Z",
+                      "startTime": "2026-06-20T23:03:03.327Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1983,12 +2204,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 617,
+                      "duration": 630,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:24.438Z",
+                      "startTime": "2026-06-20T23:04:09.738Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2027,12 +2248,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 910,
+                  "duration": 746,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:17.679Z",
+                  "startTime": "2026-06-20T23:02:17.680Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2061,12 +2282,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 811,
+                  "duration": 847,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:18.618Z",
+                  "startTime": "2026-06-20T23:02:18.454Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2095,12 +2316,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 846,
+                  "duration": 883,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:19.449Z",
+                  "startTime": "2026-06-20T23:02:19.323Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2129,12 +2350,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 818,
+                  "duration": 815,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:54.919Z",
+                  "startTime": "2026-06-20T23:03:04.280Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2163,12 +2384,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 722,
+                  "duration": 768,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:55.759Z",
+                  "startTime": "2026-06-20T23:03:05.121Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2197,12 +2418,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 793,
+                  "duration": 831,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:03:56.508Z",
+                  "startTime": "2026-06-20T23:03:05.915Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2231,12 +2452,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 267,
+                  "duration": 289,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:04:25.130Z",
+                  "startTime": "2026-06-20T23:04:10.541Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2265,12 +2486,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 255,
+                  "duration": 274,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:04:25.415Z",
+                  "startTime": "2026-06-20T23:04:10.843Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2299,12 +2520,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 263,
+                  "duration": 320,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T22:04:25.683Z",
+                  "startTime": "2026-06-20T23:04:11.134Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2348,12 +2569,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 911,
+                      "duration": 1232,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:20.327Z",
+                      "startTime": "2026-06-20T23:02:20.238Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2382,12 +2603,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1357,
+                      "duration": 1300,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:57.333Z",
+                      "startTime": "2026-06-20T23:03:06.772Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2416,12 +2637,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 442,
+                      "duration": 460,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:25.961Z",
+                      "startTime": "2026-06-20T23:04:11.486Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2467,12 +2688,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1172,
+                      "duration": 1196,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:21.292Z",
+                      "startTime": "2026-06-20T23:02:21.563Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2501,12 +2722,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1534,
+                      "duration": 1358,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:22.528Z",
+                      "startTime": "2026-06-20T23:02:22.817Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2535,12 +2756,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1425,
+                      "duration": 1484,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:24.081Z",
+                      "startTime": "2026-06-20T23:02:24.204Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2569,12 +2790,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1472,
+                      "duration": 1506,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:58.754Z",
+                      "startTime": "2026-06-20T23:03:08.154Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2603,12 +2824,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1672,
+                      "duration": 1635,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:00.306Z",
+                      "startTime": "2026-06-20T23:03:09.724Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2637,12 +2858,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1373,
+                      "duration": 1303,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:02.016Z",
+                      "startTime": "2026-06-20T23:03:11.380Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2671,12 +2892,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 464,
+                      "duration": 540,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:26.445Z",
+                      "startTime": "2026-06-20T23:04:12.041Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2705,12 +2926,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 676,
+                      "duration": 746,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:26.953Z",
+                      "startTime": "2026-06-20T23:04:12.660Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2739,12 +2960,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 548,
+                      "duration": 535,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:27.646Z",
+                      "startTime": "2026-06-20T23:04:13.430Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2781,12 +3002,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4627,
+                      "duration": 5233,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:25.532Z",
+                      "startTime": "2026-06-20T23:02:25.731Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2815,12 +3036,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1482,
+                      "duration": 1483,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:30.222Z",
+                      "startTime": "2026-06-20T23:02:31.033Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2849,12 +3070,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3433,
+                      "duration": 3486,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:03.439Z",
+                      "startTime": "2026-06-20T23:03:12.712Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2883,12 +3104,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1640,
+                      "duration": 1535,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:06.931Z",
+                      "startTime": "2026-06-20T23:03:16.264Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2917,12 +3138,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1420,
+                      "duration": 1740,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:28.215Z",
+                      "startTime": "2026-06-20T23:04:13.985Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2951,12 +3172,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 455,
+                      "duration": 681,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:29.677Z",
+                      "startTime": "2026-06-20T23:04:15.821Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2993,12 +3214,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1118,
+                      "duration": 1151,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:31.735Z",
+                      "startTime": "2026-06-20T23:02:32.538Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3027,12 +3248,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 740,
+                      "duration": 701,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:03:32.873Z",
+                      "startTime": "2026-06-20T23:02:33.718Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3061,12 +3282,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 972,
+                      "duration": 1044,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:08.591Z",
+                      "startTime": "2026-06-20T23:03:17.822Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3095,12 +3316,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 895,
+                      "duration": 1188,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:09.601Z",
+                      "startTime": "2026-06-20T23:03:18.907Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3129,12 +3350,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 244,
+                      "duration": 306,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:30.155Z",
+                      "startTime": "2026-06-20T23:04:16.523Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3163,12 +3384,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 251,
+                      "duration": 245,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T22:04:30.415Z",
+                      "startTime": "2026-06-20T23:04:16.854Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3188,9 +3409,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-20T22:01:39.052Z",
-    "duration": 171890.71,
-    "expected": 82,
+    "startTime": "2026-06-20T23:00:31.577Z",
+    "duration": 225813.087,
+    "expected": 88,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/146</span>
+                <span class='fraction'>0/159</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/146</span>
+                <span class='fraction'>0/159</span>
             </div>
         
             
@@ -209,7 +209,33 @@
 <a name='L144'></a><a href='#L144'>144</a>
 <a name='L145'></a><a href='#L145'>145</a>
 <a name='L146'></a><a href='#L146'>146</a>
-<a name='L147'></a><a href='#L147'>147</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L147'></a><a href='#L147'>147</a>
+<a name='L148'></a><a href='#L148'>148</a>
+<a name='L149'></a><a href='#L149'>149</a>
+<a name='L150'></a><a href='#L150'>150</a>
+<a name='L151'></a><a href='#L151'>151</a>
+<a name='L152'></a><a href='#L152'>152</a>
+<a name='L153'></a><a href='#L153'>153</a>
+<a name='L154'></a><a href='#L154'>154</a>
+<a name='L155'></a><a href='#L155'>155</a>
+<a name='L156'></a><a href='#L156'>156</a>
+<a name='L157'></a><a href='#L157'>157</a>
+<a name='L158'></a><a href='#L158'>158</a>
+<a name='L159'></a><a href='#L159'>159</a>
+<a name='L160'></a><a href='#L160'>160</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -362,7 +388,7 @@
 <span class="cstat-no" title="statement not covered" >import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";</span>
 <span class="cstat-no" title="statement not covered" >import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";</span>
 <span class="cstat-no" title="statement not covered" >import { AppLayout } from "@/components/layout";</span>
-<span class="cstat-no" title="statement not covered" >import { Button, Card } from "@/components/ui";</span>
+<span class="cstat-no" title="statement not covered" >import { Button, Card, PhotoViewControl } from "@/components/ui";</span>
 <span class="cstat-no" title="statement not covered" >import { ItemMetadata } from "@/features/items/ItemMetadata";</span>
 <span class="cstat-no" title="statement not covered" >import Link from "next/link";</span>
 <span class="cstat-no" title="statement not covered" >import Image from "next/image";</span>
@@ -427,7 +453,7 @@
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >        {/* Hero Photo */}</span>
 <span class="cstat-no" title="statement not covered" >        {heroPhoto ? (</span>
-<span class="cstat-no" title="statement not covered" >          &lt;div className="bg-ground rounded-lg overflow-hidden h-96 flex items-center justify-center"&gt;</span>
+<span class="cstat-no" title="statement not covered" >          &lt;div className="relative isolate bg-ground rounded-lg overflow-hidden h-96 flex items-center justify-center"&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;Image</span>
 <span class="cstat-no" title="statement not covered" >              src={getPhotoAssetUrlForPhoto(heroPhoto, collection.id, { w: PHOTO_WIDTH.hero })}</span>
 <span class="cstat-no" title="statement not covered" >              alt={itemDisplayName(item)}</span>
@@ -436,6 +462,19 @@
 <span class="cstat-no" title="statement not covered" >              priority</span>
 <span class="cstat-no" title="statement not covered" >              unoptimized</span>
 <span class="cstat-no" title="statement not covered" >            /&gt;</span>
+<span class="cstat-no" title="statement not covered" >            {heroPhoto.itemId &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >              &lt;PhotoViewControl</span>
+<span class="cstat-no" title="statement not covered" >                photo={{</span>
+<span class="cstat-no" title="statement not covered" >                  id: heroPhoto.id,</span>
+<span class="cstat-no" title="statement not covered" >                  itemId: heroPhoto.itemId,</span>
+<span class="cstat-no" title="statement not covered" >                  collectionId: heroPhoto.collectionId,</span>
+<span class="cstat-no" title="statement not covered" >                  rotation: heroPhoto.rotation,</span>
+<span class="cstat-no" title="statement not covered" >                  updatedAt: heroPhoto.updatedAt,</span>
+<span class="cstat-no" title="statement not covered" >                  alt: itemDisplayName(item),</span>
+<span class="cstat-no" title="statement not covered" >                }}</span>
+<span class="cstat-no" title="statement not covered" >                className="absolute right-3 top-3 z-20"</span>
+<span class="cstat-no" title="statement not covered" >              /&gt;</span>
+<span class="cstat-no" title="statement not covered" >            )}</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/div&gt;</span>
 <span class="cstat-no" title="statement not covered" >        ) : (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Card padding="lg" className="h-96 flex items-center justify-center"&gt;</span>
@@ -508,7 +547,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-20T22:01:49.677Z
+                at 2026-06-20T23:00:52.928Z
             </div>
         <script src="../../../../../../prettify.js"></script>
         <script>
