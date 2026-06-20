@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/1bacc44d37adca7ec19c4b2758534b7e848967a2",
-        "commitHash": "1bacc44d37adca7ec19c4b2758534b7e848967a2",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27882631328"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/20afe8040dad1d34f2dc23091c467b185a4bbfb0",
+        "commitHash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27885151450"
       },
       "gitCommit": {
-        "shortHash": "1bacc44",
-        "hash": "1bacc44d37adca7ec19c4b2758534b7e848967a2",
-        "subject": "feat: real purgeCollection — owner-only whole-collection cascade purge + audit (#218)",
-        "body": "feat: real purgeCollection — owner-only whole-collection cascade purge + audit (#218)\n\n* docs(spec): purgeCollection cascade design — total-erase, name-confirm, audit (purges follow-up)\n\n* docs(spec): purgeCollection rev-2 — spec review folded (include-deleted resolve, non-vacuous tests, subquery counts)\n\n* docs(plan): purgeCollection implementation plan (5 tasks, TDD)\n\n* feat(repo): by-collection cascade deletes + Collection findByIdIncludingDeleted/hardDelete (purgeCollection)\n\nAdd 12 thin by-collection repo methods that later purgeCollection tasks\ncompose into a cascade purge. Each method lands in both the implementation\nand its interface so strict-mode build agrees.\n\n- Simple deletes (direct collection_id): SortResult, Session,\n  CollectionPreferenceItem, Invitation, Membership\n- Subquery-scoped deletes (via parent): SortResultShare + SortResultItem\n  (via sort_results), DecisionEvent (via sessions)\n- RETURNING/count/collection: Photo.hardDeleteByCollection (blob keys),\n  Item.hardDeleteByCollection (count), Collection.findByIdIncludingDeleted\n  (mirrors findById's mapToCollection) + Collection.hardDelete\n\nAlso fix two stale partial-mock casts in ScoringService.test.ts\n(as unknown as I*Repository) re-surfaced by the widened DecisionEvent interface.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(collections): CollectionPurgeService — transactional cascade purge + audit + blobs\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(api): real owner-only collection purge — include-deleted resolve + name confirm (purgeCollection)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(collections): un-mocked collection-purge cascade + atomicity + authz (purgeCollection)\n\nDrives the real POST /api/collections/[id]/purge route -> CollectionPurgeService\n-> real repos -> ephemeral Postgres. Mocks only auth, @vercel/blob del, and getDb.\n\nSeeds a FULL collection (2nd member, 2 items, 2 http photos incl. soft-deleted,\nsession + decision_event, member preference, draft + finalized results with items,\na share, and an invitation) so every empty-after assertion is non-vacuous.\n\nCases: total cascade (all 10 child tables -> 0, collection hard-gone, one audit\nrow with matching metadata, del per http key); soft-delete -> purge resolution;\natomicity (hardDelete injection rolls the whole tx back, zero audit rows); and\nauthz/confirm precedence (403 member, 404 absent, 400 wrong confirm, 403 wins\nover confirm for a non-owner).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: real collection purge — cascade + audit (purgeCollection); correct stale stub references\n\n* chore(graphify): refresh\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "20afe80",
+        "hash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
+        "subject": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)",
+        "body": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)\n\n* docs(spec): image performance design (sub-project A) — caching + on-demand resize\n\nFolds adversarial review (wf_fdebbbf1-a42): servePhotoFile owns the variant\nETag end-to-end (no If-None-Match passthrough to blob get); private,max-age=300,\nmust-revalidate instead of immutable (shared-tablet authz); sharp decode-bomb\nguards; runtime=nodejs; persisted-variant-cache deferred to a bead.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(plan): image performance implementation plan (sub-project A)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): servePhotoFile — variant ETag, max-age cache, guarded sharp resize\n\nOwns the variant ETag end-to-end (no If-None-Match passthrough to blob get).\nprivate,max-age=300,must-revalidate (shared-tablet authz). ?w= allowlist\n{160,320,640,1280}; decode-bomb guards (limitInputPixels + source-byte ceiling);\nEXIF auto-orient; generic 500. 12 tests, real sharp on real fixtures.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): photo URL helpers accept a width option\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): item /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): pool /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): request per-surface widths at every photo URL build site\n\nPHOTO_WIDTH map (card 640, poolTile 320, hero 1280, galleryTile 640) threaded\nthrough collections/items/results/compare/triage pages, item-detail hero+gallery,\nPhotoGallery, PoolPhotoGrid. next/image already lazy-loads non-priority tiles.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): assert per-surface image widths (card 640, hero 1280)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): airtight decode-bomb guard + invariant/pool-width tests (review fold)\n\nWhole-branch review (wf_16cceee2-403) folds:\n- bounded readStreamCapped() so an unknown/mis-reported blob size can't OOM\n  before the byte ceiling (Security+QA convergent minor); direct unit tests.\n- test PHOTO_WIDTH subset of RESIZE_WIDTHS (was comment-only invariant).\n- PoolPhotoGrid renders w=320 (pool tier render wiring; e2e only covered 640/1280).\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): API.md /file routes + ARCHITECTURE decision 14 (image cache/resize)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for image-perf changes\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): match /file* glob so interceptors catch resized ?w= URLs\n\nA's ?w= width param changed the image URL surface; the existing\n'**/photos/**/file' route globs no longer matched '.../file?w=640', so those\nrequests hit the real (blob-credential-less) route in CI -> 500 -> CardImage\nonError fallback -> getByRole('img') missing. Add the trailing * to all\ninterceptors. 34 e2e pass across tablet/phone/desktop.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1781986468000
+          "time": 1781992806000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1781986468000
+          "time": 1781992806000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/1bacc44d37adca7ec19c4b2758534b7e848967a2",
-            "commitHash": "1bacc44d37adca7ec19c4b2758534b7e848967a2",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27882631328"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/20afe8040dad1d34f2dc23091c467b185a4bbfb0",
+            "commitHash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27885151450"
           },
           "gitCommit": {
-            "shortHash": "1bacc44",
-            "hash": "1bacc44d37adca7ec19c4b2758534b7e848967a2",
-            "subject": "feat: real purgeCollection — owner-only whole-collection cascade purge + audit (#218)",
-            "body": "feat: real purgeCollection — owner-only whole-collection cascade purge + audit (#218)\n\n* docs(spec): purgeCollection cascade design — total-erase, name-confirm, audit (purges follow-up)\n\n* docs(spec): purgeCollection rev-2 — spec review folded (include-deleted resolve, non-vacuous tests, subquery counts)\n\n* docs(plan): purgeCollection implementation plan (5 tasks, TDD)\n\n* feat(repo): by-collection cascade deletes + Collection findByIdIncludingDeleted/hardDelete (purgeCollection)\n\nAdd 12 thin by-collection repo methods that later purgeCollection tasks\ncompose into a cascade purge. Each method lands in both the implementation\nand its interface so strict-mode build agrees.\n\n- Simple deletes (direct collection_id): SortResult, Session,\n  CollectionPreferenceItem, Invitation, Membership\n- Subquery-scoped deletes (via parent): SortResultShare + SortResultItem\n  (via sort_results), DecisionEvent (via sessions)\n- RETURNING/count/collection: Photo.hardDeleteByCollection (blob keys),\n  Item.hardDeleteByCollection (count), Collection.findByIdIncludingDeleted\n  (mirrors findById's mapToCollection) + Collection.hardDelete\n\nAlso fix two stale partial-mock casts in ScoringService.test.ts\n(as unknown as I*Repository) re-surfaced by the widened DecisionEvent interface.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(collections): CollectionPurgeService — transactional cascade purge + audit + blobs\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(api): real owner-only collection purge — include-deleted resolve + name confirm (purgeCollection)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(collections): un-mocked collection-purge cascade + atomicity + authz (purgeCollection)\n\nDrives the real POST /api/collections/[id]/purge route -> CollectionPurgeService\n-> real repos -> ephemeral Postgres. Mocks only auth, @vercel/blob del, and getDb.\n\nSeeds a FULL collection (2nd member, 2 items, 2 http photos incl. soft-deleted,\nsession + decision_event, member preference, draft + finalized results with items,\na share, and an invitation) so every empty-after assertion is non-vacuous.\n\nCases: total cascade (all 10 child tables -> 0, collection hard-gone, one audit\nrow with matching metadata, del per http key); soft-delete -> purge resolution;\natomicity (hardDelete injection rolls the whole tx back, zero audit rows); and\nauthz/confirm precedence (403 member, 404 absent, 400 wrong confirm, 403 wins\nover confirm for a non-owner).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: real collection purge — cascade + audit (purgeCollection); correct stale stub references\n\n* chore(graphify): refresh\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "20afe80",
+            "hash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
+            "subject": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)",
+            "body": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)\n\n* docs(spec): image performance design (sub-project A) — caching + on-demand resize\n\nFolds adversarial review (wf_fdebbbf1-a42): servePhotoFile owns the variant\nETag end-to-end (no If-None-Match passthrough to blob get); private,max-age=300,\nmust-revalidate instead of immutable (shared-tablet authz); sharp decode-bomb\nguards; runtime=nodejs; persisted-variant-cache deferred to a bead.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(plan): image performance implementation plan (sub-project A)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): servePhotoFile — variant ETag, max-age cache, guarded sharp resize\n\nOwns the variant ETag end-to-end (no If-None-Match passthrough to blob get).\nprivate,max-age=300,must-revalidate (shared-tablet authz). ?w= allowlist\n{160,320,640,1280}; decode-bomb guards (limitInputPixels + source-byte ceiling);\nEXIF auto-orient; generic 500. 12 tests, real sharp on real fixtures.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): photo URL helpers accept a width option\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): item /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): pool /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): request per-surface widths at every photo URL build site\n\nPHOTO_WIDTH map (card 640, poolTile 320, hero 1280, galleryTile 640) threaded\nthrough collections/items/results/compare/triage pages, item-detail hero+gallery,\nPhotoGallery, PoolPhotoGrid. next/image already lazy-loads non-priority tiles.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): assert per-surface image widths (card 640, hero 1280)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): airtight decode-bomb guard + invariant/pool-width tests (review fold)\n\nWhole-branch review (wf_16cceee2-403) folds:\n- bounded readStreamCapped() so an unknown/mis-reported blob size can't OOM\n  before the byte ceiling (Security+QA convergent minor); direct unit tests.\n- test PHOTO_WIDTH subset of RESIZE_WIDTHS (was comment-only invariant).\n- PoolPhotoGrid renders w=320 (pool tier render wiring; e2e only covered 640/1280).\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): API.md /file routes + ARCHITECTURE decision 14 (image cache/resize)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for image-perf changes\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): match /file* glob so interceptors catch resized ?w= URLs\n\nA's ?w= width param changed the image URL surface; the existing\n'**/photos/**/file' route globs no longer matched '.../file?w=640', so those\nrequests hit the real (blob-credential-less) route in CI -> 500 -> CardImage\nonError fallback -> getByRole('img') missing. Add the trailing * to all\ninterceptors. 34 e2e pass across tablet/phone/desktop.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781986468000
+              "time": 1781992806000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781986468000
+              "time": 1781992806000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/1bacc44d37adca7ec19c4b2758534b7e848967a2",
-            "commitHash": "1bacc44d37adca7ec19c4b2758534b7e848967a2",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27882631328"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/20afe8040dad1d34f2dc23091c467b185a4bbfb0",
+            "commitHash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27885151450"
           },
           "gitCommit": {
-            "shortHash": "1bacc44",
-            "hash": "1bacc44d37adca7ec19c4b2758534b7e848967a2",
-            "subject": "feat: real purgeCollection — owner-only whole-collection cascade purge + audit (#218)",
-            "body": "feat: real purgeCollection — owner-only whole-collection cascade purge + audit (#218)\n\n* docs(spec): purgeCollection cascade design — total-erase, name-confirm, audit (purges follow-up)\n\n* docs(spec): purgeCollection rev-2 — spec review folded (include-deleted resolve, non-vacuous tests, subquery counts)\n\n* docs(plan): purgeCollection implementation plan (5 tasks, TDD)\n\n* feat(repo): by-collection cascade deletes + Collection findByIdIncludingDeleted/hardDelete (purgeCollection)\n\nAdd 12 thin by-collection repo methods that later purgeCollection tasks\ncompose into a cascade purge. Each method lands in both the implementation\nand its interface so strict-mode build agrees.\n\n- Simple deletes (direct collection_id): SortResult, Session,\n  CollectionPreferenceItem, Invitation, Membership\n- Subquery-scoped deletes (via parent): SortResultShare + SortResultItem\n  (via sort_results), DecisionEvent (via sessions)\n- RETURNING/count/collection: Photo.hardDeleteByCollection (blob keys),\n  Item.hardDeleteByCollection (count), Collection.findByIdIncludingDeleted\n  (mirrors findById's mapToCollection) + Collection.hardDelete\n\nAlso fix two stale partial-mock casts in ScoringService.test.ts\n(as unknown as I*Repository) re-surfaced by the widened DecisionEvent interface.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(collections): CollectionPurgeService — transactional cascade purge + audit + blobs\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(api): real owner-only collection purge — include-deleted resolve + name confirm (purgeCollection)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(collections): un-mocked collection-purge cascade + atomicity + authz (purgeCollection)\n\nDrives the real POST /api/collections/[id]/purge route -> CollectionPurgeService\n-> real repos -> ephemeral Postgres. Mocks only auth, @vercel/blob del, and getDb.\n\nSeeds a FULL collection (2nd member, 2 items, 2 http photos incl. soft-deleted,\nsession + decision_event, member preference, draft + finalized results with items,\na share, and an invitation) so every empty-after assertion is non-vacuous.\n\nCases: total cascade (all 10 child tables -> 0, collection hard-gone, one audit\nrow with matching metadata, del per http key); soft-delete -> purge resolution;\natomicity (hardDelete injection rolls the whole tx back, zero audit rows); and\nauthz/confirm precedence (403 member, 404 absent, 400 wrong confirm, 403 wins\nover confirm for a non-owner).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: real collection purge — cascade + audit (purgeCollection); correct stale stub references\n\n* chore(graphify): refresh\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "20afe80",
+            "hash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
+            "subject": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)",
+            "body": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)\n\n* docs(spec): image performance design (sub-project A) — caching + on-demand resize\n\nFolds adversarial review (wf_fdebbbf1-a42): servePhotoFile owns the variant\nETag end-to-end (no If-None-Match passthrough to blob get); private,max-age=300,\nmust-revalidate instead of immutable (shared-tablet authz); sharp decode-bomb\nguards; runtime=nodejs; persisted-variant-cache deferred to a bead.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(plan): image performance implementation plan (sub-project A)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): servePhotoFile — variant ETag, max-age cache, guarded sharp resize\n\nOwns the variant ETag end-to-end (no If-None-Match passthrough to blob get).\nprivate,max-age=300,must-revalidate (shared-tablet authz). ?w= allowlist\n{160,320,640,1280}; decode-bomb guards (limitInputPixels + source-byte ceiling);\nEXIF auto-orient; generic 500. 12 tests, real sharp on real fixtures.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): photo URL helpers accept a width option\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): item /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): pool /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): request per-surface widths at every photo URL build site\n\nPHOTO_WIDTH map (card 640, poolTile 320, hero 1280, galleryTile 640) threaded\nthrough collections/items/results/compare/triage pages, item-detail hero+gallery,\nPhotoGallery, PoolPhotoGrid. next/image already lazy-loads non-priority tiles.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): assert per-surface image widths (card 640, hero 1280)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): airtight decode-bomb guard + invariant/pool-width tests (review fold)\n\nWhole-branch review (wf_16cceee2-403) folds:\n- bounded readStreamCapped() so an unknown/mis-reported blob size can't OOM\n  before the byte ceiling (Security+QA convergent minor); direct unit tests.\n- test PHOTO_WIDTH subset of RESIZE_WIDTHS (was comment-only invariant).\n- PoolPhotoGrid renders w=320 (pool tier render wiring; e2e only covered 640/1280).\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): API.md /file routes + ARCHITECTURE decision 14 (image cache/resize)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for image-perf changes\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): match /file* glob so interceptors catch resized ?w= URLs\n\nA's ?w= width param changed the image URL surface; the existing\n'**/photos/**/file' route globs no longer matched '.../file?w=640', so those\nrequests hit the real (blob-credential-less) route in CI -> 500 -> CardImage\nonError fallback -> getByRole('img') missing. Add the trailing * to all\ninterceptors. 34 e2e pass across tablet/phone/desktop.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781986468000
+              "time": 1781992806000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781986468000
+              "time": 1781992806000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/1bacc44d37adca7ec19c4b2758534b7e848967a2",
-            "commitHash": "1bacc44d37adca7ec19c4b2758534b7e848967a2",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27882631328"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/20afe8040dad1d34f2dc23091c467b185a4bbfb0",
+            "commitHash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27885151450"
           },
           "gitCommit": {
-            "shortHash": "1bacc44",
-            "hash": "1bacc44d37adca7ec19c4b2758534b7e848967a2",
-            "subject": "feat: real purgeCollection — owner-only whole-collection cascade purge + audit (#218)",
-            "body": "feat: real purgeCollection — owner-only whole-collection cascade purge + audit (#218)\n\n* docs(spec): purgeCollection cascade design — total-erase, name-confirm, audit (purges follow-up)\n\n* docs(spec): purgeCollection rev-2 — spec review folded (include-deleted resolve, non-vacuous tests, subquery counts)\n\n* docs(plan): purgeCollection implementation plan (5 tasks, TDD)\n\n* feat(repo): by-collection cascade deletes + Collection findByIdIncludingDeleted/hardDelete (purgeCollection)\n\nAdd 12 thin by-collection repo methods that later purgeCollection tasks\ncompose into a cascade purge. Each method lands in both the implementation\nand its interface so strict-mode build agrees.\n\n- Simple deletes (direct collection_id): SortResult, Session,\n  CollectionPreferenceItem, Invitation, Membership\n- Subquery-scoped deletes (via parent): SortResultShare + SortResultItem\n  (via sort_results), DecisionEvent (via sessions)\n- RETURNING/count/collection: Photo.hardDeleteByCollection (blob keys),\n  Item.hardDeleteByCollection (count), Collection.findByIdIncludingDeleted\n  (mirrors findById's mapToCollection) + Collection.hardDelete\n\nAlso fix two stale partial-mock casts in ScoringService.test.ts\n(as unknown as I*Repository) re-surfaced by the widened DecisionEvent interface.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(collections): CollectionPurgeService — transactional cascade purge + audit + blobs\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(api): real owner-only collection purge — include-deleted resolve + name confirm (purgeCollection)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(collections): un-mocked collection-purge cascade + atomicity + authz (purgeCollection)\n\nDrives the real POST /api/collections/[id]/purge route -> CollectionPurgeService\n-> real repos -> ephemeral Postgres. Mocks only auth, @vercel/blob del, and getDb.\n\nSeeds a FULL collection (2nd member, 2 items, 2 http photos incl. soft-deleted,\nsession + decision_event, member preference, draft + finalized results with items,\na share, and an invitation) so every empty-after assertion is non-vacuous.\n\nCases: total cascade (all 10 child tables -> 0, collection hard-gone, one audit\nrow with matching metadata, del per http key); soft-delete -> purge resolution;\natomicity (hardDelete injection rolls the whole tx back, zero audit rows); and\nauthz/confirm precedence (403 member, 404 absent, 400 wrong confirm, 403 wins\nover confirm for a non-owner).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: real collection purge — cascade + audit (purgeCollection); correct stale stub references\n\n* chore(graphify): refresh\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "20afe80",
+            "hash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
+            "subject": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)",
+            "body": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)\n\n* docs(spec): image performance design (sub-project A) — caching + on-demand resize\n\nFolds adversarial review (wf_fdebbbf1-a42): servePhotoFile owns the variant\nETag end-to-end (no If-None-Match passthrough to blob get); private,max-age=300,\nmust-revalidate instead of immutable (shared-tablet authz); sharp decode-bomb\nguards; runtime=nodejs; persisted-variant-cache deferred to a bead.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(plan): image performance implementation plan (sub-project A)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): servePhotoFile — variant ETag, max-age cache, guarded sharp resize\n\nOwns the variant ETag end-to-end (no If-None-Match passthrough to blob get).\nprivate,max-age=300,must-revalidate (shared-tablet authz). ?w= allowlist\n{160,320,640,1280}; decode-bomb guards (limitInputPixels + source-byte ceiling);\nEXIF auto-orient; generic 500. 12 tests, real sharp on real fixtures.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): photo URL helpers accept a width option\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): item /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): pool /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): request per-surface widths at every photo URL build site\n\nPHOTO_WIDTH map (card 640, poolTile 320, hero 1280, galleryTile 640) threaded\nthrough collections/items/results/compare/triage pages, item-detail hero+gallery,\nPhotoGallery, PoolPhotoGrid. next/image already lazy-loads non-priority tiles.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): assert per-surface image widths (card 640, hero 1280)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): airtight decode-bomb guard + invariant/pool-width tests (review fold)\n\nWhole-branch review (wf_16cceee2-403) folds:\n- bounded readStreamCapped() so an unknown/mis-reported blob size can't OOM\n  before the byte ceiling (Security+QA convergent minor); direct unit tests.\n- test PHOTO_WIDTH subset of RESIZE_WIDTHS (was comment-only invariant).\n- PoolPhotoGrid renders w=320 (pool tier render wiring; e2e only covered 640/1280).\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): API.md /file routes + ARCHITECTURE decision 14 (image cache/resize)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for image-perf changes\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): match /file* glob so interceptors catch resized ?w= URLs\n\nA's ?w= width param changed the image URL surface; the existing\n'**/photos/**/file' route globs no longer matched '.../file?w=640', so those\nrequests hit the real (blob-credential-less) route in CI -> 500 -> CardImage\nonError fallback -> getByRole('img') missing. Add the trailing * to all\ninterceptors. 34 e2e pass across tablet/phone/desktop.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781986468000
+              "time": 1781992806000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781986468000
+              "time": 1781992806000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/1bacc44d37adca7ec19c4b2758534b7e848967a2",
-            "commitHash": "1bacc44d37adca7ec19c4b2758534b7e848967a2",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27882631328"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/20afe8040dad1d34f2dc23091c467b185a4bbfb0",
+            "commitHash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27885151450"
           },
           "gitCommit": {
-            "shortHash": "1bacc44",
-            "hash": "1bacc44d37adca7ec19c4b2758534b7e848967a2",
-            "subject": "feat: real purgeCollection — owner-only whole-collection cascade purge + audit (#218)",
-            "body": "feat: real purgeCollection — owner-only whole-collection cascade purge + audit (#218)\n\n* docs(spec): purgeCollection cascade design — total-erase, name-confirm, audit (purges follow-up)\n\n* docs(spec): purgeCollection rev-2 — spec review folded (include-deleted resolve, non-vacuous tests, subquery counts)\n\n* docs(plan): purgeCollection implementation plan (5 tasks, TDD)\n\n* feat(repo): by-collection cascade deletes + Collection findByIdIncludingDeleted/hardDelete (purgeCollection)\n\nAdd 12 thin by-collection repo methods that later purgeCollection tasks\ncompose into a cascade purge. Each method lands in both the implementation\nand its interface so strict-mode build agrees.\n\n- Simple deletes (direct collection_id): SortResult, Session,\n  CollectionPreferenceItem, Invitation, Membership\n- Subquery-scoped deletes (via parent): SortResultShare + SortResultItem\n  (via sort_results), DecisionEvent (via sessions)\n- RETURNING/count/collection: Photo.hardDeleteByCollection (blob keys),\n  Item.hardDeleteByCollection (count), Collection.findByIdIncludingDeleted\n  (mirrors findById's mapToCollection) + Collection.hardDelete\n\nAlso fix two stale partial-mock casts in ScoringService.test.ts\n(as unknown as I*Repository) re-surfaced by the widened DecisionEvent interface.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(collections): CollectionPurgeService — transactional cascade purge + audit + blobs\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(api): real owner-only collection purge — include-deleted resolve + name confirm (purgeCollection)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(collections): un-mocked collection-purge cascade + atomicity + authz (purgeCollection)\n\nDrives the real POST /api/collections/[id]/purge route -> CollectionPurgeService\n-> real repos -> ephemeral Postgres. Mocks only auth, @vercel/blob del, and getDb.\n\nSeeds a FULL collection (2nd member, 2 items, 2 http photos incl. soft-deleted,\nsession + decision_event, member preference, draft + finalized results with items,\na share, and an invitation) so every empty-after assertion is non-vacuous.\n\nCases: total cascade (all 10 child tables -> 0, collection hard-gone, one audit\nrow with matching metadata, del per http key); soft-delete -> purge resolution;\natomicity (hardDelete injection rolls the whole tx back, zero audit rows); and\nauthz/confirm precedence (403 member, 404 absent, 400 wrong confirm, 403 wins\nover confirm for a non-owner).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: real collection purge — cascade + audit (purgeCollection); correct stale stub references\n\n* chore(graphify): refresh\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "20afe80",
+            "hash": "20afe8040dad1d34f2dc23091c467b185a4bbfb0",
+            "subject": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)",
+            "body": "Image performance: caching + on-demand resize (epic A — purses-u1lr.1) (#219)\n\n* docs(spec): image performance design (sub-project A) — caching + on-demand resize\n\nFolds adversarial review (wf_fdebbbf1-a42): servePhotoFile owns the variant\nETag end-to-end (no If-None-Match passthrough to blob get); private,max-age=300,\nmust-revalidate instead of immutable (shared-tablet authz); sharp decode-bomb\nguards; runtime=nodejs; persisted-variant-cache deferred to a bead.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(plan): image performance implementation plan (sub-project A)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): servePhotoFile — variant ETag, max-age cache, guarded sharp resize\n\nOwns the variant ETag end-to-end (no If-None-Match passthrough to blob get).\nprivate,max-age=300,must-revalidate (shared-tablet authz). ?w= allowlist\n{160,320,640,1280}; decode-bomb guards (limitInputPixels + source-byte ceiling);\nEXIF auto-orient; generic 500. 12 tests, real sharp on real fixtures.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): photo URL helpers accept a width option\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): item /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): pool /file route delegates to servePhotoFile (nodejs runtime)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): request per-surface widths at every photo URL build site\n\nPHOTO_WIDTH map (card 640, poolTile 320, hero 1280, galleryTile 640) threaded\nthrough collections/items/results/compare/triage pages, item-detail hero+gallery,\nPhotoGallery, PoolPhotoGrid. next/image already lazy-loads non-priority tiles.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): assert per-surface image widths (card 640, hero 1280)\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): airtight decode-bomb guard + invariant/pool-width tests (review fold)\n\nWhole-branch review (wf_16cceee2-403) folds:\n- bounded readStreamCapped() so an unknown/mis-reported blob size can't OOM\n  before the byte ceiling (Security+QA convergent minor); direct unit tests.\n- test PHOTO_WIDTH subset of RESIZE_WIDTHS (was comment-only invariant).\n- PoolPhotoGrid renders w=320 (pool tier render wiring; e2e only covered 640/1280).\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): API.md /file routes + ARCHITECTURE decision 14 (image cache/resize)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for image-perf changes\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(e2e): match /file* glob so interceptors catch resized ?w= URLs\n\nA's ?w= width param changed the image URL surface; the existing\n'**/photos/**/file' route globs no longer matched '.../file?w=640', so those\nrequests hit the real (blob-credential-less) route in CI -> 500 -> CardImage\nonError fallback -> getByRole('img') missing. Add the trailing * to all\ninterceptors. 34 e2e pass across tablet/phone/desktop.\n\nBead: purses-u1lr.1\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781986468000
+              "time": 1781992806000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781986468000
+              "time": 1781992806000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 958,
+                  "duration": 957,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:17:33.018Z",
+                  "startTime": "2026-06-20T22:02:46.177Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -303,12 +303,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 9167,
+                  "duration": 6369,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:17:34.644Z",
+                  "startTime": "2026-06-20T22:02:47.810Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -337,12 +337,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2196,
+                  "duration": 2181,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:17:44.665Z",
+                  "startTime": "2026-06-20T22:02:54.948Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -371,12 +371,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1613,
+                  "duration": 1643,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:18:21.707Z",
+                  "startTime": "2026-06-20T22:03:34.334Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -405,12 +405,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2741,
+                  "duration": 2316,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:18:23.508Z",
+                  "startTime": "2026-06-20T22:03:36.156Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -439,12 +439,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1141,
+                  "duration": 1074,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:19:23.002Z",
+                  "startTime": "2026-06-20T22:04:11.410Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -473,12 +473,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1214,
+                  "duration": 1291,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:19:25.584Z",
+                  "startTime": "2026-06-20T22:04:12.847Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -515,12 +515,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1800,
+                  "duration": 1631,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:17:46.899Z",
+                  "startTime": "2026-06-20T22:02:57.167Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -549,12 +549,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1641,
+                  "duration": 1454,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:17:48.797Z",
+                  "startTime": "2026-06-20T22:02:58.843Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -583,12 +583,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2311,
+                  "duration": 2467,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:17:50.458Z",
+                  "startTime": "2026-06-20T22:03:00.327Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -617,12 +617,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2800,
+                  "duration": 1532,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:18:26.305Z",
+                  "startTime": "2026-06-20T22:03:38.508Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -651,12 +651,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1999,
+                  "duration": 1388,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:18:29.231Z",
+                  "startTime": "2026-06-20T22:03:40.087Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -685,12 +685,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2986,
+                  "duration": 1880,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:18:31.258Z",
+                  "startTime": "2026-06-20T22:03:41.503Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -719,12 +719,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 796,
+                  "duration": 806,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:19:26.855Z",
+                  "startTime": "2026-06-20T22:04:14.176Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -753,12 +753,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 762,
+                  "duration": 827,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:19:27.694Z",
+                  "startTime": "2026-06-20T22:04:15.018Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -787,12 +787,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1125,
+                  "duration": 1155,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:19:28.480Z",
+                  "startTime": "2026-06-20T22:04:15.870Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -836,12 +836,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1046,
+                      "duration": 986,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:17:52.803Z",
+                      "startTime": "2026-06-20T22:03:02.841Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -870,12 +870,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1594,
+                      "duration": 1530,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:17:53.968Z",
+                      "startTime": "2026-06-20T22:03:03.952Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -904,12 +904,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1358,
+                      "duration": 1369,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:17:55.587Z",
+                      "startTime": "2026-06-20T22:03:05.502Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -938,12 +938,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2136,
+                      "duration": 840,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:34.336Z",
+                      "startTime": "2026-06-20T22:03:43.417Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -972,12 +972,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2586,
+                      "duration": 1408,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:44.723Z",
+                      "startTime": "2026-06-20T22:03:44.355Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1006,12 +1006,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2205,
+                      "duration": 892,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:47.342Z",
+                      "startTime": "2026-06-20T22:03:45.788Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1040,12 +1040,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 519,
+                      "duration": 518,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:29.658Z",
+                      "startTime": "2026-06-20T22:04:17.060Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1074,12 +1074,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 771,
+                      "duration": 808,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:30.260Z",
+                      "startTime": "2026-06-20T22:04:17.667Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1108,12 +1108,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 464,
+                      "duration": 467,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:31.047Z",
+                      "startTime": "2026-06-20T22:04:18.493Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1124,6 +1124,227 @@
               "id": "bc75bd59fd35184b0d5e-217f7d68f330f3466238",
               "file": "compare.spec.ts",
               "line": 105,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "image-perf.spec.ts",
+      "file": "image-perf.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "per-surface image widths",
+          "file": "image-perf.spec.ts",
+          "line": 5,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the items grid requests the resized card width (w=640)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1081,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-20T22:03:06.918Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "af38cfc44e4f9b50eb98-01b2be16e7a446f560d6",
+              "file": "image-perf.spec.ts",
+              "line": 20,
+              "column": 7
+            },
+            {
+              "title": "the item-detail hero requests the large width (w=1280)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2929,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-20T22:03:08.094Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "af38cfc44e4f9b50eb98-8e3cc0f8c310195e787f",
+              "file": "image-perf.spec.ts",
+              "line": 27,
+              "column": 7
+            },
+            {
+              "title": "the items grid requests the resized card width (w=640)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 863,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-20T22:03:46.720Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "af38cfc44e4f9b50eb98-059347feac851f329f15",
+              "file": "image-perf.spec.ts",
+              "line": 20,
+              "column": 7
+            },
+            {
+              "title": "the item-detail hero requests the large width (w=1280)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 821,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-20T22:03:47.665Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "af38cfc44e4f9b50eb98-4a718b70ba0c620aa552",
+              "file": "image-perf.spec.ts",
+              "line": 27,
+              "column": 7
+            },
+            {
+              "title": "the items grid requests the resized card width (w=640)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 523,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-20T22:04:18.992Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "af38cfc44e4f9b50eb98-dca8ce915d992139d69b",
+              "file": "image-perf.spec.ts",
+              "line": 20,
+              "column": 7
+            },
+            {
+              "title": "the item-detail hero requests the large width (w=1280)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 670,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-20T22:04:19.554Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "af38cfc44e4f9b50eb98-0a2cf8c7f54a21270679",
+              "file": "image-perf.spec.ts",
+              "line": 27,
               "column": 7
             }
           ]
@@ -1159,12 +1380,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1485,
+                      "duration": 1351,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:17:56.982Z",
+                      "startTime": "2026-06-20T22:03:11.048Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1193,12 +1414,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1116,
+                      "duration": 1062,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:17:58.481Z",
+                      "startTime": "2026-06-20T22:03:12.409Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1227,12 +1448,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1085,
+                      "duration": 1077,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:17:59.606Z",
+                      "startTime": "2026-06-20T22:03:13.479Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1261,12 +1482,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3964,
+                      "duration": 1190,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:49.769Z",
+                      "startTime": "2026-06-20T22:03:48.537Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1295,12 +1516,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1983,
+                      "duration": 1068,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:53.742Z",
+                      "startTime": "2026-06-20T22:03:49.741Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1329,12 +1550,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1402,
+                      "duration": 1057,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:55.736Z",
+                      "startTime": "2026-06-20T22:03:50.816Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1363,12 +1584,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1115,
+                      "duration": 1125,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:31.538Z",
+                      "startTime": "2026-06-20T22:04:20.249Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1397,12 +1618,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1070,
+                      "duration": 1075,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:32.662Z",
+                      "startTime": "2026-06-20T22:04:21.382Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1431,12 +1652,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1113,
+                      "duration": 1057,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:33.743Z",
+                      "startTime": "2026-06-20T22:04:22.469Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1475,12 +1696,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 875,
+                  "duration": 799,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:18:00.716Z",
+                  "startTime": "2026-06-20T22:03:14.580Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1509,12 +1730,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 981,
+                  "duration": 976,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:18:01.633Z",
+                  "startTime": "2026-06-20T22:03:15.424Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1543,12 +1764,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1241,
+                  "duration": 767,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:18:57.172Z",
+                  "startTime": "2026-06-20T22:03:51.898Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1577,12 +1798,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1230,
+                  "duration": 929,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:18:58.493Z",
+                  "startTime": "2026-06-20T22:03:52.712Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1611,12 +1832,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 293,
+                  "duration": 289,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:19:34.882Z",
+                  "startTime": "2026-06-20T22:04:23.552Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1645,12 +1866,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 555,
+                  "duration": 528,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:19:35.211Z",
+                  "startTime": "2026-06-20T22:04:23.882Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1694,12 +1915,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1973,
+                      "duration": 1146,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:02.643Z",
+                      "startTime": "2026-06-20T22:03:16.427Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1728,12 +1949,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1150,
+                      "duration": 1147,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:59.784Z",
+                      "startTime": "2026-06-20T22:03:53.670Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1762,12 +1983,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 551,
+                      "duration": 617,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:35.791Z",
+                      "startTime": "2026-06-20T22:04:24.438Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1806,12 +2027,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1055,
+                  "duration": 910,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:18:04.716Z",
+                  "startTime": "2026-06-20T22:03:17.679Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1840,12 +2061,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 677,
+                  "duration": 811,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:18:05.797Z",
+                  "startTime": "2026-06-20T22:03:18.618Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1874,12 +2095,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 875,
+                  "duration": 846,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:18:06.490Z",
+                  "startTime": "2026-06-20T22:03:19.449Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1908,12 +2129,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 752,
+                  "duration": 818,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:19:01.176Z",
+                  "startTime": "2026-06-20T22:03:54.919Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1942,12 +2163,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1117,
+                  "duration": 722,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:19:01.967Z",
+                  "startTime": "2026-06-20T22:03:55.759Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1976,12 +2197,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1100,
+                  "duration": 793,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:19:03.124Z",
+                  "startTime": "2026-06-20T22:03:56.508Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2010,12 +2231,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 268,
+                  "duration": 267,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:19:36.413Z",
+                  "startTime": "2026-06-20T22:04:25.130Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2044,12 +2265,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 284,
+                  "duration": 255,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:19:36.697Z",
+                  "startTime": "2026-06-20T22:04:25.415Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2078,12 +2299,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 277,
+                  "duration": 263,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T20:19:37.003Z",
+                  "startTime": "2026-06-20T22:04:25.683Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2127,12 +2348,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1266,
+                      "duration": 911,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:07.392Z",
+                      "startTime": "2026-06-20T22:03:20.327Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2161,12 +2382,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1061,
+                      "duration": 1357,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:04.268Z",
+                      "startTime": "2026-06-20T22:03:57.333Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2195,12 +2416,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 496,
+                      "duration": 442,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:37.300Z",
+                      "startTime": "2026-06-20T22:04:25.961Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2246,12 +2467,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1243,
+                      "duration": 1172,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:08.716Z",
+                      "startTime": "2026-06-20T22:03:21.292Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2280,12 +2501,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1522,
+                      "duration": 1534,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:10.032Z",
+                      "startTime": "2026-06-20T22:03:22.528Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2314,12 +2535,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1482,
+                      "duration": 1425,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:11.587Z",
+                      "startTime": "2026-06-20T22:03:24.081Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2348,12 +2569,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1769,
+                      "duration": 1472,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:05.486Z",
+                      "startTime": "2026-06-20T22:03:58.754Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2382,12 +2603,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2162,
+                      "duration": 1672,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:07.341Z",
+                      "startTime": "2026-06-20T22:04:00.306Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2416,12 +2637,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1766,
+                      "duration": 1373,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:09.564Z",
+                      "startTime": "2026-06-20T22:04:02.016Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2450,12 +2671,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 476,
+                      "duration": 464,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:37.840Z",
+                      "startTime": "2026-06-20T22:04:26.445Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2484,12 +2705,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 748,
+                      "duration": 676,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:38.357Z",
+                      "startTime": "2026-06-20T22:04:26.953Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2518,12 +2739,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 514,
+                      "duration": 548,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:39.125Z",
+                      "startTime": "2026-06-20T22:04:27.646Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2560,12 +2781,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4162,
+                      "duration": 4627,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:13.093Z",
+                      "startTime": "2026-06-20T22:03:25.532Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2594,12 +2815,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1474,
+                      "duration": 1482,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:17.328Z",
+                      "startTime": "2026-06-20T22:03:30.222Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2628,12 +2849,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4182,
+                      "duration": 3433,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:11.371Z",
+                      "startTime": "2026-06-20T22:04:03.439Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2662,12 +2883,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1942,
+                      "duration": 1640,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:15.660Z",
+                      "startTime": "2026-06-20T22:04:06.931Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2696,12 +2917,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1687,
+                      "duration": 1420,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:39.657Z",
+                      "startTime": "2026-06-20T22:04:28.215Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2730,12 +2951,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 527,
+                      "duration": 455,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:41.392Z",
+                      "startTime": "2026-06-20T22:04:29.677Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2772,12 +2993,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1250,
+                      "duration": 1118,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:18.825Z",
+                      "startTime": "2026-06-20T22:03:31.735Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2806,12 +3027,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 805,
+                      "duration": 740,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:18:20.106Z",
+                      "startTime": "2026-06-20T22:03:32.873Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2840,12 +3061,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1391,
+                      "duration": 972,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:17.629Z",
+                      "startTime": "2026-06-20T22:04:08.591Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2874,12 +3095,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1317,
+                      "duration": 895,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:19.056Z",
+                      "startTime": "2026-06-20T22:04:09.601Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2908,12 +3129,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 272,
+                      "duration": 244,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:41.940Z",
+                      "startTime": "2026-06-20T22:04:30.155Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2942,12 +3163,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 282,
+                      "duration": 251,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T20:19:42.230Z",
+                      "startTime": "2026-06-20T22:04:30.415Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2967,9 +3188,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-20T20:16:22.943Z",
-    "duration": 199894.266,
-    "expected": 76,
+    "startTime": "2026-06-20T22:01:39.052Z",
+    "duration": 171890.71,
+    "expected": 82,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0
