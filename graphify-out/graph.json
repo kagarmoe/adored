@@ -452,7 +452,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "fixtures_db_closedb",
-      "community": 49,
+      "community": 57,
       "norm_label": "closedb()"
     },
     {
@@ -1634,7 +1634,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_backfill_collection_slugs",
-      "community": 70,
+      "community": 98,
       "norm_label": "backfill-collection-slugs.ts"
     },
     {
@@ -1644,7 +1644,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "scripts_backfill_collection_slugs_main",
-      "community": 70,
+      "community": 98,
       "norm_label": "main()"
     },
     {
@@ -2084,7 +2084,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_verify_auth",
-      "community": 46,
+      "community": 98,
       "norm_label": "verify-auth.ts"
     },
     {
@@ -2094,7 +2094,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "scripts_verify_auth_verifyauthsetup",
-      "community": 46,
+      "community": 98,
       "norm_label": "verifyauthsetup()"
     },
     {
@@ -2164,7 +2164,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "archive_route",
-      "community": 5,
+      "community": 10,
       "norm_label": "route.ts"
     },
     {
@@ -2184,7 +2184,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "invitations_route_test",
-      "community": 111,
+      "community": 9,
       "norm_label": "route.test.ts"
     },
     {
@@ -2194,7 +2194,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "invitations_route_test_mockgetsession_mockgetdb_collectionrepo_membershiprepo_invrepo",
-      "community": 111,
+      "community": 9,
       "norm_label": "{ mockgetsession, mockgetdb, collectionrepo, membershiprepo, invrepo }"
     },
     {
@@ -2204,7 +2204,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "invitations_route_test_req",
-      "community": 111,
+      "community": 9,
       "norm_label": "req()"
     },
     {
@@ -2214,7 +2214,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "invitations_route",
-      "community": 111,
+      "community": 9,
       "norm_label": "route.ts"
     },
     {
@@ -2224,7 +2224,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "invitations_route_get",
-      "community": 111,
+      "community": 9,
       "norm_label": "get()"
     },
     {
@@ -2234,7 +2234,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "invitations_route_post",
-      "community": 111,
+      "community": 9,
       "norm_label": "post()"
     },
     {
@@ -2264,7 +2264,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "photoid_route",
-      "community": 46,
+      "community": 10,
       "norm_label": "route.ts"
     },
     {
@@ -2274,7 +2274,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "photoid_route_delete",
-      "community": 119,
+      "community": 3,
       "norm_label": "delete()"
     },
     {
@@ -2384,7 +2384,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_collections_id_items_itemid_photos_route_ts_photos_route",
-      "community": 46,
+      "community": 10,
       "norm_label": "route.ts"
     },
     {
@@ -2394,7 +2394,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "photos_route_post",
-      "community": 46,
+      "community": 2,
       "norm_label": "post()"
     },
     {
@@ -2424,7 +2424,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "itemid_route_patch",
-      "community": 10,
+      "community": 3,
       "norm_label": "patch()"
     },
     {
@@ -2584,7 +2584,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "members_route",
-      "community": 2,
+      "community": 10,
       "norm_label": "route.ts"
     },
     {
@@ -2614,7 +2614,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "reassign_route_test",
-      "community": 11,
+      "community": 39,
       "norm_label": "route.test.ts"
     },
     {
@@ -2624,7 +2624,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "reassign_route_test_mockgetsession_mockgetdb_membershiprepo_collectionrepo_reassignphotos",
-      "community": 11,
+      "community": 39,
       "norm_label": "{\n  mockgetsession,\n  mockgetdb,\n  membershiprepo,\n  collectionrepo,\n  reassignphotos,\n}"
     },
     {
@@ -2634,7 +2634,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "reassign_route_test_req",
-      "community": 11,
+      "community": 39,
       "norm_label": "req()"
     },
     {
@@ -2644,7 +2644,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "reassign_route",
-      "community": 11,
+      "community": 10,
       "norm_label": "route.ts"
     },
     {
@@ -2654,7 +2654,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "reassign_route_post",
-      "community": 11,
+      "community": 3,
       "norm_label": "post()"
     },
     {
@@ -2664,7 +2664,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "group_route_test",
-      "community": 11,
+      "community": 39,
       "norm_label": "route.test.ts"
     },
     {
@@ -2674,7 +2674,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "group_route_test_mockgetsession_mockgetdb_membershiprepo_collectionrepo_createitemfrompool_createitemsfrompooleach",
-      "community": 11,
+      "community": 39,
       "norm_label": "{\n  mockgetsession,\n  mockgetdb,\n  membershiprepo,\n  collectionrepo,\n  createitemfrompool,\n  createitemsfrompooleach,\n}"
     },
     {
@@ -2684,7 +2684,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "group_route_test_req",
-      "community": 11,
+      "community": 39,
       "norm_label": "req()"
     },
     {
@@ -2694,7 +2694,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "group_route",
-      "community": 11,
+      "community": 10,
       "norm_label": "route.ts"
     },
     {
@@ -2704,7 +2704,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "group_route_post",
-      "community": 11,
+      "community": 3,
       "norm_label": "post()"
     },
     {
@@ -2794,7 +2794,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_collections_id_pool_photos_route_ts_photos_route",
-      "community": 70,
+      "community": 10,
       "norm_label": "route.ts"
     },
     {
@@ -2804,7 +2804,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "photos_route_get",
-      "community": 70,
+      "community": 2,
       "norm_label": "get()"
     },
     {
@@ -2814,7 +2814,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "upload_route_test",
-      "community": 0,
+      "community": 111,
       "norm_label": "route.test.ts"
     },
     {
@@ -2824,7 +2824,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "upload_route_test_mockgetsession_mockgetdb_membershiprepo_collectionrepo_mockhandleupload",
-      "community": 0,
+      "community": 111,
       "norm_label": "{ mockgetsession, mockgetdb, membershiprepo, collectionrepo, mockhandleupload }"
     },
     {
@@ -2834,7 +2834,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "upload_route_test_makereq",
-      "community": 0,
+      "community": 111,
       "norm_label": "makereq()"
     },
     {
@@ -2844,7 +2844,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "upload_route",
-      "community": 0,
+      "community": 10,
       "norm_label": "route.ts"
     },
     {
@@ -2854,7 +2854,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "upload_route_httperror",
-      "community": 0,
+      "community": 10,
       "norm_label": "httperror"
     },
     {
@@ -2864,7 +2864,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "upload_route_httperror_constructor",
-      "community": 0,
+      "community": 10,
       "norm_label": ".constructor()"
     },
     {
@@ -2874,7 +2874,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "upload_route_assertcanaddphotos",
-      "community": 0,
+      "community": 3,
       "norm_label": "assertcanaddphotos()"
     },
     {
@@ -2884,7 +2884,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "upload_route_post",
-      "community": 0,
+      "community": 111,
       "norm_label": "post()"
     },
     {
@@ -2934,7 +2934,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_collections_id_purge_route_ts_purge_route",
-      "community": 5,
+      "community": 10,
       "norm_label": "route.ts"
     },
     {
@@ -2954,7 +2954,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_collections_id_restore_route_ts_restore_route",
-      "community": 5,
+      "community": 10,
       "norm_label": "route.ts"
     },
     {
@@ -3014,7 +3014,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "collections_route",
-      "community": 2,
+      "community": 10,
       "norm_label": "route.ts"
     },
     {
@@ -3104,7 +3104,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "accept_route",
-      "community": 2,
+      "community": 27,
       "norm_label": "route.ts"
     },
     {
@@ -3114,7 +3114,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "accept_route_get",
-      "community": 2,
+      "community": 27,
       "norm_label": "get()"
     },
     {
@@ -3124,7 +3124,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "accept_route_post",
-      "community": 2,
+      "community": 27,
       "norm_label": "post()"
     },
     {
@@ -3134,7 +3134,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_items_id_purge_route_ts_purge_route",
-      "community": 13,
+      "community": 22,
       "norm_label": "route.ts"
     },
     {
@@ -3144,7 +3144,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "purge_route_purgeconfirmschema",
-      "community": 13,
+      "community": 22,
       "norm_label": "purgeconfirmschema"
     },
     {
@@ -3154,7 +3154,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_app_api_items_id_purge_route_ts_purge_route_post",
-      "community": 2,
+      "community": 22,
       "norm_label": "post()"
     },
     {
@@ -3174,7 +3174,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "remove_from_sorts_route_post",
-      "community": 2,
+      "community": 22,
       "norm_label": "post()"
     },
     {
@@ -3474,7 +3474,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "finalize_route_test",
-      "community": 31,
+      "community": 35,
       "norm_label": "route.test.ts"
     },
     {
@@ -3484,7 +3484,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "finalize_route_test_mockrequireauth_mockgetdb_mockrequireapiresultaccess_sortresultrepo",
-      "community": 31,
+      "community": 35,
       "norm_label": "{ mockrequireauth, mockgetdb, mockrequireapiresultaccess, sortresultrepo }"
     },
     {
@@ -3494,7 +3494,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "finalize_route_test_draft_result",
-      "community": 31,
+      "community": 35,
       "norm_label": "draft_result"
     },
     {
@@ -3504,7 +3504,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "finalize_route_test_params",
-      "community": 31,
+      "community": 35,
       "norm_label": "params"
     },
     {
@@ -3514,7 +3514,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "finalize_route_test_postreq",
-      "community": 31,
+      "community": 35,
       "norm_label": "postreq()"
     },
     {
@@ -3524,7 +3524,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "finalize_route_test_unauthorized",
-      "community": 31,
+      "community": 35,
       "norm_label": "unauthorized()"
     },
     {
@@ -3534,7 +3534,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "finalize_route",
-      "community": 31,
+      "community": 2,
       "norm_label": "route.ts"
     },
     {
@@ -3544,7 +3544,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "finalize_route_post",
-      "community": 31,
+      "community": 2,
       "norm_label": "post()"
     },
     {
@@ -3554,7 +3554,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "reset_route_test",
-      "community": 31,
+      "community": 32,
       "norm_label": "route.test.ts"
     },
     {
@@ -3564,7 +3564,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "reset_route_test_mockrequireauth_mockgetdb_mockrequireapiresultaccess_itemrepo",
-      "community": 31,
+      "community": 32,
       "norm_label": "{ mockrequireauth, mockgetdb, mockrequireapiresultaccess, itemrepo }"
     },
     {
@@ -3574,7 +3574,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "reset_route_test_result",
-      "community": 31,
+      "community": 32,
       "norm_label": "result"
     },
     {
@@ -3584,7 +3584,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "reset_route_test_makeitem",
-      "community": 31,
+      "community": 32,
       "norm_label": "makeitem()"
     },
     {
@@ -3594,7 +3594,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "reset_route_test_params",
-      "community": 31,
+      "community": 32,
       "norm_label": "params"
     },
     {
@@ -3604,7 +3604,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "reset_route_test_postreq",
-      "community": 31,
+      "community": 32,
       "norm_label": "postreq()"
     },
     {
@@ -3614,7 +3614,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "reset_route_test_unauthorized",
-      "community": 31,
+      "community": 32,
       "norm_label": "unauthorized()"
     },
     {
@@ -3624,7 +3624,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "reset_route",
-      "community": 31,
+      "community": 2,
       "norm_label": "route.ts"
     },
     {
@@ -3634,7 +3634,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "reset_route_post",
-      "community": 31,
+      "community": 2,
       "norm_label": "post()"
     },
     {
@@ -3724,7 +3724,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "rid_route",
-      "community": 31,
+      "community": 13,
       "norm_label": "route.ts"
     },
     {
@@ -3734,7 +3734,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "rid_route_get",
-      "community": 31,
+      "community": 2,
       "norm_label": "get()"
     },
     {
@@ -3744,7 +3744,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "rid_route_patch",
-      "community": 31,
+      "community": 2,
       "norm_label": "patch()"
     },
     {
@@ -3754,7 +3754,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "rid_route_delete",
-      "community": 31,
+      "community": 2,
       "norm_label": "delete()"
     },
     {
@@ -3834,7 +3834,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_sort_results_id_items_route_ts_items_route",
-      "community": 13,
+      "community": 2,
       "norm_label": "route.ts"
     },
     {
@@ -3854,77 +3854,77 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_sort_results_id_route_test_ts_id_route_test",
-      "community": 127,
+      "community": 135,
       "norm_label": "route.test.ts"
     },
     {
       "label": "{\n  mockRequireAuth,\n  mockGetDb,\n  mockRequireApiResultAccess,\n  sortResultRepo,\n  sortResultItemRepo,\n}",
       "file_type": "code",
       "source_file": "src/app/api/sort-results/[id]/route.test.ts",
-      "source_location": "L11",
+      "source_location": "L12",
       "_origin": "ast",
       "id": "id_route_test_mockrequireauth_mockgetdb_mockrequireapiresultaccess_sortresultrepo_sortresultitemrepo",
-      "community": 127,
+      "community": 135,
       "norm_label": "{\n  mockrequireauth,\n  mockgetdb,\n  mockrequireapiresultaccess,\n  sortresultrepo,\n  sortresultitemrepo,\n}"
     },
     {
       "label": "DRAFT_RESULT",
       "file_type": "code",
       "source_file": "src/app/api/sort-results/[id]/route.test.ts",
-      "source_location": "L53",
+      "source_location": "L54",
       "_origin": "ast",
       "id": "id_route_test_draft_result",
-      "community": 127,
+      "community": 135,
       "norm_label": "draft_result"
     },
     {
       "label": "params",
       "file_type": "code",
       "source_file": "src/app/api/sort-results/[id]/route.test.ts",
-      "source_location": "L65",
+      "source_location": "L66",
       "_origin": "ast",
       "id": "id_route_test_params",
-      "community": 127,
+      "community": 135,
       "norm_label": "params"
     },
     {
       "label": "patchReq()",
       "file_type": "code",
       "source_file": "src/app/api/sort-results/[id]/route.test.ts",
-      "source_location": "L67",
+      "source_location": "L68",
       "_origin": "ast",
       "id": "id_route_test_patchreq",
-      "community": 127,
+      "community": 135,
       "norm_label": "patchreq()"
     },
     {
       "label": "badJsonReq()",
       "file_type": "code",
       "source_file": "src/app/api/sort-results/[id]/route.test.ts",
-      "source_location": "L68",
+      "source_location": "L69",
       "_origin": "ast",
       "id": "id_route_test_badjsonreq",
-      "community": 127,
+      "community": 135,
       "norm_label": "badjsonreq()"
     },
     {
       "label": "getReq()",
       "file_type": "code",
       "source_file": "src/app/api/sort-results/[id]/route.test.ts",
-      "source_location": "L74",
+      "source_location": "L75",
       "_origin": "ast",
       "id": "id_route_test_getreq",
-      "community": 127,
+      "community": 135,
       "norm_label": "getreq()"
     },
     {
       "label": "unauthorized()",
       "file_type": "code",
       "source_file": "src/app/api/sort-results/[id]/route.test.ts",
-      "source_location": "L89",
+      "source_location": "L93",
       "_origin": "ast",
       "id": "id_route_test_unauthorized",
-      "community": 127,
+      "community": 135,
       "norm_label": "unauthorized()"
     },
     {
@@ -3974,7 +3974,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "sid_route_test",
-      "community": 112,
+      "community": 2,
       "norm_label": "route.test.ts"
     },
     {
@@ -3984,7 +3984,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "sid_route_test_mockrequireauth_mockgetdb_mockrequireresultaccess_sharerepo",
-      "community": 112,
+      "community": 2,
       "norm_label": "{ mockrequireauth, mockgetdb, mockrequireresultaccess, sharerepo }"
     },
     {
@@ -3994,7 +3994,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "sid_route_test_ctx",
-      "community": 112,
+      "community": 2,
       "norm_label": "ctx"
     },
     {
@@ -4004,7 +4004,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "sid_route_test_ownshare",
-      "community": 112,
+      "community": 2,
       "norm_label": "ownshare"
     },
     {
@@ -4014,7 +4014,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "sid_route_test_patchreq",
-      "community": 112,
+      "community": 2,
       "norm_label": "patchreq()"
     },
     {
@@ -4024,7 +4024,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "sid_route_test_badjsonreq",
-      "community": 112,
+      "community": 2,
       "norm_label": "badjsonreq()"
     },
     {
@@ -4074,7 +4074,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "shares_route_test",
-      "community": 82,
+      "community": 2,
       "norm_label": "route.test.ts"
     },
     {
@@ -4084,7 +4084,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "shares_route_test_mockrequireauth_mockgetdb_mockrequireresultaccess_sharerepo",
-      "community": 82,
+      "community": 2,
       "norm_label": "{ mockrequireauth, mockgetdb, mockrequireresultaccess, sharerepo }"
     },
     {
@@ -4094,7 +4094,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "shares_route_test_ctx",
-      "community": 82,
+      "community": 2,
       "norm_label": "ctx"
     },
     {
@@ -4104,7 +4104,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "shares_route_test_postreq",
-      "community": 82,
+      "community": 2,
       "norm_label": "postreq()"
     },
     {
@@ -4114,7 +4114,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "shares_route_test_badjsonreq",
-      "community": 82,
+      "community": 2,
       "norm_label": "badjsonreq()"
     },
     {
@@ -4124,7 +4124,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "shares_route",
-      "community": 82,
+      "community": 2,
       "norm_label": "route.ts"
     },
     {
@@ -4134,7 +4134,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "shares_route_get",
-      "community": 82,
+      "community": 2,
       "norm_label": "get()"
     },
     {
@@ -4144,7 +4144,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "shares_route_post",
-      "community": 82,
+      "community": 2,
       "norm_label": "post()"
     },
     {
@@ -4284,7 +4284,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "sort_results_route",
-      "community": 135,
+      "community": 13,
       "norm_label": "route.ts"
     },
     {
@@ -4294,7 +4294,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "sort_results_route_createresultrequest",
-      "community": 135,
+      "community": 13,
       "norm_label": "createresultrequest"
     },
     {
@@ -4304,7 +4304,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "sort_results_route_post",
-      "community": 135,
+      "community": 9,
       "norm_label": "post()"
     },
     {
@@ -4314,7 +4314,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "me_route",
-      "community": 17,
+      "community": 3,
       "norm_label": "route.ts"
     },
     {
@@ -4324,7 +4324,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "me_route_get",
-      "community": 17,
+      "community": 3,
       "norm_label": "get()"
     },
     {
@@ -4334,7 +4334,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "me_route_patch",
-      "community": 17,
+      "community": 3,
       "norm_label": "patch()"
     },
     {
@@ -4344,7 +4344,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "me_route_delete",
-      "community": 17,
+      "community": 3,
       "norm_label": "delete()"
     },
     {
@@ -4444,7 +4444,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "photos_page",
-      "community": 8,
+      "community": 3,
       "norm_label": "page.tsx"
     },
     {
@@ -4454,7 +4454,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "photos_page_photopageprops",
-      "community": 8,
+      "community": 3,
       "norm_label": "photopageprops"
     },
     {
@@ -4464,7 +4464,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "photos_page_photopage",
-      "community": 8,
+      "community": 3,
       "norm_label": "photopage()"
     },
     {
@@ -4534,7 +4534,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "members_page",
-      "community": 36,
+      "community": 3,
       "norm_label": "page.tsx"
     },
     {
@@ -4544,7 +4544,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "members_page_memberspageprops",
-      "community": 36,
+      "community": 3,
       "norm_label": "memberspageprops"
     },
     {
@@ -4554,7 +4554,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "members_page_memberspage",
-      "community": 36,
+      "community": 3,
       "norm_label": "memberspage()"
     },
     {
@@ -4744,7 +4744,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "resultnumber_page",
-      "community": 141,
+      "community": 63,
       "norm_label": "page.tsx"
     },
     {
@@ -4754,7 +4754,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "resultnumber_page_resultdetailpageprops",
-      "community": 141,
+      "community": 63,
       "norm_label": "resultdetailpageprops"
     },
     {
@@ -4764,7 +4764,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "resultnumber_page_bucketlabels",
-      "community": 141,
+      "community": 63,
       "norm_label": "bucketlabels"
     },
     {
@@ -4774,7 +4774,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "resultnumber_page_bucketramp",
-      "community": 141,
+      "community": 63,
       "norm_label": "bucketramp"
     },
     {
@@ -4784,7 +4784,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "resultnumber_page_resultdetailpage",
-      "community": 141,
+      "community": 3,
       "norm_label": "resultdetailpage()"
     },
     {
@@ -4794,7 +4794,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "results_page_test",
-      "community": 19,
+      "community": 3,
       "norm_label": "page.test.tsx"
     },
     {
@@ -4804,7 +4804,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "results_page_test_mockgetsession_mockrequireaccess_resultrepo",
-      "community": 19,
+      "community": 3,
       "norm_label": "{ mockgetsession, mockrequireaccess, resultrepo }"
     },
     {
@@ -4814,7 +4814,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "results_page",
-      "community": 19,
+      "community": 3,
       "norm_label": "page.tsx"
     },
     {
@@ -4824,7 +4824,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "results_page_resultspageprops",
-      "community": 19,
+      "community": 3,
       "norm_label": "resultspageprops"
     },
     {
@@ -4834,7 +4834,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "results_page_resultspage",
-      "community": 19,
+      "community": 3,
       "norm_label": "resultspage()"
     },
     {
@@ -4844,7 +4844,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "compare_page_test",
-      "community": 141,
+      "community": 65,
       "norm_label": "page.test.tsx"
     },
     {
@@ -4854,7 +4854,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "compare_page_test_mockgetsession_mockrequireaccess_itemrepo_sessionrepo_prefrepo_decisionrepo_photorepo",
-      "community": 141,
+      "community": 65,
       "norm_label": "{ mockgetsession, mockrequireaccess, itemrepo, sessionrepo, prefrepo, decisionrepo, photorepo }"
     },
     {
@@ -4864,7 +4864,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "compare_page_test_collection",
-      "community": 141,
+      "community": 65,
       "norm_label": "collection"
     },
     {
@@ -4874,7 +4874,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "compare_page_test_a",
-      "community": 141,
+      "community": 65,
       "norm_label": "a"
     },
     {
@@ -4884,7 +4884,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "compare_page_test_b",
-      "community": 141,
+      "community": 65,
       "norm_label": "b"
     },
     {
@@ -4894,7 +4894,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "compare_page",
-      "community": 141,
+      "community": 3,
       "norm_label": "page.tsx"
     },
     {
@@ -4904,7 +4904,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "compare_page_comparepageprops",
-      "community": 141,
+      "community": 3,
       "norm_label": "comparepageprops"
     },
     {
@@ -4914,7 +4914,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "compare_page_comparepage",
-      "community": 141,
+      "community": 3,
       "norm_label": "comparepage()"
     },
     {
@@ -4924,7 +4924,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "sessionnumber_page_test",
-      "community": 119,
+      "community": 3,
       "norm_label": "page.test.tsx"
     },
     {
@@ -4934,7 +4934,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "sessionnumber_page_test_mockgetsession_mockrequireaccess_redirectmock_sessionrepo_decisionrepo_itemrepo_prefrepo",
-      "community": 119,
+      "community": 3,
       "norm_label": "{ mockgetsession, mockrequireaccess, redirectmock, sessionrepo, decisionrepo, itemrepo, prefrepo }"
     },
     {
@@ -4944,7 +4944,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "sessionnumber_page",
-      "community": 119,
+      "community": 3,
       "norm_label": "page.tsx"
     },
     {
@@ -4954,7 +4954,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "sessionnumber_page_sessionpageprops",
-      "community": 119,
+      "community": 3,
       "norm_label": "sessionpageprops"
     },
     {
@@ -4964,7 +4964,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "sessionnumber_page_sortsessionpage",
-      "community": 119,
+      "community": 3,
       "norm_label": "sortsessionpage()"
     },
     {
@@ -4974,7 +4974,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "triage_page_test",
-      "community": 136,
+      "community": 8,
       "norm_label": "page.test.tsx"
     },
     {
@@ -4984,7 +4984,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "triage_page_test_mockgetsession_mockrequireaccess_itemrepo_sessionrepo_prefrepo_photorepo",
-      "community": 136,
+      "community": 8,
       "norm_label": "{ mockgetsession, mockrequireaccess, itemrepo, sessionrepo, prefrepo, photorepo }"
     },
     {
@@ -4994,7 +4994,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "triage_page_test_collection",
-      "community": 136,
+      "community": 8,
       "norm_label": "collection"
     },
     {
@@ -5004,7 +5004,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "triage_page_test_item",
-      "community": 136,
+      "community": 8,
       "norm_label": "item"
     },
     {
@@ -5014,7 +5014,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "triage_page",
-      "community": 136,
+      "community": 8,
       "norm_label": "page.tsx"
     },
     {
@@ -5024,7 +5024,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "triage_page_triagepageprops",
-      "community": 136,
+      "community": 8,
       "norm_label": "triagepageprops"
     },
     {
@@ -5034,7 +5034,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "triage_page_triagepage",
-      "community": 136,
+      "community": 3,
       "norm_label": "triagepage()"
     },
     {
@@ -5124,7 +5124,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_collections_new_page_tsx_new_page",
-      "community": 42,
+      "community": 3,
       "norm_label": "page.tsx"
     },
     {
@@ -5134,7 +5134,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "new_page_createcollectionpage",
-      "community": 42,
+      "community": 3,
       "norm_label": "createcollectionpage()"
     },
     {
@@ -5144,7 +5144,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "collections_page",
-      "community": 23,
+      "community": 10,
       "norm_label": "page.tsx"
     },
     {
@@ -5154,7 +5154,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "collections_page_collectionspageprops",
-      "community": 23,
+      "community": 10,
       "norm_label": "collectionspageprops"
     },
     {
@@ -5164,7 +5164,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "collections_page_collectionspage",
-      "community": 23,
+      "community": 3,
       "norm_label": "collectionspage()"
     },
     {
@@ -5254,7 +5254,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "login_page",
-      "community": 42,
+      "community": 136,
       "norm_label": "page.tsx"
     },
     {
@@ -5264,7 +5264,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "login_page_logincontent",
-      "community": 42,
+      "community": 136,
       "norm_label": "logincontent()"
     },
     {
@@ -5274,7 +5274,7 @@
       "source_location": "L158",
       "_origin": "ast",
       "id": "login_page_loginpage",
-      "community": 42,
+      "community": 136,
       "norm_label": "loginpage()"
     },
     {
@@ -5284,7 +5284,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_page",
-      "community": 119,
+      "community": 3,
       "norm_label": "page.tsx"
     },
     {
@@ -5294,7 +5294,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "app_page_home",
-      "community": 119,
+      "community": 3,
       "norm_label": "home()"
     },
     {
@@ -5304,7 +5304,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "shared_preview_page",
-      "community": 19,
+      "community": 11,
       "norm_label": "page.tsx"
     },
     {
@@ -5314,7 +5314,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "shared_preview_page_collections",
-      "community": 19,
+      "community": 11,
       "norm_label": "collections"
     },
     {
@@ -5324,7 +5324,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "shared_preview_page_covercard",
-      "community": 19,
+      "community": 11,
       "norm_label": "covercard()"
     },
     {
@@ -5334,7 +5334,7 @@
       "source_location": "L81",
       "_origin": "ast",
       "id": "shared_preview_page_compareside",
-      "community": 19,
+      "community": 11,
       "norm_label": "compareside()"
     },
     {
@@ -5344,7 +5344,7 @@
       "source_location": "L109",
       "_origin": "ast",
       "id": "shared_preview_page_rulelabel",
-      "community": 19,
+      "community": 11,
       "norm_label": "rulelabel()"
     },
     {
@@ -5354,7 +5354,7 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "shared_preview_page_previewpage",
-      "community": 19,
+      "community": 11,
       "norm_label": "previewpage()"
     },
     {
@@ -5364,7 +5364,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_shared_results_token_page_tsx_token_page",
-      "community": 8,
+      "community": 11,
       "norm_label": "page.tsx"
     },
     {
@@ -5374,7 +5374,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "token_page_sharedresultpageprops",
-      "community": 8,
+      "community": 11,
       "norm_label": "sharedresultpageprops"
     },
     {
@@ -5384,7 +5384,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "token_page_sharedresultpage",
-      "community": 8,
+      "community": 11,
       "norm_label": "sharedresultpage()"
     },
     {
@@ -5394,7 +5394,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "signup_page",
-      "community": 42,
+      "community": 136,
       "norm_label": "page.tsx"
     },
     {
@@ -5404,7 +5404,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "signup_page_signuppage",
-      "community": 42,
+      "community": 136,
       "norm_label": "signuppage()"
     },
     {
@@ -5544,7 +5544,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "layout_sectionheader",
-      "community": 36,
+      "community": 3,
       "norm_label": "sectionheader.tsx"
     },
     {
@@ -5554,7 +5554,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "layout_sectionheader_sectionheaderprops",
-      "community": 36,
+      "community": 3,
       "norm_label": "sectionheaderprops"
     },
     {
@@ -5564,7 +5564,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "layout_sectionheader_sectionheader",
-      "community": 36,
+      "community": 3,
       "norm_label": "sectionheader"
     },
     {
@@ -5594,7 +5594,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "layout_index",
-      "community": 36,
+      "community": 3,
       "norm_label": "index.ts"
     },
     {
@@ -5644,7 +5644,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_badge_test",
-      "community": 19,
+      "community": 11,
       "norm_label": "badge.test.ts"
     },
     {
@@ -5654,7 +5654,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_badge",
-      "community": 19,
+      "community": 11,
       "norm_label": "badge.tsx"
     },
     {
@@ -5664,7 +5664,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "ui_badge_badgevariants",
-      "community": 19,
+      "community": 11,
       "norm_label": "badgevariants"
     },
     {
@@ -5674,7 +5674,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "ui_badge_badgeprops",
-      "community": 19,
+      "community": 11,
       "norm_label": "badgeprops"
     },
     {
@@ -5684,7 +5684,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "ui_badge_badge",
-      "community": 19,
+      "community": 11,
       "norm_label": "badge"
     },
     {
@@ -5704,7 +5704,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "ui_button_buttonvariants",
-      "community": 23,
+      "community": 19,
       "norm_label": "buttonvariants"
     },
     {
@@ -5724,7 +5724,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "ui_button_button",
-      "community": 42,
+      "community": 136,
       "norm_label": "button"
     },
     {
@@ -5734,7 +5734,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_card",
-      "community": 19,
+      "community": 11,
       "norm_label": "card.tsx"
     },
     {
@@ -5744,7 +5744,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "ui_card_cardprops",
-      "community": 19,
+      "community": 11,
       "norm_label": "cardprops"
     },
     {
@@ -5754,7 +5754,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "ui_card_paddingmap",
-      "community": 19,
+      "community": 11,
       "norm_label": "paddingmap"
     },
     {
@@ -5764,7 +5764,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "ui_card_card",
-      "community": 8,
+      "community": 11,
       "norm_label": "card"
     },
     {
@@ -5934,7 +5934,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "ui_input",
-      "community": 19,
+      "community": 136,
       "norm_label": "input.tsx"
     },
     {
@@ -5944,7 +5944,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "ui_input_inputprops",
-      "community": 19,
+      "community": 136,
       "norm_label": "inputprops"
     },
     {
@@ -5954,7 +5954,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "ui_input_input",
-      "community": 42,
+      "community": 136,
       "norm_label": "input"
     },
     {
@@ -6084,7 +6084,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "collections_collectioncard_test",
-      "community": 23,
+      "community": 5,
       "norm_label": "collectioncard.test.tsx"
     },
     {
@@ -6094,7 +6094,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "collections_collectioncard_test_collection",
-      "community": 23,
+      "community": 5,
       "norm_label": "collection"
     },
     {
@@ -6104,7 +6104,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "collections_collectioncard",
-      "community": 23,
+      "community": 5,
       "norm_label": "collectioncard.tsx"
     },
     {
@@ -6114,7 +6114,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "collections_collectioncard_collectioncardprops",
-      "community": 23,
+      "community": 5,
       "norm_label": "collectioncardprops"
     },
     {
@@ -6124,7 +6124,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "collections_collectioncard_collectioncard",
-      "community": 23,
+      "community": 5,
       "norm_label": "collectioncard()"
     },
     {
@@ -6134,7 +6134,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "collections_collectionfilters",
-      "community": 23,
+      "community": 19,
       "norm_label": "collectionfilters.tsx"
     },
     {
@@ -6144,7 +6144,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "collections_collectionfilters_filters",
-      "community": 23,
+      "community": 19,
       "norm_label": "filters"
     },
     {
@@ -6154,7 +6154,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "collections_collectionfilters_collectionfiltersprops",
-      "community": 23,
+      "community": 19,
       "norm_label": "collectionfiltersprops"
     },
     {
@@ -6164,7 +6164,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "collections_collectionfilters_collectionfilters",
-      "community": 23,
+      "community": 19,
       "norm_label": "collectionfilters()"
     },
     {
@@ -6204,7 +6204,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "collections_collectionform_collectionform",
-      "community": 42,
+      "community": 3,
       "norm_label": "collectionform()"
     },
     {
@@ -6214,7 +6214,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "collections_inviteform",
-      "community": 42,
+      "community": 23,
       "norm_label": "inviteform.tsx"
     },
     {
@@ -6224,7 +6224,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "collections_inviteform_inviteschema",
-      "community": 42,
+      "community": 23,
       "norm_label": "inviteschema"
     },
     {
@@ -6234,7 +6234,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "collections_inviteform_inviteformprops",
-      "community": 42,
+      "community": 23,
       "norm_label": "inviteformprops"
     },
     {
@@ -6244,7 +6244,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "collections_inviteform_inviteform",
-      "community": 36,
+      "community": 23,
       "norm_label": "inviteform()"
     },
     {
@@ -6254,7 +6254,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "collections_memberlist",
-      "community": 36,
+      "community": 20,
       "norm_label": "memberlist.tsx"
     },
     {
@@ -6264,7 +6264,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "collections_memberlist_memberlistprops",
-      "community": 36,
+      "community": 20,
       "norm_label": "memberlistprops"
     },
     {
@@ -6274,7 +6274,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "collections_memberlist_memberlist",
-      "community": 36,
+      "community": 20,
       "norm_label": "memberlist()"
     },
     {
@@ -6284,7 +6284,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "collections_permissioncheckboxes",
-      "community": 42,
+      "community": 23,
       "norm_label": "permissioncheckboxes.tsx"
     },
     {
@@ -6294,7 +6294,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "collections_permissioncheckboxes_permissioncheckboxesprops",
-      "community": 42,
+      "community": 23,
       "norm_label": "permissioncheckboxesprops"
     },
     {
@@ -6304,7 +6304,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "collections_permissioncheckboxes_permissiondescriptions",
-      "community": 42,
+      "community": 23,
       "norm_label": "permissiondescriptions"
     },
     {
@@ -6314,7 +6314,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "collections_permissioncheckboxes_permissioncheckboxes",
-      "community": 42,
+      "community": 23,
       "norm_label": "permissioncheckboxes()"
     },
     {
@@ -6394,7 +6394,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "items_itemeditform",
-      "community": 42,
+      "community": 136,
       "norm_label": "itemeditform.tsx"
     },
     {
@@ -6414,7 +6414,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "items_itemeditform_itemeditform",
-      "community": 3,
+      "community": 136,
       "norm_label": "itemeditform()"
     },
     {
@@ -6524,7 +6524,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "items_itemform_itemform",
-      "community": 3,
+      "community": 42,
       "norm_label": "itemform()"
     },
     {
@@ -6904,7 +6904,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "results_finalizeresultform_test",
-      "community": 32,
+      "community": 136,
       "norm_label": "finalizeresultform.test.tsx"
     },
     {
@@ -6914,7 +6914,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "results_finalizeresultform_test_push",
-      "community": 32,
+      "community": 136,
       "norm_label": "push"
     },
     {
@@ -6924,7 +6924,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "results_finalizeresultform",
-      "community": 32,
+      "community": 136,
       "norm_label": "finalizeresultform.tsx"
     },
     {
@@ -6934,7 +6934,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "results_finalizeresultform_finalizeresultformprops",
-      "community": 32,
+      "community": 136,
       "norm_label": "finalizeresultformprops"
     },
     {
@@ -6944,7 +6944,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "results_finalizeresultform_finalizeresultform",
-      "community": 32,
+      "community": 136,
       "norm_label": "finalizeresultform()"
     },
     {
@@ -7004,7 +7004,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "results_sharepanel",
-      "community": 141,
+      "community": 63,
       "norm_label": "sharepanel.tsx"
     },
     {
@@ -7024,7 +7024,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "results_sharepanel_sharepanel",
-      "community": 141,
+      "community": 63,
       "norm_label": "sharepanel()"
     },
     {
@@ -7034,7 +7034,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "sessions_seeresultscard",
-      "community": 119,
+      "community": 11,
       "norm_label": "seeresultscard.tsx"
     },
     {
@@ -7044,7 +7044,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "sessions_seeresultscard_seeresultscardprops",
-      "community": 119,
+      "community": 11,
       "norm_label": "seeresultscardprops"
     },
     {
@@ -7054,7 +7054,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "sessions_seeresultscard_seeresultscard",
-      "community": 119,
+      "community": 11,
       "norm_label": "seeresultscard()"
     },
     {
@@ -7064,7 +7064,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "sessions_sessionanalytics",
-      "community": 29,
+      "community": 33,
       "norm_label": "sessionanalytics.tsx"
     },
     {
@@ -7074,7 +7074,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "sessions_sessionanalytics_sessionanalyticsprops",
-      "community": 29,
+      "community": 33,
       "norm_label": "sessionanalyticsprops"
     },
     {
@@ -7084,7 +7084,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "sessions_sessionanalytics_sessionanalytics",
-      "community": 29,
+      "community": 33,
       "norm_label": "sessionanalytics()"
     },
     {
@@ -7244,7 +7244,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "sorting_startsessionform_test",
-      "community": 65,
+      "community": 136,
       "norm_label": "startsessionform.test.tsx"
     },
     {
@@ -7254,7 +7254,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "sorting_startsessionform_test_push",
-      "community": 65,
+      "community": 136,
       "norm_label": "push"
     },
     {
@@ -7264,7 +7264,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "sorting_startsessionform",
-      "community": 65,
+      "community": 136,
       "norm_label": "startsessionform.tsx"
     },
     {
@@ -7274,7 +7274,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "sorting_startsessionform_startsessionformprops",
-      "community": 65,
+      "community": 136,
       "norm_label": "startsessionformprops"
     },
     {
@@ -7284,7 +7284,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "sorting_startsessionform_startsessionform",
-      "community": 65,
+      "community": 136,
       "norm_label": "startsessionform()"
     },
     {
@@ -7324,7 +7324,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "hooks_usepermissions",
-      "community": 140,
+      "community": 20,
       "norm_label": "usepermissions.ts"
     },
     {
@@ -7334,7 +7334,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "hooks_usepermissions_derivedpermissions",
-      "community": 140,
+      "community": 20,
       "norm_label": "derivedpermissions"
     },
     {
@@ -7344,7 +7344,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "hooks_usepermissions_usepermissions",
-      "community": 140,
+      "community": 20,
       "norm_label": "usepermissions()"
     },
     {
@@ -7524,7 +7524,7 @@
       "source_location": "L137",
       "_origin": "ast",
       "id": "lib_auth_getsession",
-      "community": 119,
+      "community": 3,
       "norm_label": "getsession()"
     },
     {
@@ -7624,7 +7624,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "collections_slug_test",
-      "community": 70,
+      "community": 5,
       "norm_label": "slug.test.ts"
     },
     {
@@ -7634,7 +7634,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "collections_slug",
-      "community": 70,
+      "community": 5,
       "norm_label": "slug.ts"
     },
     {
@@ -7644,7 +7644,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "collections_slug_reserved_collection_slugs",
-      "community": 70,
+      "community": 5,
       "norm_label": "reserved_collection_slugs"
     },
     {
@@ -7654,7 +7654,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "collections_slug_slugifyname",
-      "community": 70,
+      "community": 5,
       "norm_label": "slugifyname()"
     },
     {
@@ -7664,7 +7664,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "lib_db",
-      "community": 13,
+      "community": 10,
       "norm_label": "db.ts"
     },
     {
@@ -7674,7 +7674,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "lib_db_client",
-      "community": 13,
+      "community": 10,
       "norm_label": "client"
     },
     {
@@ -7684,7 +7684,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "lib_db_db",
-      "community": 13,
+      "community": 10,
       "norm_label": "db"
     },
     {
@@ -7724,7 +7724,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "db_backfill_numbers_integration_test_seedowner",
-      "community": 98,
+      "community": 14,
       "norm_label": "seedowner()"
     },
     {
@@ -8024,7 +8024,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "db_move_photos_integration_test",
-      "community": 121,
+      "community": 71,
       "norm_label": "move-photos.integration.test.ts"
     },
     {
@@ -8034,7 +8034,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "db_move_photos_integration_test_makeservice",
-      "community": 121,
+      "community": 71,
       "norm_label": "makeservice()"
     },
     {
@@ -8044,7 +8044,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "db_move_photos_integration_test_photorepo",
-      "community": 121,
+      "community": 71,
       "norm_label": "photorepo()"
     },
     {
@@ -8054,7 +8054,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "db_move_photos_integration_test_itemrepo",
-      "community": 121,
+      "community": 71,
       "norm_label": "itemrepo()"
     },
     {
@@ -8064,7 +8064,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "db_move_photos_integration_test_seeditem",
-      "community": 121,
+      "community": 71,
       "norm_label": "seeditem()"
     },
     {
@@ -8074,7 +8074,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "db_move_photos_integration_test_seedphoto",
-      "community": 121,
+      "community": 71,
       "norm_label": "seedphoto()"
     },
     {
@@ -8084,7 +8084,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "db_move_photos_integration_test_heroes",
-      "community": 121,
+      "community": 71,
       "norm_label": "heroes()"
     },
     {
@@ -8234,7 +8234,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "db_result_number_integration_test",
-      "community": 14,
+      "community": 57,
       "norm_label": "result-number.integration.test.ts"
     },
     {
@@ -8244,7 +8244,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "db_result_number_integration_test_seedowner",
-      "community": 14,
+      "community": 57,
       "norm_label": "seedowner()"
     },
     {
@@ -8254,7 +8254,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "db_result_number_integration_test_newcollection",
-      "community": 14,
+      "community": 57,
       "norm_label": "newcollection()"
     },
     {
@@ -8264,7 +8264,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "db_schema",
-      "community": 46,
+      "community": 98,
       "norm_label": "schema.ts"
     },
     {
@@ -8274,7 +8274,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "db_schema_user",
-      "community": 46,
+      "community": 49,
       "norm_label": "user"
     },
     {
@@ -8284,7 +8284,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "db_schema_account",
-      "community": 46,
+      "community": 98,
       "norm_label": "account"
     },
     {
@@ -8294,7 +8294,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "db_schema_session",
-      "community": 46,
+      "community": 98,
       "norm_label": "session"
     },
     {
@@ -8304,7 +8304,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "db_schema_verificationtoken",
-      "community": 46,
+      "community": 98,
       "norm_label": "verificationtoken"
     },
     {
@@ -8314,7 +8314,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "db_schema_collectionstable",
-      "community": 70,
+      "community": 98,
       "norm_label": "collectionstable"
     },
     {
@@ -8324,7 +8324,7 @@
       "source_location": "L109",
       "_origin": "ast",
       "id": "db_schema_itemstable",
-      "community": 46,
+      "community": 98,
       "norm_label": "itemstable"
     },
     {
@@ -8334,7 +8334,7 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "db_schema_photostable",
-      "community": 46,
+      "community": 98,
       "norm_label": "photostable"
     },
     {
@@ -8354,7 +8354,7 @@
       "source_location": "L203",
       "_origin": "ast",
       "id": "db_schema_decisioneventstable",
-      "community": 46,
+      "community": 98,
       "norm_label": "decisioneventstable"
     },
     {
@@ -8364,7 +8364,7 @@
       "source_location": "L220",
       "_origin": "ast",
       "id": "db_schema_preferencestable",
-      "community": 46,
+      "community": 98,
       "norm_label": "preferencestable"
     },
     {
@@ -8394,7 +8394,7 @@
       "source_location": "L305",
       "_origin": "ast",
       "id": "db_schema_sortresultsharestable",
-      "community": 46,
+      "community": 98,
       "norm_label": "sortresultsharestable"
     },
     {
@@ -8404,7 +8404,7 @@
       "source_location": "L325",
       "_origin": "ast",
       "id": "db_schema_invitationstable",
-      "community": 28,
+      "community": 27,
       "norm_label": "invitationstable"
     },
     {
@@ -8414,7 +8414,7 @@
       "source_location": "L355",
       "_origin": "ast",
       "id": "db_schema_membershipstable",
-      "community": 46,
+      "community": 98,
       "norm_label": "membershipstable"
     },
     {
@@ -8434,7 +8434,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "db_session_number_integration_test_seedowner",
-      "community": 14,
+      "community": 46,
       "norm_label": "seedowner()"
     },
     {
@@ -8461,7 +8461,7 @@
       "label": "{ mockGetSession }",
       "file_type": "code",
       "source_file": "src/lib/db/sort-pipeline.integration.test.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "_origin": "ast",
       "id": "db_sort_pipeline_integration_test_mockgetsession",
       "community": 46,
@@ -8471,7 +8471,7 @@
       "label": "decisionReq()",
       "file_type": "code",
       "source_file": "src/lib/db/sort-pipeline.integration.test.ts",
-      "source_location": "L48",
+      "source_location": "L49",
       "_origin": "ast",
       "id": "db_sort_pipeline_integration_test_decisionreq",
       "community": 46,
@@ -8481,7 +8481,7 @@
       "label": "seedCollectionItemSession()",
       "file_type": "code",
       "source_file": "src/lib/db/sort-pipeline.integration.test.ts",
-      "source_location": "L69",
+      "source_location": "L70",
       "_origin": "ast",
       "id": "db_sort_pipeline_integration_test_seedcollectionitemsession",
       "community": 46,
@@ -8491,7 +8491,7 @@
       "label": "seedPopulatedDraft()",
       "file_type": "code",
       "source_file": "src/lib/db/sort-pipeline.integration.test.ts",
-      "source_location": "L313",
+      "source_location": "L314",
       "_origin": "ast",
       "id": "db_sort_pipeline_integration_test_seedpopulateddraft",
       "community": 46,
@@ -8504,7 +8504,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "db_sort_results_authz_integration_test",
-      "community": 31,
+      "community": 29,
       "norm_label": "sort-results-authz.integration.test.ts"
     },
     {
@@ -8514,7 +8514,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "db_sort_results_authz_integration_test_mockgetsession",
-      "community": 31,
+      "community": 29,
       "norm_label": "{ mockgetsession }"
     },
     {
@@ -8524,7 +8524,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "db_sort_results_authz_integration_test_seedresult",
-      "community": 14,
+      "community": 29,
       "norm_label": "seedresult()"
     },
     {
@@ -8534,7 +8534,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "db_sort_results_authz_integration_test_addmember",
-      "community": 46,
+      "community": 29,
       "norm_label": "addmember()"
     },
     {
@@ -8544,7 +8544,7 @@
       "source_location": "L106",
       "_origin": "ast",
       "id": "db_sort_results_authz_integration_test_jsonreq",
-      "community": 31,
+      "community": 29,
       "norm_label": "jsonreq()"
     },
     {
@@ -8554,7 +8554,7 @@
       "source_location": "L180",
       "_origin": "ast",
       "id": "db_sort_results_authz_integration_test_seedforeignresultitem",
-      "community": 14,
+      "community": 29,
       "norm_label": "seedforeignresultitem()"
     },
     {
@@ -8564,7 +8564,7 @@
       "source_location": "L245",
       "_origin": "ast",
       "id": "db_sort_results_authz_integration_test_seedforeignshare",
-      "community": 14,
+      "community": 29,
       "norm_label": "seedforeignshare()"
     },
     {
@@ -8574,7 +8574,7 @@
       "source_location": "L291",
       "_origin": "ast",
       "id": "db_sort_results_authz_integration_test_postreq",
-      "community": 31,
+      "community": 29,
       "norm_label": "postreq()"
     },
     {
@@ -8624,7 +8624,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "db_triage_decision_integration_test_seedcollectionitemsession",
-      "community": 14,
+      "community": 46,
       "norm_label": "seedcollectionitemsession()"
     },
     {
@@ -8664,7 +8664,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "lib_env",
-      "community": 10,
+      "community": 82,
       "norm_label": "env.ts"
     },
     {
@@ -8674,7 +8674,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "lib_env_envschema",
-      "community": 10,
+      "community": 82,
       "norm_label": "envschema"
     },
     {
@@ -8684,7 +8684,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "lib_env_envconfig",
-      "community": 10,
+      "community": 82,
       "norm_label": "envconfig"
     },
     {
@@ -8694,7 +8694,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "lib_env_validateenv",
-      "community": 10,
+      "community": 82,
       "norm_label": "validateenv()"
     },
     {
@@ -8704,7 +8704,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "lib_env_env",
-      "community": 10,
+      "community": 82,
       "norm_label": "env"
     },
     {
@@ -8904,7 +8904,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "lib_pairwise_selection",
-      "community": 29,
+      "community": 39,
       "norm_label": "pairwise-selection.ts"
     },
     {
@@ -8914,7 +8914,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "lib_pairwise_selection_selectionoptions",
-      "community": 29,
+      "community": 39,
       "norm_label": "selectionoptions"
     },
     {
@@ -8924,7 +8924,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "lib_pairwise_selection_selectnextpair",
-      "community": 141,
+      "community": 3,
       "norm_label": "selectnextpair()"
     },
     {
@@ -8934,7 +8934,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "lib_pairwise_selection_getlowconfidencepairs",
-      "community": 29,
+      "community": 39,
       "norm_label": "getlowconfidencepairs()"
     },
     {
@@ -8944,7 +8944,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "lib_pairwise_selection_getcomparisonpriorities",
-      "community": 29,
+      "community": 39,
       "norm_label": "getcomparisonpriorities()"
     },
     {
@@ -8954,7 +8954,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "lib_photos",
-      "community": 141,
+      "community": 8,
       "norm_label": "photos.ts"
     },
     {
@@ -8974,7 +8974,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "lib_photos_getphotoasseturl",
-      "community": 141,
+      "community": 8,
       "norm_label": "getphotoasseturl()"
     },
     {
@@ -8984,7 +8984,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "lib_photos_getphotoasseturlforphoto",
-      "community": 141,
+      "community": 8,
       "norm_label": "getphotoasseturlforphoto()"
     },
     {
@@ -9004,7 +9004,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "lib_transactions",
-      "community": 108,
+      "community": 13,
       "norm_label": "transactions.ts"
     },
     {
@@ -9054,7 +9054,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "lib_uploads_pool_allowed_content_types",
-      "community": 0,
+      "community": 12,
       "norm_label": "pool_allowed_content_types"
     },
     {
@@ -9444,7 +9444,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "api_invitations_invitationcontroller",
-      "community": 27,
+      "community": 28,
       "norm_label": "invitationcontroller"
     },
     {
@@ -9464,7 +9464,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "api_invitations_invitationcontroller_listinvitations",
-      "community": 27,
+      "community": 28,
       "norm_label": ".listinvitations()"
     },
     {
@@ -9474,7 +9474,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "api_invitations_invitationcontroller_createinvitation",
-      "community": 27,
+      "community": 28,
       "norm_label": ".createinvitation()"
     },
     {
@@ -9484,7 +9484,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "api_invitations_invitationcontroller_getinvitation",
-      "community": 27,
+      "community": 28,
       "norm_label": ".getinvitation()"
     },
     {
@@ -9494,7 +9494,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "api_invitations_invitationcontroller_updateinvitation",
-      "community": 27,
+      "community": 28,
       "norm_label": ".updateinvitation()"
     },
     {
@@ -9504,7 +9504,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "api_invitations_invitationcontroller_revokeinvitation",
-      "community": 27,
+      "community": 28,
       "norm_label": ".revokeinvitation()"
     },
     {
@@ -9514,7 +9514,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "api_invitations_invitationcontroller_resendinvitation",
-      "community": 27,
+      "community": 28,
       "norm_label": ".resendinvitation()"
     },
     {
@@ -9524,7 +9524,7 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "api_invitations_invitationcontroller_acceptinvitation",
-      "community": 27,
+      "community": 28,
       "norm_label": ".acceptinvitation()"
     },
     {
@@ -9534,7 +9534,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "api_items",
-      "community": 113,
+      "community": 39,
       "norm_label": "items.ts"
     },
     {
@@ -9544,7 +9544,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "api_items_createitemschema",
-      "community": 113,
+      "community": 39,
       "norm_label": "createitemschema"
     },
     {
@@ -9554,7 +9554,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "api_items_updateitemschema",
-      "community": 113,
+      "community": 39,
       "norm_label": "updateitemschema"
     },
     {
@@ -9564,7 +9564,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "api_items_createiteminput",
-      "community": 113,
+      "community": 39,
       "norm_label": "createiteminput"
     },
     {
@@ -9574,7 +9574,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "api_items_updateiteminput",
-      "community": 113,
+      "community": 39,
       "norm_label": "updateiteminput"
     },
     {
@@ -9584,7 +9584,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "api_items_itemcontroller",
-      "community": 35,
+      "community": 39,
       "norm_label": "itemcontroller"
     },
     {
@@ -9594,7 +9594,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "api_items_itemcontroller_constructor",
-      "community": 35,
+      "community": 41,
       "norm_label": ".constructor()"
     },
     {
@@ -9604,7 +9604,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "api_items_itemcontroller_listitems",
-      "community": 35,
+      "community": 39,
       "norm_label": ".listitems()"
     },
     {
@@ -9614,7 +9614,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "api_items_itemcontroller_createitem",
-      "community": 35,
+      "community": 39,
       "norm_label": ".createitem()"
     },
     {
@@ -9624,7 +9624,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "api_items_itemcontroller_getitem",
-      "community": 35,
+      "community": 39,
       "norm_label": ".getitem()"
     },
     {
@@ -9634,7 +9634,7 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "api_items_itemcontroller_updateitem",
-      "community": 35,
+      "community": 39,
       "norm_label": ".updateitem()"
     },
     {
@@ -9644,7 +9644,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "api_items_itemcontroller_deleteitem",
-      "community": 35,
+      "community": 39,
       "norm_label": ".deleteitem()"
     },
     {
@@ -9654,7 +9654,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "api_items_itemcontroller_restoreitem",
-      "community": 35,
+      "community": 39,
       "norm_label": ".restoreitem()"
     },
     {
@@ -9664,7 +9664,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "api_members",
-      "community": 132,
+      "community": 24,
       "norm_label": "members.ts"
     },
     {
@@ -9674,7 +9674,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "api_members_creatememberschema",
-      "community": 132,
+      "community": 24,
       "norm_label": "creatememberschema"
     },
     {
@@ -9684,7 +9684,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "api_members_updatememberschema",
-      "community": 132,
+      "community": 24,
       "norm_label": "updatememberschema"
     },
     {
@@ -9694,7 +9694,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "api_members_creatememberinput",
-      "community": 132,
+      "community": 24,
       "norm_label": "creatememberinput"
     },
     {
@@ -9704,7 +9704,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "api_members_updatememberinput",
-      "community": 132,
+      "community": 24,
       "norm_label": "updatememberinput"
     },
     {
@@ -9954,7 +9954,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "api_result_items",
-      "community": 109,
+      "community": 72,
       "norm_label": "result-items.ts"
     },
     {
@@ -9964,7 +9964,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "api_result_items_updateresultitemschema",
-      "community": 109,
+      "community": 72,
       "norm_label": "updateresultitemschema"
     },
     {
@@ -9974,7 +9974,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "api_result_items_updateresultiteminput",
-      "community": 109,
+      "community": 72,
       "norm_label": "updateresultiteminput"
     },
     {
@@ -10044,7 +10044,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "api_results",
-      "community": 109,
+      "community": 13,
       "norm_label": "results.ts"
     },
     {
@@ -10054,7 +10054,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "api_results_updateresultschema",
-      "community": 109,
+      "community": 13,
       "norm_label": "updateresultschema"
     },
     {
@@ -10064,7 +10064,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "api_results_updateresultinput",
-      "community": 109,
+      "community": 13,
       "norm_label": "updateresultinput"
     },
     {
@@ -10454,7 +10454,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "dal_collection_access_test",
-      "community": 13,
+      "community": 9,
       "norm_label": "collection-access.test.ts"
     },
     {
@@ -10464,7 +10464,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "dal_collection_access_test_collectionrepo_membershiprepo",
-      "community": 13,
+      "community": 9,
       "norm_label": "{ collectionrepo, membershiprepo }"
     },
     {
@@ -10474,7 +10474,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "dal_collection_access_test_db",
-      "community": 13,
+      "community": 9,
       "norm_label": "db"
     },
     {
@@ -10484,7 +10484,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "dal_collection_access",
-      "community": 13,
+      "community": 2,
       "norm_label": "collection-access.ts"
     },
     {
@@ -10504,7 +10504,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "dal_collection_access_requireapicollectionowner",
-      "community": 13,
+      "community": 22,
       "norm_label": "requireapicollectionowner()"
     },
     {
@@ -10514,7 +10514,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "dal_collection_access_requireapiresultaccess",
-      "community": 31,
+      "community": 2,
       "norm_label": "requireapiresultaccess()"
     },
     {
@@ -10574,7 +10574,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "repositories_collectionpreferenceitemrepository",
-      "community": 109,
+      "community": 41,
       "norm_label": "collectionpreferenceitemrepository.ts"
     },
     {
@@ -10584,7 +10584,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "repositories_collectionpreferenceitemrepository_icollectionpreferenceitemrepository",
-      "community": 109,
+      "community": 41,
       "norm_label": "icollectionpreferenceitemrepository"
     },
     {
@@ -10634,7 +10634,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "repositories_invitationrepository",
-      "community": 28,
+      "community": 27,
       "norm_label": "invitationrepository.ts"
     },
     {
@@ -10734,7 +10734,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "repositories_sortresultrepository",
-      "community": 109,
+      "community": 13,
       "norm_label": "sortresultrepository.ts"
     },
     {
@@ -10814,7 +10814,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository",
-      "community": 29,
+      "community": 47,
       "norm_label": "collectionpreferenceitemrepository"
     },
     {
@@ -10834,7 +10834,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository_create",
-      "community": 29,
+      "community": 47,
       "norm_label": ".create()"
     },
     {
@@ -10844,7 +10844,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository_findbyid",
-      "community": 29,
+      "community": 47,
       "norm_label": ".findbyid()"
     },
     {
@@ -10854,7 +10854,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository_findbyitem",
-      "community": 29,
+      "community": 47,
       "norm_label": ".findbyitem()"
     },
     {
@@ -10864,7 +10864,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository_findbycollection",
-      "community": 29,
+      "community": 47,
       "norm_label": ".findbycollection()"
     },
     {
@@ -10874,7 +10874,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository_update",
-      "community": 29,
+      "community": 47,
       "norm_label": ".update()"
     },
     {
@@ -10884,7 +10884,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository_clear",
-      "community": 29,
+      "community": 47,
       "norm_label": ".clear()"
     },
     {
@@ -10894,7 +10894,7 @@
       "source_location": "L106",
       "_origin": "ast",
       "id": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository_deletebyitem",
-      "community": 29,
+      "community": 47,
       "norm_label": ".deletebyitem()"
     },
     {
@@ -10904,7 +10904,7 @@
       "source_location": "L112",
       "_origin": "ast",
       "id": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository_maptopreference",
-      "community": 29,
+      "community": 47,
       "norm_label": ".maptopreference()"
     },
     {
@@ -10914,7 +10914,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "implementations_collectionrepository",
-      "community": 70,
+      "community": 10,
       "norm_label": "collectionrepository.ts"
     },
     {
@@ -10924,7 +10924,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "implementations_collectionrepository_collectionrepository",
-      "community": 5,
+      "community": 10,
       "norm_label": "collectionrepository"
     },
     {
@@ -11024,7 +11024,7 @@
       "source_location": "L145",
       "_origin": "ast",
       "id": "implementations_collectionrepository_randomslug",
-      "community": 70,
+      "community": 5,
       "norm_label": "randomslug()"
     },
     {
@@ -11114,7 +11114,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "implementations_invitationrepository",
-      "community": 28,
+      "community": 27,
       "norm_label": "invitationrepository.ts"
     },
     {
@@ -11224,7 +11224,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "implementations_itemrepository",
-      "community": 46,
+      "community": 71,
       "norm_label": "itemrepository.ts"
     },
     {
@@ -11354,7 +11354,7 @@
       "source_location": "L175",
       "_origin": "ast",
       "id": "implementations_itemrepository_iscatalognumberconflict",
-      "community": 46,
+      "community": 71,
       "norm_label": "iscatalognumberconflict()"
     },
     {
@@ -11364,7 +11364,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "implementations_membershiprepository",
-      "community": 46,
+      "community": 10,
       "norm_label": "membershiprepository.ts"
     },
     {
@@ -11374,7 +11374,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "implementations_membershiprepository_membershiprepository",
-      "community": 20,
+      "community": 10,
       "norm_label": "membershiprepository"
     },
     {
@@ -11444,7 +11444,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "implementations_membershiprepository_membershiprepository_delete",
-      "community": 20,
+      "community": 10,
       "norm_label": ".delete()"
     },
     {
@@ -11464,7 +11464,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "implementations_photorepository",
-      "community": 46,
+      "community": 10,
       "norm_label": "photorepository.ts"
     },
     {
@@ -12174,7 +12174,7 @@
       "source_location": "L145",
       "_origin": "ast",
       "id": "implementations_sortresultrepository_isresultnumberconflict",
-      "community": 108,
+      "community": 13,
       "norm_label": "isresultnumberconflict()"
     },
     {
@@ -12584,7 +12584,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "services_invitationservice_invitationservice_constructor",
-      "community": 56,
+      "community": 28,
       "norm_label": ".constructor()"
     },
     {
@@ -12654,7 +12654,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "services_itempurgeservice_iteminresulterror",
-      "community": 13,
+      "community": 22,
       "norm_label": "iteminresulterror"
     },
     {
@@ -12664,7 +12664,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "services_itempurgeservice_iteminresulterror_constructor",
-      "community": 13,
+      "community": 22,
       "norm_label": ".constructor()"
     },
     {
@@ -12674,7 +12674,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "services_itempurgeservice_itempurgeservice",
-      "community": 58,
+      "community": 22,
       "norm_label": "itempurgeservice"
     },
     {
@@ -12684,7 +12684,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "services_itempurgeservice_itempurgeservice_constructor",
-      "community": 58,
+      "community": 22,
       "norm_label": ".constructor()"
     },
     {
@@ -12694,7 +12694,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "services_itempurgeservice_itempurgeservice_purge",
-      "community": 58,
+      "community": 22,
       "norm_label": ".purge()"
     },
     {
@@ -12704,7 +12704,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "services_itemservice_test",
-      "community": 11,
+      "community": 39,
       "norm_label": "itemservice.test.ts"
     },
     {
@@ -12714,7 +12714,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "services_itemservice_test_makerepos",
-      "community": 11,
+      "community": 39,
       "norm_label": "makerepos()"
     },
     {
@@ -12724,7 +12724,7 @@
       "source_location": "L168",
       "_origin": "ast",
       "id": "services_itemservice_test_photo",
-      "community": 11,
+      "community": 39,
       "norm_label": "photo()"
     },
     {
@@ -12734,7 +12734,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "services_itemservice",
-      "community": 11,
+      "community": 39,
       "norm_label": "itemservice.ts"
     },
     {
@@ -12744,7 +12744,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "services_itemservice_reassigndest",
-      "community": 11,
+      "community": 39,
       "norm_label": "reassigndest"
     },
     {
@@ -12754,7 +12754,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "services_itemservice_poolgrouperror",
-      "community": 11,
+      "community": 39,
       "norm_label": "poolgrouperror"
     },
     {
@@ -12764,7 +12764,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "services_itemservice_poolgrouperror_constructor",
-      "community": 11,
+      "community": 39,
       "norm_label": ".constructor()"
     },
     {
@@ -12774,7 +12774,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "services_itemservice_itemservice",
-      "community": 22,
+      "community": 39,
       "norm_label": "itemservice"
     },
     {
@@ -12784,7 +12784,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "services_itemservice_itemservice_constructor",
-      "community": 22,
+      "community": 41,
       "norm_label": ".constructor()"
     },
     {
@@ -12794,87 +12794,87 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "services_itemservice_itemservice_createitemfrompool",
-      "community": 22,
+      "community": 39,
       "norm_label": ".createitemfrompool()"
     },
     {
       "label": ".createItemsFromPoolEach()",
       "file_type": "code",
       "source_file": "src/server/services/ItemService.ts",
-      "source_location": "L80",
+      "source_location": "L81",
       "_origin": "ast",
       "id": "services_itemservice_itemservice_createitemsfrompooleach",
-      "community": 22,
+      "community": 39,
       "norm_label": ".createitemsfrompooleach()"
     },
     {
       "label": ".reassignPhotos()",
       "file_type": "code",
       "source_file": "src/server/services/ItemService.ts",
-      "source_location": "L126",
+      "source_location": "L127",
       "_origin": "ast",
       "id": "services_itemservice_itemservice_reassignphotos",
-      "community": 22,
+      "community": 39,
       "norm_label": ".reassignphotos()"
     },
     {
       "label": ".createItem()",
       "file_type": "code",
       "source_file": "src/server/services/ItemService.ts",
-      "source_location": "L190",
+      "source_location": "L191",
       "_origin": "ast",
       "id": "services_itemservice_itemservice_createitem",
-      "community": 22,
+      "community": 39,
       "norm_label": ".createitem()"
     },
     {
       "label": ".getItem()",
       "file_type": "code",
       "source_file": "src/server/services/ItemService.ts",
-      "source_location": "L206",
+      "source_location": "L207",
       "_origin": "ast",
       "id": "services_itemservice_itemservice_getitem",
-      "community": 22,
+      "community": 39,
       "norm_label": ".getitem()"
     },
     {
       "label": ".getCollectionItems()",
       "file_type": "code",
       "source_file": "src/server/services/ItemService.ts",
-      "source_location": "L210",
+      "source_location": "L211",
       "_origin": "ast",
       "id": "services_itemservice_itemservice_getcollectionitems",
-      "community": 22,
+      "community": 39,
       "norm_label": ".getcollectionitems()"
     },
     {
       "label": ".updateItem()",
       "file_type": "code",
       "source_file": "src/server/services/ItemService.ts",
-      "source_location": "L214",
+      "source_location": "L215",
       "_origin": "ast",
       "id": "services_itemservice_itemservice_updateitem",
-      "community": 22,
+      "community": 39,
       "norm_label": ".updateitem()"
     },
     {
       "label": ".deleteItem()",
       "file_type": "code",
       "source_file": "src/server/services/ItemService.ts",
-      "source_location": "L221",
+      "source_location": "L222",
       "_origin": "ast",
       "id": "services_itemservice_itemservice_deleteitem",
-      "community": 22,
+      "community": 39,
       "norm_label": ".deleteitem()"
     },
     {
       "label": ".restoreItem()",
       "file_type": "code",
       "source_file": "src/server/services/ItemService.ts",
-      "source_location": "L225",
+      "source_location": "L226",
       "_origin": "ast",
       "id": "services_itemservice_itemservice_restoreitem",
-      "community": 22,
+      "community": 39,
       "norm_label": ".restoreitem()"
     },
     {
@@ -13024,7 +13024,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "services_pairingservice_pairingresult",
-      "community": 41,
+      "community": 39,
       "norm_label": "pairingresult"
     },
     {
@@ -13174,7 +13174,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "services_preferencestateservice_test",
-      "community": 47,
+      "community": 41,
       "norm_label": "preferencestateservice.test.ts"
     },
     {
@@ -13184,7 +13184,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "services_preferencestateservice_test_scored",
-      "community": 47,
+      "community": 41,
       "norm_label": "scored()"
     },
     {
@@ -13194,7 +13194,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "services_preferencestateservice_test_persisted",
-      "community": 47,
+      "community": 41,
       "norm_label": "persisted()"
     },
     {
@@ -13204,7 +13204,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "services_preferencestateservice_test_buildservice",
-      "community": 47,
+      "community": 41,
       "norm_label": "buildservice()"
     },
     {
@@ -13604,7 +13604,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "services_sortresultservice",
-      "community": 108,
+      "community": 13,
       "norm_label": "sortresultservice.ts"
     },
     {
@@ -13614,7 +13614,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "services_sortresultservice_supersedestateerror",
-      "community": 109,
+      "community": 13,
       "norm_label": "supersedestateerror"
     },
     {
@@ -13624,7 +13624,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "services_sortresultservice_supersedestateerror_constructor",
-      "community": 109,
+      "community": 13,
       "norm_label": ".constructor()"
     },
     {
@@ -13634,7 +13634,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "services_sortresultservice_deleteresultstateerror",
-      "community": 109,
+      "community": 13,
       "norm_label": "deleteresultstateerror"
     },
     {
@@ -13644,7 +13644,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "services_sortresultservice_deleteresultstateerror_constructor",
-      "community": 109,
+      "community": 13,
       "norm_label": ".constructor()"
     },
     {
@@ -13724,7 +13724,7 @@
       "source_location": "L122",
       "_origin": "ast",
       "id": "services_sortresultservice_sortresultservice_getresult",
-      "community": 108,
+      "community": 72,
       "norm_label": ".getresult()"
     },
     {
@@ -13744,7 +13744,7 @@
       "source_location": "L137",
       "_origin": "ast",
       "id": "services_sortresultservice_sortresultservice_setmanualoverride",
-      "community": 108,
+      "community": 72,
       "norm_label": ".setmanualoverride()"
     },
     {
@@ -13754,7 +13754,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "services_sortresultservice_sortresultservice_resetmanualoverride",
-      "community": 108,
+      "community": 72,
       "norm_label": ".resetmanualoverride()"
     },
     {
@@ -13801,7 +13801,7 @@
       "label": ".removeItemFromDraftResults()",
       "file_type": "code",
       "source_file": "src/server/services/SortResultService.ts",
-      "source_location": "L216",
+      "source_location": "L218",
       "_origin": "ast",
       "id": "services_sortresultservice_sortresultservice_removeitemfromdraftresults",
       "community": 108,
@@ -14294,7 +14294,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "types_domain_collectionpreferenceitem",
-      "community": 29,
+      "community": 47,
       "norm_label": "collectionpreferenceitem"
     },
     {
@@ -14364,7 +14364,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "types_index",
-      "community": 33,
+      "community": 41,
       "norm_label": "index.ts"
     },
     {
@@ -21202,9 +21202,9 @@
       "source_file": "e2e/item-removal.spec.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_item_removal_spec",
-      "target": "fixtures_api_auth",
-      "confidence_score": 1.0
+      "target": "fixtures_api_auth"
     },
     {
       "relation": "contains",
@@ -21212,9 +21212,9 @@
       "source_file": "e2e/fixtures/api-auth.ts",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fixtures_api_auth",
-      "target": "fixtures_api_auth_apicontextfor",
-      "confidence_score": 1.0
+      "target": "fixtures_api_auth_apicontextfor"
     },
     {
       "relation": "contains",
@@ -21222,9 +21222,9 @@
       "source_file": "e2e/fixtures/api-auth.ts",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fixtures_api_auth",
-      "target": "fixtures_api_auth_apiusercredentials",
-      "confidence_score": 1.0
+      "target": "fixtures_api_auth_apiusercredentials"
     },
     {
       "relation": "contains",
@@ -21232,9 +21232,9 @@
       "source_file": "e2e/fixtures/api-auth.ts",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fixtures_api_auth",
-      "target": "fixtures_api_auth_playwrightfixture",
-      "confidence_score": 1.0
+      "target": "fixtures_api_auth_playwrightfixture"
     },
     {
       "relation": "imports",
@@ -21243,9 +21243,9 @@
       "source_file": "e2e/item-removal.spec.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_item_removal_spec",
-      "target": "fixtures_api_auth_apicontextfor",
-      "confidence_score": 1.0
+      "target": "fixtures_api_auth_apicontextfor"
     },
     {
       "relation": "imports_from",
@@ -21320,9 +21320,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "fixtures_db",
-      "confidence_score": 1.0
+      "target": "fixtures_db"
     },
     {
       "relation": "imports_from",
@@ -21364,9 +21364,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "fixtures_db",
-      "confidence_score": 1.0
+      "target": "fixtures_db"
     },
     {
       "relation": "imports_from",
@@ -21430,9 +21430,9 @@
       "source_file": "e2e/item-removal.spec.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_item_removal_spec",
-      "target": "fixtures_db",
-      "confidence_score": 1.0
+      "target": "fixtures_db"
     },
     {
       "relation": "imports_from",
@@ -21754,9 +21754,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "fixtures_db_gettestdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_gettestdb"
     },
     {
       "relation": "calls",
@@ -21908,9 +21908,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "fixtures_db_gettestdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_gettestdb"
     },
     {
       "relation": "calls",
@@ -22172,9 +22172,9 @@
       "source_file": "e2e/item-removal.spec.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_item_removal_spec",
-      "target": "fixtures_db_gettestdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_gettestdb"
     },
     {
       "relation": "calls",
@@ -22183,9 +22183,9 @@
       "source_file": "e2e/item-removal.spec.ts",
       "source_location": "L43",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_item_removal_spec_resultitemrowcount",
-      "target": "fixtures_db_gettestdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_gettestdb"
     },
     {
       "relation": "calls",
@@ -22282,9 +22282,9 @@
       "source_file": "e2e/fixtures/seed.ts",
       "source_location": "L250",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fixtures_seed_seeduser",
-      "target": "fixtures_db_gettestdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_gettestdb"
     },
     {
       "relation": "imports",
@@ -22359,9 +22359,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "fixtures_db_resetdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_resetdb"
     },
     {
       "relation": "imports",
@@ -22403,9 +22403,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "fixtures_db_resetdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_resetdb"
     },
     {
       "relation": "imports",
@@ -22546,9 +22546,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "fixtures_db_closedb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_closedb"
     },
     {
       "relation": "imports",
@@ -22590,9 +22590,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "fixtures_db_closedb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_closedb"
     },
     {
       "relation": "imports",
@@ -22656,9 +22656,9 @@
       "source_file": "e2e/item-removal.spec.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_item_removal_spec",
-      "target": "fixtures_db_closedb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_closedb"
     },
     {
       "relation": "imports",
@@ -22742,9 +22742,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "fixtures_seed",
-      "confidence_score": 1.0
+      "target": "fixtures_seed"
     },
     {
       "relation": "imports_from",
@@ -22786,9 +22786,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "fixtures_seed",
-      "confidence_score": 1.0
+      "target": "fixtures_seed"
     },
     {
       "relation": "imports_from",
@@ -22830,9 +22830,9 @@
       "source_file": "e2e/item-removal.spec.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_item_removal_spec",
-      "target": "fixtures_seed",
-      "confidence_score": 1.0
+      "target": "fixtures_seed"
     },
     {
       "relation": "imports_from",
@@ -22947,9 +22947,9 @@
       "source_file": "e2e/fixtures/seed.ts",
       "source_location": "L240",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fixtures_seed",
-      "target": "fixtures_seed_seededuser",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seededuser"
     },
     {
       "relation": "contains",
@@ -22967,9 +22967,9 @@
       "source_file": "e2e/fixtures/seed.ts",
       "source_location": "L282",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fixtures_seed",
-      "target": "fixtures_seed_seedremovalscenario",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seedremovalscenario"
     },
     {
       "relation": "contains",
@@ -22997,9 +22997,9 @@
       "source_file": "e2e/fixtures/seed.ts",
       "source_location": "L249",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fixtures_seed",
-      "target": "fixtures_seed_seeduser",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seeduser"
     },
     {
       "relation": "contains",
@@ -23249,9 +23249,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "fixtures_seed_seedbaseline",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seedbaseline"
     },
     {
       "relation": "imports",
@@ -23293,9 +23293,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "fixtures_seed_seedbaseline",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seedbaseline"
     },
     {
       "relation": "imports",
@@ -23502,9 +23502,9 @@
       "source_file": "e2e/fixtures/seed.ts",
       "source_location": "L295",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fixtures_seed_seedremovalscenario",
-      "target": "fixtures_seed_seeduser",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seeduser"
     },
     {
       "relation": "calls",
@@ -23513,9 +23513,9 @@
       "source_file": "e2e/fixtures/seed.ts",
       "source_location": "L251",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "fixtures_seed_seeduser",
-      "target": "lib_id_generateid",
-      "confidence_score": 1.0
+      "target": "lib_id_generateid"
     },
     {
       "relation": "imports",
@@ -23524,9 +23524,9 @@
       "source_file": "e2e/item-removal.spec.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_item_removal_spec",
-      "target": "fixtures_seed_seedremovalscenario",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seedremovalscenario"
     },
     {
       "relation": "calls",
@@ -23829,9 +23829,9 @@
       "source_file": "e2e/item-removal.spec.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_item_removal_spec",
-      "target": "db_schema",
-      "confidence_score": 1.0
+      "target": "db_schema"
     },
     {
       "relation": "imports",
@@ -23840,9 +23840,9 @@
       "source_file": "e2e/item-removal.spec.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_item_removal_spec",
-      "target": "db_schema_sortresultitemstable",
-      "confidence_score": 1.0
+      "target": "db_schema_sortresultitemstable"
     },
     {
       "relation": "contains",
@@ -23850,9 +23850,9 @@
       "source_file": "e2e/item-removal.spec.ts",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_item_removal_spec",
-      "target": "e2e_item_removal_spec_itemisgone",
-      "confidence_score": 1.0
+      "target": "e2e_item_removal_spec_itemisgone"
     },
     {
       "relation": "contains",
@@ -23860,9 +23860,9 @@
       "source_file": "e2e/item-removal.spec.ts",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_item_removal_spec",
-      "target": "e2e_item_removal_spec_itemispresent",
-      "confidence_score": 1.0
+      "target": "e2e_item_removal_spec_itemispresent"
     },
     {
       "relation": "contains",
@@ -23870,9 +23870,9 @@
       "source_file": "e2e/item-removal.spec.ts",
       "source_location": "L42",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_item_removal_spec",
-      "target": "e2e_item_removal_spec_resultitemrowcount",
-      "confidence_score": 1.0
+      "target": "e2e_item_removal_spec_resultitemrowcount"
     },
     {
       "relation": "contains",
@@ -30120,9 +30120,9 @@
       "source_file": "src/app/api/items/[id]/purge/route.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_app_api_items_id_purge_route_ts_purge_route",
-      "target": "dal_collection_access",
-      "confidence_score": 1.0
+      "target": "dal_collection_access"
     },
     {
       "relation": "imports",
@@ -30131,9 +30131,9 @@
       "source_file": "src/app/api/items/[id]/purge/route.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_app_api_items_id_purge_route_ts_purge_route",
-      "target": "dal_collection_access_requireapicollectionowner",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapicollectionowner"
     },
     {
       "relation": "imports_from",
@@ -30164,9 +30164,9 @@
       "source_file": "src/app/api/items/[id]/purge/route.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_app_api_items_id_purge_route_ts_purge_route",
-      "target": "implementations_sortresultitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultitemrepository"
     },
     {
       "relation": "imports",
@@ -30175,9 +30175,9 @@
       "source_file": "src/app/api/items/[id]/purge/route.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_app_api_items_id_purge_route_ts_purge_route",
-      "target": "implementations_sortresultitemrepository_sortresultitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultitemrepository_sortresultitemrepository"
     },
     {
       "relation": "imports_from",
@@ -30240,9 +30240,9 @@
       "source_file": "src/app/api/items/[id]/purge/route.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_app_api_items_id_purge_route_ts_purge_route",
-      "target": "services_itempurgeservice",
-      "confidence_score": 1.0
+      "target": "services_itempurgeservice"
     },
     {
       "relation": "imports",
@@ -30251,9 +30251,9 @@
       "source_file": "src/app/api/items/[id]/purge/route.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_app_api_items_id_purge_route_ts_purge_route",
-      "target": "services_itempurgeservice_iteminresulterror",
-      "confidence_score": 1.0
+      "target": "services_itempurgeservice_iteminresulterror"
     },
     {
       "relation": "imports",
@@ -30262,9 +30262,9 @@
       "source_file": "src/app/api/items/[id]/purge/route.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_app_api_items_id_purge_route_ts_purge_route",
-      "target": "services_itempurgeservice_itempurgeservice",
-      "confidence_score": 1.0
+      "target": "services_itempurgeservice_itempurgeservice"
     },
     {
       "relation": "contains",
@@ -30316,9 +30316,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L32",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "remove_from_sorts_route",
-      "confidence_score": 1.0
+      "target": "remove_from_sorts_route"
     },
     {
       "relation": "imports_from",
@@ -30327,9 +30327,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "dal_collection_access",
-      "confidence_score": 1.0
+      "target": "dal_collection_access"
     },
     {
       "relation": "imports",
@@ -30338,9 +30338,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "dal_collection_access_requireapicollectionowner",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapicollectionowner"
     },
     {
       "relation": "imports_from",
@@ -30349,9 +30349,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "implementations_collectionpreferenceitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_collectionpreferenceitemrepository"
     },
     {
       "relation": "imports",
@@ -30360,9 +30360,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository"
     },
     {
       "relation": "imports_from",
@@ -30371,9 +30371,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "implementations_itemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_itemrepository"
     },
     {
       "relation": "imports",
@@ -30382,9 +30382,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "implementations_itemrepository_itemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_itemrepository_itemrepository"
     },
     {
       "relation": "imports_from",
@@ -30393,9 +30393,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "implementations_sortresultitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultitemrepository"
     },
     {
       "relation": "imports",
@@ -30404,9 +30404,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "implementations_sortresultitemrepository_sortresultitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultitemrepository_sortresultitemrepository"
     },
     {
       "relation": "imports_from",
@@ -30415,9 +30415,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "implementations_sortresultrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultrepository"
     },
     {
       "relation": "imports",
@@ -30426,9 +30426,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "implementations_sortresultrepository_sortresultrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultrepository_sortresultrepository"
     },
     {
       "relation": "imports_from",
@@ -30437,9 +30437,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "lib_auth",
-      "confidence_score": 1.0
+      "target": "lib_auth"
     },
     {
       "relation": "imports",
@@ -30448,9 +30448,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "lib_auth_requireauth",
-      "confidence_score": 1.0
+      "target": "lib_auth_requireauth"
     },
     {
       "relation": "imports_from",
@@ -30459,9 +30459,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "lib_db",
-      "confidence_score": 1.0
+      "target": "lib_db"
     },
     {
       "relation": "imports",
@@ -30470,9 +30470,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "lib_db_getdb",
-      "confidence_score": 1.0
+      "target": "lib_db_getdb"
     },
     {
       "relation": "contains",
@@ -30480,9 +30480,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "remove_from_sorts_route_post",
-      "confidence_score": 1.0
+      "target": "remove_from_sorts_route_post"
     },
     {
       "relation": "imports_from",
@@ -30491,9 +30491,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "services_sortresultservice",
-      "confidence_score": 1.0
+      "target": "services_sortresultservice"
     },
     {
       "relation": "imports",
@@ -30502,9 +30502,9 @@
       "source_file": "src/app/api/items/[id]/remove-from-sorts/route.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "remove_from_sorts_route",
-      "target": "services_sortresultservice_sortresultservice",
-      "confidence_score": 1.0
+      "target": "services_sortresultservice_sortresultservice"
     },
     {
       "relation": "imports",
@@ -30513,9 +30513,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L32",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "remove_from_sorts_route_post",
-      "confidence_score": 1.0
+      "target": "remove_from_sorts_route_post"
     },
     {
       "relation": "calls",
@@ -33122,6 +33122,28 @@
       "confidence_score": 1.0,
       "source": "src_app_api_sort_results_id_route_test_ts_id_route_test",
       "target": "id_route_test_unauthorized"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/api/sort-results/[id]/route.test.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "src_app_api_sort_results_id_route_test_ts_id_route_test",
+      "target": "test_support_faketxdb",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/api/sort-results/[id]/route.test.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "src_app_api_sort_results_id_route_test_ts_id_route_test",
+      "target": "test_support_faketxdb_faketxdb",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -45703,9 +45725,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice",
-      "target": "lib_db",
-      "confidence_score": 1.0
+      "target": "lib_db"
     },
     {
       "relation": "imports_from",
@@ -46022,9 +46044,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice",
-      "target": "lib_db_database",
-      "confidence_score": 1.0
+      "target": "lib_db_database"
     },
     {
       "relation": "references",
@@ -46033,9 +46055,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L43",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice_itempurgeservice_constructor",
-      "target": "lib_db_database",
-      "confidence_score": 1.0
+      "target": "lib_db_database"
     },
     {
       "relation": "imports",
@@ -46609,9 +46631,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L60",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "db_item_purge_integration_test_addmember",
-      "confidence_score": 1.0
+      "target": "db_item_purge_integration_test_addmember"
     },
     {
       "relation": "contains",
@@ -46619,9 +46641,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "db_item_purge_integration_test_mockgetsession_mockblobdel",
-      "confidence_score": 1.0
+      "target": "db_item_purge_integration_test_mockgetsession_mockblobdel"
     },
     {
       "relation": "contains",
@@ -46629,9 +46651,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L101",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "db_item_purge_integration_test_photorowcount",
-      "confidence_score": 1.0
+      "target": "db_item_purge_integration_test_photorowcount"
     },
     {
       "relation": "contains",
@@ -46639,9 +46661,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L109",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "db_item_purge_integration_test_prefrowcount",
-      "confidence_score": 1.0
+      "target": "db_item_purge_integration_test_prefrowcount"
     },
     {
       "relation": "contains",
@@ -46649,9 +46671,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L42",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "db_item_purge_integration_test_purgereq",
-      "confidence_score": 1.0
+      "target": "db_item_purge_integration_test_purgereq"
     },
     {
       "relation": "contains",
@@ -46659,9 +46681,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L77",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "db_item_purge_integration_test_seeditemwithchildren",
-      "confidence_score": 1.0
+      "target": "db_item_purge_integration_test_seeditemwithchildren"
     },
     {
       "relation": "imports_from",
@@ -46670,9 +46692,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "implementations_collectionpreferenceitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_collectionpreferenceitemrepository"
     },
     {
       "relation": "imports",
@@ -46681,9 +46703,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository"
     },
     {
       "relation": "imports_from",
@@ -46692,9 +46714,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "implementations_itemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_itemrepository"
     },
     {
       "relation": "imports",
@@ -46703,9 +46725,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "implementations_itemrepository_itemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_itemrepository_itemrepository"
     },
     {
       "relation": "imports_from",
@@ -46714,9 +46736,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "implementations_membershiprepository",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository"
     },
     {
       "relation": "imports",
@@ -46725,9 +46747,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "implementations_membershiprepository_membershiprepository",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository_membershiprepository"
     },
     {
       "relation": "imports_from",
@@ -46736,9 +46758,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "implementations_photorepository",
-      "confidence_score": 1.0
+      "target": "implementations_photorepository"
     },
     {
       "relation": "imports",
@@ -46747,9 +46769,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "implementations_photorepository_photorepository",
-      "confidence_score": 1.0
+      "target": "implementations_photorepository_photorepository"
     },
     {
       "relation": "imports_from",
@@ -46758,9 +46780,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "implementations_sortresultitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultitemrepository"
     },
     {
       "relation": "imports",
@@ -46769,9 +46791,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "implementations_sortresultitemrepository_sortresultitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultitemrepository_sortresultitemrepository"
     },
     {
       "relation": "imports_from",
@@ -46780,9 +46802,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "implementations_sortresultrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultrepository"
     },
     {
       "relation": "imports",
@@ -46791,9 +46813,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "implementations_sortresultrepository_sortresultrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultrepository_sortresultrepository"
     },
     {
       "relation": "imports_from",
@@ -46802,9 +46824,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "lib_id",
-      "confidence_score": 1.0
+      "target": "lib_id"
     },
     {
       "relation": "imports",
@@ -46813,9 +46835,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test",
-      "target": "lib_id_generateid",
-      "confidence_score": 1.0
+      "target": "lib_id_generateid"
     },
     {
       "relation": "imports_from",
@@ -46824,9 +46846,9 @@
       "source_file": "src/lib/db/item-purge.integration.test.ts",
       "source_location": "L63",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_item_purge_integration_test_addmember",
-      "target": "db_schema",
-      "confidence_score": 1.0
+      "target": "db_schema"
     },
     {
       "relation": "calls",
@@ -47154,9 +47176,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L48",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "db_remove_from_sorts_integration_test_addmember",
-      "confidence_score": 1.0
+      "target": "db_remove_from_sorts_integration_test_addmember"
     },
     {
       "relation": "contains",
@@ -47164,9 +47186,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "db_remove_from_sorts_integration_test_mockgetsession",
-      "confidence_score": 1.0
+      "target": "db_remove_from_sorts_integration_test_mockgetsession"
     },
     {
       "relation": "contains",
@@ -47174,9 +47196,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L75",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "db_remove_from_sorts_integration_test_placeinresult",
-      "confidence_score": 1.0
+      "target": "db_remove_from_sorts_integration_test_placeinresult"
     },
     {
       "relation": "contains",
@@ -47184,9 +47206,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L97",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "db_remove_from_sorts_integration_test_prefrowcount",
-      "confidence_score": 1.0
+      "target": "db_remove_from_sorts_integration_test_prefrowcount"
     },
     {
       "relation": "contains",
@@ -47194,9 +47216,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "db_remove_from_sorts_integration_test_removereq",
-      "confidence_score": 1.0
+      "target": "db_remove_from_sorts_integration_test_removereq"
     },
     {
       "relation": "contains",
@@ -47204,9 +47226,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L89",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "db_remove_from_sorts_integration_test_resultitemexists",
-      "confidence_score": 1.0
+      "target": "db_remove_from_sorts_integration_test_resultitemexists"
     },
     {
       "relation": "contains",
@@ -47214,9 +47236,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L64",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "db_remove_from_sorts_integration_test_seeditemwithpreference",
-      "confidence_score": 1.0
+      "target": "db_remove_from_sorts_integration_test_seeditemwithpreference"
     },
     {
       "relation": "imports_from",
@@ -47225,9 +47247,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "implementations_collectionpreferenceitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_collectionpreferenceitemrepository"
     },
     {
       "relation": "imports",
@@ -47236,9 +47258,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository"
     },
     {
       "relation": "imports_from",
@@ -47247,9 +47269,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "implementations_itemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_itemrepository"
     },
     {
       "relation": "imports",
@@ -47258,9 +47280,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "implementations_itemrepository_itemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_itemrepository_itemrepository"
     },
     {
       "relation": "imports_from",
@@ -47269,9 +47291,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "implementations_membershiprepository",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository"
     },
     {
       "relation": "imports",
@@ -47280,9 +47302,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "implementations_membershiprepository_membershiprepository",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository_membershiprepository"
     },
     {
       "relation": "imports_from",
@@ -47291,9 +47313,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "implementations_sortresultitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultitemrepository"
     },
     {
       "relation": "imports",
@@ -47302,9 +47324,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "implementations_sortresultitemrepository_sortresultitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultitemrepository_sortresultitemrepository"
     },
     {
       "relation": "imports_from",
@@ -47313,9 +47335,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "implementations_sortresultrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultrepository"
     },
     {
       "relation": "imports",
@@ -47324,9 +47346,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "implementations_sortresultrepository_sortresultrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultrepository_sortresultrepository"
     },
     {
       "relation": "imports_from",
@@ -47335,9 +47357,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "lib_id",
-      "confidence_score": 1.0
+      "target": "lib_id"
     },
     {
       "relation": "imports",
@@ -47346,9 +47368,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test",
-      "target": "lib_id_generateid",
-      "confidence_score": 1.0
+      "target": "lib_id_generateid"
     },
     {
       "relation": "imports_from",
@@ -47357,9 +47379,9 @@
       "source_file": "src/lib/db/remove-from-sorts.integration.test.ts",
       "source_location": "L51",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_remove_from_sorts_integration_test_addmember",
-      "target": "db_schema",
-      "confidence_score": 1.0
+      "target": "db_schema"
     },
     {
       "relation": "calls",
@@ -47857,9 +47879,9 @@
       "source_file": "src/server/repositories/implementations/SortResultItemRepository.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_sortresultitemrepository",
-      "target": "db_schema_sortresultstable",
-      "confidence_score": 1.0
+      "target": "db_schema_sortresultstable"
     },
     {
       "relation": "imports",
@@ -48162,6 +48184,28 @@
       "confidence_score": 1.0,
       "source": "db_sort_pipeline_integration_test",
       "target": "implementations_sortresultrepository_sortresultrepository"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/db/sort-pipeline.integration.test.ts",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "db_sort_pipeline_integration_test",
+      "target": "implementations_sortresultsharerepository",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/db/sort-pipeline.integration.test.ts",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "db_sort_pipeline_integration_test",
+      "target": "implementations_sortresultsharerepository_sortresultsharerepository",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -49737,9 +49781,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice",
-      "target": "lib_transactions",
-      "confidence_score": 1.0
+      "target": "lib_transactions"
     },
     {
       "relation": "imports_from",
@@ -49759,9 +49803,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice",
-      "target": "lib_transactions_withtransaction",
-      "confidence_score": 1.0
+      "target": "lib_transactions_withtransaction"
     },
     {
       "relation": "calls",
@@ -49794,6 +49838,17 @@
       "source_location": "L89",
       "weight": 1.0,
       "source": "services_sortresultservice_sortresultservice_createresultwithitems",
+      "target": "lib_transactions_withtransaction"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/server/services/SortResultService.ts",
+      "source_location": "L200",
+      "weight": 1.0,
+      "source": "services_sortresultservice_sortresultservice_deleteresult",
       "target": "lib_transactions_withtransaction"
     },
     {
@@ -52425,9 +52480,9 @@
       "source_file": "src/server/dal/collection-access.test.ts",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access_test",
-      "target": "dal_collection_access_requireapicollectionowner",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapicollectionowner"
     },
     {
       "relation": "contains",
@@ -52465,9 +52520,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access",
-      "target": "dal_collection_access_requireapicollectionowner",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapicollectionowner"
     },
     {
       "relation": "contains",
@@ -54494,9 +54549,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice",
-      "target": "implementations_collectionpreferenceitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_collectionpreferenceitemrepository"
     },
     {
       "relation": "method",
@@ -54534,9 +54589,9 @@
       "source_file": "src/server/repositories/implementations/CollectionPreferenceItemRepository.ts",
       "source_location": "L106",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository",
-      "target": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository_deletebyitem",
-      "confidence_score": 1.0
+      "target": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository_deletebyitem"
     },
     {
       "relation": "method",
@@ -54595,9 +54650,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice",
-      "target": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_collectionpreferenceitemrepository_collectionpreferenceitemrepository"
     },
     {
       "relation": "calls",
@@ -55544,9 +55599,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice",
-      "target": "implementations_itemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_itemrepository"
     },
     {
       "relation": "method",
@@ -55604,9 +55659,9 @@
       "source_file": "src/server/repositories/implementations/ItemRepository.ts",
       "source_location": "L78",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_itemrepository_itemrepository",
-      "target": "implementations_itemrepository_itemrepository_findbyidincludingdeleted",
-      "confidence_score": 1.0
+      "target": "implementations_itemrepository_itemrepository_findbyidincludingdeleted"
     },
     {
       "relation": "method",
@@ -55624,9 +55679,9 @@
       "source_file": "src/server/repositories/implementations/ItemRepository.ts",
       "source_location": "L146",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_itemrepository_itemrepository",
-      "target": "implementations_itemrepository_itemrepository_harddelete",
-      "confidence_score": 1.0
+      "target": "implementations_itemrepository_itemrepository_harddelete"
     },
     {
       "relation": "method",
@@ -55665,9 +55720,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice",
-      "target": "implementations_itemrepository_itemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_itemrepository_itemrepository"
     },
     {
       "relation": "calls",
@@ -55742,9 +55797,9 @@
       "source_file": "src/server/repositories/implementations/ItemRepository.ts",
       "source_location": "L83",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_itemrepository_itemrepository_findbyidincludingdeleted",
-      "target": "implementations_itemrepository_itemrepository_maptoitem",
-      "confidence_score": 1.0
+      "target": "implementations_itemrepository_itemrepository_maptoitem"
     },
     {
       "relation": "references",
@@ -55753,9 +55808,9 @@
       "source_file": "src/server/repositories/implementations/ItemRepository.ts",
       "source_location": "L78",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_itemrepository_itemrepository_findbyidincludingdeleted",
-      "target": "types_domain_item",
-      "confidence_score": 1.0
+      "target": "types_domain_item"
     },
     {
       "relation": "references",
@@ -56117,9 +56172,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice",
-      "target": "implementations_photorepository",
-      "confidence_score": 1.0
+      "target": "implementations_photorepository"
     },
     {
       "relation": "method",
@@ -56247,9 +56302,9 @@
       "source_file": "src/server/repositories/implementations/PhotoRepository.ts",
       "source_location": "L302",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_photorepository_photorepository",
-      "target": "implementations_photorepository_photorepository_harddeletebyitem",
-      "confidence_score": 1.0
+      "target": "implementations_photorepository_photorepository_harddeletebyitem"
     },
     {
       "relation": "method",
@@ -56318,9 +56373,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice",
-      "target": "implementations_photorepository_photorepository",
-      "confidence_score": 1.0
+      "target": "implementations_photorepository_photorepository"
     },
     {
       "relation": "calls",
@@ -56582,9 +56637,9 @@
       "source_file": "src/server/repositories/implementations/PhotoRepository.ts",
       "source_location": "L303",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_photorepository_photorepository_harddeletebyitem",
-      "target": "implementations_photorepository_photorepository_delete",
-      "confidence_score": 1.0
+      "target": "implementations_photorepository_photorepository_delete"
     },
     {
       "relation": "references",
@@ -57059,9 +57114,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice",
-      "target": "implementations_sortresultitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultitemrepository"
     },
     {
       "relation": "imports_from",
@@ -57090,9 +57145,9 @@
       "source_file": "src/server/repositories/implementations/SortResultItemRepository.ts",
       "source_location": "L111",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_sortresultitemrepository_sortresultitemrepository",
-      "target": "implementations_sortresultitemrepository_sortresultitemrepository_countbyiteminfinalizedresults",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultitemrepository_sortresultitemrepository_countbyiteminfinalizedresults"
     },
     {
       "relation": "method",
@@ -57120,9 +57175,9 @@
       "source_file": "src/server/repositories/implementations/SortResultItemRepository.ts",
       "source_location": "L89",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_sortresultitemrepository_sortresultitemrepository",
-      "target": "implementations_sortresultitemrepository_sortresultitemrepository_deletebyitemindraftresults",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultitemrepository_sortresultitemrepository_deletebyitemindraftresults"
     },
     {
       "relation": "method",
@@ -57140,9 +57195,9 @@
       "source_file": "src/server/repositories/implementations/SortResultItemRepository.ts",
       "source_location": "L76",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_sortresultitemrepository_sortresultitemrepository",
-      "target": "implementations_sortresultitemrepository_sortresultitemrepository_existsbyitem",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultitemrepository_sortresultitemrepository_existsbyitem"
     },
     {
       "relation": "method",
@@ -57191,9 +57246,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice",
-      "target": "implementations_sortresultitemrepository_sortresultitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultitemrepository_sortresultitemrepository"
     },
     {
       "relation": "references",
@@ -57202,9 +57257,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L43",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice_itempurgeservice_constructor",
-      "target": "implementations_sortresultitemrepository_sortresultitemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultitemrepository_sortresultitemrepository"
     },
     {
       "relation": "imports",
@@ -57301,9 +57356,9 @@
       "source_file": "src/server/repositories/implementations/SortResultItemRepository.ts",
       "source_location": "L92",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_sortresultitemrepository_sortresultitemrepository_deletebyitemindraftresults",
-      "target": "implementations_sortresultitemrepository_sortresultitemrepository_delete",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultitemrepository_sortresultitemrepository_delete"
     },
     {
       "relation": "calls",
@@ -58827,9 +58882,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice",
-      "target": "services_itempurgeservice_iteminresulterror",
-      "confidence_score": 1.0
+      "target": "services_itempurgeservice_iteminresulterror"
     },
     {
       "relation": "contains",
@@ -58837,9 +58892,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L42",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice",
-      "target": "services_itempurgeservice_itempurgeservice",
-      "confidence_score": 1.0
+      "target": "services_itempurgeservice_itempurgeservice"
     },
     {
       "relation": "method",
@@ -58847,9 +58902,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice_iteminresulterror",
-      "target": "services_itempurgeservice_iteminresulterror_constructor",
-      "confidence_score": 1.0
+      "target": "services_itempurgeservice_iteminresulterror_constructor"
     },
     {
       "relation": "method",
@@ -58857,9 +58912,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L43",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice_itempurgeservice",
-      "target": "services_itempurgeservice_itempurgeservice_constructor",
-      "confidence_score": 1.0
+      "target": "services_itempurgeservice_itempurgeservice_constructor"
     },
     {
       "relation": "method",
@@ -58867,9 +58922,9 @@
       "source_file": "src/server/services/ItemPurgeService.ts",
       "source_location": "L48",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_itempurgeservice_itempurgeservice",
-      "target": "services_itempurgeservice_itempurgeservice_purge",
-      "confidence_score": 1.0
+      "target": "services_itempurgeservice_itempurgeservice_purge"
     },
     {
       "relation": "imports_from",
@@ -60952,9 +61007,9 @@
       "source_file": "src/server/services/SortResultService.ts",
       "source_location": "L216",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "services_sortresultservice_sortresultservice",
-      "target": "services_sortresultservice_sortresultservice_removeitemfromdraftresults",
-      "confidence_score": 1.0
+      "target": "services_sortresultservice_sortresultservice_removeitemfromdraftresults"
     },
     {
       "relation": "method",
@@ -63166,9 +63221,9 @@
       "source_file": "docs/API.md",
       "source_location": "L154",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_auth_user_154",
-      "confidence_score": 1.0
+      "target": "docs_api_auth_user_154"
     },
     {
       "relation": "contains",
@@ -63196,9 +63251,9 @@
       "source_file": "docs/API.md",
       "source_location": "L188",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_collection_items_188",
-      "confidence_score": 1.0
+      "target": "docs_api_collection_items_188"
     },
     {
       "relation": "contains",
@@ -63206,9 +63261,9 @@
       "source_file": "docs/API.md",
       "source_location": "L165",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_collections_core_165",
-      "confidence_score": 1.0
+      "target": "docs_api_collections_core_165"
     },
     {
       "relation": "contains",
@@ -63226,9 +63281,9 @@
       "source_file": "docs/API.md",
       "source_location": "L196",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_item_photos_196",
-      "confidence_score": 1.0
+      "target": "docs_api_item_photos_196"
     },
     {
       "relation": "contains",
@@ -63256,9 +63311,9 @@
       "source_file": "docs/API.md",
       "source_location": "L229",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_members_invitations_229",
-      "confidence_score": 1.0
+      "target": "docs_api_members_invitations_229"
     },
     {
       "relation": "contains",
@@ -63266,9 +63321,9 @@
       "source_file": "docs/API.md",
       "source_location": "L210",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_pool_photos_210",
-      "confidence_score": 1.0
+      "target": "docs_api_pool_photos_210"
     },
     {
       "relation": "contains",
@@ -63276,9 +63331,9 @@
       "source_file": "docs/API.md",
       "source_location": "L252",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_preferences_252",
-      "confidence_score": 1.0
+      "target": "docs_api_preferences_252"
     },
     {
       "relation": "contains",
@@ -63296,9 +63351,9 @@
       "source_file": "docs/API.md",
       "source_location": "L281",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_sessions_281",
-      "confidence_score": 1.0
+      "target": "docs_api_sessions_281"
     },
     {
       "relation": "contains",
@@ -63306,9 +63361,9 @@
       "source_file": "docs/API.md",
       "source_location": "L319",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_shares_319",
-      "confidence_score": 1.0
+      "target": "docs_api_shares_319"
     },
     {
       "relation": "contains",
@@ -63316,9 +63371,9 @@
       "source_file": "docs/API.md",
       "source_location": "L294",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_sort_results_294",
-      "confidence_score": 1.0
+      "target": "docs_api_sort_results_294"
     },
     {
       "relation": "contains",
@@ -63446,9 +63501,9 @@
       "source_file": "docs/API.md",
       "source_location": "L162",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_auth_user_154",
-      "target": "docs_api_get_patch_delete_api_users_me",
-      "confidence_score": 1.0
+      "target": "docs_api_get_patch_delete_api_users_me"
     },
     {
       "relation": "contains",
@@ -63456,9 +63511,9 @@
       "source_file": "docs/API.md",
       "source_location": "L156",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_auth_user_154",
-      "target": "docs_api_get_post_api_auth_nextauth",
-      "confidence_score": 1.0
+      "target": "docs_api_get_post_api_auth_nextauth"
     },
     {
       "relation": "contains",
@@ -63466,9 +63521,9 @@
       "source_file": "docs/API.md",
       "source_location": "L159",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_auth_user_154",
-      "target": "docs_api_post_api_auth_signup",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_auth_signup"
     },
     {
       "relation": "contains",
@@ -63476,9 +63531,9 @@
       "source_file": "docs/API.md",
       "source_location": "L179",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_collections_core_165",
-      "target": "docs_api_delete_api_collections_id",
-      "confidence_score": 1.0
+      "target": "docs_api_delete_api_collections_id"
     },
     {
       "relation": "contains",
@@ -63486,9 +63541,9 @@
       "source_file": "docs/API.md",
       "source_location": "L167",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_collections_core_165",
-      "target": "docs_api_get_api_collections",
-      "confidence_score": 1.0
+      "target": "docs_api_get_api_collections"
     },
     {
       "relation": "contains",
@@ -63496,9 +63551,9 @@
       "source_file": "docs/API.md",
       "source_location": "L173",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_collections_core_165",
-      "target": "docs_api_get_api_collections_id_requireauth_only",
-      "confidence_score": 1.0
+      "target": "docs_api_get_api_collections_id_requireauth_only"
     },
     {
       "relation": "contains",
@@ -63506,9 +63561,9 @@
       "source_file": "docs/API.md",
       "source_location": "L176",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_collections_core_165",
-      "target": "docs_api_patch_api_collections_id",
-      "confidence_score": 1.0
+      "target": "docs_api_patch_api_collections_id"
     },
     {
       "relation": "contains",
@@ -63516,9 +63571,9 @@
       "source_file": "docs/API.md",
       "source_location": "L170",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_collections_core_165",
-      "target": "docs_api_post_api_collections",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_collections"
     },
     {
       "relation": "contains",
@@ -63526,9 +63581,9 @@
       "source_file": "docs/API.md",
       "source_location": "L182",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_collections_core_165",
-      "target": "docs_api_post_api_collections_id_archive_restore",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_collections_id_archive_restore"
     },
     {
       "relation": "contains",
@@ -63536,9 +63591,9 @@
       "source_file": "docs/API.md",
       "source_location": "L185",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_collections_core_165",
-      "target": "docs_api_post_api_collections_id_purge",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_collections_id_purge"
     },
     {
       "relation": "contains",
@@ -63546,9 +63601,9 @@
       "source_file": "docs/API.md",
       "source_location": "L190",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_collection_items_188",
-      "target": "docs_api_get_post_api_collections_id_items",
-      "confidence_score": 1.0
+      "target": "docs_api_get_post_api_collections_id_items"
     },
     {
       "relation": "contains",
@@ -63556,9 +63611,9 @@
       "source_file": "docs/API.md",
       "source_location": "L193",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_collection_items_188",
-      "target": "docs_api_patch_api_collections_id_items_itemid",
-      "confidence_score": 1.0
+      "target": "docs_api_patch_api_collections_id_items_itemid"
     },
     {
       "relation": "contains",
@@ -63566,9 +63621,9 @@
       "source_file": "docs/API.md",
       "source_location": "L201",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_item_photos_196",
-      "target": "docs_api_delete_api_collections_id_items_itemid_photos_photoid",
-      "confidence_score": 1.0
+      "target": "docs_api_delete_api_collections_id_items_itemid_photos_photoid"
     },
     {
       "relation": "contains",
@@ -63576,9 +63631,9 @@
       "source_file": "docs/API.md",
       "source_location": "L204",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_item_photos_196",
-      "target": "docs_api_get_api_collections_id_items_itemid_photos_photoid_file",
-      "confidence_score": 1.0
+      "target": "docs_api_get_api_collections_id_items_itemid_photos_photoid_file"
     },
     {
       "relation": "contains",
@@ -63586,9 +63641,9 @@
       "source_file": "docs/API.md",
       "source_location": "L198",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_item_photos_196",
-      "target": "docs_api_post_api_collections_id_items_itemid_photos",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_collections_id_items_itemid_photos"
     },
     {
       "relation": "contains",
@@ -63596,9 +63651,9 @@
       "source_file": "docs/API.md",
       "source_location": "L207",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_item_photos_196",
-      "target": "docs_api_post_api_collections_id_items_itemid_photos_photoid_set_hero",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_collections_id_items_itemid_photos_photoid_set_hero"
     },
     {
       "relation": "contains",
@@ -63606,9 +63661,9 @@
       "source_file": "docs/API.md",
       "source_location": "L217",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_pool_photos_210",
-      "target": "docs_api_get_api_collections_id_pool_photos",
-      "confidence_score": 1.0
+      "target": "docs_api_get_api_collections_id_pool_photos"
     },
     {
       "relation": "contains",
@@ -63616,9 +63671,9 @@
       "source_file": "docs/API.md",
       "source_location": "L220",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_pool_photos_210",
-      "target": "docs_api_get_api_collections_id_pool_photos_photoid_file",
-      "confidence_score": 1.0
+      "target": "docs_api_get_api_collections_id_pool_photos_photoid_file"
     },
     {
       "relation": "contains",
@@ -63626,9 +63681,9 @@
       "source_file": "docs/API.md",
       "source_location": "L226",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_pool_photos_210",
-      "target": "docs_api_post_api_collections_id_photos_reassign",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_collections_id_photos_reassign"
     },
     {
       "relation": "contains",
@@ -63636,9 +63691,9 @@
       "source_file": "docs/API.md",
       "source_location": "L214",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_pool_photos_210",
-      "target": "docs_api_post_api_collections_id_pool_group",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_collections_id_pool_group"
     },
     {
       "relation": "contains",
@@ -63646,9 +63701,9 @@
       "source_file": "docs/API.md",
       "source_location": "L223",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_pool_photos_210",
-      "target": "docs_api_post_api_collections_id_pool_upload",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_collections_id_pool_upload"
     },
     {
       "relation": "contains",
@@ -63656,9 +63711,9 @@
       "source_file": "docs/API.md",
       "source_location": "L231",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_members_invitations_229",
-      "target": "docs_api_get_api_collections_id_members_requireauth_only",
-      "confidence_score": 1.0
+      "target": "docs_api_get_api_collections_id_members_requireauth_only"
     },
     {
       "relation": "contains",
@@ -63666,9 +63721,9 @@
       "source_file": "docs/API.md",
       "source_location": "L237",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_members_invitations_229",
-      "target": "docs_api_get_patch_delete_api_collections_id_members_mid",
-      "confidence_score": 1.0
+      "target": "docs_api_get_patch_delete_api_collections_id_members_mid"
     },
     {
       "relation": "contains",
@@ -63676,9 +63731,9 @@
       "source_file": "docs/API.md",
       "source_location": "L243",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_members_invitations_229",
-      "target": "docs_api_get_patch_delete_api_invitations_id_requireauth_only",
-      "confidence_score": 1.0
+      "target": "docs_api_get_patch_delete_api_invitations_id_requireauth_only"
     },
     {
       "relation": "contains",
@@ -63686,9 +63741,9 @@
       "source_file": "docs/API.md",
       "source_location": "L240",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_members_invitations_229",
-      "target": "docs_api_get_post_api_collections_id_invitations",
-      "confidence_score": 1.0
+      "target": "docs_api_get_post_api_collections_id_invitations"
     },
     {
       "relation": "contains",
@@ -63696,9 +63751,9 @@
       "source_file": "docs/API.md",
       "source_location": "L249",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_members_invitations_229",
-      "target": "docs_api_get_post_api_invitations_accept_token",
-      "confidence_score": 1.0
+      "target": "docs_api_get_post_api_invitations_accept_token"
     },
     {
       "relation": "contains",
@@ -63706,9 +63761,9 @@
       "source_file": "docs/API.md",
       "source_location": "L234",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_members_invitations_229",
-      "target": "docs_api_post_api_collections_id_members",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_collections_id_members"
     },
     {
       "relation": "contains",
@@ -63716,9 +63771,9 @@
       "source_file": "docs/API.md",
       "source_location": "L246",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_members_invitations_229",
-      "target": "docs_api_post_api_invitations_id_resend_requireauth_only",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_invitations_id_resend_requireauth_only"
     },
     {
       "relation": "contains",
@@ -63726,9 +63781,9 @@
       "source_file": "docs/API.md",
       "source_location": "L256",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_preferences_252",
-      "target": "docs_api_get_api_collections_id_preferences_items",
-      "confidence_score": 1.0
+      "target": "docs_api_get_api_collections_id_preferences_items"
     },
     {
       "relation": "contains",
@@ -63736,9 +63791,9 @@
       "source_file": "docs/API.md",
       "source_location": "L259",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_preferences_252",
-      "target": "docs_api_post_api_collections_id_preferences_recalculate",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_collections_id_preferences_recalculate"
     },
     {
       "relation": "contains",
@@ -63776,9 +63831,9 @@
       "source_file": "docs/API.md",
       "source_location": "L278",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_items_top_level_requireauth_only_family",
-      "target": "docs_api_post_api_items_id_remove_from_sorts",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_items_id_remove_from_sorts"
     },
     {
       "relation": "contains",
@@ -63796,9 +63851,9 @@
       "source_file": "docs/API.md",
       "source_location": "L288",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_sessions_281",
-      "target": "docs_api_get_patch_delete_api_sessions_id",
-      "confidence_score": 1.0
+      "target": "docs_api_get_patch_delete_api_sessions_id"
     },
     {
       "relation": "contains",
@@ -63806,9 +63861,9 @@
       "source_file": "docs/API.md",
       "source_location": "L285",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_sessions_281",
-      "target": "docs_api_post_api_sessions",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_sessions"
     },
     {
       "relation": "contains",
@@ -63816,9 +63871,9 @@
       "source_file": "docs/API.md",
       "source_location": "L291",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_sessions_281",
-      "target": "docs_api_post_api_sessions_id_decisions",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_sessions_id_decisions"
     },
     {
       "relation": "contains",
@@ -63826,9 +63881,9 @@
       "source_file": "docs/API.md",
       "source_location": "L310",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_sort_results_294",
-      "target": "docs_api_get_api_sort_results_id_items",
-      "confidence_score": 1.0
+      "target": "docs_api_get_api_sort_results_id_items"
     },
     {
       "relation": "contains",
@@ -63836,9 +63891,9 @@
       "source_file": "docs/API.md",
       "source_location": "L301",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_sort_results_294",
-      "target": "docs_api_get_patch_delete_api_sort_results_id",
-      "confidence_score": 1.0
+      "target": "docs_api_get_patch_delete_api_sort_results_id"
     },
     {
       "relation": "contains",
@@ -63846,9 +63901,9 @@
       "source_file": "docs/API.md",
       "source_location": "L313",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_sort_results_294",
-      "target": "docs_api_get_patch_delete_api_sort_results_id_items_rid",
-      "confidence_score": 1.0
+      "target": "docs_api_get_patch_delete_api_sort_results_id_items_rid"
     },
     {
       "relation": "contains",
@@ -63856,9 +63911,9 @@
       "source_file": "docs/API.md",
       "source_location": "L298",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_sort_results_294",
-      "target": "docs_api_post_api_sort_results",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_sort_results"
     },
     {
       "relation": "contains",
@@ -63866,9 +63921,9 @@
       "source_file": "docs/API.md",
       "source_location": "L304",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_sort_results_294",
-      "target": "docs_api_post_api_sort_results_id_finalize",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_sort_results_id_finalize"
     },
     {
       "relation": "contains",
@@ -63876,9 +63931,9 @@
       "source_file": "docs/API.md",
       "source_location": "L316",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_sort_results_294",
-      "target": "docs_api_post_api_sort_results_id_items_rid_reset",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_sort_results_id_items_rid_reset"
     },
     {
       "relation": "contains",
@@ -63886,9 +63941,9 @@
       "source_file": "docs/API.md",
       "source_location": "L307",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_sort_results_294",
-      "target": "docs_api_post_api_sort_results_id_supersede",
-      "confidence_score": 1.0
+      "target": "docs_api_post_api_sort_results_id_supersede"
     },
     {
       "relation": "contains",
@@ -63896,9 +63951,9 @@
       "source_file": "docs/API.md",
       "source_location": "L327",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_shares_319",
-      "target": "docs_api_get_api_shared_results_token",
-      "confidence_score": 1.0
+      "target": "docs_api_get_api_shared_results_token"
     },
     {
       "relation": "contains",
@@ -63906,9 +63961,9 @@
       "source_file": "docs/API.md",
       "source_location": "L324",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_shares_319",
-      "target": "docs_api_get_patch_delete_api_sort_results_id_shares_sid",
-      "confidence_score": 1.0
+      "target": "docs_api_get_patch_delete_api_sort_results_id_shares_sid"
     },
     {
       "relation": "contains",
@@ -63916,9 +63971,9 @@
       "source_file": "docs/API.md",
       "source_location": "L321",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_api_shares_319",
-      "target": "docs_api_get_post_api_sort_results_id_shares",
-      "confidence_score": 1.0
+      "target": "docs_api_get_post_api_sort_results_id_shares"
     },
     {
       "relation": "contains",
@@ -65886,9 +65941,9 @@
       "source_file": "docs/superpowers/plans/2026-06-19-u3p-item-purge.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "plans_2026_06_19_u3p_item_purge",
-      "target": "plans_2026_06_19_u3p_item_purge_u3p_item_purge_remove_from_sorts_implementation_plan",
-      "confidence_score": 1.0
+      "target": "plans_2026_06_19_u3p_item_purge_u3p_item_purge_remove_from_sorts_implementation_plan"
     },
     {
       "relation": "contains",
@@ -65896,9 +65951,9 @@
       "source_file": "docs/superpowers/plans/2026-06-19-u3p-item-purge.md",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "plans_2026_06_19_u3p_item_purge_u3p_item_purge_remove_from_sorts_implementation_plan",
-      "target": "plans_2026_06_19_u3p_item_purge_global_constraints",
-      "confidence_score": 1.0
+      "target": "plans_2026_06_19_u3p_item_purge_global_constraints"
     },
     {
       "relation": "contains",
@@ -65906,9 +65961,9 @@
       "source_file": "docs/superpowers/plans/2026-06-19-u3p-item-purge.md",
       "source_location": "L92",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "plans_2026_06_19_u3p_item_purge_u3p_item_purge_remove_from_sorts_implementation_plan",
-      "target": "plans_2026_06_19_u3p_item_purge_self_review",
-      "confidence_score": 1.0
+      "target": "plans_2026_06_19_u3p_item_purge_self_review"
     },
     {
       "relation": "contains",
@@ -65916,9 +65971,9 @@
       "source_file": "docs/superpowers/plans/2026-06-19-u3p-item-purge.md",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "plans_2026_06_19_u3p_item_purge_global_constraints",
-      "target": "plans_2026_06_19_u3p_item_purge_task_1_requireapicollectionowner_dal_gate",
-      "confidence_score": 1.0
+      "target": "plans_2026_06_19_u3p_item_purge_task_1_requireapicollectionowner_dal_gate"
     },
     {
       "relation": "contains",
@@ -65926,9 +65981,9 @@
       "source_file": "docs/superpowers/plans/2026-06-19-u3p-item-purge.md",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "plans_2026_06_19_u3p_item_purge_global_constraints",
-      "target": "plans_2026_06_19_u3p_item_purge_task_2_repository_methods_interfaces",
-      "confidence_score": 1.0
+      "target": "plans_2026_06_19_u3p_item_purge_task_2_repository_methods_interfaces"
     },
     {
       "relation": "contains",
@@ -65936,9 +65991,9 @@
       "source_file": "docs/superpowers/plans/2026-06-19-u3p-item-purge.md",
       "source_location": "L49",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "plans_2026_06_19_u3p_item_purge_global_constraints",
-      "target": "plans_2026_06_19_u3p_item_purge_task_3_purge_service_route_un_mocked_integration",
-      "confidence_score": 1.0
+      "target": "plans_2026_06_19_u3p_item_purge_task_3_purge_service_route_un_mocked_integration"
     },
     {
       "relation": "contains",
@@ -65946,9 +66001,9 @@
       "source_file": "docs/superpowers/plans/2026-06-19-u3p-item-purge.md",
       "source_location": "L62",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "plans_2026_06_19_u3p_item_purge_global_constraints",
-      "target": "plans_2026_06_19_u3p_item_purge_task_4_remove_from_sorts_service_route_un_mocked_integration",
-      "confidence_score": 1.0
+      "target": "plans_2026_06_19_u3p_item_purge_task_4_remove_from_sorts_service_route_un_mocked_integration"
     },
     {
       "relation": "contains",
@@ -65956,9 +66011,9 @@
       "source_file": "docs/superpowers/plans/2026-06-19-u3p-item-purge.md",
       "source_location": "L72",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "plans_2026_06_19_u3p_item_purge_global_constraints",
-      "target": "plans_2026_06_19_u3p_item_purge_task_5_playwright_e2e_the_entire_removal_workflow",
-      "confidence_score": 1.0
+      "target": "plans_2026_06_19_u3p_item_purge_task_5_playwright_e2e_the_entire_removal_workflow"
     },
     {
       "relation": "contains",
@@ -65966,9 +66021,9 @@
       "source_file": "docs/superpowers/plans/2026-06-19-u3p-item-purge.md",
       "source_location": "L88",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "plans_2026_06_19_u3p_item_purge_global_constraints",
-      "target": "plans_2026_06_19_u3p_item_purge_task_6_acceptance_gate",
-      "confidence_score": 1.0
+      "target": "plans_2026_06_19_u3p_item_purge_task_6_acceptance_gate"
     },
     {
       "relation": "contains",
@@ -66356,9 +66411,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design",
-      "target": "specs_2026_06_19_u3p_item_purge_design_item_purge_remove_from_sorts_purses_u3p_design_rev_3",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_item_purge_remove_from_sorts_purses_u3p_design_rev_3"
     },
     {
       "relation": "contains",
@@ -66366,9 +66421,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design_item_purge_remove_from_sorts_purses_u3p_design_rev_3",
-      "target": "specs_2026_06_19_u3p_item_purge_design_a_purge_approach",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_a_purge_approach"
     },
     {
       "relation": "contains",
@@ -66376,9 +66431,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L114",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design_item_purge_remove_from_sorts_purses_u3p_design_rev_3",
-      "target": "specs_2026_06_19_u3p_item_purge_design_advances",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_advances"
     },
     {
       "relation": "contains",
@@ -66386,9 +66441,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L51",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design_item_purge_remove_from_sorts_purses_u3p_design_rev_3",
-      "target": "specs_2026_06_19_u3p_item_purge_design_b_remove_from_sorts_approach",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_b_remove_from_sorts_approach"
     },
     {
       "relation": "contains",
@@ -66396,9 +66451,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L108",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design_item_purge_remove_from_sorts_purses_u3p_design_rev_3",
-      "target": "specs_2026_06_19_u3p_item_purge_design_decisions_resolved",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_decisions_resolved"
     },
     {
       "relation": "contains",
@@ -66406,9 +66461,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L82",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design_item_purge_remove_from_sorts_purses_u3p_design_rev_3",
-      "target": "specs_2026_06_19_u3p_item_purge_design_error_handling",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_error_handling"
     },
     {
       "relation": "contains",
@@ -66416,9 +66471,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design_item_purge_remove_from_sorts_purses_u3p_design_rev_3",
-      "target": "specs_2026_06_19_u3p_item_purge_design_goal_scope",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_goal_scope"
     },
     {
       "relation": "contains",
@@ -66426,9 +66481,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L74",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design_item_purge_remove_from_sorts_purses_u3p_design_rev_3",
-      "target": "specs_2026_06_19_u3p_item_purge_design_new_methods",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_new_methods"
     },
     {
       "relation": "contains",
@@ -66436,9 +66491,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L87",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design_item_purge_remove_from_sorts_purses_u3p_design_rev_3",
-      "target": "specs_2026_06_19_u3p_item_purge_design_security_vibe_security",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_security_vibe_security"
     },
     {
       "relation": "contains",
@@ -66446,9 +66501,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L94",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design_item_purge_remove_from_sorts_purses_u3p_design_rev_3",
-      "target": "specs_2026_06_19_u3p_item_purge_design_testing_un_mocked_db_integration_is_authoritative_mock_only_vercel_blob",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_testing_un_mocked_db_integration_is_authoritative_mock_only_vercel_blob"
     },
     {
       "relation": "contains",
@@ -66456,9 +66511,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design_item_purge_remove_from_sorts_purses_u3p_design_rev_3",
-      "target": "specs_2026_06_19_u3p_item_purge_design_the_fk_reality_the_three_items_id_referrers_verified_complete",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_the_fk_reality_the_three_items_id_referrers_verified_complete"
     },
     {
       "relation": "contains",
@@ -66466,9 +66521,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design_item_purge_remove_from_sorts_purses_u3p_design_rev_3",
-      "target": "specs_2026_06_19_u3p_item_purge_design_why",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_why"
     },
     {
       "relation": "contains",
@@ -66476,9 +66531,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design_a_purge_approach",
-      "target": "specs_2026_06_19_u3p_item_purge_design_itempurgeservice_purge_itemid_a_service_not_the_controller",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_itempurgeservice_purge_itemid_a_service_not_the_controller"
     },
     {
       "relation": "contains",
@@ -66486,9 +66541,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design_a_purge_approach",
-      "target": "specs_2026_06_19_u3p_item_purge_design_route_authz_before_any_body_parsing_security_owner_only_confirm",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_route_authz_before_any_body_parsing_security_owner_only_confirm"
     },
     {
       "relation": "contains",
@@ -66496,9 +66551,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design_b_remove_from_sorts_approach",
-      "target": "specs_2026_06_19_u3p_item_purge_design_removeitemfromdraftresults_itemid_on_sortresultservice_which_owns_sort_result_item_mutations",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_removeitemfromdraftresults_itemid_on_sortresultservice_which_owns_sort_result_item_mutations"
     },
     {
       "relation": "contains",
@@ -66506,9 +66561,9 @@
       "source_file": "docs/superpowers/specs/2026-06-19-u3p-item-purge-design.md",
       "source_location": "L53",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "specs_2026_06_19_u3p_item_purge_design_b_remove_from_sorts_approach",
-      "target": "specs_2026_06_19_u3p_item_purge_design_route_post_api_items_id_remove_from_sorts",
-      "confidence_score": 1.0
+      "target": "specs_2026_06_19_u3p_item_purge_design_route_post_api_items_id_remove_from_sorts"
     },
     {
       "relation": "contains",
@@ -68162,5 +68217,5 @@
       "source_file": "docs/ARCHITECTURE.md"
     }
   ],
-  "built_at_commit": "289bf7b461fa5bba88e6907645d0334f0c0c05bc"
+  "built_at_commit": "ccbff72fbc7e49afdc7561ed9cd23e88389ed0ae"
 }
