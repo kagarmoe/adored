@@ -10,6 +10,7 @@
 // @vitest-environment node
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { sql } from "drizzle-orm";
+import { NextRequest } from "next/server";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline } from "../../../e2e/fixtures/seed";
 import { generateId } from "@/lib/id";
@@ -17,6 +18,7 @@ import { AuditLogRepository } from "@/server/repositories/implementations/AuditL
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
+import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 
 // Drive the REAL purge route end-to-end. Mock only the external boundaries: auth
 // (owner session), @vercel/blob's del (don't hit the store), and getDb -> test db.
@@ -36,6 +38,7 @@ vi.mock("@vercel/blob", () => ({ del: mockBlobDel }));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
 import { POST as purge } from "@/app/api/items/[id]/purge/route";
+import { GET as auditRoute } from "@/app/api/collections/[id]/audit/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -284,5 +287,142 @@ describeDb("item purge -> audit_log (route -> service -> DB) — purses-ite", ()
     expect(await new AuditLogRepository(db).findByCollection(collectionId)).toHaveLength(0);
 
     spy.mockRestore();
+  });
+});
+
+// Owner-only read of the purge trail: GET /api/collections/[id]/audit. Drives the
+// REAL route handler against ephemeral Postgres; mocks only auth (the switchable
+// session) and getDb -> test db (both already wired at module top). The authz gate
+// is requireApiCollectionOwner, so the existence-oracle order holds: an absent id
+// is 404 BEFORE any ownership check, while a real foreign collection is 403 — a
+// member or stranger learns only "you can't read this", never whether it exists.
+//
+// Requests are NextRequest (not a plain Request): the route reads
+// request.nextUrl.searchParams, the codebase convention for query params, which is
+// a NextRequest-only getter. Constructing NextRequest exercises the production
+// query-parse path rather than a stub.
+describeDb("GET /api/collections/[id]/audit (owner-only) — purses-ite", () => {
+  let ownerId: string;
+  let memberId: string;
+  let strangerId: string;
+  let collectionId: string; // owned by ownerId, has 2 audit rows
+  let emptyCollectionId: string; // owned by ownerId, zero audit rows
+
+  /** Insert a bare user row (no password needed — auth is mocked) and return its id. */
+  async function seedUserRow(label: string): Promise<string> {
+    const { db } = getTestDb();
+    const id = generateId("user");
+    await db
+      .insert((await import("@/lib/db/schema")).user)
+      .values({ id, email: `${label}-${id}@adored.test`, name: label });
+    return id;
+  }
+
+  function auditReq(id: string, limit?: string): NextRequest {
+    const qs = limit == null ? "" : `?limit=${limit}`;
+    return new NextRequest(`http://localhost/api/collections/${id}/audit${qs}`);
+  }
+
+  beforeEach(async () => {
+    await resetDb();
+    vi.clearAllMocks();
+    ownerId = await seedBaseline();
+    const { db } = getTestDb();
+
+    collectionId = generateId("col");
+    emptyCollectionId = generateId("col");
+    await db.execute(sql`
+      INSERT INTO collections (id, owner_id, name, status, created_at, updated_at)
+      VALUES
+        (${collectionId}, ${ownerId}, 'Audit read', 'active', now(), now()),
+        (${emptyCollectionId}, ${ownerId}, 'Audit read empty', 'active', now(), now())
+    `);
+
+    // A member (curator) of the owner's collection — NOT the owner. Must be 403.
+    memberId = await seedUserRow("member");
+    await new MembershipRepository(db).create({
+      collectionId, userId: memberId, role: "curator",
+      canManageCollection: false, canInviteMembers: false, canAddItems: true,
+      canEditMetadata: true, canAddPhotos: true, canDeletePhotos: false,
+      canSort: true, canViewOutputs: true,
+    });
+
+    // A stranger: a real user with NO membership anywhere. Must be 403 on the
+    // owner's (valid, foreign) collection, 404 on a truly-absent id.
+    strangerId = await seedUserRow("stranger");
+
+    // Two audit rows in collectionId so newest-first ordering is assertable. Both
+    // are written via the real repo; the ULID id tie-breaks a same-ms createdAt.
+    const repo = new AuditLogRepository(db);
+    await repo.record({
+      actorId: ownerId, action: "item.purge", targetType: "item",
+      targetId: "itm-older", collectionId,
+    });
+    await repo.record({
+      actorId: ownerId, action: "item.purge", targetType: "item",
+      targetId: "itm-newer", collectionId,
+    });
+  });
+
+  afterAll(async () => {
+    await closeDb();
+  });
+
+  it("owner gets the collection's entries, newest-first", async () => {
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await auditRoute(auditReq(collectionId), { params: { id: collectionId } });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveLength(2);
+    // Newest-first by the repo's (desc createdAt, desc id) total order.
+    expect(body[0].targetId).toBe("itm-newer");
+    expect(body[1].targetId).toBe("itm-older");
+    expect(new Date(body[0].createdAt).getTime()).toBeGreaterThanOrEqual(
+      new Date(body[1].createdAt).getTime(),
+    );
+  });
+
+  it("non-owner member -> 403 (membership is not enough to read the trail)", async () => {
+    mockGetSession.mockResolvedValue({ user: { id: memberId } });
+    const res = await auditRoute(auditReq(collectionId), { params: { id: collectionId } });
+    expect(res.status).toBe(403);
+  });
+
+  it("stranger on a valid foreign collection -> 403; truly-absent id -> 404", async () => {
+    mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+    // The collection EXISTS but the stranger is neither member nor owner: 403.
+    expect(
+      (await auditRoute(auditReq(collectionId), { params: { id: collectionId } })).status,
+    ).toBe(403);
+    // Absent collection: 404 from the gate BEFORE any ownership check (existence
+    // oracle — a missing id and a forbidden id give different answers, but the gate
+    // checks existence first so a stranger can't probe ownership of a real id).
+    expect(
+      (await auditRoute(auditReq("col-absent"), { params: { id: "col-absent" } })).status,
+    ).toBe(404);
+  });
+
+  it("empty collection -> 200 []", async () => {
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await auditRoute(auditReq(emptyCollectionId), { params: { id: emptyCollectionId } });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual([]);
+  });
+
+  it("?limit=abc/-5/99999 all return a bounded, non-error result (clamped, never 500)", async () => {
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    for (const q of ["abc", "-5", "99999"]) {
+      const res = await auditRoute(auditReq(collectionId, q), { params: { id: collectionId } });
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(Array.isArray(body)).toBe(true);
+      expect(body.length).toBeLessThanOrEqual(200);
+    }
+  });
+
+  it("401 when unauthenticated (no session)", async () => {
+    mockGetSession.mockResolvedValue(null);
+    const res = await auditRoute(auditReq(collectionId), { params: { id: collectionId } });
+    expect(res.status).toBe(401);
   });
 });
