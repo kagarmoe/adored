@@ -206,7 +206,7 @@ Returns the `Collection` by id **without a membership check** — any signed-in 
 `getSession` + belongs-to-parent (`404`) + (`canDeletePhotos` or owner) → `403`; also `photo.itemId` must match (`404`). Deletes blob + row. `200 { success: true }`. `400` on failure; `401`.
 
 ### `GET /api/collections/[id]/items/[itemId]/photos/[photoId]/file`
-`getSession` + belongs-to-parent (`404`) + (member or owner) → `403`. Streams the **binary** image (`Content-Type` from blob). Supports `If-None-Match` → `304`. `404` if blob missing; `400` on failure; `401`.
+`getSession` + belongs-to-parent (`404`) + (member or owner) → `403`. Then delegates to `servePhotoFile` (`src/lib/photo-serving.ts`). Optional `?w=` selects a server-resized variant (allowlist `160|320|640|1280`; other/invalid → `400`); omitted → the full-resolution original streamed verbatim. Resized variants are EXIF auto-oriented `image/webp`; originals keep their stored `Content-Type`. Caching: `Cache-Control: private, max-age=300, must-revalidate` + a strong variant `ETag` (`"photoId:w|orig:updatedAtMs"`) compared **app-side** (the client `If-None-Match` is **not** forwarded to Vercel Blob) → `304`. Source over `RESIZE_MAX_SOURCE_BYTES` (25 MB) or excess decoded pixels → `400`; blob missing → `404`; processing failure → generic `500`; `401`. `runtime = "nodejs"` (sharp). `next/image` keeps `unoptimized` (private blobs + cookie auth).
 
 ### `POST /api/collections/[id]/items/[itemId]/photos/[photoId]/set-hero`
 `getSession` + belongs-to-parent (`404`) + `requireApiCollectionAccess` (`403`/`404`). Sets the item's hero photo. `200 { success: true }`. `400` on failure; `401`.
@@ -222,7 +222,7 @@ Group pooled photos into item(s). **Body:** `{ photoIds: string[] (1..MAX_GROUP_
 Lists pooled photos. **Returns** `{ photos: [{ id, filename }] }`. (The bulk uploader polls this until async-recorded rows appear.) `401`/`403`/`404`.
 
 ### `GET /api/collections/[id]/pool/photos/[photoId]/file`
-Streams a **pooled** photo's binary (must be this collection's and unassigned — `itemId === null`, else `404`). `If-None-Match` → `304`. `400` on failure; `401`/`403`.
+A **pooled** photo (must be this collection's and unassigned — `itemId === null`, else `404`). Same serving contract as the item `/file` route above (delegates to `servePhotoFile`): optional `?w=` resize allowlist, EXIF auto-orient → webp, `private, max-age=300, must-revalidate` + app-side variant `ETag`/`304`, decode-bomb guards, generic `500`, `runtime = "nodejs"`. `401`/`403`.
 
 ### `POST /api/collections/[id]/pool/upload`
 Client-direct upload via `@vercel/blob` `handleUpload`. `onBeforeGenerateToken` authorizes (`canAddPhotos` or owner; `401`/`404`/`403`) and signs a token; `onUploadCompleted` (no session — trusts the signed token) records the pooled `Photo`. **Body:** the Vercel Blob `HandleUploadBody`. Allowed types `POOL_ALLOWED_CONTENT_TYPES`, max `POOL_MAX_BYTES`. Returns the `handleUpload` JSON; `500` on unexpected failure.
