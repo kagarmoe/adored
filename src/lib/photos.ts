@@ -10,6 +10,9 @@ export interface PhotoUrlOptions {
   w?: number;
 }
 
+/** Allowed clockwise rotation values (degrees) for the rotate PATCH endpoints. */
+export const ALLOWED_ROTATIONS = [0, 90, 180, 270] as const;
+
 /** Per-surface request widths (one per surface — `unoptimized` precludes srcset).
  *  Must be members of RESIZE_WIDTHS in photo-serving.ts. */
 export const PHOTO_WIDTH = {
