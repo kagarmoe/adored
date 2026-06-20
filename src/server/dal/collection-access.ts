@@ -25,6 +25,25 @@ export async function requireApiCollectionAccess(
   return collection;
 }
 
+// Owner-only gate for collection-scoped API routes (a stricter sibling of
+// requireApiCollectionAccess). Resolves the collection from its id, returns it
+// iff the caller is the collection owner, else a NextResponse the caller returns
+// immediately: 404 if absent, 403 if it exists but the caller is not the owner
+// (a member-not-owner gets 403, same as a non-member). Used by destructive
+// collection-owner ops (item purge) where membership is insufficient.
+export async function requireApiCollectionOwner(
+  db: Database,
+  collectionId: string,
+  userId: string,
+): Promise<Collection | NextResponse> {
+  const collection = await new CollectionRepository(db).findById(collectionId);
+  if (!collection) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (collection.ownerId !== userId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  return collection;
+}
+
 // Resolve a sort-result, then gate by collection access AND curator ownership
 // (results are curator-scoped — each curator sorts independently, per t9l).
 // Returns the result when the caller may act on it, else a NextResponse to return.

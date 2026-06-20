@@ -20,6 +20,7 @@ Structured reference for an AI agent (or developer) calling the **Adored** HTTP 
 Authentication is *who you are*; authorization is *what you may touch*. The chokepoint is `src/server/dal/collection-access.ts` (do not hand-roll):
 
 - **`requireApiCollectionAccess(db, collectionId, userId)`** — tenant gate. Returns the collection only if the user is **member or owner**; otherwise a `NextResponse`: **`404`** if the collection is absent, **`403`** if it exists but the caller is neither.
+- **`requireApiCollectionOwner(db, collectionId, userId)`** — owner-only sibling of `requireApiCollectionAccess` (a stricter gate). Returns the collection only if **`collection.ownerId === userId`**; otherwise a `NextResponse`: **`404`** if absent, **`403`** if it exists but the caller is not the owner (a member-not-owner gets `403`, same as a non-member). Used by destructive collection-owner ops where membership is insufficient (item `purge`, `remove-from-sorts`).
 - **`requireApiResultAccess(db, resultId, userId)`** — for `sort-results`. Resolves the result, runs the collection gate on `result.collectionId`, then additionally requires **`result.curatorId === userId`** (results are curator-private). `404` absent, `403` if not a member **or** not the owning curator.
 - **Sessions** use an inline `authorizeSession` of the same shape (collection access + `session.curatorId === userId`).
 - **Older routes** (`requireAuth`-only) sometimes add an **inline** check instead of the DAL guard — `canManageCollection`, `isOwner`, `isCollectionManager`, or a `membership.canX` flag → `403`. These are correctly guarded; the detail names the exact check per method.
@@ -50,7 +51,7 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 - **Curator-scoped** — `sessions` and `sort-results` (and children) are private to the creating curator, enforced on top of collection membership.
 - **`ownerId`/`curatorId` come from the session, never the body** — create routes force them from the authenticated user.
 - **Belongs-to-parent on child routes** — see Authorization model.
-- **Soft-delete vs purge** — `archive`/`restore` are reversible; `purge` is the permanent path (note: `purgeItem` is currently a no-op stub — see detail). `DELETE /api/sort-results/[id]` and `…/items/[rid]` are hard deletes restricted to **draft** results (see detail).
+- **Soft-delete vs purge** — `archive`/`restore` are reversible; `purge` is the permanent path. `POST /api/items/[id]/purge` is now real: an **owner-only** permanent hard-delete cascade (preferences + photos + blobs, then the item) in one transaction, **`409`** if the item is in any sort result (see detail; `purgeCollection` remains a no-op stub). `DELETE /api/sort-results/[id]` and `…/items/[rid]` are hard deletes restricted to **draft** results (see detail).
 
 ## Route index
 
@@ -120,7 +121,8 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 | POST | `/api/items?collectionId=` | **⚠** |
 | GET·PATCH·DELETE | `/api/items/[id]` | **⚠** |
 | POST | `/api/items/[id]/restore` | **⚠** |
-| POST | `/api/items/[id]/purge` | **⚠** (no-op stub) |
+| POST | `/api/items/[id]/purge` | owner |
+| POST | `/api/items/[id]/remove-from-sorts` | owner |
 
 ### sessions
 | Method | Path | Access |
@@ -271,7 +273,10 @@ All routes here enforce only authentication — **no collection membership/owner
 `requireAuth` only. Restores a soft-deleted item.
 
 ### `POST /api/items/[id]/purge`
-`requireAuth` only. **Body:** `{ confirm: "PURGE" }` (zod-validated). **Returns** `{ message: "Item purged successfully" }` — but `purgeItem()` is currently a **no-op stub** that deletes nothing and ignores `[id]`. `400` invalid body.
+`requireAuth` → resolve the item **including soft-deleted** (`findByIdIncludingDeleted`; `404` if absent) → **owner-only** `requireApiCollectionOwner(item.collectionId)` (`404`/`403`) → **only then** parse `{ confirm: "PURGE" }` (zod; `400` invalid JSON, `400` if confirm missing/wrong). Authz precedes body validation deliberately — a non-owner with a malformed body gets `403`, never a `400` that would leak the item's existence. On success, `ItemPurgeService` permanently **hard-deletes the item + its `CollectionPreferenceItem` rows + its photos atomically** (children-first in one `withTransaction`, since the `items` FK has no `ON DELETE CASCADE`), then deletes the photo **blobs best-effort after commit** (a blob `del` failure is logged, never rolls back the committed delete — orphans are inert/sweepable). **`409`** (`ItemInResultError`) if the item is referenced by **any** sort result (draft or finalized) — the owner must first detach drafts via `remove-from-sorts`; finalized membership is a hard block. `200 { message: "Item purged" }`.
+
+### `POST /api/items/[id]/remove-from-sorts`
+`requireAuth` → resolve item including soft-deleted (`404`) → **owner-only** `requireApiCollectionOwner` (`404`/`403`). No confirm body. Bulk-detaches the item from **every draft** sort result across all curators in one `withTransaction` (purge-prep companion); **finalized results and the curator's `CollectionPreferenceItem` rows are left untouched**. `200 { removed, remainingInFinalized }` — count detached from drafts, and how many finalized results still reference it. This is a deliberate, scoped **t9l exception**: results are normally curator-private, but purge is a collection-owner op, so clearing draft sorts is its necessary consequence.
 
 ## sessions
 
@@ -329,7 +334,7 @@ These routes enforce **authentication only** (no collection membership/ownership
 - `GET /api/collections/[id]` — reads any collection.
 - `GET /api/collections/[id]/members` — reads any collection's member list.
 - `GET·PATCH·DELETE /api/invitations/[id]`, `POST /api/invitations/[id]/resend` — manage any invitation by id.
-- `POST /api/items`, `GET·PATCH·DELETE /api/items/[id]`, `/restore`, `/purge` — act on any item by id (read/update/soft-delete). `purge` is additionally a no-op stub.
+- `POST /api/items`, `GET·PATCH·DELETE /api/items/[id]`, `/restore` — act on any item by id (read/update/soft-delete). **`/purge` is no longer in this set:** it now gates **owner-only** via `requireApiCollectionOwner` (as does the new `/remove-from-sorts`).
 - `GET·POST /api/collections/[id]/preferences/*` — no membership gate (but scoped to the caller's own data).
 
-Related stubs (return success without doing the work): `POST /api/items/[id]/purge`. (The former sort-results no-op-success stubs — `DELETE /api/sort-results/[id]`, `DELETE /api/sort-results/[id]/items/[rid]`, and the empty `GET …/shares` listing — are now implemented; **purses-u3p** is resolved for the sort-results lifecycle.)
+Implemented (formerly no-op stubs): `POST /api/items/[id]/purge` is now a real owner-only hard-delete cascade with a `409`-in-result guard, alongside the new owner-only `POST /api/items/[id]/remove-from-sorts` — **purses-u3p** is resolved for item purge. (`purgeCollection` remains a separate no-op stub.) The former sort-results no-op-success stubs — `DELETE /api/sort-results/[id]`, `DELETE /api/sort-results/[id]/items/[rid]`, and the empty `GET …/shares` listing — are also implemented.

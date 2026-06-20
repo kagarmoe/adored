@@ -236,6 +236,135 @@ export async function seedSortScenario(ownerId: string): Promise<{
   return { collectionId, slug, sessionNumber: session.number, itemIds, resultNumber: result.number };
 }
 
+/** Credentials returned for a seeded user, ready to feed `apiContextFor`. */
+export interface SeededUser {
+  id: string;
+  email: string;
+  password: string;
+}
+
+const REMOVAL_PASSWORD = "removal-password-123"; // ≥ 8 chars (signup rule)
+
+/** Insert a fresh user with a unique email and a known password. */
+async function seedUser(label: string): Promise<SeededUser> {
+  const { db } = getTestDb();
+  const id = generateId("user");
+  const email = `${label}-${id}@adored.test`;
+  const hashed = await bcrypt.hash(REMOVAL_PASSWORD, 12);
+  await db.insert(user).values({
+    id,
+    email,
+    name: label,
+    password: hashed,
+    emailVerified: new Date(),
+  });
+  return { id, email, password: REMOVAL_PASSWORD };
+}
+
+/**
+ * Seed the item-removal workflow scenario (purses-u3p). Net-new fixture: the
+ * existing seeds make a single user and only DRAFT results; this one creates:
+ *   - TWO users: an `owner` and a `nonOwner` (distinct principals for the authz
+ *     case — the non-owner is NOT a member of the collection),
+ *   - a collection owned by `owner`,
+ *   - one item with a hero photo (real http blobKey so the purge `del` filter
+ *     fires; the e2e asserts API outcomes, not the blob store),
+ *   - the item placed in BOTH a DRAFT result and a FINALIZED result.
+ *
+ * The finalized result is built the DB-layer way (`SortResultRepository.create`
+ * with `status:"finalized"` + `SortResultItemRepository.create`), the same
+ * pattern `sort-results-authz.integration.test.ts` uses — there is no live route
+ * that finalizes with a pre-placed item, so this is fixture-only construction.
+ *
+ * Each call creates uniquely-ided rows, so it is safe to seed per-test without a
+ * full `resetDb()` (which would wipe the baseline user other specs depend on).
+ */
+export async function seedRemovalScenario(): Promise<{
+  owner: SeededUser;
+  nonOwner: SeededUser;
+  collectionId: string;
+  itemId: string;
+  photoId: string;
+  draftResultId: string;
+  draftResultItemId: string;
+  finalizedResultId: string;
+  finalizedResultItemId: string;
+}> {
+  const { db } = getTestDb();
+
+  const owner = await seedUser("removal-owner");
+  const nonOwner = await seedUser("removal-nonowner");
+
+  const collectionId = generateId("col");
+  await db.insert(collectionsTable).values({
+    id: collectionId,
+    ownerId: owner.id,
+    name: "E2E Removal Bags",
+    slug: `e2e-removal-bags-${collectionId}`,
+  });
+
+  const item = await new ItemRepository(db).create({
+    collectionId,
+    name: "E2E Removal Item",
+  });
+  const photo = await new PhotoRepository(db).create({
+    itemId: item.id,
+    collectionId,
+    // A real http(s) URL so the purge blob `del` filter (startsWith "http")
+    // actually selects it — the workflow exercises the cleanup path end to end.
+    blobKey: "https://blob.example/e2e-removal-hero.jpg",
+    filename: "e2e-removal-hero.jpg",
+    mimeType: "image/jpeg",
+    fileSize: 1,
+    uploadedBy: owner.id,
+    isHero: true,
+  });
+
+  const resultRepo = new SortResultRepository(db);
+  const resultItemRepo = new SortResultItemRepository(db);
+
+  // DRAFT result holding the item — cleared by remove-from-sorts.
+  const draftResult = await resultRepo.create({
+    collectionId,
+    curatorId: owner.id,
+    name: "E2E Removal Draft",
+    status: "draft",
+  });
+  const draftResultItem = await resultItemRepo.create({
+    sortResultId: draftResult.id,
+    itemId: item.id,
+    computedRank: 1,
+    computedBucket: "top",
+  });
+
+  // FINALIZED result holding the same item — the hard purge block; survives
+  // remove-from-sorts (draft-only).
+  const finalizedResult = await resultRepo.create({
+    collectionId,
+    curatorId: owner.id,
+    name: "E2E Removal Finalized",
+    status: "finalized",
+  });
+  const finalizedResultItem = await resultItemRepo.create({
+    sortResultId: finalizedResult.id,
+    itemId: item.id,
+    computedRank: 1,
+    computedBucket: "top",
+  });
+
+  return {
+    owner,
+    nonOwner,
+    collectionId,
+    itemId: item.id,
+    photoId: photo.id,
+    draftResultId: draftResult.id,
+    draftResultItemId: draftResultItem.id,
+    finalizedResultId: finalizedResult.id,
+    finalizedResultItemId: finalizedResultItem.id,
+  };
+}
+
 // Allow running directly (tsx e2e/fixtures/seed.ts) for manual verification.
 if (require.main === module) {
   (async () => {

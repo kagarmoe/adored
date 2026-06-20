@@ -295,6 +295,18 @@ export class PhotoRepository implements IPhotoRepository {
     return rows.length;
   }
 
+  // Permanently DELETE every photo of an item (active AND soft-deleted — no
+  // deletedAt filter), returning each row's blob_key so the caller can purge the
+  // backing blobs. Purge-only; the item is being hard-deleted, so all its photos
+  // must go regardless of soft-delete state.
+  async hardDeleteByItem(itemId: string): Promise<string[]> {
+    const rows = await this.db
+      .delete(photosTable)
+      .where(eq(photosTable.itemId, itemId))
+      .returning({ blobKey: photosTable.blobKey });
+    return rows.map((r) => r.blobKey);
+  }
+
   private mapToPhoto(row: any): Photo {
     return {
       id: row.id,

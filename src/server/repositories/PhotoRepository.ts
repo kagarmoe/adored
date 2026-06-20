@@ -26,4 +26,7 @@ export interface IPhotoRepository {
   ): Promise<number>;
   countAvailablePooled(collectionId: string, photoIds: string[]): Promise<number>;
   unassignAllFromItem(itemId: string): Promise<number>;
+  // Permanently DELETE every photo of an item (active AND soft-deleted),
+  // returning their blob keys so the caller can clean up blob storage. Purge-only.
+  hardDeleteByItem(itemId: string): Promise<string[]>;
 }
