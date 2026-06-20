@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/dd4df027b40e789280a86488779085311b600ef1",
-        "commitHash": "dd4df027b40e789280a86488779085311b600ef1",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27851763523"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/e78bd7c44a9aec5d8d53447b79113b0f89543cf3",
+        "commitHash": "e78bd7c44a9aec5d8d53447b79113b0f89543cf3",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27853774627"
       },
       "gitCommit": {
-        "shortHash": "dd4df02",
-        "hash": "dd4df027b40e789280a86488779085311b600ef1",
-        "subject": "fix(sort): reject renaming a finalized result with 409 (purses-gmn) (#210)",
-        "body": "fix(sort): reject renaming a finalized result with 409 (purses-gmn) (#210)\n\nA finalized sort-result is fully immutable, including its name — mirror the\nitem-level 526 guards. The PATCH handler on /api/sort-results/[id] now returns\n409 \"Result is finalized\" before calling updateResult when the resolved\nresult's status is finalized; draft results still rename fine.\n\nThe finalize page redirects an already-finalized result to its read-only view\nso the rename+finalize form (both now 409) is never presented.\n\nTests: unit PATCH-finalized-409 (update not called) + un-mocked DB integration\nproof (real PATCH on a finalized result -> 409, name unchanged). Doc: API.md\nGET·PATCH·DELETE /api/sort-results/[id] notes the PATCH 409.\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "e78bd7c",
+        "hash": "e78bd7c44a9aec5d8d53447b79113b0f89543cf3",
+        "subject": "fix: atomic result materialization via withTransaction (purses-nea) (#212)",
+        "body": "fix: atomic result materialization via withTransaction (purses-nea) (#212)\n\n* docs(spec): transactional result materialization (purses-nea)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): nea rev-2 — fold Data+Architect spec review (testability restructure, PgBouncer, retry predicate)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): nea — fold re-review (all 4 constructor sites; cloneItemsFrom wording)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(plan): nea transactional materialization (4 TDD tasks)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* refactor(repo): split SortResultRepository.create into insertWithNumber + retry wrapper (export isResultNumberConflict)\n\nExtract a single-INSERT insertWithNumber (caller-supplied number, no\nrecompute, no retry) and re-implement create as a thin wrapper that\nrecomputes getNextResultNumber each attempt and retries on the exact\nisResultNumberConflict predicate (now exported, single source of truth).\nAdd ResultNumberExhaustedError for the service's whole-tx retry to throw\non exhaustion. Fix stale neon-http no-long-transaction comment.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(sort): extract pure rankPreferencesToItems + cloneItemsFrom\n\nPure, DB-free materialization logic unit-tested directly: rank by score\ndesc with 0-based computedRank and rankBucket mapping; clone computed\nfields into the create-input shape (no manual overrides). Mirrors the\ncurrent inline logic in createDraftResult/supersedeResult ahead of the\ntransactional rewire.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): materialize results atomically via withTransaction (purses-nea)\n\ncreateDraftResult + supersedeResult now write the result row + all item\nrows inside a single transaction via a shared createResultWithItems\nprimitive. A mid-materialization failure (e.g. an item-INSERT FK 23503)\nrolls the whole transaction back — no partial draft. The (collection,\nnumber) race is retried at the transaction boundary, recomputing the\nnumber each attempt, gated on the shared isResultNumberConflict\npredicate; exhaustion throws ResultNumberExhaustedError.\n\nSortResultService gains a db constructor param (4th); all four\nconstructing routes + the e2e seed pass it. Materialization writes use\nONLY tx-bound repos (new SortResultRepository(tx) / SortResultItemRepository(tx)),\nnever the injected repos.\n\nTests: un-mocked integration rollback proof (collection-scoped emptiness)\nin sort-pipeline.integration.test.ts is RED before / GREEN after; route +\nservice unit tests use a fakeTxDb() helper whose .transaction runs the\ncallback; retired the now-bypassed injected-repo write assertions in\nfavor of tx-bound-write + guard assertions.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): throw ResultNumberExhaustedError on number-allocation exhaustion + test (purses-nea review)\n\nThe retry catch threw the raw 23505 on the final attempt, so the\nspec-mandated ResultNumberExhaustedError was unreachable. Move the named\nthrow into the conflict branch (continue while attempt<4, else throw the\ndistinct error); non-conflict errors still propagate unchanged. Trailing\nthrow kept as a defensive TS-return-type fallback.\n\nAdds a unit test rejecting insertWithNumber 5x with a real-shaped 23505\nconflict and asserting createDraftResult rejects with\nResultNumberExhaustedError (was: raw 23505 propagated).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph for nea\n\n* docs(arch): note transactional result materialization (purses-nea, first real transaction)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(api): note atomic materialization on POST + supersede (purses-nea)\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1781909092000
+          "time": 1781913360000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1781909092000
+          "time": 1781913360000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/dd4df027b40e789280a86488779085311b600ef1",
-            "commitHash": "dd4df027b40e789280a86488779085311b600ef1",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27851763523"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/e78bd7c44a9aec5d8d53447b79113b0f89543cf3",
+            "commitHash": "e78bd7c44a9aec5d8d53447b79113b0f89543cf3",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27853774627"
           },
           "gitCommit": {
-            "shortHash": "dd4df02",
-            "hash": "dd4df027b40e789280a86488779085311b600ef1",
-            "subject": "fix(sort): reject renaming a finalized result with 409 (purses-gmn) (#210)",
-            "body": "fix(sort): reject renaming a finalized result with 409 (purses-gmn) (#210)\n\nA finalized sort-result is fully immutable, including its name — mirror the\nitem-level 526 guards. The PATCH handler on /api/sort-results/[id] now returns\n409 \"Result is finalized\" before calling updateResult when the resolved\nresult's status is finalized; draft results still rename fine.\n\nThe finalize page redirects an already-finalized result to its read-only view\nso the rename+finalize form (both now 409) is never presented.\n\nTests: unit PATCH-finalized-409 (update not called) + un-mocked DB integration\nproof (real PATCH on a finalized result -> 409, name unchanged). Doc: API.md\nGET·PATCH·DELETE /api/sort-results/[id] notes the PATCH 409.\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "e78bd7c",
+            "hash": "e78bd7c44a9aec5d8d53447b79113b0f89543cf3",
+            "subject": "fix: atomic result materialization via withTransaction (purses-nea) (#212)",
+            "body": "fix: atomic result materialization via withTransaction (purses-nea) (#212)\n\n* docs(spec): transactional result materialization (purses-nea)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): nea rev-2 — fold Data+Architect spec review (testability restructure, PgBouncer, retry predicate)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): nea — fold re-review (all 4 constructor sites; cloneItemsFrom wording)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(plan): nea transactional materialization (4 TDD tasks)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* refactor(repo): split SortResultRepository.create into insertWithNumber + retry wrapper (export isResultNumberConflict)\n\nExtract a single-INSERT insertWithNumber (caller-supplied number, no\nrecompute, no retry) and re-implement create as a thin wrapper that\nrecomputes getNextResultNumber each attempt and retries on the exact\nisResultNumberConflict predicate (now exported, single source of truth).\nAdd ResultNumberExhaustedError for the service's whole-tx retry to throw\non exhaustion. Fix stale neon-http no-long-transaction comment.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(sort): extract pure rankPreferencesToItems + cloneItemsFrom\n\nPure, DB-free materialization logic unit-tested directly: rank by score\ndesc with 0-based computedRank and rankBucket mapping; clone computed\nfields into the create-input shape (no manual overrides). Mirrors the\ncurrent inline logic in createDraftResult/supersedeResult ahead of the\ntransactional rewire.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): materialize results atomically via withTransaction (purses-nea)\n\ncreateDraftResult + supersedeResult now write the result row + all item\nrows inside a single transaction via a shared createResultWithItems\nprimitive. A mid-materialization failure (e.g. an item-INSERT FK 23503)\nrolls the whole transaction back — no partial draft. The (collection,\nnumber) race is retried at the transaction boundary, recomputing the\nnumber each attempt, gated on the shared isResultNumberConflict\npredicate; exhaustion throws ResultNumberExhaustedError.\n\nSortResultService gains a db constructor param (4th); all four\nconstructing routes + the e2e seed pass it. Materialization writes use\nONLY tx-bound repos (new SortResultRepository(tx) / SortResultItemRepository(tx)),\nnever the injected repos.\n\nTests: un-mocked integration rollback proof (collection-scoped emptiness)\nin sort-pipeline.integration.test.ts is RED before / GREEN after; route +\nservice unit tests use a fakeTxDb() helper whose .transaction runs the\ncallback; retired the now-bypassed injected-repo write assertions in\nfavor of tx-bound-write + guard assertions.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): throw ResultNumberExhaustedError on number-allocation exhaustion + test (purses-nea review)\n\nThe retry catch threw the raw 23505 on the final attempt, so the\nspec-mandated ResultNumberExhaustedError was unreachable. Move the named\nthrow into the conflict branch (continue while attempt<4, else throw the\ndistinct error); non-conflict errors still propagate unchanged. Trailing\nthrow kept as a defensive TS-return-type fallback.\n\nAdds a unit test rejecting insertWithNumber 5x with a real-shaped 23505\nconflict and asserting createDraftResult rejects with\nResultNumberExhaustedError (was: raw 23505 propagated).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph for nea\n\n* docs(arch): note transactional result materialization (purses-nea, first real transaction)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(api): note atomic materialization on POST + supersede (purses-nea)\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781909092000
+              "time": 1781913360000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781909092000
+              "time": 1781913360000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/dd4df027b40e789280a86488779085311b600ef1",
-            "commitHash": "dd4df027b40e789280a86488779085311b600ef1",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27851763523"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/e78bd7c44a9aec5d8d53447b79113b0f89543cf3",
+            "commitHash": "e78bd7c44a9aec5d8d53447b79113b0f89543cf3",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27853774627"
           },
           "gitCommit": {
-            "shortHash": "dd4df02",
-            "hash": "dd4df027b40e789280a86488779085311b600ef1",
-            "subject": "fix(sort): reject renaming a finalized result with 409 (purses-gmn) (#210)",
-            "body": "fix(sort): reject renaming a finalized result with 409 (purses-gmn) (#210)\n\nA finalized sort-result is fully immutable, including its name — mirror the\nitem-level 526 guards. The PATCH handler on /api/sort-results/[id] now returns\n409 \"Result is finalized\" before calling updateResult when the resolved\nresult's status is finalized; draft results still rename fine.\n\nThe finalize page redirects an already-finalized result to its read-only view\nso the rename+finalize form (both now 409) is never presented.\n\nTests: unit PATCH-finalized-409 (update not called) + un-mocked DB integration\nproof (real PATCH on a finalized result -> 409, name unchanged). Doc: API.md\nGET·PATCH·DELETE /api/sort-results/[id] notes the PATCH 409.\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "e78bd7c",
+            "hash": "e78bd7c44a9aec5d8d53447b79113b0f89543cf3",
+            "subject": "fix: atomic result materialization via withTransaction (purses-nea) (#212)",
+            "body": "fix: atomic result materialization via withTransaction (purses-nea) (#212)\n\n* docs(spec): transactional result materialization (purses-nea)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): nea rev-2 — fold Data+Architect spec review (testability restructure, PgBouncer, retry predicate)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): nea — fold re-review (all 4 constructor sites; cloneItemsFrom wording)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(plan): nea transactional materialization (4 TDD tasks)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* refactor(repo): split SortResultRepository.create into insertWithNumber + retry wrapper (export isResultNumberConflict)\n\nExtract a single-INSERT insertWithNumber (caller-supplied number, no\nrecompute, no retry) and re-implement create as a thin wrapper that\nrecomputes getNextResultNumber each attempt and retries on the exact\nisResultNumberConflict predicate (now exported, single source of truth).\nAdd ResultNumberExhaustedError for the service's whole-tx retry to throw\non exhaustion. Fix stale neon-http no-long-transaction comment.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(sort): extract pure rankPreferencesToItems + cloneItemsFrom\n\nPure, DB-free materialization logic unit-tested directly: rank by score\ndesc with 0-based computedRank and rankBucket mapping; clone computed\nfields into the create-input shape (no manual overrides). Mirrors the\ncurrent inline logic in createDraftResult/supersedeResult ahead of the\ntransactional rewire.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): materialize results atomically via withTransaction (purses-nea)\n\ncreateDraftResult + supersedeResult now write the result row + all item\nrows inside a single transaction via a shared createResultWithItems\nprimitive. A mid-materialization failure (e.g. an item-INSERT FK 23503)\nrolls the whole transaction back — no partial draft. The (collection,\nnumber) race is retried at the transaction boundary, recomputing the\nnumber each attempt, gated on the shared isResultNumberConflict\npredicate; exhaustion throws ResultNumberExhaustedError.\n\nSortResultService gains a db constructor param (4th); all four\nconstructing routes + the e2e seed pass it. Materialization writes use\nONLY tx-bound repos (new SortResultRepository(tx) / SortResultItemRepository(tx)),\nnever the injected repos.\n\nTests: un-mocked integration rollback proof (collection-scoped emptiness)\nin sort-pipeline.integration.test.ts is RED before / GREEN after; route +\nservice unit tests use a fakeTxDb() helper whose .transaction runs the\ncallback; retired the now-bypassed injected-repo write assertions in\nfavor of tx-bound-write + guard assertions.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): throw ResultNumberExhaustedError on number-allocation exhaustion + test (purses-nea review)\n\nThe retry catch threw the raw 23505 on the final attempt, so the\nspec-mandated ResultNumberExhaustedError was unreachable. Move the named\nthrow into the conflict branch (continue while attempt<4, else throw the\ndistinct error); non-conflict errors still propagate unchanged. Trailing\nthrow kept as a defensive TS-return-type fallback.\n\nAdds a unit test rejecting insertWithNumber 5x with a real-shaped 23505\nconflict and asserting createDraftResult rejects with\nResultNumberExhaustedError (was: raw 23505 propagated).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph for nea\n\n* docs(arch): note transactional result materialization (purses-nea, first real transaction)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(api): note atomic materialization on POST + supersede (purses-nea)\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781909092000
+              "time": 1781913360000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781909092000
+              "time": 1781913360000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/dd4df027b40e789280a86488779085311b600ef1",
-            "commitHash": "dd4df027b40e789280a86488779085311b600ef1",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27851763523"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/e78bd7c44a9aec5d8d53447b79113b0f89543cf3",
+            "commitHash": "e78bd7c44a9aec5d8d53447b79113b0f89543cf3",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27853774627"
           },
           "gitCommit": {
-            "shortHash": "dd4df02",
-            "hash": "dd4df027b40e789280a86488779085311b600ef1",
-            "subject": "fix(sort): reject renaming a finalized result with 409 (purses-gmn) (#210)",
-            "body": "fix(sort): reject renaming a finalized result with 409 (purses-gmn) (#210)\n\nA finalized sort-result is fully immutable, including its name — mirror the\nitem-level 526 guards. The PATCH handler on /api/sort-results/[id] now returns\n409 \"Result is finalized\" before calling updateResult when the resolved\nresult's status is finalized; draft results still rename fine.\n\nThe finalize page redirects an already-finalized result to its read-only view\nso the rename+finalize form (both now 409) is never presented.\n\nTests: unit PATCH-finalized-409 (update not called) + un-mocked DB integration\nproof (real PATCH on a finalized result -> 409, name unchanged). Doc: API.md\nGET·PATCH·DELETE /api/sort-results/[id] notes the PATCH 409.\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "e78bd7c",
+            "hash": "e78bd7c44a9aec5d8d53447b79113b0f89543cf3",
+            "subject": "fix: atomic result materialization via withTransaction (purses-nea) (#212)",
+            "body": "fix: atomic result materialization via withTransaction (purses-nea) (#212)\n\n* docs(spec): transactional result materialization (purses-nea)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): nea rev-2 — fold Data+Architect spec review (testability restructure, PgBouncer, retry predicate)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): nea — fold re-review (all 4 constructor sites; cloneItemsFrom wording)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(plan): nea transactional materialization (4 TDD tasks)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* refactor(repo): split SortResultRepository.create into insertWithNumber + retry wrapper (export isResultNumberConflict)\n\nExtract a single-INSERT insertWithNumber (caller-supplied number, no\nrecompute, no retry) and re-implement create as a thin wrapper that\nrecomputes getNextResultNumber each attempt and retries on the exact\nisResultNumberConflict predicate (now exported, single source of truth).\nAdd ResultNumberExhaustedError for the service's whole-tx retry to throw\non exhaustion. Fix stale neon-http no-long-transaction comment.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(sort): extract pure rankPreferencesToItems + cloneItemsFrom\n\nPure, DB-free materialization logic unit-tested directly: rank by score\ndesc with 0-based computedRank and rankBucket mapping; clone computed\nfields into the create-input shape (no manual overrides). Mirrors the\ncurrent inline logic in createDraftResult/supersedeResult ahead of the\ntransactional rewire.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): materialize results atomically via withTransaction (purses-nea)\n\ncreateDraftResult + supersedeResult now write the result row + all item\nrows inside a single transaction via a shared createResultWithItems\nprimitive. A mid-materialization failure (e.g. an item-INSERT FK 23503)\nrolls the whole transaction back — no partial draft. The (collection,\nnumber) race is retried at the transaction boundary, recomputing the\nnumber each attempt, gated on the shared isResultNumberConflict\npredicate; exhaustion throws ResultNumberExhaustedError.\n\nSortResultService gains a db constructor param (4th); all four\nconstructing routes + the e2e seed pass it. Materialization writes use\nONLY tx-bound repos (new SortResultRepository(tx) / SortResultItemRepository(tx)),\nnever the injected repos.\n\nTests: un-mocked integration rollback proof (collection-scoped emptiness)\nin sort-pipeline.integration.test.ts is RED before / GREEN after; route +\nservice unit tests use a fakeTxDb() helper whose .transaction runs the\ncallback; retired the now-bypassed injected-repo write assertions in\nfavor of tx-bound-write + guard assertions.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): throw ResultNumberExhaustedError on number-allocation exhaustion + test (purses-nea review)\n\nThe retry catch threw the raw 23505 on the final attempt, so the\nspec-mandated ResultNumberExhaustedError was unreachable. Move the named\nthrow into the conflict branch (continue while attempt<4, else throw the\ndistinct error); non-conflict errors still propagate unchanged. Trailing\nthrow kept as a defensive TS-return-type fallback.\n\nAdds a unit test rejecting insertWithNumber 5x with a real-shaped 23505\nconflict and asserting createDraftResult rejects with\nResultNumberExhaustedError (was: raw 23505 propagated).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph for nea\n\n* docs(arch): note transactional result materialization (purses-nea, first real transaction)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(api): note atomic materialization on POST + supersede (purses-nea)\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781909092000
+              "time": 1781913360000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781909092000
+              "time": 1781913360000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/dd4df027b40e789280a86488779085311b600ef1",
-            "commitHash": "dd4df027b40e789280a86488779085311b600ef1",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27851763523"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/e78bd7c44a9aec5d8d53447b79113b0f89543cf3",
+            "commitHash": "e78bd7c44a9aec5d8d53447b79113b0f89543cf3",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27853774627"
           },
           "gitCommit": {
-            "shortHash": "dd4df02",
-            "hash": "dd4df027b40e789280a86488779085311b600ef1",
-            "subject": "fix(sort): reject renaming a finalized result with 409 (purses-gmn) (#210)",
-            "body": "fix(sort): reject renaming a finalized result with 409 (purses-gmn) (#210)\n\nA finalized sort-result is fully immutable, including its name — mirror the\nitem-level 526 guards. The PATCH handler on /api/sort-results/[id] now returns\n409 \"Result is finalized\" before calling updateResult when the resolved\nresult's status is finalized; draft results still rename fine.\n\nThe finalize page redirects an already-finalized result to its read-only view\nso the rename+finalize form (both now 409) is never presented.\n\nTests: unit PATCH-finalized-409 (update not called) + un-mocked DB integration\nproof (real PATCH on a finalized result -> 409, name unchanged). Doc: API.md\nGET·PATCH·DELETE /api/sort-results/[id] notes the PATCH 409.\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "e78bd7c",
+            "hash": "e78bd7c44a9aec5d8d53447b79113b0f89543cf3",
+            "subject": "fix: atomic result materialization via withTransaction (purses-nea) (#212)",
+            "body": "fix: atomic result materialization via withTransaction (purses-nea) (#212)\n\n* docs(spec): transactional result materialization (purses-nea)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): nea rev-2 — fold Data+Architect spec review (testability restructure, PgBouncer, retry predicate)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(spec): nea — fold re-review (all 4 constructor sites; cloneItemsFrom wording)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(plan): nea transactional materialization (4 TDD tasks)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* refactor(repo): split SortResultRepository.create into insertWithNumber + retry wrapper (export isResultNumberConflict)\n\nExtract a single-INSERT insertWithNumber (caller-supplied number, no\nrecompute, no retry) and re-implement create as a thin wrapper that\nrecomputes getNextResultNumber each attempt and retries on the exact\nisResultNumberConflict predicate (now exported, single source of truth).\nAdd ResultNumberExhaustedError for the service's whole-tx retry to throw\non exhaustion. Fix stale neon-http no-long-transaction comment.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(sort): extract pure rankPreferencesToItems + cloneItemsFrom\n\nPure, DB-free materialization logic unit-tested directly: rank by score\ndesc with 0-based computedRank and rankBucket mapping; clone computed\nfields into the create-input shape (no manual overrides). Mirrors the\ncurrent inline logic in createDraftResult/supersedeResult ahead of the\ntransactional rewire.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): materialize results atomically via withTransaction (purses-nea)\n\ncreateDraftResult + supersedeResult now write the result row + all item\nrows inside a single transaction via a shared createResultWithItems\nprimitive. A mid-materialization failure (e.g. an item-INSERT FK 23503)\nrolls the whole transaction back — no partial draft. The (collection,\nnumber) race is retried at the transaction boundary, recomputing the\nnumber each attempt, gated on the shared isResultNumberConflict\npredicate; exhaustion throws ResultNumberExhaustedError.\n\nSortResultService gains a db constructor param (4th); all four\nconstructing routes + the e2e seed pass it. Materialization writes use\nONLY tx-bound repos (new SortResultRepository(tx) / SortResultItemRepository(tx)),\nnever the injected repos.\n\nTests: un-mocked integration rollback proof (collection-scoped emptiness)\nin sort-pipeline.integration.test.ts is RED before / GREEN after; route +\nservice unit tests use a fakeTxDb() helper whose .transaction runs the\ncallback; retired the now-bypassed injected-repo write assertions in\nfavor of tx-bound-write + guard assertions.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(sort): throw ResultNumberExhaustedError on number-allocation exhaustion + test (purses-nea review)\n\nThe retry catch threw the raw 23505 on the final attempt, so the\nspec-mandated ResultNumberExhaustedError was unreachable. Move the named\nthrow into the conflict branch (continue while attempt<4, else throw the\ndistinct error); non-conflict errors still propagate unchanged. Trailing\nthrow kept as a defensive TS-return-type fallback.\n\nAdds a unit test rejecting insertWithNumber 5x with a real-shaped 23505\nconflict and asserting createDraftResult rejects with\nResultNumberExhaustedError (was: raw 23505 propagated).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph for nea\n\n* docs(arch): note transactional result materialization (purses-nea, first real transaction)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs(api): note atomic materialization on POST + supersede (purses-nea)\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781909092000
+              "time": 1781913360000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781909092000
+              "time": 1781913360000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 940,
+                  "duration": 951,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:47:40.455Z",
+                  "startTime": "2026-06-19T23:58:55.050Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -303,12 +303,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 8571,
+                  "duration": 9389,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:47:42.061Z",
+                  "startTime": "2026-06-19T23:58:56.676Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -337,12 +337,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2166,
+                  "duration": 2186,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:47:51.598Z",
+                  "startTime": "2026-06-19T23:59:07.052Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -371,12 +371,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1606,
+                  "duration": 1870,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:48:24.553Z",
+                  "startTime": "2026-06-20T00:00:10.459Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -405,12 +405,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2671,
+                  "duration": 2618,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:48:26.339Z",
+                  "startTime": "2026-06-20T00:00:12.715Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -439,12 +439,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1222,
+                  "duration": 1232,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:49:25.849Z",
+                  "startTime": "2026-06-20T00:00:48.984Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -473,12 +473,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1208,
+                  "duration": 1176,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:49:27.879Z",
+                  "startTime": "2026-06-20T00:00:51.079Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -515,12 +515,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1656,
+                  "duration": 1657,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:47:53.804Z",
+                  "startTime": "2026-06-19T23:59:09.290Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -549,12 +549,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1607,
+                  "duration": 1548,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:47:55.525Z",
+                  "startTime": "2026-06-19T23:59:10.993Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -583,12 +583,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2393,
+                  "duration": 2192,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:47:57.157Z",
+                  "startTime": "2026-06-19T23:59:12.570Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -617,12 +617,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2342,
+                  "duration": 1884,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:48:29.061Z",
+                  "startTime": "2026-06-20T00:00:15.364Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -651,12 +651,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2428,
+                  "duration": 1878,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:48:31.473Z",
+                  "startTime": "2026-06-20T00:00:17.319Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -685,12 +685,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3610,
+                  "duration": 2209,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:48:33.937Z",
+                  "startTime": "2026-06-20T00:00:19.235Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -719,12 +719,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 743,
+                  "duration": 727,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:49:29.151Z",
+                  "startTime": "2026-06-20T00:00:52.313Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -753,12 +753,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 737,
+                  "duration": 869,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:49:29.931Z",
+                  "startTime": "2026-06-20T00:00:53.086Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -792,7 +792,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:49:30.694Z",
+                  "startTime": "2026-06-20T00:00:53.987Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -836,12 +836,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 997,
+                      "duration": 1138,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:47:59.587Z",
+                      "startTime": "2026-06-19T23:59:14.797Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -870,12 +870,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1512,
+                      "duration": 1568,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:48:00.715Z",
+                      "startTime": "2026-06-19T23:59:16.044Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -904,12 +904,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1391,
+                      "duration": 1363,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:48:02.259Z",
+                      "startTime": "2026-06-19T23:59:17.637Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -938,12 +938,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1869,
+                      "duration": 1023,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:48:37.639Z",
+                      "startTime": "2026-06-20T00:00:21.503Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -972,12 +972,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3273,
+                      "duration": 1827,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:48:45.878Z",
+                      "startTime": "2026-06-20T00:00:22.766Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1006,12 +1006,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1157,
+                      "duration": 1356,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:48:49.188Z",
+                      "startTime": "2026-06-20T00:00:24.629Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1040,12 +1040,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 488,
+                      "duration": 541,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:31.834Z",
+                      "startTime": "2026-06-20T00:00:55.131Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1074,12 +1074,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 745,
+                      "duration": 855,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:32.392Z",
+                      "startTime": "2026-06-20T00:00:55.755Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1108,12 +1108,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 447,
+                      "duration": 442,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:33.155Z",
+                      "startTime": "2026-06-20T00:00:56.627Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1152,12 +1152,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1281,
+                  "duration": 859,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:48:03.710Z",
+                  "startTime": "2026-06-19T23:59:19.046Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1186,12 +1186,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1127,
+                  "duration": 948,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:48:05.072Z",
+                  "startTime": "2026-06-19T23:59:19.998Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1220,12 +1220,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 950,
+                  "duration": 1064,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:48:50.491Z",
+                  "startTime": "2026-06-20T00:00:26.044Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1254,12 +1254,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2333,
+                  "duration": 1260,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:48:52.287Z",
+                  "startTime": "2026-06-20T00:00:27.188Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1288,12 +1288,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 285,
+                  "duration": 306,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:49:33.642Z",
+                  "startTime": "2026-06-20T00:00:57.096Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1322,12 +1322,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 538,
+                  "duration": 533,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:49:33.964Z",
+                  "startTime": "2026-06-20T00:00:57.434Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1371,12 +1371,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1873,
+                      "duration": 1934,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:48:06.247Z",
+                      "startTime": "2026-06-19T23:59:20.980Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1405,12 +1405,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2828,
+                      "duration": 1292,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:48:54.690Z",
+                      "startTime": "2026-06-20T00:00:28.503Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1439,12 +1439,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 556,
+                      "duration": 575,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:34.518Z",
+                      "startTime": "2026-06-20T00:00:57.984Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1483,12 +1483,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1037,
+                  "duration": 1036,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:48:08.208Z",
+                  "startTime": "2026-06-19T23:59:23.012Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1517,12 +1517,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 849,
+                  "duration": 812,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:48:09.270Z",
+                  "startTime": "2026-06-19T23:59:24.079Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1551,12 +1551,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 866,
+                  "duration": 791,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:48:10.143Z",
+                  "startTime": "2026-06-19T23:59:24.913Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1585,12 +1585,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1131,
+                  "duration": 1061,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:48:58.859Z",
+                  "startTime": "2026-06-20T00:00:30.042Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1619,12 +1619,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1072,
+                  "duration": 1056,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:49:00.030Z",
+                  "startTime": "2026-06-20T00:00:31.140Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1653,12 +1653,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1219,
+                  "duration": 1096,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:49:01.130Z",
+                  "startTime": "2026-06-20T00:00:32.231Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1687,12 +1687,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 247,
+                  "duration": 269,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:49:35.133Z",
+                  "startTime": "2026-06-20T00:00:58.617Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1721,12 +1721,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 254,
+                  "duration": 285,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:49:35.397Z",
+                  "startTime": "2026-06-20T00:00:58.902Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1755,12 +1755,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 259,
+                  "duration": 285,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-19T22:49:35.663Z",
+                  "startTime": "2026-06-20T00:00:59.202Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1804,12 +1804,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1198,
+                      "duration": 1275,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:48:11.038Z",
+                      "startTime": "2026-06-19T23:59:25.727Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1838,12 +1838,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 947,
+                      "duration": 1718,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:02.391Z",
+                      "startTime": "2026-06-20T00:00:33.363Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1872,12 +1872,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 408,
+                      "duration": 457,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:35.940Z",
+                      "startTime": "2026-06-20T00:00:59.506Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1923,12 +1923,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1205,
+                      "duration": 1198,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:48:12.317Z",
+                      "startTime": "2026-06-19T23:59:27.060Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1957,12 +1957,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1476,
+                      "duration": 1426,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:48:13.593Z",
+                      "startTime": "2026-06-19T23:59:28.333Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1991,12 +1991,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1311,
+                      "duration": 1511,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:48:15.114Z",
+                      "startTime": "2026-06-19T23:59:29.777Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2025,12 +2025,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1476,
+                      "duration": 1528,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:03.501Z",
+                      "startTime": "2026-06-20T00:00:35.201Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2059,12 +2059,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2153,
+                      "duration": 1729,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:05.498Z",
+                      "startTime": "2026-06-20T00:00:36.805Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2093,12 +2093,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1657,
+                      "duration": 1382,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:07.676Z",
+                      "startTime": "2026-06-20T00:00:38.568Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2127,12 +2127,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 439,
+                      "duration": 468,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:36.402Z",
+                      "startTime": "2026-06-20T00:01:00.012Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2161,12 +2161,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 652,
+                      "duration": 715,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:36.881Z",
+                      "startTime": "2026-06-20T00:01:00.520Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2195,12 +2195,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 464,
+                      "duration": 523,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:37.554Z",
+                      "startTime": "2026-06-20T00:01:01.259Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2237,12 +2237,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3865,
+                      "duration": 3847,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:48:16.464Z",
+                      "startTime": "2026-06-19T23:59:31.310Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2271,12 +2271,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1508,
+                      "duration": 1586,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:48:20.412Z",
+                      "startTime": "2026-06-19T23:59:35.217Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2305,12 +2305,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4318,
+                      "duration": 4363,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:09.369Z",
+                      "startTime": "2026-06-20T00:00:39.986Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2339,12 +2339,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1792,
+                      "duration": 1539,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:13.789Z",
+                      "startTime": "2026-06-20T00:00:44.419Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2373,12 +2373,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1453,
+                      "duration": 1524,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:38.037Z",
+                      "startTime": "2026-06-20T00:01:01.800Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2407,12 +2407,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 484,
+                      "duration": 444,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:39.531Z",
+                      "startTime": "2026-06-20T00:01:03.365Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2449,12 +2449,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1132,
+                      "duration": 980,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:48:21.943Z",
+                      "startTime": "2026-06-19T23:59:36.826Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2483,12 +2483,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 787,
+                      "duration": 1444,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:48:23.104Z",
+                      "startTime": "2026-06-19T23:59:37.848Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2517,12 +2517,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1051,
+                      "duration": 1322,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:15.617Z",
+                      "startTime": "2026-06-20T00:00:46.009Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2551,12 +2551,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1226,
+                      "duration": 693,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:16.695Z",
+                      "startTime": "2026-06-20T00:00:47.362Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2585,12 +2585,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 244,
+                      "duration": 268,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:40.035Z",
+                      "startTime": "2026-06-20T00:01:03.831Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2619,12 +2619,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 248,
+                      "duration": 254,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-19T22:49:40.295Z",
+                      "startTime": "2026-06-20T00:01:04.119Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2644,8 +2644,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-19T22:46:33.848Z",
-    "duration": 186977.601,
+    "startTime": "2026-06-19T23:57:47.273Z",
+    "duration": 197388.46000000002,
     "expected": 67,
     "skipped": 0,
     "unexpected": 0,
