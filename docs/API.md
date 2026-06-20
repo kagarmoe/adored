@@ -74,6 +74,7 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 | POST | `/api/collections/[id]/archive` | manager |
 | POST | `/api/collections/[id]/restore` | manager |
 | POST | `/api/collections/[id]/purge` | owner |
+| GET | `/api/collections/[id]/audit` | owner |
 
 ### collection items
 | Method | Path | Access |
@@ -185,6 +186,9 @@ Returns the `Collection` by id **without a membership check** — any signed-in 
 ### `POST /api/collections/[id]/purge`
 `requireAuth` + `isOwner` → `403`. **Body:** `{ confirm }`. Permanently removes the collection (and its blobs). `400` invalid JSON.
 
+### `GET /api/collections/[id]/audit`
+`requireAuth` + **owner-only** `requireApiCollectionOwner` (`404` absent *before* `403` non-owner — the existence-oracle convention; a member-not-owner gets `403`). Returns the collection's permanent-purge trail as `AuditLog[]`, **newest-first** (`created_at DESC, id DESC`). `?limit=` is clamped server-side (default `100`, hard cap `200`; `NaN`/`≤0`/absent → `100`) — never an unbounded scan. Append-only; rows carry only ids + counts (no PII). `200 []` when empty; `401`/`404`/`403`. (`purses-ite`.)
+
 ## collection items
 
 ### `GET·POST /api/collections/[id]/items`
@@ -273,7 +277,7 @@ All routes here enforce only authentication — **no collection membership/owner
 `requireAuth` only. Restores a soft-deleted item.
 
 ### `POST /api/items/[id]/purge`
-`requireAuth` → resolve the item **including soft-deleted** (`findByIdIncludingDeleted`; `404` if absent) → **owner-only** `requireApiCollectionOwner(item.collectionId)` (`404`/`403`) → **only then** parse `{ confirm: "PURGE" }` (zod; `400` invalid JSON, `400` if confirm missing/wrong). Authz precedes body validation deliberately — a non-owner with a malformed body gets `403`, never a `400` that would leak the item's existence. On success, `ItemPurgeService` permanently **hard-deletes the item + its `CollectionPreferenceItem` rows + its photos atomically** (children-first in one `withTransaction`, since the `items` FK has no `ON DELETE CASCADE`), then deletes the photo **blobs best-effort after commit** (a blob `del` failure is logged, never rolls back the committed delete — orphans are inert/sweepable). **`409`** (`ItemInResultError`) if the item is referenced by **any** sort result (draft or finalized) — the owner must first detach drafts via `remove-from-sorts`; finalized membership is a hard block. `200 { message: "Item purged" }`.
+`requireAuth` → resolve the item **including soft-deleted** (`findByIdIncludingDeleted`; `404` if absent) → **owner-only** `requireApiCollectionOwner(item.collectionId)` (`404`/`403`) → **only then** parse `{ confirm: "PURGE" }` (zod; `400` invalid JSON, `400` if confirm missing/wrong). Authz precedes body validation deliberately — a non-owner with a malformed body gets `403`, never a `400` that would leak the item's existence. On success, `ItemPurgeService` permanently **hard-deletes the item + its `CollectionPreferenceItem` rows + its photos atomically** (children-first in one `withTransaction`, since the `items` FK has no `ON DELETE CASCADE`) — and **writes one append-only `audit_log` row in the same transaction** (`item.purge`, actor from the session, photo/preference counts; `purses-ite`), so a committed purge always has its audit record. Then deletes the photo **blobs best-effort after commit** (a blob `del` failure is logged, never rolls back the committed delete — orphans are inert/sweepable). **`409`** (`ItemInResultError`) if the item is referenced by **any** sort result (draft or finalized) — the owner must first detach drafts via `remove-from-sorts`; finalized membership is a hard block. `200 { message: "Item purged" }`.
 
 ### `POST /api/items/[id]/remove-from-sorts`
 `requireAuth` → resolve item including soft-deleted (`404`) → **owner-only** `requireApiCollectionOwner` (`404`/`403`). No confirm body. Bulk-detaches the item from **every draft** sort result across all curators in one `withTransaction` (purge-prep companion); **finalized results and the curator's `CollectionPreferenceItem` rows are left untouched**. `200 { removed, remainingInFinalized }` — count detached from drafts, and how many finalized results still reference it. This is a deliberate, scoped **t9l exception**: results are normally curator-private, but purge is a collection-owner op, so clearing draft sorts is its necessary consequence.
