@@ -70,12 +70,26 @@ describe("ItemPhotoCarousel", () => {
     expect(screen.getByRole("button", { name: /previous photo/i })).toHaveAttribute("aria-disabled", "false");
   });
 
-  it("moves with ArrowRight/ArrowLeft and announces the position", () => {
+  it("is itself focusable and moves with ArrowRight/ArrowLeft, announcing position", () => {
     const { container } = render(<ItemPhotoCarousel photos={mk(3)} {...props} />);
     const group = screen.getByRole("group");
-    expect(container.querySelector('[role="status"]')).toHaveTextContent("Photo 1 of 3");
+    group.focus();
+    expect(group).toHaveFocus(); // tabIndex=0 → the carousel region is a real keyboard target
+    expect(within(container).getByRole("status")).toHaveTextContent("Photo 1 of 3");
     fireEvent.keyDown(group, { key: "ArrowRight" });
     expect(within(container).getByRole("status")).toHaveTextContent("Photo 2 of 3");
+    fireEvent.keyDown(group, { key: "ArrowLeft" });
+    expect(within(container).getByRole("status")).toHaveTextContent("Photo 1 of 3");
+  });
+
+  it("jumps to a photo when its dot is tapped", async () => {
+    const user = userEvent.setup();
+    render(<ItemPhotoCarousel photos={mk(3)} {...props} />);
+    await user.click(screen.getByRole("button", { name: /go to photo 3/i }));
+    expect(currentImgSrc()).toContain("/photos/p3/");
+    const dots = screen.getAllByRole("button", { name: /go to photo/i });
+    expect(dots[2]).toHaveAttribute("aria-current", "true");
+    expect(dots[0]).toHaveAttribute("aria-current", "false");
   });
 
   it("offers the rotate/zoom view control on the current photo", () => {

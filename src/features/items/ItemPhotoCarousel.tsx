@@ -24,8 +24,8 @@ export function ItemPhotoCarousel({ photos, collectionId, itemName, addPhotosHre
 
   if (photos.length === 0) {
     return (
-      <div className="flex aspect-[4/3] flex-col items-center justify-center gap-3 rounded-card bg-ground p-6 text-center">
-        <p className="text-ink-soft">No photos yet — add a few whenever you like.</p>
+      <div className="flex aspect-[4/3] flex-col items-center justify-center gap-3 rounded-card bg-surface p-6 text-center ring-1 ring-hairline">
+        <p className="text-ink-soft">Add photos whenever you like — they help you see what you love.</p>
         <Link href={addPhotosHref} className="text-primary underline underline-offset-2">
           Add photos
         </Link>
@@ -49,6 +49,8 @@ export function ItemPhotoCarousel({ photos, collectionId, itemName, addPhotosHre
       role="group"
       aria-roledescription="carousel"
       aria-label={`Photos of ${itemName}`}
+      tabIndex={0}
+      className="rounded-card outline-none focus-visible:ring-2 focus-visible:ring-primary"
       onKeyDown={(e) => {
         if (e.key === "ArrowLeft") {
           e.preventDefault();
@@ -91,7 +93,7 @@ export function ItemPhotoCarousel({ photos, collectionId, itemName, addPhotosHre
                   className="inline-flex h-11 w-11 items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   <span
-                    className={`block h-2 w-2 rounded-full ${i === current ? "bg-primary" : "bg-ink-soft/40"}`}
+                    className={`block h-2 w-2 rounded-full ${i === current ? "bg-primary" : "bg-ink-soft/70"}`}
                   />
                 </button>
               ))}
