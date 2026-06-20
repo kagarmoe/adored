@@ -54,11 +54,3 @@ export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
 }
-
-export async function apiDelete(path: string): Promise<void> {
-  return apiFetch<void>(path, {
-    method: "DELETE",
-  });
-}
-
-export { ApiError };

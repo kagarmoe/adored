@@ -25,18 +25,6 @@ export async function sessionEmail(page: Page): Promise<string | null> {
   return session?.user?.email ?? null;
 }
 
-/** Poll until a session for `expectedEmail` exists (default: any session). */
-export async function expectAuthenticated(
-  page: Page,
-  expectedEmail?: string,
-): Promise<void> {
-  await expect(async () => {
-    const email = await sessionEmail(page);
-    if (expectedEmail) expect(email).toBe(expectedEmail);
-    else expect(email).toBeTruthy();
-  }).toPass({ timeout: 15_000 });
-}
-
 /** Drive the real /login form. Waits for the credentials callback POST so we
  *  never race hydration (the client signIn handler must be attached first). */
 export async function submitLogin(

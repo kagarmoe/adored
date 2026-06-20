@@ -1,7 +1,7 @@
 export { Button, buttonVariants } from "./Button";
 export type { ButtonProps } from "./Button";
 
-export { Badge, badgeVariants } from "./Badge";
+export { Badge } from "./Badge";
 export type { BadgeProps } from "./Badge";
 
 export { Card } from "./Card";
@@ -28,12 +28,8 @@ export type { ErrorMessageProps } from "./ErrorMessage";
 export { EmptyState } from "./EmptyState";
 export type { EmptyStateProps } from "./EmptyState";
 
-export { ConfirmDialog } from "./ConfirmDialog";
-export type { ConfirmDialogProps } from "./ConfirmDialog";
-
 export { CardImage } from "./CardImage";
 
-export { ImageViewer } from "./ImageViewer";
 export type { ViewerPhoto } from "./ImageViewer";
 
 export { PhotoViewControl } from "./PhotoViewControl";
