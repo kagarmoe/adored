@@ -37,6 +37,7 @@ const baseArgs = {
   mimeType: "image/jpeg",
   photoId: "p1",
   updatedAt: new Date(1_700_000_000_000),
+  rotation: 0,
 };
 const req = (qs = "", headers: Record<string, string> = {}) =>
   new Request(`http://t/file${qs}`, { headers });
@@ -111,13 +112,44 @@ describe("servePhotoFile", () => {
     expect(a.headers.get("ETag")).not.toBe(b.headers.get("ETag"));
   });
 
-  it("auto-orients via EXIF so the resized image is upright (portrait stays portrait)", async () => {
+  it("auto-orients via EXIF so the resized image is upright (rotation 0 -> portrait)", async () => {
     mockBlob(exifPhoto); // orientation 6 -> displayed portrait 3024x4032
     const res = await servePhotoFile(baseArgs, req("?w=320"));
     const meta = await sharp(Buffer.from(await res.arrayBuffer())).metadata();
     expect(meta.width).toBe(320);
     expect(meta.height!).toBeGreaterThan(meta.width!); // .rotate() applied
     expect(meta.orientation).toBeUndefined(); // EXIF orientation tag stripped
+  });
+
+  it("composes a stored rotation ON TOP of EXIF orientation (not double-rotated)", async () => {
+    // exifPhoto auto-orients to portrait; +90 -> landscape; +180 -> portrait again.
+    mockBlob(exifPhoto);
+    const m90 = await sharp(
+      Buffer.from(await (await servePhotoFile({ ...baseArgs, rotation: 90 }, req("?w=320"))).arrayBuffer()),
+    ).metadata();
+    expect(m90.width!).toBeGreaterThan(m90.height!); // landscape — one further turn, not sideways-twice
+
+    mockBlob(exifPhoto);
+    const m180 = await sharp(
+      Buffer.from(await (await servePhotoFile({ ...baseArgs, rotation: 180 }, req("?w=320"))).arrayBuffer()),
+    ).metadata();
+    expect(m180.height!).toBeGreaterThan(m180.width!); // portrait
+  });
+
+  it("re-encodes & orients the passthrough (no ?w=) when rotation != 0", async () => {
+    mockBlob(exifPhoto);
+    const res = await servePhotoFile({ ...baseArgs, rotation: 90 }, req());
+    expect(res.headers.get("Content-Type")).toBe("image/webp"); // not the verbatim jpeg
+    const meta = await sharp(Buffer.from(await res.arrayBuffer())).metadata();
+    expect(meta.format).toBe("webp");
+  });
+
+  it("streams the passthrough verbatim when rotation === 0", async () => {
+    mockBlob(cc0, { contentType: "image/jpeg" });
+    const res = await servePhotoFile(baseArgs, req());
+    expect(res.headers.get("Content-Type")).toBe("image/jpeg");
+    const out = Buffer.from(await res.arrayBuffer());
+    expect(out.byteLength).toBe(cc0.byteLength);
   });
 
 });

@@ -44,6 +44,7 @@ const photo = {
   blobKey: "store/k.jpg",
   mimeType: "image/jpeg",
   updatedAt: new Date(1_700_000_000_000),
+  rotation: 0,
 };
 function req(headers: Record<string, string> = {}) {
   return new Request("http://localhost/file?w=640", { headers }) as any;
@@ -111,8 +112,18 @@ describe("GET item photo file", () => {
         mimeType: "image/jpeg",
         photoId: "p1",
         updatedAt: photo.updatedAt,
+        rotation: 0,
       },
       request,
+    );
+  });
+
+  it("forwards the photo's stored rotation (reads photo.rotation, not a constant)", async () => {
+    photoRepo.findById.mockResolvedValue({ ...photo, rotation: 270 });
+    await GET(req(), { params });
+    expect(mockServePhotoFile).toHaveBeenCalledWith(
+      expect.objectContaining({ rotation: 270 }),
+      expect.anything(),
     );
   });
 });

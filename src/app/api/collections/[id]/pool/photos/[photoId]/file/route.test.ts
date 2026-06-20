@@ -38,6 +38,7 @@ const pooledPhoto = {
   blobKey: "store/k.jpg",
   mimeType: "image/jpeg",
   updatedAt: new Date(1_700_000_000_000),
+  rotation: 0,
 };
 function req(headers: Record<string, string> = {}) {
   return new Request("http://localhost/file?w=320", { headers }) as any;
@@ -101,8 +102,18 @@ describe("GET pool photo file", () => {
         mimeType: "image/jpeg",
         photoId: "p1",
         updatedAt: pooledPhoto.updatedAt,
+        rotation: 0,
       },
       request,
+    );
+  });
+
+  it("forwards the pooled photo's stored rotation", async () => {
+    photoRepo.findById.mockResolvedValue({ ...pooledPhoto, rotation: 90 });
+    await GET(req(), { params: { id: "c1", photoId: "p1" } });
+    expect(mockServePhotoFile).toHaveBeenCalledWith(
+      expect.objectContaining({ rotation: 90 }),
+      expect.anything(),
     );
   });
 });

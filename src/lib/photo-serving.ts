@@ -19,6 +19,8 @@ interface ServeArgs {
   mimeType: string;
   photoId: string;
   updatedAt: Date;
+  /** Stored clockwise rotation (0|90|180|270), applied on top of EXIF auto-orient. */
+  rotation: number;
 }
 
 /** Strong ETag of the *variant identity*: photo + width + version. `updatedAt`
@@ -57,7 +59,7 @@ export async function readStreamCapped(
  * namespace). Call ONLY after the route's authz has passed.
  */
 export async function servePhotoFile(
-  { blobKey, mimeType, photoId, updatedAt }: ServeArgs,
+  { blobKey, mimeType, photoId, updatedAt, rotation }: ServeArgs,
   request: Request,
 ): Promise<NextResponse> {
   const wParam = new URL(request.url).searchParams.get("w");
@@ -85,12 +87,29 @@ export async function servePhotoFile(
     }
 
     if (width === null) {
-      return new NextResponse(result.stream, {
-        headers: {
-          "Content-Type": result.blob.contentType || mimeType,
-          "Cache-Control": CACHE_CONTROL,
-          ETag: etag,
-        },
+      // Passthrough stays a pure stream when there's nothing to apply. When a
+      // user rotation is stored we must re-encode so the original is orientation-
+      // correct too (otherwise /file without ?w= would serve the un-rotated image).
+      if (rotation === 0) {
+        return new NextResponse(result.stream, {
+          headers: {
+            "Content-Type": result.blob.contentType || mimeType,
+            "Cache-Control": CACHE_CONTROL,
+            ETag: etag,
+          },
+        });
+      }
+      const orig = await readStreamCapped(result.stream, RESIZE_MAX_SOURCE_BYTES);
+      if (!orig) {
+        return NextResponse.json({ error: "Image too large to process" }, { status: 400 });
+      }
+      const rotated = await sharp(orig, { limitInputPixels: LIMIT_INPUT_PIXELS, failOn: "truncated" })
+        .rotate()
+        .rotate(rotation)
+        .webp({ quality: 80 })
+        .toBuffer();
+      return new NextResponse(new Uint8Array(rotated), {
+        headers: { "Content-Type": "image/webp", "Cache-Control": CACHE_CONTROL, ETag: etag },
       });
     }
 
@@ -105,6 +124,7 @@ export async function servePhotoFile(
     }
     const out = await sharp(buf, { limitInputPixels: LIMIT_INPUT_PIXELS, failOn: "truncated" })
       .rotate() // EXIF auto-orient, then strips the orientation tag
+      .rotate(rotation) // user's stored clockwise turn on top (0 = no-op)
       .resize({ width, withoutEnlargement: true })
       .webp({ quality: 80 })
       .toBuffer();

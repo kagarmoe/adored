@@ -49,6 +49,7 @@ export async function GET(
         mimeType: photo.mimeType,
         photoId: photo.id,
         updatedAt: photo.updatedAt,
+        rotation: photo.rotation,
       },
       request
     );
