@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { getPhotoAssetUrl } from "@/lib/photos";
@@ -91,7 +92,9 @@ export function ImageViewer({ photo, onClose }: { photo: ViewerPhoto; onClose: (
     }
   };
 
-  return (
+  // Portal to <body>: card surfaces create stacking contexts (isolate), which
+  // would otherwise trap this fixed overlay beneath the page content.
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       onClick={(e) => {
@@ -132,7 +135,8 @@ export function ImageViewer({ photo, onClose }: { photo: ViewerPhoto; onClose: (
           {status}
         </p>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
