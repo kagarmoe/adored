@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button, Card } from "@/components/ui";
 import type { Photo } from "@/types";
 import Image from "next/image";
-import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
+import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { PhotoMoveBar, type MoveDestination, type MoveTarget } from "./PhotoMoveBar";
 
 interface PhotoGalleryProps {
@@ -173,7 +173,7 @@ export function PhotoGallery({
                 }`}
               >
                 <Image
-                  src={getPhotoAssetUrlForPhoto(photo, collectionId)}
+                  src={getPhotoAssetUrlForPhoto(photo, collectionId, { w: PHOTO_WIDTH.galleryTile })}
                   alt="Item photo"
                   fill
                   className="object-cover"

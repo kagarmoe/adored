@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/ui";
 import { CompareChoice } from "@/features/sorting/CompareChoice";
 import { selectNextPair } from "@/lib/pairwise-selection";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
-import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
+import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 
 interface ComparePageProps {
   params: { id: string; sessionNumber: string };
@@ -107,8 +107,8 @@ export default async function ComparePage({ params }: ComparePageProps) {
   const covers = await photoRepo.findCoverPhotosByItemIds([itemA.id, itemB.id]);
   const coverA = covers.get(itemA.id);
   const coverB = covers.get(itemB.id);
-  const heroA = coverA ? getPhotoAssetUrlForPhoto(coverA, collection.id) : undefined;
-  const heroB = coverB ? getPhotoAssetUrlForPhoto(coverB, collection.id) : undefined;
+  const heroA = coverA ? getPhotoAssetUrlForPhoto(coverA, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
+  const heroB = coverB ? getPhotoAssetUrlForPhoto(coverB, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
   const comparisonsMade = decisions.filter((d) => d.type === "pairwise_compare").length;
 
   return (

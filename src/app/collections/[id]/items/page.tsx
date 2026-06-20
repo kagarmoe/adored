@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
-import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
+import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
 import { Button, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
@@ -89,7 +89,7 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
                   key={item.id}
                   item={item}
                   collectionId={collection.slug ?? collection.id}
-                  heroPhotoUrl={cover ? getPhotoAssetUrlForPhoto(cover, collection.id) : undefined}
+                  heroPhotoUrl={cover ? getPhotoAssetUrlForPhoto(cover, collection.id, { w: PHOTO_WIDTH.card }) : undefined}
                 />
               );
             })}

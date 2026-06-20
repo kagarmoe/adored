@@ -7,7 +7,7 @@ import { SortResultItemRepository } from "@/server/repositories/implementations/
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
-import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
+import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
 import { Badge, Button, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
@@ -77,7 +77,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
   const covers = await new PhotoRepository(db).findCoverPhotosByItemIds(ranked.map((r) => r.item.id));
   const coverUrl = (itemId: string) => {
     const c = covers.get(itemId);
-    return c ? getPhotoAssetUrlForPhoto(c, collection.id) : undefined;
+    return c ? getPhotoAssetUrlForPhoto(c, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
   };
 
   return (

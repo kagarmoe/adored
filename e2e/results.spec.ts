@@ -33,7 +33,7 @@ test.describe("results page (renderer-only, seeded populated result)", () => {
   });
 
   test.beforeEach(async ({ page }) => {
-    await page.route("**/photos/**/file", (route) =>
+    await page.route("**/photos/**/file*", (route) =>
       route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/jpeg" }),
     );
   });

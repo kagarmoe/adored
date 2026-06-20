@@ -29,6 +29,16 @@ describe("PoolPhotoGrid selection + grouping", () => {
     expect(screen.queryByRole("button", { name: /make an item/i })).not.toBeInTheDocument();
   });
 
+  it("requests the resized pool-tile width (w=320) for every tile", () => {
+    const { container } = render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} />);
+    const imgs = Array.from(container.querySelectorAll("img"));
+    expect(imgs).toHaveLength(PHOTOS.length);
+    for (const img of imgs) {
+      expect(img.getAttribute("src")).toContain("/pool/photos/");
+      expect(img.getAttribute("src")).toContain("w=320");
+    }
+  });
+
   it("toggles selection and reflects the count; Clear deselects", async () => {
     const user = userEvent.setup();
     render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} />);
