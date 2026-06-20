@@ -38,4 +38,10 @@ export interface ISortResultItemRepository {
   // True iff ANY sort_result_item references the item (any result, any status).
   // The purge 409 guard — an item in any result cannot be purged.
   existsByItem(itemId: string): Promise<boolean>;
+  // Delete the item's result-items that belong to DRAFT results; returns the
+  // affected-row count. Owner-only purge-prep — finalized results are untouched.
+  deleteByItemInDraftResults(itemId: string): Promise<number>;
+  // Count the item's result-items whose parent result is FINALIZED (so the
+  // caller knows whether a purge can now succeed, or is finalized-blocked).
+  countByItemInFinalizedResults(itemId: string): Promise<number>;
 }

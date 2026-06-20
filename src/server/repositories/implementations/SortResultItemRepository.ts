@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, and, inArray, count } from "drizzle-orm";
 import type { Database } from "@/lib/db";
-import { sortResultItemsTable } from "@/lib/db/schema";
+import { sortResultItemsTable, sortResultsTable } from "@/lib/db/schema";
 import type { ISortResultItemRepository } from "../SortResultRepository";
 import type { SortResultItem } from "@/types";
 import { generateId } from "@/lib/id";
@@ -80,6 +80,49 @@ export class SortResultItemRepository implements ISortResultItemRepository {
       .where(eq(sortResultItemsTable.itemId, itemId))
       .limit(1);
     return row != null;
+  }
+
+  // Delete the item's result-items that belong to DRAFT results; returns the
+  // affected-row count (postgres-js rowCount). Owner-only purge-prep — finalized
+  // results are never matched. Mirrors: DELETE ... WHERE item_id=$1 AND
+  // sort_result_id IN (SELECT id FROM sort_results WHERE status='draft').
+  async deleteByItemInDraftResults(itemId: string): Promise<number> {
+    // RETURNING ids and counting them is driver-agnostic (postgres-js exposes
+    // affected-row count inconsistently across the drizzle delete result shape).
+    const deleted = await this.db
+      .delete(sortResultItemsTable)
+      .where(
+        and(
+          eq(sortResultItemsTable.itemId, itemId),
+          inArray(
+            sortResultItemsTable.sortResultId,
+            this.db
+              .select({ id: sortResultsTable.id })
+              .from(sortResultsTable)
+              .where(eq(sortResultsTable.status, "draft")),
+          ),
+        ),
+      )
+      .returning({ id: sortResultItemsTable.id });
+    return deleted.length;
+  }
+
+  // Count the item's result-items whose parent result is FINALIZED.
+  async countByItemInFinalizedResults(itemId: string): Promise<number> {
+    const [row] = await this.db
+      .select({ n: count() })
+      .from(sortResultItemsTable)
+      .innerJoin(
+        sortResultsTable,
+        eq(sortResultItemsTable.sortResultId, sortResultsTable.id),
+      )
+      .where(
+        and(
+          eq(sortResultItemsTable.itemId, itemId),
+          eq(sortResultsTable.status, "finalized"),
+        ),
+      );
+    return row?.n ?? 0;
   }
 
   private mapToResultItem(row: any): SortResultItem {

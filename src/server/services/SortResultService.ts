@@ -201,4 +201,26 @@ export class SortResultService {
     await this.sortResultRepo.delete(id);
     return true;
   }
+
+  /**
+   * Owner-only purge-prep: detach an item from every DRAFT result it sits in
+   * (across all curators), in one transaction, then report how many FINALIZED
+   * results still reference it. The deliberate t9l exception — purge is a
+   * collection-owner op, so clearing draft sorts is its necessary consequence;
+   * finalized results stay immutable and preferences are untouched.
+   *
+   * Invariant: every write inside the transaction goes to the tx-bound repo, not
+   * the injected `this.sortResultItemRepo`. The finalized count runs in the same
+   * transaction so `removed`/`remainingInFinalized` are a consistent snapshot.
+   */
+  async removeItemFromDraftResults(
+    itemId: string,
+  ): Promise<{ removed: number; remainingInFinalized: number }> {
+    return withTransaction(this.db, async (tx) => {
+      const repo = new SortResultItemRepository(tx);
+      const removed = await repo.deleteByItemInDraftResults(itemId);
+      const remainingInFinalized = await repo.countByItemInFinalizedResults(itemId);
+      return { removed, remainingInFinalized };
+    });
+  }
 }
