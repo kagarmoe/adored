@@ -18,6 +18,7 @@ function photo(id: string, isHero = false): Photo {
     fileSize: 1234,
     uploadedBy: "u1",
     isHero,
+    rotation: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
