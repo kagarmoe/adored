@@ -25,6 +25,8 @@ test.describe("photo viewer: rotate + zoom", () => {
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
 
+    const srcBefore = await dialog.getByRole("img").getAttribute("src");
+
     const patch = page.waitForRequest(
       (r) => r.method() === "PATCH" && /\/photos\/[^/]+$/.test(r.url()),
     );
@@ -33,6 +35,8 @@ test.describe("photo viewer: rotate + zoom", () => {
     expect(req.postDataJSON()).toEqual({ rotation: 90 });
 
     await expect(dialog.getByRole("status")).toHaveText(/rotated to 90 degrees/i);
+    // Persisted: the PATCH returned a new updatedAt, so the image URL's v= changed.
+    await expect(dialog.getByRole("img")).not.toHaveAttribute("src", srcBefore ?? "");
   });
 
   test("zoom in changes the image scale", async ({ page }) => {

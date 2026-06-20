@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const { mockRefresh } = vi.hoisted(() => ({ mockRefresh: vi.fn() }));
@@ -88,5 +88,41 @@ describe("ImageViewer", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
     await user.keyboard("{Escape}");
     expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
+  it("closes when the backdrop (outside the panel) is clicked", () => {
+    const onClose = vi.fn();
+    render(<ImageViewer photo={photo} onClose={onClose} />);
+    const container = screen.getByRole("dialog").parentElement as HTMLElement;
+    fireEvent.click(container); // target === currentTarget → close
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("traps focus: Tab from the last control wraps to the first enabled control", async () => {
+    const user = userEvent.setup();
+    render(<ImageViewer photo={photo} onClose={() => {}} />);
+    await user.click(screen.getByRole("button", { name: /zoom in/i })); // enable Zoom out
+    const close = screen.getByRole("button", { name: /close/i });
+    const zoomOut = screen.getByRole("button", { name: /zoom out/i });
+    close.focus();
+    fireEvent.keyDown(document, { key: "Tab" });
+    expect(document.activeElement).toBe(zoomOut);
+  });
+
+  it("drag pans the image only when zoomed in", async () => {
+    const user = userEvent.setup();
+    render(<ImageViewer photo={photo} onClose={() => {}} />);
+    const area = img().parentElement as HTMLElement;
+
+    // At 1x, a drag does nothing (no swipe-to-pan when not zoomed).
+    fireEvent.pointerDown(area, { clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(area, { clientX: 150, clientY: 130 });
+    expect(img().style.transform).toContain("translate(0px, 0px)");
+    fireEvent.pointerUp(area);
+
+    await user.click(screen.getByRole("button", { name: /zoom in/i }));
+    fireEvent.pointerDown(area, { clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(area, { clientX: 150, clientY: 130 });
+    expect(img().style.transform).toContain("translate(50px, 30px)");
   });
 });

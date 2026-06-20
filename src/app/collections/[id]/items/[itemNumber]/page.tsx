@@ -79,17 +79,19 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
               priority
               unoptimized
             />
-            <PhotoViewControl
-              photo={{
-                id: heroPhoto.id,
-                itemId: heroPhoto.itemId,
-                collectionId: heroPhoto.collectionId,
-                rotation: heroPhoto.rotation,
-                updatedAt: heroPhoto.updatedAt,
-                alt: itemDisplayName(item),
-              }}
-              className="absolute right-3 top-3 z-20"
-            />
+            {heroPhoto.itemId && (
+              <PhotoViewControl
+                photo={{
+                  id: heroPhoto.id,
+                  itemId: heroPhoto.itemId,
+                  collectionId: heroPhoto.collectionId,
+                  rotation: heroPhoto.rotation,
+                  updatedAt: heroPhoto.updatedAt,
+                  alt: itemDisplayName(item),
+                }}
+                className="absolute right-3 top-3 z-20"
+              />
+            )}
           </div>
         ) : (
           <Card padding="lg" className="h-96 flex items-center justify-center">

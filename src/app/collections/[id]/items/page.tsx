@@ -91,7 +91,7 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
                   collectionId={collection.slug ?? collection.id}
                   heroPhotoUrl={cover ? getPhotoAssetUrlForPhoto(cover, collection.id, { w: PHOTO_WIDTH.card }) : undefined}
                   viewerPhoto={
-                    cover
+                    cover && cover.itemId
                       ? {
                           id: cover.id,
                           itemId: cover.itemId,
