@@ -1,65 +1,57 @@
 # Image Manipulation — persisted rotation + zoom (sub-project B)
 
 **Bead:** purses-u1lr.2 · **Epic:** purses-u1lr · **Date:** 2026-06-20 · depends on A (purses-u1lr.1)
+**Status:** revised after adversarial review (wf_19818d31-78d) — findings folded below.
 
 ## Problem / requirements
-From the epic:
-- **Rotate (MUST):** the user must be able to rotate images — on the item page, the item grid (`collections/[id]/items`), and the collection-list cards (`collections/`) — and it **persists** (survives reload, applies after item creation).
-- **Zoom (SHOULD):** on `collections/` cards, images are often too large for the card (esp. phone); the user should be able to zoom in/out.
-
-Phone photos arrive sideways and there's no way to fix them; covers are cropped with no way to see the whole image. Tablet-first, **tap-first, no swiping** (TONE/CLAUDE).
+- **Rotate (MUST):** rotate images — item page, item grid (`collections/[id]/items`), collection-list cards (`collections/`) — and it **persists** (survives reload, applies after item creation). Phone photos arrive sideways.
+- **Zoom (SHOULD):** on `collections/` cards images are often too large for the card (esp. phone); zoom in/out.
+- Tablet-first, **tap-first, no swiping** (TONE/CLAUDE); gentle, judgement-free.
 
 ## Solution overview
-Rotation is stored per-photo and applied **non-destructively** in A's `servePhotoFile` sharp pipeline. Both rotate and zoom are reached through one gentle, reusable **`ImageViewer`** lightbox opened by a single "view" icon on each card image — keeping cards uncluttered (one control surface, low cognitive load) while satisfying rotate-everywhere + zoom.
+Rotation is stored per-photo and applied **non-destructively** in A's `servePhotoFile` sharp pipeline. Rotate + zoom live in one reusable **`ImageViewer`** lightbox opened by a single gentle "view" control on each card image — implemented with the **stretched-link** pattern so the control is valid, accessible DOM (not a `<button>` inside an `<a>`).
 
 ### 1. Data — `photos.rotation`
-- Add `rotation: integer('rotation').default(0).notNull()` to `photosTable` (`src/lib/db/schema.ts`); generate the migration (`ALTER TABLE "photos" ADD COLUMN "rotation" integer DEFAULT 0 NOT NULL`). Use `integer` (already imported) not `smallint` (avoids an import; PG stores it fine). Values constrained at the API boundary to `{0, 90, 180, 270}` (degrees clockwise).
+- `rotation: integer('rotation').default(0).notNull()` on `photosTable` (`integer` is already imported; PG stores 0/90/180/270 fine). Generate migration → `ALTER TABLE "photos" ADD COLUMN "rotation" integer DEFAULT 0 NOT NULL` (constant default → safe, instant on PG, no rewrite; reversible via DROP COLUMN). Commit generated SQL **and** the drizzle meta snapshot together.
 - `Photo` interface (`domain.ts`): add `rotation: number`.
-- `PhotoRepository`: `mapToPhoto` adds `rotation: row.rotation`; `create` relies on the DB default (no change needed if omitted, but add `rotation: data.rotation ?? 0` for explicitness). `update` already spreads `...data` so `update(id, { rotation })` works.
+- `PhotoRepository`: `mapToPhoto` → `rotation: row.rotation`. **`create` input type must keep rotation optional** (else it breaks every existing caller — `Omit<Photo,...>` makes it required): change the param to `Omit<Photo, "id"|"createdAt"|"updatedAt"|"deletedAt"|"rotation"> & { rotation?: number }` and set `rotation: data.rotation ?? 0` in `.values()`. `update` already spreads `...data` → `update(id,{rotation})` works. The task gate runs `tsc --noEmit` so a broken caller surfaces.
 
-### 2. Serve — apply rotation in the sharp pipeline (builds on A)
-- `servePhotoFile` args gain `rotation: number`. In the **resize** branch, after EXIF `.rotate()` add `.rotate(rotation)` (user rotation, clockwise; 0 is a no-op). Composition: EXIF-orient first, then the user's explicit turn.
-- Both `/file` routes pass `rotation: photo.rotation`.
-- ETag already includes `updatedAt`; a rotate bumps `updatedAt` (via `PhotoRepository.update`) → ETag changes → cache busts. **Passthrough (no `?w=`) does not re-encode**, so the zoom viewer requests a resized large width (`1280`) which goes through sharp and *is* rotated.
+### 2. Serve — apply rotation in `servePhotoFile` (orientation-correct on EVERY path)
+- `servePhotoFile` args gain `rotation: number`. Both `/file` routes pass `rotation: photo.rotation`.
+- **Resize branch:** after EXIF `.rotate()` add `.rotate(rotation)` (user's clockwise turn on top of the upright image; 0 = no-op).
+- **Passthrough branch (no `?w=`):** if `rotation !== 0`, route through sharp (`.rotate()` EXIF + `.rotate(rotation)` → `webp`) so the original is orientation-correct too; if `rotation === 0`, keep the pure verbatim stream (the common case stays a fast stream). This **removes the "passthrough serves unrotated" inconsistency** (Architect finding) — `/file` is orientation-correct regardless of `?w=`.
+- ETag already keys on `updatedAt`; a rotate bumps `updatedAt` → ETag changes → cache busts.
 
-### 3. Instant freshness after rotate — re-add `v` to URLs
-- Re-introduce the `v` option in the URL helpers: `getPhotoAssetUrlForPhoto(photo, id, { w, v })` where callers pass `v: photo.updatedAt.getTime()` (a `withVersion` convenience may derive it). The server ignores `v` for content (only `w` matters; ETag derives version from `updatedAt`); it exists purely so the **URL changes when rotation changes**.
-- After a rotate PATCH succeeds, the client calls `router.refresh()`; the server re-renders the card/hero with a new `?w=…&v=<newUpdatedAt>` → the browser fetches the rotated variant immediately instead of waiting out `max-age=300`.
+### 3. PATCH rotation endpoints
+- `PATCH /api/collections/[id]/items/[itemId]/photos/[photoId]` — body `{ rotation: 0|90|180|270 }` (absolute, idempotent). **Authz (deliberate write-tier — Security finding):** belongs-to-parent (`404`, *before* the permission check) then **`canAddPhotos || isOwner`** (`403`) — matching the photo-mutation precedent (the DELETE route gates on `canDeletePhotos`; rotation edits photo *presentation*, so `canAddPhotos` is the closest grant). NOT the bare member-or-owner read tier (which would let a view-only curator rotate shared photos). Validate `rotation` ∈ allowed set; reject non-member-of-set / non-integer / missing / unparseable body → `400` (mirror `reassign`'s `try/catch` around `req.json()`). `200 { rotation, updatedAt }` (return `updatedAt` so the client can rebust — Architect finding).
+- `PATCH /api/collections/[id]/pool/photos/[photoId]` — same, with the pool **3-conjunct IDOR guard verbatim**: `!photo || photo.collectionId !== params.id || photo.itemId !== null → 404`.
 
-### 4. PATCH rotation endpoints
-- `PATCH /api/collections/[id]/items/[itemId]/photos/[photoId]` — body `{ rotation: 0|90|180|270 }` (absolute, idempotent). Authz: belongs-to-parent (`404`) + member-or-owner (`403`) — same tier as the `/file` GET; rotation is low-risk, non-destructive, reversible. Validate `rotation` ∈ allowed set (`400` otherwise). `200 { rotation }`.
-- `PATCH /api/collections/[id]/pool/photos/[photoId]` — same, for pooled photos (`itemId === null`, this collection).
-- Validation lives at the boundary (Zod or a small guard). No partial state — a single `update`.
+### 4. Instant freshness — new `v` cache-bust param
+- Add a **new** optional `v?: number` to `PhotoUrlOptions`, folded into the existing `withQuery` → `?w=…&v=…`. **One reason:** within A's `max-age=300` window the browser serves the cached image without revalidating the *same* URL, so a rotate wouldn't show for up to 5 min; a changed URL (`v` = `updatedAt` ms) forces the new variant immediately. The server ignores `v` for content (only `w` matters; ETag derives the version from `updatedAt`). No `withVersion` helper — callers pass `v: photo.updatedAt.getTime()` where they already have the photo.
+- Card/hero URL builders pass `v`. After a rotate, `router.refresh()` re-renders Server Components with the new `v` → the rotated variant loads.
 
-### 5. UI — `ImageViewer` + `PhotoViewButton`
-- **`PhotoViewButton`** (client): a small, gentle icon button (⤢ / magnifier) overlaid on a card image (bottom-right), `min-h-11 min-w-11` (≥44px), `aria-label="View photo"`, visible (no hover-only). Inside a card `<Link>` it calls `e.preventDefault(); e.stopPropagation()` so it opens the viewer instead of navigating. Renders nothing when there's no photo.
-- **`ImageViewer`** (client modal): tap-to-open lightbox showing the photo at `?w=1280`. Controls (all ≥44px, labeled): **Zoom in (+) / Zoom out (−)** stepping a CSS `transform: scale()` (1×–4×, clamped) on the image; **Rotate** (↻) → `PATCH … { rotation: (current+90)%360 }`, optimistic (immediately CSS-rotate the viewer image), on success `router.refresh()`, on failure revert + gentle error; **Close** (✕ / backdrop tap / Escape). No swipe; focus-trapped; `role="dialog"` `aria-modal`; reduced-motion respected. Reuses A's width via `getPhotoAssetUrl{ForPhoto}`.
-- **Wiring:** `collections/` cards (`CollectionCard`) → `PhotoViewButton` (zoom + rotate). `collections/[id]/items` cards (`ItemCard`) → `PhotoViewButton` (rotate; zoom harmless/consistent). Current item page hero/gallery → `PhotoViewButton` (C will fold this into the carousel). The viewer needs the photo's id/itemId/rotation/updatedAt + collectionId — passed as a small `viewerPhoto` prop alongside the existing URL props.
-- Gentle/tone: judgement-free labels ("View photo", "Rotate"), no counts/badges; controls are quiet until focused (DESIGN tokens, AA contrast, both themes).
-
-## Components / files
-- `src/lib/db/schema.ts` (+`rotation`), `drizzle/000N_*.sql` (generated), `src/types/domain.ts` (+`rotation`), `src/server/repositories/implementations/PhotoRepository.ts` (`mapToPhoto`/`create`).
-- `src/lib/photo-serving.ts` (+`rotation` arg, `.rotate(rotation)`), both `/file` routes (pass `rotation`).
-- `src/lib/photos.ts` (re-add `v` to `PhotoUrlOptions`).
-- `src/app/api/collections/[id]/items/[itemId]/photos/[photoId]/route.ts` (PATCH; may be new file or add to existing DELETE route), pool equivalent.
-- `src/features/items/ImageViewer.tsx` (new), `src/features/items/PhotoViewButton.tsx` (new) — or under `src/components/ui`.
-- Card surfaces: `CollectionCard.tsx`, `ItemCard.tsx`, item-detail `page.tsx`, and the pages building the viewer photo props.
+### 5. UI — `ImageViewer` + the card "view" control (stretched-link pattern)
+- **Card structure (both `CollectionCard`, `ItemCard`):** wrap the card body in a `relative` container. The navigating `<Link>` becomes a **stretched overlay** (`absolute inset-0`, `aria-label`, low z) — content is no longer *inside* the anchor. The **view control** is a sibling `<button>` (higher z, `pointer-events-auto`) over the image corner → valid DOM, tap-anywhere still navigates, the button overrides. (Removes the invalid `<button>`-in-`<a>` and the `preventDefault` hack — UX/Craftsman finding.)
+- **View control:** circular `<button>`, `min-h-11 min-w-11` (≥44px), **token backplate** `bg-surface/90 text-ink shadow-lift` so it meets ≥3:1 non-text contrast on both light/busy and dark photos (Design finding), `aria-label="View photo"`. Renders only when the card has a photo.
+- **`ImageViewer`** (client modal, reuses the repo's `ConfirmDialog` modal idiom — Design finding): scrim `bg-black/60 backdrop-blur-sm`, control cluster on `bg-surface` with `shadow-raised` + DESIGN spacing tokens, `role="dialog"` `aria-modal`, focus-trapped, Escape/backdrop/✕ to close, reduced-motion respected. Shows the photo at `?w=1280&v=`. Controls (≥44px, labeled): **Zoom +/−** (CSS `transform: scale()` 1×–4× clamped), **Rotate ↻** → optimistic CSS rotate, `PATCH {rotation:(cur+90)%360}`; on success set the `<img src>` to `?w=1280&v=<updatedAt from response>` and drop the CSS transform on `img onLoad` (reconcile — Architect finding) + `router.refresh()`; on failure revert + gentle message. An **`aria-live="polite"`** region announces "Rotated to N degrees" / the error (UX finding).
+- **Wiring:** `CollectionCard` (zoom+rotate), `ItemCard` (rotate; zoom harmless), current item-page hero/gallery (C folds into the carousel). Pages pass a small `viewerPhoto` ({id,itemId,rotation,updatedAt,collectionId}) alongside existing URL props.
 
 ## Testing (TDD; runs in CI)
-- **DB-backed (un-mocked, `src/lib/db/photo-rotation.integration.test.ts`, `RUN_DB_TESTS=1`):** `rotation` defaults to 0 on insert; `update(id,{rotation:90})` round-trips via `findById`/`findByItem`; `mapToPhoto` is `any`-typed so this guards the mapping.
-- **servePhotoFile (`photo-serving.test.ts`):** `rotation:90` on a landscape fixture → resized output dims swap (proves `.rotate(rotation)` ran after EXIF); `rotation:0` unchanged from A's behavior.
-- **PATCH routes (unit):** 401/404(belongs-to-parent)/403(non-member)/200; `rotation:45`→400, `rotation:90`→200 persists; pool route same. Authz-before-mutation.
-- **Component (jsdom):** `PhotoViewButton` opens the viewer and (inside a Link) does not navigate (preventDefault); `ImageViewer` zoom +/- changes the scale, rotate issues the PATCH with the next absolute rotation and refreshes, Escape/backdrop closes, focus trap, `aria-modal`.
-- **e2e (`e2e/image-rotate.spec.ts`):** open the viewer from a card, tap rotate, assert the PATCH fired and the image `src` `v=` changed (rotation persisted); zoom +/- changes scale. Touches `src/features/**` → triggers the e2e CI job.
-- **a11y:** controls keyboard-operable, labeled, AA contrast (web-accessibility lens).
+- **DB (un-mocked, `src/lib/db/photo-rotation.integration.test.ts`):** `rotation` defaults 0 on insert; `update(id,{rotation:90})` round-trips via `findById`/`findByItem` (guards the `any`-typed `mapToPhoto`).
+- **servePhotoFile (`photo-serving.test.ts`):**
+  - **Composition (headline risk)** on `IMG_0428.jpeg` (EXIF orientation 6): `rotation:0` → output **portrait** (height>width, EXIF applied once); `rotation:90` → **landscape** (width>height, one further turn — proves NOT double-rotated). Assert via the height:width ratio inverting (width is clamped to `w` by resize, so assert the ratio, not absolute dims — QA finding).
+  - Passthrough with `rotation:90` (no `?w=`) → re-encoded & oriented (not verbatim); `rotation:0` passthrough → verbatim stream unchanged.
+- **A's two route delegation tests MUST be updated** to expect `rotation` in the `servePhotoFile` args (exact `toHaveBeenCalledWith`), plus a **non-zero** stored-rotation forwarded case (proves the route reads `photo.rotation`) (QA finding — required edit).
+- **PATCH routes (unit, item + pool):** `401` / `404`(belongs-to-parent, before permission) / `403`(non-member) / **`403` member-without-`canAddPhotos`** / `200` persists; `rotation:45`→`400`, non-integer/missing→`400`; pool cross-collection & assigned-photo→`404`. **Negative invariant:** assert `PhotoRepository.update` is **NOT** called on every 401/403/404/400 path (authz-before-mutation — QA finding).
+- **Component (jsdom):** view button opens the viewer and does not navigate; `ImageViewer` zoom +/- changes scale, rotate issues PATCH with the next absolute rotation + announces via the live region + refreshes, Escape/backdrop close, focus trap, `aria-modal`.
+- **e2e (`e2e/image-rotate.spec.ts`):** open viewer from a card, rotate, assert the PATCH fired and the image `src` `v=` changed (persistence); zoom +/- changes scale. Intercept `**/photos/**/file*` and the PATCH. Touches `src/features/**` → e2e CI job.
+- **a11y (web-accessibility lens):** controls keyboard-operable, labeled, AA contrast both themes; live region present.
 
 ## Out of scope
-- Item-page carousel redesign → **C** (purses-u1lr.3) reuses `ImageViewer`.
-- Bulk/multi-photo rotate; arbitrary-angle rotation (only 90° steps).
-- Persisted variant cache → purses-u1lr.4.
+- Item-page carousel redesign → **C** (reuses `ImageViewer`). Bulk/multi rotate; arbitrary angles. Persisted variant cache → purses-u1lr.4.
 
 ## Risks
-- **Double-rotation (EXIF + stored).** Pipeline is `.rotate()` [EXIF] then `.rotate(stored)` — verified by a fixture test; stored rotation is the user's delta on top of the upright image.
-- **Optimistic rotate divergence.** On PATCH failure, revert the CSS rotation + show a gentle error; `router.refresh()` only on success.
-- **Nested interactive (button in card Link).** `preventDefault`+`stopPropagation`; ensure keyboard focus order is sane (the view button is a real `<button>`, not a div).
-- **Migration safety.** `ADD COLUMN … integer DEFAULT 0 NOT NULL` is a constant default — safe on Postgres (no table rewrite lock concern on modern PG); runs via `vercel-build` `db:migrate` with the prod `DATABASE_URL`.
+- **Double-rotation (EXIF + stored)** — pipeline is `.rotate()` then `.rotate(stored)`; the composition test on the EXIF fixture is the proof.
+- **Optimistic divergence** — reconcile via `img onLoad` + the PATCH-returned `updatedAt`; revert on failure.
+- **create() type break** — handled by the optional `rotation?` create input + `tsc` gate.
+- **Migration** — constant-default ADD COLUMN, safe; runs via `vercel-build db:migrate` with the prod `DATABASE_URL`; test DB applies it via the same path; commit SQL+meta together.
