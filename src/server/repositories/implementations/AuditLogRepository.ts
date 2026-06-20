@@ -13,7 +13,9 @@ const DEFAULT_LIMIT = 100;
 const MAX_LIMIT = 200;
 
 // Always clamp: a hostile/absent ?limit= must never produce an unbounded scan.
-function clampLimit(raw: number | undefined): number {
+// Exported for a pure-unit test that pins the cap constants (the DB tests only
+// prove the result is bounded, not that the ceiling is exactly 200).
+export function clampLimit(raw: number | undefined): number {
   const n = Number(raw);
   return Number.isFinite(n) ? Math.min(MAX_LIMIT, Math.max(1, Math.trunc(n))) : DEFAULT_LIMIT;
 }
