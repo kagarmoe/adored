@@ -267,7 +267,7 @@ All routes here enforce only authentication — **no collection membership/owner
 `requireAuth`. `collectionId` is a **query param** (`400` if missing); body → `createItem(collectionId, body)`. `201 Item`. Membership on `collectionId` is **not** checked.
 
 ### `GET·PATCH·DELETE /api/items/[id]`
-`requireAuth` only. `GET` → `Item`; `PATCH` body → updated `Item` (`400` invalid JSON); `DELETE` → `{ message, item }` (soft delete). Any item, any caller.
+`requireAuth` only. `GET` → `Item` (**`404`** if absent/deleted); `PATCH` body → updated `Item` (`400` invalid JSON); `DELETE` → `{ message, item }` (soft delete). Any item, any caller.
 
 ### `POST /api/items/[id]/restore`
 `requireAuth` only. Restores a soft-deleted item.
