@@ -49,12 +49,10 @@ export class ItemController {
     });
   }
 
-  async getItem(itemId: string): Promise<Item> {
-    const item = await this.itemRepo.findById(itemId);
-    if (!item) {
-      throw new Error("Item not found");
-    }
-    return item;
+  async getItem(itemId: string): Promise<Item | null> {
+    // Returns null for an absent/soft-deleted item so the route maps it to 404
+    // (a thrown "not found" was previously caught as a generic 500).
+    return this.itemRepo.findById(itemId);
   }
 
   async updateItem(itemId: string, data: unknown): Promise<Item> {
