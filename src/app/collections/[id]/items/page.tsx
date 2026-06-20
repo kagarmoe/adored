@@ -90,6 +90,17 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
                   item={item}
                   collectionId={collection.slug ?? collection.id}
                   heroPhotoUrl={cover ? getPhotoAssetUrlForPhoto(cover, collection.id, { w: PHOTO_WIDTH.card }) : undefined}
+                  viewerPhoto={
+                    cover
+                      ? {
+                          id: cover.id,
+                          itemId: cover.itemId,
+                          collectionId: cover.collectionId,
+                          rotation: cover.rotation,
+                          updatedAt: cover.updatedAt,
+                        }
+                      : undefined
+                  }
                 />
               );
             })}

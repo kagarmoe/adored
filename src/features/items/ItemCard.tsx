@@ -1,6 +1,6 @@
 import type { Item } from "@/types";
 import { hasName, itemDisplayName, itemInitial } from "@/lib/items";
-import { Badge, Card, CardImage } from "@/components/ui";
+import { Badge, Card, CardImage, PhotoViewControl, type ViewerPhoto } from "@/components/ui";
 import Link from "next/link";
 
 interface ItemCardProps {
@@ -11,6 +11,8 @@ interface ItemCardProps {
   /** Override the image area sizing (default a square). Triage caps height so
    *  the decision buttons stay above the fold. */
   imageClassName?: string;
+  /** When set, a "view photo" control opens the zoom/rotate lightbox for the hero. */
+  viewerPhoto?: ViewerPhoto;
 }
 
 const bucketDots = {
@@ -27,38 +29,52 @@ const bucketLabels = {
   low: "Onward",
 };
 
-export function ItemCard({ item, collectionId, heroPhotoUrl, bucket, imageClassName = "aspect-square" }: ItemCardProps) {
+export function ItemCard({
+  item,
+  collectionId,
+  heroPhotoUrl,
+  bucket,
+  imageClassName = "aspect-square",
+  viewerPhoto,
+}: ItemCardProps) {
+  // Stretched-link: the navigating <Link> is an overlay sibling so the view
+  // control is valid DOM. `isolate` keeps the control (z-20) above the link (z-10).
   return (
-    <Link href={`/collections/${collectionId}/items/${item.number}`}>
-      <Card interactive padding="none" className="overflow-hidden h-full flex flex-col">
-        <div className={`bg-accent-aqua ${imageClassName} flex items-center justify-center relative overflow-hidden`}>
-          <CardImage
-            src={heroPhotoUrl}
-            alt={itemDisplayName(item)}
-            fallback={
-              <span className="font-display text-5xl text-ink-soft" aria-hidden>
-                {itemInitial(item)}
-              </span>
-            }
-          />
-        </div>
-        <div className="p-3 flex-1 flex flex-col justify-between">
-          <div className="space-y-2">
-            <div className="flex items-start justify-between gap-2">
-              <h3 className="text-ink truncate">{itemDisplayName(item)}</h3>
-              {bucket && <Badge variant={bucket} title={bucketLabels[bucket]}>{bucketDots[bucket]}</Badge>}
-            </div>
-            {hasName(item) ? (
-              item.brand && <p className="text-xs text-ink-soft truncate">{item.brand}</p>
-            ) : (
-              <p className="text-xs text-ink-soft truncate">Add a name</p>
-            )}
-            {item.status && item.status !== "active" && (
-              <Badge variant={item.status === "deleted" ? "deleted" : "archived"}>{item.status}</Badge>
-            )}
+    <Card interactive padding="none" className="relative isolate flex h-full flex-col overflow-hidden">
+      <div className={`bg-accent-aqua ${imageClassName} relative flex items-center justify-center overflow-hidden`}>
+        <CardImage
+          src={heroPhotoUrl}
+          alt={itemDisplayName(item)}
+          fallback={
+            <span className="font-display text-5xl text-ink-soft" aria-hidden>
+              {itemInitial(item)}
+            </span>
+          }
+        />
+      </div>
+      <div className="flex flex-1 flex-col justify-between p-3">
+        <div className="space-y-2">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="text-ink truncate">{itemDisplayName(item)}</h3>
+            {bucket && <Badge variant={bucket} title={bucketLabels[bucket]}>{bucketDots[bucket]}</Badge>}
           </div>
+          {hasName(item) ? (
+            item.brand && <p className="text-xs text-ink-soft truncate">{item.brand}</p>
+          ) : (
+            <p className="text-xs text-ink-soft truncate">Add a name</p>
+          )}
+          {item.status && item.status !== "active" && (
+            <Badge variant={item.status === "deleted" ? "deleted" : "archived"}>{item.status}</Badge>
+          )}
         </div>
-      </Card>
-    </Link>
+      </div>
+
+      <Link
+        href={`/collections/${collectionId}/items/${item.number}`}
+        className="absolute inset-0 z-10"
+        aria-label={itemDisplayName(item)}
+      />
+      {viewerPhoto && <PhotoViewControl photo={viewerPhoto} className="absolute right-2 top-2 z-20" />}
+    </Card>
   );
 }
