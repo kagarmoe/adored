@@ -7,6 +7,7 @@
 // controller<->repo seam is exercised end to end.
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { NextResponse } from "next/server";
+import { fakeTxDb } from "@/test-support/fakeTxDb";
 
 const {
   mockRequireAuth,
@@ -76,7 +77,10 @@ const getReq = () => ({}) as any;
 beforeEach(() => {
   vi.clearAllMocks();
   mockRequireAuth.mockResolvedValue({ id: "u1", email: "u1@example.com" });
-  mockGetDb.mockReturnValue({});
+  // deleteResult wraps its two deletes in withTransaction(db, ...), so the
+  // injected db must expose .transaction; fakeTxDb runs the callback inline and
+  // the mocked tx-bound repo constructors return sortResultRepo / sortResultItemRepo.
+  mockGetDb.mockReturnValue(fakeTxDb());
   // Default: access granted -> returns the result (not a NextResponse).
   mockRequireApiResultAccess.mockResolvedValue(DRAFT_RESULT);
   sortResultRepo.findById.mockResolvedValue(DRAFT_RESULT);

@@ -20,6 +20,7 @@ import { SessionRepository } from "@/server/repositories/implementations/Session
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
+import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { SortResultService } from "@/server/services/SortResultService";
 import type { CollectionPreferenceItem } from "@/types";
 
@@ -357,6 +358,45 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     // Result row gone AND no orphaned child items left behind.
     expect(await new SortResultRepository(db).findById(draft.id)).toBeNull();
     expect(await new SortResultItemRepository(db).findByResult(draft.id)).toEqual([]);
+  });
+
+  it("deleteResult rolls back the item deletes when the result delete FK-fails (atomicity)", async () => {
+    // Un-mocked transactional-rollback proof for the DELETE path. We inject a
+    // clean FK failure: sort_result_shares.sortResultId references
+    // sort_results.id with ON DELETE no action, so a share pinned to the draft
+    // makes the result-row delete trip the FK (23503). deleteResult removes the
+    // children (items) FIRST, then the result — so the failure lands AFTER the
+    // item deletes. With withTransaction wrapping both, the whole thing rolls
+    // back and the items survive. Without it, the item deletes would have
+    // committed before the result delete failed, leaving partial state.
+    const { db } = getTestDb();
+    const draft = await seedPopulatedDraft();
+
+    const itemRepo = new SortResultItemRepository(db);
+    const before = await itemRepo.findByResult(draft.id);
+    expect(before.length).toBeGreaterThan(0);
+
+    // Pin a share to the draft → the result-row delete will FK-violate.
+    await new SortResultShareRepository(db).create({
+      sortResultId: draft.id,
+      shareToken: `share-tok-${generateId("tok")}`,
+    });
+
+    const service = new SortResultService(
+      new SortResultRepository(db),
+      new SortResultItemRepository(db),
+      new CollectionPreferenceItemRepository(db),
+      db,
+    );
+
+    await expect(service.deleteResult(draft.id)).rejects.toThrow();
+
+    // The point: the transaction rolled back, so EVERY item row still exists
+    // (the children delete ran, then the result delete FK-failed → full undo).
+    const after = await itemRepo.findByResult(draft.id);
+    expect(after).toHaveLength(before.length);
+    // And the result row itself survives too.
+    expect(await new SortResultRepository(db).findById(draft.id)).not.toBeNull();
   });
 
   it("DELETE /api/sort-results/[id] rejects a finalized result with 409 and leaves it intact", async () => {

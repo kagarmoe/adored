@@ -7,8 +7,8 @@ import { fakeTxDb } from "@/test-support/fakeTxDb";
 // tests) to observe the in-transaction writes; the AUTHORITATIVE atomicity proof
 // is the un-mocked integration rollback test in sort-pipeline.integration.test.ts.
 const { txResultRepo, txItemRepo, isResultNumberConflict } = vi.hoisted(() => ({
-  txResultRepo: { getNextResultNumber: vi.fn(), insertWithNumber: vi.fn() },
-  txItemRepo: { create: vi.fn() },
+  txResultRepo: { getNextResultNumber: vi.fn(), insertWithNumber: vi.fn(), delete: vi.fn() },
+  txItemRepo: { create: vi.fn(), deleteByResult: vi.fn() },
   isResultNumberConflict: vi.fn(() => false),
 }));
 vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
@@ -100,7 +100,9 @@ beforeEach(() => {
   isResultNumberConflict.mockReturnValue(false);
   txResultRepo.getNextResultNumber.mockResolvedValue(1);
   txResultRepo.insertWithNumber.mockResolvedValue(sortResult());
+  txResultRepo.delete.mockResolvedValue(undefined);
   txItemRepo.create.mockResolvedValue(sortResultItem());
+  txItemRepo.deleteByResult.mockResolvedValue(undefined);
 });
 
 describe("SortResultService.createDraftResult", () => {
@@ -301,72 +303,67 @@ describe("SortResultService.supersedeResult", () => {
 });
 
 describe("SortResultService deleteResult", () => {
-  it("returns false when the result is absent (no deletes attempted)", async () => {
-    const deleteResultRow = vi.fn();
-    const deleteByResult = vi.fn();
+  // The status guard reads findById from the INJECTED sortResultRepo and
+  // returns/throws BEFORE opening the tx; the deletes run on the tx-bound repos
+  // (txItemRepo.deleteByResult / txResultRepo.delete). The un-mocked atomicity
+  // proof lives in sort-pipeline.integration.test.ts.
+  it("returns false when the result is absent (no tx deletes attempted)", async () => {
     const sortResultRepo = {
       findById: async () => null,
-      delete: deleteResultRow,
     } as unknown as ISortResultRepository;
-    const itemRepo = { deleteByResult } as unknown as ISortResultItemRepository;
 
     const deleted = await new SortResultService(
       sortResultRepo,
-      itemRepo,
+      {} as unknown as ISortResultItemRepository,
       {} as unknown as ICollectionPreferenceItemRepository,
       txDb,
     ).deleteResult("missing");
 
     expect(deleted).toBe(false);
-    expect(deleteByResult).not.toHaveBeenCalled();
-    expect(deleteResultRow).not.toHaveBeenCalled();
+    expect(txItemRepo.deleteByResult).not.toHaveBeenCalled();
+    expect(txResultRepo.delete).not.toHaveBeenCalled();
   });
 
-  it("throws DeleteResultStateError when the result is finalized (no deletes attempted)", async () => {
-    const deleteResultRow = vi.fn();
-    const deleteByResult = vi.fn();
+  it("throws DeleteResultStateError when the result is finalized (no tx deletes attempted)", async () => {
     const sortResultRepo = {
       findById: async () => sortResult({ status: "finalized" }),
-      delete: deleteResultRow,
     } as unknown as ISortResultRepository;
-    const itemRepo = { deleteByResult } as unknown as ISortResultItemRepository;
 
     await expect(
       new SortResultService(
         sortResultRepo,
-        itemRepo,
+        {} as unknown as ISortResultItemRepository,
         {} as unknown as ICollectionPreferenceItemRepository,
         txDb,
       ).deleteResult("res-1"),
     ).rejects.toBeInstanceOf(DeleteResultStateError);
-    expect(deleteByResult).not.toHaveBeenCalled();
-    expect(deleteResultRow).not.toHaveBeenCalled();
+    expect(txItemRepo.deleteByResult).not.toHaveBeenCalled();
+    expect(txResultRepo.delete).not.toHaveBeenCalled();
   });
 
-  it("deletes children BEFORE the result row (FK-safe order) for a draft", async () => {
+  it("deletes children BEFORE the result row (FK-safe order) inside one tx for a draft", async () => {
     const calls: string[] = [];
-    const deleteByResult = vi.fn(async () => {
+    txItemRepo.deleteByResult.mockImplementation(async () => {
       calls.push("children");
     });
-    const deleteResultRow = vi.fn(async () => {
+    txResultRepo.delete.mockImplementation(async () => {
       calls.push("result");
     });
     const sortResultRepo = {
       findById: async () => sortResult({ status: "draft" }),
-      delete: deleteResultRow,
     } as unknown as ISortResultRepository;
-    const itemRepo = { deleteByResult } as unknown as ISortResultItemRepository;
 
     const deleted = await new SortResultService(
       sortResultRepo,
-      itemRepo,
+      {} as unknown as ISortResultItemRepository,
       {} as unknown as ICollectionPreferenceItemRepository,
       txDb,
     ).deleteResult("res-1");
 
     expect(deleted).toBe(true);
-    expect(deleteByResult).toHaveBeenCalledWith("res-1");
-    expect(deleteResultRow).toHaveBeenCalledWith("res-1");
+    // Writes land on the tx-bound repos, not the injected ones.
+    expect(txItemRepo.deleteByResult).toHaveBeenCalledWith("res-1");
+    expect(txResultRepo.delete).toHaveBeenCalledWith("res-1");
     // Children-first: the sort_result_items -> sort_results FK has no cascade.
     expect(calls).toEqual(["children", "result"]);
   });
