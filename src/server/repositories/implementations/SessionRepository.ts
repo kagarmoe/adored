@@ -26,7 +26,7 @@ export class SessionRepository implements ISessionRepository {
     };
 
     // Auto-allocate MAX+1, retry on the UNIQUE(collection_id, number) race
-    // (neon-http is stateless — no long transaction to lock the max). Any other
+    // (a retry-able insert — simpler than locking the max; a transaction is available but unnecessary here). Any other
     // unique violation (e.g. sessions_active_unique) surfaces, not retried.
     for (let attempt = 0; attempt < 5; attempt++) {
       const number = await this.getNextSessionNumber(data.collectionId);

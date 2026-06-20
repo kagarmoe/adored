@@ -204,7 +204,7 @@ export class PhotoRepository implements IPhotoRepository {
   // matches only this collection's still-pooled, non-deleted rows, so a photo
   // from another collection, an already-grouped photo, or a deleted one can
   // never be captured. The caller compares the returned count to the requested
-  // count and rejects on a mismatch (neon-http has no transaction to lean on).
+  // count and rejects on a mismatch — a single guarded UPDATE needs no transaction.
   async assignPooledPhotosToItem(
     collectionId: string,
     photoIds: string[],
@@ -234,9 +234,9 @@ export class PhotoRepository implements IPhotoRepository {
 
   // How many of these ids are currently available pooled photos of this
   // collection (unassigned, not deleted). Used to reject a grouping conflict
-  // BEFORE any item is created or any photo is assigned — neon-http has no
-  // transaction, so a pre-check keeps a conflict from leaking a half-assigned
-  // orphan item.
+  // BEFORE any item is created or any photo is assigned — the create→assign path
+  // is deliberately non-transactional, so a pre-check keeps a conflict from leaking
+  // a half-assigned orphan item (partial failure is at worst a harmless empty item).
   async countAvailablePooled(collectionId: string, photoIds: string[]): Promise<number> {
     if (photoIds.length === 0) return 0;
     const rows = await this.db
