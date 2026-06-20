@@ -29,6 +29,13 @@
       "when": 1781717463646,
       "tag": "0003_parallel_sleeper",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1781935961388,
+      "tag": "0004_pretty_veda",
+      "breakpoints": true
     }
   ]
 }
