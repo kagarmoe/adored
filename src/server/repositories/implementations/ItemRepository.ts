@@ -75,6 +75,14 @@ export class ItemRepository implements IItemRepository {
     return item ? this.mapToItem(item) : null;
   }
 
+  async findByIdIncludingDeleted(id: string): Promise<Item | null> {
+    const [item] = await this.db
+      .select()
+      .from(itemsTable)
+      .where(eq(itemsTable.id, id));
+    return item ? this.mapToItem(item) : null;
+  }
+
   async findByCollection(collectionId: string): Promise<Item[]> {
     const items = await this.db
       .select()
@@ -133,6 +141,10 @@ export class ItemRepository implements IItemRepository {
       .where(eq(itemsTable.id, id))
       .returning();
     return this.mapToItem(item);
+  }
+
+  async hardDelete(id: string): Promise<void> {
+    await this.db.delete(itemsTable).where(eq(itemsTable.id, id));
   }
 
   private mapToItem(row: any): Item {

@@ -71,6 +71,17 @@ export class SortResultItemRepository implements ISortResultItemRepository {
       .where(eq(sortResultItemsTable.sortResultId, sortResultId));
   }
 
+  // True iff ANY sort_result_item references the item (any result, any status).
+  // The purge 409 guard. LIMIT 1 — existence only.
+  async existsByItem(itemId: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: sortResultItemsTable.id })
+      .from(sortResultItemsTable)
+      .where(eq(sortResultItemsTable.itemId, itemId))
+      .limit(1);
+    return row != null;
+  }
+
   private mapToResultItem(row: any): SortResultItem {
     return {
       id: row.id,

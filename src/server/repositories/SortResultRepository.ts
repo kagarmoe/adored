@@ -35,4 +35,7 @@ export interface ISortResultItemRepository {
   update(id: string, data: Partial<SortResultItem>): Promise<SortResultItem>;
   delete(id: string): Promise<void>;
   deleteByResult(sortResultId: string): Promise<void>;
+  // True iff ANY sort_result_item references the item (any result, any status).
+  // The purge 409 guard — an item in any result cannot be purged.
+  existsByItem(itemId: string): Promise<boolean>;
 }
