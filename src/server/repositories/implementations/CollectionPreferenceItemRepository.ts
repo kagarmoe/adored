@@ -102,11 +102,16 @@ export class CollectionPreferenceItemRepository
   }
 
   // Permanently DELETE every preference row for an item, across ALL curators
-  // (distinct from clear, which is collection+curator-scoped). Purge-only.
-  async deleteByItem(itemId: string): Promise<void> {
-    await this.db
+  // (distinct from clear, which is collection+curator-scoped). Returns the
+  // affected count via RETURNING (postgres-js exposes delete rowCount
+  // inconsistently — mirrors SortResultItemRepository.deleteByItemInDraftResults).
+  // Purge-only.
+  async deleteByItem(itemId: string): Promise<number> {
+    const deleted = await this.db
       .delete(preferencesTable)
-      .where(eq(preferencesTable.itemId, itemId));
+      .where(eq(preferencesTable.itemId, itemId))
+      .returning({ id: preferencesTable.id });
+    return deleted.length;
   }
 
   private mapToPreference(row: any): CollectionPreferenceItem {
