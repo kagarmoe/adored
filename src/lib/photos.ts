@@ -10,6 +10,19 @@ export interface PhotoUrlOptions {
   w?: number;
 }
 
+/** Per-surface request widths (one per surface — `unoptimized` precludes srcset).
+ *  Must be members of RESIZE_WIDTHS in photo-serving.ts. */
+export const PHOTO_WIDTH = {
+  /** Cards/grids: ItemCard, CollectionCard, CompareChoice, MostLovedHero, triage. */
+  card: 640,
+  /** Dense pool grid (up to 6 cols). */
+  poolTile: 320,
+  /** Item-detail hero. */
+  hero: 1280,
+  /** Item-detail / photo-manager gallery thumbnails. */
+  galleryTile: 640,
+} as const;
+
 function withQuery(base: string, opts?: PhotoUrlOptions): string {
   return opts?.w ? `${base}?w=${opts.w}` : base;
 }

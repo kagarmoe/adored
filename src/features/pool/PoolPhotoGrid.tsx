@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getPoolPhotoAssetUrl } from "@/lib/photos";
+import { getPoolPhotoAssetUrl, PHOTO_WIDTH } from "@/lib/photos";
 import type { Photo } from "@/types";
 import { PoolActionBar } from "./PoolActionBar";
 
@@ -117,7 +117,7 @@ export function PoolPhotoGrid({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={getPoolPhotoAssetUrl(collectionId, p.id)}
+                src={getPoolPhotoAssetUrl(collectionId, p.id, { w: PHOTO_WIDTH.poolTile })}
                 alt={alt(p.filename)}
                 loading="lazy"
                 className="h-full w-full object-cover"

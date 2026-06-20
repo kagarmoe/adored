@@ -6,7 +6,7 @@ import { ItemRepository } from "@/server/repositories/implementations/ItemReposi
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
-import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
+import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
 import { Card, EmptyState } from "@/components/ui";
 import { DecisionControls } from "@/features/sorting/DecisionControls";
@@ -52,7 +52,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
   const photoRepo = new PhotoRepository(db);
   const covers = item ? await photoRepo.findCoverPhotosByItemIds([item.id]) : new Map();
   const cover = item ? covers.get(item.id) : undefined;
-  const heroPhotoUrl = cover ? getPhotoAssetUrlForPhoto(cover, collection.id) : undefined;
+  const heroPhotoUrl = cover ? getPhotoAssetUrlForPhoto(cover, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
 
   const totalItems = items.length;
   const triaged = preferences.length;

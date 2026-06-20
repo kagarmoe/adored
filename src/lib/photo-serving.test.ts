@@ -18,7 +18,7 @@ function mockBlob(buf: Buffer, opts: { contentType?: string; size?: number } = {
   // fresh stream per call — a ReadableStream is single-use
   mockGet.mockImplementation(async () => ({
     statusCode: 200,
-    stream: new Response(buf).body,
+    stream: new Response(new Uint8Array(buf)).body,
     blob: {
       contentType: opts.contentType ?? "image/jpeg",
       etag: "blob-content-etag",
@@ -118,7 +118,7 @@ describe("servePhotoFile", () => {
   it("returns a generic 500 (no internal detail) when processing throws", async () => {
     mockGet.mockImplementation(async () => ({
       statusCode: 200,
-      stream: new Response(Buffer.from("not an image")).body,
+      stream: new Response(new Uint8Array(Buffer.from("not an image"))).body,
       blob: { contentType: "image/jpeg", etag: "e", size: 12 },
     }));
     const res = await servePhotoFile(baseArgs, req("?w=320"));

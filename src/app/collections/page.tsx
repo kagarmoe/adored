@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
-import { getPhotoAssetUrlForPhoto } from "@/lib/photos";
+import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
 import { buttonVariants, EmptyState } from "@/components/ui";
 import { CollectionCard } from "@/features/collections/CollectionCard";
@@ -72,7 +72,7 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
                 <CollectionCard
                   key={collection.id}
                   collection={collection}
-                  coverPhotoUrl={cover ? getPhotoAssetUrlForPhoto(cover, collection.id) : undefined}
+                  coverPhotoUrl={cover ? getPhotoAssetUrlForPhoto(cover, collection.id, { w: PHOTO_WIDTH.card }) : undefined}
                 />
               );
             })}
