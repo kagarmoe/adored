@@ -6,7 +6,7 @@ const { selectWhere, insertReturning } = vi.hoisted(() => ({
   insertReturning: vi.fn(),
 }));
 
-const valuesSpy = vi.fn(() => ({ returning: insertReturning }));
+const valuesSpy = vi.fn(function () { return ({ returning: insertReturning }); });
 
 const db = {
   select: () => ({ from: () => ({ where: selectWhere }) }),

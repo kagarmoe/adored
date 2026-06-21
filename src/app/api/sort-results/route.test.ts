@@ -32,13 +32,13 @@ vi.mock("@/server/dal/collection-access", () => ({
   requireApiCollectionAccess: mockRequireApiCollectionAccess,
 }));
 vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
-  SortResultRepository: vi.fn(() => sortResultRepo),
+  SortResultRepository: vi.fn(function () { return sortResultRepo; }),
 }));
 vi.mock("@/server/repositories/implementations/SortResultItemRepository", () => ({
-  SortResultItemRepository: vi.fn(() => sortResultItemRepo),
+  SortResultItemRepository: vi.fn(function () { return sortResultItemRepo; }),
 }));
 vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({
-  CollectionPreferenceItemRepository: vi.fn(() => preferenceRepo),
+  CollectionPreferenceItemRepository: vi.fn(function () { return preferenceRepo; }),
 }));
 
 import { POST } from "./route";

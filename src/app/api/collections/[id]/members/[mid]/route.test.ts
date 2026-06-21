@@ -2,16 +2,16 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const { mockGetSession, mockGetDb, membershipRepo, collectionRepo, ctrl } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
-  mockGetDb: vi.fn(() => ({})),
+  mockGetDb: vi.fn(function () { return ({}); }),
   membershipRepo: { findById: vi.fn(), findByUser: vi.fn() },
   collectionRepo: { findById: vi.fn() },
   ctrl: { getMember: vi.fn(), isCollectionManager: vi.fn(), updateMember: vi.fn(), removeMember: vi.fn() },
 }));
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: mockGetDb }));
-vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({ MembershipRepository: vi.fn(() => membershipRepo) }));
-vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({ CollectionRepository: vi.fn(() => collectionRepo) }));
-vi.mock("@/server/api/members", () => ({ MemberController: vi.fn(() => ctrl) }));
+vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({ MembershipRepository: vi.fn(function () { return membershipRepo; }) }));
+vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({ CollectionRepository: vi.fn(function () { return collectionRepo; }) }));
+vi.mock("@/server/api/members", () => ({ MemberController: vi.fn(function () { return ctrl; }) }));
 
 import { GET, PATCH, DELETE } from "./route";
 

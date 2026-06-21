@@ -6,14 +6,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const { mockRequireAuth, mockGetDb, findById } = vi.hoisted(() => ({
   mockRequireAuth: vi.fn(),
-  mockGetDb: vi.fn(() => ({})),
+  mockGetDb: vi.fn(function () { return ({}); }),
   findById: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({ requireAuth: mockRequireAuth, getSession: vi.fn() }));
 vi.mock("@/lib/db", () => ({ getDb: mockGetDb }));
 vi.mock("@/server/repositories/implementations/ItemRepository", () => ({
-  ItemRepository: vi.fn(() => ({ findById })),
+  ItemRepository: vi.fn(function () { return ({ findById }); }),
 }));
 
 import { GET } from "./route";

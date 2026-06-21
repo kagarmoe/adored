@@ -15,7 +15,7 @@ vi.mock("@/lib/auth", () => ({ requireAuth: mockRequireAuth }));
 vi.mock("@/lib/db", () => ({ getDb: mockGetDb }));
 vi.mock("@/server/dal/collection-access", () => ({ requireApiResultAccess: mockRequireResultAccess }));
 vi.mock("@/server/repositories/implementations/SortResultShareRepository", () => ({
-  SortResultShareRepository: vi.fn(() => shareRepo),
+  SortResultShareRepository: vi.fn(function () { return shareRepo; }),
 }));
 
 import { GET, POST } from "./route";

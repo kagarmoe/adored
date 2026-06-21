@@ -13,7 +13,7 @@ vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 vi.mock("@/components/layout", () => ({ AppLayout: ({ children }: any) => <div>{children}</div> }));
 vi.mock("@/lib/collection-access", () => ({ requireCollectionAccess: mockRequireAccess }));
-vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({ SortResultRepository: vi.fn(() => resultRepo) }));
+vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({ SortResultRepository: vi.fn(function () { return resultRepo; }) }));
 
 import ResultsPage from "./page";
 

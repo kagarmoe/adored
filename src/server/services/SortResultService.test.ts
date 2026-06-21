@@ -9,14 +9,14 @@ import { fakeTxDb } from "@/test-support/fakeTxDb";
 const { txResultRepo, txItemRepo, isResultNumberConflict } = vi.hoisted(() => ({
   txResultRepo: { getNextResultNumber: vi.fn(), insertWithNumber: vi.fn(), delete: vi.fn() },
   txItemRepo: { create: vi.fn(), deleteByResult: vi.fn() },
-  isResultNumberConflict: vi.fn(() => false),
+  isResultNumberConflict: vi.fn(function () { return false; }),
 }));
 vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
-  SortResultRepository: vi.fn(() => txResultRepo),
+  SortResultRepository: vi.fn(function () { return txResultRepo; }),
   isResultNumberConflict,
 }));
 vi.mock("@/server/repositories/implementations/SortResultItemRepository", () => ({
-  SortResultItemRepository: vi.fn(() => txItemRepo),
+  SortResultItemRepository: vi.fn(function () { return txItemRepo; }),
 }));
 
 import {
