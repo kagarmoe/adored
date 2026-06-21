@@ -14,9 +14,31 @@ import { describe, it, expect } from "vitest";
 import * as ts from "typescript";
 import * as fs from "fs";
 import * as path from "path";
-// glob v8 ships no bundled @types; use require so TS doesn't chase the module.
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
-const globSync: (pattern: string, opts?: { cwd?: string }) => string[] = (require("glob") as any).sync;
+
+// ---------------------------------------------------------------------------
+// Dependency-free recursive directory walk (replaces glob transitive dep)
+// ---------------------------------------------------------------------------
+
+/**
+ * Recursively collect all files under `dir` whose names match `ext`.
+ * Uses only node:fs — no glob dependency.
+ */
+function walkFiles(dir: string, ext: RegExp): string[] {
+  const results: string[] = [];
+  function recurse(current: string) {
+    const entries = fs.readdirSync(current, { withFileTypes: true });
+    for (const entry of entries) {
+      const full = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        recurse(full);
+      } else if (entry.isFile() && ext.test(entry.name)) {
+        results.push(full);
+      }
+    }
+  }
+  recurse(dir);
+  return results;
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -124,9 +146,11 @@ function methodsFromRoute(src: string): string[] {
 }
 
 function buildRouteTable(repoRoot: string): RouteEntry[] {
-  const routeFiles = globSync("src/app/api/**/route.ts", { cwd: repoRoot });
-  return routeFiles.map((rel: string) => {
-    const abs = path.join(repoRoot, rel);
+  const apiDir = path.join(repoRoot, "src", "app", "api");
+  const routeFiles = walkFiles(apiDir, /^route\.ts$/).filter((f) =>
+    f.endsWith("route.ts"),
+  );
+  return routeFiles.map((abs) => {
     const src = fs.readFileSync(abs, "utf-8");
     const pattern = routePatternFromFile(abs);
     const methods = new Set(methodsFromRoute(src));
@@ -305,6 +329,48 @@ function extractCalls(
           calls.push({ url: resolvedUrl, method, file: filePath, line });
         }
       }
+
+      // upload(name, body, { handleUploadUrl: "/api/..." })  — @vercel/blob/client
+      if (ts.isIdentifier(expr) && expr.text === "upload" && args.length >= 3) {
+        const optsArg = args[2];
+        const line = getLine(node);
+        if (ts.isObjectLiteralExpression(optsArg)) {
+          for (const prop of optsArg.properties) {
+            if (
+              ts.isPropertyAssignment(prop) &&
+              ts.isIdentifier(prop.name) &&
+              prop.name.text === "handleUploadUrl"
+            ) {
+              const resolvedUrl = resolveStringNode(prop.initializer);
+              if (resolvedUrl === null) {
+                // identifier check
+                if (ts.isIdentifier(prop.initializer)) {
+                  const bound = constBindings.get(prop.initializer.text);
+                  if (bound !== undefined) {
+                    if (bound.startsWith("/api/")) {
+                      calls.push({ url: bound, method: "POST", file: filePath, line });
+                    }
+                  } else {
+                    unresolved.push({
+                      file: filePath,
+                      line,
+                      reason: `upload handleUploadUrl is identifier '${prop.initializer.text}' not resolvable to a const string`,
+                    });
+                  }
+                } else {
+                  unresolved.push({
+                    file: filePath,
+                    line,
+                    reason: `upload handleUploadUrl is not a string/template literal or known identifier (kind: ${ts.SyntaxKind[prop.initializer.kind]})`,
+                  });
+                }
+              } else if (resolvedUrl.startsWith("/api/")) {
+                calls.push({ url: resolvedUrl, method: "POST", file: filePath, line });
+              }
+            }
+          }
+        }
+      }
     }
 
     ts.forEachChild(node, walk);
@@ -405,6 +471,22 @@ describe("extractCalls — unit fixtures", () => {
     expect(unresolved).toHaveLength(0);
   });
 
+  it("upload() with template handleUploadUrl extracts as POST", () => {
+    const src = `upload(name, body, { handleUploadUrl: \`/api/x/\${y}/upload\`, access: "private" });`;
+    const { calls, unresolved } = extractCalls("fixture.ts", src);
+    expect(unresolved).toHaveLength(0);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({ url: "/api/x/[param]/upload", method: "POST" });
+  });
+
+  it("upload() with unresolvable handleUploadUrl goes to unresolved, not silently dropped", () => {
+    const src = `upload(name, body, { handleUploadUrl: computeUrl(), access: "private" });`;
+    const { calls, unresolved } = extractCalls("fixture.ts", src);
+    expect(calls).toHaveLength(0);
+    expect(unresolved).toHaveLength(1);
+    expect(unresolved[0].reason).toMatch(/handleUploadUrl/);
+  });
+
   it("query string is stripped during normalisation", () => {
     const src = 'apiGet(`/api/invitations/accept?token=${params.token}`);';
     const { calls } = extractCalls("fixture.ts", src);
@@ -456,17 +538,28 @@ describe("routePatternFromFile — unit fixtures", () => {
 // ---------------------------------------------------------------------------
 
 describe("matchesRoute — guardrail", () => {
-  it("returns false for a deliberately non-existent route", () => {
-    const REPO_ROOT = path.resolve(__dirname, "../../..");
-    const routes = buildRouteTable(REPO_ROOT);
+  // Hand-crafted route table — self-contained so this test can't become a no-op
+  // if someone later adds a real /api/does-not-exist route.
+  const FIXED_ROUTES: RouteEntry[] = [
+    { pattern: "/api/collections", methods: new Set(["GET", "POST"]) },
+    { pattern: "/api/collections/[param]/items", methods: new Set(["GET", "POST"]) },
+    { pattern: "/api/collections/[param]/pool/upload", methods: new Set(["POST"]) },
+  ];
+
+  it("returns false for a deliberately non-existent route (self-contained)", () => {
     const fakeMiss = matchesRoute(
       { url: "/api/does-not-exist", method: "POST" },
-      routes,
+      FIXED_ROUTES,
     );
     expect(fakeMiss).toBe(false);
   });
 
-  it("returns true for a known real route (sanity check)", () => {
+  it("returns true for a known route in the hand-crafted table", () => {
+    const hit = matchesRoute({ url: "/api/collections", method: "POST" }, FIXED_ROUTES);
+    expect(hit).toBe(true);
+  });
+
+  it("returns true for a real route in the live route table (sanity check)", () => {
     const REPO_ROOT = path.resolve(__dirname, "../../..");
     const routes = buildRouteTable(REPO_ROOT);
     // /api/collections is definitely real
@@ -482,21 +575,22 @@ describe("matchesRoute — guardrail", () => {
 describe("repo-scan: every UI /api/ call matches a route+method", () => {
   const REPO_ROOT = path.resolve(__dirname, "../../..");
 
-  // Glob all "use client" files in src/components, src/features, src/app
-  // glob v8 sync() accepts only a single pattern string, so call per dir.
+  // Walk "use client" files in src/components, src/features, src/app
+  // Uses dependency-free recursive walk — no glob dep.
+  const USE_CLIENT_RE = /^\s*["']use client["']/;
   function getClientFiles(): string[] {
-    const patterns = [
-      "src/components/**/*.{ts,tsx}",
-      "src/features/**/*.{ts,tsx}",
-      "src/app/**/*.{ts,tsx}",
+    const dirs = [
+      path.join(REPO_ROOT, "src", "components"),
+      path.join(REPO_ROOT, "src", "features"),
+      path.join(REPO_ROOT, "src", "app"),
     ];
-    const files = patterns.flatMap((p) => globSync(p, { cwd: REPO_ROOT }));
-    return files
-      .map((f) => path.join(REPO_ROOT, f))
-      .filter((abs) => {
-        const content = fs.readFileSync(abs, "utf-8");
-        return content.startsWith('"use client"') || content.startsWith("'use client'");
-      });
+    const tsExt = /\.(ts|tsx)$/;
+    const files = dirs.flatMap((d) => (fs.existsSync(d) ? walkFiles(d, tsExt) : []));
+    return files.filter((abs) => {
+      // Strip leading BOM (﻿) before testing the directive.
+      const content = fs.readFileSync(abs, "utf-8").replace(/^﻿/, "");
+      return USE_CLIENT_RE.test(content);
+    });
   }
 
   it("all UI fetch call URLs can be statically resolved (no unresolved sites)", () => {
