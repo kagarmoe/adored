@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
@@ -95,5 +95,27 @@ describe("ItemPhotoCarousel", () => {
   it("offers the rotate/zoom view control on the current photo", () => {
     render(<ItemPhotoCarousel photos={mk(2)} {...props} />);
     expect(screen.getByRole("button", { name: /view photo/i })).toBeInTheDocument();
+  });
+
+  it("drops the current photo from the carousel after a confirmed delete", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
+    render(<ItemPhotoCarousel photos={mk(3)} {...props} />);
+    expect(currentImgSrc()).toContain("/photos/p1/");
+    fireEvent.click(screen.getByRole("button", { name: /delete this photo/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
+    await waitFor(() =>
+      expect(screen.getAllByRole("button", { name: /go to photo/i })).toHaveLength(2),
+    );
+    expect(currentImgSrc()).toContain("/photos/p2/"); // p1 gone → p2 slides into view
+  });
+
+  it("returns to the add-photos CTA when the last photo is deleted", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
+    render(<ItemPhotoCarousel photos={mk(1)} {...props} />);
+    fireEvent.click(screen.getByRole("button", { name: /delete this photo/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
+    await waitFor(() =>
+      expect(screen.getByRole("link", { name: /add photos/i })).toBeInTheDocument(),
+    );
   });
 });

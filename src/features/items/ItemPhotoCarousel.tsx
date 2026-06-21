@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getPhotoAssetUrl } from "@/lib/photos";
 import { PhotoViewControl, type ViewerPhoto } from "@/components/ui";
+import { PhotoDeleteControl } from "./PhotoDeleteControl";
 
 const MAX_DOTS = 6;
 
@@ -19,8 +20,16 @@ interface ItemPhotoCarouselProps {
 /** Tap-first flip-through of an item's photos. No swipe: navigate with the
  *  Prev/Next arrows, the dots/counter, or ArrowLeft/Right. Rotate + zoom reuse
  *  the shared ImageViewer via PhotoViewControl on the current photo. */
-export function ItemPhotoCarousel({ photos, collectionId, itemName, addPhotosHref }: ItemPhotoCarouselProps) {
+export function ItemPhotoCarousel({
+  photos: initialPhotos,
+  collectionId,
+  itemName,
+  addPhotosHref,
+}: ItemPhotoCarouselProps) {
   const [index, setIndex] = useState(0);
+  // Local source of truth so a deleted photo drops out immediately (optimistic,
+  // mirroring PhotoGallery). The render clamps `current` to the new length.
+  const [photos, setPhotos] = useState(initialPhotos);
 
   if (photos.length === 0) {
     return (
@@ -71,6 +80,13 @@ export function ItemPhotoCarousel({ photos, collectionId, itemName, addPhotosHre
           className="object-contain"
         />
         <PhotoViewControl photo={photo} className="absolute right-3 top-3 z-20" />
+        <PhotoDeleteControl
+          collectionId={collectionId}
+          itemId={photo.itemId}
+          photoId={photo.id}
+          onDeleted={() => setPhotos((prev) => prev.filter((p) => p.id !== photo.id))}
+          className="absolute left-3 top-3 z-20"
+        />
         {multi && (
           <>
             <NavArrow side="left" label="Previous photo" disabled={atStart} onClick={() => go(current - 1)} />
