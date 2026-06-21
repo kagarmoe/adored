@@ -97,9 +97,14 @@ describe("ItemPhotoCarousel", () => {
     expect(screen.getByRole("button", { name: /view photo/i })).toBeInTheDocument();
   });
 
+  it("hides the delete control when the viewer can't delete (no 403-only button)", () => {
+    render(<ItemPhotoCarousel photos={mk(2)} {...props} canDelete={false} />);
+    expect(screen.queryByRole("button", { name: /delete this photo/i })).not.toBeInTheDocument();
+  });
+
   it("drops the current photo from the carousel after a confirmed delete", async () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
-    render(<ItemPhotoCarousel photos={mk(3)} {...props} />);
+    render(<ItemPhotoCarousel photos={mk(3)} {...props} canDelete />);
     expect(currentImgSrc()).toContain("/photos/p1/");
     fireEvent.click(screen.getByRole("button", { name: /delete this photo/i }));
     fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
@@ -109,9 +114,22 @@ describe("ItemPhotoCarousel", () => {
     expect(currentImgSrc()).toContain("/photos/p2/"); // p1 gone → p2 slides into view
   });
 
+  it("deletes a MIDDLE photo — the neighbour after it slides into view", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
+    render(<ItemPhotoCarousel photos={mk(3)} {...props} canDelete />);
+    fireEvent.click(screen.getByRole("button", { name: /next photo/i })); // → p2 (index 1)
+    expect(currentImgSrc()).toContain("/photos/p2/");
+    fireEvent.click(screen.getByRole("button", { name: /delete this photo/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
+    await waitFor(() =>
+      expect(screen.getAllByRole("button", { name: /go to photo/i })).toHaveLength(2),
+    );
+    expect(currentImgSrc()).toContain("/photos/p3/"); // p2 gone → p3 takes index 1
+  });
+
   it("returns to the add-photos CTA when the last photo is deleted", async () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
-    render(<ItemPhotoCarousel photos={mk(1)} {...props} />);
+    render(<ItemPhotoCarousel photos={mk(1)} {...props} canDelete />);
     fireEvent.click(screen.getByRole("button", { name: /delete this photo/i }));
     fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
     await waitFor(() =>

@@ -76,9 +76,9 @@ export function PhotoDeleteControl({
     <div
       role="group"
       aria-label="Delete this photo"
-      className={`flex flex-col gap-2 rounded-card bg-surface p-3 shadow-lift ring-1 ring-hairline ${className ?? ""}`}
+      className={`flex max-w-[15rem] flex-col gap-2 rounded-card bg-surface p-3 shadow-lift ring-1 ring-hairline ${className ?? ""}`}
     >
-      <span className="text-sm text-ink">Delete this photo?</span>
+      <span className="text-sm text-ink">Delete this photo? This can’t be undone.</span>
       <div className="flex gap-2">
         <Button
           ref={cancelRef}

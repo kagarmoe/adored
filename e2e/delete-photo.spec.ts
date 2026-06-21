@@ -29,5 +29,11 @@ test.describe("delete photo from the item carousel", () => {
     // Confirm → the photo is gone; the carousel shows its empty state.
     await page.getByRole("button", { name: /^delete$/i }).click();
     await expect(page.getByRole("link", { name: /add photos/i })).toBeVisible();
+
+    // Reload: the empty state must come from the SERVER, not optimistic local
+    // state — this is what proves the row was actually deleted.
+    await page.reload();
+    await expect(page.getByRole("link", { name: /add photos/i })).toBeVisible();
+    await expect(page.getByRole("img")).toHaveCount(0);
   });
 });
