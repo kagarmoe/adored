@@ -7,6 +7,7 @@ import { SessionRepository } from "@/server/repositories/implementations/Session
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { AppLayout } from "@/components/layout";
 import { Badge, Button, Card } from "@/components/ui";
+import { AbandonSessionButton } from "@/features/sessions/AbandonSessionButton";
 import Link from "next/link";
 
 interface CollectionPageProps {
@@ -117,7 +118,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
                 <Link href={`/collections/${collection.slug ?? collection.id}/sort/${activeSession.number}`}>
                   <Button>Resume</Button>
                 </Link>
-                <Button variant="secondary">Abandon</Button>
+                <AbandonSessionButton sessionId={activeSession.id} />
               </div>
             </div>
           </Card>
