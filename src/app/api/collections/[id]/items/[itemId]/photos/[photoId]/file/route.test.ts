@@ -111,6 +111,7 @@ describe("GET item photo file", () => {
         blobKey: "store/k.jpg",
         mimeType: "image/jpeg",
         photoId: "p1",
+        collectionId: "c1",
         updatedAt: photo.updatedAt,
         rotation: 0,
       },

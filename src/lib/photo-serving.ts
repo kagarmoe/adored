@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { get } from "@vercel/blob";
+import { get, put } from "@vercel/blob";
 import sharp from "sharp";
 import { getBlobAccess } from "@/lib/photos";
+import { variantPath } from "@/lib/photo-variants";
 
 /** Widths a card/grid/hero may request via `?w=`. One per surface; `unoptimized`
  *  precludes srcset, so we pick a single 2x-friendly width per surface. */
@@ -22,6 +23,7 @@ interface ServeArgs {
   blobKey: string;
   mimeType: string;
   photoId: string;
+  collectionId: string;
   updatedAt: Date;
   /** Stored clockwise rotation (0|90|180|270), applied on top of EXIF auto-orient. */
   rotation: number;
@@ -58,12 +60,16 @@ export async function readStreamCapped(
 
 /**
  * Serve a photo's bytes with caching + optional on-demand resize. Owns the
- * variant ETag end-to-end: it does NOT forward the client's If-None-Match into
- * the blob get() (whose etag is the blob's *content* etag — a different
- * namespace). Call ONLY after the route's authz has passed.
+ * variant ETag end-to-end (does NOT forward the client's If-None-Match into the
+ * blob get). Call ONLY after the route's authz has passed.
+ *
+ * Resized variants are persisted back to Blob (resize-once-globally): on a HIT
+ * the stored webp is streamed without fetching or decoding the original. The
+ * variant store is BEST-EFFORT — any variant get/put failure degrades to an
+ * on-the-fly resize, never a broken image.
  */
 export async function servePhotoFile(
-  { blobKey, mimeType, photoId, updatedAt, rotation }: ServeArgs,
+  { blobKey, mimeType, photoId, collectionId, updatedAt, rotation }: ServeArgs,
   request: Request,
 ): Promise<NextResponse> {
   const wParam = new URL(request.url).searchParams.get("w");
@@ -85,15 +91,13 @@ export async function servePhotoFile(
   }
 
   try {
-    const result = await get(blobKey, { access: getBlobAccess(blobKey) });
-    if (!result || result.statusCode !== 200) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-
+    // Original passthrough (no ?w=): stream verbatim, or re-encode/orient when a
+    // user rotation is stored so /file is orientation-correct without a variant.
     if (width === null) {
-      // Passthrough stays a pure stream when there's nothing to apply. When a
-      // user rotation is stored we must re-encode so the original is orientation-
-      // correct too (otherwise /file without ?w= would serve the un-rotated image).
+      const result = await get(blobKey, { access: getBlobAccess(blobKey) });
+      if (!result || result.statusCode !== 200) {
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
+      }
       if (rotation === 0) {
         return new NextResponse(result.stream, {
           headers: {
@@ -112,13 +116,29 @@ export async function servePhotoFile(
         .rotate(rotation)
         .webp({ quality: 80 })
         .toBuffer();
-      return new NextResponse(new Uint8Array(rotated), {
+      return webpResponse(rotated, etag);
+    }
+
+    // Resize path — persisted variant get-or-create (best-effort cache).
+    const vPath = variantPath(collectionId, photoId, width, updatedAt.getTime());
+    let variant: Awaited<ReturnType<typeof get>> = null;
+    try {
+      variant = await get(vPath, { access: "private" });
+    } catch {
+      variant = null; // a transient blob error is a cache miss, not a failure
+    }
+    if (variant && variant.statusCode === 200) {
+      // Reuse the variant ETag (NOT the blob's content etag) so 304 still matches.
+      return new NextResponse(variant.stream, {
         headers: { "Content-Type": "image/webp", "Cache-Control": CACHE_CONTROL, ETag: etag },
       });
     }
 
-    // Fast-reject a known-huge blob without reading it; the capped reader then
-    // bounds the read for unknown/mis-reported sizes too.
+    // MISS: fetch the original, resize, persist (best-effort), stream.
+    const result = await get(blobKey, { access: getBlobAccess(blobKey) });
+    if (!result || result.statusCode !== 200) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     if (result.blob.size != null && result.blob.size > RESIZE_MAX_SOURCE_BYTES) {
       return NextResponse.json({ error: "Image too large to process" }, { status: 400 });
     }
@@ -132,11 +152,26 @@ export async function servePhotoFile(
       .resize({ width, withoutEnlargement: true })
       .webp({ quality: 80 })
       .toBuffer();
-    return new NextResponse(new Uint8Array(out), {
-      headers: { "Content-Type": "image/webp", "Cache-Control": CACHE_CONTROL, ETag: etag },
-    });
+    try {
+      await put(vPath, out, {
+        access: "private",
+        addRandomSuffix: false,
+        allowOverwrite: true, // deterministic bytes — a concurrent double-miss is safe
+        contentType: "image/webp",
+      });
+    } catch (error) {
+      // A cache-write race/outage must never fail the response; we re-resize next time.
+      console.error("variant persist failed (orphaned/none, will re-resize)", { vPath, error });
+    }
+    return webpResponse(out, etag);
   } catch (error) {
     console.error("servePhotoFile failed", { photoId, width, error });
     return NextResponse.json({ error: "Image processing failed" }, { status: 500 });
   }
+}
+
+function webpResponse(bytes: Buffer, etag: string): NextResponse {
+  return new NextResponse(new Uint8Array(bytes), {
+    headers: { "Content-Type": "image/webp", "Cache-Control": CACHE_CONTROL, ETag: etag },
+  });
 }

@@ -1,17 +1,32 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockGetSession, mockGetDb, photoRepo, itemRepo, membershipRepo, collectionRepo } =
-  vi.hoisted(() => ({
-    mockGetSession: vi.fn(),
-    mockGetDb: vi.fn(),
-    photoRepo: { findById: vi.fn(), update: vi.fn() },
-    itemRepo: { findById: vi.fn() },
-    membershipRepo: { findByUser: vi.fn() },
-    collectionRepo: { findById: vi.fn() },
-  }));
+const {
+  mockGetSession,
+  mockGetDb,
+  mockBlobDel,
+  mockDeleteVariants,
+  photoRepo,
+  itemRepo,
+  membershipRepo,
+  collectionRepo,
+} = vi.hoisted(() => ({
+  mockGetSession: vi.fn(),
+  mockGetDb: vi.fn(),
+  mockBlobDel: vi.fn(),
+  mockDeleteVariants: vi.fn(),
+  photoRepo: { findById: vi.fn(), update: vi.fn(), delete: vi.fn() },
+  itemRepo: { findById: vi.fn() },
+  membershipRepo: { findByUser: vi.fn() },
+  collectionRepo: { findById: vi.fn() },
+}));
 
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: mockGetDb }));
+vi.mock("@vercel/blob", () => ({ del: mockBlobDel }));
+vi.mock("@/lib/photo-variants", () => ({
+  deleteVariants: mockDeleteVariants,
+  variantPrefix: (c: string, p?: string) => (p ? `variants/${c}/${p}/` : `variants/${c}/`),
+}));
 vi.mock("@/server/repositories/implementations/PhotoRepository", () => ({
   PhotoRepository: vi.fn().mockImplementation(() => photoRepo),
 }));
@@ -25,7 +40,7 @@ vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({
   CollectionRepository: vi.fn().mockImplementation(() => collectionRepo),
 }));
 
-import { PATCH } from "./route";
+import { PATCH, DELETE } from "./route";
 
 const params = { id: "c1", itemId: "item_1", photoId: "p1" };
 const updatedAt = new Date(1_700_000_000_000);
@@ -97,5 +112,62 @@ describe("PATCH item photo (rotation)", () => {
     expect((await PATCH(req({ rotation: "90" }), { params })).status).toBe(400);
     expect((await PATCH(req("not json"), { params })).status).toBe(400);
     expect(photoRepo.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("DELETE item photo", () => {
+  const delReq = () => new Request("http://localhost/photo", { method: "DELETE" }) as any;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetDb.mockReturnValue({ db: "fake" });
+    mockGetSession.mockResolvedValue({ user: { id: "u1" } });
+    itemRepo.findById.mockResolvedValue({ id: "item_1", collectionId: "c1" });
+    photoRepo.findById.mockResolvedValue({
+      id: "p1",
+      itemId: "item_1",
+      collectionId: "c1",
+      blobKey: "https://blob/x.jpg",
+    });
+    membershipRepo.findByUser.mockResolvedValue({ id: "m1", canDeletePhotos: true });
+    collectionRepo.findById.mockResolvedValue({ id: "c1", ownerId: "u9" });
+    photoRepo.delete.mockResolvedValue(undefined);
+    mockBlobDel.mockResolvedValue(undefined);
+    mockDeleteVariants.mockResolvedValue(undefined);
+  });
+
+  it("401 when unauthenticated; no delete, no variant sweep", async () => {
+    mockGetSession.mockResolvedValue(null);
+    expect((await DELETE(delReq(), { params })).status).toBe(401);
+    expect(photoRepo.delete).not.toHaveBeenCalled();
+    expect(mockDeleteVariants).not.toHaveBeenCalled();
+  });
+
+  it("403 for a member WITHOUT canDeletePhotos; no delete, no variant sweep", async () => {
+    membershipRepo.findByUser.mockResolvedValue({ id: "m1", canDeletePhotos: false });
+    expect((await DELETE(delReq(), { params })).status).toBe(403);
+    expect(photoRepo.delete).not.toHaveBeenCalled();
+    expect(mockDeleteVariants).not.toHaveBeenCalled();
+  });
+
+  it("404 when the photo is not on this item; no delete", async () => {
+    photoRepo.findById.mockResolvedValue({ id: "p1", itemId: "other", collectionId: "c1" });
+    expect((await DELETE(delReq(), { params })).status).toBe(404);
+    expect(photoRepo.delete).not.toHaveBeenCalled();
+  });
+
+  it("200: deletes the blob, the row, then sweeps the photo's variants", async () => {
+    const res = await DELETE(delReq(), { params });
+    expect(res.status).toBe(200);
+    expect(mockBlobDel).toHaveBeenCalledWith("https://blob/x.jpg");
+    expect(photoRepo.delete).toHaveBeenCalledWith("p1");
+    expect(mockDeleteVariants).toHaveBeenCalledWith("variants/c1/p1/");
+  });
+
+  it("a variant-cleanup failure does not fail the (already committed) delete", async () => {
+    mockDeleteVariants.mockRejectedValue(new Error("blob outage"));
+    const res = await DELETE(delReq(), { params });
+    expect(res.status).toBe(200);
+    expect(photoRepo.delete).toHaveBeenCalledWith("p1");
   });
 });

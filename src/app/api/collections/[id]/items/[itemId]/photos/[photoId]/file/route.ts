@@ -48,6 +48,7 @@ export async function GET(
         blobKey: photo.blobKey,
         mimeType: photo.mimeType,
         photoId: photo.id,
+        collectionId: params.id,
         updatedAt: photo.updatedAt,
         rotation: photo.rotation,
       },
