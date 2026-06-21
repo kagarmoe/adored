@@ -17,12 +17,12 @@ test.describe("abandon sorting session", () => {
     await expect(page.getByText("Active Sorting Session")).toBeVisible();
 
     // First click reveals the confirm; it must NOT delete on its own.
-    await page.getByRole("button", { name: /^abandon$/i }).click();
-    await expect(page.getByText(/abandon this session\?/i)).toBeVisible();
+    await page.getByRole("button", { name: /^set aside$/i }).click();
+    await expect(page.getByText(/set this session aside\?/i)).toBeVisible();
     await expect(page.getByText("Active Sorting Session")).toBeVisible();
 
     // Confirm → the card is gone after the server refresh.
-    await page.getByRole("button", { name: /^abandon$/i }).click();
+    await page.getByRole("button", { name: /^set aside$/i }).click();
     await expect(page.getByText("Active Sorting Session")).toHaveCount(0);
   });
 });
