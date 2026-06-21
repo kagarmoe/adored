@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/c84026791ec775348cab0775eea91f9e8ada648b",
-        "commitHash": "c84026791ec775348cab0775eea91f9e8ada648b",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27887624002"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2c989bdebb7c239836ccbdfc201061d44196273c",
+        "commitHash": "2c989bdebb7c239836ccbdfc201061d44196273c",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27889212762"
       },
       "gitCommit": {
-        "shortHash": "c840267",
-        "hash": "c84026791ec775348cab0775eea91f9e8ada648b",
-        "subject": "Dead code removal: −720 LOC, 12 dead modules + dead exports (epic purses-d8rd) (#222)",
-        "body": "Dead code removal: −720 LOC, 12 dead modules + dead exports (epic purses-d8rd) (#222)\n\n* chore(dead-code): remove 10 unused modules (services, hooks, libs) (D phase 1)\n\nVerified-unreferenced (knip + manual): CollectionService, UserService,\nPhotoService + server/api/photos (dead pair), InvitationService + MembershipService\n(dead pair), useCollection, usePermissions, lib/api-errors, lib/validation.\nNo test files orphaned; tsc/unit(511)/lint green. Kept resend (signup email),\n.prettierrc.js (config), UnauthorizedError (2 refs) — knip false positives.\n\nBead: purses-d8rd\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(dead-code): remove dead exports + unused ConfirmDialog (D phase 2)\n\nConfirmDialog component (only referenced in a comment); getLowConfidencePairs/\ngetComparisonPriorities (pairwise); apiDelete + redundant ApiError re-export;\nisApiError; expectAuthenticated (e2e helper); trimmed layout/ui barrels to the\nexports actually imported. Kept db (backs the Database type) + uploads labels\n(used internally). tsc/unit(511)/lint green.\n\nBead: purses-d8rd\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph after dead-code removal (nodes removed)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "2c989bd",
+        "hash": "2c989bdebb7c239836ccbdfc201061d44196273c",
+        "subject": "feat(images): persisted variant cache — resize-once-globally (purses-u1lr.4) (#224)",
+        "body": "feat(images): persisted variant cache — resize-once-globally (purses-u1lr.4) (#224)\n\n* docs(spec): persisted variant cache design (purses-u1lr.4)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(spec): fold D4 review (wf_5ca6b2c8-496) — allowOverwrite + best-effort fallback + variantEtag on HIT\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): persisted variant cache — resize-once-globally (purses-u1lr.4)\n\nservePhotoFile now get-or-creates the resized variant in Blob (variants/<cid>/<pid>/\nw<w>-v<v>.webp): HIT streams the stored webp (no original fetch, no sharp); MISS\nresizes, persists (allowOverwrite, deterministic), streams. BEST-EFFORT — a variant\nget/put failure degrades to on-the-fly resize, never 500. Version=updatedAt busts on\nrotation. Cleanup helper (list+del prefix, best-effort) wired into photo DELETE +\nCollectionPurgeService. webp retained (avif deferred). +16 tests (HIT/MISS/round-trip/\nfallback/version/cleanup); collection-purge integration asserts the variant sweep.\n\nBead: purses-u1lr.4\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): fold D4 whole-branch review (wf_996c6395-507)\n\n- harden photo DELETE so a variant-cleanup rejection can't fail the committed\n  delete (+ test) — QA minor.\n- document the accepted concurrent-first-burst limitation (no single-flight) — Perf minor.\nArchitect/Security/Craftsman/Perf returned CLEAN.\n\nBead: purses-u1lr.4\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): persisted variant cache shipped (ARCHITECTURE 14 + API.md /file & DELETE)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for persisted variant cache\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1781999444000
+          "time": 1782003912000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1781999444000
+          "time": 1782003912000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/c84026791ec775348cab0775eea91f9e8ada648b",
-            "commitHash": "c84026791ec775348cab0775eea91f9e8ada648b",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27887624002"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2c989bdebb7c239836ccbdfc201061d44196273c",
+            "commitHash": "2c989bdebb7c239836ccbdfc201061d44196273c",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27889212762"
           },
           "gitCommit": {
-            "shortHash": "c840267",
-            "hash": "c84026791ec775348cab0775eea91f9e8ada648b",
-            "subject": "Dead code removal: −720 LOC, 12 dead modules + dead exports (epic purses-d8rd) (#222)",
-            "body": "Dead code removal: −720 LOC, 12 dead modules + dead exports (epic purses-d8rd) (#222)\n\n* chore(dead-code): remove 10 unused modules (services, hooks, libs) (D phase 1)\n\nVerified-unreferenced (knip + manual): CollectionService, UserService,\nPhotoService + server/api/photos (dead pair), InvitationService + MembershipService\n(dead pair), useCollection, usePermissions, lib/api-errors, lib/validation.\nNo test files orphaned; tsc/unit(511)/lint green. Kept resend (signup email),\n.prettierrc.js (config), UnauthorizedError (2 refs) — knip false positives.\n\nBead: purses-d8rd\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(dead-code): remove dead exports + unused ConfirmDialog (D phase 2)\n\nConfirmDialog component (only referenced in a comment); getLowConfidencePairs/\ngetComparisonPriorities (pairwise); apiDelete + redundant ApiError re-export;\nisApiError; expectAuthenticated (e2e helper); trimmed layout/ui barrels to the\nexports actually imported. Kept db (backs the Database type) + uploads labels\n(used internally). tsc/unit(511)/lint green.\n\nBead: purses-d8rd\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph after dead-code removal (nodes removed)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "2c989bd",
+            "hash": "2c989bdebb7c239836ccbdfc201061d44196273c",
+            "subject": "feat(images): persisted variant cache — resize-once-globally (purses-u1lr.4) (#224)",
+            "body": "feat(images): persisted variant cache — resize-once-globally (purses-u1lr.4) (#224)\n\n* docs(spec): persisted variant cache design (purses-u1lr.4)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(spec): fold D4 review (wf_5ca6b2c8-496) — allowOverwrite + best-effort fallback + variantEtag on HIT\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): persisted variant cache — resize-once-globally (purses-u1lr.4)\n\nservePhotoFile now get-or-creates the resized variant in Blob (variants/<cid>/<pid>/\nw<w>-v<v>.webp): HIT streams the stored webp (no original fetch, no sharp); MISS\nresizes, persists (allowOverwrite, deterministic), streams. BEST-EFFORT — a variant\nget/put failure degrades to on-the-fly resize, never 500. Version=updatedAt busts on\nrotation. Cleanup helper (list+del prefix, best-effort) wired into photo DELETE +\nCollectionPurgeService. webp retained (avif deferred). +16 tests (HIT/MISS/round-trip/\nfallback/version/cleanup); collection-purge integration asserts the variant sweep.\n\nBead: purses-u1lr.4\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): fold D4 whole-branch review (wf_996c6395-507)\n\n- harden photo DELETE so a variant-cleanup rejection can't fail the committed\n  delete (+ test) — QA minor.\n- document the accepted concurrent-first-burst limitation (no single-flight) — Perf minor.\nArchitect/Security/Craftsman/Perf returned CLEAN.\n\nBead: purses-u1lr.4\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): persisted variant cache shipped (ARCHITECTURE 14 + API.md /file & DELETE)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for persisted variant cache\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781999444000
+              "time": 1782003912000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781999444000
+              "time": 1782003912000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/c84026791ec775348cab0775eea91f9e8ada648b",
-            "commitHash": "c84026791ec775348cab0775eea91f9e8ada648b",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27887624002"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2c989bdebb7c239836ccbdfc201061d44196273c",
+            "commitHash": "2c989bdebb7c239836ccbdfc201061d44196273c",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27889212762"
           },
           "gitCommit": {
-            "shortHash": "c840267",
-            "hash": "c84026791ec775348cab0775eea91f9e8ada648b",
-            "subject": "Dead code removal: −720 LOC, 12 dead modules + dead exports (epic purses-d8rd) (#222)",
-            "body": "Dead code removal: −720 LOC, 12 dead modules + dead exports (epic purses-d8rd) (#222)\n\n* chore(dead-code): remove 10 unused modules (services, hooks, libs) (D phase 1)\n\nVerified-unreferenced (knip + manual): CollectionService, UserService,\nPhotoService + server/api/photos (dead pair), InvitationService + MembershipService\n(dead pair), useCollection, usePermissions, lib/api-errors, lib/validation.\nNo test files orphaned; tsc/unit(511)/lint green. Kept resend (signup email),\n.prettierrc.js (config), UnauthorizedError (2 refs) — knip false positives.\n\nBead: purses-d8rd\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(dead-code): remove dead exports + unused ConfirmDialog (D phase 2)\n\nConfirmDialog component (only referenced in a comment); getLowConfidencePairs/\ngetComparisonPriorities (pairwise); apiDelete + redundant ApiError re-export;\nisApiError; expectAuthenticated (e2e helper); trimmed layout/ui barrels to the\nexports actually imported. Kept db (backs the Database type) + uploads labels\n(used internally). tsc/unit(511)/lint green.\n\nBead: purses-d8rd\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph after dead-code removal (nodes removed)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "2c989bd",
+            "hash": "2c989bdebb7c239836ccbdfc201061d44196273c",
+            "subject": "feat(images): persisted variant cache — resize-once-globally (purses-u1lr.4) (#224)",
+            "body": "feat(images): persisted variant cache — resize-once-globally (purses-u1lr.4) (#224)\n\n* docs(spec): persisted variant cache design (purses-u1lr.4)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(spec): fold D4 review (wf_5ca6b2c8-496) — allowOverwrite + best-effort fallback + variantEtag on HIT\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): persisted variant cache — resize-once-globally (purses-u1lr.4)\n\nservePhotoFile now get-or-creates the resized variant in Blob (variants/<cid>/<pid>/\nw<w>-v<v>.webp): HIT streams the stored webp (no original fetch, no sharp); MISS\nresizes, persists (allowOverwrite, deterministic), streams. BEST-EFFORT — a variant\nget/put failure degrades to on-the-fly resize, never 500. Version=updatedAt busts on\nrotation. Cleanup helper (list+del prefix, best-effort) wired into photo DELETE +\nCollectionPurgeService. webp retained (avif deferred). +16 tests (HIT/MISS/round-trip/\nfallback/version/cleanup); collection-purge integration asserts the variant sweep.\n\nBead: purses-u1lr.4\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): fold D4 whole-branch review (wf_996c6395-507)\n\n- harden photo DELETE so a variant-cleanup rejection can't fail the committed\n  delete (+ test) — QA minor.\n- document the accepted concurrent-first-burst limitation (no single-flight) — Perf minor.\nArchitect/Security/Craftsman/Perf returned CLEAN.\n\nBead: purses-u1lr.4\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): persisted variant cache shipped (ARCHITECTURE 14 + API.md /file & DELETE)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for persisted variant cache\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781999444000
+              "time": 1782003912000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781999444000
+              "time": 1782003912000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/c84026791ec775348cab0775eea91f9e8ada648b",
-            "commitHash": "c84026791ec775348cab0775eea91f9e8ada648b",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27887624002"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2c989bdebb7c239836ccbdfc201061d44196273c",
+            "commitHash": "2c989bdebb7c239836ccbdfc201061d44196273c",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27889212762"
           },
           "gitCommit": {
-            "shortHash": "c840267",
-            "hash": "c84026791ec775348cab0775eea91f9e8ada648b",
-            "subject": "Dead code removal: −720 LOC, 12 dead modules + dead exports (epic purses-d8rd) (#222)",
-            "body": "Dead code removal: −720 LOC, 12 dead modules + dead exports (epic purses-d8rd) (#222)\n\n* chore(dead-code): remove 10 unused modules (services, hooks, libs) (D phase 1)\n\nVerified-unreferenced (knip + manual): CollectionService, UserService,\nPhotoService + server/api/photos (dead pair), InvitationService + MembershipService\n(dead pair), useCollection, usePermissions, lib/api-errors, lib/validation.\nNo test files orphaned; tsc/unit(511)/lint green. Kept resend (signup email),\n.prettierrc.js (config), UnauthorizedError (2 refs) — knip false positives.\n\nBead: purses-d8rd\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(dead-code): remove dead exports + unused ConfirmDialog (D phase 2)\n\nConfirmDialog component (only referenced in a comment); getLowConfidencePairs/\ngetComparisonPriorities (pairwise); apiDelete + redundant ApiError re-export;\nisApiError; expectAuthenticated (e2e helper); trimmed layout/ui barrels to the\nexports actually imported. Kept db (backs the Database type) + uploads labels\n(used internally). tsc/unit(511)/lint green.\n\nBead: purses-d8rd\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph after dead-code removal (nodes removed)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "2c989bd",
+            "hash": "2c989bdebb7c239836ccbdfc201061d44196273c",
+            "subject": "feat(images): persisted variant cache — resize-once-globally (purses-u1lr.4) (#224)",
+            "body": "feat(images): persisted variant cache — resize-once-globally (purses-u1lr.4) (#224)\n\n* docs(spec): persisted variant cache design (purses-u1lr.4)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(spec): fold D4 review (wf_5ca6b2c8-496) — allowOverwrite + best-effort fallback + variantEtag on HIT\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): persisted variant cache — resize-once-globally (purses-u1lr.4)\n\nservePhotoFile now get-or-creates the resized variant in Blob (variants/<cid>/<pid>/\nw<w>-v<v>.webp): HIT streams the stored webp (no original fetch, no sharp); MISS\nresizes, persists (allowOverwrite, deterministic), streams. BEST-EFFORT — a variant\nget/put failure degrades to on-the-fly resize, never 500. Version=updatedAt busts on\nrotation. Cleanup helper (list+del prefix, best-effort) wired into photo DELETE +\nCollectionPurgeService. webp retained (avif deferred). +16 tests (HIT/MISS/round-trip/\nfallback/version/cleanup); collection-purge integration asserts the variant sweep.\n\nBead: purses-u1lr.4\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): fold D4 whole-branch review (wf_996c6395-507)\n\n- harden photo DELETE so a variant-cleanup rejection can't fail the committed\n  delete (+ test) — QA minor.\n- document the accepted concurrent-first-burst limitation (no single-flight) — Perf minor.\nArchitect/Security/Craftsman/Perf returned CLEAN.\n\nBead: purses-u1lr.4\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): persisted variant cache shipped (ARCHITECTURE 14 + API.md /file & DELETE)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for persisted variant cache\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781999444000
+              "time": 1782003912000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781999444000
+              "time": 1782003912000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/c84026791ec775348cab0775eea91f9e8ada648b",
-            "commitHash": "c84026791ec775348cab0775eea91f9e8ada648b",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27887624002"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2c989bdebb7c239836ccbdfc201061d44196273c",
+            "commitHash": "2c989bdebb7c239836ccbdfc201061d44196273c",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27889212762"
           },
           "gitCommit": {
-            "shortHash": "c840267",
-            "hash": "c84026791ec775348cab0775eea91f9e8ada648b",
-            "subject": "Dead code removal: −720 LOC, 12 dead modules + dead exports (epic purses-d8rd) (#222)",
-            "body": "Dead code removal: −720 LOC, 12 dead modules + dead exports (epic purses-d8rd) (#222)\n\n* chore(dead-code): remove 10 unused modules (services, hooks, libs) (D phase 1)\n\nVerified-unreferenced (knip + manual): CollectionService, UserService,\nPhotoService + server/api/photos (dead pair), InvitationService + MembershipService\n(dead pair), useCollection, usePermissions, lib/api-errors, lib/validation.\nNo test files orphaned; tsc/unit(511)/lint green. Kept resend (signup email),\n.prettierrc.js (config), UnauthorizedError (2 refs) — knip false positives.\n\nBead: purses-d8rd\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(dead-code): remove dead exports + unused ConfirmDialog (D phase 2)\n\nConfirmDialog component (only referenced in a comment); getLowConfidencePairs/\ngetComparisonPriorities (pairwise); apiDelete + redundant ApiError re-export;\nisApiError; expectAuthenticated (e2e helper); trimmed layout/ui barrels to the\nexports actually imported. Kept db (backs the Database type) + uploads labels\n(used internally). tsc/unit(511)/lint green.\n\nBead: purses-d8rd\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph after dead-code removal (nodes removed)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "2c989bd",
+            "hash": "2c989bdebb7c239836ccbdfc201061d44196273c",
+            "subject": "feat(images): persisted variant cache — resize-once-globally (purses-u1lr.4) (#224)",
+            "body": "feat(images): persisted variant cache — resize-once-globally (purses-u1lr.4) (#224)\n\n* docs(spec): persisted variant cache design (purses-u1lr.4)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(spec): fold D4 review (wf_5ca6b2c8-496) — allowOverwrite + best-effort fallback + variantEtag on HIT\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* feat(images): persisted variant cache — resize-once-globally (purses-u1lr.4)\n\nservePhotoFile now get-or-creates the resized variant in Blob (variants/<cid>/<pid>/\nw<w>-v<v>.webp): HIT streams the stored webp (no original fetch, no sharp); MISS\nresizes, persists (allowOverwrite, deterministic), streams. BEST-EFFORT — a variant\nget/put failure degrades to on-the-fly resize, never 500. Version=updatedAt busts on\nrotation. Cleanup helper (list+del prefix, best-effort) wired into photo DELETE +\nCollectionPurgeService. webp retained (avif deferred). +16 tests (HIT/MISS/round-trip/\nfallback/version/cleanup); collection-purge integration asserts the variant sweep.\n\nBead: purses-u1lr.4\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(images): fold D4 whole-branch review (wf_996c6395-507)\n\n- harden photo DELETE so a variant-cleanup rejection can't fail the committed\n  delete (+ test) — QA minor.\n- document the accepted concurrent-first-burst limitation (no single-flight) — Perf minor.\nArchitect/Security/Craftsman/Perf returned CLEAN.\n\nBead: purses-u1lr.4\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* docs(sync): persisted variant cache shipped (ARCHITECTURE 14 + API.md /file & DELETE)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* chore(graphify): refresh graph for persisted variant cache\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1781999444000
+              "time": 1782003912000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1781999444000
+              "time": 1782003912000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1009,
+                  "duration": 1032,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:53:44.091Z",
+                  "startTime": "2026-06-21T01:07:49.300Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -303,12 +303,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 7512,
+                  "duration": 7155,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:53:45.766Z",
+                  "startTime": "2026-06-21T01:07:51.040Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -337,12 +337,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2167,
+                  "duration": 2317,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:53:54.026Z",
+                  "startTime": "2026-06-21T01:07:58.983Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -371,12 +371,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1633,
+                  "duration": 1726,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:54:43.721Z",
+                  "startTime": "2026-06-21T01:09:17.731Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -405,12 +405,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2394,
+                  "duration": 2747,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:54:45.546Z",
+                  "startTime": "2026-06-21T01:09:19.648Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -439,12 +439,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2700,
+                  "duration": 3450,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:56:03.251Z",
+                  "startTime": "2026-06-21T01:11:07.905Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -473,12 +473,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1597,
+                  "duration": 1836,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:56:08.298Z",
+                  "startTime": "2026-06-21T01:11:14.797Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -515,12 +515,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1636,
+                  "duration": 1685,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:53:56.226Z",
+                  "startTime": "2026-06-21T01:08:01.337Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -549,12 +549,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1568,
+                  "duration": 1622,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:53:57.923Z",
+                  "startTime": "2026-06-21T01:08:03.099Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -583,12 +583,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2540,
+                  "duration": 3822,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:53:59.521Z",
+                  "startTime": "2026-06-21T01:08:04.737Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -617,12 +617,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1991,
+                  "duration": 2905,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:54:47.983Z",
+                  "startTime": "2026-06-21T01:09:22.443Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -651,12 +651,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1511,
+                  "duration": 1987,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:54:50.041Z",
+                  "startTime": "2026-06-21T01:09:25.455Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -685,12 +685,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1953,
+                  "duration": 2609,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:54:51.575Z",
+                  "startTime": "2026-06-21T01:09:27.504Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -719,12 +719,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 875,
+                  "duration": 865,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:56:09.937Z",
+                  "startTime": "2026-06-21T01:11:16.695Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -753,12 +753,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 858,
+                  "duration": 909,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:56:10.850Z",
+                  "startTime": "2026-06-21T01:11:17.595Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -787,12 +787,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1365,
+                  "duration": 1358,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:56:11.746Z",
+                  "startTime": "2026-06-21T01:11:18.540Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -836,12 +836,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 976,
+                      "duration": 3631,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:02.107Z",
+                      "startTime": "2026-06-21T01:08:08.614Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -870,12 +870,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1513,
+                      "duration": 3636,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:03.206Z",
+                      "startTime": "2026-06-21T01:08:23.046Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -904,12 +904,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1053,
+                      "duration": 1903,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:04.767Z",
+                      "startTime": "2026-06-21T01:08:26.723Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -938,12 +938,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 833,
+                      "duration": 1233,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:53.564Z",
+                      "startTime": "2026-06-21T01:09:30.268Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -972,12 +972,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1289,
+                      "duration": 4458,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:54.516Z",
+                      "startTime": "2026-06-21T01:09:32.938Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1006,12 +1006,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 908,
+                      "duration": 1188,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:55.838Z",
+                      "startTime": "2026-06-21T01:09:37.422Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1040,12 +1040,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 635,
+                      "duration": 706,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:13.151Z",
+                      "startTime": "2026-06-21T01:11:19.941Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1074,12 +1074,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 812,
+                      "duration": 1075,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:13.998Z",
+                      "startTime": "2026-06-21T01:11:20.841Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1108,12 +1108,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 497,
+                      "duration": 502,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:14.828Z",
+                      "startTime": "2026-06-21T01:11:21.936Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1159,12 +1159,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1089,
+                      "duration": 6079,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:05.851Z",
+                      "startTime": "2026-06-21T01:08:28.822Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1193,12 +1193,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1628,
+                      "duration": 1785,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:07.018Z",
+                      "startTime": "2026-06-21T01:08:35.229Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1227,12 +1227,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 891,
+                      "duration": 1020,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:56.779Z",
+                      "startTime": "2026-06-21T01:09:40.464Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1261,12 +1261,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1260,
+                      "duration": 1418,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:57.732Z",
+                      "startTime": "2026-06-21T01:09:41.841Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1295,12 +1295,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 505,
+                      "duration": 473,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:15.378Z",
+                      "startTime": "2026-06-21T01:11:22.466Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1329,12 +1329,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 476,
+                      "duration": 451,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:15.966Z",
+                      "startTime": "2026-06-21T01:11:22.977Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1380,12 +1380,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2914,
+                      "duration": 6034,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:08.696Z",
+                      "startTime": "2026-06-21T01:08:37.076Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1414,12 +1414,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4037,
+                      "duration": 4322,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:11.736Z",
+                      "startTime": "2026-06-21T01:08:43.201Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1448,12 +1448,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2513,
+                      "duration": 5492,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:59.028Z",
+                      "startTime": "2026-06-21T01:09:43.468Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1482,12 +1482,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2859,
+                      "duration": 5255,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:55:01.600Z",
+                      "startTime": "2026-06-21T01:09:51.097Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1516,12 +1516,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 986,
+                      "duration": 1043,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:16.480Z",
+                      "startTime": "2026-06-21T01:11:23.455Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1550,12 +1550,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 984,
+                      "duration": 829,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:17.544Z",
+                      "startTime": "2026-06-21T01:11:24.541Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1601,12 +1601,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2127,
+                      "duration": 2279,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:15.805Z",
+                      "startTime": "2026-06-21T01:08:47.579Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1635,12 +1635,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2101,
+                      "duration": 2673,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:18.013Z",
+                      "startTime": "2026-06-21T01:08:50.050Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1669,12 +1669,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1247,
+                      "duration": 1507,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:55:04.491Z",
+                      "startTime": "2026-06-21T01:09:56.808Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1703,12 +1703,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1723,
+                      "duration": 2895,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:55:05.803Z",
+                      "startTime": "2026-06-21T01:09:59.400Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1737,12 +1737,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 728,
+                      "duration": 553,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:18.579Z",
+                      "startTime": "2026-06-21T01:11:25.395Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1771,12 +1771,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 752,
+                      "duration": 662,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:19.378Z",
+                      "startTime": "2026-06-21T01:11:26.001Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1822,12 +1822,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1310,
+                      "duration": 1708,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:20.153Z",
+                      "startTime": "2026-06-21T01:08:52.775Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1856,12 +1856,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1186,
+                      "duration": 1298,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:21.477Z",
+                      "startTime": "2026-06-21T01:08:54.496Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1890,12 +1890,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1167,
+                      "duration": 1316,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:22.675Z",
+                      "startTime": "2026-06-21T01:08:55.804Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1924,12 +1924,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1444,
+                      "duration": 3100,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:55:07.562Z",
+                      "startTime": "2026-06-21T01:10:02.326Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1958,12 +1958,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1194,
+                      "duration": 2154,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:55:09.017Z",
+                      "startTime": "2026-06-21T01:10:05.436Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1992,12 +1992,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1167,
+                      "duration": 3803,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:55:10.220Z",
+                      "startTime": "2026-06-21T01:10:07.599Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2026,12 +2026,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1401,
+                      "duration": 1243,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:20.189Z",
+                      "startTime": "2026-06-21T01:11:26.687Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2060,12 +2060,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1300,
+                      "duration": 1186,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:21.598Z",
+                      "startTime": "2026-06-21T01:11:27.942Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2094,12 +2094,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1362,
+                      "duration": 1170,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:22.908Z",
+                      "startTime": "2026-06-21T01:11:29.140Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2138,12 +2138,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 785,
+                  "duration": 916,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:54:23.868Z",
+                  "startTime": "2026-06-21T01:08:57.171Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2172,12 +2172,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1056,
+                  "duration": 1082,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:54:24.693Z",
+                  "startTime": "2026-06-21T01:08:58.205Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2206,12 +2206,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 734,
+                  "duration": 861,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:55:11.411Z",
+                  "startTime": "2026-06-21T01:10:11.433Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2240,12 +2240,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 855,
+                  "duration": 1575,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:55:12.191Z",
+                  "startTime": "2026-06-21T01:10:12.695Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2274,12 +2274,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 363,
+                  "duration": 301,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:56:24.330Z",
+                  "startTime": "2026-06-21T01:11:30.334Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2308,12 +2308,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 774,
+                  "duration": 586,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:56:24.763Z",
+                  "startTime": "2026-06-21T01:11:30.670Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2357,12 +2357,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1113,
+                      "duration": 1491,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:25.773Z",
+                      "startTime": "2026-06-21T01:08:59.362Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2391,12 +2391,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 874,
+                      "duration": 1112,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:55:13.070Z",
+                      "startTime": "2026-06-21T01:10:14.352Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2425,12 +2425,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 663,
+                      "duration": 604,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:25.574Z",
+                      "startTime": "2026-06-21T01:11:31.285Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2469,12 +2469,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 744,
+                  "duration": 1128,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:54:27.009Z",
+                  "startTime": "2026-06-21T01:09:01.130Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2503,12 +2503,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 827,
+                  "duration": 800,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:54:27.774Z",
+                  "startTime": "2026-06-21T01:09:02.290Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2537,12 +2537,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 822,
+                  "duration": 811,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:54:28.627Z",
+                  "startTime": "2026-06-21T01:09:03.115Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2571,12 +2571,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 690,
+                  "duration": 1135,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:55:14.024Z",
+                  "startTime": "2026-06-21T01:10:16.925Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2605,12 +2605,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 805,
+                  "duration": 1060,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:55:14.726Z",
+                  "startTime": "2026-06-21T01:10:18.088Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2639,12 +2639,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 722,
+                  "duration": 1124,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:55:15.555Z",
+                  "startTime": "2026-06-21T01:10:19.187Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2673,12 +2673,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 236,
+                  "duration": 262,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:56:26.341Z",
+                  "startTime": "2026-06-21T01:11:31.965Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2707,12 +2707,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 242,
+                  "duration": 279,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:56:26.591Z",
+                  "startTime": "2026-06-21T01:11:32.246Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2741,12 +2741,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 251,
+                  "duration": 287,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-20T23:56:26.845Z",
+                  "startTime": "2026-06-21T01:11:32.537Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2790,12 +2790,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1203,
+                      "duration": 1259,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:29.473Z",
+                      "startTime": "2026-06-21T01:09:03.950Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2824,12 +2824,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1271,
+                      "duration": 1444,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:55:16.307Z",
+                      "startTime": "2026-06-21T01:10:20.351Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2858,12 +2858,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 414,
+                      "duration": 478,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:27.114Z",
+                      "startTime": "2026-06-21T01:11:32.840Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2909,12 +2909,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1180,
+                      "duration": 1285,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:30.742Z",
+                      "startTime": "2026-06-21T01:09:05.286Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2943,12 +2943,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1372,
+                      "duration": 1388,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:31.990Z",
+                      "startTime": "2026-06-21T01:09:06.650Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2977,12 +2977,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1392,
+                      "duration": 1492,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:33.391Z",
+                      "startTime": "2026-06-21T01:09:08.087Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3011,12 +3011,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1574,
+                      "duration": 1426,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:55:17.640Z",
+                      "startTime": "2026-06-21T01:10:22.326Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3045,12 +3045,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1586,
+                      "duration": 2168,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:55:19.272Z",
+                      "startTime": "2026-06-21T01:10:24.220Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3079,12 +3079,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1287,
+                      "duration": 1735,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:55:20.893Z",
+                      "startTime": "2026-06-21T01:10:26.407Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3113,12 +3113,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 465,
+                      "duration": 453,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:27.565Z",
+                      "startTime": "2026-06-21T01:11:33.362Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3147,12 +3147,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 662,
+                      "duration": 763,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:28.073Z",
+                      "startTime": "2026-06-21T01:11:33.861Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3181,12 +3181,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 445,
+                      "duration": 480,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:28.751Z",
+                      "startTime": "2026-06-21T01:11:34.646Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3223,12 +3223,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4804,
+                      "duration": 3920,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:34.800Z",
+                      "startTime": "2026-06-21T01:09:09.611Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3257,12 +3257,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1457,
+                      "duration": 1445,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:39.657Z",
+                      "startTime": "2026-06-21T01:09:13.589Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3291,12 +3291,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3608,
+                      "duration": 4688,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:55:22.207Z",
+                      "startTime": "2026-06-21T01:10:28.189Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3325,12 +3325,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2079,
+                      "duration": 1704,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:55:25.871Z",
+                      "startTime": "2026-06-21T01:10:32.958Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3359,12 +3359,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1340,
+                      "duration": 1515,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:29.213Z",
+                      "startTime": "2026-06-21T01:11:35.143Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3393,12 +3393,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 430,
+                      "duration": 500,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:30.589Z",
+                      "startTime": "2026-06-21T01:11:36.705Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3435,12 +3435,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1155,
+                      "duration": 1083,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:41.131Z",
+                      "startTime": "2026-06-21T01:09:15.054Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3469,12 +3469,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 754,
+                      "duration": 857,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:54:42.300Z",
+                      "startTime": "2026-06-21T01:09:16.157Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3503,12 +3503,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2197,
+                      "duration": 1180,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:55:27.988Z",
+                      "startTime": "2026-06-21T01:10:34.707Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3537,12 +3537,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1755,
+                      "duration": 1122,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:55:30.233Z",
+                      "startTime": "2026-06-21T01:10:35.906Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3571,12 +3571,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 228,
+                      "duration": 260,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:31.033Z",
+                      "startTime": "2026-06-21T01:11:37.230Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3605,12 +3605,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 228,
+                      "duration": 232,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-20T23:56:31.275Z",
+                      "startTime": "2026-06-21T01:11:37.506Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3630,8 +3630,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-20T23:52:41.365Z",
-    "duration": 230412.136,
+    "startTime": "2026-06-21T01:06:40.016Z",
+    "duration": 298001.73099999997,
     "expected": 94,
     "skipped": 0,
     "unexpected": 0,
