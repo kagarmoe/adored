@@ -163,4 +163,11 @@ describe("DELETE item photo", () => {
     expect(photoRepo.delete).toHaveBeenCalledWith("p1");
     expect(mockDeleteVariants).toHaveBeenCalledWith("variants/c1/p1/");
   });
+
+  it("a variant-cleanup failure does not fail the (already committed) delete", async () => {
+    mockDeleteVariants.mockRejectedValue(new Error("blob outage"));
+    const res = await DELETE(delReq(), { params });
+    expect(res.status).toBe(200);
+    expect(photoRepo.delete).toHaveBeenCalledWith("p1");
+  });
 });

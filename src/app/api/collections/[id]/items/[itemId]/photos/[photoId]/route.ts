@@ -110,8 +110,9 @@ export async function DELETE(
     await photoRepo.delete(params.photoId);
 
     // Best-effort: sweep any persisted resized variants for this photo (all
-    // widths + versions). Never throws — orphans are inert/sweepable.
-    await deleteVariants(variantPrefix(params.id, params.photoId));
+    // widths + versions). `deleteVariants` already swallows; the extra `.catch`
+    // guarantees a cache-cleanup failure can never fail a successful delete.
+    await deleteVariants(variantPrefix(params.id, params.photoId)).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

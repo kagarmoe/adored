@@ -49,4 +49,5 @@ Wire it:
 - **Concurrent double-miss** → two `put`s to the same deterministic pathname; identical bytes, last-write-wins — harmless. (Not worth a lock.)
 - **`get` by pathname** (not full URL) for the variant: `@vercel/blob get(urlOrPathname)` accepts a pathname; the variant is `put` with `addRandomSuffix:false` so the pathname is exact. Verify in impl.
 - **Storage growth** from rotation-orphaned old-version variants — bounded by the prefix sweep on photo delete / collection purge; tiny webp.
-- **Serving-path latency on miss** is unchanged from A (one extra `put` after the resize, off the response's critical bytes — can be fire-and-forget if needed; default await for simplicity).
+- **Serving-path latency on miss** is unchanged from A plus one awaited `put` (once per variant). `await` is deliberate — a bare un-awaited `put` is dropped when the serverless function freezes post-response.
+- **Concurrent first-burst is not single-flighted** (accepted): the *first* simultaneous requests for an uncached variant each resize before any has persisted, so the herd is reduced to "the opening burst," not "exactly once." A distributed single-flight lock isn't worth it — `allowOverwrite` makes the racing puts harmless, A's `loading="lazy"` already limits the visible-card burst, and every request after the first persist is a HIT.
