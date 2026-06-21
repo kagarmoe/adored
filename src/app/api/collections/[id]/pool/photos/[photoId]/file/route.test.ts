@@ -101,6 +101,7 @@ describe("GET pool photo file", () => {
         blobKey: "store/k.jpg",
         mimeType: "image/jpeg",
         photoId: "p1",
+        collectionId: "c1",
         updatedAt: pooledPhoto.updatedAt,
         rotation: 0,
       },

@@ -7,6 +7,7 @@ import { MembershipRepository } from "@/server/repositories/implementations/Memb
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { del } from "@vercel/blob";
 import { ALLOWED_ROTATIONS } from "@/lib/photos";
+import { deleteVariants, variantPrefix } from "@/lib/photo-variants";
 
 // Rotate a photo (persisted, non-destructive). Authz is a WRITE tier
 // (canAddPhotos|owner), not the bare-member read tier — a view-only curator must
@@ -107,6 +108,10 @@ export async function DELETE(
 
     // Delete from database
     await photoRepo.delete(params.photoId);
+
+    // Best-effort: sweep any persisted resized variants for this photo (all
+    // widths + versions). Never throws — orphans are inert/sweepable.
+    await deleteVariants(variantPrefix(params.id, params.photoId));
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -2,6 +2,7 @@ import type { Database } from "@/lib/db";
 import type { Collection } from "@/types";
 import { withTransaction } from "@/lib/transactions";
 import { del } from "@vercel/blob";
+import { deleteVariants, variantPrefix } from "@/lib/photo-variants";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
@@ -66,5 +67,8 @@ export class CollectionPurgeService {
         console.error("CollectionPurgeService: blob del failed (orphaned, sweepable)", r.reason);
       }
     }
+
+    // Best-effort: sweep every persisted resized variant for the collection.
+    await deleteVariants(variantPrefix(collection.id));
   }
 }

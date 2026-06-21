@@ -3,8 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
 
-vi.mock("@vercel/blob", () => ({ get: vi.fn() }));
-import { get } from "@vercel/blob";
+vi.mock("@vercel/blob", () => ({ get: vi.fn(), put: vi.fn() }));
+import { get, put } from "@vercel/blob";
 import {
   servePhotoFile,
   readStreamCapped,
@@ -13,29 +13,37 @@ import {
 } from "./photo-serving";
 
 const mockGet = get as unknown as ReturnType<typeof vi.fn>;
+const mockPut = put as unknown as ReturnType<typeof vi.fn>;
 
 const fixture = (name: string) =>
   fs.readFileSync(path.join(process.cwd(), "e2e/fixtures/photos", name));
 const cc0 = fixture("cc0-01.jpg"); // 1600x973, no EXIF orientation
 const exifPhoto = fixture("IMG_0428.jpeg"); // 4032x3024, EXIF orientation 6 (portrait)
 
+// Path-aware: a variant-path get MISSES (null) so the resize path falls through
+// to fetching+resizing the original (as in sub-project A). Variant HITs are set
+// up per-test. The original blobKey always returns a 200.
 function mockBlob(buf: Buffer, opts: { contentType?: string; size?: number } = {}) {
-  // fresh stream per call — a ReadableStream is single-use
-  mockGet.mockImplementation(async () => ({
-    statusCode: 200,
-    stream: new Response(new Uint8Array(buf)).body,
-    blob: {
-      contentType: opts.contentType ?? "image/jpeg",
-      etag: "blob-content-etag",
-      size: opts.size ?? buf.byteLength,
-    },
-  }));
+  mockGet.mockImplementation(async (key: string) => {
+    if (typeof key === "string" && key.startsWith("variants/")) return null;
+    return {
+      statusCode: 200,
+      stream: new Response(new Uint8Array(buf)).body, // fresh stream per call (single-use)
+      blob: {
+        contentType: opts.contentType ?? "image/jpeg",
+        etag: "blob-content-etag",
+        size: opts.size ?? buf.byteLength,
+      },
+    };
+  });
+  mockPut.mockResolvedValue({ url: "https://blob/variant.webp" });
 }
 
 const baseArgs = {
   blobKey: "store/abc.jpg",
   mimeType: "image/jpeg",
   photoId: "p1",
+  collectionId: "c1",
   updatedAt: new Date(1_700_000_000_000),
   rotation: 0,
 };
@@ -43,7 +51,10 @@ const req = (qs = "", headers: Record<string, string> = {}) =>
   new Request(`http://t/file${qs}`, { headers });
 
 describe("servePhotoFile", () => {
-  beforeEach(() => mockGet.mockReset());
+  beforeEach(() => {
+    mockGet.mockReset();
+    mockPut.mockReset();
+  });
 
   it("serves the original verbatim (no resize) when no width is requested", async () => {
     mockBlob(cc0, { contentType: "image/jpeg" });
@@ -187,16 +198,111 @@ describe("readStreamCapped", () => {
 });
 
 describe("servePhotoFile (continued)", () => {
-  beforeEach(() => mockGet.mockReset());
+  beforeEach(() => {
+    mockGet.mockReset();
+    mockPut.mockReset();
+  });
 
   it("returns a generic 500 (no internal detail) when processing throws", async () => {
-    mockGet.mockImplementation(async () => ({
-      statusCode: 200,
-      stream: new Response(new Uint8Array(Buffer.from("not an image"))).body,
-      blob: { contentType: "image/jpeg", etag: "e", size: 12 },
-    }));
+    // variant MISS → fetch the (bad) original → sharp throws → 500
+    mockGet.mockImplementation(async (key: string) => {
+      if (typeof key === "string" && key.startsWith("variants/")) return null;
+      return {
+        statusCode: 200,
+        stream: new Response(new Uint8Array(Buffer.from("not an image"))).body,
+        blob: { contentType: "image/jpeg", etag: "e", size: 12 },
+      };
+    });
     const res = await servePhotoFile(baseArgs, req("?w=320"));
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ error: "Image processing failed" });
+  });
+});
+
+describe("servePhotoFile — persisted variant cache", () => {
+  beforeEach(() => {
+    mockGet.mockReset();
+    mockPut.mockReset();
+  });
+
+  it("HIT: streams the stored variant without resizing or fetching the original", async () => {
+    const variantBytes = await sharp(cc0).resize({ width: 320 }).webp().toBuffer();
+    mockGet.mockImplementation(async (key: string) => {
+      if (typeof key === "string" && key.startsWith("variants/")) {
+        return { statusCode: 200, stream: new Response(new Uint8Array(variantBytes)).body, blob: { contentType: "image/webp", etag: "v", size: variantBytes.byteLength } };
+      }
+      throw new Error("original should NOT be fetched on a variant HIT");
+    });
+    mockPut.mockResolvedValue({ url: "x" });
+
+    const res = await servePhotoFile(baseArgs, req("?w=320"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toBe("image/webp");
+    // HIT reuses the variant ETag (not the blob's content etag) so 304 still matches.
+    expect(res.headers.get("ETag")).toBe(`"p1:320:${baseArgs.updatedAt.getTime()}"`);
+    expect(mockPut).not.toHaveBeenCalled();
+  });
+
+  it("MISS: resizes the original, persists the variant (deterministic webp), streams it", async () => {
+    mockBlob(cc0);
+    const res = await servePhotoFile(baseArgs, req("?w=320"));
+    expect(res.status).toBe(200);
+    const meta = await sharp(Buffer.from(await res.arrayBuffer())).metadata();
+    expect(meta.width).toBeLessThanOrEqual(320);
+    expect(mockPut).toHaveBeenCalledTimes(1);
+    const [pathArg, , opts] = mockPut.mock.calls[0];
+    expect(pathArg).toBe(`variants/c1/p1/w320-v${baseArgs.updatedAt.getTime()}.webp`);
+    expect(opts).toMatchObject({ access: "private", addRandomSuffix: false, allowOverwrite: true, contentType: "image/webp" });
+  });
+
+  it("round-trip: the pathname written on MISS is the one read on the next HIT", async () => {
+    mockBlob(cc0);
+    await servePhotoFile(baseArgs, req("?w=640"));
+    const writtenPath = mockPut.mock.calls[0][0] as string;
+
+    const variantBytes = await sharp(cc0).resize({ width: 640 }).webp().toBuffer();
+    mockGet.mockReset();
+    mockGet.mockImplementation(async (key: string) =>
+      key === writtenPath
+        ? { statusCode: 200, stream: new Response(new Uint8Array(variantBytes)).body, blob: { contentType: "image/webp", etag: "v", size: 1 } }
+        : null,
+    );
+    const res = await servePhotoFile(baseArgs, req("?w=640"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toBe("image/webp");
+  });
+
+  it("best-effort: a variant-get error falls through to an on-the-fly resize (200, not 500)", async () => {
+    mockGet.mockImplementation(async (key: string) => {
+      if (typeof key === "string" && key.startsWith("variants/")) throw new Error("blob rate limited");
+      return { statusCode: 200, stream: new Response(new Uint8Array(cc0)).body, blob: { contentType: "image/jpeg", etag: "e", size: cc0.byteLength } };
+    });
+    mockPut.mockResolvedValue({ url: "x" });
+    const res = await servePhotoFile(baseArgs, req("?w=320"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toBe("image/webp");
+  });
+
+  it("best-effort: a variant put() rejection still returns the resized bytes (200)", async () => {
+    mockBlob(cc0);
+    mockPut.mockRejectedValue(new Error("BlobAlreadyExists"));
+    const res = await servePhotoFile(baseArgs, req("?w=320"));
+    expect(res.status).toBe(200);
+    const meta = await sharp(Buffer.from(await res.arrayBuffer())).metadata();
+    expect(meta.format).toBe("webp");
+  });
+
+  it("version busts the variant pathname (rotation/edit → new key)", async () => {
+    mockBlob(cc0);
+    await servePhotoFile(baseArgs, req("?w=320"));
+    await servePhotoFile({ ...baseArgs, updatedAt: new Date(baseArgs.updatedAt.getTime() + 1000) }, req("?w=320"));
+    expect(mockPut.mock.calls[0][0]).not.toBe(mockPut.mock.calls[1][0]);
+  });
+
+  it("passthrough (no ?w=) never touches the variant store", async () => {
+    mockBlob(cc0, { contentType: "image/jpeg" });
+    await servePhotoFile(baseArgs, req());
+    expect(mockPut).not.toHaveBeenCalled();
+    expect(mockGet).not.toHaveBeenCalledWith(expect.stringMatching(/^variants\//), expect.anything());
   });
 });

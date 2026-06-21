@@ -30,9 +30,10 @@ import { InvitationRepository } from "@/server/repositories/implementations/Invi
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { AuditLogRepository } from "@/server/repositories/implementations/AuditLogRepository";
 
-const { mockGetSession, mockBlobDel } = vi.hoisted(() => ({
+const { mockGetSession, mockBlobDel, mockBlobList } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockBlobDel: vi.fn(),
+  mockBlobList: vi.fn(),
 }));
 // Flat-replace BOTH auth exports from one spy (spread form pulls in nodemailer).
 vi.mock("@/lib/auth", () => ({
@@ -43,7 +44,7 @@ vi.mock("@/lib/auth", () => ({
     return s.user;
   },
 }));
-vi.mock("@vercel/blob", () => ({ del: mockBlobDel }));
+vi.mock("@vercel/blob", () => ({ del: mockBlobDel, list: mockBlobList }));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
 import { POST as purge } from "@/app/api/collections/[id]/purge/route";
@@ -283,6 +284,7 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
     await resetDb();
     vi.clearAllMocks();
     mockBlobDel.mockResolvedValue(undefined);
+    mockBlobList.mockResolvedValue({ blobs: [], hasMore: false });
     ownerId = await seedBaseline();
   });
 
@@ -356,6 +358,12 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
     const delledKeys = mockBlobDel.mock.calls.map((c) => c[0]).sort();
     expect(delledKeys).toEqual([HTTP_KEY_ACTIVE, HTTP_KEY_SOFT].sort());
     expect(mockBlobDel).toHaveBeenCalledTimes(2);
+
+    // Persisted resized variants for the whole collection are swept post-commit.
+    expect(mockBlobList).toHaveBeenCalledWith({
+      prefix: `variants/${seed.collectionId}/`,
+      cursor: undefined,
+    });
   });
 
   it("(2) soft-delete THEN purge resolves the deleted collection and erases everything (canonical DELETE -> purge path)", async () => {
