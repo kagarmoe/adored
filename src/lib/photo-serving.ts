@@ -8,8 +8,12 @@ import { getBlobAccess } from "@/lib/photos";
 export const RESIZE_WIDTHS = [160, 320, 640, 1280] as const;
 /** Refuse to buffer a source larger than this (decode-bomb / OOM guard). */
 export const RESIZE_MAX_SOURCE_BYTES = 25_000_000;
-/** sharp refuses to decode an image whose pixel count exceeds this (decode-bomb guard). */
-const LIMIT_INPUT_PIXELS = 24_000_000;
+/** sharp refuses to decode an image whose pixel count exceeds this (decode-bomb
+ *  backstop). 100 MP comfortably clears real photos — incl. 48 MP iPhone shots —
+ *  while still blocking a pathological PNG that decodes to hundreds of MP. The
+ *  RESIZE_MAX_SOURCE_BYTES byte ceiling is the primary OOM guard; this is the
+ *  secondary one. (Was 24 MP, which wrongly rejected real >24 MP phone photos.) */
+const LIMIT_INPUT_PIXELS = 100_000_000;
 /** Cache 5 min then revalidate — keeps the byte-savings while re-running authz
  *  every 5 min (not `immutable`: these are private images on shared tablets). */
 const CACHE_CONTROL = "private, max-age=300, must-revalidate";

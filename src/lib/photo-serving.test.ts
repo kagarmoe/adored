@@ -78,6 +78,23 @@ describe("servePhotoFile", () => {
     expect(out.byteLength).toBeLessThan(cc0.byteLength);
   });
 
+  it("resizes a real-sized photo larger than the old 24 MP guard (regression: prod 500s)", async () => {
+    // A 30 MP source (6000x5000) — a normal modern phone photo, bigger than the
+    // previous limitInputPixels (24 MP). It must resize, not 500.
+    const big = await sharp({
+      create: { width: 6000, height: 5000, channels: 3, background: { r: 90, g: 110, b: 130 } },
+    })
+      .jpeg()
+      .toBuffer();
+    expect(6000 * 5000).toBeGreaterThan(24_000_000); // would have hit the old guard
+    mockBlob(big);
+    const res = await servePhotoFile(baseArgs, req("?w=640"));
+    expect(res.status).toBe(200);
+    const meta = await sharp(Buffer.from(await res.arrayBuffer())).metadata();
+    expect(meta.format).toBe("webp");
+    expect(meta.width).toBeLessThanOrEqual(640);
+  });
+
   it("rejects a non-allowlisted width with 400, before fetching the blob", async () => {
     mockBlob(cc0);
     expect((await servePhotoFile(baseArgs, req("?w=999"))).status).toBe(400);
