@@ -88,3 +88,6 @@ next-env.d.ts
 # PR screenshots (live on GitHub releases, never committed — see docs/cookbook/add-images-to-pr.md)
 # Anchored to repo root so it doesn't also swallow .claude/skills/pr-screenshots/.
 /pr-screenshots/
+
+# vitest blob reports (per-tier coverage, merged in CI)
+/.vitest-reports/
