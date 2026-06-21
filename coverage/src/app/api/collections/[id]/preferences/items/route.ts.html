@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/30</span>
+                <span class='fraction'>0/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>0/6</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/30</span>
+                <span class='fraction'>0/10</span>
             </div>
         
             
@@ -93,7 +93,20 @@
 <a name='L28'></a><a href='#L28'>28</a>
 <a name='L29'></a><a href='#L29'>29</a>
 <a name='L30'></a><a href='#L30'>30</a>
-<a name='L31'></a><a href='#L31'>31</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L31'></a><a href='#L31'>31</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -103,56 +116,43 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import { NextRequest, NextResponse } from "next/server";</span></span></span>
-<span class="cstat-no" title="statement not covered" >import { requireAuth } from "@/lib/auth";</span>
-<span class="cstat-no" title="statement not covered" >import { PreferenceController } from "@/server/api/preferences";</span>
-<span class="cstat-no" title="statement not covered" >import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";</span>
-<span class="cstat-no" title="statement not covered" >import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";</span>
-<span class="cstat-no" title="statement not covered" >import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";</span>
-<span class="cstat-no" title="statement not covered" >import { PreferenceStateService } from "@/server/services/PreferenceStateService";</span>
-<span class="cstat-no" title="statement not covered" >import { ScoringService } from "@/server/services/ScoringService";</span>
-<span class="cstat-no" title="statement not covered" >import { getDb } from "@/lib/db";</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export async function GET(</span>
-<span class="cstat-no" title="statement not covered" >  _request: NextRequest,</span>
-<span class="cstat-no" title="statement not covered" >  { params }: { params: { id: string } }</span>
-<span class="cstat-no" title="statement not covered" >) {</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth";
+import { PreferenceController } from "@/server/api/preferences";
+import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
+import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
+import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
+import { PreferenceStateService } from "@/server/services/PreferenceStateService";
+import { ScoringService } from "@/server/services/ScoringService";
+import { getDb } from "@/lib/db";
+&nbsp;
+export async function <span class="fstat-no" title="function not covered" >GET(</span>
+  _request: NextRequest,
+  { params }: { params: { id: string } }
+) {
 <span class="cstat-no" title="statement not covered" >  try {</span>
-<span class="cstat-no" title="statement not covered" >    const user = await requireAuth();</span>
-<span class="cstat-no" title="statement not covered" >    const db = getDb();</span>
-<span class="cstat-no" title="statement not covered" >    const prefRepo = new CollectionPreferenceItemRepository(db);</span>
-<span class="cstat-no" title="statement not covered" >    const scoringService = new ScoringService(new DecisionEventRepository(db), new SessionRepository(db));</span>
-<span class="cstat-no" title="statement not covered" >    const prefService = new PreferenceStateService(prefRepo, scoringService);</span>
-<span class="cstat-no" title="statement not covered" >    const controller = new PreferenceController(prefService);</span>
-<span class="cstat-no" title="statement not covered" >    const items = await controller.listItemPreferences(params.id, user.id);</span>
+    const user = <span class="cstat-no" title="statement not covered" >await requireAuth();</span>
+    const <span class="cstat-no" title="statement not covered" >db = getDb();</span>
+    const prefRepo = <span class="cstat-no" title="statement not covered" >new CollectionPreferenceItemRepository(db);</span>
+    const scoringService = <span class="cstat-no" title="statement not covered" >new ScoringService(new DecisionEventRepository(db), new SessionRepository(db));</span>
+    const prefService = <span class="cstat-no" title="statement not covered" >new PreferenceStateService(prefRepo, scoringService);</span>
+    const controller = <span class="cstat-no" title="statement not covered" >new PreferenceController(prefService);</span>
+    const items = <span class="cstat-no" title="statement not covered" >await controller.listItemPreferences(params.id, user.id);</span>
 <span class="cstat-no" title="statement not covered" >    return NextResponse.json(items);</span>
-<span class="cstat-no" title="statement not covered" >  } catch (error) {</span>
+  } catch (error) {
 <span class="cstat-no" title="statement not covered" >    return NextResponse.json(</span>
-<span class="cstat-no" title="statement not covered" >      { error: error instanceof Error ? error.message : "Unknown error" },</span>
-<span class="cstat-no" title="statement not covered" >      { status: error instanceof Error &amp;&amp; error.message === "Unauthorized" ? 401 : 500 }</span>
-<span class="cstat-no" title="statement not covered" >    );</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: error instanceof Error &amp;&amp; error.message === "Unauthorized" ? 401 : 500 }
+    );
+  }
+}
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -160,7 +160,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-21T02:17:35.755Z
+                at 2026-06-21T04:41:40.731Z
             </div>
         <script src="../../../../../../../prettify.js"></script>
         <script>

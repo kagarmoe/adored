@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/22</span>
+                <span class='fraction'>0/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>0/2</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/22</span>
+                <span class='fraction'>0/7</span>
             </div>
         
             
@@ -85,50 +85,50 @@
 <a name='L20'></a><a href='#L20'>20</a>
 <a name='L21'></a><a href='#L21'>21</a>
 <a name='L22'></a><a href='#L22'>22</a>
-<a name='L23'></a><a href='#L23'>23</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L23'></a><a href='#L23'>23</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import { NextRequest, NextResponse } from "next/server";</span></span></span>
-<span class="cstat-no" title="statement not covered" >import { ShareController } from "@/server/api/shares";</span>
-<span class="cstat-no" title="statement not covered" >import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";</span>
-<span class="cstat-no" title="statement not covered" >import { getDb } from "@/lib/db";</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export async function GET(</span>
-<span class="cstat-no" title="statement not covered" >  _request: NextRequest,</span>
-<span class="cstat-no" title="statement not covered" >  { params }: { params: { token: string } }</span>
-<span class="cstat-no" title="statement not covered" >) {</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NextRequest, NextResponse } from "next/server";
+import { ShareController } from "@/server/api/shares";
+import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
+import { getDb } from "@/lib/db";
+&nbsp;
+export async function <span class="fstat-no" title="function not covered" >GET(</span>
+  _request: NextRequest,
+  { params }: { params: { token: string } }
+) {
 <span class="cstat-no" title="statement not covered" >  try {</span>
-<span class="cstat-no" title="statement not covered" >    const db = getDb();</span>
-<span class="cstat-no" title="statement not covered" >    const shareRepo = new SortResultShareRepository(db);</span>
-<span class="cstat-no" title="statement not covered" >    const controller = new ShareController(shareRepo);</span>
-<span class="cstat-no" title="statement not covered" >    const share = await controller.viewSharedResult(params.token);</span>
+    const <span class="cstat-no" title="statement not covered" >db = getDb();</span>
+    const shareRepo = <span class="cstat-no" title="statement not covered" >new SortResultShareRepository(db);</span>
+    const controller = <span class="cstat-no" title="statement not covered" >new ShareController(shareRepo);</span>
+    const share = <span class="cstat-no" title="statement not covered" >await controller.viewSharedResult(params.token);</span>
 <span class="cstat-no" title="statement not covered" >    return NextResponse.json(share);</span>
-<span class="cstat-no" title="statement not covered" >  } catch (error) {</span>
+  } catch (error) {
 <span class="cstat-no" title="statement not covered" >    return NextResponse.json(</span>
-<span class="cstat-no" title="statement not covered" >      { error: error instanceof Error ? error.message : "Unknown error" },</span>
-<span class="cstat-no" title="statement not covered" >      { status: 404 }</span>
-<span class="cstat-no" title="statement not covered" >    );</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 404 }
+    );
+  }
+}
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -136,7 +136,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-21T02:17:35.755Z
+                at 2026-06-21T04:41:40.731Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>
