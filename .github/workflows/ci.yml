@@ -263,6 +263,8 @@ jobs:
     needs: [changes, gate, e2e, coverage]
     # Run on main pushes whenever the gate passed, even if e2e was skipped
     # (non-UI push) or failed (we still want to publish the failure report).
+    # A breached coverage floor likewise does NOT suppress the dashboard — the
+    # dashboard should reflect reality; the floor gates PRs, not publishing.
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && !cancelled() && needs.gate.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
