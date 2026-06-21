@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { AppLayout } from "@/components/layout";
 import { Button, Card } from "@/components/ui";
 import { ItemMetadata } from "@/features/items/ItemMetadata";
@@ -26,6 +27,13 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
   const itemRepo = new ItemRepository(db);
   const photoRepo = new PhotoRepository(db);
+  const membershipRepo = new MembershipRepository(db);
+
+  // Same tier the photo-DELETE route enforces — so we only show a delete control
+  // the viewer can actually use (a view-only curator would just get a 403).
+  const membership = await membershipRepo.findByUser(session.user.id, collection.id);
+  const canDeletePhotos =
+    collection.ownerId === session.user.id || Boolean(membership?.canDeletePhotos);
 
   const number = Number(params.itemNumber);
   const item =
@@ -98,6 +106,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
             collectionId={collection.id}
             itemName={itemDisplayName(item)}
             addPhotosHref={photosHref}
+            canDelete={canDeletePhotos}
           />
 
           {/* Details — with a contextual edit affordance (purses-0gv). */}

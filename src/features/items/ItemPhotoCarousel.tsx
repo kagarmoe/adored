@@ -3,8 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getPhotoAssetUrl } from "@/lib/photos";
 import { PhotoViewControl, type ViewerPhoto } from "@/components/ui";
+import { PhotoDeleteControl } from "./PhotoDeleteControl";
 
 const MAX_DOTS = 6;
 
@@ -14,13 +16,34 @@ interface ItemPhotoCarouselProps {
   collectionId: string;
   itemName: string;
   addPhotosHref: string;
+  /** Whether this viewer may delete photos (owner or canDeletePhotos). When
+   *  false the per-photo delete control is hidden — it would only 403. */
+  canDelete?: boolean;
 }
 
 /** Tap-first flip-through of an item's photos. No swipe: navigate with the
  *  Prev/Next arrows, the dots/counter, or ArrowLeft/Right. Rotate + zoom reuse
  *  the shared ImageViewer via PhotoViewControl on the current photo. */
-export function ItemPhotoCarousel({ photos, collectionId, itemName, addPhotosHref }: ItemPhotoCarouselProps) {
+export function ItemPhotoCarousel({
+  photos: initialPhotos,
+  collectionId,
+  itemName,
+  addPhotosHref,
+  canDelete = false,
+}: ItemPhotoCarouselProps) {
+  const router = useRouter();
   const [index, setIndex] = useState(0);
+  // Local source of truth so a deleted photo drops out immediately (optimistic,
+  // mirroring PhotoGallery). The render clamps `current` to the new length.
+  const [photos, setPhotos] = useState(initialPhotos);
+
+  // Drop the deleted photo locally for an instant response, then refresh so the
+  // page's other photo-derived bits (e.g. a server-promoted hero) re-sync. A
+  // deleted hero is re-promoted server-side and shows on the refreshed render.
+  const handleDeleted = (id: string) => {
+    setPhotos((prev) => prev.filter((p) => p.id !== id));
+    router.refresh();
+  };
 
   if (photos.length === 0) {
     return (
@@ -71,6 +94,15 @@ export function ItemPhotoCarousel({ photos, collectionId, itemName, addPhotosHre
           className="object-contain"
         />
         <PhotoViewControl photo={photo} className="absolute right-3 top-3 z-20" />
+        {canDelete && (
+          <PhotoDeleteControl
+            collectionId={collectionId}
+            itemId={photo.itemId}
+            photoId={photo.id}
+            onDeleted={() => handleDeleted(photo.id)}
+            className="absolute left-3 top-3 z-20"
+          />
+        )}
         {multi && (
           <>
             <NavArrow side="left" label="Previous photo" disabled={atStart} onClick={() => go(current - 1)} />
