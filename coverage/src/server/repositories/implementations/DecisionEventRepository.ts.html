@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">81.81% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/11</span>
+                <span class='fraction'>9/11</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>2/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">85.71% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>6/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">80% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>8/10</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -141,7 +141,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -149,8 +149,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -160,11 +160,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -176,13 +172,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -194,7 +194,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -211,16 +211,16 @@ import type { DecisionEvent, TriageDecision, PairwiseDecision } from "@/types";
 import { generateId } from "@/lib/id";
 &nbsp;
 export class DecisionEventRepository implements IDecisionEventRepository {
-<span class="fstat-no" title="function not covered" >  constructor(private <span class="cstat-no" title="statement not covered" >d</span>b: Database) {</span>}
+  constructor(private db: Database) {}
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >create(d</span>ata: {
+  async create(data: {
     id?: string;
     sessionId: string;
     type: "triage" | "pairwise_compare";
     decision: TriageDecision | PairwiseDecision;
   }): Promise&lt;DecisionEvent&gt; {
-    const id = <span class="cstat-no" title="statement not covered" >data.id || generateId("evt");</span>
-    const [event] = <span class="cstat-no" title="statement not covered" >await this.db</span>
+    const id = data.id || generateId("evt");
+    const [event] = await this.db
       .insert(decisionEventsTable)
       .values({
         id,
@@ -230,7 +230,7 @@ export class DecisionEventRepository implements IDecisionEventRepository {
         createdAt: new Date(),
       })
       .returning();
-<span class="cstat-no" title="statement not covered" >    return this.mapToDecisionEvent(event);</span>
+    return this.mapToDecisionEvent(event);
   }
 &nbsp;
   async <span class="fstat-no" title="function not covered" >findById(i</span>d: string): Promise&lt;DecisionEvent | null&gt; {
@@ -241,18 +241,18 @@ export class DecisionEventRepository implements IDecisionEventRepository {
 <span class="cstat-no" title="statement not covered" >    return event ? this.mapToDecisionEvent(event) : null;</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >findBySession(s</span>essionId: string): Promise&lt;DecisionEvent[]&gt; {
-    const events = <span class="cstat-no" title="statement not covered" >await this.db</span>
+  async findBySession(sessionId: string): Promise&lt;DecisionEvent[]&gt; {
+    const events = await this.db
       .select()
       .from(decisionEventsTable)
       .where(eq(decisionEventsTable.sessionId, sessionId));
-<span class="cstat-no" title="statement not covered" >    return events.map(<span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >this.mapToDecisionEvent(e))</span>;</span>
+    return events.map((e) =&gt; this.mapToDecisionEvent(e));
   }
 &nbsp;
   // Delete every decision of this collection's sessions (decisions have no
   // collection_id — scope via the parent sessions). Purge-only.
-  async <span class="fstat-no" title="function not covered" >deleteByCollection(c</span>ollectionId: string): Promise&lt;void&gt; {
-<span class="cstat-no" title="statement not covered" >    await this.db.delete(decisionEventsTable).where(</span>
+  async deleteByCollection(collectionId: string): Promise&lt;void&gt; {
+    await this.db.delete(decisionEventsTable).where(
       inArray(
         decisionEventsTable.sessionId,
         this.db
@@ -263,8 +263,8 @@ export class DecisionEventRepository implements IDecisionEventRepository {
     );
   }
 &nbsp;
-  private <span class="fstat-no" title="function not covered" >mapToDecisionEvent(r</span>ow: any): DecisionEvent {
-<span class="cstat-no" title="statement not covered" >    return {</span>
+  private mapToDecisionEvent(row: any): DecisionEvent {
+    return {
       id: row.id,
       sessionId: row.sessionId,
       type: row.type as "triage" | "pairwise_compare",
@@ -280,7 +280,7 @@ export class DecisionEventRepository implements IDecisionEventRepository {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-21T04:41:40.731Z
+                at 2026-06-21T05:10:15.264Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

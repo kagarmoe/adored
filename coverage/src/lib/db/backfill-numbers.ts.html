@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">83.33% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/18</span>
+                <span class='fraction'>15/18</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>1/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">83.33% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/18</span>
+                <span class='fraction'>15/18</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -123,7 +123,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -133,27 +133,27 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -171,8 +171,8 @@ type NumberedTable = typeof sessionsTable | typeof sortResultsTable;
  * oldest (createdAt) first, continuing after the collection's current MAX.
  * Idempotent: rows that already have a number are untouched.
  */
-export async function <span class="fstat-no" title="function not covered" >backfillTable(d</span>b: any, table: NumberedTable): Promise&lt;number&gt; {
-  const rows = <span class="cstat-no" title="statement not covered" >await db</span>
+export async function backfillTable(db: any, table: NumberedTable): Promise&lt;number&gt; {
+  const rows = await db
     .select({ id: table.id, collectionId: table.collectionId })
     .from(table)
     // No deletedAt filter: a soft-deleted session still owns its slot in the
@@ -182,27 +182,27 @@ export async function <span class="fstat-no" title="function not covered" >backf
     .where(isNull(table.number))
     .orderBy(asc(table.createdAt), asc(table.id));
 &nbsp;
-  const byCollection = <span class="cstat-no" title="statement not covered" >new Map&lt;string, string[]&gt;();</span>
-<span class="cstat-no" title="statement not covered" >  for (const r of rows) {</span>
-    const list = <span class="cstat-no" title="statement not covered" >byCollection.get(r.collectionId) ?? [];</span>
-<span class="cstat-no" title="statement not covered" >    list.push(r.id);</span>
-<span class="cstat-no" title="statement not covered" >    byCollection.set(r.collectionId, list);</span>
+  const byCollection = new Map&lt;string, string[]&gt;();
+  for (const r of rows) {
+    const list = byCollection.get(r.collectionId) ?? [];
+    list.push(r.id);
+    byCollection.set(r.collectionId, list);
   }
 &nbsp;
-  let updated = <span class="cstat-no" title="statement not covered" >0;</span>
-<span class="cstat-no" title="statement not covered" >  for (const [collectionId, ids] of byCollection) {</span>
-    const [{ max }] = <span class="cstat-no" title="statement not covered" >await db</span>
+  let updated = 0;
+  for (const [collectionId, ids] of byCollection) {
+    const [{ max }] = await db
       .select({ max: sql&lt;number | null&gt;`max(${table.number})` })
       .from(table)
       .where(eq(table.collectionId, collectionId));
-    let <span class="cstat-no" title="statement not covered" >next = (max ?? 0) + 1;</span>
-<span class="cstat-no" title="statement not covered" >    for (const id of ids) {</span>
-<span class="cstat-no" title="statement not covered" >      await db.update(table).set({ number: next }).where(eq(table.id, id));</span>
-<span class="cstat-no" title="statement not covered" >      next++;</span>
-<span class="cstat-no" title="statement not covered" >      updated++;</span>
+    let next = (max ?? 0) + 1;
+    for (const id of ids) {
+      await db.update(table).set({ number: next }).where(eq(table.id, id));
+      next++;
+      updated++;
     }
   }
-<span class="cstat-no" title="statement not covered" >  return updated;</span>
+  return updated;
 }
 &nbsp;
 export async function <span class="fstat-no" title="function not covered" >backfillNumbers(d</span>b: any): Promise&lt;void&gt; {
@@ -217,7 +217,7 @@ export async function <span class="fstat-no" title="function not covered" >backf
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-21T04:41:40.731Z
+                at 2026-06-21T05:10:15.264Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

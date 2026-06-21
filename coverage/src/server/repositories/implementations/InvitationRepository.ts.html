@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">33.33% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/18</span>
+                <span class='fraction'>6/18</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">25% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/8</span>
+                <span class='fraction'>2/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">36.36% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/11</span>
+                <span class='fraction'>4/11</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">35.29% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/17</span>
+                <span class='fraction'>6/17</span>
             </div>
         
             
@@ -195,7 +195,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -211,8 +211,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -233,11 +233,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -265,6 +261,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -287,11 +287,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -319,9 +319,9 @@ import type { Invitation } from "@/types";
 import { generateId } from "@/lib/id";
 &nbsp;
 export class InvitationRepository implements IInvitationRepository {
-<span class="fstat-no" title="function not covered" >  constructor(private <span class="cstat-no" title="statement not covered" >d</span>b: Database) {</span>}
+  constructor(private db: Database) {}
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >create(d</span>ata: {
+  async create(data: {
     id?: string;
     collectionId: string;
     email: string;
@@ -335,8 +335,8 @@ export class InvitationRepository implements IInvitationRepository {
     canSort: boolean;
     canViewOutputs: boolean;
   }): Promise&lt;Invitation&gt; {
-    const id = <span class="cstat-no" title="statement not covered" >data.id || generateId("inv");</span>
-    const [inv] = <span class="cstat-no" title="statement not covered" >await this.db</span>
+    const id = data.id || generateId("inv");
+    const [inv] = await this.db
       .insert(invitationsTable)
       .values({
         id,
@@ -357,7 +357,7 @@ export class InvitationRepository implements IInvitationRepository {
         acceptedAt: null,
       })
       .returning();
-<span class="cstat-no" title="statement not covered" >    return this.mapToInvitation(inv);</span>
+    return this.mapToInvitation(inv);
   }
 &nbsp;
   async <span class="fstat-no" title="function not covered" >findById(i</span>d: string): Promise&lt;Invitation | null&gt; {
@@ -410,12 +410,12 @@ export class InvitationRepository implements IInvitationRepository {
 <span class="cstat-no" title="statement not covered" >    await this.db.delete(invitationsTable).where(eq(invitationsTable.id, id));</span>
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >deleteByCollection(c</span>ollectionId: string): Promise&lt;void&gt; {
-<span class="cstat-no" title="statement not covered" >    await this.db.delete(invitationsTable).where(eq(invitationsTable.collectionId, collectionId));</span>
+  async deleteByCollection(collectionId: string): Promise&lt;void&gt; {
+    await this.db.delete(invitationsTable).where(eq(invitationsTable.collectionId, collectionId));
   }
 &nbsp;
-  private <span class="fstat-no" title="function not covered" >mapToInvitation(r</span>ow: any): Invitation {
-<span class="cstat-no" title="statement not covered" >    return {</span>
+  private mapToInvitation(row: any): Invitation {
+    return {
       id: row.id,
       collectionId: row.collectionId,
       email: row.email,
@@ -442,7 +442,7 @@ export class InvitationRepository implements IInvitationRepository {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-21T04:41:40.731Z
+                at 2026-06-21T05:10:15.264Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

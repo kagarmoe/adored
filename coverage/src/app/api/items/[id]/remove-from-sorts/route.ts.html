@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">85.71% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/14</span>
+                <span class='fraction'>12/14</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">40% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>4/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">84.61% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/13</span>
+                <span class='fraction'>11/13</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -134,28 +134,28 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -181,32 +181,32 @@ import { SortResultService } from "@/server/services/SortResultService";
 // finalized untouched). No confirm body — consistent with deleteResultItem; the
 // op is re-derivable by regenerating the affected draft. Authz BEFORE any body
 // access: a non-owner never reaches the service.
-export async function <span class="fstat-no" title="function not covered" >POST(</span>
+export async function POST(
   _request: NextRequest,
   { params }: { params: { id: string } },
 ) {
-<span class="cstat-no" title="statement not covered" >  try {</span>
-    const user = <span class="cstat-no" title="statement not covered" >await requireAuth();</span>
-    const <span class="cstat-no" title="statement not covered" >db = getDb();</span>
+  try {
+    const user = await requireAuth();
+    const db = getDb();
 &nbsp;
-    const item = <span class="cstat-no" title="statement not covered" >await new ItemRepository(db).findByIdIncludingDeleted(params.id);</span>
-<span class="cstat-no" title="statement not covered" >    if (!item) {</span>
-<span class="cstat-no" title="statement not covered" >      return NextResponse.json({ error: "Not found" }, { status: 404 });</span>
+    const item = await new ItemRepository(db).findByIdIncludingDeleted(params.id);
+    if (!item) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 &nbsp;
-    const owned = <span class="cstat-no" title="statement not covered" >await requireApiCollectionOwner(db, item.collectionId, user.id);</span>
-<span class="cstat-no" title="statement not covered" >    if (owned instanceof NextResponse) <span class="cstat-no" title="statement not covered" >return owned; // 404 (absent) / 403 (not owner)</span></span>
+    const owned = await requireApiCollectionOwner(db, item.collectionId, user.id);
+    if (owned instanceof NextResponse) return owned; // 404 (absent) / 403 (not owner)
 &nbsp;
-    const service = <span class="cstat-no" title="statement not covered" >new SortResultService(</span>
+    const service = new SortResultService(
       new SortResultRepository(db),
       new SortResultItemRepository(db),
       new CollectionPreferenceItemRepository(db),
       db,
     );
     const { removed, remainingInFinalized } =
-<span class="cstat-no" title="statement not covered" >      await service.removeItemFromDraftResults(item.id);</span>
+      await service.removeItemFromDraftResults(item.id);
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    return NextResponse.json({ removed, remainingInFinalized });</span>
+    return NextResponse.json({ removed, remainingInFinalized });
   } catch (error) {
     const status =
 <span class="cstat-no" title="statement not covered" >      error instanceof Error &amp;&amp; error.message === "Unauthorized" ? 401 : 500;</span>
@@ -223,7 +223,7 @@ export async function <span class="fstat-no" title="function not covered" >POST(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-21T04:41:40.731Z
+                at 2026-06-21T05:10:15.264Z
             </div>
         <script src="../../../../../../prettify.js"></script>
         <script>
