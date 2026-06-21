@@ -24,6 +24,12 @@ describe("DeleteCollectionSection", () => {
     expect(screen.getByRole("textbox")).toBeInTheDocument();
   });
 
+  it("moves focus into the confirm field when the step appears", () => {
+    render(<DeleteCollectionSection {...props} />);
+    fireEvent.click(screen.getByRole("button", { name: /delete this collection/i }));
+    expect(screen.getByRole("textbox")).toHaveFocus();
+  });
+
   it("keeps the Delete button disabled until the exact name is typed", () => {
     render(<DeleteCollectionSection {...props} />);
     fireEvent.click(screen.getByRole("button", { name: /delete this collection/i }));

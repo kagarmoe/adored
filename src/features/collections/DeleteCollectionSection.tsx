@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card } from "@/components/ui";
+import { Button, Card, Input } from "@/components/ui";
 
 interface DeleteCollectionSectionProps {
   collectionId: string;
@@ -22,8 +22,15 @@ export function DeleteCollectionSection({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const inFlight = useRef(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const matches = typed === collectionName;
+
+  // When the confirm step appears, move focus into the name field so a keyboard
+  // user isn't dropped and a screen reader announces the new step.
+  useEffect(() => {
+    if (confirming) inputRef.current?.focus();
+  }, [confirming]);
 
   async function purge() {
     if (inFlight.current || !matches) return;
@@ -34,7 +41,7 @@ export function DeleteCollectionSection({
       const res = await fetch(`/api/collections/${collectionId}/purge`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ confirm: collectionName }),
+        body: JSON.stringify({ confirm: typed }),
       });
       if (!res.ok) throw new Error("purge failed");
       // The collection is gone — leave the now-dead page.
@@ -60,17 +67,19 @@ export function DeleteCollectionSection({
           Delete this collection
         </Button>
       ) : (
-        <div className="mt-4 flex flex-col gap-3">
-          <label className="text-sm text-ink">
+        <div role="group" aria-label="Delete this collection" className="mt-4 flex flex-col gap-3">
+          <label htmlFor="confirm-delete-collection" className="text-sm text-ink">
             Type <span className="font-semibold">{collectionName}</span> to confirm
-            <input
-              type="text"
-              value={typed}
-              onChange={(e) => setTyped(e.target.value)}
-              autoComplete="off"
-              className="mt-1 block w-full rounded-control border border-hairline bg-surface px-3 py-2 text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            />
           </label>
+          <Input
+            id="confirm-delete-collection"
+            ref={inputRef}
+            type="text"
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            autoComplete="off"
+            aria-label={`Type ${collectionName} to confirm`}
+          />
           <div className="flex gap-2">
             <Button
               variant="secondary"
