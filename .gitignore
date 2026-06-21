@@ -83,3 +83,8 @@ next-env.d.ts
 # Project automation skills — committed for now; move upstream once proven.
 !/.claude/skills/sync-docs/
 !/.claude/skills/close-out/
+!/.claude/skills/pr-screenshots/
+
+# PR screenshots (live on GitHub releases, never committed — see docs/cookbook/add-images-to-pr.md)
+# Anchored to repo root so it doesn't also swallow .claude/skills/pr-screenshots/.
+/pr-screenshots/
