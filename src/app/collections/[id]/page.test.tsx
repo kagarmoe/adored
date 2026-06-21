@@ -12,7 +12,12 @@ const { mockGetSession, mockRequireAccess, itemRepo, sessionRepo, resultRepo } =
 }));
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
-vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn(),
+  // The active-session card now renders AbandonSessionButton (a client island
+  // that calls useRouter).
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
 vi.mock("@/components/layout", () => ({ AppLayout: ({ children }: any) => <div>{children}</div> }));
 vi.mock("@/lib/collection-access", () => ({ requireCollectionAccess: mockRequireAccess }));
 vi.mock("@/server/repositories/implementations/ItemRepository", () => ({ ItemRepository: vi.fn(() => itemRepo) }));
