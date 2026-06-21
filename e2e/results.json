@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/7e0db45092ac531f9e6220128cd139ce2ef9e13a",
-        "commitHash": "7e0db45092ac531f9e6220128cd139ce2ef9e13a",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27890403392"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2839297d6b295bc4714d4e9b5697dff12198aaef",
+        "commitHash": "2839297d6b295bc4714d4e9b5697dff12198aaef",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27890701899"
       },
       "gitCommit": {
-        "shortHash": "7e0db45",
-        "hash": "7e0db45092ac531f9e6220128cd139ce2ef9e13a",
-        "subject": "feat(items): delete a photo from the item carousel (purses-v1m2) (#227)",
-        "body": "feat(items): delete a photo from the item carousel (purses-v1m2) (#227)\n\n* feat(items): delete a photo from the item carousel (purses-v1m2)\n\nDeleting an image already worked, but only behind 'Manage photos' — not where you\nlook at images. Add a delete control to the item-page carousel so you can remove\nthe photo you're viewing. New PhotoDeleteControl: trash button -> two-step confirm\n('Delete this photo? Keep / Delete', focus to Keep, role=group, idempotency guard)\n-> DELETE /api/collections/[id]/items/[itemId]/photos/[photoId]. The carousel goes\nstateful so the deleted photo drops out immediately (clamps index; last photo ->\nadd-photos CTA).\n\n- Unit: PhotoDeleteControl (7) reveal/confirm/focus/double-tap/back-out/non-ok/\n  network-reject; carousel (2) drops the photo + falls back to the CTA.\n- E2E (real seam): delete the only photo -> real DELETE -> add-photos CTA.\n\nBead: purses-v1m2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(items): fold #227 review — permanence copy, permission gate, real-delete proof\n\n- Confirm now states permanence: 'Delete this photo? This can't be undone.' (the\n  blob is hard-deleted) + capped panel width so it doesn't obscure the photo [UX major].\n- Gate the delete control behind canDeletePhotos||owner: the item page loads the\n  membership and passes canDelete; a view-only curator no longer sees a 403-only\n  button [UX major]. (PhotoGallery has the same gap — follow-up.)\n- Optimistic removal now also router.refresh()es so server-derived bits (promoted\n  hero) re-sync [Craftsman minor].\n- E2E reloads after delete and asserts no image + the CTA from a SERVER re-fetch —\n  proves the row was deleted, not just optimistic state [QA major].\n- Tests: gate hides control; middle-photo delete (index shift); owner-sees /\n  view-only-hides at the page level. 25 unit + e2e green.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "2839297",
+        "hash": "2839297d6b295bc4714d4e9b5697dff12198aaef",
+        "subject": "feat(collections): delete a collection from Settings (owner-only) (#228)",
+        "body": "feat(collections): delete a collection from Settings (owner-only) (#228)\n\n* feat(collections): owner can delete a collection from Settings (purses-* delete-collection)\n\nNo UI existed to delete a collection (the purge backend did: owner-only\nPOST /api/collections/[id]/purge with a type-the-name confirm). Add a DeleteCollectionSection\nto the edit/Settings page, rendered ONLY for the owner: a danger zone -> reveal a\ntype-the-exact-name confirm (matches the route's confirm contract) -> POST purge ->\nredirect to /collections. Honest about permanence ('removes the collection and\neverything in it … can't be undone'); idempotency guard; gentle error.\n\n- Unit (6): reveal-only, Delete disabled until exact name typed, purge POSTs {confirm:name}\n  + redirects, double-submit = one call, Cancel backs out, failed purge keeps you put.\n- E2E (real seam): owner types the name -> real cascade purge -> lands on /collections.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(collections): edit page shows delete-collection only to the owner (gate)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(collections): fold #228 review — shared Input (44px), focus mgmt, honest confirm\n\n- Use the shared Input primitive for the confirm field (48px tap target + canonical\n  focus ring; was a hand-rolled <40px input) [UX major, DESIGN.md/PRODUCT.md].\n- Move focus into the field on reveal + role=group label — no keyboard dead-end on\n  the app's most destructive action [UX/Craftsman major]. (+focus test)\n- Send the user's TYPED value as confirm (not the server-echoed name) so the wire\n  carries real intent [Security nit/Craftsman minor].\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1782007354000
+          "time": 1782008137000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1782007354000
+          "time": 1782008137000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/7e0db45092ac531f9e6220128cd139ce2ef9e13a",
-            "commitHash": "7e0db45092ac531f9e6220128cd139ce2ef9e13a",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27890403392"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2839297d6b295bc4714d4e9b5697dff12198aaef",
+            "commitHash": "2839297d6b295bc4714d4e9b5697dff12198aaef",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27890701899"
           },
           "gitCommit": {
-            "shortHash": "7e0db45",
-            "hash": "7e0db45092ac531f9e6220128cd139ce2ef9e13a",
-            "subject": "feat(items): delete a photo from the item carousel (purses-v1m2) (#227)",
-            "body": "feat(items): delete a photo from the item carousel (purses-v1m2) (#227)\n\n* feat(items): delete a photo from the item carousel (purses-v1m2)\n\nDeleting an image already worked, but only behind 'Manage photos' — not where you\nlook at images. Add a delete control to the item-page carousel so you can remove\nthe photo you're viewing. New PhotoDeleteControl: trash button -> two-step confirm\n('Delete this photo? Keep / Delete', focus to Keep, role=group, idempotency guard)\n-> DELETE /api/collections/[id]/items/[itemId]/photos/[photoId]. The carousel goes\nstateful so the deleted photo drops out immediately (clamps index; last photo ->\nadd-photos CTA).\n\n- Unit: PhotoDeleteControl (7) reveal/confirm/focus/double-tap/back-out/non-ok/\n  network-reject; carousel (2) drops the photo + falls back to the CTA.\n- E2E (real seam): delete the only photo -> real DELETE -> add-photos CTA.\n\nBead: purses-v1m2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(items): fold #227 review — permanence copy, permission gate, real-delete proof\n\n- Confirm now states permanence: 'Delete this photo? This can't be undone.' (the\n  blob is hard-deleted) + capped panel width so it doesn't obscure the photo [UX major].\n- Gate the delete control behind canDeletePhotos||owner: the item page loads the\n  membership and passes canDelete; a view-only curator no longer sees a 403-only\n  button [UX major]. (PhotoGallery has the same gap — follow-up.)\n- Optimistic removal now also router.refresh()es so server-derived bits (promoted\n  hero) re-sync [Craftsman minor].\n- E2E reloads after delete and asserts no image + the CTA from a SERVER re-fetch —\n  proves the row was deleted, not just optimistic state [QA major].\n- Tests: gate hides control; middle-photo delete (index shift); owner-sees /\n  view-only-hides at the page level. 25 unit + e2e green.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "2839297",
+            "hash": "2839297d6b295bc4714d4e9b5697dff12198aaef",
+            "subject": "feat(collections): delete a collection from Settings (owner-only) (#228)",
+            "body": "feat(collections): delete a collection from Settings (owner-only) (#228)\n\n* feat(collections): owner can delete a collection from Settings (purses-* delete-collection)\n\nNo UI existed to delete a collection (the purge backend did: owner-only\nPOST /api/collections/[id]/purge with a type-the-name confirm). Add a DeleteCollectionSection\nto the edit/Settings page, rendered ONLY for the owner: a danger zone -> reveal a\ntype-the-exact-name confirm (matches the route's confirm contract) -> POST purge ->\nredirect to /collections. Honest about permanence ('removes the collection and\neverything in it … can't be undone'); idempotency guard; gentle error.\n\n- Unit (6): reveal-only, Delete disabled until exact name typed, purge POSTs {confirm:name}\n  + redirects, double-submit = one call, Cancel backs out, failed purge keeps you put.\n- E2E (real seam): owner types the name -> real cascade purge -> lands on /collections.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(collections): edit page shows delete-collection only to the owner (gate)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(collections): fold #228 review — shared Input (44px), focus mgmt, honest confirm\n\n- Use the shared Input primitive for the confirm field (48px tap target + canonical\n  focus ring; was a hand-rolled <40px input) [UX major, DESIGN.md/PRODUCT.md].\n- Move focus into the field on reveal + role=group label — no keyboard dead-end on\n  the app's most destructive action [UX/Craftsman major]. (+focus test)\n- Send the user's TYPED value as confirm (not the server-echoed name) so the wire\n  carries real intent [Security nit/Craftsman minor].\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782007354000
+              "time": 1782008137000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782007354000
+              "time": 1782008137000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/7e0db45092ac531f9e6220128cd139ce2ef9e13a",
-            "commitHash": "7e0db45092ac531f9e6220128cd139ce2ef9e13a",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27890403392"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2839297d6b295bc4714d4e9b5697dff12198aaef",
+            "commitHash": "2839297d6b295bc4714d4e9b5697dff12198aaef",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27890701899"
           },
           "gitCommit": {
-            "shortHash": "7e0db45",
-            "hash": "7e0db45092ac531f9e6220128cd139ce2ef9e13a",
-            "subject": "feat(items): delete a photo from the item carousel (purses-v1m2) (#227)",
-            "body": "feat(items): delete a photo from the item carousel (purses-v1m2) (#227)\n\n* feat(items): delete a photo from the item carousel (purses-v1m2)\n\nDeleting an image already worked, but only behind 'Manage photos' — not where you\nlook at images. Add a delete control to the item-page carousel so you can remove\nthe photo you're viewing. New PhotoDeleteControl: trash button -> two-step confirm\n('Delete this photo? Keep / Delete', focus to Keep, role=group, idempotency guard)\n-> DELETE /api/collections/[id]/items/[itemId]/photos/[photoId]. The carousel goes\nstateful so the deleted photo drops out immediately (clamps index; last photo ->\nadd-photos CTA).\n\n- Unit: PhotoDeleteControl (7) reveal/confirm/focus/double-tap/back-out/non-ok/\n  network-reject; carousel (2) drops the photo + falls back to the CTA.\n- E2E (real seam): delete the only photo -> real DELETE -> add-photos CTA.\n\nBead: purses-v1m2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(items): fold #227 review — permanence copy, permission gate, real-delete proof\n\n- Confirm now states permanence: 'Delete this photo? This can't be undone.' (the\n  blob is hard-deleted) + capped panel width so it doesn't obscure the photo [UX major].\n- Gate the delete control behind canDeletePhotos||owner: the item page loads the\n  membership and passes canDelete; a view-only curator no longer sees a 403-only\n  button [UX major]. (PhotoGallery has the same gap — follow-up.)\n- Optimistic removal now also router.refresh()es so server-derived bits (promoted\n  hero) re-sync [Craftsman minor].\n- E2E reloads after delete and asserts no image + the CTA from a SERVER re-fetch —\n  proves the row was deleted, not just optimistic state [QA major].\n- Tests: gate hides control; middle-photo delete (index shift); owner-sees /\n  view-only-hides at the page level. 25 unit + e2e green.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "2839297",
+            "hash": "2839297d6b295bc4714d4e9b5697dff12198aaef",
+            "subject": "feat(collections): delete a collection from Settings (owner-only) (#228)",
+            "body": "feat(collections): delete a collection from Settings (owner-only) (#228)\n\n* feat(collections): owner can delete a collection from Settings (purses-* delete-collection)\n\nNo UI existed to delete a collection (the purge backend did: owner-only\nPOST /api/collections/[id]/purge with a type-the-name confirm). Add a DeleteCollectionSection\nto the edit/Settings page, rendered ONLY for the owner: a danger zone -> reveal a\ntype-the-exact-name confirm (matches the route's confirm contract) -> POST purge ->\nredirect to /collections. Honest about permanence ('removes the collection and\neverything in it … can't be undone'); idempotency guard; gentle error.\n\n- Unit (6): reveal-only, Delete disabled until exact name typed, purge POSTs {confirm:name}\n  + redirects, double-submit = one call, Cancel backs out, failed purge keeps you put.\n- E2E (real seam): owner types the name -> real cascade purge -> lands on /collections.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(collections): edit page shows delete-collection only to the owner (gate)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(collections): fold #228 review — shared Input (44px), focus mgmt, honest confirm\n\n- Use the shared Input primitive for the confirm field (48px tap target + canonical\n  focus ring; was a hand-rolled <40px input) [UX major, DESIGN.md/PRODUCT.md].\n- Move focus into the field on reveal + role=group label — no keyboard dead-end on\n  the app's most destructive action [UX/Craftsman major]. (+focus test)\n- Send the user's TYPED value as confirm (not the server-echoed name) so the wire\n  carries real intent [Security nit/Craftsman minor].\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782007354000
+              "time": 1782008137000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782007354000
+              "time": 1782008137000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/7e0db45092ac531f9e6220128cd139ce2ef9e13a",
-            "commitHash": "7e0db45092ac531f9e6220128cd139ce2ef9e13a",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27890403392"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2839297d6b295bc4714d4e9b5697dff12198aaef",
+            "commitHash": "2839297d6b295bc4714d4e9b5697dff12198aaef",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27890701899"
           },
           "gitCommit": {
-            "shortHash": "7e0db45",
-            "hash": "7e0db45092ac531f9e6220128cd139ce2ef9e13a",
-            "subject": "feat(items): delete a photo from the item carousel (purses-v1m2) (#227)",
-            "body": "feat(items): delete a photo from the item carousel (purses-v1m2) (#227)\n\n* feat(items): delete a photo from the item carousel (purses-v1m2)\n\nDeleting an image already worked, but only behind 'Manage photos' — not where you\nlook at images. Add a delete control to the item-page carousel so you can remove\nthe photo you're viewing. New PhotoDeleteControl: trash button -> two-step confirm\n('Delete this photo? Keep / Delete', focus to Keep, role=group, idempotency guard)\n-> DELETE /api/collections/[id]/items/[itemId]/photos/[photoId]. The carousel goes\nstateful so the deleted photo drops out immediately (clamps index; last photo ->\nadd-photos CTA).\n\n- Unit: PhotoDeleteControl (7) reveal/confirm/focus/double-tap/back-out/non-ok/\n  network-reject; carousel (2) drops the photo + falls back to the CTA.\n- E2E (real seam): delete the only photo -> real DELETE -> add-photos CTA.\n\nBead: purses-v1m2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(items): fold #227 review — permanence copy, permission gate, real-delete proof\n\n- Confirm now states permanence: 'Delete this photo? This can't be undone.' (the\n  blob is hard-deleted) + capped panel width so it doesn't obscure the photo [UX major].\n- Gate the delete control behind canDeletePhotos||owner: the item page loads the\n  membership and passes canDelete; a view-only curator no longer sees a 403-only\n  button [UX major]. (PhotoGallery has the same gap — follow-up.)\n- Optimistic removal now also router.refresh()es so server-derived bits (promoted\n  hero) re-sync [Craftsman minor].\n- E2E reloads after delete and asserts no image + the CTA from a SERVER re-fetch —\n  proves the row was deleted, not just optimistic state [QA major].\n- Tests: gate hides control; middle-photo delete (index shift); owner-sees /\n  view-only-hides at the page level. 25 unit + e2e green.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "2839297",
+            "hash": "2839297d6b295bc4714d4e9b5697dff12198aaef",
+            "subject": "feat(collections): delete a collection from Settings (owner-only) (#228)",
+            "body": "feat(collections): delete a collection from Settings (owner-only) (#228)\n\n* feat(collections): owner can delete a collection from Settings (purses-* delete-collection)\n\nNo UI existed to delete a collection (the purge backend did: owner-only\nPOST /api/collections/[id]/purge with a type-the-name confirm). Add a DeleteCollectionSection\nto the edit/Settings page, rendered ONLY for the owner: a danger zone -> reveal a\ntype-the-exact-name confirm (matches the route's confirm contract) -> POST purge ->\nredirect to /collections. Honest about permanence ('removes the collection and\neverything in it … can't be undone'); idempotency guard; gentle error.\n\n- Unit (6): reveal-only, Delete disabled until exact name typed, purge POSTs {confirm:name}\n  + redirects, double-submit = one call, Cancel backs out, failed purge keeps you put.\n- E2E (real seam): owner types the name -> real cascade purge -> lands on /collections.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(collections): edit page shows delete-collection only to the owner (gate)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(collections): fold #228 review — shared Input (44px), focus mgmt, honest confirm\n\n- Use the shared Input primitive for the confirm field (48px tap target + canonical\n  focus ring; was a hand-rolled <40px input) [UX major, DESIGN.md/PRODUCT.md].\n- Move focus into the field on reveal + role=group label — no keyboard dead-end on\n  the app's most destructive action [UX/Craftsman major]. (+focus test)\n- Send the user's TYPED value as confirm (not the server-echoed name) so the wire\n  carries real intent [Security nit/Craftsman minor].\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782007354000
+              "time": 1782008137000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782007354000
+              "time": 1782008137000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/7e0db45092ac531f9e6220128cd139ce2ef9e13a",
-            "commitHash": "7e0db45092ac531f9e6220128cd139ce2ef9e13a",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27890403392"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2839297d6b295bc4714d4e9b5697dff12198aaef",
+            "commitHash": "2839297d6b295bc4714d4e9b5697dff12198aaef",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27890701899"
           },
           "gitCommit": {
-            "shortHash": "7e0db45",
-            "hash": "7e0db45092ac531f9e6220128cd139ce2ef9e13a",
-            "subject": "feat(items): delete a photo from the item carousel (purses-v1m2) (#227)",
-            "body": "feat(items): delete a photo from the item carousel (purses-v1m2) (#227)\n\n* feat(items): delete a photo from the item carousel (purses-v1m2)\n\nDeleting an image already worked, but only behind 'Manage photos' — not where you\nlook at images. Add a delete control to the item-page carousel so you can remove\nthe photo you're viewing. New PhotoDeleteControl: trash button -> two-step confirm\n('Delete this photo? Keep / Delete', focus to Keep, role=group, idempotency guard)\n-> DELETE /api/collections/[id]/items/[itemId]/photos/[photoId]. The carousel goes\nstateful so the deleted photo drops out immediately (clamps index; last photo ->\nadd-photos CTA).\n\n- Unit: PhotoDeleteControl (7) reveal/confirm/focus/double-tap/back-out/non-ok/\n  network-reject; carousel (2) drops the photo + falls back to the CTA.\n- E2E (real seam): delete the only photo -> real DELETE -> add-photos CTA.\n\nBead: purses-v1m2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(items): fold #227 review — permanence copy, permission gate, real-delete proof\n\n- Confirm now states permanence: 'Delete this photo? This can't be undone.' (the\n  blob is hard-deleted) + capped panel width so it doesn't obscure the photo [UX major].\n- Gate the delete control behind canDeletePhotos||owner: the item page loads the\n  membership and passes canDelete; a view-only curator no longer sees a 403-only\n  button [UX major]. (PhotoGallery has the same gap — follow-up.)\n- Optimistic removal now also router.refresh()es so server-derived bits (promoted\n  hero) re-sync [Craftsman minor].\n- E2E reloads after delete and asserts no image + the CTA from a SERVER re-fetch —\n  proves the row was deleted, not just optimistic state [QA major].\n- Tests: gate hides control; middle-photo delete (index shift); owner-sees /\n  view-only-hides at the page level. 25 unit + e2e green.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "2839297",
+            "hash": "2839297d6b295bc4714d4e9b5697dff12198aaef",
+            "subject": "feat(collections): delete a collection from Settings (owner-only) (#228)",
+            "body": "feat(collections): delete a collection from Settings (owner-only) (#228)\n\n* feat(collections): owner can delete a collection from Settings (purses-* delete-collection)\n\nNo UI existed to delete a collection (the purge backend did: owner-only\nPOST /api/collections/[id]/purge with a type-the-name confirm). Add a DeleteCollectionSection\nto the edit/Settings page, rendered ONLY for the owner: a danger zone -> reveal a\ntype-the-exact-name confirm (matches the route's confirm contract) -> POST purge ->\nredirect to /collections. Honest about permanence ('removes the collection and\neverything in it … can't be undone'); idempotency guard; gentle error.\n\n- Unit (6): reveal-only, Delete disabled until exact name typed, purge POSTs {confirm:name}\n  + redirects, double-submit = one call, Cancel backs out, failed purge keeps you put.\n- E2E (real seam): owner types the name -> real cascade purge -> lands on /collections.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* test(collections): edit page shows delete-collection only to the owner (gate)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n* fix(collections): fold #228 review — shared Input (44px), focus mgmt, honest confirm\n\n- Use the shared Input primitive for the confirm field (48px tap target + canonical\n  focus ring; was a hand-rolled <40px input) [UX major, DESIGN.md/PRODUCT.md].\n- Move focus into the field on reveal + role=group label — no keyboard dead-end on\n  the app's most destructive action [UX/Craftsman major]. (+focus test)\n- Send the user's TYPED value as confirm (not the server-echoed name) so the wire\n  carries real intent [Security nit/Craftsman minor].\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NpkGzYgcy23jUToNwgjSw9\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782007354000
+              "time": 1782008137000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782007354000
+              "time": 1782008137000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 969,
+                  "duration": 1020,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:05:36.650Z",
+                  "startTime": "2026-06-21T02:18:11.920Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -310,12 +310,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 10748,
+                      "duration": 8909,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:05:38.297Z",
+                      "startTime": "2026-06-21T02:18:13.619Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -344,12 +344,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2820,
+                      "duration": 2788,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:43.201Z",
+                      "startTime": "2026-06-21T02:20:02.319Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -378,12 +378,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 750,
+                      "duration": 3342,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:01.219Z",
+                      "startTime": "2026-06-21T02:21:51.757Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -422,12 +422,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3065,
+                  "duration": 2635,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:05:49.877Z",
+                  "startTime": "2026-06-21T02:18:23.398Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -456,12 +456,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2237,
+                  "duration": 2069,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:05:53.093Z",
+                  "startTime": "2026-06-21T02:18:26.107Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -490,12 +490,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2106,
+                  "duration": 2077,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:06:46.230Z",
+                  "startTime": "2026-06-21T02:20:05.352Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -524,12 +524,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1898,
+                  "duration": 1982,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:06:48.402Z",
+                  "startTime": "2026-06-21T02:20:07.496Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -558,12 +558,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 977,
+                  "duration": 1537,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:08:02.788Z",
+                  "startTime": "2026-06-21T02:21:59.799Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -592,12 +592,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1184,
+                  "duration": 1710,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:08:03.829Z",
+                  "startTime": "2026-06-21T02:22:01.443Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -634,12 +634,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1486,
+                  "duration": 1636,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:05:55.362Z",
+                  "startTime": "2026-06-21T02:18:28.232Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -668,12 +668,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1533,
+                  "duration": 1596,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:05:56.890Z",
+                  "startTime": "2026-06-21T02:18:29.905Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -702,12 +702,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2329,
+                  "duration": 2310,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:05:58.443Z",
+                  "startTime": "2026-06-21T02:18:31.525Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -736,12 +736,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1569,
+                  "duration": 1646,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:06:50.340Z",
+                  "startTime": "2026-06-21T02:20:09.520Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -770,12 +770,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2434,
+                  "duration": 1630,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:06:51.961Z",
+                  "startTime": "2026-06-21T02:20:11.232Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -804,12 +804,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2660,
+                  "duration": 1866,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:06:54.435Z",
+                  "startTime": "2026-06-21T02:20:12.899Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -838,12 +838,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 733,
+                  "duration": 934,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:08:05.065Z",
+                  "startTime": "2026-06-21T02:22:03.254Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -872,12 +872,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 736,
+                  "duration": 1055,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:08:05.831Z",
+                  "startTime": "2026-06-21T02:22:04.217Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -906,12 +906,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1075,
+                  "duration": 1496,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:08:06.592Z",
+                  "startTime": "2026-06-21T02:22:05.296Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -955,12 +955,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1076,
+                      "duration": 1050,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:00.805Z",
+                      "startTime": "2026-06-21T02:18:33.872Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -989,12 +989,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1503,
+                      "duration": 1779,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:01.980Z",
+                      "startTime": "2026-06-21T02:18:35.065Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1023,12 +1023,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1355,
+                      "duration": 1370,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:03.506Z",
+                      "startTime": "2026-06-21T02:18:36.895Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1057,12 +1057,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2916,
+                      "duration": 1037,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:57.152Z",
+                      "startTime": "2026-06-21T02:20:14.810Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1091,12 +1091,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2144,
+                      "duration": 1355,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:08.606Z",
+                      "startTime": "2026-06-21T02:20:15.969Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1125,12 +1125,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1008,
+                      "duration": 917,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:10.783Z",
+                      "startTime": "2026-06-21T02:20:17.351Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1159,12 +1159,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 492,
+                      "duration": 678,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:07.689Z",
+                      "startTime": "2026-06-21T02:22:06.855Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1193,12 +1193,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 747,
+                      "duration": 996,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:08.250Z",
+                      "startTime": "2026-06-21T02:22:07.816Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1227,12 +1227,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 461,
+                      "duration": 654,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:09.015Z",
+                      "startTime": "2026-06-21T02:22:08.826Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1243,6 +1243,125 @@
               "id": "bc75bd59fd35184b0d5e-217f7d68f330f3466238",
               "file": "compare.spec.ts",
               "line": 105,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "delete-collection.spec.ts",
+      "file": "delete-collection.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "delete a collection",
+          "file": "delete-collection.spec.ts",
+          "line": 7,
+          "column": 6,
+          "specs": [
+            {
+              "title": "owner types the name to permanently delete, then lands on /collections",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2486,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-21T02:18:38.315Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b4d359e9405cf2cbd405-9ac7b395acf7f708c441",
+              "file": "delete-collection.spec.ts",
+              "line": 15,
+              "column": 7
+            },
+            {
+              "title": "owner types the name to permanently delete, then lands on /collections",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1724,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-21T02:20:18.316Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b4d359e9405cf2cbd405-de9b9abbaf3b8092dc58",
+              "file": "delete-collection.spec.ts",
+              "line": 15,
+              "column": 7
+            },
+            {
+              "title": "owner types the name to permanently delete, then lands on /collections",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1081,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-21T02:22:09.507Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b4d359e9405cf2cbd405-7e10aadd5465e204bc4b",
+              "file": "delete-collection.spec.ts",
+              "line": 15,
               "column": 7
             }
           ]
@@ -1278,12 +1397,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2063,
+                      "duration": 1938,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:04.921Z",
+                      "startTime": "2026-06-21T02:18:40.881Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1312,12 +1431,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3079,
+                      "duration": 1857,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:11.987Z",
+                      "startTime": "2026-06-21T02:20:20.107Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1346,12 +1465,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 717,
+                      "duration": 970,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:09.501Z",
+                      "startTime": "2026-06-21T02:22:10.752Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1397,12 +1516,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 955,
+                      "duration": 880,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:07.084Z",
+                      "startTime": "2026-06-21T02:18:42.882Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1431,12 +1550,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1072,
+                      "duration": 1110,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:08.127Z",
+                      "startTime": "2026-06-21T02:18:43.823Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1465,12 +1584,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3742,
+                      "duration": 1290,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:17.833Z",
+                      "startTime": "2026-06-21T02:20:22.030Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1499,12 +1618,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1555,
+                      "duration": 1966,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:22.813Z",
+                      "startTime": "2026-06-21T02:20:23.393Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1533,12 +1652,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 467,
+                      "duration": 593,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:10.265Z",
+                      "startTime": "2026-06-21T02:22:11.855Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1567,12 +1686,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 425,
+                      "duration": 646,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:10.777Z",
+                      "startTime": "2026-06-21T02:22:12.577Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1618,12 +1737,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3214,
+                      "duration": 3473,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:09.229Z",
+                      "startTime": "2026-06-21T02:18:44.961Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1652,12 +1771,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3941,
+                      "duration": 4067,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:12.570Z",
+                      "startTime": "2026-06-21T02:18:48.533Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1686,12 +1805,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3719,
+                      "duration": 9345,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:24.424Z",
+                      "startTime": "2026-06-21T02:20:25.607Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1720,12 +1839,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3811,
+                      "duration": 4420,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:28.296Z",
+                      "startTime": "2026-06-21T02:20:35.440Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1754,12 +1873,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1009,
+                      "duration": 1005,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:11.226Z",
+                      "startTime": "2026-06-21T02:22:13.257Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1788,12 +1907,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 793,
+                      "duration": 920,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:12.278Z",
+                      "startTime": "2026-06-21T02:22:14.338Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1839,12 +1958,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1871,
+                      "duration": 2034,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:16.570Z",
+                      "startTime": "2026-06-21T02:18:52.645Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1873,12 +1992,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1932,
+                      "duration": 2147,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:18.525Z",
+                      "startTime": "2026-06-21T02:18:54.790Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1907,12 +2026,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1674,
+                      "duration": 1612,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:32.155Z",
+                      "startTime": "2026-06-21T02:20:41.899Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1941,12 +2060,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2011,
+                      "duration": 2590,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:33.918Z",
+                      "startTime": "2026-06-21T02:20:43.899Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1975,12 +2094,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 475,
+                      "duration": 528,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:13.111Z",
+                      "startTime": "2026-06-21T02:22:15.311Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2009,12 +2128,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 615,
+                      "duration": 653,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:13.653Z",
+                      "startTime": "2026-06-21T02:22:15.953Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2060,12 +2179,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1275,
+                      "duration": 1457,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:20.498Z",
+                      "startTime": "2026-06-21T02:18:57.008Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2094,12 +2213,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1065,
+                      "duration": 1188,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:21.784Z",
+                      "startTime": "2026-06-21T02:18:58.496Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2128,12 +2247,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1070,
+                      "duration": 1184,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:22.860Z",
+                      "startTime": "2026-06-21T02:18:59.690Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2162,12 +2281,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1586,
+                      "duration": 2798,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:35.997Z",
+                      "startTime": "2026-06-21T02:20:46.950Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2196,12 +2315,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1271,
+                      "duration": 2418,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:37.599Z",
+                      "startTime": "2026-06-21T02:20:49.761Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2230,12 +2349,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1186,
+                      "duration": 1334,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:38.880Z",
+                      "startTime": "2026-06-21T02:20:52.185Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2264,12 +2383,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1160,
+                      "duration": 1514,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:14.296Z",
+                      "startTime": "2026-06-21T02:22:16.671Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2298,12 +2417,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1057,
+                      "duration": 1364,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:15.463Z",
+                      "startTime": "2026-06-21T02:22:18.217Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2332,12 +2451,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1072,
+                      "duration": 1353,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:16.530Z",
+                      "startTime": "2026-06-21T02:22:19.591Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2376,12 +2495,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 828,
+                  "duration": 801,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:06:23.956Z",
+                  "startTime": "2026-06-21T02:19:00.899Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2410,12 +2529,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 999,
+                  "duration": 1023,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:06:24.839Z",
+                  "startTime": "2026-06-21T02:19:01.747Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2444,12 +2563,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1101,
+                  "duration": 1074,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:07:40.102Z",
+                  "startTime": "2026-06-21T02:20:53.545Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2478,12 +2597,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1253,
+                  "duration": 1146,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:07:41.280Z",
+                  "startTime": "2026-06-21T02:20:54.699Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2512,12 +2631,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 258,
+                  "duration": 425,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:08:17.628Z",
+                  "startTime": "2026-06-21T02:22:20.984Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2546,12 +2665,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 516,
+                  "duration": 556,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:08:17.929Z",
+                  "startTime": "2026-06-21T02:22:21.462Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2595,12 +2714,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1150,
+                      "duration": 1136,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:25.861Z",
+                      "startTime": "2026-06-21T02:19:02.792Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2629,12 +2748,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1092,
+                      "duration": 1124,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:42.576Z",
+                      "startTime": "2026-06-21T02:20:55.908Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2663,12 +2782,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 596,
+                      "duration": 646,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:18.471Z",
+                      "startTime": "2026-06-21T02:22:22.040Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2707,12 +2826,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 771,
+                  "duration": 895,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:06:27.108Z",
+                  "startTime": "2026-06-21T02:19:04.030Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2741,12 +2860,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 884,
+                  "duration": 1007,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:06:27.901Z",
+                  "startTime": "2026-06-21T02:19:04.940Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2775,12 +2894,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 832,
+                  "duration": 1757,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:06:28.804Z",
+                  "startTime": "2026-06-21T02:19:05.986Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2809,12 +2928,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 906,
+                  "duration": 1016,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:07:43.838Z",
+                  "startTime": "2026-06-21T02:20:57.200Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2843,12 +2962,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1091,
+                  "duration": 904,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:07:44.788Z",
+                  "startTime": "2026-06-21T02:20:58.241Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2877,12 +2996,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 968,
+                  "duration": 1019,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:07:45.920Z",
+                  "startTime": "2026-06-21T02:20:59.190Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2911,12 +3030,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 241,
+                  "duration": 268,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:08:19.146Z",
+                  "startTime": "2026-06-21T02:22:22.755Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2945,12 +3064,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 236,
+                  "duration": 248,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:08:19.404Z",
+                  "startTime": "2026-06-21T02:22:23.039Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2979,12 +3098,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 254,
+                  "duration": 272,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-21T02:08:19.654Z",
+                  "startTime": "2026-06-21T02:22:23.304Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3028,12 +3147,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1220,
+                      "duration": 1492,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:29.662Z",
+                      "startTime": "2026-06-21T02:19:07.784Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3062,12 +3181,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1131,
+                      "duration": 986,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:46.932Z",
+                      "startTime": "2026-06-21T02:21:00.240Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3096,12 +3215,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 438,
+                      "duration": 435,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:19.924Z",
+                      "startTime": "2026-06-21T02:22:23.593Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3147,12 +3266,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1191,
+                      "duration": 2778,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:30.984Z",
+                      "startTime": "2026-06-21T02:19:10.105Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3181,12 +3300,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1383,
+                      "duration": 1945,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:32.279Z",
+                      "startTime": "2026-06-21T02:19:17.064Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3215,12 +3334,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1434,
+                      "duration": 2388,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:33.694Z",
+                      "startTime": "2026-06-21T02:19:19.052Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3249,12 +3368,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1683,
+                      "duration": 1495,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:48.237Z",
+                      "startTime": "2026-06-21T02:21:01.354Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3283,12 +3402,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1734,
+                      "duration": 2673,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:50.017Z",
+                      "startTime": "2026-06-21T02:21:02.984Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3317,12 +3436,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1332,
+                      "duration": 2141,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:51.788Z",
+                      "startTime": "2026-06-21T02:21:05.683Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3351,12 +3470,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 453,
+                      "duration": 505,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:20.415Z",
+                      "startTime": "2026-06-21T02:22:24.067Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3385,12 +3504,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 674,
+                      "duration": 657,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:20.902Z",
+                      "startTime": "2026-06-21T02:22:24.645Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3424,7 +3543,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:21.595Z",
+                      "startTime": "2026-06-21T02:22:25.320Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3461,12 +3580,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3898,
+                      "duration": 9220,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:35.162Z",
+                      "startTime": "2026-06-21T02:19:21.455Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3495,12 +3614,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1471,
+                      "duration": 2182,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:39.135Z",
+                      "startTime": "2026-06-21T02:19:35.569Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3529,12 +3648,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3663,
+                      "duration": 6424,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:53.145Z",
+                      "startTime": "2026-06-21T02:21:07.849Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3563,12 +3682,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1594,
+                      "duration": 2002,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:56.862Z",
+                      "startTime": "2026-06-21T02:21:14.850Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3597,12 +3716,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1426,
+                      "duration": 1569,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:22.087Z",
+                      "startTime": "2026-06-21T02:22:25.810Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3631,12 +3750,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 472,
+                      "duration": 454,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:23.552Z",
+                      "startTime": "2026-06-21T02:22:27.423Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3673,12 +3792,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1003,
+                      "duration": 1356,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:40.628Z",
+                      "startTime": "2026-06-21T02:19:37.768Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3707,12 +3826,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 713,
+                      "duration": 916,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:06:41.655Z",
+                      "startTime": "2026-06-21T02:19:39.155Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3741,12 +3860,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 983,
+                      "duration": 1729,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:58.485Z",
+                      "startTime": "2026-06-21T02:21:16.879Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3775,12 +3894,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 972,
+                      "duration": 1013,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:07:59.498Z",
+                      "startTime": "2026-06-21T02:21:18.662Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3809,12 +3928,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 293,
+                      "duration": 242,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:24.046Z",
+                      "startTime": "2026-06-21T02:22:27.899Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3843,12 +3962,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 236,
+                      "duration": 249,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-21T02:08:24.358Z",
+                      "startTime": "2026-06-21T02:22:28.157Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3868,9 +3987,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-21T02:04:26.584Z",
-    "duration": 238306.215,
-    "expected": 100,
+    "startTime": "2026-06-21T02:17:04.493Z",
+    "duration": 324700.364,
+    "expected": 103,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0
