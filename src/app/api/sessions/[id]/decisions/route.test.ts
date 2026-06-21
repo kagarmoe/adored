@@ -11,13 +11,13 @@ const { mockGetSession, mockGetDb, insertReturning, sessionRepo, collectionRepo,
 }));
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: mockGetDb }));
-vi.mock("@/server/repositories/implementations/SessionRepository", () => ({ SessionRepository: vi.fn(() => sessionRepo) }));
-vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({ CollectionRepository: vi.fn(() => collectionRepo) }));
-vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({ MembershipRepository: vi.fn(() => membershipRepo) }));
-vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({ CollectionPreferenceItemRepository: vi.fn(() => ({})) }));
-vi.mock("@/server/repositories/implementations/DecisionEventRepository", () => ({ DecisionEventRepository: vi.fn(() => ({})) }));
-vi.mock("@/server/services/ScoringService", () => ({ ScoringService: vi.fn(() => ({})) }));
-vi.mock("@/server/services/PreferenceStateService", () => ({ PreferenceStateService: vi.fn(() => ({ recalculatePreferences: prefRecalc })) }));
+vi.mock("@/server/repositories/implementations/SessionRepository", () => ({ SessionRepository: vi.fn(function () { return sessionRepo; }) }));
+vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({ CollectionRepository: vi.fn(function () { return collectionRepo; }) }));
+vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({ MembershipRepository: vi.fn(function () { return membershipRepo; }) }));
+vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({ CollectionPreferenceItemRepository: vi.fn(function () { return {}; }) }));
+vi.mock("@/server/repositories/implementations/DecisionEventRepository", () => ({ DecisionEventRepository: vi.fn(function () { return {}; }) }));
+vi.mock("@/server/services/ScoringService", () => ({ ScoringService: vi.fn(function () { return {}; }) }));
+vi.mock("@/server/services/PreferenceStateService", () => ({ PreferenceStateService: vi.fn(function () { return { recalculatePreferences: prefRecalc }; }) }));
 
 import { POST } from "./route";
 

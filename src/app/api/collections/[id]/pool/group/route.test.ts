@@ -19,22 +19,22 @@ const {
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: mockGetDb }));
 vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({
-  MembershipRepository: vi.fn().mockImplementation(() => membershipRepo),
+  MembershipRepository: vi.fn().mockImplementation(function () { return membershipRepo; }),
 }));
 vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({
-  CollectionRepository: vi.fn().mockImplementation(() => collectionRepo),
+  CollectionRepository: vi.fn().mockImplementation(function () { return collectionRepo; }),
 }));
 vi.mock("@/server/repositories/implementations/ItemRepository", () => ({
-  ItemRepository: vi.fn().mockImplementation(() => ({})),
+  ItemRepository: vi.fn().mockImplementation(function () { return ({}); }),
 }));
 vi.mock("@/server/repositories/implementations/PhotoRepository", () => ({
-  PhotoRepository: vi.fn().mockImplementation(() => ({})),
+  PhotoRepository: vi.fn().mockImplementation(function () { return ({}); }),
 }));
 vi.mock("@/server/services/ItemService", async () => {
   const actual = await vi.importActual<any>("@/server/services/ItemService");
   return {
     ...actual, // keep the real PoolGroupError class for instanceof mapping
-    ItemService: vi.fn().mockImplementation(() => ({ createItemFromPool, createItemsFromPoolEach })),
+    ItemService: vi.fn().mockImplementation(function () { return ({ createItemFromPool, createItemsFromPoolEach }); }),
   };
 });
 

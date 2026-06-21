@@ -12,13 +12,13 @@ const { mockGetSession, mockGetDb, photoRepo, membershipRepo, collectionRepo } =
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: mockGetDb }));
 vi.mock("@/server/repositories/implementations/PhotoRepository", () => ({
-  PhotoRepository: vi.fn().mockImplementation(() => photoRepo),
+  PhotoRepository: vi.fn().mockImplementation(function () { return photoRepo; }),
 }));
 vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({
-  MembershipRepository: vi.fn().mockImplementation(() => membershipRepo),
+  MembershipRepository: vi.fn().mockImplementation(function () { return membershipRepo; }),
 }));
 vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({
-  CollectionRepository: vi.fn().mockImplementation(() => collectionRepo),
+  CollectionRepository: vi.fn().mockImplementation(function () { return collectionRepo; }),
 }));
 
 import { GET } from "./route";

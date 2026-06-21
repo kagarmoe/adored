@@ -6,8 +6,8 @@ const { collectionRepo, membershipRepo } = vi.hoisted(() => ({
   collectionRepo: { findById: vi.fn() },
   membershipRepo: { findByUser: vi.fn() },
 }));
-vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({ CollectionRepository: vi.fn(() => collectionRepo) }));
-vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({ MembershipRepository: vi.fn(() => membershipRepo) }));
+vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({ CollectionRepository: vi.fn(function () { return collectionRepo; }) }));
+vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({ MembershipRepository: vi.fn(function () { return membershipRepo; }) }));
 
 import { requireApiCollectionAccess, requireApiCollectionOwner } from "./collection-access";
 

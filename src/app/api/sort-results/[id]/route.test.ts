@@ -40,13 +40,13 @@ vi.mock("@/server/dal/collection-access", () => ({
   requireApiResultAccess: mockRequireApiResultAccess,
 }));
 vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
-  SortResultRepository: vi.fn(() => sortResultRepo),
+  SortResultRepository: vi.fn(function () { return sortResultRepo; }),
 }));
 vi.mock("@/server/repositories/implementations/SortResultItemRepository", () => ({
-  SortResultItemRepository: vi.fn(() => sortResultItemRepo),
+  SortResultItemRepository: vi.fn(function () { return sortResultItemRepo; }),
 }));
 vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({
-  CollectionPreferenceItemRepository: vi.fn(() => ({})),
+  CollectionPreferenceItemRepository: vi.fn(function () { return ({}); }),
 }));
 
 import { GET, PATCH, DELETE } from "./route";

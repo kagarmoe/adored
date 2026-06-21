@@ -22,16 +22,16 @@ vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: mockGetDb }));
 vi.mock("@/lib/photo-serving", () => ({ servePhotoFile: mockServePhotoFile }));
 vi.mock("@/server/repositories/implementations/PhotoRepository", () => ({
-  PhotoRepository: vi.fn().mockImplementation(() => photoRepo),
+  PhotoRepository: vi.fn().mockImplementation(function () { return photoRepo; }),
 }));
 vi.mock("@/server/repositories/implementations/ItemRepository", () => ({
-  ItemRepository: vi.fn().mockImplementation(() => itemRepo),
+  ItemRepository: vi.fn().mockImplementation(function () { return itemRepo; }),
 }));
 vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({
-  MembershipRepository: vi.fn().mockImplementation(() => membershipRepo),
+  MembershipRepository: vi.fn().mockImplementation(function () { return membershipRepo; }),
 }));
 vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({
-  CollectionRepository: vi.fn().mockImplementation(() => collectionRepo),
+  CollectionRepository: vi.fn().mockImplementation(function () { return collectionRepo; }),
 }));
 
 import { GET } from "./route";

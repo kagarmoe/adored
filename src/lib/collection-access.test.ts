@@ -12,10 +12,10 @@ const { mockRedirect, collectionRepo, membershipRepo } = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({ redirect: mockRedirect }));
 vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({
-  CollectionRepository: vi.fn(() => collectionRepo),
+  CollectionRepository: vi.fn(function () { return collectionRepo; }),
 }));
 vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({
-  MembershipRepository: vi.fn(() => membershipRepo),
+  MembershipRepository: vi.fn(function () { return membershipRepo; }),
 }));
 
 import { requireCollectionAccess } from "./collection-access";

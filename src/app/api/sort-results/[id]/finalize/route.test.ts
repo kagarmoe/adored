@@ -28,7 +28,7 @@ vi.mock("@/server/dal/collection-access", () => ({
   requireApiResultAccess: mockRequireApiResultAccess,
 }));
 vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
-  SortResultRepository: vi.fn(() => sortResultRepo),
+  SortResultRepository: vi.fn(function () { return sortResultRepo; }),
 }));
 
 import { POST } from "./route";

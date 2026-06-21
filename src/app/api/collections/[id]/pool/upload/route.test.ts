@@ -12,13 +12,13 @@ const { mockGetSession, mockGetDb, membershipRepo, collectionRepo, mockHandleUpl
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: mockGetDb }));
 vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({
-  MembershipRepository: vi.fn().mockImplementation(() => membershipRepo),
+  MembershipRepository: vi.fn().mockImplementation(function () { return membershipRepo; }),
 }));
 vi.mock("@/server/repositories/implementations/CollectionRepository", () => ({
-  CollectionRepository: vi.fn().mockImplementation(() => collectionRepo),
+  CollectionRepository: vi.fn().mockImplementation(function () { return collectionRepo; }),
 }));
 vi.mock("@/server/repositories/implementations/PhotoRepository", () => ({
-  PhotoRepository: vi.fn().mockImplementation(() => ({ create: vi.fn() })),
+  PhotoRepository: vi.fn().mockImplementation(function () { return ({ create: vi.fn() }); }),
 }));
 vi.mock("@vercel/blob/client", () => ({ handleUpload: mockHandleUpload }));
 
