@@ -14,9 +14,9 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
-import { seedBaseline, seedFullCollection, seedUserRow } from "../../../e2e/fixtures/seed";
+import { seedBaseline, seedBareCollection, seedFullCollection, seedUserRow } from "../../../e2e/fixtures/seed";
 import { mockAuth } from "../../../e2e/fixtures/mock-auth";
-import { user as userTable, collectionsTable } from "@/lib/db/schema";
+import { user as userTable } from "@/lib/db/schema";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
@@ -47,7 +47,7 @@ import { POST as itemsPost } from "@/app/api/items/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
-function makeNextReq(
+function nextReq(
   method: string,
   url: string,
   body?: unknown,
@@ -57,15 +57,6 @@ function makeNextReq(
     headers: body !== undefined ? { "content-type": "application/json" } : {},
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
-}
-
-// Alias for readability; all route handlers receive NextRequest.
-function nextReq(
-  method: string,
-  url: string,
-  body?: unknown,
-): NextRequest {
-  return makeNextReq(method, url, body);
 }
 
 // ============================================================================
@@ -110,7 +101,9 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       expect(row.password).toMatch(/^\$2[ab]\$/);
     });
 
-    it("returns 201 for a duplicate email (anti-enumeration — no user row added)", async () => {
+    it("returns 201 for a duplicate email (TIMING oracle: dup path skips bcrypt — tracked as a bead; this test pins the 201 status only, not that it's safe)", async () => {
+      // Duplicate-email returns 201 but is a TIMING oracle (dup path skips bcrypt).
+      // Tracked as a bead; this test pins the 201 status only, not that it's safe.
       // First signup creates the user
       const email = "dup@adored.test";
       const password = "password123";
@@ -184,17 +177,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
 
       // Owner has a full seeded collection; other user has their own
       const seed = await seedFullCollection(ownerId);
-      const { db } = getTestDb();
-      const otherId2 = generateId("col_other");
-      await db.insert(collectionsTable).values({
-        id: otherId2,
-        ownerId: otherId,
-        name: "Other's Collection",
-        slug: `slug-other-${otherId2}`,
-        status: "active",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const otherId2 = await seedBareCollection(otherId);
 
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await collectionsGet();
@@ -640,13 +623,3 @@ describeDb("Group E — core route integration tests (real DB)", () => {
     });
   });
 });
-
-// generateId helper — imported directly to avoid a separate mock
-function generateId(prefix: string): string {
-  // Thin wrapper matching the real generateId shape used in seed helpers.
-  // We only need this for constructing a secondary collection in one test.
-  const chars = "0123456789abcdefghijklmnopqrstuvwxyz";
-  let rand = "";
-  for (let i = 0; i < 20; i++) rand += chars[Math.floor(Math.random() * chars.length)];
-  return `${prefix}_${rand}`;
-}

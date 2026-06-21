@@ -11,22 +11,14 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline, seedFullCollection, seedUserRow } from "../../../e2e/fixtures/seed";
+import { mockAuth } from "../../../e2e/fixtures/mock-auth";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 
 const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
 
-// Flat-replace BOTH exports so requireAuth() derives from the same spy.
-// Never importActual @/lib/auth — the spread form pulls in nodemailer.
-vi.mock("@/lib/auth", () => ({
-  getSession: mockGetSession,
-  requireAuth: async () => {
-    const s = await mockGetSession();
-    if (!s?.user) throw new Error("Unauthorized");
-    return s.user;
-  },
-}));
+vi.mock("@/lib/auth", () => mockAuth(mockGetSession));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
 import { GET as getItems } from "@/app/api/collections/[id]/preferences/items/route";

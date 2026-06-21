@@ -388,6 +388,20 @@ export interface FullSeedIds {
 }
 
 /**
+ * Seed a bare collection owned by `ownerId` (no items, members, or cascade rows).
+ * Returns the generated collectionId.
+ */
+export async function seedBareCollection(ownerId: string): Promise<string> {
+  const { db } = getTestDb();
+  const collectionId = generateId("col");
+  await db.execute(sql`
+    INSERT INTO collections (id, owner_id, name, slug, status, created_at, updated_at)
+    VALUES (${collectionId}, ${ownerId}, ${"Test Collection"}, ${`slug-${collectionId}`}, 'active', now(), now())
+  `);
+  return collectionId;
+}
+
+/**
  * Insert a bare user row (auth is mocked in integration tests, so no password
  * needed). Returns the generated user id.
  */

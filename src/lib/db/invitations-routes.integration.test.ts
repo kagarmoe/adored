@@ -22,7 +22,8 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
-import { seedBaseline, seedUserRow } from "../../../e2e/fixtures/seed";
+import { seedBaseline, seedBareCollection, seedUserRow } from "../../../e2e/fixtures/seed";
+import { mockAuth } from "../../../e2e/fixtures/mock-auth";
 import { generateId } from "@/lib/id";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
@@ -35,14 +36,7 @@ const { mockGetSession } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
 }));
 
-vi.mock("@/lib/auth", () => ({
-  getSession: mockGetSession,
-  requireAuth: async () => {
-    const s = await mockGetSession();
-    if (!s?.user) throw new Error("Unauthorized");
-    return s.user;
-  },
-}));
+vi.mock("@/lib/auth", () => mockAuth(mockGetSession));
 
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
@@ -99,18 +93,6 @@ async function seedInvitation(
     canViewOutputs: true,
   });
   return { id: inv.id, token };
-}
-
-/** Seed a bare collection owned by ownerId (no full cascade). */
-async function seedBareCollection(ownerId: string): Promise<string> {
-  const { db } = getTestDb();
-  const { sql } = await import("drizzle-orm");
-  const collectionId = generateId("col");
-  await db.execute(sql`
-    INSERT INTO collections (id, owner_id, name, slug, status, created_at, updated_at)
-    VALUES (${collectionId}, ${ownerId}, ${"Test Collection"}, ${`slug-${collectionId}`}, 'active', now(), now())
-  `);
-  return collectionId;
 }
 
 // ---------------------------------------------------------------------------

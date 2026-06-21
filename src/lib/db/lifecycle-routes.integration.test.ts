@@ -19,25 +19,18 @@
 
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
-import { seedBaseline, seedFullCollection, seedUserRow } from "../../../e2e/fixtures/seed";
+import { seedBaseline, seedBareCollection, seedFullCollection, seedUserRow } from "../../../e2e/fixtures/seed";
+import { mockAuth } from "../../../e2e/fixtures/mock-auth";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
-import { generateId } from "@/lib/id";
 
 // ---------------------------------------------------------------------------
 // Hoisted mocks — must precede any import that transitively loads @/lib/auth
 // ---------------------------------------------------------------------------
 const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
 
-vi.mock("@/lib/auth", () => ({
-  getSession: mockGetSession,
-  requireAuth: async () => {
-    const s = await mockGetSession();
-    if (!s?.user) throw new Error("Unauthorized");
-    return s.user;
-  },
-}));
+vi.mock("@/lib/auth", () => mockAuth(mockGetSession));
 
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
@@ -133,14 +126,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
 
     it("returns empty array for collection with no members", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const { db } = getTestDb();
-      const collectionId = generateId("col");
-      // Use raw insert via SQL (same pattern as seedFullCollection)
-      const { sql } = await import("drizzle-orm");
-      await db.execute(
-        sql`INSERT INTO collections (id, owner_id, name, slug, status, created_at, updated_at)
-            VALUES (${collectionId}, ${ownerId}, ${"Empty Coll"}, ${`slug-${collectionId}`}, 'active', now(), now())`,
-      );
+      const collectionId = await seedBareCollection(ownerId);
 
       const res = await membersGet(getReq(), { params: { id: collectionId } });
       expect(res.status).toBe(200);
@@ -188,14 +174,9 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
 
     it("happy path — owner adds a new member; real membership row created", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const { db } = getTestDb();
       // Use a collection with no existing members for a clean count
-      const collectionId = generateId("col");
-      const { sql } = await import("drizzle-orm");
-      await db.execute(
-        sql`INSERT INTO collections (id, owner_id, name, slug, status, created_at, updated_at)
-            VALUES (${collectionId}, ${ownerId}, ${"Member Test Coll"}, ${`slug-${collectionId}`}, 'active', now(), now())`,
-      );
+      const collectionId = await seedBareCollection(ownerId);
+      const { db } = getTestDb();
 
       const newUserId = await seedUserRow("new-member");
 
