@@ -15,6 +15,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
+    "screenshots": "playwright test --config=playwright.screenshots.config.ts",
     "db:generate": "drizzle-kit generate:pg --schema=src/lib/db/schema.ts --out=drizzle",
     "db:migrate": "node -r esbuild-register scripts/migrate.ts",
     "db:backfill-slugs": "node -r esbuild-register scripts/backfill-collection-slugs.ts",
