@@ -3,13 +3,18 @@ import { eq } from "drizzle-orm";
 import { user, collectionsTable } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
 import { getTestDb, resetDb, closeDb } from "./db";
+import { sql } from "drizzle-orm";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
+import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { SortResultService } from "@/server/services/SortResultService";
+import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
+import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
+import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 
 // A known user every spec can log in as via the Credentials provider.
 export const BASELINE_USER = {
@@ -362,6 +367,189 @@ export async function seedRemovalScenario(): Promise<{
     draftResultItemId: draftResultItem.id,
     finalizedResultId: finalizedResult.id,
     finalizedResultItemId: finalizedResultItem.id,
+  };
+}
+
+// Two distinct real http blob keys used by seedFullCollection — exported so
+// tests that assert blob deletions can reference the same constants.
+export const FULL_SEED_HTTP_KEY_ACTIVE = "https://blob.example/active.jpg";
+export const FULL_SEED_HTTP_KEY_SOFT = "https://blob.example/soft.jpg";
+
+const FULL_SEED_COLLECTION_NAME = "My Beloved Bags";
+
+/** All ids returned by seedFullCollection — used in route integration tests. */
+export interface FullSeedIds {
+  collectionId: string;
+  name: string;
+  memberId: string;
+  itemAId: string;
+  itemBId: string;
+  sessionId: string;
+}
+
+/**
+ * Seed a bare collection owned by `ownerId` (no items, members, or cascade rows).
+ * Returns the generated collectionId.
+ */
+export async function seedBareCollection(ownerId: string): Promise<string> {
+  const { db } = getTestDb();
+  const collectionId = generateId("col");
+  await db.execute(sql`
+    INSERT INTO collections (id, owner_id, name, slug, status, created_at, updated_at)
+    VALUES (${collectionId}, ${ownerId}, ${"Test Collection"}, ${`slug-${collectionId}`}, 'active', now(), now())
+  `);
+  return collectionId;
+}
+
+/**
+ * Insert a bare user row (auth is mocked in integration tests, so no password
+ * needed). Returns the generated user id.
+ */
+export async function seedUserRow(label: string): Promise<string> {
+  const { db } = getTestDb();
+  const id = generateId("user");
+  await db
+    .insert((await import("@/lib/db/schema")).user)
+    .values({ id, email: `${label}-${id}@adored.test`, name: label });
+  return id;
+}
+
+/**
+ * Seed a FULL collection owned by `ownerId`, populating EVERY cascade table so
+ * every empty-after assertion is non-vacuous:
+ *   - a 2nd member (membership row),
+ *   - 2 items,
+ *   - 2 photos with distinct http blobKeys (one soft-deleted),
+ *   - a session (owner) + 1 decision_event,
+ *   - the 2nd member's preference (1 row, on item B),
+ *   - a DRAFT result + 1 result-item,
+ *   - a FINALIZED result + 1 result-item + 1 share,
+ *   - 1 invitation.
+ *
+ * Used by the purge integration test and the route integration test harness.
+ */
+export async function seedFullCollection(ownerId: string): Promise<FullSeedIds> {
+  const { db } = getTestDb();
+  const collectionId = generateId("col");
+  await db.execute(sql`
+    INSERT INTO collections (id, owner_id, name, slug, status, created_at, updated_at)
+    VALUES (${collectionId}, ${ownerId}, ${FULL_SEED_COLLECTION_NAME}, ${`slug-${collectionId}`}, 'active', now(), now())
+  `);
+
+  // A 2nd member (curator) — not the owner.
+  const memberId = await seedUserRow("member");
+  await new MembershipRepository(db).create({
+    collectionId,
+    userId: memberId,
+    role: "curator",
+    canManageCollection: false,
+    canInviteMembers: false,
+    canAddItems: true,
+    canEditMetadata: true,
+    canAddPhotos: true,
+    canDeletePhotos: false,
+    canSort: true,
+    canViewOutputs: true,
+  });
+
+  const itemRepo = new ItemRepository(db);
+  const itemA = await itemRepo.create({ collectionId });
+  const itemB = await itemRepo.create({ collectionId });
+
+  const photoRepo = new PhotoRepository(db);
+  await photoRepo.create({
+    itemId: itemA.id,
+    collectionId,
+    blobKey: FULL_SEED_HTTP_KEY_ACTIVE,
+    filename: "active.jpg",
+    mimeType: "image/jpeg",
+    fileSize: 1,
+    uploadedBy: ownerId,
+    isHero: true,
+  });
+  const softPhoto = await photoRepo.create({
+    itemId: itemB.id,
+    collectionId,
+    blobKey: FULL_SEED_HTTP_KEY_SOFT,
+    filename: "soft.jpg",
+    mimeType: "image/jpeg",
+    fileSize: 1,
+    uploadedBy: ownerId,
+    isHero: false,
+  });
+  await photoRepo.softDelete(softPhoto.id);
+
+  const session = await new SessionRepository(db).create({ collectionId, curatorId: ownerId });
+  await new DecisionEventRepository(db).create({
+    sessionId: session.id,
+    type: "triage",
+    decision: { itemId: itemA.id, result: "top" },
+  });
+
+  await new CollectionPreferenceItemRepository(db).create({
+    collectionId,
+    curatorId: memberId,
+    itemId: itemB.id,
+    score: 0.5,
+    confidence: 1,
+    rankBucket: "medium",
+    comparisonCount: 0,
+  });
+
+  const resultRepo = new SortResultRepository(db);
+  const resultItemRepo = new SortResultItemRepository(db);
+
+  const draft = await resultRepo.create({
+    collectionId,
+    curatorId: ownerId,
+    name: "Draft ranking",
+    status: "draft",
+  });
+  await resultItemRepo.create({
+    sortResultId: draft.id,
+    itemId: itemA.id,
+    computedRank: 1,
+    computedBucket: "top",
+  });
+
+  const finalized = await resultRepo.create({
+    collectionId,
+    curatorId: ownerId,
+    name: "Finalized ranking",
+    status: "finalized",
+  });
+  await resultItemRepo.create({
+    sortResultId: finalized.id,
+    itemId: itemB.id,
+    computedRank: 1,
+    computedBucket: "high",
+  });
+  await new SortResultShareRepository(db).create({
+    sortResultId: finalized.id,
+    shareToken: generateId("tok"),
+  });
+
+  await new InvitationRepository(db).create({
+    collectionId,
+    email: "invitee@adored.test",
+    token: generateId("invtok"),
+    canManageCollection: false,
+    canInviteMembers: false,
+    canAddItems: true,
+    canEditMetadata: true,
+    canAddPhotos: true,
+    canDeletePhotos: false,
+    canSort: true,
+    canViewOutputs: true,
+  });
+
+  return {
+    collectionId,
+    name: FULL_SEED_COLLECTION_NAME,
+    memberId,
+    itemAId: itemA.id,
+    itemBId: itemB.id,
+    sessionId: session.id,
   };
 }
 

@@ -1,0 +1,428 @@
+// Real-DB integration tests for the collection/item lifecycle routes:
+//   GET/POST /api/collections/[id]/members
+//   POST     /api/collections/[id]/archive
+//   POST     /api/collections/[id]/restore
+//   POST     /api/items/[id]/restore
+//
+// Mocks ONLY auth (getSession/requireAuth) and getDb → test DB.
+// No @vercel/blob calls in these routes — not mocked.
+//
+// AUTHZ GAPS PINNED (do NOT fix here — tracked in the pv9 epic):
+//   purses-55c: GET /members is requireAuth-only — any authenticated user can list
+//               members of any collection (no membership/ownership check).
+//   purses-3al: POST /items/[id]/restore is requireAuth-only — any authenticated
+//               user can restore any item regardless of collection membership (IDOR).
+//   missing-404-archive-restore: POST /archive and /restore return 403 (not 404)
+//               for an absent collection because canManageCollection() uses findById,
+//               which returns null → false → "not manager" → 403.
+// @vitest-environment node
+
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
+import { seedBaseline, seedBareCollection, seedFullCollection, seedUserRow } from "../../../e2e/fixtures/seed";
+import { mockAuth } from "../../../e2e/fixtures/mock-auth";
+import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
+
+// ---------------------------------------------------------------------------
+// Hoisted mocks — must precede any import that transitively loads @/lib/auth
+// ---------------------------------------------------------------------------
+const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
+
+vi.mock("@/lib/auth", () => mockAuth(mockGetSession));
+
+vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
+
+// Import route handlers AFTER mocks are hoisted
+import { GET as membersGet, POST as membersPost } from "@/app/api/collections/[id]/members/route";
+import { POST as archivePost } from "@/app/api/collections/[id]/archive/route";
+import { POST as collectionRestorePost } from "@/app/api/collections/[id]/restore/route";
+import { POST as itemRestorePost } from "@/app/api/items/[id]/restore/route";
+
+// ---------------------------------------------------------------------------
+// Gate: skip unless RUN_DB_TESTS=1
+// ---------------------------------------------------------------------------
+const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
+
+// ---------------------------------------------------------------------------
+// Request helpers
+// ---------------------------------------------------------------------------
+function req(method: string, body?: unknown) {
+  return new Request("http://localhost/", {
+    method,
+    headers: body !== undefined ? { "content-type": "application/json" } : {},
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  }) as any;
+}
+
+const getReq = () => req("GET");
+const postReq = (body?: unknown) => req("POST", body ?? {});
+
+// ---------------------------------------------------------------------------
+// Suite
+// ---------------------------------------------------------------------------
+describeDb("lifecycle route integration tests — members + archive/restore", () => {
+  let ownerId: string;
+  let strangerId: string;
+
+  beforeEach(async () => {
+    await resetDb();
+    vi.clearAllMocks();
+    ownerId = await seedBaseline();
+    strangerId = await seedUserRow("stranger");
+  });
+
+  afterAll(async () => {
+    await closeDb();
+  });
+
+  // =========================================================================
+  // GET /api/collections/[id]/members
+  // =========================================================================
+  describe("GET /api/collections/[id]/members", () => {
+    it("401 when unauthenticated", async () => {
+      mockGetSession.mockResolvedValue(null);
+      const { collectionId } = await seedFullCollection(ownerId);
+
+      const res = await membersGet(getReq(), { params: { id: collectionId } });
+      expect(res.status).toBe(401);
+    });
+
+    it("happy path — owner gets the membership list (real rows)", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const { collectionId, memberId } = await seedFullCollection(ownerId);
+
+      const res = await membersGet(getReq(), { params: { id: collectionId } });
+      expect(res.status).toBe(200);
+
+      const body = await res.json();
+      expect(Array.isArray(body)).toBe(true);
+      expect(body).toHaveLength(1);
+      expect(body[0]).toMatchObject({ collectionId, userId: memberId });
+    });
+
+    it("happy path — member gets the membership list (real rows)", async () => {
+      const { collectionId, memberId } = await seedFullCollection(ownerId);
+      mockGetSession.mockResolvedValue({ user: { id: memberId } });
+
+      const res = await membersGet(getReq(), { params: { id: collectionId } });
+      expect(res.status).toBe(200);
+
+      const body = await res.json();
+      expect(Array.isArray(body)).toBe(true);
+    });
+
+    // AUTHZ GAP PIN (purses-55c): any authenticated user — not a member — can
+    // list members of a foreign collection. The route is requireAuth-only.
+    it("AUTHZ-GAP(purses-55c): stranger gets 200 (no membership check)", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+      const { collectionId } = await seedFullCollection(ownerId);
+
+      const res = await membersGet(getReq(), { params: { id: collectionId } });
+      // Pinning ACTUAL behavior — this should be 403 once the gap is fixed.
+      expect(res.status).toBe(200);
+    });
+
+    it("returns empty array for collection with no members", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const collectionId = await seedBareCollection(ownerId);
+
+      const res = await membersGet(getReq(), { params: { id: collectionId } });
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body).toEqual([]);
+    });
+  });
+
+  // =========================================================================
+  // POST /api/collections/[id]/members
+  // =========================================================================
+  describe("POST /api/collections/[id]/members", () => {
+    it("401 when unauthenticated", async () => {
+      mockGetSession.mockResolvedValue(null);
+      const { collectionId } = await seedFullCollection(ownerId);
+
+      const res = await membersPost(
+        postReq({ userId: strangerId }),
+        { params: { id: collectionId } },
+      );
+      expect(res.status).toBe(401);
+    });
+
+    it("403 when non-owner (non-manager) tries to add a member", async () => {
+      const { collectionId, memberId } = await seedFullCollection(ownerId);
+      mockGetSession.mockResolvedValue({ user: { id: memberId } });
+
+      const res = await membersPost(
+        postReq({ userId: strangerId }),
+        { params: { id: collectionId } },
+      );
+      expect(res.status).toBe(403);
+    });
+
+    it("403 when stranger tries to add a member", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+      const { collectionId } = await seedFullCollection(ownerId);
+
+      const res = await membersPost(
+        postReq({ userId: strangerId }),
+        { params: { id: collectionId } },
+      );
+      expect(res.status).toBe(403);
+    });
+
+    it("happy path — owner adds a new member; real membership row created", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      // Use a collection with no existing members for a clean count
+      const collectionId = await seedBareCollection(ownerId);
+      const { db } = getTestDb();
+
+      const newUserId = await seedUserRow("new-member");
+
+      const res = await membersPost(
+        postReq({ userId: newUserId, canSort: true, canViewOutputs: true }),
+        { params: { id: collectionId } },
+      );
+      expect(res.status).toBe(201);
+
+      const body = await res.json();
+      expect(body).toMatchObject({ collectionId, userId: newUserId });
+
+      // Verify real DB row
+      const membershipRepo = new MembershipRepository(db);
+      const memberships = await membershipRepo.findByCollection(collectionId);
+      expect(memberships).toHaveLength(1);
+      expect(memberships[0]).toMatchObject({ collectionId, userId: newUserId, canSort: true });
+    });
+
+    it("400 on invalid JSON body", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const { collectionId } = await seedFullCollection(ownerId);
+
+      // Send raw Request with invalid JSON
+      const badReq = new Request("http://localhost/", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "not-json",
+      }) as any;
+
+      const res = await membersPost(badReq, { params: { id: collectionId } });
+      expect(res.status).toBe(400);
+    });
+
+    it("returns 403 for an absent collection (isCollectionManager returns false — no 404)", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+      const res = await membersPost(
+        postReq({ userId: strangerId }),
+        { params: { id: "col-absent" } },
+      );
+      // isCollectionManager → findById → null → false → 403
+      expect(res.status).toBe(403);
+    });
+  });
+
+  // =========================================================================
+  // POST /api/collections/[id]/archive
+  // =========================================================================
+  describe("POST /api/collections/[id]/archive", () => {
+    it("401 when unauthenticated", async () => {
+      mockGetSession.mockResolvedValue(null);
+      const { collectionId } = await seedFullCollection(ownerId);
+
+      const res = await archivePost(postReq(), { params: { id: collectionId } });
+      expect(res.status).toBe(401);
+    });
+
+    it("403 when non-owner member tries to archive", async () => {
+      const { collectionId, memberId } = await seedFullCollection(ownerId);
+      mockGetSession.mockResolvedValue({ user: { id: memberId } });
+
+      const res = await archivePost(postReq(), { params: { id: collectionId } });
+      expect(res.status).toBe(403);
+    });
+
+    it("403 when stranger tries to archive", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+      const { collectionId } = await seedFullCollection(ownerId);
+
+      const res = await archivePost(postReq(), { params: { id: collectionId } });
+      expect(res.status).toBe(403);
+    });
+
+    // AUTHZ GAP PIN: absent collection → canManageCollection → findById → null → false → 403, not 404.
+    it("AUTHZ-GAP(missing-404-archive): absent collection returns 403 not 404", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+      const res = await archivePost(postReq(), { params: { id: "col-absent" } });
+      // Pinning ACTUAL behavior — should be 404 once fixed.
+      expect(res.status).toBe(403);
+    });
+
+    it("happy path — owner archives; DB status flips to 'archived'", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const { db } = getTestDb();
+      const { collectionId } = await seedFullCollection(ownerId);
+
+      // Guard: collection is active before archiving
+      const before = await new CollectionRepository(db).findById(collectionId);
+      expect(before?.status).toBe("active");
+
+      const res = await archivePost(postReq(), { params: { id: collectionId } });
+      expect(res.status).toBe(200);
+
+      const body = await res.json();
+      expect(body).toMatchObject({ id: collectionId, status: "archived" });
+
+      // Verify real DB row
+      const after = await new CollectionRepository(db).findById(collectionId);
+      expect(after?.status).toBe("archived");
+    });
+  });
+
+  // =========================================================================
+  // POST /api/collections/[id]/restore
+  // =========================================================================
+  describe("POST /api/collections/[id]/restore", () => {
+    it("401 when unauthenticated", async () => {
+      mockGetSession.mockResolvedValue(null);
+      const { collectionId } = await seedFullCollection(ownerId);
+
+      const res = await collectionRestorePost(postReq(), { params: { id: collectionId } });
+      expect(res.status).toBe(401);
+    });
+
+    it("403 when non-owner member tries to restore", async () => {
+      const { collectionId, memberId } = await seedFullCollection(ownerId);
+      mockGetSession.mockResolvedValue({ user: { id: memberId } });
+
+      const res = await collectionRestorePost(postReq(), { params: { id: collectionId } });
+      expect(res.status).toBe(403);
+    });
+
+    it("403 when stranger tries to restore", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+      const { collectionId } = await seedFullCollection(ownerId);
+
+      const res = await collectionRestorePost(postReq(), { params: { id: collectionId } });
+      expect(res.status).toBe(403);
+    });
+
+    // AUTHZ GAP PIN: absent collection → canManageCollection → findById → null → false → 403, not 404.
+    it("AUTHZ-GAP(missing-404-restore): absent collection returns 403 not 404", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+      const res = await collectionRestorePost(postReq(), { params: { id: "col-absent" } });
+      // Pinning ACTUAL behavior — should be 404 once fixed.
+      expect(res.status).toBe(403);
+    });
+
+    it("happy path — owner restores archived collection; DB status flips to 'active'", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const { db } = getTestDb();
+      const { collectionId } = await seedFullCollection(ownerId);
+
+      // Archive first
+      await new CollectionRepository(db).update(collectionId, { status: "archived" });
+      const before = await new CollectionRepository(db).findById(collectionId);
+      expect(before?.status).toBe("archived");
+
+      const res = await collectionRestorePost(postReq(), { params: { id: collectionId } });
+      expect(res.status).toBe(200);
+
+      const body = await res.json();
+      expect(body).toMatchObject({ id: collectionId, status: "active" });
+
+      // Verify real DB row
+      const after = await new CollectionRepository(db).findById(collectionId);
+      expect(after?.status).toBe("active");
+    });
+
+    it("archive → restore round-trip; collection returns to 'active'", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const { db } = getTestDb();
+      const { collectionId } = await seedFullCollection(ownerId);
+
+      await archivePost(postReq(), { params: { id: collectionId } });
+      const archived = await new CollectionRepository(db).findById(collectionId);
+      expect(archived?.status).toBe("archived");
+
+      const restoreRes = await collectionRestorePost(postReq(), { params: { id: collectionId } });
+      expect(restoreRes.status).toBe(200);
+
+      const restored = await new CollectionRepository(db).findById(collectionId);
+      expect(restored?.status).toBe("active");
+    });
+  });
+
+  // =========================================================================
+  // POST /api/items/[id]/restore
+  // =========================================================================
+  describe("POST /api/items/[id]/restore", () => {
+    it("401 when unauthenticated", async () => {
+      mockGetSession.mockResolvedValue(null);
+      const { itemAId } = await seedFullCollection(ownerId);
+
+      const res = await itemRestorePost(postReq(), { params: { id: itemAId } });
+      expect(res.status).toBe(401);
+    });
+
+    it("happy path — owner restores a soft-deleted item; deletedAt cleared", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const { db } = getTestDb();
+      const { collectionId } = await seedFullCollection(ownerId);
+
+      // Create and soft-delete an item
+      const itemRepo = new ItemRepository(db);
+      const item = await itemRepo.create({ collectionId, name: "Restore Me" });
+      await itemRepo.softDelete(item.id);
+
+      // Guard: item is soft-deleted
+      const deleted = await itemRepo.findByIdIncludingDeleted(item.id);
+      expect(deleted?.deletedAt).not.toBeNull();
+
+      const res = await itemRestorePost(postReq(), { params: { id: item.id } });
+      expect(res.status).toBe(200);
+
+      const body = await res.json();
+      expect(body).toMatchObject({ id: item.id, collectionId });
+      expect(body.deletedAt).toBeNull();
+
+      // Verify real DB row
+      const restored = await itemRepo.findById(item.id); // findById filters deletedAt
+      expect(restored).not.toBeNull();
+      expect(restored?.deletedAt).toBeNull();
+    });
+
+    // AUTHZ GAP PIN (purses-3al): POST /items/[id]/restore is requireAuth-only —
+    // no tenant/membership check. A stranger can restore any item.
+    it("AUTHZ-GAP(purses-3al): stranger can restore a foreign item (no tenant check)", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+      const { db } = getTestDb();
+      const { collectionId } = await seedFullCollection(ownerId);
+
+      const itemRepo = new ItemRepository(db);
+      const item = await itemRepo.create({ collectionId, name: "Foreign Item" });
+      await itemRepo.softDelete(item.id);
+
+      const res = await itemRestorePost(postReq(), { params: { id: item.id } });
+      // Pinning ACTUAL behavior — this should be 403 once the IDOR is fixed.
+      expect(res.status).toBe(200);
+
+      // The item IS restored despite the stranger making the call
+      const restored = await itemRepo.findById(item.id);
+      expect(restored).not.toBeNull();
+    });
+
+    it("returns 500 for an absent item id (no 404 guard in route)", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+      const res = await itemRestorePost(postReq(), { params: { id: "item-absent" } });
+      // ItemController.restoreItem calls itemRepo.update which does an UPDATE WHERE id=...
+      // returning() — if no row matches, Drizzle returns undefined, causing a TypeError.
+      // The route catches it as a generic 500.
+      expect(res.status).toBe(500);
+    });
+  });
+});
