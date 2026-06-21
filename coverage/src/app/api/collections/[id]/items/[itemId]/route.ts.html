@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">94.11% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/17</span>
+                <span class='fraction'>16/17</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">83.33% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>10/12</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">94.11% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/17</span>
+                <span class='fraction'>16/17</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -146,42 +146,42 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -205,36 +205,36 @@ interface ItemUpdateRequest {
   notes?: string | null;
 }
 &nbsp;
-export async function <span class="fstat-no" title="function not covered" >PATCH(</span>
+export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string; itemId: string } }
 ) {
-  const session = <span class="cstat-no" title="statement not covered" >await getSession();</span>
-<span class="cstat-no" title="statement not covered" >  if (!session?.user) {</span>
-<span class="cstat-no" title="statement not covered" >    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });</span>
+  const session = await getSession();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 &nbsp;
-  const <span class="cstat-no" title="statement not covered" >db = getDb();</span>
-  const itemRepo = <span class="cstat-no" title="statement not covered" >new ItemRepository(db);</span>
-  const membershipRepo = <span class="cstat-no" title="statement not covered" >new MembershipRepository(db);</span>
+  const db = getDb();
+  const itemRepo = new ItemRepository(db);
+  const membershipRepo = new MembershipRepository(db);
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  try {</span>
+  try {
     // Verify item belongs to collection and user has permission
-    const item = <span class="cstat-no" title="statement not covered" >await itemRepo.findById(params.itemId);</span>
-<span class="cstat-no" title="statement not covered" >    if (!item || item.collectionId !== params.id) {</span>
-<span class="cstat-no" title="statement not covered" >      return NextResponse.json({ error: "Not found" }, { status: 404 });</span>
+    const item = await itemRepo.findById(params.itemId);
+    if (!item || item.collectionId !== params.id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 &nbsp;
-    const membership = <span class="cstat-no" title="statement not covered" >await membershipRepo.findByUser(</span>
+    const membership = await membershipRepo.findByUser(
       session.user.id,
       params.id
     );
-<span class="cstat-no" title="statement not covered" >    if (!membership || !membership.canEditMetadata) {</span>
-<span class="cstat-no" title="statement not covered" >      return NextResponse.json({ error: "Forbidden" }, { status: 403 });</span>
+    if (!membership || !membership.canEditMetadata) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 &nbsp;
-    const body: ItemUpdateRequest = <span class="cstat-no" title="statement not covered" >await req.json();</span>
-    const updated = <span class="cstat-no" title="statement not covered" >await itemRepo.update(params.itemId, {</span>
+    const body: ItemUpdateRequest = await req.json();
+    const updated = await itemRepo.update(params.itemId, {
       name: body.name,
       brand: body.brand,
       style: body.style,
@@ -244,7 +244,7 @@ export async function <span class="fstat-no" title="function not covered" >PATCH
       notes: body.notes,
     });
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    return NextResponse.json(updated);</span>
+    return NextResponse.json(updated);
   } catch (error) {
 <span class="cstat-no" title="statement not covered" >    return NextResponse.json(</span>
       { error: error instanceof Error ? error.message : "Update failed" },
@@ -259,7 +259,7 @@ export async function <span class="fstat-no" title="function not covered" >PATCH
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-21T05:50:19.941Z
+                at 2026-06-21T07:19:31.738Z
             </div>
         <script src="../../../../../../../prettify.js"></script>
         <script>
