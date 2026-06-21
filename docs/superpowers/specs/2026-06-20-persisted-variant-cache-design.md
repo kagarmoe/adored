@@ -10,11 +10,11 @@ Persist each resized variant back to Vercel Blob under a **deterministic key**; 
 
 ### 1. Variant store + get-or-create (in `servePhotoFile`)
 - **Variant pathname:** `variants/<collectionId>/<photoId>/w<width>-v<version>.webp` (`version` = `updatedAt` ms — already the ETag version, so a rotation/edit that bumps `updatedAt` yields a **new** variant key; old-version variants become unreferenced).
-- `servePhotoFile` gains `collectionId` in its args. In the **resize branch** (`?w=` allowlisted):
-  1. `get(variantPath, { access: "private" })` — **HIT** (`statusCode 200`): stream it (`image/webp` + the same `Cache-Control`/`ETag`). No `sharp`, no original fetch.
-  2. **MISS** (null): fetch the original (existing `get(blobKey)`), `sharp().rotate().rotate(rotation).resize(w).webp()` (unchanged pipeline), then `put(variantPath, buf, { access: "private", addRandomSuffix: false, contentType: "image/webp" })` (deterministic pathname → idempotent overwrite on the rare concurrent double-miss; same bytes, last-write-wins is harmless), and stream the buffer.
-- **Passthrough (no `?w=`)** and the existing decode-bomb guards, ETag, `Cache-Control`, 304 short-circuit are **unchanged**. Only the resize branch gains the variant lookup.
-- **webp retained** (avif is a trivial follow-on now that encode is amortized, but changes Content-Type + first-miss latency — out of scope here).
+- `servePhotoFile` gains `collectionId` in its args. In the **resize branch** (`?w=` allowlisted) the variant store is **best-effort — its failure degrades to A's on-the-fly resize, never a 500/broken image**:
+  1. **HIT:** `try { v = await get(variantPath, { access: "private" }) } catch { v = null }` (a transient blob throw — rate-limit/5xx — is treated as a miss, not propagated). If `v?.statusCode === 200`: stream `v.stream` with `Content-Type: image/webp`, `Cache-Control: CACHE_CONTROL`, and **`ETag: variantEtag(photoId, width, updatedAt)`** (NOT the blob's own content etag — the top-of-function 304 compares against `variantEtag`, so forwarding `v.blob.etag` would break revalidation). No `sharp`, no original fetch.
+  2. **MISS** (`v` null): fetch the original (existing `get(blobKey)`), `sharp().rotate().rotate(rotation).resize(w).webp()` (unchanged pipeline) → the resized buffer. **Stream that buffer regardless of cache-write outcome**, and persist it: `try { await put(variantPath, buf, { access: "private", addRandomSuffix: false, allowOverwrite: true, contentType: "image/webp" }) } catch (e) { console.error(...) }` — `allowOverwrite:true` makes a concurrent double-miss genuinely last-write-wins (deterministic identical bytes); the try/catch guarantees a cache-write race or blob outage can never fail the response. **await** (not fire-and-forget): a bare un-awaited `put` is dropped when the serverless function freezes post-response — the only safe async form is `waitUntil`, not worth it for a once-per-variant write.
+- **Passthrough (no `?w=`)**, the decode-bomb guards, the variant ETag, `Cache-Control`, and the 304 short-circuit are **unchanged**. Only the resize branch gains the (best-effort) variant lookup.
+- **Variant access is always `private`** (the variant is a fresh server-created blob, independent of the source's `getBlobAccess`; all current uploads are private; the `put` access and the `get` access must match). webp retained (avif is a trivial follow-on now encode is amortized — out of scope; changes Content-Type + first-miss latency).
 
 ### 2. Orphan cleanup (bead scope: photo delete + collection purge)
 A best-effort helper `src/lib/photo-variants.ts`:
@@ -34,12 +34,14 @@ Wire it:
 
 ## Testing (TDD; runs in CI)
 - **`servePhotoFile` (`photo-serving.test.ts`)**, mock `get`/`put` (`@vercel/blob`), real `sharp`:
-  - **HIT**: `get(variantPath)` returns `{statusCode:200, stream}` → response is that stream, `put` NOT called, and the original `get(blobKey)` NOT called (proves serve-from-variant).
-  - **MISS**: `get(variantPath)` null, `get(blobKey)` returns the original → `put` called once with a pathname matching `variants/<cid>/<pid>/w320-v…webp` + `contentType image/webp` + `addRandomSuffix:false`; response streams the resized bytes; decoded width ≤ w.
+  - **HIT**: `get(variantPath)` returns `{statusCode:200, stream}` → response is that stream, `put` NOT called, original `get(blobKey)` NOT called; **response `ETag === variantEtag`** (so a follow-up If-None-Match still 304s) and `Content-Type: image/webp`.
+  - **MISS**: variant `get` null, `get(blobKey)` returns the original → response streams the resized bytes (decoded width ≤ w); `put` called once with `contentType image/webp`, `addRandomSuffix:false`, `allowOverwrite:true`.
+  - **same-pathname round-trip**: capture the pathname passed to `put` on a MISS; a second call where the mocked `get` returns 200 **only for that exact pathname** serves from the variant (no resize) — proves write-key === read-key.
+  - **best-effort fallback**: (a) variant `get` THROWS → falls through to resize-from-original and returns 200 (not 500); (b) `put` REJECTS (already-exists/outage) → the resized bytes are still returned 200.
   - **version**: two MISSes with different `updatedAt` → `put` pathnames differ (rotation busts the variant).
   - passthrough (no `w`) → no variant `get`/`put`.
 - **`photo-variants.test.ts`**: `deleteVariants` calls `list` with the prefix and `del` with the listed urls; a `del`/`list` rejection is swallowed (logged), never thrown; `variantPrefix` shape.
-- **Photo DELETE route test**: variant cleanup helper invoked with `variants/<id>/<photoId>/` after a successful delete (mock the helper).
+- **Photo DELETE route test** (the DELETE handler currently has **no test** — create the block): 401/404/403 guards (no `del`, no variant cleanup); 200 happy path → `del(blobKey)` then `deleteVariants(variantPrefix(id, photoId))`; a variant-cleanup failure does not fail the response.
 - **`CollectionPurgeService`**: extend its DB integration test (or a focused unit) asserting `deleteVariants` is invoked for the collection prefix post-commit (mock blob `list`/`del`).
 - e2e: behavior unchanged (image still renders at `?w=`); variant persistence is server-internal (Blob mocked in e2e), so it stays unit-covered.
 
