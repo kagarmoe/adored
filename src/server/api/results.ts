@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { SortResult } from "@/types";
 import type { ISortResultRepository } from "@/server/repositories/SortResultRepository";
+import { FinalizeStateError } from "@/server/services/SortResultService";
 
 const UpdateResultSchema = z.object({
   name: z.string().min(1).optional(),
@@ -29,10 +30,12 @@ export class ResultController {
   }
 
   async finalizeResult(resultId: string): Promise<SortResult> {
-    // TODO: Mark result as finalized (immutable)
     const result = await this.resultRepo.findById(resultId);
     if (!result) {
       throw new Error("Result not found");
+    }
+    if (result.status === "finalized") {
+      throw new FinalizeStateError();
     }
     return this.resultRepo.update(resultId, {
       status: "finalized",

@@ -30,6 +30,14 @@ export class DeleteResultStateError extends Error {
   }
 }
 
+/** Thrown when finalize targets a result that is already finalized; the route maps it to 409. */
+export class FinalizeStateError extends Error {
+  constructor() {
+    super("Can only finalize draft results");
+    this.name = "FinalizeStateError";
+  }
+}
+
 /**
  * Thrown when the (collection, number) race could not be won within the retry
  * budget. Distinct from a mid-transaction failure so ops can tell "retry storm
