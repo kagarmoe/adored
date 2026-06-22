@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">75% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>9/12</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>1/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">80% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/5</span>
+                <span class='fraction'>4/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">75% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>9/12</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -116,29 +116,20 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -147,29 +138,38 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { z } from "zod";
 import type { Session } from "@/types";
 import type { ISessionRepository } from "@/server/repositories/SessionRepository";
 &nbsp;
-const CreateSessionSchema = <span class="cstat-no" title="statement not covered" >z.object({</span>
+const CreateSessionSchema = z.object({
   goal: z.string().optional(),
 });
 &nbsp;
-const UpdateSessionSchema = <span class="cstat-no" title="statement not covered" >z.object({</span>
+const UpdateSessionSchema = z.object({
   status: z.enum(["active", "paused", "completed", "abandoned"]).optional(),
   goal: z.string().optional(),
 });
@@ -178,7 +178,7 @@ export type CreateSessionInput = z.infer&lt;typeof CreateSessionSchema&gt;;
 export type UpdateSessionInput = z.infer&lt;typeof UpdateSessionSchema&gt;;
 &nbsp;
 export class SessionController {
-<span class="fstat-no" title="function not covered" >  constructor(private <span class="cstat-no" title="statement not covered" >s</span>essionRepo: ISessionRepository) {</span>}
+  constructor(private sessionRepo: ISessionRepository) {}
 &nbsp;
   async <span class="fstat-no" title="function not covered" >createSession(</span>
     collectionId: string,
@@ -193,21 +193,21 @@ export class SessionController {
     });
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >getSession(s</span>essionId: string): Promise&lt;Session&gt; {
-    const session = <span class="cstat-no" title="statement not covered" >await this.sessionRepo.findById(sessionId);</span>
-<span class="cstat-no" title="statement not covered" >    if (!session) {</span>
+  async getSession(sessionId: string): Promise&lt;Session&gt; {
+    const session = await this.sessionRepo.findById(sessionId);
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (!session) {
 <span class="cstat-no" title="statement not covered" >      throw new Error("Session not found");</span>
     }
-<span class="cstat-no" title="statement not covered" >    return session;</span>
+    return session;
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >updateSession(s</span>essionId: string, data: unknown): Promise&lt;Session&gt; {
-    const parsed = <span class="cstat-no" title="statement not covered" >UpdateSessionSchema.parse(data);</span>
-<span class="cstat-no" title="statement not covered" >    return this.sessionRepo.update(sessionId, parsed);</span>
+  async updateSession(sessionId: string, data: unknown): Promise&lt;Session&gt; {
+    const parsed = UpdateSessionSchema.parse(data);
+    return this.sessionRepo.update(sessionId, parsed);
   }
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >deleteSession(s</span>essionId: string): Promise&lt;void&gt; {
-<span class="cstat-no" title="statement not covered" >    await this.sessionRepo.softDelete(sessionId);</span>
+  async deleteSession(sessionId: string): Promise&lt;void&gt; {
+    await this.sessionRepo.softDelete(sessionId);
   }
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -217,7 +217,7 @@ export class SessionController {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-21T07:19:31.738Z
+                at 2026-06-22T19:50:10.554Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
