@@ -104,25 +104,20 @@ describeDb(
         expect(body).toHaveLength(0);
       });
 
-      it("(4) returns empty array for an absent collection id (no 404 — route is auth-only; caller has no rows)", async () => {
-        // AUTH GAP (pv9): no collection membership/existence check. A caller who is
-        // authenticated but references a non-existent collection gets 200 + [] rather
-        // than 404. Flag only — do not fix here.
+      it("(4) 404s an absent collection id (resolve-then-authorize)", async () => {
+        // purses-55c: GET preferences/items now runs requireApiCollectionAccess, which
+        // resolves the collection first — an absent id is a clean 404.
         mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
         const res = await getItems(makeGetReq("col-absent-xyz") as any, {
           params: { id: "col-absent-xyz" },
         });
-        expect(res.status).toBe(200);
-        const body = await res.json();
-        expect(Array.isArray(body)).toBe(true);
-        expect(body).toHaveLength(0);
+        expect(res.status).toBe(404);
       });
 
-      it("(5) stranger (not a member) gets 200 + empty list — AUTH GAP flagged (pv9)", async () => {
-        // AUTH GAP (pv9): no membership guard on GET preferences/items. A user with no
-        // relationship to the collection is not rejected — they simply see their own
-        // (empty) result set. Pin the current behavior; fix is tracked under pv9.
+      it("(5) 403s a stranger (not a member)", async () => {
+        // purses-55c: GET preferences/items is now gated on collection access — a
+        // non-member gets 403 (still caller-scoped to their own rows for members).
         const seed = await seedFullCollection(ownerId);
         const strangerId = await seedUserRow("stranger");
         mockGetSession.mockResolvedValue({ user: { id: strangerId } });
@@ -130,9 +125,7 @@ describeDb(
         const res = await getItems(makeGetReq(seed.collectionId) as any, {
           params: { id: seed.collectionId },
         });
-        expect(res.status).toBe(200);
-        const body = await res.json();
-        expect(body).toHaveLength(0);
+        expect(res.status).toBe(403);
       });
     });
 
@@ -268,18 +261,34 @@ describeDb(
         expect(after[0].rankBucket).toBe("medium");
       });
 
-      it("(10) recalculate absent collection — 200 + empty (AUTH GAP pv9: no existence guard)", async () => {
-        // AUTH GAP (pv9): no collection-existence/membership check on POST recalculate.
-        // ScoringService.computePreferences calls sessionRepo.findByCollection which
-        // returns [] for a missing collection → empty preferences → 200. Pin behavior.
+      it("(10) recalculate 404s an absent collection (resolve-then-authorize)", async () => {
+        // purses-55c: POST recalculate now runs requireApiCollectionAccess, which
+        // resolves the collection first — an absent id is a clean 404.
         mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
         const res = await recalculate(makePostReq("col-absent-xyz") as any, {
           params: { id: "col-absent-xyz" },
         });
-        expect(res.status).toBe(200);
-        const body = await res.json();
-        expect(body.preferences).toHaveLength(0);
+        expect(res.status).toBe(404);
+      });
+
+      it("(10b) recalculate 403s a stranger (not a member) — and writes no rows", async () => {
+        // purses-55c: POST recalculate is now gated on collection access — a non-member
+        // gets 403 and no preference rows are written into the foreign collection.
+        const seed = await seedFullCollection(ownerId);
+        const strangerId = await seedUserRow("stranger-recalc");
+        mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+        const { db } = getTestDb();
+        const prefRepo = new CollectionPreferenceItemRepository(db);
+
+        const res = await recalculate(makePostReq(seed.collectionId) as any, {
+          params: { id: seed.collectionId },
+        });
+        expect(res.status).toBe(403);
+
+        // No rows for the stranger in the foreign collection.
+        const after = await prefRepo.findByCollection(seed.collectionId, strangerId);
+        expect(after).toHaveLength(0);
       });
 
       it("(11) member adds their own session+decisions and recalculate scopes to their curator id", async () => {
