@@ -48,6 +48,7 @@ vi.mock("@/lib/auth", () => ({
 }));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
+import { POST as createResult } from "@/app/api/sort-results/route";
 import { GET as getResult } from "@/app/api/sort-results/[id]/route";
 import { POST as finalizeResult } from "@/app/api/sort-results/[id]/finalize/route";
 import { GET as listItems } from "@/app/api/sort-results/[id]/items/route";
@@ -133,6 +134,37 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
   function login(id: string) {
     mockGetSession.mockResolvedValue({ user: { id } });
   }
+
+  // ── POST (create) input validation ────────────────────────────────────────
+  // Recovers the two POST-create 400 branches (route.ts ~L25-26) orphaned when
+  // Phase-3 Task 7 deleted the mocked sibling. Both fire BEFORE getDb()/access/
+  // service, so they're trivial in the integration tier; each is paired with a
+  // findByCollection read proving no sort_results row landed (non-vacuous).
+  describe("POST /api/sort-results (create) — input validation", () => {
+    it("400s a body missing collectionId; no result row is created", async () => {
+      const { db } = getTestDb();
+      const collectionId = await seedCollection();
+      // Non-vacuous: the collection has zero results BEFORE.
+      expect(await new SortResultRepository(db).findByCollection(collectionId)).toEqual([]);
+
+      login(ownerId);
+      const res = await createResult(jsonReq("POST", { name: "X" }) as any);
+      expect(res.status).toBe(400);
+      // Still zero — the validation guard fired before any write.
+      expect(await new SortResultRepository(db).findByCollection(collectionId)).toEqual([]);
+    });
+
+    it("400s a body missing name; no result row is created", async () => {
+      const { db } = getTestDb();
+      const collectionId = await seedCollection();
+      expect(await new SortResultRepository(db).findByCollection(collectionId)).toEqual([]);
+
+      login(ownerId);
+      const res = await createResult(jsonReq("POST", { collectionId }) as any);
+      expect(res.status).toBe(400);
+      expect(await new SortResultRepository(db).findByCollection(collectionId)).toEqual([]);
+    });
+  });
 
   // ── [id] GET ────────────────────────────────────────────────────────────
   describe("GET /api/sort-results/[id]", () => {
