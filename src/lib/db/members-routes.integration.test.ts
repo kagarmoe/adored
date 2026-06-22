@@ -1,3 +1,4 @@
+// @vitest-environment node
 // Honest real-DB integration for the member-management route:
 // real GET/PATCH/DELETE /api/collections/[id]/members/[mid] handlers ->
 // requireApiCollectionAccess + MemberController -> MembershipRepository ->
@@ -24,7 +25,6 @@
 // Every "unchanged / gone after" assertion is paired with a "present / as-seeded
 // before" read via MembershipRepository, so a never-seeded row can't make the suite
 // vacuously pass.
-// @vitest-environment node
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline, seedFullCollection, seedUserRow } from "../../../e2e/fixtures/seed";
