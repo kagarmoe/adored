@@ -250,13 +250,13 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       expect(res.status).toBe(403);
     });
 
-    // AUTHZ GAP PIN: absent collection → canManageCollection → findById → null → false → 403, not 404.
-    it("AUTHZ-GAP(missing-404-archive): absent collection returns 403 not 404", async () => {
+    it("404s an absent collection (resolve-then-authorize)", async () => {
+      // purses-nj7 ride-along: archive resolves the collection first — an absent id is
+      // a clean 404 (was a 403 from canManageCollection → findById null → not-manager).
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
       const res = await archivePost(postReq(), { params: { id: "col-absent" } });
-      // Pinning ACTUAL behavior — should be 404 once fixed.
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(404);
     });
 
     it("happy path — owner archives; DB status flips to 'archived'", async () => {
@@ -308,13 +308,13 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       expect(res.status).toBe(403);
     });
 
-    // AUTHZ GAP PIN: absent collection → canManageCollection → findById → null → false → 403, not 404.
-    it("AUTHZ-GAP(missing-404-restore): absent collection returns 403 not 404", async () => {
+    it("404s an absent collection (resolve-then-authorize)", async () => {
+      // purses-nj7 ride-along: restore resolves the collection first — an absent id is
+      // a clean 404 (was a 403 from canManageCollection → findById null → not-manager).
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
       const res = await collectionRestorePost(postReq(), { params: { id: "col-absent" } });
-      // Pinning ACTUAL behavior — should be 404 once fixed.
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(404);
     });
 
     it("happy path — owner restores archived collection; DB status flips to 'active'", async () => {
