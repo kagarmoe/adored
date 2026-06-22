@@ -1,3 +1,4 @@
+// @vitest-environment node
 // Honest real-DB integration for the collection-invitations routes:
 // real GET/POST /api/collections/[id]/invitations handlers -> requireApiCollectionAccess
 // + InvitationController -> InvitationRepository -> ephemeral Postgres. Mocks ONLY the two
@@ -20,7 +21,6 @@
 //
 // Every "0 / absent after" assertion is paired with a "present / non-zero before" read so a
 // never-seeded row can't make the suite vacuously pass.
-// @vitest-environment node
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline, seedBareCollection, seedUserRow } from "../../../e2e/fixtures/seed";

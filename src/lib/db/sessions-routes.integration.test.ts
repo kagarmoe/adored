@@ -1,3 +1,4 @@
+// @vitest-environment node
 // Honest real-DB integration for the sessions routes: real POST /api/sessions and
 // real /api/sessions/[id] GET/PATCH/DELETE handlers -> SessionController ->
 // SessionRepository -> ephemeral Postgres. Mocks ONLY the two true boundaries:
@@ -10,7 +11,6 @@
 // then the curator-scope gate (403). Every "gone after" / "unchanged" assertion is
 // paired with a "present before" / "non-zero before" read, so a never-seeded row can't
 // make the suite vacuously pass.
-// @vitest-environment node
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline, seedBareCollection, seedUserRow } from "../../../e2e/fixtures/seed";

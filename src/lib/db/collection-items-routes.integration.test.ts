@@ -1,3 +1,4 @@
+// @vitest-environment node
 // Honest real-DB integration for the item routes: the real collection-scoped
 // item list/create handler (GET/POST /api/collections/[id]/items) and the real
 // top-level item handler (GET/PATCH/DELETE /api/items/[id]) -> ItemController ->
@@ -16,7 +17,6 @@
 //
 // Every "gone after" / "unchanged" assertion is paired with a "present before" /
 // "non-zero before" read, so a never-seeded row can't make the suite vacuously pass.
-// @vitest-environment node
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline, seedBareCollection, seedUserRow } from "../../../e2e/fixtures/seed";
