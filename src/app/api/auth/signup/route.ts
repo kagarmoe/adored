@@ -44,7 +44,10 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (existing.length > 0) {
-      // Return generic success to prevent email enumeration
+      // Equalize timing: run a throwaway hash so the dup-email path takes the
+      // same wall-clock time as the real signup path (purses-zeyd timing oracle).
+      await bcrypt.hash(password, 12);
+      // Return generic success to prevent email enumeration.
       return NextResponse.json(
         { message: "Account created successfully" },
         { status: 201 }
