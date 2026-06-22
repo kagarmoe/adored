@@ -188,4 +188,44 @@ describeDb("triage decision flow (route -> DB) — purses-t9l", () => {
     expect(await untriagedItemIds(collectionId, memberId)).not.toContain(itemId);
     expect(await new CollectionPreferenceItemRepository(db).findByItem(itemId, ownerId)).toBeNull();
   });
+
+  // ---- decisions-route branch gap (was sibling-only): 401 / 404 / 500 -------
+  // The deleted unit sibling reached these branches via fake repos; reproduce them
+  // here against real rows so deleting it loses no coverage.
+
+  it("D) 401s an unauthenticated caller — and writes no decision", async () => {
+    const { db } = getTestDb();
+    const { itemId, sessionId } = await seedCollectionItemSession(ownerId);
+    mockGetSession.mockResolvedValue(null);
+
+    const res = await POST(decisionReq({ type: "triage", decision: { itemId, result: "top" } }) as any, {
+      params: { id: sessionId },
+    });
+    expect(res.status).toBe(401);
+
+    // Non-vacuous: a real session existed it could have written a decision to.
+    expect(await new DecisionEventRepository(db).findBySession(sessionId)).toHaveLength(0);
+  });
+
+  it("E) 404s an absent session id — and writes nothing", async () => {
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await POST(decisionReq({ type: "triage", decision: { foo: "bar" } }) as any, {
+      params: { id: "sess-absent" },
+    });
+    expect(res.status).toBe(404);
+  });
+
+  it("F) 500s when the decision payload is missing (NOT NULL violation in the write) — author is curator", async () => {
+    const { db } = getTestDb();
+    // Curator-owned session so authz passes; the failure is purely the write.
+    const { sessionId } = await seedCollectionItemSession(ownerId);
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    // decision is a NOT NULL jsonb column; omitting it drives the route's catch -> 500.
+    const res = await POST(decisionReq({ type: "triage" }) as any, { params: { id: sessionId } });
+    expect(res.status).toBe(500);
+
+    // The failed insert left no decision_events row for the session.
+    expect(await new DecisionEventRepository(db).findBySession(sessionId)).toHaveLength(0);
+  });
 });

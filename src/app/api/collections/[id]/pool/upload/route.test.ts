@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// KEEP-UNIT (Phase 3): pool/upload generates a @vercel/blob/client upload token
+// and writes NO DB row in the request path (the durable row is written later by
+// Blob's async onUploadCompleted callback). So this stays a plain mocked unit
+// test — NOT a RUN_DB_TESTS integration test. It covers only what lives here:
+// token-generation + the authorize gate (assertCanAddPhotos). The DB-backed pool
+// routes are covered by src/lib/db/pool-routes.integration.test.ts.
 const { mockGetSession, mockGetDb, membershipRepo, collectionRepo, mockHandleUpload } =
   vi.hoisted(() => ({
     mockGetSession: vi.fn(),
@@ -35,20 +41,21 @@ describe("POST /api/collections/[id]/pool/upload", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetDb.mockReturnValue({ db: "fake" });
-    // Drive onBeforeGenerateToken so we exercise the real authorize path.
+    // Drive onBeforeGenerateToken so we exercise the real authorize path AND can
+    // assert the generated token's shape (allowlist + size cap + signed payload).
     mockHandleUpload.mockImplementation(async (opts: any) => {
-      await opts.onBeforeGenerateToken("photos/x.jpg", null, false);
-      return { ok: true };
+      const token = await opts.onBeforeGenerateToken("photos/x.jpg", null, false);
+      return { token };
     });
   });
 
-  it("401 when unauthenticated", async () => {
+  it("401 when unauthenticated — no token generated", async () => {
     mockGetSession.mockResolvedValue(null);
     const res = await POST(makeReq(), { params: { id: "c1" } });
     expect(res.status).toBe(401);
   });
 
-  it("403 when the user cannot add photos and is not owner", async () => {
+  it("403 when the user lacks canAddPhotos and is not owner — no token generated", async () => {
     mockGetSession.mockResolvedValue({ user: { id: "u1" } });
     membershipRepo.findByUser.mockResolvedValue({ canAddPhotos: false });
     collectionRepo.findById.mockResolvedValue({ id: "c1", ownerId: "u2" });
@@ -56,21 +63,41 @@ describe("POST /api/collections/[id]/pool/upload", () => {
     expect(res.status).toBe(403);
   });
 
-  it("passes for the owner and returns the handleUpload response", async () => {
+  it("404 when the collection does not exist — no token generated", async () => {
+    mockGetSession.mockResolvedValue({ user: { id: "u1" } });
+    membershipRepo.findByUser.mockResolvedValue(null);
+    collectionRepo.findById.mockResolvedValue(null);
+    const res = await POST(makeReq(), { params: { id: "c1" } });
+    expect(res.status).toBe(404);
+  });
+
+  it("generates a token for the owner: invokes handleUpload and returns its response", async () => {
     mockGetSession.mockResolvedValue({ user: { id: "u1" } });
     membershipRepo.findByUser.mockResolvedValue(null);
     collectionRepo.findById.mockResolvedValue({ id: "c1", ownerId: "u1" });
+
     const res = await POST(makeReq(), { params: { id: "c1" } });
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ ok: true });
+    expect(mockHandleUpload).toHaveBeenCalledOnce();
+
+    // The generated token carries the upload contract + a signed payload binding
+    // the upload to this collection and uploader.
+    const body = (await res.json()) as { token: any };
+    expect(body.token.maximumSizeInBytes).toBeGreaterThan(0);
+    expect(Array.isArray(body.token.allowedContentTypes)).toBe(true);
+    expect(body.token.allowedContentTypes.length).toBeGreaterThan(0);
+    expect(JSON.parse(body.token.tokenPayload)).toEqual({ collectionId: "c1", uploadedBy: "u1" });
   });
 
-  it("passes for a member with canAddPhotos and returns the handleUpload response", async () => {
+  it("generates a token for a member with canAddPhotos", async () => {
     mockGetSession.mockResolvedValue({ user: { id: "u1" } });
     membershipRepo.findByUser.mockResolvedValue({ canAddPhotos: true });
     collectionRepo.findById.mockResolvedValue({ id: "c1", ownerId: "u2" });
+
     const res = await POST(makeReq(), { params: { id: "c1" } });
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ ok: true });
+    expect(mockHandleUpload).toHaveBeenCalledOnce();
+    const body = (await res.json()) as { token: any };
+    expect(JSON.parse(body.token.tokenPayload)).toEqual({ collectionId: "c1", uploadedBy: "u1" });
   });
 });

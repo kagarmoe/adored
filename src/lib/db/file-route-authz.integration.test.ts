@@ -1,10 +1,12 @@
+// @vitest-environment node
 // src/lib/db/file-route-authz.integration.test.ts
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { sql } from "drizzle-orm";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
-import { seedBaseline } from "../../../e2e/fixtures/seed";
+import { seedBaseline, seedUserRow } from "../../../e2e/fixtures/seed";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 
 const { mockGetSession, mockBlobGet } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
@@ -48,14 +50,51 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
 
   function req() { return new Request("http://localhost/file"); }
 
+  it("401s an unauthenticated caller — never serves bytes", async () => {
+    mockGetSession.mockResolvedValue(null);
+    const res = await GET(req() as any, { params: { id: collectionId, itemId, photoId } });
+    expect(res.status).toBe(401);
+    expect(mockBlobGet).not.toHaveBeenCalled();
+  });
+
   it("404s when the collection segment is a slug, not the owning ULID", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await GET(req() as any, { params: { id: "summer-bags", itemId, photoId } });
     expect(res.status).toBe(404);
   });
 
+  it("404s when the photo is not on this item (belongs-to-parent) — never serves bytes", async () => {
+    // A second item in the SAME collection with its own photo: requesting it via
+    // the first item's [itemId] must 404, not leak another item's photo.
+    const { db } = getTestDb();
+    const otherItem = await new ItemRepository(db).create({ collectionId });
+    const otherPhoto = await new PhotoRepository(db).create({
+      itemId: otherItem.id, collectionId, blobKey: "k2", filename: "k2.jpg",
+      mimeType: "image/jpeg", fileSize: 1, uploadedBy: ownerId, isHero: false,
+    });
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await GET(req() as any, { params: { id: collectionId, itemId, photoId: otherPhoto.id } });
+    expect(res.status).toBe(404);
+    expect(mockBlobGet).not.toHaveBeenCalled();
+  });
+
   it("200s for the owner with the correct collection.id", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await GET(req() as any, { params: { id: collectionId, itemId, photoId } });
+    expect(res.status).toBe(200);
+  });
+
+  it("200s for a NON-owner member (member-or-owner read tier)", async () => {
+    // Closes the membership-but-not-owner success branch: a curator member with no
+    // photo permissions still reads /file (the file gate is bare member-or-owner).
+    const memberId = await seedUserRow("file-member");
+    await new MembershipRepository(getTestDb().db).create({
+      collectionId, userId: memberId, role: "curator",
+      canManageCollection: false, canInviteMembers: false, canAddItems: false,
+      canEditMetadata: false, canAddPhotos: false, canDeletePhotos: false,
+      canSort: false, canViewOutputs: true,
+    });
+    mockGetSession.mockResolvedValue({ user: { id: memberId } });
     const res = await GET(req() as any, { params: { id: collectionId, itemId, photoId } });
     expect(res.status).toBe(200);
   });
