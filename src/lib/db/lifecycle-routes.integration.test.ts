@@ -113,15 +113,14 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       expect(Array.isArray(body)).toBe(true);
     });
 
-    // AUTHZ GAP PIN (purses-55c): any authenticated user — not a member — can
-    // list members of a foreign collection. The route is requireAuth-only.
-    it("AUTHZ-GAP(purses-55c): stranger gets 200 (no membership check)", async () => {
+    it("403s a stranger listing members of a foreign collection", async () => {
+      // purses-55c: GET /members is now scoped to collection access — a non-member
+      // gets 403 instead of the full roster.
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
       const { collectionId } = await seedFullCollection(ownerId);
 
       const res = await membersGet(getReq(), { params: { id: collectionId } });
-      // Pinning ACTUAL behavior — this should be 403 once the gap is fixed.
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(403);
     });
 
     it("returns empty array for collection with no members", async () => {

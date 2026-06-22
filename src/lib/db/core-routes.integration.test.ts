@@ -250,24 +250,33 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       expect(res.status).toBe(401);
     });
 
-    it("returns 500 for absent collection id (controller throws 'Collection not found')", async () => {
-      // NOTE (purses-55c): GET /api/collections/[id] does NOT check membership —
-      // any authenticated user can read any collection by id. The controller
-      // throws "Collection not found" (not "Unauthorized"), which the route maps
-      // to 500 (not 404). This is a known gap; pinning actual behavior here.
+    it("404s an absent collection id (resolve-then-authorize)", async () => {
+      // purses-55c: GET /api/collections/[id] now runs requireApiCollectionAccess,
+      // which resolves the collection first — an absent id is a clean 404 (was a
+      // 500 from the controller throwing "Collection not found").
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await collectionGet(
         nextReq("GET", "http://localhost/api/collections/col-absent"),
         { params: { id: "col-absent" } },
       );
-      // The route catches the thrown Error and maps it: the message is
-      // "Collection not found" which is not "Unauthorized", so status is 500.
-      expect(res.status).toBe(500);
+      expect(res.status).toBe(404);
     });
 
-    it("returns the collection for any authenticated user (no ownership check)", async () => {
+    it("403s a stranger (authenticated, not a member) reading a collection", async () => {
+      // purses-55c: a non-member is now scoped out — 403, the collection unchanged.
       const seed = await seedFullCollection(ownerId);
-      // Log in as the member (not the owner) — should still get the collection
+      const strangerId = await seedUserRow("stranger-get-col");
+      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+      const res = await collectionGet(
+        nextReq("GET", `http://localhost/api/collections/${seed.collectionId}`),
+        { params: { id: seed.collectionId } },
+      );
+      expect(res.status).toBe(403);
+    });
+
+    it("returns the collection for a member of the collection", async () => {
+      const seed = await seedFullCollection(ownerId);
+      // Log in as the member (not the owner) — a member may read the collection.
       mockGetSession.mockResolvedValue({ user: { id: seed.memberId } });
       const res = await collectionGet(
         nextReq("GET", `http://localhost/api/collections/${seed.collectionId}`),
