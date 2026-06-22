@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 import { InvitationController } from "@/server/api/invitations";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   const session = await getSession();
@@ -32,6 +33,6 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const invitation = await controller.createInvitation(params.id, body);
     return NextResponse.json(invitation, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
+    return errorResponse(error);
   }
 }

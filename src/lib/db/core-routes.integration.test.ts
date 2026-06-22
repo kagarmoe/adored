@@ -101,9 +101,10 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       expect(row.password).toMatch(/^\$2[ab]\$/);
     });
 
-    it("returns 201 for a duplicate email (TIMING oracle: dup path skips bcrypt — tracked as a bead; this test pins the 201 status only, not that it's safe)", async () => {
-      // Duplicate-email returns 201 but is a TIMING oracle (dup path skips bcrypt).
-      // Tracked as a bead; this test pins the 201 status only, not that it's safe.
+    it("returns 201 for a duplicate email (timing equalized: dup path now also hashes)", async () => {
+      // Duplicate-email returns 201; timing is equalized — the dup branch now runs
+      // bcrypt.hash(password, 12) (throwaway) before the early return, so response
+      // time is equivalent to the real signup path. No flaky wall-clock assertion.
       // First signup creates the user
       const email = "dup@adored.test";
       const password = "password123";
@@ -620,9 +621,11 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       expect(after).toHaveLength(before.length);
     });
 
-    it("returns 500 (zod validation fail) when name is missing", async () => {
+    it("returns 400 (zod validation fail) when name is missing — no item created", async () => {
+      const { db } = getTestDb();
       const seed = await seedFullCollection(ownerId);
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const before = await new ItemRepository(db).findByCollection(seed.collectionId);
       const res = await itemsPost(
         nextReq(
           "POST",
@@ -630,8 +633,10 @@ describeDb("Group E — core route integration tests (real DB)", () => {
           {}, // no name field — zod requires min(1)
         ),
       );
-      // zod parse throws ZodError which is caught as generic 500
-      expect(res.status).toBe(500);
+      // ZodError is now caught by errorResponse and mapped to 400.
+      expect(res.status).toBe(400);
+      // No row written.
+      expect(await new ItemRepository(db).findByCollection(seed.collectionId)).toHaveLength(before.length);
     });
   });
 });

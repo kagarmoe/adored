@@ -22,7 +22,12 @@ import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline, seedBareCollection, seedUserRow } from "../../../e2e/fixtures/seed";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 
-const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
+const { mockGetSession, UnauthorizedError } = vi.hoisted(() => {
+  class UnauthorizedError extends Error {
+    constructor(message = "Unauthorized") { super(message); this.name = "UnauthorizedError"; }
+  }
+  return { mockGetSession: vi.fn(), UnauthorizedError };
+});
 // Flat-replace BOTH @/lib/auth exports from one spy (spread/importActual pulls nodemailer).
 vi.mock("@/lib/auth", () => ({
   getSession: mockGetSession,
@@ -31,6 +36,7 @@ vi.mock("@/lib/auth", () => ({
     if (!s?.user) throw new Error("Unauthorized");
     return s.user;
   },
+  UnauthorizedError,
 }));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
@@ -141,26 +147,19 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       expect(res.status).toBe(404);
     });
 
-    it("rejects an invalid body (missing required name) — and creates no item", async () => {
-      // purses-7jds: pins current (gap) behavior — the route does NOT wrap
-      // ItemController.createItem (which runs CreateItemSchema.parse) in a try/catch.
-      // An invalid body therefore makes the handler REJECT with a ZodError (which
-      // Next.js maps to a 500 at the framework boundary) rather than returning a clean
-      // 400 Response. The load-bearing invariant either way: NOTHING is persisted.
-      // When 7jds is fixed, this should become a returned 400 with no throw.
+    it("400s an invalid body (missing required name) — and creates no item", async () => {
       const { db } = getTestDb();
       const collectionId = await seedBareCollection(ownerId);
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       // Non-vacuous: empty before.
       expect(await new ItemRepository(db).findByCollection(collectionId)).toHaveLength(0);
 
-      await expect(
-        createItem(jsonReq("POST", { brand: "no name here" }) as any, {
-          params: { id: collectionId },
-        } as any),
-      ).rejects.toThrow(/name/i);
+      const res = await createItem(jsonReq("POST", { brand: "no name here" }) as any, {
+        params: { id: collectionId },
+      } as any);
+      expect(res.status).toBe(400);
 
-      // The contract that matters regardless of error shape: no row written.
+      // No row written — validation fired before any DB write.
       expect(await new ItemRepository(db).findByCollection(collectionId)).toHaveLength(0);
     });
 

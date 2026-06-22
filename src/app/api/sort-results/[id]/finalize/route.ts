@@ -4,6 +4,7 @@ import { ResultController } from "@/server/api/results";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { getDb } from "@/lib/db";
 import { requireApiResultAccess } from "@/server/dal/collection-access";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function POST(
   _request: NextRequest,
@@ -20,9 +21,6 @@ export async function POST(
     const result = await controller.finalizeResult(params.id);
     return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 },
-    );
+    return errorResponse(error);
   }
 }
