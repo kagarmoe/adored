@@ -1,6 +1,6 @@
 import { test, expect, type APIRequestContext } from "@playwright/test";
 import { eq } from "drizzle-orm";
-import { sortResultItemsTable } from "@/lib/db/schema";
+import { sortResultItemsTable, itemsTable } from "@/lib/db/schema";
 import { getTestDb, closeDb } from "./fixtures/db";
 import { seedRemovalScenario } from "./fixtures/seed";
 import { apiContextFor } from "./fixtures/api-auth";
@@ -36,6 +36,18 @@ async function itemIsPresent(ctx: APIRequestContext, itemId: string): Promise<bo
   if (res.status() !== 200) return false;
   const body = await res.json();
   return body?.id === itemId;
+}
+
+/** Does the item row physically exist (DB), regardless of who may read it via the
+ *  API. Used to prove survival from a context that cannot GET the item — e.g. a
+ *  non-member, who is now correctly 403'd on GET /api/items/[id] (pv9 IDOR fix). */
+async function itemRowExists(itemId: string): Promise<boolean> {
+  const { db } = getTestDb();
+  const rows = await db
+    .select({ id: itemsTable.id })
+    .from(itemsTable)
+    .where(eq(itemsTable.id, itemId));
+  return rows.length > 0;
 }
 
 /** Count this item's sort_result_item rows directly (DB), to prove survival. */
@@ -133,8 +145,10 @@ test.describe("item removal workflow (purge + remove-from-sorts) — purses-u3p"
       const removeRes = await nonOwner.post(`${BASE}/${scenario.itemId}/remove-from-sorts`);
       expect(removeRes.status(), "non-owner remove-from-sorts must be 403").toBe(403);
 
-      // Nothing was touched: the item and BOTH result-items survive.
-      expect(await itemIsPresent(nonOwner, scenario.itemId)).toBe(true);
+      // Nothing was touched: the item and BOTH result-items survive. The non-owner
+      // is a non-member, so it can no longer GET the item via the API (pv9 IDOR fix
+      // returns 403) — prove survival straight from the DB instead.
+      expect(await itemRowExists(scenario.itemId)).toBe(true);
       expect(await resultItemRowCount(scenario.itemId)).toBe(2);
     } finally {
       await nonOwner.dispose();
