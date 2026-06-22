@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">20.58% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/34</span>
+                <span class='fraction'>7/34</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">17.24% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/29</span>
+                <span class='fraction'>5/29</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">25% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/8</span>
+                <span class='fraction'>2/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">20.58% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/34</span>
+                <span class='fraction'>7/34</span>
             </div>
         
             
@@ -229,7 +229,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -302,16 +302,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -383,7 +383,7 @@ import bcrypt from "bcryptjs";
 import { generateId } from "@/lib/id";
 import { env } from "@/lib/env";
 &nbsp;
-export const authOptions: NextAuthOptions = <span class="cstat-no" title="statement not covered" >{</span>
+export const authOptions: NextAuthOptions = {
   secret: env.AUTH_SECRET,
   adapter: DrizzleAdapter(getDb()),
   providers: [
@@ -440,7 +440,7 @@ export const authOptions: NextAuthOptions = <span class="cstat-no" title="statem
         port: env.EMAIL_SERVER_PORT,
         secure: env.NODE_ENV === "production",
         auth: env.EMAIL_SERVER_USER
-          ? {
+          ? <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
               user: env.EMAIL_SERVER_USER,
               pass: env.EMAIL_SERVER_PASSWORD,
             }
@@ -455,17 +455,17 @@ export const authOptions: NextAuthOptions = <span class="cstat-no" title="statem
     }),
   ],
   callbacks: {
-    async <span class="fstat-no" title="function not covered" >jwt({</span> token, user: authUser }) {
-<span class="cstat-no" title="statement not covered" >      if (authUser) {</span>
-<span class="cstat-no" title="statement not covered" >        token.id = authUser.id;</span>
+    async jwt({ token, user: authUser }) {
+      if (authUser) {
+        token.id = authUser.id;
       }
-<span class="cstat-no" title="statement not covered" >      return token;</span>
+      return token;
     },
-    async <span class="fstat-no" title="function not covered" >session({</span> session, token }) {
-<span class="cstat-no" title="statement not covered" >      if (session.user) {</span>
-        (<span class="cstat-no" title="statement not covered" >session.user as any).id = token.id as string;</span>
+    async session({ session, token }) {
+      if (session.user) {
+        (session.user as any).id = token.id as string;
       }
-<span class="cstat-no" title="statement not covered" >      return session;</span>
+      return session;
     },
     async <span class="fstat-no" title="function not covered" >signIn({</span> user: authUser, account }) {
 <span class="cstat-no" title="statement not covered" >      if (account?.provider === "email" &amp;&amp; authUser?.email) {</span>
@@ -532,7 +532,7 @@ export async function <span class="fstat-no" title="function not covered" >requi
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-22T19:50:10.554Z
+                at 2026-06-22T20:40:21.524Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

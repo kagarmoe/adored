@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/3</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -150,7 +150,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -186,15 +186,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">80x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -220,7 +220,7 @@ interface PermissionCheckboxesProps {
   disabled?: boolean;
 }
 &nbsp;
-const permissionDescriptions: Record&lt;string, { label: string; description: string }&gt; = <span class="cstat-no" title="statement not covered" >{</span>
+const permissionDescriptions: Record&lt;string, { label: string; description: string }&gt; = {
   canAddItems: {
     label: "Add items",
     description: "Create new items in this collection",
@@ -255,16 +255,16 @@ const permissionDescriptions: Record&lt;string, { label: string; description: st
   },
 };
 &nbsp;
-export function <span class="fstat-no" title="function not covered" >PermissionCheckboxes({</span> values, onChange, disabled = <span class="branch-0 cbranch-no" title="branch not covered" >false }</span>: PermissionCheckboxesProps) {
-<span class="cstat-no" title="statement not covered" >  return (</span>
+export function PermissionCheckboxes({ values, onChange, disabled = false }: PermissionCheckboxesProps) {
+  return (
     &lt;div className="space-y-4"&gt;
-      {Object.entries(permissionDescriptions).map(<span class="fstat-no" title="function not covered" >([</span>key, { label, description }]) =&gt; (
-<span class="cstat-no" title="statement not covered" >        &lt;div key={key} className="space-y-2"&gt;</span>
+      {Object.entries(permissionDescriptions).map(([key, { label, description }]) =&gt; (
+        &lt;div key={key} className="space-y-2"&gt;
           &lt;Checkbox
             id={key}
             label={label}
             checked={values[key as keyof typeof values]}
-            onChange={<span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >onChange(key, e.target.checked)}</span>
+            onChange={(e) =&gt; onChange(key, e.target.checked)}
             disabled={disabled}
           /&gt;
           &lt;p className="text-xs text-ink-soft ml-9"&gt;{description}&lt;/p&gt;
@@ -280,7 +280,7 @@ export function <span class="fstat-no" title="function not covered" >PermissionC
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-22T19:50:10.554Z
+                at 2026-06-22T20:40:21.524Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/20</span>
+                <span class='fraction'>20/20</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">87.5% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/16</span>
+                <span class='fraction'>14/16</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>10/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/18</span>
+                <span class='fraction'>18/18</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -220,37 +220,35 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -290,7 +288,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -353,41 +353,41 @@ interface SessionAnalyticsProps {
   sessionCreatedAt: Date;
 }
 &nbsp;
-export function <span class="fstat-no" title="function not covered" >SessionAnalytics({</span>
+export function SessionAnalytics({
   preferences,
   decisions,
   totalItems,
   sessionCreatedAt,
 }: SessionAnalyticsProps) {
-  const triageDecisions = <span class="cstat-no" title="statement not covered" >decisions.filter(<span class="fstat-no" title="function not covered" >(d</span>) =&gt; <span class="cstat-no" title="statement not covered" >d.type === "triage")</span>;</span>
-  const pairwiseDecisions = <span class="cstat-no" title="statement not covered" >decisions.filter(<span class="fstat-no" title="function not covered" >(d</span>) =&gt; <span class="cstat-no" title="statement not covered" >d.type === "pairwise_compare")</span>;</span>
+  const triageDecisions = decisions.filter((d) =&gt; d.type === "triage");
+  const pairwiseDecisions = decisions.filter((d) =&gt; d.type === "pairwise_compare");
 &nbsp;
-  const triageCount = <span class="cstat-no" title="statement not covered" >triageDecisions.length;</span>
-  const pairwiseCount = <span class="cstat-no" title="statement not covered" >pairwiseDecisions.length;</span>
-  const totalDecisions = <span class="cstat-no" title="statement not covered" >decisions.length;</span>
+  const triageCount = triageDecisions.length;
+  const pairwiseCount = pairwiseDecisions.length;
+  const totalDecisions = decisions.length;
 &nbsp;
-  const triaged = <span class="cstat-no" title="statement not covered" >preferences.length;</span>
-  const avgConfidence = <span class="cstat-no" title="statement not covered" >preferences.length &gt; 0</span>
-    ? preferences.reduce(<span class="fstat-no" title="function not covered" >(s</span>um, p) =&gt; <span class="cstat-no" title="statement not covered" >sum + p.confidence, 0</span>) / preferences.length
+  const triaged = preferences.length;
+  const avgConfidence = preferences.length &gt; 0
+    ? preferences.reduce((sum, p) =&gt; sum + p.confidence, 0) / preferences.length
     : 0;
 &nbsp;
-  const bucketCounts = <span class="cstat-no" title="statement not covered" >{</span>
-    top: preferences.filter(<span class="fstat-no" title="function not covered" >(p</span>) =&gt; <span class="cstat-no" title="statement not covered" >p.rankBucket === "top")</span>.length,
-    high: preferences.filter(<span class="fstat-no" title="function not covered" >(p</span>) =&gt; <span class="cstat-no" title="statement not covered" >p.rankBucket === "high")</span>.length,
-    medium: preferences.filter(<span class="fstat-no" title="function not covered" >(p</span>) =&gt; <span class="cstat-no" title="statement not covered" >p.rankBucket === "medium")</span>.length,
-    low: preferences.filter(<span class="fstat-no" title="function not covered" >(p</span>) =&gt; <span class="cstat-no" title="statement not covered" >p.rankBucket === "low")</span>.length,
+  const bucketCounts = {
+    top: preferences.filter((p) =&gt; p.rankBucket === "top").length,
+    high: preferences.filter((p) =&gt; p.rankBucket === "high").length,
+    medium: preferences.filter((p) =&gt; p.rankBucket === "medium").length,
+    low: preferences.filter((p) =&gt; p.rankBucket === "low").length,
   };
 &nbsp;
   const avgComparisonCount =
-<span class="cstat-no" title="statement not covered" >    preferences.length &gt; 0</span>
-      ? preferences.reduce(<span class="fstat-no" title="function not covered" >(s</span>um, p) =&gt; <span class="cstat-no" title="statement not covered" >sum + p.comparisonCount, 0</span>) / preferences.length
+    preferences.length &gt; 0
+      ? preferences.reduce((sum, p) =&gt; sum + p.comparisonCount, 0) / preferences.length
       : 0;
 &nbsp;
-  const timeSpent = <span class="cstat-no" title="statement not covered" >Math.round(</span>
+  const timeSpent = Math.round(
     (new Date().getTime() - new Date(sessionCreatedAt).getTime()) / 60000
   );
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return (</span>
+  return (
     &lt;div className="space-y-4"&gt;
       &lt;h3 className="text-ink"&gt;Session Analytics&lt;/h3&gt;
 &nbsp;
@@ -428,8 +428,8 @@ export function <span class="fstat-no" title="function not covered" >SessionAnal
               { label: "Like", count: bucketCounts.high, color: "bg-tier-like" },
               { label: "Maybe", count: bucketCounts.medium, color: "bg-tier-maybe" },
               { label: "Onward", count: bucketCounts.low, color: "bg-tier-onward" },
-            ].map(<span class="fstat-no" title="function not covered" >(b</span>ucket) =&gt; (
-<span class="cstat-no" title="statement not covered" >              &lt;div key={bucket.label}&gt;</span>
+            ].map((bucket) =&gt; (
+              &lt;div key={bucket.label}&gt;
                 &lt;div className="flex justify-between items-center mb-1"&gt;
                   &lt;p className="text-sm font-medium text-ink"&gt;{bucket.label}&lt;/p&gt;
                   &lt;p className="text-sm text-ink-soft"&gt;{bucket.count}&lt;/p&gt;
@@ -459,7 +459,7 @@ export function <span class="fstat-no" title="function not covered" >SessionAnal
             &lt;div className="flex justify-between items-start"&gt;
               &lt;span className="text-ink-soft"&gt;Decision Rate&lt;/span&gt;
               &lt;span className="font-semibold text-ink"&gt;
-                {timeSpent &gt; 0 ? (totalDecisions / (timeSpent || 1)).toFixed(1) : 0} per min
+                {timeSpent &gt; 0 ? (totalDecisions / (timeSpent || <span class="branch-1 cbranch-no" title="branch not covered" >1)).t</span>oFixed(1) : 0} per min
               &lt;/span&gt;
             &lt;/div&gt;
             &lt;div className="flex justify-between items-start"&gt;
@@ -471,7 +471,7 @@ export function <span class="fstat-no" title="function not covered" >SessionAnal
             &lt;div className="flex justify-between items-start"&gt;
               &lt;span className="text-ink-soft"&gt;Confidence Level&lt;/span&gt;
               &lt;span className="font-semibold text-ink"&gt;
-                {avgConfidence &gt; 0.8 ? "High" : avgConfidence &gt; 0.6 ? "Medium" : "Low"}
+                {avgConfidence &gt; 0.8 ? <span class="branch-0 cbranch-no" title="branch not covered" >"High" : a</span>vgConfidence &gt; 0.6 ? "Medium" : "Low"}
               &lt;/span&gt;
             &lt;/div&gt;
           &lt;/div&gt;
@@ -487,7 +487,7 @@ export function <span class="fstat-no" title="function not covered" >SessionAnal
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-22T19:50:10.554Z
+                at 2026-06-22T20:40:21.524Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
