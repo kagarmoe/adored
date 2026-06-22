@@ -16,7 +16,9 @@ export async function POST(
 
     // Resolve first so an absent collection is a 404, not a 403 from the
     // canManageCollection(findById→null→false) path (purses-nj7 ride-along).
-    const existing = await collectionRepo.findByIdIncludingDeleted(params.id);
+    // Use findById (matching archive): restore flips status archived→active, so a
+    // soft-deleted collection is "absent" from the active-management view → 404, not 403.
+    const existing = await collectionRepo.findById(params.id);
     if (!existing) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }

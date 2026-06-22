@@ -2,9 +2,9 @@
 //   GET  /api/collections/[id]/preferences/items
 //   POST /api/collections/[id]/preferences/recalculate
 //
-// Both routes use requireAuth() only — no collection-membership guard. The
-// handler scopes results to the caller's own curator id, so a stranger gets an
-// empty list rather than a 403. That gap is flagged below (pv9 epic).
+// Both routes require collection access (requireApiCollectionAccess) AND scope
+// results to the caller's own curator id: a non-member stranger gets 403, a member
+// gets only their own preference rows (purses-55c, closed in pv9 PR1).
 //
 // Mocks: getSession/requireAuth (auth boundary) + getDb -> test db. No blob.
 // @vitest-environment node

@@ -8,15 +8,16 @@
 //   GET  /api/invitations/accept        → invRepo.findByToken (public, no auth)
 //   POST /api/invitations/accept        → invRepo.findByToken + invRepo.update (public, no auth)
 //
-// AUTHZ GAP NOTICE (purses-nj7):
+// AUTHZ (purses-nj7, closed in pv9 PR1):
 //   GET / PATCH / DELETE /api/invitations/[id] and POST /api/invitations/[id]/resend
-//   perform NO ownership or membership check — any authenticated user can act on
-//   any invitation. Tests below pin the ACTUAL current behavior (200/success for a
-//   stranger) and are annotated with the gap. These are regression pins, not approvals.
+//   resolve the invitation → require collection access (member-or-owner) on its
+//   collectionId. A non-member stranger gets 403; an absent invitation gets 404.
+//   Tests below assert that intended behavior.
 //
-//   /api/invitations/accept is intentionally public (no auth required); the gap there
-//   is that POST accept does NOT create a membership row — it only flips
-//   invitation.status to "accepted". Tests pin this actual behavior.
+//   REMAINING GAP (purses-8zcc, owned by pv9 PR3): /api/invitations/accept is
+//   intentionally public, but POST accept does NOT create a membership row — it only
+//   flips invitation.status to "accepted", with no state guard. The accept-flow tests
+//   below still pin this actual (buggy) behavior.
 //
 // @vitest-environment node
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
