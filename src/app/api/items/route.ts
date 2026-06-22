@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { ItemController } from "@/server/api/items";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAuth();
-    const body = await request.json();
+    const user = await requireAuth();
     const searchParams = request.nextUrl.searchParams;
     const collectionId = searchParams.get("collectionId");
 
@@ -19,6 +19,10 @@ export async function POST(request: NextRequest) {
     }
 
     const db = getDb();
+    const access = await requireApiCollectionAccess(db, collectionId, user.id);
+    if (access instanceof NextResponse) return access;
+
+    const body = await request.json();
     const itemRepo = new ItemRepository(db);
     const controller = new ItemController(itemRepo);
 

@@ -588,12 +588,16 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       expect(row!.name).toBe("Created Via Route");
     });
 
-    it("stranger (authenticated, not a member) can also create items — pv9 authz gap confirmed", async () => {
-      // This test PINS the missing tenant check. A stranger can write items into
-      // another user's collection. This should be fixed in pv9.
+    it("403s a stranger (authenticated, not a member) — and creates no item", async () => {
+      // purses-3al: POST /api/items now gates the query-param collectionId via
+      // requireApiCollectionAccess before createItem — a non-member gets 403 and
+      // nothing is written into the foreign collection.
       const seed = await seedFullCollection(ownerId);
       const strangerId = await seedUserRow("stranger-items");
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+      const { db } = getTestDb();
+      const before = await new ItemRepository(db).findByCollection(seed.collectionId);
+
       const res = await itemsPost(
         nextReq(
           "POST",
@@ -601,11 +605,10 @@ describeDb("Group E — core route integration tests (real DB)", () => {
           { name: "Stranger Item" },
         ),
       );
-      // If this passes 201, the authz gap is confirmed. If it changes to 403,
-      // the gap has been fixed and this test should be updated.
-      expect(res.status).toBe(201);
-      const body = await res.json();
-      expect(body.collectionId).toBe(seed.collectionId);
+      expect(res.status).toBe(403);
+      // No row added to the foreign collection.
+      const after = await new ItemRepository(db).findByCollection(seed.collectionId);
+      expect(after).toHaveLength(before.length);
     });
 
     it("returns 500 (zod validation fail) when name is missing", async () => {
