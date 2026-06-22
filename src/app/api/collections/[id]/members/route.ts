@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { MemberController } from "@/server/api/members";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
 
 export async function GET(
@@ -10,8 +11,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const db = getDb();
+    const access = await requireApiCollectionAccess(db, params.id, user.id);
+    if (access instanceof NextResponse) return access;
+
     const membershipRepo = new MembershipRepository(db);
     const collectionRepo = new CollectionRepository(db);
     const controller = new MemberController(membershipRepo, collectionRepo);

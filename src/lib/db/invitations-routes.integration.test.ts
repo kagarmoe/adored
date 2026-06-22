@@ -8,15 +8,16 @@
 //   GET  /api/invitations/accept        → invRepo.findByToken (public, no auth)
 //   POST /api/invitations/accept        → invRepo.findByToken + invRepo.update (public, no auth)
 //
-// AUTHZ GAP NOTICE (purses-nj7):
+// AUTHZ (purses-nj7, closed in pv9 PR1):
 //   GET / PATCH / DELETE /api/invitations/[id] and POST /api/invitations/[id]/resend
-//   perform NO ownership or membership check — any authenticated user can act on
-//   any invitation. Tests below pin the ACTUAL current behavior (200/success for a
-//   stranger) and are annotated with the gap. These are regression pins, not approvals.
+//   resolve the invitation → require collection access (member-or-owner) on its
+//   collectionId. A non-member stranger gets 403; an absent invitation gets 404.
+//   Tests below assert that intended behavior.
 //
-//   /api/invitations/accept is intentionally public (no auth required); the gap there
-//   is that POST accept does NOT create a membership row — it only flips
-//   invitation.status to "accepted". Tests pin this actual behavior.
+//   REMAINING GAP (purses-8zcc, owned by pv9 PR3): /api/invitations/accept is
+//   intentionally public, but POST accept does NOT create a membership row — it only
+//   flips invitation.status to "accepted", with no state guard. The accept-flow tests
+//   below still pin this actual (buggy) behavior.
 //
 // @vitest-environment node
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -143,22 +144,20 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(body.status).toBe("pending");
     });
 
-    it("500 for absent invitation (no owner check — invitationController throws 'Invitation not found')", async () => {
-      // The route maps all non-Unauthorized errors to 500 (not 404). Pin current behavior.
+    it("404 for absent invitation (resolve-then-authorize)", async () => {
+      // purses-nj7: the route resolves the invitation first via InvitationRepository
+      // → an absent id is a clean 404 (was a 500 from the controller throwing).
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await getInvitation(
         makeRequest("GET", "http://localhost/api/invitations/inv-absent") as any,
         { params: { id: "inv-absent" } },
       );
-      // The controller throws "Invitation not found"; the route maps it to 500 (not 404).
-      expect(res.status).toBe(500);
-      const body = await res.json();
-      expect(body.error).toMatch(/not found/i);
+      expect(res.status).toBe(404);
     });
 
-    // IDOR GAP (purses-nj7): any authenticated user can read any invitation —
-    // the route has no collection ownership / membership check.
-    it("IDOR GAP: stranger (authenticated, unrelated user) can read another user's invitation — pins current behavior", async () => {
+    it("403s a stranger reading another user's invitation", async () => {
+      // purses-nj7: invitations/[id] GET is now scoped to the invitation's collection
+      // (member-or-owner) — a non-member gets 403.
       const strangerId = await seedUserRow("stranger");
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
 
@@ -169,8 +168,7 @@ describeDb("Invitation routes — real DB integration", () => {
         makeRequest("GET", `http://localhost/api/invitations/${id}`) as any,
         { params: { id } },
       );
-      // BUG: should be 403. Currently 200 — no authz guard on this route.
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(403);
     });
   });
 
@@ -232,24 +230,25 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(updated!.canDeletePhotos).toBe(true);
     });
 
-    it("IDOR GAP: stranger can patch another user's invitation — pins current behavior", async () => {
+    it("403s a stranger patching another user's invitation — and does NOT mutate", async () => {
+      // purses-nj7: PATCH is now scoped to the invitation's collection — a non-member
+      // gets 403 and the invitation is left unchanged.
       const strangerId = await seedUserRow("stranger-patch");
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
 
       const collectionId = await seedBareCollection(ownerId);
-      const { id } = await seedInvitation(collectionId);
+      const { id } = await seedInvitation(collectionId); // seeded canSort: true
 
       const res = await patchInvitation(
         makeRequest("PATCH", `http://localhost/api/invitations/${id}`, { canSort: false }) as any,
         { params: { id } },
       );
-      // BUG: should be 403. Currently 200 — no authz guard.
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(403);
 
-      // The mutation actually lands in the DB.
+      // The mutation did NOT land — canSort is still the seeded true.
       const { db } = getTestDb();
       const inv = await new InvitationRepository(db).findById(id);
-      expect(inv!.canSort).toBe(false);
+      expect(inv!.canSort).toBe(true);
     });
   });
 
@@ -289,18 +288,19 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(inv!.status).toBe("revoked");
     });
 
-    it("500 for absent invitation (controller throws 'Invitation not found' → route maps to 500)", async () => {
+    it("404 for absent invitation (resolve-then-authorize)", async () => {
+      // purses-nj7: DELETE resolves the invitation first → absent id is a clean 404.
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await deleteInvitation(
         makeRequest("DELETE", "http://localhost/api/invitations/inv-absent") as any,
         { params: { id: "inv-absent" } },
       );
-      expect(res.status).toBe(500);
-      const body = await res.json();
-      expect(body.error).toMatch(/not found/i);
+      expect(res.status).toBe(404);
     });
 
-    it("IDOR GAP: stranger can revoke another user's invitation — pins current behavior", async () => {
+    it("403s a stranger revoking another user's invitation — and does NOT mutate", async () => {
+      // purses-nj7: DELETE is now scoped to the invitation's collection — a non-member
+      // gets 403 and the invitation status is unchanged.
       const strangerId = await seedUserRow("stranger-delete");
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
 
@@ -311,13 +311,12 @@ describeDb("Invitation routes — real DB integration", () => {
         makeRequest("DELETE", `http://localhost/api/invitations/${id}`) as any,
         { params: { id } },
       );
-      // BUG: should be 403. Currently 200 — no authz guard.
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(403);
 
-      // The status change actually lands in the DB.
+      // Still pending — the stranger's revoke did not take effect.
       const { db } = getTestDb();
       const inv = await new InvitationRepository(db).findById(id);
-      expect(inv!.status).toBe("revoked");
+      expect(inv!.status).toBe("pending");
     });
   });
 
@@ -357,18 +356,19 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(inv!.status).toBe("pending"); // unchanged
     });
 
-    it("500 for absent invitation (controller throws 'Invitation not found' → route maps to 500)", async () => {
+    it("404 for absent invitation (resolve-then-authorize)", async () => {
+      // purses-nj7: resend resolves the invitation first → absent id is a clean 404.
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await resendInvitation(
         makeRequest("POST", "http://localhost/api/invitations/inv-absent/resend") as any,
         { params: { id: "inv-absent" } },
       );
-      expect(res.status).toBe(500);
-      const body = await res.json();
-      expect(body.error).toMatch(/not found/i);
+      expect(res.status).toBe(404);
     });
 
-    it("IDOR GAP: stranger can resend another user's invitation — pins current behavior", async () => {
+    it("403s a stranger resending another user's invitation", async () => {
+      // purses-nj7: resend is now scoped to the invitation's collection — a non-member
+      // gets 403.
       const strangerId = await seedUserRow("stranger-resend");
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
 
@@ -379,8 +379,7 @@ describeDb("Invitation routes — real DB integration", () => {
         makeRequest("POST", `http://localhost/api/invitations/${id}/resend`) as any,
         { params: { id } },
       );
-      // BUG: should be 403. Currently 200 — no authz guard.
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(403);
     });
   });
 

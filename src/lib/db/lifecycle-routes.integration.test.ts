@@ -113,15 +113,14 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       expect(Array.isArray(body)).toBe(true);
     });
 
-    // AUTHZ GAP PIN (purses-55c): any authenticated user — not a member — can
-    // list members of a foreign collection. The route is requireAuth-only.
-    it("AUTHZ-GAP(purses-55c): stranger gets 200 (no membership check)", async () => {
+    it("403s a stranger listing members of a foreign collection", async () => {
+      // purses-55c: GET /members is now scoped to collection access — a non-member
+      // gets 403 instead of the full roster.
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
       const { collectionId } = await seedFullCollection(ownerId);
 
       const res = await membersGet(getReq(), { params: { id: collectionId } });
-      // Pinning ACTUAL behavior — this should be 403 once the gap is fixed.
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(403);
     });
 
     it("returns empty array for collection with no members", async () => {
@@ -251,13 +250,13 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       expect(res.status).toBe(403);
     });
 
-    // AUTHZ GAP PIN: absent collection → canManageCollection → findById → null → false → 403, not 404.
-    it("AUTHZ-GAP(missing-404-archive): absent collection returns 403 not 404", async () => {
+    it("404s an absent collection (resolve-then-authorize)", async () => {
+      // purses-nj7 ride-along: archive resolves the collection first — an absent id is
+      // a clean 404 (was a 403 from canManageCollection → findById null → not-manager).
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
       const res = await archivePost(postReq(), { params: { id: "col-absent" } });
-      // Pinning ACTUAL behavior — should be 404 once fixed.
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(404);
     });
 
     it("happy path — owner archives; DB status flips to 'archived'", async () => {
@@ -309,13 +308,13 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       expect(res.status).toBe(403);
     });
 
-    // AUTHZ GAP PIN: absent collection → canManageCollection → findById → null → false → 403, not 404.
-    it("AUTHZ-GAP(missing-404-restore): absent collection returns 403 not 404", async () => {
+    it("404s an absent collection (resolve-then-authorize)", async () => {
+      // purses-nj7 ride-along: restore resolves the collection first — an absent id is
+      // a clean 404 (was a 403 from canManageCollection → findById null → not-manager).
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
       const res = await collectionRestorePost(postReq(), { params: { id: "col-absent" } });
-      // Pinning ACTUAL behavior — should be 404 once fixed.
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(404);
     });
 
     it("happy path — owner restores archived collection; DB status flips to 'active'", async () => {
@@ -395,9 +394,10 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       expect(restored?.deletedAt).toBeNull();
     });
 
-    // AUTHZ GAP PIN (purses-3al): POST /items/[id]/restore is requireAuth-only —
-    // no tenant/membership check. A stranger can restore any item.
-    it("AUTHZ-GAP(purses-3al): stranger can restore a foreign item (no tenant check)", async () => {
+    it("403s a stranger restoring a foreign item — and leaves it soft-deleted", async () => {
+      // purses-3al: POST /items/[id]/restore now resolves the item (incl. soft-deleted)
+      // and gates on collection access — a non-member gets 403 and the item stays
+      // soft-deleted.
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
       const { db } = getTestDb();
       const { collectionId } = await seedFullCollection(ownerId);
@@ -407,22 +407,21 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       await itemRepo.softDelete(item.id);
 
       const res = await itemRestorePost(postReq(), { params: { id: item.id } });
-      // Pinning ACTUAL behavior — this should be 403 once the IDOR is fixed.
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(403);
 
-      // The item IS restored despite the stranger making the call
-      const restored = await itemRepo.findById(item.id);
-      expect(restored).not.toBeNull();
+      // Still soft-deleted — the stranger's restore did not take effect.
+      expect(await itemRepo.findById(item.id)).toBeNull();
+      const stillDeleted = await itemRepo.findByIdIncludingDeleted(item.id);
+      expect(stillDeleted?.deletedAt).not.toBeNull();
     });
 
-    it("returns 500 for an absent item id (no 404 guard in route)", async () => {
+    it("404s an absent item id (resolve-then-authorize)", async () => {
+      // purses-3al: the route resolves the item via findByIdIncludingDeleted first;
+      // an absent item is a clean 404 (was a 500 from an UPDATE returning() TypeError).
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
       const res = await itemRestorePost(postReq(), { params: { id: "item-absent" } });
-      // ItemController.restoreItem calls itemRepo.update which does an UPDATE WHERE id=...
-      // returning() — if no row matches, Drizzle returns undefined, causing a TypeError.
-      // The route catches it as a generic 500.
-      expect(res.status).toBe(500);
+      expect(res.status).toBe(404);
     });
   });
 });

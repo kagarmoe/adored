@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { CollectionController } from "@/server/api/collections";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
 
 export async function GET(
@@ -9,8 +10,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const db = getDb();
+    const access = await requireApiCollectionAccess(db, params.id, user.id);
+    if (access instanceof NextResponse) return access;
+
     const collectionRepo = new CollectionRepository(db);
     const controller = new CollectionController(collectionRepo);
 

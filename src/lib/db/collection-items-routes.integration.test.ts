@@ -219,10 +219,9 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       expect(await res.json()).toMatchObject({ id: item.id, name: "Bag" });
     });
 
-    it("lets ANY authenticated stranger read an item in a collection they cannot access", async () => {
-      // purses-3al: pins current (gap) behavior — items/[id] is requireAuth-only
-      // (no collection scoping), so a non-member CAN read any item today. This is a
-      // cross-tenant IDOR; the fix is owned by the pv9 epic. Assert the gap as-is.
+    it("403s a stranger reading an item in a collection they cannot access", async () => {
+      // purses-3al: items/[id] GET is now scoped to collection access — a non-member
+      // gets 403 (the item still exists, the caller just lacks access).
       const { db } = getTestDb();
       const collectionId = await seedBareCollection(ownerId);
       const item = await new ItemRepository(db).create({ collectionId, name: "Owner's Bag" });
@@ -230,8 +229,9 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
 
       const res = await getItem(jsonReq("GET") as any, { params: { id: item.id } } as any);
-      expect(res.status).toBe(200);
-      expect(await res.json()).toMatchObject({ id: item.id });
+      expect(res.status).toBe(403);
+      // The item is untouched and still readable by the owner.
+      expect(await new ItemRepository(db).findById(item.id)).not.toBeNull();
     });
   });
 
@@ -269,9 +269,9 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       expect(after!.brand).toBe("Gucci");
     });
 
-    it("lets ANY authenticated stranger patch an item they cannot access", async () => {
-      // purses-3al: pins current (gap) behavior — items/[id] PATCH is requireAuth-only,
-      // so a non-member CAN mutate any item today (cross-tenant IDOR; fix owned by pv9).
+    it("403s a stranger patching an item they cannot access — and does NOT mutate", async () => {
+      // purses-3al: items/[id] PATCH is now scoped to collection access — a non-member
+      // gets 403 and the item is left unchanged.
       const { db } = getTestDb();
       const collectionId = await seedBareCollection(ownerId);
       const item = await new ItemRepository(db).create({ collectionId, name: "Owner's" });
@@ -281,9 +281,9 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       const res = await patchItem(jsonReq("PATCH", { name: "StrangerEdited" }) as any, {
         params: { id: item.id },
       } as any);
-      expect(res.status).toBe(200);
-      // The mutation really persisted — the gap has teeth.
-      expect((await new ItemRepository(db).findById(item.id))!.name).toBe("StrangerEdited");
+      expect(res.status).toBe(403);
+      // The name is untouched — the stranger's edit did not persist.
+      expect((await new ItemRepository(db).findById(item.id))!.name).toBe("Owner's");
     });
   });
 
@@ -316,9 +316,9 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       expect(await new ItemRepository(db).findById(item.id)).toBeNull();
     });
 
-    it("lets ANY authenticated stranger delete an item they cannot access", async () => {
-      // purses-3al: pins current (gap) behavior — items/[id] DELETE is requireAuth-only,
-      // so a non-member CAN delete any item today (cross-tenant IDOR; fix owned by pv9).
+    it("403s a stranger deleting an item they cannot access — and does NOT delete", async () => {
+      // purses-3al: items/[id] DELETE is now scoped to collection access — a non-member
+      // gets 403 and the item is left intact.
       const { db } = getTestDb();
       const collectionId = await seedBareCollection(ownerId);
       const item = await new ItemRepository(db).create({ collectionId, name: "Owner's" });
@@ -329,9 +329,9 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       expect(await new ItemRepository(db).findById(item.id)).not.toBeNull();
 
       const res = await deleteItem(jsonReq("DELETE") as any, { params: { id: item.id } } as any);
-      expect(res.status).toBe(200);
-      // Gone after — the stranger's delete really took effect.
-      expect(await new ItemRepository(db).findById(item.id)).toBeNull();
+      expect(res.status).toBe(403);
+      // Still present — the stranger's delete did not take effect.
+      expect(await new ItemRepository(db).findById(item.id)).not.toBeNull();
     });
   });
 });

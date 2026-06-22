@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { InvitationController } from "@/server/api/invitations";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
+import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
 
 export async function GET(
@@ -9,11 +10,17 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const db = getDb();
     const invRepo = new InvitationRepository(db);
-    const controller = new InvitationController(invRepo);
-    const invitation = await controller.getInvitation(params.id);
+
+    const invitation = await invRepo.findById(params.id);
+    if (!invitation) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    const access = await requireApiCollectionAccess(db, invitation.collectionId, user.id);
+    if (access instanceof NextResponse) return access;
+
     return NextResponse.json(invitation);
   } catch (error) {
     return NextResponse.json(
@@ -28,10 +35,18 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireAuth();
-    const body = await request.json();
+    const user = await requireAuth();
     const db = getDb();
     const invRepo = new InvitationRepository(db);
+
+    const existing = await invRepo.findById(params.id);
+    if (!existing) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    const access = await requireApiCollectionAccess(db, existing.collectionId, user.id);
+    if (access instanceof NextResponse) return access;
+
+    const body = await request.json();
     const controller = new InvitationController(invRepo);
     const invitation = await controller.updateInvitation(params.id, body);
     return NextResponse.json(invitation);
@@ -51,9 +66,17 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const db = getDb();
     const invRepo = new InvitationRepository(db);
+
+    const existing = await invRepo.findById(params.id);
+    if (!existing) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    const access = await requireApiCollectionAccess(db, existing.collectionId, user.id);
+    if (access instanceof NextResponse) return access;
+
     const controller = new InvitationController(invRepo);
     await controller.revokeInvitation(params.id);
     return NextResponse.json({ message: "Invitation revoked" });

@@ -6,6 +6,7 @@ import { DecisionEventRepository } from "@/server/repositories/implementations/D
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { PreferenceStateService } from "@/server/services/PreferenceStateService";
 import { ScoringService } from "@/server/services/ScoringService";
+import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
 
 export async function GET(
@@ -15,6 +16,9 @@ export async function GET(
   try {
     const user = await requireAuth();
     const db = getDb();
+    const access = await requireApiCollectionAccess(db, params.id, user.id);
+    if (access instanceof NextResponse) return access;
+
     const prefRepo = new CollectionPreferenceItemRepository(db);
     const scoringService = new ScoringService(new DecisionEventRepository(db), new SessionRepository(db));
     const prefService = new PreferenceStateService(prefRepo, scoringService);

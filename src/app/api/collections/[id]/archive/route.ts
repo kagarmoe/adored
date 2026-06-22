@@ -14,6 +14,13 @@ export async function POST(
     const collectionRepo = new CollectionRepository(db);
     const controller = new CollectionController(collectionRepo);
 
+    // Resolve first so an absent collection is a 404, not a 403 from the
+    // canManageCollection(findById→null→false) path (purses-nj7 ride-along).
+    const existing = await collectionRepo.findById(params.id);
+    if (!existing) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
     // Check if user can manage collection
     const canManage = await controller.canManageCollection(user.id, params.id);
     if (!canManage) {
