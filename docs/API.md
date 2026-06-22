@@ -4,7 +4,7 @@ Structured reference for an AI agent (or developer) calling the **Adored** HTTP 
 
 **How to read this:** [Authentication](#authentication), [Authorization model](#authorization-model), and [Status-code semantics](#status-code-semantics) apply to every route — read them first. Then use the [Route index](#route-index) and the per-family detail. Returned-entity field shapes (`Collection`, `Item`, `Photo`, `SortResult`, `SortResultItem`, `Membership`, `Invitation`, `Session`, `DecisionEvent`) live in `src/types` and the Drizzle schema (`src/lib/db/schema.ts`) — this doc names the entity rather than duplicating fields that would drift.
 
-> **Accuracy note:** this documents what the code does **today**. Several routes enforce only authentication, not collection membership — they are flagged **`⚠ requireAuth-only`**. Closing them is the in-flight **pv9 authz epic** (`purses-55c`, `purses-g6o`, `purses-82r`); see [Known authz gaps](#known-authz-gaps). Do not rely on `⚠` routes for tenant isolation.
+> **Accuracy note:** this documents what the code does **today**. The cross-tenant **IDOR holes** are **closed** (pv9 PR1, 2026-06-22): every collection-scoped route is now scoped to its collection via `requireApiCollectionAccess` (member-or-owner; `404` absent / `403` forbidden). Remaining pv9 work is the **role/capability migration** (collapse the barely-enforced flags to Owner/Curator, tighten member/invitation management to owner — `purses-g6o`, `purses-crt`) and the **invitation-accept** membership creation (`purses-8zcc`); see [Known authz gaps](#known-authz-gaps).
 
 ## Authentication
 
@@ -55,7 +55,7 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 
 ## Route index
 
-**Access** legend: **public** · **self** (`requireAuth`, acts only on the caller's own data) · **member** (collection member-or-owner) · **manager** (`canManage`/`canEditMetadata`/`isCollectionManager`) · **owner** · **curator** (`requireApiResultAccess`/`authorizeSession`) · **`⚠`** `requireAuth`-only with no tenant check (pv9 gap).
+**Access** legend: **public** · **self** (`requireAuth`, acts only on the caller's own data) · **member** (collection member-or-owner, `requireApiCollectionAccess`) · **manager** (`canManage`/`canEditMetadata`/`isCollectionManager`) · **owner** · **curator** (`requireApiResultAccess`/`authorizeSession`).
 
 ### auth & user
 | Method | Path | Access |
@@ -68,7 +68,7 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 | Method | Path | Access |
 |---|---|---|
 | GET·POST | `/api/collections` | self |
-| GET | `/api/collections/[id]` | **⚠** |
+| GET | `/api/collections/[id]` | member |
 | PATCH | `/api/collections/[id]` | manager |
 | DELETE | `/api/collections/[id]` | owner |
 | POST | `/api/collections/[id]/archive` | manager |
@@ -103,26 +103,26 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 ### members & invitations
 | Method | Path | Access |
 |---|---|---|
-| GET | `/api/collections/[id]/members` | **⚠** |
+| GET | `/api/collections/[id]/members` | member |
 | POST | `/api/collections/[id]/members` | manager |
 | GET·PATCH·DELETE | `/api/collections/[id]/members/[mid]` | member (GET) / manager (PATCH·DELETE) |
 | GET·POST | `/api/collections/[id]/invitations` | member |
-| GET·PATCH·DELETE | `/api/invitations/[id]` | **⚠** |
-| POST | `/api/invitations/[id]/resend` | **⚠** |
+| GET·PATCH·DELETE | `/api/invitations/[id]` | member |
+| POST | `/api/invitations/[id]/resend` | member |
 | GET·POST | `/api/invitations/accept` | public (token) |
 
 ### preferences
 | Method | Path | Access |
 |---|---|---|
-| GET | `/api/collections/[id]/preferences/items` | **⚠** (scoped to caller) |
-| POST | `/api/collections/[id]/preferences/recalculate` | **⚠** (scoped to caller) |
+| GET | `/api/collections/[id]/preferences/items` | member (scoped to caller) |
+| POST | `/api/collections/[id]/preferences/recalculate` | member (scoped to caller) |
 
 ### items (top-level)
 | Method | Path | Access |
 |---|---|---|
-| POST | `/api/items?collectionId=` | **⚠** |
-| GET·PATCH·DELETE | `/api/items/[id]` | **⚠** |
-| POST | `/api/items/[id]/restore` | **⚠** |
+| POST | `/api/items?collectionId=` | member |
+| GET·PATCH·DELETE | `/api/items/[id]` | member |
+| POST | `/api/items/[id]/restore` | member |
 | POST | `/api/items/[id]/purge` | owner |
 | POST | `/api/items/[id]/remove-from-sorts` | owner |
 
@@ -172,8 +172,8 @@ Authenticated. Returns the caller's `Collection[]`. `401`/`500`.
 ### `POST /api/collections`
 Authenticated. **Body** → `createCollection`; also creates the caller's **owner** `Membership` (all permission flags true). **Returns** `201 Collection`. `400` invalid JSON. Owner is forced from the session.
 
-### `GET /api/collections/[id]`  ⚠ requireAuth-only
-Returns the `Collection` by id **without a membership check** — any signed-in user can read any collection. `401`/`500`. (pv9 gap.)
+### `GET /api/collections/[id]`
+`getSession` + `requireApiCollectionAccess` (member-or-owner). Returns the `Collection`. `401`/`403`/`404` (`404` absent before membership is evaluated). (IDOR closed — pv9 PR1, `purses-55c`.)
 
 ### `PATCH /api/collections/[id]`
 `requireAuth` + `canManageCollection` → `403`. Body → updated `Collection`. `400` invalid JSON.
@@ -236,8 +236,8 @@ Unified "Move to…". **Body:** `{ photoIds: string[], destination: { type: "ite
 
 ## members & invitations
 
-### `GET /api/collections/[id]/members`  ⚠ requireAuth-only
-Lists a collection's members **without a membership check** — any signed-in user can read any collection's member list. `401`/`500`. (pv9 gap.)
+### `GET /api/collections/[id]/members`
+`getSession` + `requireApiCollectionAccess` (member-or-owner). Lists the collection's members. `401`/`403`/`404`. (IDOR closed — pv9 PR1, `purses-55c`.)
 
 ### `POST /api/collections/[id]/members`
 `requireAuth` + `isCollectionManager` → `403`. Body → `201` member. `400` invalid JSON.
@@ -248,37 +248,37 @@ Lists a collection's members **without a membership check** — any signed-in us
 ### `GET·POST /api/collections/[id]/invitations`
 `getSession` + `requireApiCollectionAccess` (member). `GET` → `Invitation[]`. `POST` body → `201 Invitation` (`500` on failure).
 
-### `GET·PATCH·DELETE /api/invitations/[id]`  ⚠ requireAuth-only
-Reads/updates/revokes an invitation by id **without an ownership/collection check**. `PATCH` body → updated `Invitation` (`400` invalid JSON); `DELETE` → `{ message }`. `401`/`500`. (pv9 gap.)
+### `GET·PATCH·DELETE /api/invitations/[id]`
+`requireAuth` + resolve the invitation (`404` absent) + `requireApiCollectionAccess(invitation.collectionId)` (member-or-owner). `PATCH` body → updated `Invitation` (`400` invalid JSON); `DELETE` → `{ message }`. `401`/`403`/`404`. (IDOR closed — pv9 PR1, `purses-nj7`; the owner-only tightening of invitation management lands with the role model, `purses-g6o`.)
 
-### `POST /api/invitations/[id]/resend`  ⚠ requireAuth-only
-Resends an invitation by id, no ownership check. `401`/`500`. (pv9 gap.)
+### `POST /api/invitations/[id]/resend`
+`requireAuth` + resolve the invitation (`404` absent) + `requireApiCollectionAccess(invitation.collectionId)` (member-or-owner). `401`/`403`/`404`. (IDOR closed — pv9 PR1, `purses-nj7`.)
 
 ### `GET·POST /api/invitations/accept?token=`
 **Public**, token-based. `GET` returns the `Invitation` for the token. `POST` marks it `accepted`. `400` missing token; `404` token not found; `500`. **Note:** `POST` currently only flips status — it does **not** create a `Membership` (incomplete).
 
 ## preferences
 
-Curator preference state derived from decision events. Both routes are **`⚠ requireAuth-only`** (no collection-membership gate) but the controller scopes work to the **caller's own** `user.id`, so they expose only the caller's data — lower severity than the read-IDOR routes, but still missing the documented membership check (pv9).
+Curator preference state derived from decision events. Both routes now require collection access (`requireApiCollectionAccess`, member-or-owner) **and** scope work to the **caller's own** `user.id` — a non-member gets `403`; a member sees only their own rows. (Membership gate added — pv9 PR1, `purses-55c`.)
 
 ### `GET /api/collections/[id]/preferences/items`
-Returns the caller's per-item preference state for the collection. `401`/`500`.
+Returns the caller's per-item preference state for the collection. `401`/`403`/`404`/`500`.
 
 ### `POST /api/collections/[id]/preferences/recalculate`
-Recomputes the caller's preferences. `{ message, preferences }`. `401`/`500`.
+Recomputes the caller's preferences. `{ message, preferences }`. `401`/`403`/`404`/`500`.
 
-## items (top-level)  ⚠ requireAuth-only family
+## items (top-level)
 
-All routes here enforce only authentication — **no collection membership/ownership check** — so any signed-in user can act on any item by id (cross-tenant IDOR). Prefer the collection-scoped `…/collections/[id]/items*` routes. (pv9 gap.)
+These routes are now scoped to the item's collection (IDOR closed — pv9 PR1, `purses-3al`). The collection-scoped `…/collections/[id]/items*` routes remain the primary surface.
 
 ### `POST /api/items?collectionId=`
-`requireAuth`. `collectionId` is a **query param** (`400` if missing); body → `createItem(collectionId, body)`. `201 Item`. Membership on `collectionId` is **not** checked.
+`requireAuth` + `requireApiCollectionAccess(collectionId)` (member-or-owner). `collectionId` is a **query param** (`400` if missing); body → `createItem(collectionId, body)`. `201 Item`. `401`/`403`/`404`.
 
 ### `GET·PATCH·DELETE /api/items/[id]`
-`requireAuth` only. `GET` → `Item` (**`404`** if absent/deleted); `PATCH` body → updated `Item` (`400` invalid JSON); `DELETE` → `{ message, item }` (soft delete). Any item, any caller.
+`requireAuth` + resolve the item (`404` absent/deleted) + `requireApiCollectionAccess(item.collectionId)` (member-or-owner). `GET` → `Item`; `PATCH` body → updated `Item` (`400` invalid JSON); `DELETE` → `{ message, item }` (soft delete). `401`/`403`/`404`.
 
 ### `POST /api/items/[id]/restore`
-`requireAuth` only. Restores a soft-deleted item.
+`requireAuth` + resolve the item including soft-deleted (`findByIdIncludingDeleted`; `404` absent) + `requireApiCollectionAccess(item.collectionId)` (member-or-owner). Restores a soft-deleted item.
 
 ### `POST /api/items/[id]/purge`
 `requireAuth` → resolve the item **including soft-deleted** (`findByIdIncludingDeleted`; `404` if absent) → **owner-only** `requireApiCollectionOwner(item.collectionId)` (`404`/`403`) → **only then** parse `{ confirm: "PURGE" }` (zod; `400` invalid JSON, `400` if confirm missing/wrong). Authz precedes body validation deliberately — a non-owner with a malformed body gets `403`, never a `400` that would leak the item's existence. On success, `ItemPurgeService` permanently **hard-deletes the item + its `CollectionPreferenceItem` rows + its photos atomically** (children-first in one `withTransaction`, since the `items` FK has no `ON DELETE CASCADE`) — and **writes one append-only `audit_log` row in the same transaction** (`item.purge`, actor from the session, photo/preference counts; `purses-ite`), so a committed purge always has its audit record. Then deletes the photo **blobs best-effort after commit** (a blob `del` failure is logged, never rolls back the committed delete — orphans are inert/sweepable). **`409`** (`ItemInResultError`) if the item is referenced by **any** sort result (draft or finalized) — the owner must first detach drafts via `remove-from-sorts`; finalized membership is a hard block. `200 { message: "Item purged" }`.
@@ -337,12 +337,11 @@ Curator-private results, gated by `requireApiResultAccess` (member-or-owner **an
 
 ## Known authz gaps
 
-These routes enforce **authentication only** (no collection membership/ownership), tracked under the **pv9** epic. An agent should treat them as unsafe for tenant isolation:
+The cross-tenant **IDOR holes are closed** (pv9 PR1, 2026-06-22): `GET /api/collections/[id]`, `GET …/members`, `GET·PATCH·DELETE /api/invitations/[id]` + `/resend`, `POST /api/items` + `GET·PATCH·DELETE /api/items/[id]` + `/restore`, and `…/preferences/*` are all scoped to their collection via `requireApiCollectionAccess` (member-or-owner; `404` absent / `403` forbidden).
 
-- `GET /api/collections/[id]` — reads any collection.
-- `GET /api/collections/[id]/members` — reads any collection's member list.
-- `GET·PATCH·DELETE /api/invitations/[id]`, `POST /api/invitations/[id]/resend` — manage any invitation by id.
-- `POST /api/items`, `GET·PATCH·DELETE /api/items/[id]`, `/restore` — act on any item by id (read/update/soft-delete). **`/purge` is no longer in this set:** it now gates **owner-only** via `requireApiCollectionOwner` (as does the new `/remove-from-sorts`).
-- `GET·POST /api/collections/[id]/preferences/*` — no membership gate (but scoped to the caller's own data).
+Remaining pv9 work (no longer tenant-isolation holes — capability/correctness):
 
-Implemented (formerly no-op stubs): `POST /api/items/[id]/purge` is now a real owner-only hard-delete cascade with a `409`-in-result guard, alongside the new owner-only `POST /api/items/[id]/remove-from-sorts` — **purses-u3p** is resolved for item purge. **`POST /api/collections/[id]/purge` is now a real owner-only whole-collection cascade purge too** (name-confirm + `collection.purge` audit). The former sort-results no-op-success stubs — `DELETE /api/sort-results/[id]`, `DELETE /api/sort-results/[id]/items/[rid]`, and the empty `GET …/shares` listing — are also implemented.
+- **Role/capability collapse** (`purses-crt`, `purses-89g`, `purses-g6o`): the 10 boolean permission flags are barely enforced; collapsing to `membership.role` (Owner/Curator) and routing every route through a `requireApiCapability` map. This will tighten member management and invitation create/manage to **owner-only** (currently member-or-owner) — `purses-lgql` (`isCollectionManager` ignores `canManageCollection`), `purses-4wj2` (invitation create ignores `canInviteMembers`).
+- **Invitation accept** (`purses-8zcc`): `POST /api/invitations/accept` flips `status` only — it does **not** create a `Membership` and has no state guard. Fix creates a curator membership, binds to the invited email, and rejects non-pending invitations.
+
+Implemented (formerly no-op stubs): `POST /api/items/[id]/purge` is a real owner-only hard-delete cascade with a `409`-in-result guard, alongside owner-only `POST /api/items/[id]/remove-from-sorts` — **purses-u3p** resolved for item purge. **`POST /api/collections/[id]/purge`** is a real owner-only whole-collection cascade purge (name-confirm + `collection.purge` audit). The former sort-results no-op-success stubs — `DELETE /api/sort-results/[id]`, `DELETE /api/sort-results/[id]/items/[rid]`, and the empty `GET …/shares` listing — are also implemented.
