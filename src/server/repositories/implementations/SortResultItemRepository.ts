@@ -85,6 +85,20 @@ export class SortResultItemRepository implements ISortResultItemRepository {
     );
   }
 
+  // Delete every result-item whose parent sort_result belongs to the given curator.
+  // Child-first prerequisite for deleteByCurator on sort_results. Account-deletion only.
+  async deleteByCurator(curatorId: string): Promise<void> {
+    await this.db.delete(sortResultItemsTable).where(
+      inArray(
+        sortResultItemsTable.sortResultId,
+        this.db
+          .select({ id: sortResultsTable.id })
+          .from(sortResultsTable)
+          .where(eq(sortResultsTable.curatorId, curatorId)),
+      ),
+    );
+  }
+
   // True iff ANY sort_result_item references the item (any result, any status).
   // The purge 409 guard. LIMIT 1 — existence only.
   async existsByItem(itemId: string): Promise<boolean> {

@@ -64,6 +64,17 @@ export class CollectionRepository implements ICollectionRepository {
     return collections.map((c) => this.mapToCollection(c));
   }
 
+  // Resolve EVERY collection owned by the user WITHOUT the deletedAt filter —
+  // account deletion must purge a user's soft-deleted (archived) collections too,
+  // which findByOwner (active-only) would skip. Mirrors findByIdIncludingDeleted.
+  async findByOwnerIncludingDeleted(ownerId: string): Promise<Collection[]> {
+    const collections = await this.db
+      .select()
+      .from(collectionsTable)
+      .where(eq(collectionsTable.ownerId, ownerId));
+    return collections.map((c) => this.mapToCollection(c));
+  }
+
   async update(
     id: string,
     data: Partial<Omit<Collection, "id" | "createdAt" | "slug">>,

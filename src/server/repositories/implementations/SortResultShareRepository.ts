@@ -80,6 +80,20 @@ export class SortResultShareRepository implements ISortResultShareRepository {
     );
   }
 
+  // Delete every share whose parent sort_result belongs to the given curator.
+  // Child-first prerequisite for deleteByCurator on sort_results. Account-deletion only.
+  async deleteByCurator(curatorId: string): Promise<void> {
+    await this.db.delete(sortResultSharesTable).where(
+      inArray(
+        sortResultSharesTable.sortResultId,
+        this.db
+          .select({ id: sortResultsTable.id })
+          .from(sortResultsTable)
+          .where(eq(sortResultsTable.curatorId, curatorId)),
+      ),
+    );
+  }
+
   private mapToShare(row: any): SortResultShare {
     return {
       id: row.id,

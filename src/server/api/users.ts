@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type { User } from "@/types";
 import type { IUserRepository } from "@/server/repositories/UserRepository";
+import type { Database } from "@/lib/db";
+import { AccountDeletionService } from "@/server/services/AccountDeletionService";
 
 const UpdateUserSchema = z.object({
   name: z.string().min(1).optional(),
@@ -10,7 +12,10 @@ const UpdateUserSchema = z.object({
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 
 export class UserController {
-  constructor(private userRepo: IUserRepository) {}
+  constructor(
+    private userRepo: IUserRepository,
+    private db: Database,
+  ) {}
 
   async getCurrentUser(userId: string): Promise<User> {
     const user = await this.userRepo.findById(userId);
@@ -28,7 +33,7 @@ export class UserController {
     });
   }
 
-  async deleteCurrentUser(userId: string): Promise<User> {
-    return this.userRepo.softDelete(userId);
+  async deleteCurrentUser(userId: string): Promise<void> {
+    await new AccountDeletionService(this.db).deleteCurrentUser(userId);
   }
 }

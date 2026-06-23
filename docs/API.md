@@ -165,7 +165,7 @@ NextAuth v4 handler (sign-in, callback, session, sign-out). Public. Drives the J
 Public. Create a credentials account. **Body:** `{ email, password }`. Email normalized + regex-validated; password ≥ 8 chars. **Returns** `201 { message }`. To prevent email enumeration it returns the **same** `201 { message: "Account created successfully" }` whether or not the email already exists. **Errors:** `400` missing/invalid email or short password; `500`.
 
 ### `GET·PATCH·DELETE /api/users/me`
-Authenticated; acts **only on the caller** (`session.user.id`), so no IDOR. `GET` → `User`. `PATCH` body → updated `User` (`400` invalid JSON). `DELETE` → `{ message, user }`. `401` if no session; `500` on error.
+Authenticated; acts **only on the caller** (`session.user.id`), so no IDOR. `GET` → `User`. `PATCH` body → updated `User` (`400` invalid input). `DELETE` → **real account deletion** via `AccountDeletionService` (pv9 PR6, `purses-hybm`): purges **every** collection the caller owns — active **and** soft-deleted — by reusing `CollectionPurgeService` (cascade + `collection.purge` audit + blob `del`); deletes the caller's curator-private rows (sessions/sort-results/+children/preferences/memberships) in collections owned by others; **scrubs** the caller's account-linking identifiers on retained shared content (`photos.uploaded_by` and accepted `invitations.email` → a per-id tombstone); scrubs the `user` row PII (`email`→`deleted+<id>@deleted.invalid`, `name`/`image`/`password`/`emailVerified`→null) and deletes `account`/`session`/`verificationToken` rows — all so login is dead and no PII survives. **Fail-loud:** if any owned-collection purge throws, the op aborts **before** the PII scrub (PII intact, retryable) and returns **`500`** — never a partial-scrub success. `200 { message }` on success; `401` if no session.
 
 ## collections (core)
 
@@ -344,10 +344,16 @@ The cross-tenant **IDOR holes are closed** (pv9 PR1, 2026-06-22): `GET /api/coll
 
 **The role model is fully wired (pv9 PR1–PR4).** There are no known tenant-isolation holes. Authorization for every collection-scoped route flows through `requireApiCapability(op)` against the Owner/Curator `CAPABILITIES` map (`src/server/dal/capabilities.ts`): owner = `collection.ownerId`, curator = any member, `membership.role` display-only, the legacy `can*` flags inert. Member management and invitation create/read/manage are **owner-only** (`purses-lgql`, `purses-4wj2` GAP A — closed in PR4); item/photo CRUD is **curator** (full-curator). `POST /api/invitations/accept` creates a curator membership bound to the caller's email, pending-guarded, idempotent (`purses-8zcc`). Create/update routes reject client-supplied flags/`role` (escalation surface closed); owner bootstrap is transactional. Migration `0006` reconciles `memberships.role` + `CHECK (role IN ('owner','curator'))`.
 
-Remaining pv9 work (correctness/cleanup, not authz holes):
+**Account deletion is real (pv9 PR6, `purses-hybm`):** `DELETE /api/users/me` purges all owned data (incl. soft-deleted collections) + scrubs PII (see its detail). The pv9 epic's in-scope work is **complete**.
 
-- **Account deletion** (`purses-hybm`, pv9 PR6): `DELETE /api/users/me` still soft-deletes (nulls `emailVerified`) without cascade/PII-scrub.
-- **Deferred cleanups:** drop the inert flag columns/type fields after the UI cluster (`purses-us3d`); ESLint repo-import boundary (`purses-25ca`, the second half of o03); member-PATCH no-op disposition (`purses-2wzz`); soft-delete audit attribution (`purses-wfgj`).
+Deferred follow-ups (cleanup/hardening, tracked):
+
+- drop the inert flag columns/type fields after the UI cluster (`purses-us3d`);
+- ESLint repo-import boundary, the second half of o03 (`purses-25ca`);
+- member-PATCH no-op disposition (`purses-2wzz`);
+- soft-delete audit attribution (`purses-wfgj`);
+- reconsider photo-delete as owner-only (`purses-opir`);
+- top-level `account.delete` audit row (`purses-obe0`).
 
 **Lockdown backstop shipped (pv9 PR5, `purses-o03`):** `src/lib/db/route-authz-enumeration.integration.test.ts` walks every `route.ts`, exercises each collection-scoped/curator-private route+method as a **stranger** and asserts `403`/`404` (never `200`/leaky `500`), and asserts **filesystem-exhaustiveness** — a new route in neither the `PUBLIC_OR_SELF` allowlist nor the stranger set fails CI. (Also fixed: `POST /api/sort-results/[id]/shares` now authorizes before parsing the body.)
 
