@@ -33,7 +33,7 @@ export function MostLovedHero({ item, collectionId, heroPhotoUrl }: MostLovedHer
           <div className="flex flex-1 flex-col justify-center gap-3 p-6 sm:p-10">
             <div className="flex items-center gap-2">
               <span className="h-3.5 w-3.5 shrink-0 rounded-full bg-spark" aria-hidden="true" />
-              <span className="font-display text-lg text-ink">What you love most</span>
+              <h2 className="font-display text-lg text-ink">What you love most</h2>
             </div>
             <p className="font-display text-3xl text-ink sm:text-4xl">{itemDisplayName(item)}</p>
             {item.brand && <p className="text-ink-soft">{item.brand}</p>}

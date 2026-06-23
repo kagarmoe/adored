@@ -49,7 +49,10 @@ test.describe("results page — Onward renders as a separate gentle section", ()
 
   // The <section> wrapping a given <h2>, so membership is asserted against the
   // real rendered DOM scoped to one section — not the whole page.
-  const sectionByHeading = (page: import("@playwright/test").Page, name: string): Locator =>
+  const sectionByHeading = (
+    page: import("@playwright/test").Page,
+    name: string | RegExp,
+  ): Locator =>
     page.locator("section").filter({
       has: page.getByRole("heading", { level: 2, name }),
     });
@@ -59,22 +62,30 @@ test.describe("results page — Onward renders as a separate gentle section", ()
   }) => {
     await page.goto(`/collections/${slug}/results/${resultNumber}`);
 
-    // (d) The most-loved hero is present — the affirmation peak leads.
-    await expect(page.getByText("What you love most")).toBeVisible();
+    // (d) The most-loved hero is present — the affirmation peak leads. Match the hero
+    // heading exactly: the page's closing beat ("What you love most is at the top.")
+    // shares the prefix, so a non-exact match would resolve to two elements.
+    await expect(
+      page.getByText("What you love most", { exact: true }),
+    ).toBeVisible();
     await expect(page.getByText(HERO_ITEM)).toBeVisible();
 
-    // (a) Both section headings render, and they are DISTINCT sections.
+    // (a) Both section headings render, and they are DISTINCT sections. The Onward
+    // heading now folds its "Onward" eyebrow into the heading's accessible name, so
+    // it reads "Onward Where these go next" — matched here by substring (a11y fix:
+    // heading-nav users hear the Onward context, not a bare "Where these go next").
     const fullRanking = sectionByHeading(page, "The full ranking");
-    const onward = sectionByHeading(page, "Where these go next");
+    const onward = sectionByHeading(page, /where these go next/i);
     await expect(fullRanking).toHaveCount(1);
     await expect(onward).toHaveCount(1);
     await expect(
       page.getByRole("heading", { level: 2, name: "The full ranking" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { level: 2, name: "Where these go next" }),
+      page.getByRole("heading", { level: 2, name: /where these go next/i }),
     ).toBeVisible();
-    // The "Onward" eyebrow lives in the Onward section, not the ranking.
+    // The "Onward" eyebrow now lives INSIDE the Onward heading (as a span), not as a
+    // standalone <p>, and not in the ranking. Its own text node is exactly "Onward".
     await expect(onward.getByText("Onward", { exact: true })).toBeVisible();
     await expect(fullRanking.getByText("Onward", { exact: true })).toHaveCount(0);
 
@@ -91,12 +102,14 @@ test.describe("results page — Onward renders as a separate gentle section", ()
     // a bold count digit. The redesign drops the grid entirely: the loved tier
     // labels are no longer visible text anywhere (ItemCard's Badge renders dots,
     // exposing the label only via a non-visible `title=` attribute), and "Onward"
-    // survives ONLY as the eyebrow of its own section. So the three loved labels
-    // being absent proves the count grid is gone, while "Onward" stays put.
+    // survives ONLY as the eyebrow now folded into its section's heading. So the three
+    // loved labels being absent proves the count grid is gone, while "Onward" stays put.
     for (const goneLabel of ["Love", "Like", "Maybe"]) {
       await expect(page.getByText(goneLabel, { exact: true })).toHaveCount(0);
     }
-    // "Onward" is present exactly once — the section eyebrow, not a tally card.
+    // "Onward" is present exactly once — the eyebrow span inside the Onward heading,
+    // not a standalone <p> tally card. (Its own text node is exactly "Onward"; the
+    // full heading text "Onward Where these go next" is not an exact match.)
     await expect(page.getByText("Onward", { exact: true })).toHaveCount(1);
   });
 });

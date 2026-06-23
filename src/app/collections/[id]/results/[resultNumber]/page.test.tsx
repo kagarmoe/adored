@@ -177,18 +177,45 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
     expect(within(onward).getByText("Low Bag")).toBeInTheDocument();
   });
 
-  it("ends the page on an affirmation beat, not the Onward section", async () => {
+  it("ends the page on an affirmation beat that re-anchors to the loved set at the top, not the Onward section", async () => {
     const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
-    const { container } = render(ui);
-    // A quiet, person-side closing line is present (distinct from the hero's
-    // "What you love most" — this is the page's final affirmation beat)...
-    const affirmation = screen.getByText(/these are the things you love|honored/i);
+    render(ui);
+    // The close re-anchors to the LOVED set at the TOP (hero/ranking), so the bare
+    // demonstrative never binds by proximity to the Onward pile rendered just above
+    // it. It must NOT read "these are the things you love most" — that mixed-case
+    // close pointed at Onward (TONE #1 affirmation-not-subtraction).
+    const affirmation = screen.getByText("What you love most is at the top.");
     expect(affirmation).toBeInTheDocument();
+    expect(screen.queryByText(/these are the things you love/i)).toBeNull();
     // ...and it is the page's last content beat — it comes after the Onward section
     // in document order, so letting-go is never the structural headline (TONE #1).
     const onwardHeading = screen.getByRole("heading", { name: /where these go next/i });
     const position = onwardHeading.compareDocumentPosition(affirmation);
     expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // Edge: exactly one loved item (the hero) plus one Onward item. The hero shows, but
+  // there is no "full ranking" tail (loved.slice(1) is empty), the Onward section still
+  // renders, and the close re-anchors to the loved set ("...at the top") — proving the
+  // loved>0 affirmation close fires even when the loved set is a single item.
+  it("loved.length===1: hero shows, no 'full ranking' heading, Onward renders, close affirms the top", async () => {
+    resultItemRepo.findByResult.mockResolvedValue([
+      { id: "ri_top", itemId: "i_top", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null },
+      { id: "ri_low", itemId: "i_low", computedRank: 2, manualRank: null, computedBucket: "low", manualBucket: null },
+    ]);
+    itemRepo.findByCollection.mockResolvedValue([TOP, LOW]);
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    // The hero is present (the lone loved item)...
+    expect(screen.getByText("What you love most")).toBeInTheDocument();
+    expect(screen.getByText("Top Bag")).toBeInTheDocument();
+    // ...with no "full ranking" tail (loved has only the hero)...
+    expect(screen.queryByText(/the full ranking/i)).toBeNull();
+    // ...the Onward section still renders the low item...
+    const onward = screen.getByRole("heading", { name: /where these go next/i }).closest("section")!;
+    expect(within(onward).getByText("Low Bag")).toBeInTheDocument();
+    // ...and the close re-anchors to the loved set at the top, the page's last beat.
+    expect(screen.getByText("What you love most is at the top.")).toBeInTheDocument();
   });
 
   it("shows the gentle empty state (not a broken hero) when the result has no ranked items", async () => {
@@ -236,9 +263,10 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
     render(ui);
     // No "love most" claim when nothing was loved...
     expect(screen.queryByText(/love most/i)).toBeNull();
-    // ...but the page still closes on affirmation about seeing clearly / the work done,
-    // and that close comes AFTER the Onward section (letting-go is never the last beat).
-    const close = screen.getByText(/saw each one clearly|that's the work|that is the work/i);
+    // ...but the page still closes on a person-side affirmation — honoring the act of
+    // looking honestly at every one — and that close comes AFTER the Onward section
+    // (letting-go is never the last beat).
+    const close = screen.getByText("You looked, honestly, at every one. That took something.");
     expect(close).toBeInTheDocument();
     const onwardHeading = screen.getByRole("heading", { name: /where these go next/i });
     const position = onwardHeading.compareDocumentPosition(close);

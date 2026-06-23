@@ -133,9 +133,15 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
             {onward.length > 0 && (
               <section className="space-y-4">
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold uppercase tracking-wide text-ink-soft">Onward</p>
-                  <h2 className="font-display text-2xl text-ink">Where these go next</h2>
-                  <p className="text-ink-soft">These are ready for a new home, where someone else can love them next.</p>
+                  {/* Onward is subordinate to the loved ranking (TONE #1): a quieter
+                     heading (text-xl vs the loved tail's text-2xl, ink-soft), with the
+                     "Onward" eyebrow folded INTO the heading so heading-nav users hear
+                     "Onward where these go next" as one accessible name. */}
+                  <h2 className="font-display text-xl text-ink-soft">
+                    <span className="block text-sm font-semibold uppercase tracking-wide">Onward</span>
+                    <span>Where these go next</span>
+                  </h2>
+                  <p className="text-ink-soft">These are ready to move on &mdash; to a new home, or simply on from here.</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                   {onward.map(({ ri, item }) => (
@@ -152,13 +158,16 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
             )}
 
             {/* The last beat is affirmation, never the letting-go list (TONE #1).
-               When nothing was loved, the close cannot claim "love most" (it would
-               name the very items just sent Onward) — so all-Onward ends on the
-               clarity of having decided instead. Either way the page ends on affirmation. */}
+               When something was loved, re-anchor to the loved set at the TOP (the
+               hero/ranking), so the close never binds by proximity to the Onward pile
+               above it. When nothing was loved, the close cannot claim "love most"
+               (it would name the very items just sent Onward) — so all-Onward ends on
+               the person-side act of looking honestly. Either way the page ends on
+               affirmation, and this is always the page's last content beat. */}
             <p className="font-display text-xl text-ink">
               {loved.length > 0
-                ? "These are the things you love most."
-                : "You saw each one clearly — that's the work."}
+                ? "What you love most is at the top."
+                : "You looked, honestly, at every one. That took something."}
             </p>
           </div>
         )}

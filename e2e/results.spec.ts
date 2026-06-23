@@ -64,8 +64,12 @@ test.describe("results page (renderer-only, seeded populated result)", () => {
     }
     await expect(page.getByText("Onward", { exact: true })).toBeVisible();
 
-    // The affirmation peak: the most-loved item, photo-led.
-    await expect(page.getByText("What you love most")).toBeVisible();
+    // The affirmation peak: the most-loved item, photo-led. Match the hero heading
+    // exactly — the page's closing beat ("What you love most is at the top.") shares
+    // the prefix, so a non-exact match would resolve to two elements.
+    await expect(
+      page.getByText("What you love most", { exact: true }),
+    ).toBeVisible();
 
     // Hero images render through the authenticated /file intercept. Three seeded
     // items each have a hero photo (one most-loved hero + the full-ranking grid).
