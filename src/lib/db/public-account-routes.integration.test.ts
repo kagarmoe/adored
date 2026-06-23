@@ -260,10 +260,9 @@ describeDb("PATCH /api/users/me", () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
     // UpdateUserSchema requires name: min(1) — empty string fails validation.
+    // ZodError is now caught by errorResponse and mapped to 400.
     const res = await mePatch(makeRequest("PATCH", { name: "" }) as any);
-    expect(res.status).toBe(500); // zod throws, caught as generic 500 — pin actual behavior
-    // GAP: zod parse errors are caught by the generic catch and returned as 500,
-    // not 400. The route should map ZodError → 400 (filed as known gap).
+    expect(res.status).toBe(400);
   });
 });
 

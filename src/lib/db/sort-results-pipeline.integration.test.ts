@@ -36,7 +36,12 @@ import { SortResultItemRepository } from "@/server/repositories/implementations/
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { SortResultService } from "@/server/services/SortResultService";
 
-const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
+const { mockGetSession, UnauthorizedError } = vi.hoisted(() => {
+  class UnauthorizedError extends Error {
+    constructor(message = "Unauthorized") { super(message); this.name = "UnauthorizedError"; }
+  }
+  return { mockGetSession: vi.fn(), UnauthorizedError };
+});
 // Flat-replace BOTH @/lib/auth exports from one spy (spread/importActual pulls nodemailer).
 vi.mock("@/lib/auth", () => ({
   getSession: mockGetSession,
@@ -45,6 +50,7 @@ vi.mock("@/lib/auth", () => ({
     if (!s?.user) throw new Error("Unauthorized");
     return s.user;
   },
+  UnauthorizedError,
 }));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
@@ -196,12 +202,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       expect(persisted!.finalizedAt).not.toBeNull();
     });
 
-    // PINNED behavior (purses-ydph): the finalize route has NO state guard — it
-    // unconditionally updates status to "finalized". So finalizing an ALREADY
-    // finalized result simply succeeds again (200, idempotent), NOT 409. The
-    // brief's "state-guard error" does not exist for this route today; pinning
-    // the actual behavior, not fixing it.
-    it("is idempotent on an already-finalized result (200 again, no 409) — purses-ydph pin", async () => {
+    it("409s when finalizing an already-finalized result (state guard)", async () => {
       const { db } = getTestDb();
       const { resultId } = await seedPopulatedDraft();
       login(ownerId);
@@ -209,7 +210,8 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       expect(first.status).toBe(200);
 
       const second = await finalizeResult(jsonReq("POST") as any, { params: { id: resultId } } as any);
-      expect(second.status).toBe(200);
+      expect(second.status).toBe(409);
+      // Still finalized — the state guard fired, nothing changed.
       expect((await new SortResultRepository(db).findById(resultId))!.status).toBe("finalized");
     });
   });
@@ -296,11 +298,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       expect((await new SortResultItemRepository(db).findById(item.id))!.manualBucket).toBeNull();
     });
 
-    // PINNED behavior (purses-ydph): the Zod UpdateResultItemSchema rejects a bad
-    // enum, but the handler only special-cases SyntaxError -> 400; a ZodError
-    // falls through to the generic catch -> 500 (NOT 400). Pinning the actual
-    // status, not fixing it. The mutation must NOT land.
-    it("PATCH bad manualBucket enum -> pinned 500 (not 400), no mutation — purses-ydph pin", async () => {
+    it("PATCH bad manualBucket enum -> 400 (ZodError mapped via errorResponse), no mutation", async () => {
       const { db } = getTestDb();
       const { resultId } = await seedPopulatedDraft();
       const item = await firstResultItem(resultId);
@@ -309,7 +307,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
         jsonReq("PATCH", { manualBucket: "not-a-bucket" }) as any,
         { params: { id: resultId, rid: item.id } } as any,
       );
-      expect(res.status).toBe(500);
+      expect(res.status).toBe(400);
       expect((await new SortResultItemRepository(db).findById(item.id))!.manualBucket).toBeNull();
     });
   });

@@ -17,7 +17,12 @@ import { seedBaseline, seedBareCollection, seedUserRow } from "../../../e2e/fixt
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 
-const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
+const { mockGetSession, UnauthorizedError } = vi.hoisted(() => {
+  class UnauthorizedError extends Error {
+    constructor(message = "Unauthorized") { super(message); this.name = "UnauthorizedError"; }
+  }
+  return { mockGetSession: vi.fn(), UnauthorizedError };
+});
 // Flat-replace BOTH @/lib/auth exports from one spy (spread/importActual pulls nodemailer).
 vi.mock("@/lib/auth", () => ({
   getSession: mockGetSession,
@@ -26,6 +31,7 @@ vi.mock("@/lib/auth", () => ({
     if (!s?.user) throw new Error("Unauthorized");
     return s.user;
   },
+  UnauthorizedError,
 }));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
@@ -245,6 +251,25 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
       const after = await new SessionRepository(db).findById(sessionId);
       expect(after!.status).toBe("completed");
       expect(after!.goal).toBe("Done sorting");
+    });
+
+    it("PATCH 400s an invalid body (bad status enum) via errorResponse — and does NOT mutate (purses-pv9)", async () => {
+      // updateSession UpdateSessionSchema.parse()es the body; an out-of-enum status is
+      // a ZodError, now mapped to 400 by errorResponse (was an unhandled 500). The
+      // curator-scope guard runs BEFORE updateSession, so authz is unchanged.
+      const { db } = getTestDb();
+      const { sessionId } = await seedSession(ownerId);
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      // Present-before: still active.
+      expect((await new SessionRepository(db).findById(sessionId))!.status).toBe("active");
+
+      const res = await patchSession(
+        jsonReq("PATCH", { status: "not-a-status" }) as any,
+        { params: { id: sessionId } } as any,
+      );
+      expect(res.status).toBe(400);
+      // Unchanged: still active.
+      expect((await new SessionRepository(db).findById(sessionId))!.status).toBe("active");
     });
 
     // ---- DELETE -----------------------------------------------------------

@@ -4,6 +4,7 @@ import { CollectionController } from "@/server/api/collections";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { getDb } from "@/lib/db";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function GET() {
   try {
@@ -15,10 +16,7 @@ export async function GET() {
     const collections = await controller.listCollections(user.id);
     return NextResponse.json(collections);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }
 
@@ -49,12 +47,6 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json(collection, { status: 201 });
   } catch (error) {
-    if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }

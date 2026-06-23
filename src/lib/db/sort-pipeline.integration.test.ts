@@ -24,7 +24,12 @@ import { SortResultShareRepository } from "@/server/repositories/implementations
 import { SortResultService } from "@/server/services/SortResultService";
 import type { CollectionPreferenceItem } from "@/types";
 
-const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
+const { mockGetSession, UnauthorizedError } = vi.hoisted(() => {
+  class UnauthorizedError extends Error {
+    constructor(message = "Unauthorized") { super(message); this.name = "UnauthorizedError"; }
+  }
+  return { mockGetSession: vi.fn(), UnauthorizedError };
+});
 // Flat-replace form: the spread form pulls in uninstalled nodemailer and errors.
 // requireAuth mirrors the real impl (getSession -> user, else throw) so routes
 // that gate via requireAuth (e.g. the DELETE handler) work under the same mock.
@@ -35,6 +40,7 @@ vi.mock("@/lib/auth", () => ({
     if (!session?.user) throw new Error("Unauthorized");
     return session.user;
   },
+  UnauthorizedError,
 }));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
@@ -449,6 +455,29 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     const after = await new SortResultRepository(db).findById(draft.id);
     expect(after!.name).toBe(originalName);
     expect(after!.name).not.toBe("Renamed");
+  });
+
+  it("PATCH /api/sort-results/[id] 400s an invalid body (empty name) via errorResponse — and leaves the name intact (purses-pv9)", async () => {
+    // updateResult UpdateResultSchema.parse()es the body; an empty name is a ZodError,
+    // now mapped to 400 by errorResponse (was 500). Authz + the finalized 409 guard run
+    // BEFORE the parse, so authz is unchanged. The result here is a draft.
+    const { db } = getTestDb();
+    const draft = await seedPopulatedDraft();
+    const originalName = (await new SortResultRepository(db).findById(draft.id))!.name;
+
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await patchResultRoute(
+      new Request(`http://localhost/api/sort-results/${draft.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: "" }),
+      }) as any,
+      { params: { id: draft.id } },
+    );
+    expect(res.status).toBe(400);
+
+    // The draft's name is unchanged — validation fired before any write.
+    expect((await new SortResultRepository(db).findById(draft.id))!.name).toBe(originalName);
   });
 
   it("DELETE /api/sort-results/[id]/items/[rid] removes that one item and leaves the rest", async () => {

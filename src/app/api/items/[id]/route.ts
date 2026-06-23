@@ -4,6 +4,7 @@ import { ItemController } from "@/server/api/items";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function GET(
   _request: NextRequest,
@@ -23,10 +24,7 @@ export async function GET(
 
     return NextResponse.json(item);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }
 
@@ -51,13 +49,7 @@ export async function PATCH(
     const item = await controller.updateItem(params.id, body);
     return NextResponse.json(item);
   } catch (error) {
-    if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }
 
@@ -81,9 +73,6 @@ export async function DELETE(
     const item = await controller.deleteItem(params.id);
     return NextResponse.json({ message: "Item deleted", item });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }

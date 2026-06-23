@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { UserController } from "@/server/api/users";
 import { UserRepository } from "@/server/repositories/implementations/UserRepository";
 import { getDb } from "@/lib/db";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function GET() {
   try {
@@ -40,13 +41,7 @@ export async function PATCH(request: NextRequest) {
     const user = await controller.updateCurrentUser(session.user.id, body);
     return NextResponse.json(user);
   } catch (error) {
-    if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
-    );
+    return errorResponse(error);
   }
 }
 

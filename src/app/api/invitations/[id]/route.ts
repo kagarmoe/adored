@@ -4,6 +4,7 @@ import { InvitationController } from "@/server/api/invitations";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function GET(
   _request: NextRequest,
@@ -23,10 +24,7 @@ export async function GET(
 
     return NextResponse.json(invitation);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }
 
@@ -51,13 +49,7 @@ export async function PATCH(
     const invitation = await controller.updateInvitation(params.id, body);
     return NextResponse.json(invitation);
   } catch (error) {
-    if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }
 
@@ -81,9 +73,6 @@ export async function DELETE(
     await controller.revokeInvitation(params.id);
     return NextResponse.json({ message: "Invitation revoked" });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }

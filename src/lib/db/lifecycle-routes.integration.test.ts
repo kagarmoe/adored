@@ -220,6 +220,24 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       // isCollectionManager → findById → null → false → 403
       expect(res.status).toBe(403);
     });
+
+    it("owner gets 400 on an invalid body (missing userId) via errorResponse — no member created (purses-pv9)", async () => {
+      // addMember CreateMemberSchema.parse()es the body; a missing userId is a
+      // ZodError, now mapped to 400 by errorResponse (was 500). The 403 manager
+      // guard runs BEFORE addMember, so authz is unchanged.
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const collectionId = await seedBareCollection(ownerId);
+      const { db } = getTestDb();
+      const before = await new MembershipRepository(db).findByCollection(collectionId);
+
+      const res = await membersPost(
+        postReq({ canSort: true }), // no userId
+        { params: { id: collectionId } },
+      );
+      expect(res.status).toBe(400);
+      // No membership row was created.
+      expect(await new MembershipRepository(db).findByCollection(collectionId)).toHaveLength(before.length);
+    });
   });
 
   // =========================================================================

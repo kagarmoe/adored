@@ -28,7 +28,12 @@ import { generateId } from "@/lib/id";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 
-const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
+const { mockGetSession, UnauthorizedError } = vi.hoisted(() => {
+  class UnauthorizedError extends Error {
+    constructor(message = "Unauthorized") { super(message); this.name = "UnauthorizedError"; }
+  }
+  return { mockGetSession: vi.fn(), UnauthorizedError };
+});
 // Flat-replace BOTH @/lib/auth exports from one spy (spread/importActual pulls nodemailer).
 vi.mock("@/lib/auth", () => ({
   getSession: mockGetSession,
@@ -37,6 +42,7 @@ vi.mock("@/lib/auth", () => ({
     if (!s?.user) throw new Error("Unauthorized");
     return s.user;
   },
+  UnauthorizedError,
 }));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
@@ -277,10 +283,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       expect(created[0].email).toBe("gap@adored.test");
     });
 
-    // GAP B (purses-4wj2): a missing email makes the controller's Zod parse throw; the POST
-    // handler's only non-401 catch branch maps every thrown error to 500 (never a 400). PIN
-    // current behavior — validation errors should be 400, but the route returns 500.
-    it("GAP: a missing email yields 500 (not 400) and creates no invitation — pins current behavior", async () => {
+    it("400s on a missing email and creates no invitation (purses-4wj2)", async () => {
       const { db } = getTestDb();
       const collectionId = await seedBareCollection(ownerId);
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
@@ -288,12 +291,11 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       const res = await POST(jsonReq("POST", { canSort: true }) as any, {
         params: { id: collectionId },
       } as any);
-      // BUG: should be 400 (validation). Currently 500 — Zod error is caught and mapped to 500.
-      expect(res.status).toBe(500);
+      expect(res.status).toBe(400);
       expect(await new InvitationRepository(db).findByCollection(collectionId)).toHaveLength(0);
     });
 
-    it("GAP: a malformed email yields 500 (not 400) and creates no invitation — pins current behavior", async () => {
+    it("400s on a malformed email and creates no invitation (purses-4wj2)", async () => {
       const { db } = getTestDb();
       const collectionId = await seedBareCollection(ownerId);
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
@@ -301,8 +303,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       const res = await POST(jsonReq("POST", { email: "not-an-email" }) as any, {
         params: { id: collectionId },
       } as any);
-      // BUG: should be 400 (invalid email). Currently 500.
-      expect(res.status).toBe(500);
+      expect(res.status).toBe(400);
       expect(await new InvitationRepository(db).findByCollection(collectionId)).toHaveLength(0);
     });
   });

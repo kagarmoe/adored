@@ -4,6 +4,7 @@ import { ShareController } from "@/server/api/shares";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { getDb } from "@/lib/db";
 import { requireApiResultAccess } from "@/server/dal/collection-access";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function GET(
   _request: NextRequest,
@@ -19,10 +20,7 @@ export async function GET(
     const shares = await controller.listShares(params.id);
     return NextResponse.json(shares);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }
 
@@ -41,12 +39,6 @@ export async function POST(
     const share = await controller.createShare(params.id, body);
     return NextResponse.json(share, { status: 201 });
   } catch (error) {
-    if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }

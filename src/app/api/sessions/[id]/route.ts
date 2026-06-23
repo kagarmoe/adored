@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { SessionController } from "@/server/api/sessions";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
+import { errorResponse } from "@/server/api/http-errors";
 
 // Load the session, then authorize its collection. Returns the controller-ready
 // repo + a typed guard outcome, or a NextResponse to return immediately.
@@ -46,8 +47,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   const db = getDb();
   const guard = await authorizeSession(db, params.id, session.user.id);
   if (guard instanceof NextResponse) return guard;
-  const result = await new SessionController(guard.sessionRepo).updateSession(params.id, body);
-  return NextResponse.json(result);
+  try {
+    const result = await new SessionController(guard.sessionRepo).updateSession(params.id, body);
+    return NextResponse.json(result);
+  } catch (error) {
+    return errorResponse(error);
+  }
 }
 
 export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {

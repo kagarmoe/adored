@@ -45,6 +45,8 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 
 **403-vs-404:** absence is reported `404` before membership is evaluated; a resource that exists but is off-limits is `403`. A `404` can mean "not visible to you," not only "no such id."
 
+**Validation & state errors are consistent (pv9 PR2):** every body-parsing route maps a failed Zod `.parse` (and malformed JSON) to **`400`** — not `500` — via the shared `errorResponse` helper (`src/server/api/http-errors.ts`), which also maps typed state errors (`DeleteResultStateError`/`SupersedeStateError`/`FinalizeStateError`) to **`409`** and `UnauthorizedError` to **`401`**. Authz guards still return their `401`/`403`/`404` **before** the parse.
+
 ## Cross-cutting invariants
 
 - **ULID for data, slug for nav** — every `[id]`/`[itemId]`/`[rid]`/`[sid]`/`[mid]` in an API path is a ULID.
@@ -310,7 +312,7 @@ Curator-private results, gated by `requireApiResultAccess` (member-or-owner **an
 `requireAuth` + `requireApiResultAccess` (`401`/`403`/`404`). `GET` → `SortResult`; `PATCH` body → updated `SortResult` (`400` invalid JSON), but rejects a **finalized** result with **`409`** (`"Result is finalized"`) — a finalized result is immutable, name included (infra §11.3; `purses-gmn`, mirroring `purses-526`'s item-level guards). `DELETE` delegates to `SortResultService.deleteResult`, which **hard-deletes a draft result and its child items** (children first — the `sort_result_items → sort_results` FK has no `ON DELETE CASCADE`; **atomic** — both deletes in one `withTransaction`, a `purses-nea` follow-up): `200 { message }` when a draft was deleted; **`409`** (`"Can only delete draft results"`) if the result is finalized; **`404`** if absent.
 
 ### `POST /api/sort-results/[id]/finalize`
-`requireApiResultAccess`. Finalizes the result. Returns `SortResult` (`200`).
+`requireApiResultAccess`. Finalizes a **draft** result → `200 SortResult`. **`409`** (`FinalizeStateError`, "Can only finalize draft results") if the result is already finalized — finalize is once-only, not idempotent (pv9 PR2, `purses-ydph`).
 
 ### `POST /api/sort-results/[id]/supersede`
 `requireAuth` + `requireApiResultAccess`. Delegates to `SortResultService.supersedeResult`. When the source is **finalized**, creates a new **draft** result (`name` = `"<source name> (Revision)"`) with the source's items **cloned** (computed rank/bucket carried over) **atomically** (result + items in one transaction — `purses-nea`) → **`201`** the new draft `SortResult`. **`409`** (`"Can only supersede finalized results"`) if the source is not finalized; **`404`** if the source is absent.

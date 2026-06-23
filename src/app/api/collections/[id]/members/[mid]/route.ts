@@ -5,6 +5,7 @@ import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { MemberController } from "@/server/api/members";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { errorResponse } from "@/server/api/http-errors";
 
 // Verify the [mid] membership row actually belongs to collection [id] (belongs-to-parent).
 async function membershipBelongsToCollection(db: ReturnType<typeof getDb>, mid: string, collectionId: string) {
@@ -42,7 +43,11 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   if (!(await ctrl.isCollectionManager(params.id, session.user.id))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  return NextResponse.json(await ctrl.updateMember(params.mid, body));
+  try {
+    return NextResponse.json(await ctrl.updateMember(params.mid, body));
+  } catch (error) {
+    return errorResponse(error);
+  }
 }
 
 export async function DELETE(_request: NextRequest, { params }: { params: { id: string; mid: string } }) {

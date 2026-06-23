@@ -4,6 +4,7 @@ import { ShareController } from "@/server/api/shares";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { getDb } from "@/lib/db";
 import { requireApiResultAccess } from "@/server/dal/collection-access";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function GET(
   _request: NextRequest,
@@ -20,10 +21,7 @@ export async function GET(
     }
     return NextResponse.json(share);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }
 
@@ -46,13 +44,7 @@ export async function PATCH(
     const share = await controller.updateShare(params.sid, body);
     return NextResponse.json(share);
   } catch (error) {
-    if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }
 
@@ -74,9 +66,6 @@ export async function DELETE(
     await controller.revokeShare(params.sid);
     return NextResponse.json({ message: "Share revoked" });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }

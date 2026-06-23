@@ -250,6 +250,26 @@ describeDb("Invitation routes — real DB integration", () => {
       const inv = await new InvitationRepository(db).findById(id);
       expect(inv!.canSort).toBe(true);
     });
+
+    it("400s an invalid body (non-boolean flag) via errorResponse — and does NOT mutate (purses-pv9)", async () => {
+      // updateInvitation UpdateInvitationSchema.parse()es the body; a non-boolean flag
+      // is a ZodError, now mapped to 400 by errorResponse (was 500). Authz (collection
+      // access) runs BEFORE the parse, so it is unchanged.
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const collectionId = await seedBareCollection(ownerId);
+      const { id } = await seedInvitation(collectionId); // seeded canSort: true
+
+      const res = await patchInvitation(
+        makeRequest("PATCH", `http://localhost/api/invitations/${id}`, { canSort: "nope" }) as any,
+        { params: { id } },
+      );
+      expect(res.status).toBe(400);
+
+      // Unchanged: canSort is still the seeded true.
+      const { db } = getTestDb();
+      const inv = await new InvitationRepository(db).findById(id);
+      expect(inv!.canSort).toBe(true);
+    });
   });
 
   // =========================================================================
