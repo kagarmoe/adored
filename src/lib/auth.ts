@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { generateId } from "@/lib/id";
 import { env } from "@/lib/env";
+import { jwtCallback, sessionCallback } from "@/lib/auth-callbacks";
 
 export const authOptions: NextAuthOptions = {
   secret: env.AUTH_SECRET,
@@ -82,18 +83,8 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user: authUser }) {
-      if (authUser) {
-        token.id = authUser.id;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        (session.user as any).id = token.id as string;
-      }
-      return session;
-    },
+    jwt: jwtCallback,
+    session: sessionCallback,
     async signIn({ user: authUser, account }) {
       if (account?.provider === "email" && authUser?.email) {
         const db = getDb();
