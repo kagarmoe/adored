@@ -5,15 +5,6 @@ export interface IMembershipRepository {
     collectionId: string;
     userId: string;
     role?: "owner" | "curator";
-    canManageCollection?: boolean;
-    canInviteMembers?: boolean;
-    canAddItems?: boolean;
-    canDeleteItems?: boolean;
-    canEditMetadata?: boolean;
-    canAddPhotos?: boolean;
-    canDeletePhotos?: boolean;
-    canSort?: boolean;
-    canViewOutputs?: boolean;
   }): Promise<CollectionMembership>;
   /**
    * Insert a membership, doing nothing on a (collection_id, user_id) unique
@@ -25,15 +16,6 @@ export interface IMembershipRepository {
     collectionId: string;
     userId: string;
     role?: "owner" | "curator";
-    canManageCollection?: boolean;
-    canInviteMembers?: boolean;
-    canAddItems?: boolean;
-    canDeleteItems?: boolean;
-    canEditMetadata?: boolean;
-    canAddPhotos?: boolean;
-    canDeletePhotos?: boolean;
-    canSort?: boolean;
-    canViewOutputs?: boolean;
   }): Promise<CollectionMembership | null>;
   findById(id: string): Promise<CollectionMembership | null>;
   findByUser(userId: string, collectionId: string): Promise<CollectionMembership | null>;

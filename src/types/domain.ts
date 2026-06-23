@@ -32,17 +32,6 @@ export interface CollectionMembership {
   userId: string;
   name?: string;
   role: MembershipRole;
-  canManageCollection: boolean;
-  canInviteMembers: boolean;
-  canAddItems: boolean;
-  canDeleteItems: boolean;
-  canEditMetadata: boolean;
-  canAddPhotos: boolean;
-  canDeletePhotos: boolean;
-  canSort: boolean;
-  canViewOutputs: boolean;
-  canViewResults?: boolean;
-  canCreateSession?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -55,14 +44,6 @@ export interface Invitation {
   collectionId: string;
   email: string;
   token: string;
-  canManageCollection: boolean;
-  canInviteMembers: boolean;
-  canAddItems: boolean;
-  canEditMetadata: boolean;
-  canAddPhotos: boolean;
-  canDeletePhotos: boolean;
-  canSort: boolean;
-  canViewOutputs: boolean;
   status: InvitationStatus;
   createdAt: Date;
   updatedAt: Date;
