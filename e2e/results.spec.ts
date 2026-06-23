@@ -51,13 +51,18 @@ test.describe("results page (renderer-only, seeded populated result)", () => {
     );
     expect(page.url()).not.toMatch(/\/collections\/col_[^/]+\/results/);
 
-    // The four tier sections of the value ramp render with their labels. This
-    // asserts the tier-section *chrome* renders, not per-bucket population: the
-    // fixture seeds only top/high/low (Maybe is intentionally empty), yet every
-    // tier label is present because the page renders all four sections regardless.
-    for (const tier of ["Love", "Like", "Maybe", "Onward"]) {
-      await expect(page.getByText(tier, { exact: true }).first()).toBeVisible();
+    // The redesign (purses-o93) replaced the per-tier count grid with an
+    // affirmation-led layout: the loved tiers lead and the lowest tier is
+    // partitioned into its own forward-framed Onward section. The old grid was the
+    // only thing that rendered the loved labels as visible text, so "Love"/"Like"/
+    // "Maybe" are gone (ItemCard's Badge shows dots, exposing the label only via a
+    // non-visible `title=`), while "Onward" survives as the Onward section eyebrow.
+    // (Reconciliation is intended — the count-grid assertion is inverted on
+    // purpose; the deep Onward-partition coverage lives in results-onward.spec.ts.)
+    for (const goneLabel of ["Love", "Like", "Maybe"]) {
+      await expect(page.getByText(goneLabel, { exact: true })).toHaveCount(0);
     }
+    await expect(page.getByText("Onward", { exact: true })).toBeVisible();
 
     // The affirmation peak: the most-loved item, photo-led.
     await expect(page.getByText("What you love most")).toBeVisible();
