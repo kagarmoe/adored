@@ -287,25 +287,25 @@ describeDb("DELETE /api/users/me", () => {
     expect(res.status).toBe(401);
   });
 
-  it("DELETE soft-deletes the account: row stays in DB with emailVerified=null", async () => {
+  it("DELETE scrubs PII: email tombstoned, name/password/emailVerified null, account+session rows gone", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-    // Confirm the row exists and emailVerified is set before DELETE.
+    // Confirm the row exists before DELETE.
     const before = await rawUserRow(ownerId);
     expect(before).not.toBeNull();
-    expect(before?.emailVerified).not.toBeNull();
 
     const res = await meDelete();
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.message).toBe("User account deleted");
 
-    // GAP: UserRepository.softDelete does NOT hard-delete the row; it sets
-    // emailVerified = null. The user row still exists after "deletion".
-    // This pins the actual behavior for future hardening.
+    // User row kept as tombstone — PII scrubbed.
     const after = await rawUserRow(ownerId);
-    expect(after).not.toBeNull(); // row survives (soft delete)
-    expect(after?.emailVerified).toBeNull(); // emailVerified cleared
+    expect(after).not.toBeNull();
+    expect(after?.email).toBe(`deleted+${ownerId}@deleted.invalid`);
+    expect(after?.name).toBeNull();
+    expect(after?.password).toBeNull();
+    expect(after?.emailVerified).toBeNull();
   });
 
   it("DELETE keys off session id — a user cannot delete another user's account", async () => {

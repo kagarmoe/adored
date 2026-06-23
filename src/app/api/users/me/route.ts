@@ -14,7 +14,7 @@ export async function GET() {
 
     const db = getDb();
     const userRepo = new UserRepository(db);
-    const controller = new UserController(userRepo);
+    const controller = new UserController(userRepo, db);
 
     const user = await controller.getCurrentUser(session.user.id);
     return NextResponse.json(user);
@@ -36,7 +36,7 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const db = getDb();
     const userRepo = new UserRepository(db);
-    const controller = new UserController(userRepo);
+    const controller = new UserController(userRepo, db);
 
     const user = await controller.updateCurrentUser(session.user.id, body);
     return NextResponse.json(user);
@@ -54,14 +54,11 @@ export async function DELETE() {
 
     const db = getDb();
     const userRepo = new UserRepository(db);
-    const controller = new UserController(userRepo);
+    const controller = new UserController(userRepo, db);
 
-    const user = await controller.deleteCurrentUser(session.user.id);
-    return NextResponse.json({ message: "User account deleted", user });
+    await controller.deleteCurrentUser(session.user.id);
+    return NextResponse.json({ message: "User account deleted" });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
-    );
+    return errorResponse(error);
   }
 }

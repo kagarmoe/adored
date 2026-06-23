@@ -121,6 +121,13 @@ export class CollectionPreferenceItemRepository
     await this.db.delete(preferencesTable).where(eq(preferencesTable.collectionId, collectionId));
   }
 
+  // Permanently DELETE every preference row for the given curator across ALL
+  // collections. Used during account deletion to remove the curator's borrowed-
+  // collection slice. Account-deletion only.
+  async deleteByCurator(curatorId: string): Promise<void> {
+    await this.db.delete(preferencesTable).where(eq(preferencesTable.curatorId, curatorId));
+  }
+
   private mapToPreference(row: any): CollectionPreferenceItem {
     return {
       id: row.id,

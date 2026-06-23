@@ -131,6 +131,13 @@ export class SortResultRepository implements ISortResultRepository {
     await this.db.delete(sortResultsTable).where(eq(sortResultsTable.collectionId, collectionId));
   }
 
+  // Delete every sort_result belonging to the given curator (across all collections).
+  // Caller must have already deleted child sort_result_shares and sort_result_items.
+  // Account-deletion only.
+  async deleteByCurator(curatorId: string): Promise<void> {
+    await this.db.delete(sortResultsTable).where(eq(sortResultsTable.curatorId, curatorId));
+  }
+
   private mapToResult(row: any): SortResult {
     return {
       id: row.id,

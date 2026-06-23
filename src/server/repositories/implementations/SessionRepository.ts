@@ -144,6 +144,12 @@ export class SessionRepository implements ISessionRepository {
     await this.db.delete(sessionsTable).where(eq(sessionsTable.collectionId, collectionId));
   }
 
+  // Delete every session belonging to the given curator (across all collections).
+  // Caller must have already deleted child decision_events. Account-deletion only.
+  async deleteByCurator(curatorId: string): Promise<void> {
+    await this.db.delete(sessionsTable).where(eq(sessionsTable.curatorId, curatorId));
+  }
+
   private mapToSession(row: any): Session {
     return {
       id: row.id,

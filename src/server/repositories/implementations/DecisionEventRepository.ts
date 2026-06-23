@@ -58,6 +58,20 @@ export class DecisionEventRepository implements IDecisionEventRepository {
     );
   }
 
+  // Delete every decision_event whose parent session belongs to the given curator.
+  // Child-first prerequisite for deleteByCurator on sessions. Account-deletion only.
+  async deleteByCurator(curatorId: string): Promise<void> {
+    await this.db.delete(decisionEventsTable).where(
+      inArray(
+        decisionEventsTable.sessionId,
+        this.db
+          .select({ id: sessionsTable.id })
+          .from(sessionsTable)
+          .where(eq(sessionsTable.curatorId, curatorId)),
+      ),
+    );
+  }
+
   private mapToDecisionEvent(row: any): DecisionEvent {
     return {
       id: row.id,

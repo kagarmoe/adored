@@ -142,6 +142,13 @@ export class MembershipRepository implements IMembershipRepository {
     await this.db.delete(membershipsTable).where(eq(membershipsTable.collectionId, collectionId));
   }
 
+  // Delete every membership for the given user across all collections.
+  // Used during account deletion to remove the user's curator memberships in
+  // borrowed collections (after child rows have been removed). Account-deletion only.
+  async deleteByUser(userId: string): Promise<void> {
+    await this.db.delete(membershipsTable).where(eq(membershipsTable.userId, userId));
+  }
+
   private mapToMembership(row: any): CollectionMembership {
     return {
       id: row.id,
