@@ -158,16 +158,14 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       expect(body[0].email).toBe("mine@adored.test");
     });
 
-    it("200s for a member without a privileged flag (member-or-owner gate)", async () => {
+    it("403s a curator member (non-owner) reading invitations (invitations:read = owner)", async () => {
       const collectionId = await seedBareCollection(ownerId);
       await seedInvitation(collectionId);
       const memberId = await addMember(collectionId);
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
       const res = await GET(jsonReq("GET") as any, { params: { id: collectionId } } as any);
-      expect(res.status).toBe(200);
-      const body = await res.json();
-      expect(body).toHaveLength(1);
+      expect(res.status).toBe(403);
     });
   });
 
@@ -258,11 +256,9 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       expect(persisted!.status).toBe("pending");
     });
 
-    // GAP A (purses-4wj2; purses-nj7 family): POST is gated by member-or-owner only — it
-    // does NOT require the inviter's membership to have canInviteMembers. A plain member
-    // whose membership has canInviteMembers=false can still create an invitation. PIN
-    // current behavior; the fix belongs to the purses-pv9 authz epic.
-    it("GAP: a member WITHOUT canInviteMembers can still create an invitation — pins current behavior", async () => {
+    // purses-4wj2-A (closed): invitations:manage = owner. A curator member (non-owner)
+    // may NOT create invitations — 403 and no row created.
+    it("403s a curator member (non-owner) creating an invitation — no row created (4wj2-A)", async () => {
       const { db } = getTestDb();
       const collectionId = await seedBareCollection(ownerId);
       const memberId = await addMember(collectionId, { canInviteMembers: false });
@@ -271,11 +267,23 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       const res = await POST(jsonReq("POST", { email: "gap@adored.test" }) as any, {
         params: { id: collectionId },
       } as any);
-      // BUG: should be 403 (no canInviteMembers). Currently 201 — gate is member-or-owner only.
-      expect(res.status).toBe(201);
+      expect(res.status).toBe(403);
+      // State: no invitation was created.
       const created = await new InvitationRepository(db).findByCollection(collectionId);
-      expect(created).toHaveLength(1);
-      expect(created[0].email).toBe("gap@adored.test");
+      expect(created).toHaveLength(0);
+    });
+
+    it("403s a curator member WITH canInviteMembers flag (flag is inert — invitations:manage = owner)", async () => {
+      const { db } = getTestDb();
+      const collectionId = await seedBareCollection(ownerId);
+      const memberId = await addMember(collectionId, { canInviteMembers: true });
+      mockGetSession.mockResolvedValue({ user: { id: memberId } });
+
+      const res = await POST(jsonReq("POST", { email: "flagged@adored.test" }) as any, {
+        params: { id: collectionId },
+      } as any);
+      expect(res.status).toBe(403);
+      expect(await new InvitationRepository(db).findByCollection(collectionId)).toHaveLength(0);
     });
 
     it("400s on a missing email and creates no invitation (purses-4wj2)", async () => {

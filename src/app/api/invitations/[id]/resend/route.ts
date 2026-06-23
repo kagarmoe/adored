@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { InvitationController } from "@/server/api/invitations";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
-import { requireApiCollectionAccess } from "@/server/dal/collection-access";
+import { requireApiInvitationCapability } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function POST(
   _request: NextRequest,
@@ -12,22 +13,14 @@ export async function POST(
   try {
     const user = await requireAuth();
     const db = getDb();
-    const invRepo = new InvitationRepository(db);
+    // invitations:manage = owner — tightens from member-or-owner (PR1) to owner-only.
+    const invitation = await requireApiInvitationCapability(db, params.id, user.id, "invitations:manage");
+    if (invitation instanceof NextResponse) return invitation;
 
-    const invitation = await invRepo.findById(params.id);
-    if (!invitation) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-    const access = await requireApiCollectionAccess(db, invitation.collectionId, user.id);
-    if (access instanceof NextResponse) return access;
-
-    const controller = new InvitationController(invRepo);
+    const controller = new InvitationController(new InvitationRepository(db));
     const result = await controller.resendInvitation(params.id);
     return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }
