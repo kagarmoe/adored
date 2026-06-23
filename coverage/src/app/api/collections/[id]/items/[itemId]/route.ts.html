@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.11% </span>
+                <span class="strong">93.75% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>16/17</span>
+                <span class='fraction'>15/16</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">83.33% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>10/12</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.11% </span>
+                <span class="strong">93.33% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>16/17</span>
+                <span class='fraction'>14/15</span>
             </div>
         
             
@@ -109,33 +109,7 @@
 <a name='L44'></a><a href='#L44'>44</a>
 <a name='L45'></a><a href='#L45'>45</a>
 <a name='L46'></a><a href='#L46'>46</a>
-<a name='L47'></a><a href='#L47'>47</a>
-<a name='L48'></a><a href='#L48'>48</a>
-<a name='L49'></a><a href='#L49'>49</a>
-<a name='L50'></a><a href='#L50'>50</a>
-<a name='L51'></a><a href='#L51'>51</a>
-<a name='L52'></a><a href='#L52'>52</a>
-<a name='L53'></a><a href='#L53'>53</a>
-<a name='L54'></a><a href='#L54'>54</a>
-<a name='L55'></a><a href='#L55'>55</a>
-<a name='L56'></a><a href='#L56'>56</a>
-<a name='L57'></a><a href='#L57'>57</a>
-<a name='L58'></a><a href='#L58'>58</a>
-<a name='L59'></a><a href='#L59'>59</a>
-<a name='L60'></a><a href='#L60'>60</a>
-<a name='L61'></a><a href='#L61'>61</a>
-<a name='L62'></a><a href='#L62'>62</a>
-<a name='L63'></a><a href='#L63'>63</a>
-<a name='L64'></a><a href='#L64'>64</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L47'></a><a href='#L47'>47</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -153,7 +127,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -162,13 +135,9 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
@@ -186,24 +155,12 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
-&nbsp;
-interface ItemUpdateRequest {
-  name?: string;
-  brand?: string | null;
-  style?: string | null;
-  color?: string | null;
-  material?: string | null;
-  category?: string | null;
-  notes?: string | null;
-}
+import { requireApiCapability } from "@/server/dal/collection-access";
+import { errorResponse } from "@/server/api/http-errors";
 &nbsp;
 export async function PATCH(
   req: NextRequest,
@@ -216,24 +173,19 @@ export async function PATCH(
 &nbsp;
   const db = getDb();
   const itemRepo = new ItemRepository(db);
-  const membershipRepo = new MembershipRepository(db);
 &nbsp;
   try {
-    // Verify item belongs to collection and user has permission
+    // Verify item belongs to collection (belongs-to-parent).
     const item = await itemRepo.findById(params.itemId);
     if (!item || item.collectionId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 &nbsp;
-    const membership = await membershipRepo.findByUser(
-      session.user.id,
-      params.id
-    );
-    if (!membership || !membership.canEditMetadata) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    // items:write = curator — any curator may edit metadata (full-curator model).
+    const access = await requireApiCapability(db, params.id, session.user.id, "items:write");
+    if (access instanceof NextResponse) return access;
 &nbsp;
-    const body: ItemUpdateRequest = await req.json();
+    const body = await req.json();
     const updated = await itemRepo.update(params.itemId, {
       name: body.name,
       brand: body.brand,
@@ -246,10 +198,7 @@ export async function PATCH(
 &nbsp;
     return NextResponse.json(updated);
   } catch (error) {
-<span class="cstat-no" title="statement not covered" >    return NextResponse.json(</span>
-      { error: error instanceof Error ? error.message : "Update failed" },
-      { status: 400 }
-    );
+<span class="cstat-no" title="statement not covered" >    return errorResponse(error);</span>
   }
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -259,7 +208,7 @@ export async function PATCH(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T01:40:48.016Z
+                at 2026-06-23T02:42:20.683Z
             </div>
         <script src="../../../../../../../prettify.js"></script>
         <script>

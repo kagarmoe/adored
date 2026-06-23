@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">81.48% </span>
+                <span class="strong">78.26% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>22/27</span>
+                <span class='fraction'>18/23</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.66% </span>
+                <span class="strong">58.33% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>10/15</span>
+                <span class='fraction'>7/12</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">81.48% </span>
+                <span class="strong">78.26% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>22/27</span>
+                <span class='fraction'>18/23</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -141,18 +141,7 @@
 <a name='L76'></a><a href='#L76'>76</a>
 <a name='L77'></a><a href='#L77'>77</a>
 <a name='L78'></a><a href='#L78'>78</a>
-<a name='L79'></a><a href='#L79'>79</a>
-<a name='L80'></a><a href='#L80'>80</a>
-<a name='L81'></a><a href='#L81'>81</a>
-<a name='L82'></a><a href='#L82'>82</a>
-<a name='L83'></a><a href='#L83'>83</a>
-<a name='L84'></a><a href='#L84'>84</a>
-<a name='L85'></a><a href='#L85'>85</a>
-<a name='L86'></a><a href='#L86'>86</a>
-<a name='L87'></a><a href='#L87'>87</a>
-<a name='L88'></a><a href='#L88'>88</a>
-<a name='L89'></a><a href='#L89'>89</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L79'></a><a href='#L79'>79</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -176,17 +165,10 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -233,8 +215,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -244,8 +224,7 @@ import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireApiCapability } from "@/server/dal/collection-access";
 import { recordPooledPhoto } from "@/server/photos/recordPooledPhoto";
 import { POOL_ALLOWED_CONTENT_TYPES, POOL_MAX_BYTES } from "@/lib/uploads";
 &nbsp;
@@ -258,23 +237,16 @@ class HttpError extends Error {
   }
 }
 &nbsp;
-async function assertCanAddPhotos(collectionId: string): Promise&lt;string&gt; {
+async function assertPhotosWrite(collectionId: string): Promise&lt;string&gt; {
   const session = await getSession();
   if (!session?.user) {
     throw new HttpError("Unauthorized", 401);
   }
   const db = getDb();
-  const membership = await new MembershipRepository(db).findByUser(
-    session.user.id,
-    collectionId,
-  );
-  const collection = await new CollectionRepository(db).findById(collectionId);
-  if (!collection) {
-    throw new HttpError("Not found", 404);
-  }
-  const isOwner = collection.ownerId === session.user.id;
-  if ((!membership || !membership.canAddPhotos) &amp;&amp; !isOwner) {
-    throw new HttpError("Forbidden", 403);
+  // photos:write = curator — any curator may upload pool photos (full-curator model).
+  const access = await requireApiCapability(db, collectionId, session.user.id, "photos:write");
+  if (access instanceof NextResponse) {
+    throw new HttpError(access.status === 404 ? "Not found" : "Forbidden", access.status);
   }
   return session.user.id;
 }
@@ -290,7 +262,7 @@ export async function POST(
       request: req,
       onBeforeGenerateToken: async () =&gt; {
         // User request: cookies present → authorize and capture the uploader.
-        const uploadedBy = await assertCanAddPhotos(params.id);
+        const uploadedBy = await assertPhotosWrite(params.id);
         return {
           allowedContentTypes: [...POOL_ALLOWED_CONTENT_TYPES],
           maximumSizeInBytes: POOL_MAX_BYTES,
@@ -312,8 +284,8 @@ export async function POST(
           uploadedBy,
           blobKey: blob.url,
           filename: blob.pathname,
-          mimeType: blob.contentType ?? "application/octet-stream", // defensive: SDK types contentType as non-optional
-          fileSize: null, // size is not provided on the completion event
+          mimeType: blob.contentType ?? "application/octet-stream",
+          fileSize: null,
         });
       },
     });
@@ -322,8 +294,6 @@ export async function POST(
     <span class="missing-if-branch" title="else path not taken" >E</span>if (error instanceof HttpError) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
-    // Unexpected (DB failure, malformed body, bad/missing token payload):
-    // don't leak internals; report a server error.
 <span class="cstat-no" title="statement not covered" >    return NextResponse.json({ error: "Upload failed" }, { status: 500 });</span>
   }
 }
@@ -334,7 +304,7 @@ export async function POST(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T01:40:48.016Z
+                at 2026-06-23T02:42:20.683Z
             </div>
         <script src="../../../../../../../prettify.js"></script>
         <script>

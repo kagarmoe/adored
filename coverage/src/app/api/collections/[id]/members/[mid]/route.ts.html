@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">97.14% </span>
+                <span class="strong">96.96% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>34/35</span>
+                <span class='fraction'>32/33</span>
             </div>
         
             
@@ -139,7 +139,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -148,6 +147,7 @@
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -170,12 +170,13 @@
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -188,20 +189,18 @@
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { requireApiCollectionAccess } from "@/server/dal/collection-access";
+import { requireApiCapability } from "@/server/dal/collection-access";
 import { MemberController } from "@/server/api/members";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { errorResponse } from "@/server/api/http-errors";
 &nbsp;
 // Verify the [mid] membership row actually belongs to collection [id] (belongs-to-parent).
@@ -214,12 +213,13 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
   const session = await getSession();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = getDb();
-  const access = await requireApiCollectionAccess(db, params.id, session.user.id);
+  // members:read = curator — any curator may read a membership.
+  const access = await requireApiCapability(db, params.id, session.user.id, "members:read");
   if (access instanceof NextResponse) return access;
   if (!(await membershipBelongsToCollection(db, params.mid, params.id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  const ctrl = new MemberController(new MembershipRepository(db), new CollectionRepository(db));
+  const ctrl = new MemberController(new MembershipRepository(db));
   return NextResponse.json(await ctrl.getMember(params.mid));
 }
 &nbsp;
@@ -236,12 +236,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   if (!(await membershipBelongsToCollection(db, params.mid, params.id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  const ctrl = new MemberController(new MembershipRepository(db), new CollectionRepository(db));
-  if (!(await ctrl.isCollectionManager(params.id, session.user.id))) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  // members:manage = owner — only the collection owner may update members.
+  const access = await requireApiCapability(db, params.id, session.user.id, "members:manage");
+  if (access instanceof NextResponse) return access;
   try {
-    return NextResponse.json(await ctrl.updateMember(params.mid, body));
+    return NextResponse.json(
+      await new MemberController(new MembershipRepository(db)).updateMember(params.mid, body),
+    );
   } catch (error) {
 <span class="cstat-no" title="statement not covered" >    return errorResponse(error);</span>
   }
@@ -254,11 +255,10 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
   if (!(await membershipBelongsToCollection(db, params.mid, params.id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  const ctrl = new MemberController(new MembershipRepository(db), new CollectionRepository(db));
-  if (!(await ctrl.isCollectionManager(params.id, session.user.id))) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-  await ctrl.removeMember(params.mid);
+  // members:manage = owner — only the collection owner may remove members.
+  const access = await requireApiCapability(db, params.id, session.user.id, "members:manage");
+  if (access instanceof NextResponse) return access;
+  await new MemberController(new MembershipRepository(db)).removeMember(params.mid);
   return NextResponse.json({ message: "Member removed" });
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -268,7 +268,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T01:40:48.016Z
+                at 2026-06-23T02:42:20.683Z
             </div>
         <script src="../../../../../../../prettify.js"></script>
         <script>

@@ -25,28 +25,28 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/11</span>
+                <span class='fraction'>0/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>0/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>0/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>0/8</span>
             </div>
         
             
@@ -114,10 +114,7 @@
 <a name='L49'></a><a href='#L49'>49</a>
 <a name='L50'></a><a href='#L50'>50</a>
 <a name='L51'></a><a href='#L51'>51</a>
-<a name='L52'></a><a href='#L52'>52</a>
-<a name='L53'></a><a href='#L53'>53</a>
-<a name='L54'></a><a href='#L54'>54</a>
-<a name='L55'></a><a href='#L55'>55</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L52'></a><a href='#L52'>52</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -138,16 +135,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -174,7 +168,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { requireCollectionAccess } from "@/lib/collection-access";
+import { requireCollectionOwnerPage } from "@/lib/collection-access";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { AppLayout } from "@/components/layout";
 import { SectionHeader } from "@/components/layout/SectionHeader";
@@ -192,12 +186,11 @@ export default async function <span class="fstat-no" title="function not covered
   }
 &nbsp;
   const <span class="cstat-no" title="statement not covered" >db = getDb();</span>
-  const collection = <span class="cstat-no" title="statement not covered" >await requireCollectionAccess(db, params.id, session.user.id);</span>
+  // Owner-only page: members:manage = owner by role (purses-yqw).
+  const collection = <span class="cstat-no" title="statement not covered" >await requireCollectionOwnerPage(db, params.id, session.user.id);</span>
   const membershipRepo = <span class="cstat-no" title="statement not covered" >new MembershipRepository(db);</span>
 &nbsp;
   const members = <span class="cstat-no" title="statement not covered" >await membershipRepo.findByCollection(collection.id);</span>
-  const currentUserMembership = <span class="cstat-no" title="statement not covered" >members.find(<span class="fstat-no" title="function not covered" >(m</span>) =&gt; <span class="cstat-no" title="statement not covered" >m.userId === session.user!.id)</span>;</span>
-  const canManage = <span class="cstat-no" title="statement not covered" >currentUserMembership?.role === "owner" || currentUserMembership?.canManageCollection;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
     &lt;AppLayout
@@ -211,16 +204,14 @@ export default async function <span class="fstat-no" title="function not covered
         {/* Members Section */}
         &lt;div&gt;
           &lt;SectionHeader title="Members" description={`${members.length} member${members.length !== 1 ? "s" : ""}`} /&gt;
-          &lt;MemberList members={members} canManage={canManage} /&gt;
+          &lt;MemberList members={members} canManage={true} /&gt;
         &lt;/div&gt;
 &nbsp;
         {/* Invite Section */}
-        {canManage &amp;&amp; (
-          &lt;div&gt;
-            &lt;SectionHeader title="Invite New Member" description="Add a new curator to this collection" /&gt;
-            &lt;InviteForm collectionId={collection.id} /&gt;
-          &lt;/div&gt;
-        )}
+        &lt;div&gt;
+          &lt;SectionHeader title="Invite New Member" description="Add a new curator to this collection" /&gt;
+          &lt;InviteForm collectionId={collection.id} /&gt;
+        &lt;/div&gt;
       &lt;/div&gt;
     &lt;/AppLayout&gt;
   );
@@ -232,7 +223,7 @@ export default async function <span class="fstat-no" title="function not covered
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T01:40:48.016Z
+                at 2026-06-23T02:42:20.683Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

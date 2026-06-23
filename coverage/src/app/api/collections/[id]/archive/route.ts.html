@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>14/14</span>
+                <span class='fraction'>9/9</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>8/10</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>14/14</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
@@ -88,20 +88,9 @@
 <a name='L23'></a><a href='#L23'>23</a>
 <a name='L24'></a><a href='#L24'>24</a>
 <a name='L25'></a><a href='#L25'>25</a>
-<a name='L26'></a><a href='#L26'>26</a>
-<a name='L27'></a><a href='#L27'>27</a>
-<a name='L28'></a><a href='#L28'>28</a>
-<a name='L29'></a><a href='#L29'>29</a>
-<a name='L30'></a><a href='#L30'>30</a>
-<a name='L31'></a><a href='#L31'>31</a>
-<a name='L32'></a><a href='#L32'>32</a>
-<a name='L33'></a><a href='#L33'>33</a>
-<a name='L34'></a><a href='#L34'>34</a>
-<a name='L35'></a><a href='#L35'>35</a>
-<a name='L36'></a><a href='#L36'>36</a>
-<a name='L37'></a><a href='#L37'>37</a>
-<a name='L38'></a><a href='#L38'>38</a>
-<a name='L39'></a><a href='#L39'>39</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L26'></a><a href='#L26'>26</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -114,36 +103,23 @@
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { CollectionController } from "@/server/api/collections";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireApiCapability } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
+import { errorResponse } from "@/server/api/http-errors";
 &nbsp;
 export async function POST(
   _request: NextRequest,
@@ -152,29 +128,14 @@ export async function POST(
   try {
     const user = await requireAuth();
     const db = getDb();
-    const collectionRepo = new CollectionRepository(db);
-    const controller = new CollectionController(collectionRepo);
+    // requireApiCapability resolves-then-authorizes: 404 absent, 403 not owner.
+    const access = await requireApiCapability(db, params.id, user.id, "collection:manage");
+    if (access instanceof NextResponse) return access;
 &nbsp;
-    // Resolve first so an absent collection is a 404, not a 403 from the
-    // canManageCollection(findById→null→false) path (purses-nj7 ride-along).
-    const existing = await collectionRepo.findById(params.id);
-    if (!existing) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-&nbsp;
-    // Check if user can manage collection
-    const canManage = await controller.canManageCollection(user.id, params.id);
-    if (!canManage) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-&nbsp;
-    const collection = await controller.archiveCollection(params.id);
+    const collection = await new CollectionController(new CollectionRepository(db)).archiveCollection(params.id);
     return NextResponse.json(collection);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : <span class="branch-1 cbranch-no" title="branch not covered" >"Unknown error" }</span>,
-      { status: error instanceof Error &amp;&amp; error.message === "Unauthorized" ? 401 : <span class="branch-1 cbranch-no" title="branch not covered" >500 }</span>
-    );
+    return errorResponse(error);
   }
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -184,7 +145,7 @@ export async function POST(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T01:40:48.016Z
+                at 2026-06-23T02:42:20.683Z
             </div>
         <script src="../../../../../../prettify.js"></script>
         <script>

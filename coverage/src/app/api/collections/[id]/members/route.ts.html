@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>25/25</span>
+                <span class='fraction'>19/19</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>24/24</span>
+                <span class='fraction'>17/17</span>
             </div>
         
             
@@ -112,14 +112,7 @@
 <a name='L47'></a><a href='#L47'>47</a>
 <a name='L48'></a><a href='#L48'>48</a>
 <a name='L49'></a><a href='#L49'>49</a>
-<a name='L50'></a><a href='#L50'>50</a>
-<a name='L51'></a><a href='#L51'>51</a>
-<a name='L52'></a><a href='#L52'>52</a>
-<a name='L53'></a><a href='#L53'>53</a>
-<a name='L54'></a><a href='#L54'>54</a>
-<a name='L55'></a><a href='#L55'>55</a>
-<a name='L56'></a><a href='#L56'>56</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L50'></a><a href='#L50'>50</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -134,14 +127,13 @@
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -157,17 +149,13 @@
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
@@ -177,8 +165,7 @@
 import { requireAuth } from "@/lib/auth";
 import { MemberController } from "@/server/api/members";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
-import { requireApiCollectionAccess } from "@/server/dal/collection-access";
+import { requireApiCapability } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
 &nbsp;
@@ -189,14 +176,13 @@ export async function GET(
   try {
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiCollectionAccess(db, params.id, user.id);
+    // members:read = curator — any curator may list members.
+    const access = await requireApiCapability(db, params.id, user.id, "members:read");
     if (access instanceof NextResponse) return access;
 &nbsp;
-    const membershipRepo = new MembershipRepository(db);
-    const collectionRepo = new CollectionRepository(db);
-    const controller = new MemberController(membershipRepo, collectionRepo);
-&nbsp;
-    const members = await controller.listMembers(params.id);
+    const members = await new MemberController(
+      new MembershipRepository(db),
+    ).listMembers(params.id);
     return NextResponse.json(members);
   } catch (error) {
     return errorResponse(error);
@@ -212,17 +198,13 @@ export async function POST(
     const body = await request.json();
 &nbsp;
     const db = getDb();
-    const membershipRepo = new MembershipRepository(db);
-    const collectionRepo = new CollectionRepository(db);
-    const controller = new MemberController(membershipRepo, collectionRepo);
+    // members:manage = owner — only the collection owner may add members.
+    const access = await requireApiCapability(db, params.id, user.id, "members:manage");
+    if (access instanceof NextResponse) return access;
 &nbsp;
-    // Check if user is collection manager (admin)
-    const isManager = await controller.isCollectionManager(params.id, user.id);
-    if (!isManager) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-&nbsp;
-    const member = await controller.addMember(params.id, body);
+    const member = await new MemberController(
+      new MembershipRepository(db),
+    ).addMember(params.id, body);
     return NextResponse.json(member, { status: 201 });
   } catch (error) {
     return errorResponse(error);
@@ -235,7 +217,7 @@ export async function POST(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T01:40:48.016Z
+                at 2026-06-23T02:42:20.683Z
             </div>
         <script src="../../../../../../prettify.js"></script>
         <script>

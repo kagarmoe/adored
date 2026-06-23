@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">96.66% </span>
+                <span class="strong">96.42% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>29/30</span>
+                <span class='fraction'>27/28</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">91.3% </span>
+                <span class="strong">89.47% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>21/23</span>
+                <span class='fraction'>17/19</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">96.66% </span>
+                <span class="strong">96.29% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>29/30</span>
+                <span class='fraction'>26/27</span>
             </div>
         
             
@@ -124,21 +124,7 @@
 <a name='L59'></a><a href='#L59'>59</a>
 <a name='L60'></a><a href='#L60'>60</a>
 <a name='L61'></a><a href='#L61'>61</a>
-<a name='L62'></a><a href='#L62'>62</a>
-<a name='L63'></a><a href='#L63'>63</a>
-<a name='L64'></a><a href='#L64'>64</a>
-<a name='L65'></a><a href='#L65'>65</a>
-<a name='L66'></a><a href='#L66'>66</a>
-<a name='L67'></a><a href='#L67'>67</a>
-<a name='L68'></a><a href='#L68'>68</a>
-<a name='L69'></a><a href='#L69'>69</a>
-<a name='L70'></a><a href='#L70'>70</a>
-<a name='L71'></a><a href='#L71'>71</a>
-<a name='L72'></a><a href='#L72'>72</a>
-<a name='L73'></a><a href='#L73'>73</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L62'></a><a href='#L62'>62</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -155,16 +141,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">9x</span>
@@ -182,7 +161,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -210,16 +188,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { requireApiCapability } from "@/server/dal/collection-access";
 import { ItemService, PoolGroupError, MAX_GROUP_PHOTOS } from "@/server/services/ItemService";
 &nbsp;
 // Groups selected pooled photos into one new (nameless, catalog-numbered) item.
-// Auth mirrors the other pool routes: member-or-owner. The heavy lifting and the
-// IDOR guard live in the service/repo; this handler validates input and maps
-// PoolGroupError to a status code.
+// photos:write = curator (full-curator model).
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   const session = await getSession();
   if (!session?.user) {
@@ -227,16 +202,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   }
 &nbsp;
   const db = getDb();
-  const [collection, membership] = await Promise.all([
-    new CollectionRepository(db).findById(params.id),
-    new MembershipRepository(db).findByUser(session.user.id, params.id),
-  ]);
-  if (!collection) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-  if (!membership &amp;&amp; collection.ownerId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  // photos:write = curator — any curator may group pool photos (full-curator model).
+  const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
+  if (access instanceof NextResponse) return access;
 &nbsp;
   let body: unknown;
   try {
@@ -259,8 +227,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     );
   }
 &nbsp;
-  // mode is lenient: "each" makes one item per photo; anything else (including a
-  // missing or unknown mode) falls back to "combine" — never a 400 on mode.
+  // mode is lenient: "each" makes one item per photo; anything else falls back to "combine".
   const mode = (body as { mode?: unknown })?.mode === "each" ? "each" : "combine";
 &nbsp;
   const service = new ItemService(new ItemRepository(db), new PhotoRepository(db));
@@ -286,7 +253,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T01:40:48.016Z
+                at 2026-06-23T02:42:20.683Z
             </div>
         <script src="../../../../../../../prettify.js"></script>
         <script>
