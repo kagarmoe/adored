@@ -347,7 +347,8 @@ The cross-tenant **IDOR holes are closed** (pv9 PR1, 2026-06-22): `GET /api/coll
 Remaining pv9 work (correctness/cleanup, not authz holes):
 
 - **Account deletion** (`purses-hybm`, pv9 PR6): `DELETE /api/users/me` still soft-deletes (nulls `emailVerified`) without cascade/PII-scrub.
-- **Lockdown backstop** (`purses-o03`, pv9 PR5): a route-enumeration CI test asserting every collection-scoped route 403/404s a stranger.
-- **Deferred cleanups:** drop the inert flag columns/type fields after the UI cluster (`purses-us3d`); ESLint repo-import boundary (`purses-25ca`); member-PATCH no-op disposition (`purses-2wzz`); soft-delete audit attribution (`purses-wfgj`).
+- **Deferred cleanups:** drop the inert flag columns/type fields after the UI cluster (`purses-us3d`); ESLint repo-import boundary (`purses-25ca`, the second half of o03); member-PATCH no-op disposition (`purses-2wzz`); soft-delete audit attribution (`purses-wfgj`).
+
+**Lockdown backstop shipped (pv9 PR5, `purses-o03`):** `src/lib/db/route-authz-enumeration.integration.test.ts` walks every `route.ts`, exercises each collection-scoped/curator-private route+method as a **stranger** and asserts `403`/`404` (never `200`/leaky `500`), and asserts **filesystem-exhaustiveness** — a new route in neither the `PUBLIC_OR_SELF` allowlist nor the stranger set fails CI. (Also fixed: `POST /api/sort-results/[id]/shares` now authorizes before parsing the body.)
 
 Implemented (formerly no-op stubs): `POST /api/items/[id]/purge` is a real owner-only hard-delete cascade with a `409`-in-result guard, alongside owner-only `POST /api/items/[id]/remove-from-sorts` — **purses-u3p** resolved for item purge. **`POST /api/collections/[id]/purge`** is a real owner-only whole-collection cascade purge (name-confirm + `collection.purge` audit). The former sort-results no-op-success stubs — `DELETE /api/sort-results/[id]`, `DELETE /api/sort-results/[id]/items/[rid]`, and the empty `GET …/shares` listing — are also implemented.
