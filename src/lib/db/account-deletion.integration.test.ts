@@ -689,6 +689,37 @@ describeDb("AccountDeletionService via DELETE /api/users/me", () => {
   });
 
   // ==========================================================================
+  // purses-obe0 — account deletion writes an attributable account.delete audit row
+  // with actor + owned-collection count. The collectionId sentinel "__account__"
+  // satisfies the NOT NULL column with no natural collection context.
+  // ==========================================================================
+  it("purses-obe0: account deletion writes an account.delete audit row attributed to the actor", async () => {
+    const { db } = getTestDb();
+    const { auditLogTable } = await import("@/lib/db/schema");
+
+    mockGetSession.mockResolvedValue({ user: { id: userId } });
+    const res = await meDelete();
+    expect(res.status).toBe(200);
+
+    // Find the account.delete audit row (collectionId sentinel "__account__").
+    const auditRows = await db
+      .select()
+      .from(auditLogTable)
+      .where(eq(auditLogTable.action, "account.delete"));
+
+    expect(auditRows).toHaveLength(1);
+    expect(auditRows[0]).toMatchObject({
+      action: "account.delete",
+      targetType: "user",
+      targetId: userId,
+      actorId: userId,
+      collectionId: "__account__",
+    });
+    // metadata.ownedCollections reflects how many owned collections were purged (1 seeded).
+    expect((auditRows[0].metadata as Record<string, number>).ownedCollections).toBe(1);
+  });
+
+  // ==========================================================================
   // F2 — borrowed photos (U uploaded into V's collection) must SURVIVE but be
   // de-identified (uploaded_by → tombstone), NOT deleted.
   // ==========================================================================

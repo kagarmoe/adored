@@ -150,8 +150,13 @@ export interface PairwiseDecision {
 }
 
 // ===== AUDIT LOG =====
-export type AuditAction = "item.purge" | "collection.purge";
-export type AuditTargetType = "item" | "collection";
+export type AuditAction =
+  | "item.purge"
+  | "collection.purge"
+  | "account.delete"
+  | "item.delete"
+  | "photo.delete";
+export type AuditTargetType = "item" | "collection" | "user" | "photo";
 
 export interface AuditLog {
   id: string;
