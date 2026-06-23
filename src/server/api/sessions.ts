@@ -44,6 +44,13 @@ export class SessionController {
     return session;
   }
 
+  // Returns null for an absent session so the caller maps it to 404 WITHOUT
+  // swallowing a real DB/infra error (a thrown getSession caught blanketly
+  // would collapse an outage into 404). Mirrors ItemController.getItem.
+  async getSessionOrNull(sessionId: string): Promise<Session | null> {
+    return this.sessionRepo.findById(sessionId);
+  }
+
   async updateSession(sessionId: string, data: unknown): Promise<Session> {
     const parsed = UpdateSessionSchema.parse(data);
     return this.sessionRepo.update(sessionId, parsed);

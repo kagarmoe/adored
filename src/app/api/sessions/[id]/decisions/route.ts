@@ -6,7 +6,6 @@ import { getSession } from "@/lib/auth";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { SessionController } from "@/server/api/sessions";
 import { PreferenceController } from "@/server/api/preferences";
-import type { Session } from "@/types";
 
 interface DecisionRequest {
   type: "triage" | "pairwise_compare" | "bucket_assign";
@@ -19,12 +18,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const db = getDb();
   // Authorize BEFORE any write: the session must belong to a collection the user can access.
-  let sortSession: Session;
-  try {
-    sortSession = await SessionController.fromDb(db).getSession(params.id);
-  } catch {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
+  // getSessionOrNull distinguishes absent (→404) from a real DB error (→ propagates, 500).
+  const sortSession = await SessionController.fromDb(db).getSessionOrNull(params.id);
+  if (!sortSession) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const access = await requireApiCollectionAccess(db, sortSession.collectionId, session.user.id);
   if (access instanceof NextResponse) return access;
 
