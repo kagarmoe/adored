@@ -284,6 +284,24 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       // The name is untouched — the stranger's edit did not persist.
       expect((await new ItemRepository(db).findById(item.id))!.name).toBe("Owner's");
     });
+
+    it("400s an invalid body (empty name) via errorResponse — and does NOT mutate (purses-pv9)", async () => {
+      // items/[id] PATCH calls ItemController.updateItem which UpdateItemSchema.parse()es
+      // the body; an empty name is a ZodError, now mapped to 400 by errorResponse (was 500).
+      const { db } = getTestDb();
+      const collectionId = await seedBareCollection(ownerId);
+      const item = await new ItemRepository(db).create({ collectionId, name: "Original" });
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      // Present-before guard.
+      expect((await new ItemRepository(db).findById(item.id))!.name).toBe("Original");
+
+      const res = await patchItem(jsonReq("PATCH", { name: "" }) as any, {
+        params: { id: item.id },
+      } as any);
+      expect(res.status).toBe(400);
+      // The name is unchanged — validation fired before any write.
+      expect((await new ItemRepository(db).findById(item.id))!.name).toBe("Original");
+    });
   });
 
   describe("DELETE /api/items/[id]", () => {

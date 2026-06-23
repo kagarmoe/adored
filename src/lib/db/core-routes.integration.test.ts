@@ -229,12 +229,18 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       expect(membership!.role).toBe("owner");
     });
 
-    it("returns 400 for missing name", async () => {
+    it("returns 400 for missing name — no collection created (purses-pv9)", async () => {
+      // CollectionController.createCollection CreateCollectionSchema.parse()es the body;
+      // a missing name is a ZodError, now mapped to 400 by errorResponse (was 500).
+      const { db } = getTestDb();
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const before = await new CollectionRepository(db).findByOwner(ownerId);
       const res = await collectionsPost(
         nextReq("POST", "http://localhost/api/collections", {}),
       );
-      expect(res.status).toBe(500); // zod parse throws → caught as generic 500
+      expect(res.status).toBe(400);
+      // No collection was created for the owner.
+      expect(await new CollectionRepository(db).findByOwner(ownerId)).toHaveLength(before.length);
     });
   });
 
@@ -352,6 +358,28 @@ describeDb("Group E — core route integration tests (real DB)", () => {
         { params: { id: seed.collectionId } },
       );
       expect(res.status).toBe(403);
+    });
+
+    it("owner gets 400 on an invalid body (bad status enum) via errorResponse — no mutation (purses-pv9)", async () => {
+      // updateCollection UpdateCollectionSchema.parse()es the body; an out-of-enum
+      // status is a ZodError, now mapped to 400 by errorResponse (was 500). The 403
+      // owner guard runs BEFORE the parse, so authz is unchanged.
+      const seed = await seedFullCollection(ownerId);
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const { db } = getTestDb();
+      const before = await new CollectionRepository(db).findById(seed.collectionId);
+
+      const res = await collectionPatch(
+        nextReq("PATCH", `http://localhost/api/collections/${seed.collectionId}`, {
+          status: "not-a-status",
+        }),
+        { params: { id: seed.collectionId } },
+      );
+      expect(res.status).toBe(400);
+      // Unchanged: name and status are exactly as seeded.
+      const after = await new CollectionRepository(db).findById(seed.collectionId);
+      expect(after!.name).toBe(before!.name);
+      expect(after!.status).toBe(before!.status);
     });
   });
 

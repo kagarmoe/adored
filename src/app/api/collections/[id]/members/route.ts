@@ -5,6 +5,7 @@ import { MembershipRepository } from "@/server/repositories/implementations/Memb
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function GET(
   _request: NextRequest,
@@ -23,10 +24,7 @@ export async function GET(
     const members = await controller.listMembers(params.id);
     return NextResponse.json(members);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }
 
@@ -52,12 +50,6 @@ export async function POST(
     const member = await controller.addMember(params.id, body);
     return NextResponse.json(member, { status: 201 });
   } catch (error) {
-    if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }

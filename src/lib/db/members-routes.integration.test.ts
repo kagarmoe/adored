@@ -30,7 +30,12 @@ import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline, seedFullCollection, seedUserRow } from "../../../e2e/fixtures/seed";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 
-const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
+const { mockGetSession, UnauthorizedError } = vi.hoisted(() => {
+  class UnauthorizedError extends Error {
+    constructor(message = "Unauthorized") { super(message); this.name = "UnauthorizedError"; }
+  }
+  return { mockGetSession: vi.fn(), UnauthorizedError };
+});
 // Flat-replace BOTH @/lib/auth exports from one spy (spread/importActual pulls nodemailer).
 vi.mock("@/lib/auth", () => ({
   getSession: mockGetSession,
@@ -39,6 +44,7 @@ vi.mock("@/lib/auth", () => ({
     if (!s?.user) throw new Error("Unauthorized");
     return s.user;
   },
+  UnauthorizedError,
 }));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
@@ -261,6 +267,25 @@ describeDb("member-management route (route -> repo -> DB)", () => {
       expect(after!.canDeletePhotos).toBe(true);
       // Untouched flags are preserved.
       expect(after!.canAddItems).toBe(true);
+    });
+
+    it("owner gets 400 on an invalid body (non-boolean flag) via errorResponse — and does NOT mutate (purses-pv9)", async () => {
+      // updateMember UpdateMemberSchema.parse()es the body; a non-boolean flag is a
+      // ZodError, now mapped to 400 by errorResponse (was an unhandled 500). The 403
+      // manager guard runs BEFORE updateMember, so authz is unchanged.
+      const { collectionId, memberId } = await seedFullCollection(ownerId);
+      const mid = await memberMembershipId(collectionId, memberId);
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      // As-seeded before: canManageCollection is false.
+      expect((await repo.findById(mid))!.canManageCollection).toBe(false);
+
+      const res = await PATCH(
+        jsonReq("PATCH", { canManageCollection: "yes" }) as any,
+        ctx(collectionId, mid),
+      );
+      expect(res.status).toBe(400);
+      // Unchanged: the invalid flag never persisted.
+      expect((await repo.findById(mid))!.canManageCollection).toBe(false);
     });
   });
 
