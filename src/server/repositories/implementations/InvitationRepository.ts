@@ -13,14 +13,14 @@ export class InvitationRepository implements IInvitationRepository {
     collectionId: string;
     email: string;
     token: string;
-    canManageCollection: boolean;
-    canInviteMembers: boolean;
-    canAddItems: boolean;
-    canEditMetadata: boolean;
-    canAddPhotos: boolean;
-    canDeletePhotos: boolean;
-    canSort: boolean;
-    canViewOutputs: boolean;
+    canManageCollection?: boolean;
+    canInviteMembers?: boolean;
+    canAddItems?: boolean;
+    canEditMetadata?: boolean;
+    canAddPhotos?: boolean;
+    canDeletePhotos?: boolean;
+    canSort?: boolean;
+    canViewOutputs?: boolean;
   }): Promise<Invitation> {
     const id = data.id || generateId("inv");
     const [inv] = await this.db
@@ -30,14 +30,14 @@ export class InvitationRepository implements IInvitationRepository {
         collectionId: data.collectionId,
         email: data.email,
         token: data.token,
-        canManageCollection: data.canManageCollection,
-        canInviteMembers: data.canInviteMembers,
-        canAddItems: data.canAddItems,
-        canEditMetadata: data.canEditMetadata,
-        canAddPhotos: data.canAddPhotos,
-        canDeletePhotos: data.canDeletePhotos,
-        canSort: data.canSort,
-        canViewOutputs: data.canViewOutputs,
+        canManageCollection: data.canManageCollection ?? false,
+        canInviteMembers: data.canInviteMembers ?? false,
+        canAddItems: data.canAddItems ?? true,
+        canEditMetadata: data.canEditMetadata ?? true,
+        canAddPhotos: data.canAddPhotos ?? true,
+        canDeletePhotos: data.canDeletePhotos ?? false,
+        canSort: data.canSort ?? true,
+        canViewOutputs: data.canViewOutputs ?? true,
         status: "pending",
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -82,10 +82,13 @@ export class InvitationRepository implements IInvitationRepository {
   }
 
   async update(id: string, data: Partial<Invitation>): Promise<Invitation> {
+    // Allow-list: only status and acceptedAt may be updated by callers.
+    // Flags, email, collectionId, and token are immutable after creation.
     const [inv] = await this.db
       .update(invitationsTable)
       .set({
-        ...data,
+        ...(data.status !== undefined && { status: data.status }),
+        ...(data.acceptedAt !== undefined && { acceptedAt: data.acceptedAt }),
         updatedAt: new Date(),
       })
       .where(eq(invitationsTable.id, id))

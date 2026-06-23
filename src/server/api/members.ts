@@ -5,26 +5,11 @@ import type { ICollectionRepository } from "@/server/repositories/CollectionRepo
 
 const CreateMemberSchema = z.object({
   userId: z.string(),
-  canManageCollection: z.boolean().optional().default(false),
-  canInviteMembers: z.boolean().optional().default(false),
-  canAddItems: z.boolean().optional().default(false),
-  canEditMetadata: z.boolean().optional().default(false),
-  canAddPhotos: z.boolean().optional().default(false),
-  canDeletePhotos: z.boolean().optional().default(false),
-  canSort: z.boolean().optional().default(false),
-  canViewOutputs: z.boolean().optional().default(false),
 });
 
-const UpdateMemberSchema = z.object({
-  canManageCollection: z.boolean().optional(),
-  canInviteMembers: z.boolean().optional(),
-  canAddItems: z.boolean().optional(),
-  canEditMetadata: z.boolean().optional(),
-  canAddPhotos: z.boolean().optional(),
-  canDeletePhotos: z.boolean().optional(),
-  canSort: z.boolean().optional(),
-  canViewOutputs: z.boolean().optional(),
-});
+// No caller-supplied fields are accepted on update — role and flags are managed
+// by the role model, not by raw client input.
+const UpdateMemberSchema = z.object({});
 
 export type CreateMemberInput = z.infer<typeof CreateMemberSchema>;
 export type UpdateMemberInput = z.infer<typeof UpdateMemberSchema>;
@@ -41,17 +26,11 @@ export class MemberController {
 
   async addMember(collectionId: string, data: unknown): Promise<CollectionMembership> {
     const parsed = CreateMemberSchema.parse(data);
+    // New members always start as curator; flags use DB column defaults.
     return this.membershipRepo.create({
       collectionId,
       userId: parsed.userId,
-      canManageCollection: parsed.canManageCollection,
-      canInviteMembers: parsed.canInviteMembers,
-      canAddItems: parsed.canAddItems,
-      canEditMetadata: parsed.canEditMetadata,
-      canAddPhotos: parsed.canAddPhotos,
-      canDeletePhotos: parsed.canDeletePhotos,
-      canSort: parsed.canSort,
-      canViewOutputs: parsed.canViewOutputs,
+      role: "curator",
     });
   }
 

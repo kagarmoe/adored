@@ -13,15 +13,15 @@ export class MembershipRepository implements IMembershipRepository {
     collectionId: string;
     userId: string;
     role?: "owner" | "curator";
-    canManageCollection: boolean;
-    canInviteMembers: boolean;
-    canAddItems: boolean;
+    canManageCollection?: boolean;
+    canInviteMembers?: boolean;
+    canAddItems?: boolean;
     canDeleteItems?: boolean;
-    canEditMetadata: boolean;
-    canAddPhotos: boolean;
-    canDeletePhotos: boolean;
-    canSort: boolean;
-    canViewOutputs: boolean;
+    canEditMetadata?: boolean;
+    canAddPhotos?: boolean;
+    canDeletePhotos?: boolean;
+    canSort?: boolean;
+    canViewOutputs?: boolean;
   }): Promise<CollectionMembership> {
     const id = data.id || generateId("mem");
     const [mem] = await this.db
@@ -31,15 +31,15 @@ export class MembershipRepository implements IMembershipRepository {
         collectionId: data.collectionId,
         userId: data.userId,
         role: data.role ?? "curator",
-        canManageCollection: data.canManageCollection,
-        canInviteMembers: data.canInviteMembers,
-        canAddItems: data.canAddItems,
+        canManageCollection: data.canManageCollection ?? false,
+        canInviteMembers: data.canInviteMembers ?? false,
+        canAddItems: data.canAddItems ?? true,
         canDeleteItems: data.canDeleteItems ?? false,
-        canEditMetadata: data.canEditMetadata,
-        canAddPhotos: data.canAddPhotos,
-        canDeletePhotos: data.canDeletePhotos,
-        canSort: data.canSort,
-        canViewOutputs: data.canViewOutputs,
+        canEditMetadata: data.canEditMetadata ?? true,
+        canAddPhotos: data.canAddPhotos ?? true,
+        canDeletePhotos: data.canDeletePhotos ?? false,
+        canSort: data.canSort ?? true,
+        canViewOutputs: data.canViewOutputs ?? true,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -76,13 +76,13 @@ export class MembershipRepository implements IMembershipRepository {
     return mems.map((m) => this.mapToMembership(m));
   }
 
-  async update(id: string, data: Partial<CollectionMembership>): Promise<CollectionMembership> {
+  async update(id: string, _data: Partial<CollectionMembership>): Promise<CollectionMembership> {
+    // Allow-list: no caller-supplied fields are permitted through membership update.
+    // Role, flags, collectionId, and userId are immutable after creation.
+    // Only updatedAt is written to mark the row touched.
     const [mem] = await this.db
       .update(membershipsTable)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
+      .set({ updatedAt: new Date() })
       .where(eq(membershipsTable.id, id))
       .returning();
     return this.mapToMembership(mem);

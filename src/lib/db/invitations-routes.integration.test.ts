@@ -205,7 +205,9 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(body.error).toMatch(/invalid json/i);
     });
 
-    it("happy path — updates permission fields; DB row reflects change", async () => {
+    it("happy path — PATCH invitation returns 200; flag fields are no longer mutable via PATCH (purses-pv9 T1)", async () => {
+      // After T1: InvitationRepository.update() allow-list only permits status/acceptedAt.
+      // Flag fields sent via PATCH are stripped — the DB row is unchanged.
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const collectionId = await seedBareCollection(ownerId);
       const { id } = await seedInvitation(collectionId);
@@ -218,16 +220,13 @@ describeDb("Invitation routes — real DB integration", () => {
         { params: { id } },
       );
       expect(res.status).toBe(200);
-      const body = await res.json();
-      expect(body.canSort).toBe(false);
-      expect(body.canDeletePhotos).toBe(true);
 
-      // Verify the DB row was actually updated.
+      // Flags were not mutated — DB row retains seeded values (canSort=true, canDeletePhotos=false).
       const { db } = getTestDb();
       const updated = await new InvitationRepository(db).findById(id);
       expect(updated).not.toBeNull();
-      expect(updated!.canSort).toBe(false);
-      expect(updated!.canDeletePhotos).toBe(true);
+      expect(updated!.canSort).toBe(true);
+      expect(updated!.canDeletePhotos).toBe(false);
     });
 
     it("403s a stranger patching another user's invitation — and does NOT mutate", async () => {

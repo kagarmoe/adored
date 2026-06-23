@@ -5,14 +5,6 @@ import { randomBytes } from "crypto";
 
 const CreateInvitationSchema = z.object({
   email: z.string().email(),
-  canManageCollection: z.boolean().optional().default(false),
-  canInviteMembers: z.boolean().optional().default(false),
-  canAddItems: z.boolean().optional().default(false),
-  canEditMetadata: z.boolean().optional().default(false),
-  canAddPhotos: z.boolean().optional().default(false),
-  canDeletePhotos: z.boolean().optional().default(false),
-  canSort: z.boolean().optional().default(false),
-  canViewOutputs: z.boolean().optional().default(false),
 });
 
 const UpdateInvitationSchema = z.object({
@@ -42,19 +34,13 @@ export class InvitationController {
     data: unknown,
   ): Promise<Invitation & { token: string }> {
     const parsed = CreateInvitationSchema.parse(data);
+    const email = parsed.email.trim().toLowerCase();
     const token = randomBytes(32).toString("hex");
+    // Flags are not accepted from callers — DB column defaults govern all permissions.
     const invitation = await this.invitationRepo.create({
       collectionId,
-      email: parsed.email,
+      email,
       token,
-      canManageCollection: parsed.canManageCollection,
-      canInviteMembers: parsed.canInviteMembers,
-      canAddItems: parsed.canAddItems,
-      canEditMetadata: parsed.canEditMetadata,
-      canAddPhotos: parsed.canAddPhotos,
-      canDeletePhotos: parsed.canDeletePhotos,
-      canSort: parsed.canSort,
-      canViewOutputs: parsed.canViewOutputs,
     });
     return { ...invitation, token };
   }
