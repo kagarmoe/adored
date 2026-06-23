@@ -14,7 +14,7 @@ vi.mock("next/navigation", () => ({
     throw new Error("REDIRECT");
   }),
 }));
-vi.mock("@/lib/collection-access", () => ({ requireCollectionAccess: mockRequireAccess }));
+vi.mock("@/lib/collection-access", () => ({ requireCollectionOwnerPage: mockRequireAccess }));
 vi.mock("@/components/layout", () => ({ AppLayout: ({ children }: any) => <div>{children}</div> }));
 vi.mock("@/features/collections/CollectionForm", () => ({ CollectionForm: () => <div>form</div> }));
 vi.mock("@/features/collections/DeleteCollectionSection", () => ({
@@ -28,16 +28,18 @@ beforeEach(() => {
   mockGetSession.mockResolvedValue({ user: { id: "u1" } });
 });
 
-describe("EditCollectionPage — delete-collection owner gate", () => {
-  it("shows the delete-collection section to the owner", async () => {
+describe("EditCollectionPage — owner-only gate (requireCollectionOwnerPage)", () => {
+  it("renders the edit form and delete section for the owner", async () => {
     mockRequireAccess.mockResolvedValue({ id: "c1", slug: "s", name: "C", ownerId: "u1" });
     render(await EditCollectionPage({ params: { id: "s" } }));
     expect(screen.getByTestId("delete-collection-section")).toBeInTheDocument();
   });
 
-  it("hides it from a non-owner (a member/manager who isn't the owner)", async () => {
-    mockRequireAccess.mockResolvedValue({ id: "c1", slug: "s", name: "C", ownerId: "other" });
-    render(await EditCollectionPage({ params: { id: "s" } }));
-    expect(screen.queryByTestId("delete-collection-section")).not.toBeInTheDocument();
+  it("redirects a non-owner (curator) before the page renders", async () => {
+    // requireCollectionOwnerPage redirects curators — simulate that redirect throw.
+    mockRequireAccess.mockImplementation(() => {
+      throw new Error("REDIRECT");
+    });
+    await expect(EditCollectionPage({ params: { id: "s" } })).rejects.toThrow("REDIRECT");
   });
 });

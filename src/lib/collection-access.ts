@@ -37,3 +37,19 @@ export async function requireCollectionAccess(
   if (!collection) redirect("/collections");
   return collection;
 }
+
+/** Owner-only page guard. Resolves the collection (member-or-owner first),
+ *  then enforces ownership. Non-owners (curators) are redirected to the
+ *  collection detail page; absent/no-access collections redirect to /collections.
+ *  `slugOrId` accepts slug or legacy ULID. */
+export async function requireCollectionOwnerPage(
+  db: Database,
+  slugOrId: string,
+  userId: string,
+): Promise<Collection> {
+  const collection = await requireCollectionAccess(db, slugOrId, userId);
+  if (collection.ownerId !== userId) {
+    redirect(`/collections/${collection.slug ?? collection.id}`);
+  }
+  return collection;
+}

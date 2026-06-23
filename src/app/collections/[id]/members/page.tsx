@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { requireCollectionAccess } from "@/lib/collection-access";
+import { requireCollectionOwnerPage } from "@/lib/collection-access";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { AppLayout } from "@/components/layout";
 import { SectionHeader } from "@/components/layout/SectionHeader";
@@ -19,12 +19,11 @@ export default async function MembersPage({ params }: MembersPageProps) {
   }
 
   const db = getDb();
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  // Owner-only page: members:manage = owner by role (purses-yqw).
+  const collection = await requireCollectionOwnerPage(db, params.id, session.user.id);
   const membershipRepo = new MembershipRepository(db);
 
   const members = await membershipRepo.findByCollection(collection.id);
-  const currentUserMembership = members.find((m) => m.userId === session.user!.id);
-  const canManage = currentUserMembership?.role === "owner" || currentUserMembership?.canManageCollection;
 
   return (
     <AppLayout
@@ -38,16 +37,14 @@ export default async function MembersPage({ params }: MembersPageProps) {
         {/* Members Section */}
         <div>
           <SectionHeader title="Members" description={`${members.length} member${members.length !== 1 ? "s" : ""}`} />
-          <MemberList members={members} canManage={canManage} />
+          <MemberList members={members} canManage={true} />
         </div>
 
         {/* Invite Section */}
-        {canManage && (
-          <div>
-            <SectionHeader title="Invite New Member" description="Add a new curator to this collection" />
-            <InviteForm collectionId={collection.id} />
-          </div>
-        )}
+        <div>
+          <SectionHeader title="Invite New Member" description="Add a new curator to this collection" />
+          <InviteForm collectionId={collection.id} />
+        </div>
       </div>
     </AppLayout>
   );
