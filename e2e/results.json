@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/1d9b6d432d56efad1f904ffb2941212c96ae82de",
-        "commitHash": "1d9b6d432d56efad1f904ffb2941212c96ae82de",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28057787724"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/4eb5c2eade46641fb6a32fa3e448e58562f34836",
+        "commitHash": "4eb5c2eade46641fb6a32fa3e448e58562f34836",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28060967327"
       },
       "gitCommit": {
-        "shortHash": "1d9b6d4",
-        "hash": "1d9b6d432d56efad1f904ffb2941212c96ae82de",
-        "subject": "PR1a — Profile + display name + session-carry (purses-wew) (#245)",
-        "body": "PR1a — Profile + display name + session-carry (purses-wew) (#245)\n\n* spec: UI/experience cluster design (epics A-D, sequencing, owner decisions)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* spec: fold adversarial spec-review findings (RoleBadge, count-grid, session-carry, CI placement, a11y prereqs)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* plan: PR1a profile + display name + session-carry (purses-wew)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* a11y(input): associate label with control via id (purses-1qor)\n\n* feat(profile): name-only update with trim/max/clear (purses-wew)\n\n* feat(auth): carry + refresh display name through the session (purses-wew)\n\n* test(auth): restore no-op + no-user branch coverage (review fix)\n\n* feat(profile): editable display-name form (purses-wew)\n\n* feat(profile): profile page + header entry point (purses-wew)\n\n* test(e2e): display-name reflects in header (purses-wew)\n\nprofile.spec.ts: authenticate via the shared storageState, edit the\nlabelled \"Display name\" on /profile, Save, and assert the banner shows\nthe new (unique, uuid-suffixed) name with no reload. Runs on all three\nviewport projects.\n\npurses-asz (UI-login→protected-page) was already covered by\ne2e/auth-navigation.spec.ts, so no login-protected.spec.ts is added.\npurses-y1o's shared ui.ts is consumed by auth.spec.ts and\nauth-navigation.spec.ts.\n\nCross-spec safe: every other spec keys off email/the session API, never\nthe display name; the new spec asserts on a freshly-set unique name.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(profile): empty-patch no-op + contract reconcile, announce save failure, session/clear correctness (review folds)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: name-only PATCH /api/users/me + display-name session-carry (sync-docs)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(screenshots): capture /profile surface (purses-wew)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "4eb5c2e",
+        "hash": "4eb5c2eade46641fb6a32fa3e448e58562f34836",
+        "subject": "PR1b — pv9 polish: role badge, primitive a11y, member/invite forms (#246)",
+        "body": "PR1b — pv9 polish: role badge, primitive a11y, member/invite forms (#246)\n\n* plan: PR1b pv9 polish (RoleBadge, primitive a11y, member/invite, nvj e2e)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(members): RoleBadge over existing Badge variants; drop tier-ramp-for-identity (purses-c0w)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* a11y(error): ErrorMessage announces via role=alert; de-dupe ProfileForm wrapper (purses-na0a)\n\n* a11y(textarea): label + error association + focus-visible (completes purses-1qor)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(textarea): cover explicit-id branch (review fold)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* a11y(input): error association + focus-visible (PR1a review folds)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(invite): clear success timer on unmount + announce via role=status (purses-th14)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(e2e): members + invitations spec (purses-nvj)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(items): reconcile item-detail delete-control test to photos:write contract (spec §5.5); confirm any-curator coverage (§5.4)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ui: focus-visible consistency, RoleBadge type/test, InviteForm persistent live region (pv9 PR1b review)\n\nFIX 1 (a11y): move error ring + border-transparent overrides from :focus to\n:focus-visible in Input and Textarea, so an errored field under pointer focus keeps\na visible boundary (red border no longer erased without a ring to replace it).\n\nFIX 2: narrow RoleBadge prop to \"owner\" | \"curator\" (matches MembershipRole);\nadd curator-side regression guards and broaden tier-absence to the full ramp.\n\nFIX 3 (a11y/UX): keep InviteForm always mounted with a persistent role=status live\nregion (announces reliably), clear email + allow immediate re-invite on success,\nrounded-lg -> rounded-control. Tests updated; drop dead console.error spy, keep\ngetTimerCount() leak guard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph for PR1b (RoleBadge, primitive a11y)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(screenshots): members surface shows RoleBadge via seedMembersScenario (purses-c0w)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1782249511000
+          "time": 1782253165000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1782249511000
+          "time": 1782253165000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/1d9b6d432d56efad1f904ffb2941212c96ae82de",
-            "commitHash": "1d9b6d432d56efad1f904ffb2941212c96ae82de",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28057787724"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/4eb5c2eade46641fb6a32fa3e448e58562f34836",
+            "commitHash": "4eb5c2eade46641fb6a32fa3e448e58562f34836",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28060967327"
           },
           "gitCommit": {
-            "shortHash": "1d9b6d4",
-            "hash": "1d9b6d432d56efad1f904ffb2941212c96ae82de",
-            "subject": "PR1a — Profile + display name + session-carry (purses-wew) (#245)",
-            "body": "PR1a — Profile + display name + session-carry (purses-wew) (#245)\n\n* spec: UI/experience cluster design (epics A-D, sequencing, owner decisions)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* spec: fold adversarial spec-review findings (RoleBadge, count-grid, session-carry, CI placement, a11y prereqs)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* plan: PR1a profile + display name + session-carry (purses-wew)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* a11y(input): associate label with control via id (purses-1qor)\n\n* feat(profile): name-only update with trim/max/clear (purses-wew)\n\n* feat(auth): carry + refresh display name through the session (purses-wew)\n\n* test(auth): restore no-op + no-user branch coverage (review fix)\n\n* feat(profile): editable display-name form (purses-wew)\n\n* feat(profile): profile page + header entry point (purses-wew)\n\n* test(e2e): display-name reflects in header (purses-wew)\n\nprofile.spec.ts: authenticate via the shared storageState, edit the\nlabelled \"Display name\" on /profile, Save, and assert the banner shows\nthe new (unique, uuid-suffixed) name with no reload. Runs on all three\nviewport projects.\n\npurses-asz (UI-login→protected-page) was already covered by\ne2e/auth-navigation.spec.ts, so no login-protected.spec.ts is added.\npurses-y1o's shared ui.ts is consumed by auth.spec.ts and\nauth-navigation.spec.ts.\n\nCross-spec safe: every other spec keys off email/the session API, never\nthe display name; the new spec asserts on a freshly-set unique name.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(profile): empty-patch no-op + contract reconcile, announce save failure, session/clear correctness (review folds)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: name-only PATCH /api/users/me + display-name session-carry (sync-docs)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(screenshots): capture /profile surface (purses-wew)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "4eb5c2e",
+            "hash": "4eb5c2eade46641fb6a32fa3e448e58562f34836",
+            "subject": "PR1b — pv9 polish: role badge, primitive a11y, member/invite forms (#246)",
+            "body": "PR1b — pv9 polish: role badge, primitive a11y, member/invite forms (#246)\n\n* plan: PR1b pv9 polish (RoleBadge, primitive a11y, member/invite, nvj e2e)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(members): RoleBadge over existing Badge variants; drop tier-ramp-for-identity (purses-c0w)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* a11y(error): ErrorMessage announces via role=alert; de-dupe ProfileForm wrapper (purses-na0a)\n\n* a11y(textarea): label + error association + focus-visible (completes purses-1qor)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(textarea): cover explicit-id branch (review fold)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* a11y(input): error association + focus-visible (PR1a review folds)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(invite): clear success timer on unmount + announce via role=status (purses-th14)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(e2e): members + invitations spec (purses-nvj)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(items): reconcile item-detail delete-control test to photos:write contract (spec §5.5); confirm any-curator coverage (§5.4)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ui: focus-visible consistency, RoleBadge type/test, InviteForm persistent live region (pv9 PR1b review)\n\nFIX 1 (a11y): move error ring + border-transparent overrides from :focus to\n:focus-visible in Input and Textarea, so an errored field under pointer focus keeps\na visible boundary (red border no longer erased without a ring to replace it).\n\nFIX 2: narrow RoleBadge prop to \"owner\" | \"curator\" (matches MembershipRole);\nadd curator-side regression guards and broaden tier-absence to the full ramp.\n\nFIX 3 (a11y/UX): keep InviteForm always mounted with a persistent role=status live\nregion (announces reliably), clear email + allow immediate re-invite on success,\nrounded-lg -> rounded-control. Tests updated; drop dead console.error spy, keep\ngetTimerCount() leak guard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph for PR1b (RoleBadge, primitive a11y)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(screenshots): members surface shows RoleBadge via seedMembersScenario (purses-c0w)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782249511000
+              "time": 1782253165000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782249511000
+              "time": 1782253165000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/1d9b6d432d56efad1f904ffb2941212c96ae82de",
-            "commitHash": "1d9b6d432d56efad1f904ffb2941212c96ae82de",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28057787724"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/4eb5c2eade46641fb6a32fa3e448e58562f34836",
+            "commitHash": "4eb5c2eade46641fb6a32fa3e448e58562f34836",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28060967327"
           },
           "gitCommit": {
-            "shortHash": "1d9b6d4",
-            "hash": "1d9b6d432d56efad1f904ffb2941212c96ae82de",
-            "subject": "PR1a — Profile + display name + session-carry (purses-wew) (#245)",
-            "body": "PR1a — Profile + display name + session-carry (purses-wew) (#245)\n\n* spec: UI/experience cluster design (epics A-D, sequencing, owner decisions)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* spec: fold adversarial spec-review findings (RoleBadge, count-grid, session-carry, CI placement, a11y prereqs)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* plan: PR1a profile + display name + session-carry (purses-wew)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* a11y(input): associate label with control via id (purses-1qor)\n\n* feat(profile): name-only update with trim/max/clear (purses-wew)\n\n* feat(auth): carry + refresh display name through the session (purses-wew)\n\n* test(auth): restore no-op + no-user branch coverage (review fix)\n\n* feat(profile): editable display-name form (purses-wew)\n\n* feat(profile): profile page + header entry point (purses-wew)\n\n* test(e2e): display-name reflects in header (purses-wew)\n\nprofile.spec.ts: authenticate via the shared storageState, edit the\nlabelled \"Display name\" on /profile, Save, and assert the banner shows\nthe new (unique, uuid-suffixed) name with no reload. Runs on all three\nviewport projects.\n\npurses-asz (UI-login→protected-page) was already covered by\ne2e/auth-navigation.spec.ts, so no login-protected.spec.ts is added.\npurses-y1o's shared ui.ts is consumed by auth.spec.ts and\nauth-navigation.spec.ts.\n\nCross-spec safe: every other spec keys off email/the session API, never\nthe display name; the new spec asserts on a freshly-set unique name.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(profile): empty-patch no-op + contract reconcile, announce save failure, session/clear correctness (review folds)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: name-only PATCH /api/users/me + display-name session-carry (sync-docs)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(screenshots): capture /profile surface (purses-wew)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "4eb5c2e",
+            "hash": "4eb5c2eade46641fb6a32fa3e448e58562f34836",
+            "subject": "PR1b — pv9 polish: role badge, primitive a11y, member/invite forms (#246)",
+            "body": "PR1b — pv9 polish: role badge, primitive a11y, member/invite forms (#246)\n\n* plan: PR1b pv9 polish (RoleBadge, primitive a11y, member/invite, nvj e2e)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(members): RoleBadge over existing Badge variants; drop tier-ramp-for-identity (purses-c0w)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* a11y(error): ErrorMessage announces via role=alert; de-dupe ProfileForm wrapper (purses-na0a)\n\n* a11y(textarea): label + error association + focus-visible (completes purses-1qor)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(textarea): cover explicit-id branch (review fold)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* a11y(input): error association + focus-visible (PR1a review folds)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(invite): clear success timer on unmount + announce via role=status (purses-th14)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(e2e): members + invitations spec (purses-nvj)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(items): reconcile item-detail delete-control test to photos:write contract (spec §5.5); confirm any-curator coverage (§5.4)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ui: focus-visible consistency, RoleBadge type/test, InviteForm persistent live region (pv9 PR1b review)\n\nFIX 1 (a11y): move error ring + border-transparent overrides from :focus to\n:focus-visible in Input and Textarea, so an errored field under pointer focus keeps\na visible boundary (red border no longer erased without a ring to replace it).\n\nFIX 2: narrow RoleBadge prop to \"owner\" | \"curator\" (matches MembershipRole);\nadd curator-side regression guards and broaden tier-absence to the full ramp.\n\nFIX 3 (a11y/UX): keep InviteForm always mounted with a persistent role=status live\nregion (announces reliably), clear email + allow immediate re-invite on success,\nrounded-lg -> rounded-control. Tests updated; drop dead console.error spy, keep\ngetTimerCount() leak guard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph for PR1b (RoleBadge, primitive a11y)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(screenshots): members surface shows RoleBadge via seedMembersScenario (purses-c0w)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782249511000
+              "time": 1782253165000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782249511000
+              "time": 1782253165000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/1d9b6d432d56efad1f904ffb2941212c96ae82de",
-            "commitHash": "1d9b6d432d56efad1f904ffb2941212c96ae82de",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28057787724"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/4eb5c2eade46641fb6a32fa3e448e58562f34836",
+            "commitHash": "4eb5c2eade46641fb6a32fa3e448e58562f34836",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28060967327"
           },
           "gitCommit": {
-            "shortHash": "1d9b6d4",
-            "hash": "1d9b6d432d56efad1f904ffb2941212c96ae82de",
-            "subject": "PR1a — Profile + display name + session-carry (purses-wew) (#245)",
-            "body": "PR1a — Profile + display name + session-carry (purses-wew) (#245)\n\n* spec: UI/experience cluster design (epics A-D, sequencing, owner decisions)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* spec: fold adversarial spec-review findings (RoleBadge, count-grid, session-carry, CI placement, a11y prereqs)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* plan: PR1a profile + display name + session-carry (purses-wew)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* a11y(input): associate label with control via id (purses-1qor)\n\n* feat(profile): name-only update with trim/max/clear (purses-wew)\n\n* feat(auth): carry + refresh display name through the session (purses-wew)\n\n* test(auth): restore no-op + no-user branch coverage (review fix)\n\n* feat(profile): editable display-name form (purses-wew)\n\n* feat(profile): profile page + header entry point (purses-wew)\n\n* test(e2e): display-name reflects in header (purses-wew)\n\nprofile.spec.ts: authenticate via the shared storageState, edit the\nlabelled \"Display name\" on /profile, Save, and assert the banner shows\nthe new (unique, uuid-suffixed) name with no reload. Runs on all three\nviewport projects.\n\npurses-asz (UI-login→protected-page) was already covered by\ne2e/auth-navigation.spec.ts, so no login-protected.spec.ts is added.\npurses-y1o's shared ui.ts is consumed by auth.spec.ts and\nauth-navigation.spec.ts.\n\nCross-spec safe: every other spec keys off email/the session API, never\nthe display name; the new spec asserts on a freshly-set unique name.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(profile): empty-patch no-op + contract reconcile, announce save failure, session/clear correctness (review folds)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: name-only PATCH /api/users/me + display-name session-carry (sync-docs)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(screenshots): capture /profile surface (purses-wew)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "4eb5c2e",
+            "hash": "4eb5c2eade46641fb6a32fa3e448e58562f34836",
+            "subject": "PR1b — pv9 polish: role badge, primitive a11y, member/invite forms (#246)",
+            "body": "PR1b — pv9 polish: role badge, primitive a11y, member/invite forms (#246)\n\n* plan: PR1b pv9 polish (RoleBadge, primitive a11y, member/invite, nvj e2e)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(members): RoleBadge over existing Badge variants; drop tier-ramp-for-identity (purses-c0w)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* a11y(error): ErrorMessage announces via role=alert; de-dupe ProfileForm wrapper (purses-na0a)\n\n* a11y(textarea): label + error association + focus-visible (completes purses-1qor)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(textarea): cover explicit-id branch (review fold)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* a11y(input): error association + focus-visible (PR1a review folds)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(invite): clear success timer on unmount + announce via role=status (purses-th14)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(e2e): members + invitations spec (purses-nvj)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(items): reconcile item-detail delete-control test to photos:write contract (spec §5.5); confirm any-curator coverage (§5.4)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ui: focus-visible consistency, RoleBadge type/test, InviteForm persistent live region (pv9 PR1b review)\n\nFIX 1 (a11y): move error ring + border-transparent overrides from :focus to\n:focus-visible in Input and Textarea, so an errored field under pointer focus keeps\na visible boundary (red border no longer erased without a ring to replace it).\n\nFIX 2: narrow RoleBadge prop to \"owner\" | \"curator\" (matches MembershipRole);\nadd curator-side regression guards and broaden tier-absence to the full ramp.\n\nFIX 3 (a11y/UX): keep InviteForm always mounted with a persistent role=status live\nregion (announces reliably), clear email + allow immediate re-invite on success,\nrounded-lg -> rounded-control. Tests updated; drop dead console.error spy, keep\ngetTimerCount() leak guard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph for PR1b (RoleBadge, primitive a11y)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(screenshots): members surface shows RoleBadge via seedMembersScenario (purses-c0w)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782249511000
+              "time": 1782253165000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782249511000
+              "time": 1782253165000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/1d9b6d432d56efad1f904ffb2941212c96ae82de",
-            "commitHash": "1d9b6d432d56efad1f904ffb2941212c96ae82de",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28057787724"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/4eb5c2eade46641fb6a32fa3e448e58562f34836",
+            "commitHash": "4eb5c2eade46641fb6a32fa3e448e58562f34836",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28060967327"
           },
           "gitCommit": {
-            "shortHash": "1d9b6d4",
-            "hash": "1d9b6d432d56efad1f904ffb2941212c96ae82de",
-            "subject": "PR1a — Profile + display name + session-carry (purses-wew) (#245)",
-            "body": "PR1a — Profile + display name + session-carry (purses-wew) (#245)\n\n* spec: UI/experience cluster design (epics A-D, sequencing, owner decisions)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* spec: fold adversarial spec-review findings (RoleBadge, count-grid, session-carry, CI placement, a11y prereqs)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* plan: PR1a profile + display name + session-carry (purses-wew)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* a11y(input): associate label with control via id (purses-1qor)\n\n* feat(profile): name-only update with trim/max/clear (purses-wew)\n\n* feat(auth): carry + refresh display name through the session (purses-wew)\n\n* test(auth): restore no-op + no-user branch coverage (review fix)\n\n* feat(profile): editable display-name form (purses-wew)\n\n* feat(profile): profile page + header entry point (purses-wew)\n\n* test(e2e): display-name reflects in header (purses-wew)\n\nprofile.spec.ts: authenticate via the shared storageState, edit the\nlabelled \"Display name\" on /profile, Save, and assert the banner shows\nthe new (unique, uuid-suffixed) name with no reload. Runs on all three\nviewport projects.\n\npurses-asz (UI-login→protected-page) was already covered by\ne2e/auth-navigation.spec.ts, so no login-protected.spec.ts is added.\npurses-y1o's shared ui.ts is consumed by auth.spec.ts and\nauth-navigation.spec.ts.\n\nCross-spec safe: every other spec keys off email/the session API, never\nthe display name; the new spec asserts on a freshly-set unique name.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(profile): empty-patch no-op + contract reconcile, announce save failure, session/clear correctness (review folds)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* docs: name-only PATCH /api/users/me + display-name session-carry (sync-docs)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(screenshots): capture /profile surface (purses-wew)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "4eb5c2e",
+            "hash": "4eb5c2eade46641fb6a32fa3e448e58562f34836",
+            "subject": "PR1b — pv9 polish: role badge, primitive a11y, member/invite forms (#246)",
+            "body": "PR1b — pv9 polish: role badge, primitive a11y, member/invite forms (#246)\n\n* plan: PR1b pv9 polish (RoleBadge, primitive a11y, member/invite, nvj e2e)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(members): RoleBadge over existing Badge variants; drop tier-ramp-for-identity (purses-c0w)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* a11y(error): ErrorMessage announces via role=alert; de-dupe ProfileForm wrapper (purses-na0a)\n\n* a11y(textarea): label + error association + focus-visible (completes purses-1qor)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(textarea): cover explicit-id branch (review fold)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* a11y(input): error association + focus-visible (PR1a review folds)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(invite): clear success timer on unmount + announce via role=status (purses-th14)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(e2e): members + invitations spec (purses-nvj)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(items): reconcile item-detail delete-control test to photos:write contract (spec §5.5); confirm any-curator coverage (§5.4)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* ui: focus-visible consistency, RoleBadge type/test, InviteForm persistent live region (pv9 PR1b review)\n\nFIX 1 (a11y): move error ring + border-transparent overrides from :focus to\n:focus-visible in Input and Textarea, so an errored field under pointer focus keeps\na visible boundary (red border no longer erased without a ring to replace it).\n\nFIX 2: narrow RoleBadge prop to \"owner\" | \"curator\" (matches MembershipRole);\nadd curator-side regression guards and broaden tier-absence to the full ramp.\n\nFIX 3 (a11y/UX): keep InviteForm always mounted with a persistent role=status live\nregion (announces reliably), clear email + allow immediate re-invite on success,\nrounded-lg -> rounded-control. Tests updated; drop dead console.error spy, keep\ngetTimerCount() leak guard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph for PR1b (RoleBadge, primitive a11y)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(screenshots): members surface shows RoleBadge via seedMembersScenario (purses-c0w)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782249511000
+              "time": 1782253165000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782249511000
+              "time": 1782253165000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 922,
+                  "duration": 928,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:21:07.434Z",
+                  "startTime": "2026-06-23T22:22:22.352Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -310,12 +310,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 6626,
+                      "duration": 11762,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:09.031Z",
+                      "startTime": "2026-06-23T22:22:23.998Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -344,12 +344,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2830,
+                      "duration": 3437,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:22:53.561Z",
+                      "startTime": "2026-06-23T22:24:55.987Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -378,12 +378,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 763,
+                      "duration": 707,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:07.453Z",
+                      "startTime": "2026-06-23T22:26:03.473Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -422,12 +422,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2923,
+                  "duration": 2483,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:21:16.334Z",
+                  "startTime": "2026-06-23T22:22:36.668Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -456,12 +456,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2092,
+                  "duration": 2191,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:21:19.323Z",
+                  "startTime": "2026-06-23T22:22:39.285Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -490,12 +490,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2016,
+                  "duration": 2510,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:22:56.599Z",
+                  "startTime": "2026-06-23T22:24:59.825Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -524,12 +524,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1960,
+                  "duration": 2989,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:22:58.682Z",
+                  "startTime": "2026-06-23T22:25:02.421Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -558,12 +558,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1045,
+                  "duration": 1111,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:24:09.009Z",
+                  "startTime": "2026-06-23T22:26:05.009Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -592,12 +592,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1269,
+                  "duration": 1248,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:24:10.105Z",
+                  "startTime": "2026-06-23T22:26:06.185Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -634,12 +634,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1619,
+                  "duration": 2511,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:21:21.457Z",
+                  "startTime": "2026-06-23T22:22:41.504Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -668,12 +668,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1465,
+                  "duration": 2547,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:21:23.119Z",
+                  "startTime": "2026-06-23T22:22:44.074Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -702,12 +702,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2175,
+                  "duration": 7041,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:21:24.618Z",
+                  "startTime": "2026-06-23T22:22:46.664Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -736,12 +736,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1515,
+                  "duration": 1951,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:23:00.677Z",
+                  "startTime": "2026-06-23T22:25:05.475Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -770,12 +770,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2284,
+                  "duration": 1957,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:23:02.264Z",
+                  "startTime": "2026-06-23T22:25:07.498Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -804,12 +804,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2459,
+                  "duration": 2163,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:23:04.580Z",
+                  "startTime": "2026-06-23T22:25:09.477Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -843,7 +843,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:24:11.411Z",
+                  "startTime": "2026-06-23T22:26:07.466Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -872,12 +872,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 748,
+                  "duration": 768,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:24:12.172Z",
+                  "startTime": "2026-06-23T22:26:08.247Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -906,12 +906,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1066,
+                  "duration": 1059,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:24:12.953Z",
+                  "startTime": "2026-06-23T22:26:09.037Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -955,12 +955,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 970,
+                      "duration": 3336,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:26.827Z",
+                      "startTime": "2026-06-23T22:22:54.169Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -989,12 +989,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1508,
+                      "duration": 4079,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:27.910Z",
+                      "startTime": "2026-06-23T22:22:59.888Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1023,12 +1023,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1113,
+                      "duration": 5374,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:29.451Z",
+                      "startTime": "2026-06-23T22:23:03.997Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1057,12 +1057,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1179,
+                      "duration": 1041,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:07.291Z",
+                      "startTime": "2026-06-23T22:25:11.705Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1091,12 +1091,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2025,
+                      "duration": 1706,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:09.399Z",
+                      "startTime": "2026-06-23T22:25:12.996Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1125,12 +1125,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1014,
+                      "duration": 1077,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:11.450Z",
+                      "startTime": "2026-06-23T22:25:14.733Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1159,12 +1159,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 460,
+                      "duration": 501,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:14.054Z",
+                      "startTime": "2026-06-23T22:26:10.123Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1193,12 +1193,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 698,
+                      "duration": 769,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:14.575Z",
+                      "startTime": "2026-06-23T22:26:10.687Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1227,12 +1227,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 452,
+                      "duration": 425,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:15.291Z",
+                      "startTime": "2026-06-23T22:26:11.474Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1278,12 +1278,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2049,
+                      "duration": 2766,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:30.620Z",
+                      "startTime": "2026-06-23T22:23:09.624Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1312,12 +1312,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4125,
+                      "duration": 2105,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:12.582Z",
+                      "startTime": "2026-06-23T22:25:15.864Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1346,12 +1346,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 729,
+                      "duration": 862,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:15.769Z",
+                      "startTime": "2026-06-23T22:26:11.930Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1397,12 +1397,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1824,
+                      "duration": 2506,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:32.751Z",
+                      "startTime": "2026-06-23T22:23:12.774Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1431,12 +1431,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3256,
+                      "duration": 2195,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:21.196Z",
+                      "startTime": "2026-06-23T22:25:18.126Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1465,12 +1465,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 695,
+                      "duration": 719,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:16.549Z",
+                      "startTime": "2026-06-23T22:26:12.842Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1516,12 +1516,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 973,
+                      "duration": 905,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:34.643Z",
+                      "startTime": "2026-06-23T22:23:15.522Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1550,12 +1550,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 875,
+                      "duration": 964,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:35.682Z",
+                      "startTime": "2026-06-23T22:23:16.900Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1584,12 +1584,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1218,
+                      "duration": 1119,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:24.939Z",
+                      "startTime": "2026-06-23T22:25:20.485Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1618,12 +1618,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1765,
+                      "duration": 1523,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:26.365Z",
+                      "startTime": "2026-06-23T22:25:21.788Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1652,12 +1652,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 413,
+                      "duration": 442,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:17.289Z",
+                      "startTime": "2026-06-23T22:26:13.604Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1686,12 +1686,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 437,
+                      "duration": 416,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:17.740Z",
+                      "startTime": "2026-06-23T22:26:14.085Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1737,12 +1737,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3079,
+                      "duration": 3308,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:36.601Z",
+                      "startTime": "2026-06-23T22:23:18.024Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1771,12 +1771,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4011,
+                      "duration": 5086,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:39.739Z",
+                      "startTime": "2026-06-23T22:23:21.432Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1805,12 +1805,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3627,
+                      "duration": 2858,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:28.787Z",
+                      "startTime": "2026-06-23T22:25:23.362Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1839,12 +1839,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3924,
+                      "duration": 4244,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:32.659Z",
+                      "startTime": "2026-06-23T22:25:26.364Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1873,12 +1873,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 901,
+                      "duration": 999,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:18.204Z",
+                      "startTime": "2026-06-23T22:26:14.530Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1907,12 +1907,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 750,
+                      "duration": 789,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:19.143Z",
+                      "startTime": "2026-06-23T22:26:15.574Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1958,12 +1958,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1773,
+                      "duration": 2383,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:43.804Z",
+                      "startTime": "2026-06-23T22:23:26.572Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1992,12 +1992,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1855,
+                      "duration": 2834,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:45.687Z",
+                      "startTime": "2026-06-23T22:23:29.164Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2026,12 +2026,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1381,
+                      "duration": 1686,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:36.641Z",
+                      "startTime": "2026-06-23T22:25:30.658Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2060,12 +2060,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2105,
+                      "duration": 2278,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:38.153Z",
+                      "startTime": "2026-06-23T22:25:32.481Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2094,12 +2094,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 472,
+                      "duration": 532,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:19.934Z",
+                      "startTime": "2026-06-23T22:26:16.394Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2128,12 +2128,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 577,
+                      "duration": 625,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:20.450Z",
+                      "startTime": "2026-06-23T22:26:16.968Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2179,12 +2179,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1276,
+                      "duration": 1593,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:47.580Z",
+                      "startTime": "2026-06-23T22:23:32.089Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2213,12 +2213,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1041,
+                      "duration": 1222,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:48.871Z",
+                      "startTime": "2026-06-23T22:23:33.695Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2247,12 +2247,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1023,
+                      "duration": 1265,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:49.921Z",
+                      "startTime": "2026-06-23T22:23:34.934Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2281,12 +2281,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1539,
+                      "duration": 1691,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:40.303Z",
+                      "startTime": "2026-06-23T22:25:34.803Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2315,12 +2315,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1238,
+                      "duration": 1265,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:41.859Z",
+                      "startTime": "2026-06-23T22:25:36.520Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2349,12 +2349,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1155,
+                      "duration": 1146,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:43.115Z",
+                      "startTime": "2026-06-23T22:25:37.797Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2383,12 +2383,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1077,
+                      "duration": 1083,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:21.053Z",
+                      "startTime": "2026-06-23T22:26:17.624Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2417,12 +2417,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1034,
+                      "duration": 1047,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:22.138Z",
+                      "startTime": "2026-06-23T22:26:18.717Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2451,12 +2451,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1019,
+                      "duration": 1023,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:23.181Z",
+                      "startTime": "2026-06-23T22:26:19.773Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2495,12 +2495,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 780,
+                  "duration": 1033,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:21:50.967Z",
+                  "startTime": "2026-06-23T22:23:36.230Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2529,12 +2529,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 996,
+                  "duration": 1509,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:21:51.792Z",
+                  "startTime": "2026-06-23T22:23:37.322Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2568,7 +2568,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:23:44.297Z",
+                  "startTime": "2026-06-23T22:25:38.971Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2597,12 +2597,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1181,
+                  "duration": 997,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:23:45.282Z",
+                  "startTime": "2026-06-23T22:25:39.978Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2631,12 +2631,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 267,
+                  "duration": 290,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:24:24.223Z",
+                  "startTime": "2026-06-23T22:26:20.818Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2665,12 +2665,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 592,
+                  "duration": 601,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:24:24.525Z",
+                  "startTime": "2026-06-23T22:26:21.142Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2681,6 +2681,320 @@
           "id": "9f98fd8c8d1538f5ebbb-1653d871c0a7a3765176",
           "file": "layout.spec.ts",
           "line": 45,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "members.spec.ts",
+      "file": "members.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "owner sees both RoleBadges and the email-only InviteForm",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 966,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-23T22:23:38.885Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "01480a904f937bb0a1f8-665e5b12467c70a0005c",
+          "file": "members.spec.ts",
+          "line": 32,
+          "column": 5
+        },
+        {
+          "title": "Remove is gated to the non-owner row",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 781,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-23T22:23:40.005Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "01480a904f937bb0a1f8-e8b72caedee0342e0519",
+          "file": "members.spec.ts",
+          "line": 51,
+          "column": 5
+        },
+        {
+          "title": "submitting a valid email shows the announced success",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1054,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-23T22:23:40.810Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "01480a904f937bb0a1f8-16a0057158965d3a7188",
+          "file": "members.spec.ts",
+          "line": 70,
+          "column": 5
+        },
+        {
+          "title": "owner sees both RoleBadges and the email-only InviteForm",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 966,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-23T22:25:41.007Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "01480a904f937bb0a1f8-328465747469e4ebf976",
+          "file": "members.spec.ts",
+          "line": 32,
+          "column": 5
+        },
+        {
+          "title": "Remove is gated to the non-owner row",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1043,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-23T22:25:42.137Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "01480a904f937bb0a1f8-92889333225f78df64e4",
+          "file": "members.spec.ts",
+          "line": 51,
+          "column": 5
+        },
+        {
+          "title": "submitting a valid email shows the announced success",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "phone",
+              "projectName": "phone",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 939,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-23T22:25:43.196Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "01480a904f937bb0a1f8-f5ba53192a4aeba77466",
+          "file": "members.spec.ts",
+          "line": 70,
+          "column": 5
+        },
+        {
+          "title": "owner sees both RoleBadges and the email-only InviteForm",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 342,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-23T22:26:21.766Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "01480a904f937bb0a1f8-cbb40fd19593f4e98197",
+          "file": "members.spec.ts",
+          "line": 32,
+          "column": 5
+        },
+        {
+          "title": "Remove is gated to the non-owner row",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 338,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-23T22:26:22.164Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "01480a904f937bb0a1f8-683f2853b1b976c28627",
+          "file": "members.spec.ts",
+          "line": 51,
+          "column": 5
+        },
+        {
+          "title": "submitting a valid email shows the announced success",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop",
+              "projectName": "desktop",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 423,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-06-23T22:26:22.515Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "01480a904f937bb0a1f8-b2a55763fd32635040bf",
+          "file": "members.spec.ts",
+          "line": 70,
           "column": 5
         }
       ]
@@ -2707,12 +3021,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1003,
+                  "duration": 1083,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:21:52.816Z",
+                  "startTime": "2026-06-23T22:23:41.910Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2741,12 +3055,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1355,
+                  "duration": 974,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:23:46.502Z",
+                  "startTime": "2026-06-23T22:25:44.177Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2775,12 +3089,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 400,
+                  "duration": 404,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:24:25.135Z",
+                  "startTime": "2026-06-23T22:26:22.969Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2824,12 +3138,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1209,
+                      "duration": 1212,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:53.844Z",
+                      "startTime": "2026-06-23T22:23:43.017Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2858,12 +3172,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1031,
+                      "duration": 923,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:47.898Z",
+                      "startTime": "2026-06-23T22:25:45.177Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2892,12 +3206,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 524,
+                      "duration": 595,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:25.553Z",
+                      "startTime": "2026-06-23T22:26:23.389Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2936,12 +3250,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 866,
+                  "duration": 768,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:21:55.132Z",
+                  "startTime": "2026-06-23T22:23:44.323Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2970,12 +3284,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1028,
+                  "duration": 878,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:21:56.017Z",
+                  "startTime": "2026-06-23T22:23:45.113Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3004,12 +3318,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1367,
+                  "duration": 1301,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:21:57.069Z",
+                  "startTime": "2026-06-23T22:23:46.014Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3038,12 +3352,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1093,
+                  "duration": 794,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:23:49.049Z",
+                  "startTime": "2026-06-23T22:25:46.183Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3072,12 +3386,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 938,
+                  "duration": 723,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:23:50.168Z",
+                  "startTime": "2026-06-23T22:25:46.997Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3106,12 +3420,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1126,
+                  "duration": 801,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:23:51.149Z",
+                  "startTime": "2026-06-23T22:25:47.737Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3140,12 +3454,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 243,
+                  "duration": 266,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:24:26.134Z",
+                  "startTime": "2026-06-23T22:26:24.047Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3174,12 +3488,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 236,
+                  "duration": 269,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:24:26.392Z",
+                  "startTime": "2026-06-23T22:26:24.327Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3208,12 +3522,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 254,
+                  "duration": 306,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T21:24:26.644Z",
+                  "startTime": "2026-06-23T22:26:24.610Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3257,12 +3571,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5620,
+                      "duration": 2104,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:21:58.477Z",
+                      "startTime": "2026-06-23T22:23:47.358Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3291,12 +3605,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1077,
+                      "duration": 1213,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:52.302Z",
+                      "startTime": "2026-06-23T22:25:48.556Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3325,12 +3639,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 436,
+                      "duration": 459,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:26.912Z",
+                      "startTime": "2026-06-23T22:26:24.932Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3376,12 +3690,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1544,
+                      "duration": 1493,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:22:05.803Z",
+                      "startTime": "2026-06-23T22:23:50.426Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3410,12 +3724,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1931,
+                      "duration": 2039,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:22:09.974Z",
+                      "startTime": "2026-06-23T22:23:56.055Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3444,12 +3758,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2311,
+                      "duration": 3000,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:22:11.962Z",
+                      "startTime": "2026-06-23T22:23:58.124Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3478,12 +3792,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1675,
+                      "duration": 1509,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:53.491Z",
+                      "startTime": "2026-06-23T22:25:49.837Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3512,12 +3826,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2650,
+                      "duration": 1636,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:55.244Z",
+                      "startTime": "2026-06-23T22:25:51.414Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3546,12 +3860,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1806,
+                      "duration": 1304,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:57.935Z",
+                      "startTime": "2026-06-23T22:25:53.078Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3580,12 +3894,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 435,
+                      "duration": 458,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:27.384Z",
+                      "startTime": "2026-06-23T22:26:25.437Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3614,12 +3928,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 691,
+                      "duration": 762,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:27.859Z",
+                      "startTime": "2026-06-23T22:26:25.930Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3648,12 +3962,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 444,
+                      "duration": 517,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:28.565Z",
+                      "startTime": "2026-06-23T22:26:26.708Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3690,12 +4004,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 9690,
+                      "duration": 7160,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:22:14.340Z",
+                      "startTime": "2026-06-23T22:24:01.178Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3724,12 +4038,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2404,
+                      "duration": 2552,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:22:24.613Z",
+                      "startTime": "2026-06-23T22:24:16.976Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3758,12 +4072,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3608,
+                      "duration": 4774,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:23:59.773Z",
+                      "startTime": "2026-06-23T22:25:54.419Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3792,12 +4106,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1519,
+                      "duration": 1459,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:03.435Z",
+                      "startTime": "2026-06-23T22:25:59.267Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3826,12 +4140,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1437,
+                      "duration": 1512,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:29.027Z",
+                      "startTime": "2026-06-23T22:26:27.242Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3860,12 +4174,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 405,
+                      "duration": 441,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:30.506Z",
+                      "startTime": "2026-06-23T22:26:28.808Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3902,12 +4216,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1692,
+                      "duration": 2059,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:22:27.048Z",
+                      "startTime": "2026-06-23T22:24:19.579Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3936,12 +4250,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1066,
+                      "duration": 1139,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:22:28.785Z",
+                      "startTime": "2026-06-23T22:24:21.695Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3970,12 +4284,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 840,
+                      "duration": 876,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:04.970Z",
+                      "startTime": "2026-06-23T22:26:00.745Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4004,12 +4318,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 892,
+                      "duration": 1047,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:05.838Z",
+                      "startTime": "2026-06-23T22:26:01.645Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4038,12 +4352,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 245,
+                      "duration": 256,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:30.933Z",
+                      "startTime": "2026-06-23T22:26:29.270Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4072,12 +4386,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 243,
+                      "duration": 239,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T21:24:31.198Z",
+                      "startTime": "2026-06-23T22:26:29.541Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4097,9 +4411,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-23T21:19:59.070Z",
-    "duration": 272670.148,
-    "expected": 106,
+    "startTime": "2026-06-23T22:21:10.182Z",
+    "duration": 319897.586,
+    "expected": 115,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

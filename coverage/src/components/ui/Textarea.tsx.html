@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>3/3</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.66% </span>
+                <span class="strong">93.33% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>6/9</span>
+                <span class='fraction'>14/15</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>3/3</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
@@ -100,20 +100,29 @@
 <a name='L35'></a><a href='#L35'>35</a>
 <a name='L36'></a><a href='#L36'>36</a>
 <a name='L37'></a><a href='#L37'>37</a>
-<a name='L38'></a><a href='#L38'>38</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">31x</span>
+<span class="cline-any cline-yes">33x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">25x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-yes">28x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -133,7 +142,20 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">31x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">33x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -145,30 +167,41 @@ interface TextareaProps extends React.TextareaHTMLAttributes&lt;HTMLTextAreaElem
 }
 &nbsp;
 const Textarea = React.forwardRef&lt;HTMLTextAreaElement, TextareaProps&gt;(
-  ({ label, error, className = "", ...props }, ref) =&gt; (
-    &lt;div className="w-full"&gt;
-      {label &amp;&amp; (
-        &lt;label className="block text-sm font-medium text-ink mb-2"&gt;
-          {label}
-          {props.required &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >&lt;span className="text-error"&gt;*&lt;/span&gt;}</span>
-        &lt;/label&gt;
-      )}
-      &lt;textarea
-        className={`
-          w-full bg-surface border border-hairline rounded-control px-4 py-3 text-ink
-          transition-shadow duration-200 ease-gentle
-          placeholder:text-ink-soft focus:outline-none focus:ring-2 focus:ring-primary
-          focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed
-          resize-none
-          ${error ? <span class="branch-0 cbranch-no" title="branch not covered" >"border-error focus:ring-error" : "</span>"}
-          ${className}
-        `}
-        ref={ref}
-        {...props}
-      /&gt;
-      {error &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >&lt;p className="text-error text-sm mt-2"&gt;{error}&lt;/p&gt;}</span>
-    &lt;/div&gt;
-  )
+  ({ label, error, className = "", id, ...props }, ref) =&gt; {
+    const generatedId = React.useId();
+    const textareaId = id ?? generatedId;
+    return (
+      &lt;div className="w-full"&gt;
+        {label &amp;&amp; (
+          &lt;label htmlFor={textareaId} className="block text-sm font-medium text-ink mb-2"&gt;
+            {label}
+            {props.required &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >&lt;span className="text-error"&gt;*&lt;/span&gt;}</span>
+          &lt;/label&gt;
+        )}
+        &lt;textarea
+          id={textareaId}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${textareaId}-error` : undefined}
+          className={`
+            w-full bg-surface border border-hairline rounded-control px-4 py-3 text-ink
+            transition-shadow duration-200 ease-gentle
+            placeholder:text-ink-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
+            focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed
+            resize-none
+            ${error ? "border-error focus-visible:ring-error" : ""}
+            ${className}
+          `}
+          ref={ref}
+          {...props}
+        /&gt;
+        {error &amp;&amp; (
+          &lt;p id={`${textareaId}-error`} className="text-error text-sm mt-2"&gt;
+            {error}
+          &lt;/p&gt;
+        )}
+      &lt;/div&gt;
+    );
+  }
 );
 Textarea.displayName = "Textarea";
 &nbsp;
@@ -181,7 +214,7 @@ export type { TextareaProps };
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T21:24:08.814Z
+                at 2026-06-23T22:25:27.648Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
