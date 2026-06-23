@@ -3,6 +3,7 @@ import type { User } from "@/types";
 import type { IUserRepository } from "@/server/repositories/UserRepository";
 import type { Database } from "@/lib/db";
 import { AccountDeletionService } from "@/server/services/AccountDeletionService";
+import { UserRepository } from "@/server/repositories/implementations/UserRepository";
 
 const UpdateUserSchema = z.object({
   name: z.string().min(1).optional(),
@@ -16,6 +17,10 @@ export class UserController {
     private userRepo: IUserRepository,
     private db: Database,
   ) {}
+
+  static fromDb(db: Database): UserController {
+    return new UserController(new UserRepository(db), db);
+  }
 
   async getCurrentUser(userId: string): Promise<User> {
     const user = await this.userRepo.findById(userId);

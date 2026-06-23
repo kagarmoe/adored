@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { SortResultShare } from "@/types";
 import type { ISortResultShareRepository } from "@/server/repositories/SortResultShareRepository";
 import { randomBytes } from "crypto";
+import type { Database } from "@/lib/db";
+import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 
 const CreateShareSchema = z.object({
   expiresAt: z.string().datetime().optional(),
@@ -17,6 +19,15 @@ export type UpdateShareInput = z.infer<typeof UpdateShareSchema>;
 
 export class ShareController {
   constructor(private shareRepo: ISortResultShareRepository) {}
+
+  static fromDb(db: Database): ShareController {
+    return new ShareController(new SortResultShareRepository(db));
+  }
+
+  async getByIdForResult(shareId: string, resultId: string): Promise<SortResultShare | null> {
+    const share = await this.shareRepo.findById(shareId);
+    return share && share.sortResultId === resultId ? share : null;
+  }
 
   async listShares(resultId: string): Promise<SortResultShare[]> {
     return this.shareRepo.findByResult(resultId);

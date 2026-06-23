@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type { Session } from "@/types";
 import type { ISessionRepository } from "@/server/repositories/SessionRepository";
+import type { Database } from "@/lib/db";
+import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 
 const CreateSessionSchema = z.object({
   goal: z.string().optional(),
@@ -16,6 +18,10 @@ export type UpdateSessionInput = z.infer<typeof UpdateSessionSchema>;
 
 export class SessionController {
   constructor(private sessionRepo: ISessionRepository) {}
+
+  static fromDb(db: Database): SessionController {
+    return new SessionController(new SessionRepository(db));
+  }
 
   async createSession(
     collectionId: string,

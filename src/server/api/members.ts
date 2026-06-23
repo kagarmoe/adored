@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type { CollectionMembership } from "@/types";
 import type { IMembershipRepository } from "@/server/repositories/MembershipRepository";
+import type { Database } from "@/lib/db";
+import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 
 const CreateMemberSchema = z.object({
   userId: z.string(),
@@ -10,6 +12,15 @@ export type CreateMemberInput = z.infer<typeof CreateMemberSchema>;
 
 export class MemberController {
   constructor(private membershipRepo: IMembershipRepository) {}
+
+  static fromDb(db: Database): MemberController {
+    return new MemberController(new MembershipRepository(db));
+  }
+
+  async getByIdForCollection(membershipId: string, collectionId: string): Promise<CollectionMembership | null> {
+    const row = await this.membershipRepo.findById(membershipId);
+    return row && row.collectionId === collectionId ? row : null;
+  }
 
   async listMembers(collectionId: string): Promise<CollectionMembership[]> {
     return this.membershipRepo.findByCollection(collectionId);

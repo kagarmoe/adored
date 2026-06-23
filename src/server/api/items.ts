@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type { Item } from "@/types";
 import type { IItemRepository } from "@/server/repositories/ItemRepository";
+import type { Database } from "@/lib/db";
+import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 
 const CreateItemSchema = z.object({
   name: z.string().min(1),
@@ -29,6 +31,10 @@ export type UpdateItemInput = z.infer<typeof UpdateItemSchema>;
 
 export class ItemController {
   constructor(private itemRepo: IItemRepository) {}
+
+  static fromDb(db: Database): ItemController {
+    return new ItemController(new ItemRepository(db));
+  }
 
   async listItems(collectionId: string): Promise<Item[]> {
     return this.itemRepo.findByCollection(collectionId);

@@ -1,6 +1,10 @@
 import type { Item } from "@/types";
 import type { IItemRepository } from "@/server/repositories/ItemRepository";
 import type { IPhotoRepository } from "@/server/repositories/PhotoRepository";
+import type { Database } from "@/lib/db";
+import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { AuditLogRepository } from "@/server/repositories/implementations/AuditLogRepository";
+import { withTransaction } from "@/lib/transactions";
 
 export const MAX_GROUP_PHOTOS = 50;
 
@@ -227,6 +231,29 @@ export class ItemService {
     return this.repo.update(itemId, {
       deletedAt: null,
       updatedAt: new Date(),
+    });
+  }
+}
+
+/** Thin service that owns the soft-delete+audit transaction for a single item. */
+export class ItemSoftDeleteService {
+  constructor(private db: Database) {}
+
+  static fromDb(db: Database): ItemSoftDeleteService {
+    return new ItemSoftDeleteService(db);
+  }
+
+  async softDeleteWithAudit(item: Item, actorId: string): Promise<Item> {
+    return withTransaction(this.db, async (tx) => {
+      const row = await new ItemRepository(tx).softDelete(item.id);
+      await new AuditLogRepository(tx).record({
+        actorId,
+        action: "item.delete",
+        targetType: "item",
+        targetId: item.id,
+        collectionId: item.collectionId,
+      });
+      return row;
     });
   }
 }
