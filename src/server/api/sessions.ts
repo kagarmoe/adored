@@ -36,17 +36,10 @@ export class SessionController {
     });
   }
 
-  async getSession(sessionId: string): Promise<Session> {
-    const session = await this.sessionRepo.findById(sessionId);
-    if (!session) {
-      throw new Error("Session not found");
-    }
-    return session;
-  }
-
   // Returns null for an absent session so the caller maps it to 404 WITHOUT
-  // swallowing a real DB/infra error (a thrown getSession caught blanketly
-  // would collapse an outage into 404). Mirrors ItemController.getItem.
+  // swallowing a real DB/infra error (a thrown getter caught blanketly would
+  // collapse an outage into 404). Mirrors ItemController.getItem. (The old
+  // throwing getSession was dropped — every caller migrated to this null getter.)
   async getSessionOrNull(sessionId: string): Promise<Session | null> {
     return this.sessionRepo.findById(sessionId);
   }
