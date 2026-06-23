@@ -7,14 +7,11 @@
 // Mocks ONLY auth (getSession/requireAuth) and getDb → test DB.
 // No @vercel/blob calls in these routes — not mocked.
 //
-// AUTHZ GAPS PINNED (do NOT fix here — tracked in the pv9 epic):
-//   purses-55c: GET /members is requireAuth-only — any authenticated user can list
-//               members of any collection (no membership/ownership check).
-//   purses-3al: POST /items/[id]/restore is requireAuth-only — any authenticated
-//               user can restore any item regardless of collection membership (IDOR).
-//   missing-404-archive-restore: POST /archive and /restore return 403 (not 404)
-//               for an absent collection because canManageCollection() uses findById,
-//               which returns null → false → "not manager" → 403.
+// AUTHZ pv9 (PR4 — all closed; tests below reflect current capability-gated behavior):
+//   purses-55c: GET /members is now members:read (curator) — no longer requireAuth-only.
+//   purses-3al: POST /items/[id]/restore is now requireApiItemCapability (items:write) — IDOR closed.
+//   archive/restore: an absent collection now returns a clean 404 (requireApiCapability
+//               resolves-then-authorizes) — was a 403 from canManageCollection → findById null.
 // @vitest-environment node
 
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -210,15 +207,15 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       expect(res.status).toBe(400);
     });
 
-    it("returns 403 for an absent collection (isCollectionManager returns false — no 404)", async () => {
+    it("404s an absent collection (requireApiCapability resolves-then-authorizes)", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
       const res = await membersPost(
         postReq({ userId: strangerId }),
         { params: { id: "col-absent" } },
       );
-      // isCollectionManager → findById → null → false → 403
-      expect(res.status).toBe(403);
+      // requireApiCapability → collection not found → 404
+      expect(res.status).toBe(404);
     });
 
     it("owner gets 400 on an invalid body (missing userId) via errorResponse — no member created (purses-pv9)", async () => {

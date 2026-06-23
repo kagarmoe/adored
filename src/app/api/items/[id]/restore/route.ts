@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { ItemController } from "@/server/api/items";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { requireApiCollectionAccess } from "@/server/dal/collection-access";
+import { requireApiItemCapability } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function POST(
   _request: NextRequest,
@@ -12,23 +13,14 @@ export async function POST(
   try {
     const user = await requireAuth();
     const db = getDb();
-    const itemRepo = new ItemRepository(db);
+    // items:write = curator. includeDeleted: true — the item to restore IS soft-deleted.
+    const item = await requireApiItemCapability(db, params.id, user.id, "items:write", { includeDeleted: true });
+    if (item instanceof NextResponse) return item;
 
-    // Lifecycle op: resolve INCLUDING soft-deleted (the item to restore is deleted).
-    const existing = await itemRepo.findByIdIncludingDeleted(params.id);
-    if (!existing) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-    const access = await requireApiCollectionAccess(db, existing.collectionId, user.id);
-    if (access instanceof NextResponse) return access;
-
-    const controller = new ItemController(itemRepo);
-    const item = await controller.restoreItem(params.id);
-    return NextResponse.json(item);
+    const controller = new ItemController(new ItemRepository(db));
+    const restored = await controller.restoreItem(params.id);
+    return NextResponse.json(restored);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }

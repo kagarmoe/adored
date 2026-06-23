@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { ItemController } from "@/server/api/items";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { requireApiCollectionAccess } from "@/server/dal/collection-access";
+import { requireApiItemCapability } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
 
@@ -13,15 +13,9 @@ export async function GET(
   try {
     const user = await requireAuth();
     const db = getDb();
-    const itemRepo = new ItemRepository(db);
-
-    const item = await itemRepo.findById(params.id);
-    if (!item) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-    const access = await requireApiCollectionAccess(db, item.collectionId, user.id);
-    if (access instanceof NextResponse) return access;
-
+    // items:read = curator. Default resolution (no includeDeleted) — soft-deleted → 404.
+    const item = await requireApiItemCapability(db, params.id, user.id, "items:read");
+    if (item instanceof NextResponse) return item;
     return NextResponse.json(item);
   } catch (error) {
     return errorResponse(error);
@@ -35,19 +29,14 @@ export async function PATCH(
   try {
     const user = await requireAuth();
     const db = getDb();
-    const itemRepo = new ItemRepository(db);
-
-    const existing = await itemRepo.findById(params.id);
-    if (!existing) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-    const access = await requireApiCollectionAccess(db, existing.collectionId, user.id);
-    if (access instanceof NextResponse) return access;
+    // items:write = curator. Default resolution — soft-deleted → 404.
+    const item = await requireApiItemCapability(db, params.id, user.id, "items:write");
+    if (item instanceof NextResponse) return item;
 
     const body = await request.json();
-    const controller = new ItemController(itemRepo);
-    const item = await controller.updateItem(params.id, body);
-    return NextResponse.json(item);
+    const controller = new ItemController(new ItemRepository(db));
+    const updated = await controller.updateItem(params.id, body);
+    return NextResponse.json(updated);
   } catch (error) {
     return errorResponse(error);
   }
@@ -60,18 +49,13 @@ export async function DELETE(
   try {
     const user = await requireAuth();
     const db = getDb();
-    const itemRepo = new ItemRepository(db);
+    // items:write = curator. Default resolution — soft-deleted → 404.
+    const item = await requireApiItemCapability(db, params.id, user.id, "items:write");
+    if (item instanceof NextResponse) return item;
 
-    const existing = await itemRepo.findById(params.id);
-    if (!existing) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-    const access = await requireApiCollectionAccess(db, existing.collectionId, user.id);
-    if (access instanceof NextResponse) return access;
-
-    const controller = new ItemController(itemRepo);
-    const item = await controller.deleteItem(params.id);
-    return NextResponse.json({ message: "Item deleted", item });
+    const controller = new ItemController(new ItemRepository(db));
+    const deleted = await controller.deleteItem(params.id);
+    return NextResponse.json({ message: "Item deleted", item: deleted });
   } catch (error) {
     return errorResponse(error);
   }

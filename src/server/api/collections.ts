@@ -77,24 +77,4 @@ export class CollectionController {
   async deleteCollection(collectionId: string): Promise<Collection> {
     return this.collectionRepo.softDelete(collectionId);
   }
-
-  async canManageCollection(
-    userId: string,
-    collectionId: string,
-  ): Promise<boolean> {
-    const collection = await this.collectionRepo.findById(collectionId);
-    if (!collection) return false;
-    if (collection.ownerId === userId) return true;
-
-    // Check membership for can_manage_collection permission
-    // TODO: Implement when MembershipRepository.findByUserAndCollection is available
-    // For now, only owners can manage
-    return false;
-  }
-
-  async isOwner(userId: string, collectionId: string): Promise<boolean> {
-    const collection = await this.collectionRepo.findById(collectionId);
-    if (!collection) return false;
-    return collection.ownerId === userId;
-  }
 }

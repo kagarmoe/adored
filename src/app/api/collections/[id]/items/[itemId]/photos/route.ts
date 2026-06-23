@@ -3,8 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireApiCapability } from "@/server/dal/collection-access";
 import { generateId } from "@/lib/id";
 import { put } from "@vercel/blob";
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_ERROR } from "@/lib/uploads";
@@ -22,25 +21,17 @@ export async function POST(
 
   const db = getDb();
   const itemRepo = new ItemRepository(db);
-  const membershipRepo = new MembershipRepository(db);
-  const collectionRepo = new CollectionRepository(db);
 
   try {
-    // Verify item belongs to collection and user has permission
+    // Verify item belongs to collection (belongs-to-parent).
     const item = await itemRepo.findById(params.itemId);
     if (!item || item.collectionId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const membership = await membershipRepo.findByUser(
-      session.user.id,
-      params.id
-    );
-    const collection = await collectionRepo.findById(params.id);
-    const isOwner = collection?.ownerId === session.user.id;
-    if ((!membership || !membership.canAddPhotos) && !isOwner) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    // photos:write = curator — any curator may add photos (full-curator model).
+    const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
+    if (access instanceof NextResponse) return access;
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
@@ -63,7 +54,6 @@ export async function POST(
     const buffer = await file.arrayBuffer();
     const blobPath = `items/${params.itemId}/${generateId("photo")}-${file.name}`;
 
-    // Upload to blob storage
     const blob = await put(blobPath, buffer, {
       access: "private",
       contentType: file.type,
@@ -73,7 +63,7 @@ export async function POST(
     const photo = await photoRepo.create({
       itemId: params.itemId,
       collectionId: params.id,
-      blobKey: blob.url, // Store actual blob URL
+      blobKey: blob.url,
       filename: file.name,
       mimeType: file.type,
       fileSize: buffer.byteLength,

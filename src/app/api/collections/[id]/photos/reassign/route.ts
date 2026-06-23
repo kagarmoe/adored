@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { requireApiCapability } from "@/server/dal/collection-access";
 import {
   ItemService,
   PoolGroupError,
@@ -13,9 +12,7 @@ import {
 } from "@/server/services/ItemService";
 
 // Unified "Move to…": reassigns selected photos to an existing item, a new item,
-// or back to the pool. Auth mirrors the other pool routes: member-or-owner. The
-// hero reconciliation and IDOR guard live in the service/repo; this handler
-// validates input and maps PoolGroupError to a status code.
+// or back to the pool. photos:write = curator (full-curator model).
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   const session = await getSession();
   if (!session?.user) {
@@ -23,16 +20,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   }
 
   const db = getDb();
-  const [collection, membership] = await Promise.all([
-    new CollectionRepository(db).findById(params.id),
-    new MembershipRepository(db).findByUser(session.user.id, params.id),
-  ]);
-  if (!collection) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-  if (!membership && collection.ownerId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  // photos:write = curator — any curator may reassign photos (full-curator model).
+  const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
+  if (access instanceof NextResponse) return access;
 
   let body: unknown;
   try {

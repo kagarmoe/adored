@@ -6,14 +6,13 @@
 // (so we can drive owner / member / stranger) and getDb -> the test db. These
 // routes touch no blob store, so no @vercel/blob mock.
 //
-// TWO DIFFERENT AUTHZ MODELS are pinned here:
-//   - /api/collections/[id]/items uses requireApiCollectionAccess (member-or-owner;
-//     404 absent collection / 403 outsider) — the correct, scoped gate.
-//   - /api/items/[id] is requireAuth-ONLY (no collection scoping at all). That is a
-//     cross-tenant IDOR gap tracked by purses-3al (fix owned by the pv9 epic). This
-//     file PINS the current (gap) behavior: any authenticated user can read/patch/
-//     delete ANY item, even one in a collection they have no access to. We assert
-//     what the handler does TODAY, not what it should do.
+// AUTHZ (post-pv9 PR4) — both route families are capability-gated:
+//   - /api/collections/[id]/items uses requireApiCapability (items:read on GET,
+//     items:write on POST; 404 absent collection / 403 non-member) — the scoped gate.
+//   - /api/items/[id] uses requireApiItemCapability (resolves item -> collection,
+//     then items:read/write). The cross-tenant IDOR gap (purses-3al) is CLOSED: a
+//     non-member now gets 403/404, not silent access. Tests below assert the
+//     capability-gated behavior, not the old requireAuth-only gap.
 //
 // Every "gone after" / "unchanged" assertion is paired with a "present before" /
 // "non-zero before" read, so a never-seeded row can't make the suite vacuously pass.
@@ -187,7 +186,8 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
   });
 
   // =====================================================================
-  // GET/PATCH/DELETE /api/items/[id] — requireAuth-ONLY (purses-3al IDOR gap)
+  // GET/PATCH/DELETE /api/items/[id] — requireApiItemCapability (items:read/write;
+  // purses-3al IDOR closed in PR4: resolves item -> collection, then authorizes)
   // =====================================================================
   describe("GET /api/items/[id]", () => {
     it("401s an unauthenticated caller", async () => {

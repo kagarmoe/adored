@@ -6,21 +6,17 @@
 // owner / curator-member / stranger) and getDb -> the test db. This route touches
 // no blob store, so no @vercel/blob mock.
 //
-// AUTHZ as-implemented (route.ts + collection-access.ts + members.ts):
-//   - GET: 401 unauth; then requireApiCollectionAccess (MEMBER-OR-OWNER) -> 404
+// AUTHZ as-implemented (route.ts + collection-access.ts):
+//   - GET: 401 unauth; then requireApiCapability("members:read") (curator) -> 404
 //     absent collection / 403 outsider; then belongs-to-parent -> 404 if the [mid]
 //     membership row's collectionId !== [id]; else 200 returns the membership.
 //   - PATCH: 401 unauth; 400 invalid JSON; belongs-to-parent 404 (runs BEFORE the
-//     role gate); then isCollectionManager -> 403; else updateMember.
+//     role gate); then requireApiCapability("members:manage") (owner) -> 403; else updateMember.
 //   - DELETE: 401 unauth; belongs-to-parent 404 (BEFORE the role gate); then
-//     isCollectionManager -> 403; else removeMember.
+//     requireApiCapability("members:manage") (owner) -> 403; else removeMember.
 //
-// PINNED GAP (do not fix — pv9 authz epic):
-//   - MemberController.isCollectionManager (members.ts:79) is `collection.ownerId
-//     === userId` only — its TODO comment confirms it IGNORES the canManageCollection
-//     flag. So a member whose membership has canManageCollection=true is STILL 403 on
-//     PATCH/DELETE; only the collection OWNER may manage members. Pinned below (bead
-//     purses-lgql).
+// purses-lgql CLOSED: members:manage = owner (role-derived from ownerId). The
+// canManageCollection flag is inert — a curator is always 403 on member management.
 //
 // Every "unchanged / gone after" assertion is paired with a "present / as-seeded
 // before" read via MembershipRepository, so a never-seeded row can't make the suite
@@ -204,9 +200,9 @@ describeDb("member-management route (route -> repo -> DB)", () => {
       expect((await repo.findById(mid))!.canManageCollection).toBe(false);
     });
 
-    it("pins: a member WITH canManageCollection=true is STILL 403 (isCollectionManager = ownerId only)", async () => {
-      // pins current behavior — isCollectionManager ignores the canManageCollection flag
-      // (members.ts:79 TODO; only the collection owner may manage members); purses-lgql, pv9 epic.
+    it("403s a member WITH canManageCollection=true (members:manage = owner by role, flag is inert — purses-lgql)", async () => {
+      // members:manage requires "owner" role derived from collection.ownerId — the
+      // canManageCollection flag is inert. A curator is always 403 on member management.
       const { collectionId } = await seedFullCollection(ownerId);
       // A member of THIS collection explicitly granted canManageCollection.
       const managerUserId = await seedUserRow("manager");

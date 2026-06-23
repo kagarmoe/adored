@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { requireApiCollectionAccess } from "@/server/dal/collection-access";
+import { requireApiCapability } from "@/server/dal/collection-access";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 
@@ -22,7 +22,9 @@ export async function POST(
   if (!photo || photo.itemId !== params.itemId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  const access = await requireApiCollectionAccess(db, params.id, session.user.id);
+
+  // photos:write = curator — any curator may set hero (full-curator model).
+  const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
   if (access instanceof NextResponse) return access;
 
   try {

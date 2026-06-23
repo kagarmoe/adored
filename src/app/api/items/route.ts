@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { ItemController } from "@/server/api/items";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { requireApiCollectionAccess } from "@/server/dal/collection-access";
+import { requireApiCapability } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
 
@@ -20,14 +20,12 @@ export async function POST(request: NextRequest) {
     }
 
     const db = getDb();
-    const access = await requireApiCollectionAccess(db, collectionId, user.id);
+    // items:write = curator — any curator may create items (full-curator model).
+    const access = await requireApiCapability(db, collectionId, user.id, "items:write");
     if (access instanceof NextResponse) return access;
 
     const body = await request.json();
-    const itemRepo = new ItemRepository(db);
-    const controller = new ItemController(itemRepo);
-
-    const item = await controller.createItem(collectionId, body);
+    const item = await new ItemController(new ItemRepository(db)).createItem(collectionId, body);
     return NextResponse.json(item, { status: 201 });
   } catch (error) {
     return errorResponse(error);

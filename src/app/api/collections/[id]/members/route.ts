@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { MemberController } from "@/server/api/members";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
-import { requireApiCollectionAccess } from "@/server/dal/collection-access";
+import { requireApiCapability } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
 
@@ -14,14 +13,13 @@ export async function GET(
   try {
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiCollectionAccess(db, params.id, user.id);
+    // members:read = curator — any curator may list members.
+    const access = await requireApiCapability(db, params.id, user.id, "members:read");
     if (access instanceof NextResponse) return access;
 
-    const membershipRepo = new MembershipRepository(db);
-    const collectionRepo = new CollectionRepository(db);
-    const controller = new MemberController(membershipRepo, collectionRepo);
-
-    const members = await controller.listMembers(params.id);
+    const members = await new MemberController(
+      new MembershipRepository(db),
+    ).listMembers(params.id);
     return NextResponse.json(members);
   } catch (error) {
     return errorResponse(error);
@@ -37,17 +35,13 @@ export async function POST(
     const body = await request.json();
 
     const db = getDb();
-    const membershipRepo = new MembershipRepository(db);
-    const collectionRepo = new CollectionRepository(db);
-    const controller = new MemberController(membershipRepo, collectionRepo);
+    // members:manage = owner — only the collection owner may add members.
+    const access = await requireApiCapability(db, params.id, user.id, "members:manage");
+    if (access instanceof NextResponse) return access;
 
-    // Check if user is collection manager (admin)
-    const isManager = await controller.isCollectionManager(params.id, user.id);
-    if (!isManager) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const member = await controller.addMember(params.id, body);
+    const member = await new MemberController(
+      new MembershipRepository(db),
+    ).addMember(params.id, body);
     return NextResponse.json(member, { status: 201 });
   } catch (error) {
     return errorResponse(error);
