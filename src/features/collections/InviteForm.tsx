@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Input, ErrorMessage } from "@/components/ui";
 import { apiPost } from "@/lib/api-client";
 import { z } from "zod";
@@ -20,6 +20,14 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
   const [success, setSuccess] = useState(false);
   const [email, setEmail] = useState("");
 
+  // Auto-reset the success view after 3s, cleaning the timer up on unmount so we
+  // never call setSuccess on an unmounted component (purses-th14).
+  useEffect(() => {
+    if (!success) return;
+    const t = setTimeout(() => setSuccess(false), 3000);
+    return () => clearTimeout(t);
+  }, [success]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -30,7 +38,6 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
       await apiPost(`/api/collections/${collectionId}/invitations`, validated);
       setSuccess(true);
       setEmail("");
-      setTimeout(() => setSuccess(false), 3000);
       onSuccess?.();
     } catch (err: any) {
       if (err instanceof z.ZodError) {
@@ -45,7 +52,11 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
 
   if (success) {
     return (
-      <div className="bg-success-soft border border-success-soft rounded-lg px-4 py-3 text-success-deep">
+      <div
+        role="status"
+        aria-live="polite"
+        className="bg-success-soft border border-success-soft rounded-lg px-4 py-3 text-success-deep"
+      >
         Invitation sent successfully!
       </div>
     );

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 // Boundary: fetch only. InviteForm posts through the REAL @/lib/api-client
 // (apiPost) and the REAL zod schema. The invite is email-only under the role model
@@ -64,6 +64,56 @@ describe("InviteForm", () => {
     expect(emailField().validity.typeMismatch).toBe(true);
     await waitFor(() => expect(fetch).not.toHaveBeenCalled());
     expect(screen.queryByText("Invitation sent successfully!")).not.toBeInTheDocument();
+  });
+
+  it("announces a sent invitation via role=status", async () => {
+    (fetch as any).mockResolvedValue({ ok: true, status: 201, json: async () => ({}) });
+
+    render(<InviteForm collectionId="coll_01ULID" />);
+    fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send Invitation" }));
+
+    // The success confirmation is exposed to assistive tech as a live status region.
+    expect(await screen.findByRole("status")).toHaveTextContent(/sent/i);
+  });
+
+  it("clears the success timer on unmount (no state update after unmount)", async () => {
+    vi.useFakeTimers();
+    try {
+      (fetch as any).mockResolvedValue({ ok: true, status: 201, json: async () => ({}) });
+      // A setState-after-unmount would log here; we also assert the timer is gone
+      // (the real, non-tautological guard — see getTimerCount below).
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const { unmount } = render(<InviteForm collectionId="coll_01ULID" />);
+      fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
+      fireEvent.click(screen.getByRole("button", { name: "Send Invitation" }));
+
+      // Flush the awaited apiPost so success state — and its 3s auto-reset timer — is set.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(screen.getByRole("status")).toHaveTextContent(/sent/i);
+      // The auto-reset timer is now pending.
+      expect(vi.getTimerCount()).toBeGreaterThan(0);
+
+      // Unmount BEFORE it fires. The effect cleanup must clearTimeout it: with the
+      // old inline setTimeout (no cleanup) the timer would survive unmount and later
+      // call setSuccess on the dead tree. getTimerCount === 0 proves it was cleared.
+      unmount();
+      expect(vi.getTimerCount()).toBe(0);
+
+      // And advancing past 3s fires nothing — no throw, no setState-after-unmount.
+      expect(() => {
+        act(() => {
+          vi.advanceTimersByTime(3000);
+        });
+      }).not.toThrow();
+      expect(errorSpy).not.toHaveBeenCalled();
+      errorSpy.mockRestore();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("a failing API response surfaces the server error and does NOT show success", async () => {
