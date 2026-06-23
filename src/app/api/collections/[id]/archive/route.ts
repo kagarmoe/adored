@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { CollectionController } from "@/server/api/collections";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireApiCapability } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function POST(
   _request: NextRequest,
@@ -11,28 +13,13 @@ export async function POST(
   try {
     const user = await requireAuth();
     const db = getDb();
-    const collectionRepo = new CollectionRepository(db);
-    const controller = new CollectionController(collectionRepo);
+    // requireApiCapability resolves-then-authorizes: 404 absent, 403 not owner.
+    const access = await requireApiCapability(db, params.id, user.id, "collection:manage");
+    if (access instanceof NextResponse) return access;
 
-    // Resolve first so an absent collection is a 404, not a 403 from the
-    // canManageCollection(findById→null→false) path (purses-nj7 ride-along).
-    const existing = await collectionRepo.findById(params.id);
-    if (!existing) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-
-    // Check if user can manage collection
-    const canManage = await controller.canManageCollection(user.id, params.id);
-    if (!canManage) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const collection = await controller.archiveCollection(params.id);
+    const collection = await new CollectionController(new CollectionRepository(db)).archiveCollection(params.id);
     return NextResponse.json(collection);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }

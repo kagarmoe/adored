@@ -210,15 +210,15 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       expect(res.status).toBe(400);
     });
 
-    it("returns 403 for an absent collection (isCollectionManager returns false — no 404)", async () => {
+    it("404s an absent collection (requireApiCapability resolves-then-authorizes)", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
       const res = await membersPost(
         postReq({ userId: strangerId }),
         { params: { id: "col-absent" } },
       );
-      // isCollectionManager → findById → null → false → 403
-      expect(res.status).toBe(403);
+      // requireApiCapability → collection not found → 404
+      expect(res.status).toBe(404);
     });
 
     it("owner gets 400 on an invalid body (missing userId) via errorResponse — no member created (purses-pv9)", async () => {

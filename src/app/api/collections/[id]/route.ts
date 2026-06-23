@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { CollectionController } from "@/server/api/collections";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
-import { requireApiCollectionAccess } from "@/server/dal/collection-access";
+import { requireApiCapability, requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
 
@@ -32,19 +32,12 @@ export async function PATCH(
 ) {
   try {
     const user = await requireAuth();
-    const body = await request.json();
-
     const db = getDb();
-    const collectionRepo = new CollectionRepository(db);
-    const controller = new CollectionController(collectionRepo);
+    const access = await requireApiCapability(db, params.id, user.id, "collection:manage");
+    if (access instanceof NextResponse) return access;
 
-    // Check if user can manage collection
-    const canManage = await controller.canManageCollection(user.id, params.id);
-    if (!canManage) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const collection = await controller.updateCollection(params.id, body);
+    const body = await request.json();
+    const collection = await new CollectionController(new CollectionRepository(db)).updateCollection(params.id, body);
     return NextResponse.json(collection);
   } catch (error) {
     return errorResponse(error);
@@ -58,16 +51,10 @@ export async function DELETE(
   try {
     const user = await requireAuth();
     const db = getDb();
-    const collectionRepo = new CollectionRepository(db);
-    const controller = new CollectionController(collectionRepo);
+    const access = await requireApiCapability(db, params.id, user.id, "collection:manage");
+    if (access instanceof NextResponse) return access;
 
-    // Only owner can delete
-    const isOwner = await controller.isOwner(user.id, params.id);
-    if (!isOwner) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const collection = await controller.deleteCollection(params.id);
+    const collection = await new CollectionController(new CollectionRepository(db)).deleteCollection(params.id);
     return NextResponse.json({ message: "Collection deleted", collection });
   } catch (error) {
     return errorResponse(error);
