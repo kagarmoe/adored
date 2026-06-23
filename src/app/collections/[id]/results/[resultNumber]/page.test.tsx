@@ -221,4 +221,27 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
     expect(screen.queryByText("What you love most")).toBeNull();
     expect(screen.queryByText(/the full ranking/i)).toBeNull();
   });
+
+  // The closing beat must not contradict itself: with nothing in the loved set the
+  // page cannot claim "these are the things you love most" (it would assert love of
+  // exactly the items it just sent Onward). The end-beat is conditional — all-Onward
+  // closes on the DECIDING / CLARITY instead, so the page still ends on affirmation
+  // (Peak-End), never on the letting-go list (TONE #1).
+  it("all-Onward ends on a clarity/deciding affirmation, never 'love most'", async () => {
+    resultItemRepo.findByResult.mockResolvedValue([
+      { id: "ri_low1", itemId: "i_low", computedRank: 1, manualRank: null, computedBucket: "low", manualBucket: null },
+    ]);
+    itemRepo.findByCollection.mockResolvedValue([{ id: "i_low", collectionId: "coll_01ABCDEF", number: 4, name: "Low Bag", brand: null, status: "active" }]);
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    // No "love most" claim when nothing was loved...
+    expect(screen.queryByText(/love most/i)).toBeNull();
+    // ...but the page still closes on affirmation about seeing clearly / the work done,
+    // and that close comes AFTER the Onward section (letting-go is never the last beat).
+    const close = screen.getByText(/saw each one clearly|that's the work|that is the work/i);
+    expect(close).toBeInTheDocument();
+    const onwardHeading = screen.getByRole("heading", { name: /where these go next/i });
+    const position = onwardHeading.compareDocumentPosition(close);
+    expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });

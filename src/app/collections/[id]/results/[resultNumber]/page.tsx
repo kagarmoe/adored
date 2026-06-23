@@ -151,8 +151,15 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
               </section>
             )}
 
-            {/* The last beat is affirmation, never the letting-go list (TONE #1). */}
-            <p className="font-display text-xl text-ink">These are the things you love most.</p>
+            {/* The last beat is affirmation, never the letting-go list (TONE #1).
+               When nothing was loved, the close cannot claim "love most" (it would
+               name the very items just sent Onward) — so all-Onward ends on the
+               clarity of having decided instead. Either way the page ends on affirmation. */}
+            <p className="font-display text-xl text-ink">
+              {loved.length > 0
+                ? "These are the things you love most."
+                : "You saw each one clearly — that's the work."}
+            </p>
           </div>
         )}
 
