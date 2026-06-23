@@ -15,6 +15,7 @@ const ErrorMessage = React.forwardRef<HTMLDivElement, ErrorMessageProps>(
         ${className}
       `}
       ref={ref}
+      role="alert"
       {...props}
     >
       <div>

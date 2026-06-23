@@ -94,7 +94,12 @@ describe("ItemDetailPage redesign (carousel + info card)", () => {
   });
 
   it("shows the delete control to a curator member (any member may delete — role model, not flags)", async () => {
-    // photos:write = member-or-owner; flags are gone. Any curator sees the control.
+    // This assertion is NOT stricter than the API — it matches it exactly. The photos
+    // DELETE route gates on requireApiCapability("photos:write"), and CAPABILITIES
+    // ["photos:write"] = "curator", which resolveEffectiveRole grants to the owner or
+    // any membership row. The page's canDeletePhotos (ownerId === user || membership)
+    // mirrors that boundary, so the control is visible to exactly the set the API lets
+    // delete: owner-or-curator. Flags are gone; role is the sole model.
     mockRequireAccess.mockResolvedValue({ ...COLLECTION, ownerId: "someone_else" });
     membershipRepo.findByUser.mockResolvedValue({ id: "m1", role: "curator" });
     await renderPage();

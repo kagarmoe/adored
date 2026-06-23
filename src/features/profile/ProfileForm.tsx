@@ -54,7 +54,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-      <div role="alert">{error && <ErrorMessage message={error} />}</div>
+      {error && <ErrorMessage message={error} />}
 
       <Input
         label="Display name"

@@ -15,4 +15,11 @@ describe("Input", () => {
     const input = screen.getByLabelText("Name");
     expect(input.id).toBe("name");
   });
+
+  it("associates the error text and marks the control invalid", () => {
+    render(<Input label="Name" error="Required" value="" onChange={() => {}} />);
+    const input = screen.getByLabelText("Name");
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    expect(input.getAttribute("aria-describedby")).toBe(screen.getByText("Required").id);
+  });
 });

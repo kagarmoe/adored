@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 // Boundary: fetch only. InviteForm posts through the REAL @/lib/api-client
 // (apiPost) and the REAL zod schema. The invite is email-only under the role model
@@ -43,12 +43,17 @@ describe("InviteForm", () => {
     // No permission flags in the payload — the role model owns all permissions.
     expect(Object.keys(body)).toEqual(["email"]);
 
-    // Success view replaces the form, and the callback fires.
+    // Success status appears, and the callback fires.
     await waitFor(() =>
       expect(screen.getByText("Invitation sent successfully!")).toBeInTheDocument(),
     );
     expect(onSuccess).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole("button", { name: "Send Invitation" })).not.toBeInTheDocument();
+
+    // The form stays mounted alongside the success status, so the user can invite
+    // again immediately — and the email field was cleared.
+    expect(screen.getByRole("button", { name: "Send Invitation" })).toBeInTheDocument();
+    expect(emailField()).toBeInTheDocument();
+    expect(emailField().value).toBe("");
   });
 
   it("a malformed email blocks submission — no fetch (native type=email guard fires before zod)", async () => {
@@ -64,6 +69,46 @@ describe("InviteForm", () => {
     expect(emailField().validity.typeMismatch).toBe(true);
     await waitFor(() => expect(fetch).not.toHaveBeenCalled());
     expect(screen.queryByText("Invitation sent successfully!")).not.toBeInTheDocument();
+  });
+
+  it("announces a sent invitation via role=status", async () => {
+    (fetch as any).mockResolvedValue({ ok: true, status: 201, json: async () => ({}) });
+
+    render(<InviteForm collectionId="coll_01ULID" />);
+    fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send Invitation" }));
+
+    // The live status region pre-exists (always mounted) so its text change is
+    // announced reliably; on success it carries the confirmation text.
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/sent/i));
+  });
+
+  it("clears the success timer on unmount (no leaked timer)", async () => {
+    vi.useFakeTimers();
+    try {
+      (fetch as any).mockResolvedValue({ ok: true, status: 201, json: async () => ({}) });
+
+      const { unmount } = render(<InviteForm collectionId="coll_01ULID" />);
+      fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
+      fireEvent.click(screen.getByRole("button", { name: "Send Invitation" }));
+
+      // Flush the awaited apiPost so success state — and its 3s auto-reset timer — is set.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(screen.getByRole("status")).toHaveTextContent(/sent/i);
+      // The auto-reset timer is now pending.
+      expect(vi.getTimerCount()).toBeGreaterThan(0);
+
+      // Unmount BEFORE it fires. The effect cleanup must clearTimeout it: with the
+      // old inline setTimeout (no cleanup) the timer would survive unmount and later
+      // call setSuccess on the dead tree. getTimerCount === 0 proves it was cleared.
+      unmount();
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("a failing API response surfaces the server error and does NOT show success", async () => {

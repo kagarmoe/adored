@@ -1,5 +1,5 @@
 import type { CollectionMembership } from "@/types";
-import { Badge } from "@/components/ui";
+import { RoleBadge } from "./RoleBadge";
 
 interface MemberListProps {
   members: CollectionMembership[];
@@ -21,15 +21,14 @@ export function MemberList({ members, canManage = false }: MemberListProps) {
           {members.map((member) => (
             <tr key={member.id} className="border-b border-hairline hover:bg-ground">
               <td className="px-4 py-3">
-                <div>
-                  <p className="font-medium text-ink">{member.name || member.userId}</p>
-                  <p className="text-xs text-ink-soft">{member.userId}</p>
-                </div>
+                {member.name ? (
+                  <p className="font-medium text-ink">{member.name}</p>
+                ) : (
+                  <p className="text-ink-soft">Member</p>
+                )}
               </td>
               <td className="px-4 py-3">
-                <Badge variant={member.role === "owner" ? "high" : "medium"}>
-                  {member.role === "owner" ? "Owner" : "Curator"}
-                </Badge>
+                <RoleBadge role={member.role} />
               </td>
               {canManage && member.role !== "owner" && (
                 <td className="px-4 py-3">

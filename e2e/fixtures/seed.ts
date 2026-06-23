@@ -241,6 +241,58 @@ export async function seedSortScenario(ownerId: string): Promise<{
   return { collectionId, slug, sessionNumber: session.number, itemIds, resultNumber: result.number };
 }
 
+/**
+ * Seed the members + invitations surface owned by `ownerId`: a collection (with
+ * slug), an OWNER membership row for `ownerId`, and a CURATOR membership row for
+ * a fresh 2nd user. Net-new because the members page reads only the `memberships`
+ * table (`listMembers` → `findByCollection`); a collection's `ownerId` alone
+ * produces ZERO membership rows, so the page would render an empty table with no
+ * RoleBadge. Both rows are needed to exercise: the owner "Owner" badge, the
+ * curator "Curator" badge + its Remove control, and the owner row having NO Remove.
+ *
+ * Uniquely-ided per call, so it is safe to seed per-test without resetDb()
+ * (which would wipe the baseline user the shared storageState depends on).
+ * Returns the ids the spec needs.
+ */
+export async function seedMembersScenario(ownerId: string): Promise<{
+  collectionId: string;
+  slug: string;
+  curatorUserId: string;
+  ownerMembershipId: string;
+  curatorMembershipId: string;
+}> {
+  const { db } = getTestDb();
+  const collectionId = generateId("col");
+  const slug = `e2e-members-${collectionId}`;
+  await db.insert(collectionsTable).values({
+    id: collectionId,
+    ownerId,
+    name: "E2E Members Bags",
+    slug,
+  });
+
+  const membershipRepo = new MembershipRepository(db);
+  const ownerMembership = await membershipRepo.create({
+    collectionId,
+    userId: ownerId,
+    role: "owner",
+  });
+  const curatorUserId = await seedUserRow("members-curator");
+  const curatorMembership = await membershipRepo.create({
+    collectionId,
+    userId: curatorUserId,
+    role: "curator",
+  });
+
+  return {
+    collectionId,
+    slug,
+    curatorUserId,
+    ownerMembershipId: ownerMembership.id,
+    curatorMembershipId: curatorMembership.id,
+  };
+}
+
 /** Credentials returned for a seeded user, ready to feed `apiContextFor`. */
 export interface SeededUser {
   id: string;

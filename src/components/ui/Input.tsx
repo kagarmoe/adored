@@ -18,19 +18,25 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(({ label, error, cl
       )}
       <input
         id={inputId}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${inputId}-error` : undefined}
         className={`
           w-full bg-surface border border-hairline rounded-control px-4 py-3 text-ink
           transition-shadow duration-200 ease-gentle
-          placeholder:text-ink-soft focus:outline-none focus:ring-2 focus:ring-primary
-          focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed
+          placeholder:text-ink-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
+          focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed
           h-12 min-h-12
-          ${error ? "border-error focus:ring-error" : ""}
+          ${error ? "border-error focus-visible:ring-error" : ""}
           ${className}
         `}
         ref={ref}
         {...props}
       />
-      {error && <p className="text-error text-sm mt-2">{error}</p>}
+      {error && (
+        <p id={`${inputId}-error`} className="text-error text-sm mt-2">
+          {error}
+        </p>
+      )}
     </div>
   );
 });
