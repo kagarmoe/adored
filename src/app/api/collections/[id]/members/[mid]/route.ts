@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { requireApiCollectionAccess } from "@/server/dal/collection-access";
+import { requireApiCapability } from "@/server/dal/collection-access";
 import { MemberController } from "@/server/api/members";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
@@ -17,7 +17,8 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
   const session = await getSession();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = getDb();
-  const access = await requireApiCollectionAccess(db, params.id, session.user.id);
+  // members:read = curator — any curator may read a membership.
+  const access = await requireApiCapability(db, params.id, session.user.id, "members:read");
   if (access instanceof NextResponse) return access;
   if (!(await membershipBelongsToCollection(db, params.mid, params.id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -39,12 +40,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   if (!(await membershipBelongsToCollection(db, params.mid, params.id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  const ctrl = new MemberController(new MembershipRepository(db), new CollectionRepository(db));
-  if (!(await ctrl.isCollectionManager(params.id, session.user.id))) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  // members:manage = owner — only the collection owner may update members.
+  const access = await requireApiCapability(db, params.id, session.user.id, "members:manage");
+  if (access instanceof NextResponse) return access;
   try {
-    return NextResponse.json(await ctrl.updateMember(params.mid, body));
+    return NextResponse.json(
+      await new MemberController(new MembershipRepository(db), new CollectionRepository(db)).updateMember(params.mid, body),
+    );
   } catch (error) {
     return errorResponse(error);
   }
@@ -57,10 +59,9 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
   if (!(await membershipBelongsToCollection(db, params.mid, params.id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  const ctrl = new MemberController(new MembershipRepository(db), new CollectionRepository(db));
-  if (!(await ctrl.isCollectionManager(params.id, session.user.id))) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-  await ctrl.removeMember(params.mid);
+  // members:manage = owner — only the collection owner may remove members.
+  const access = await requireApiCapability(db, params.id, session.user.id, "members:manage");
+  if (access instanceof NextResponse) return access;
+  await new MemberController(new MembershipRepository(db), new CollectionRepository(db)).removeMember(params.mid);
   return NextResponse.json({ message: "Member removed" });
 }
