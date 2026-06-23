@@ -350,10 +350,7 @@ The cross-tenant **IDOR holes are closed** (pv9 PR1, 2026-06-22): `GET /api/coll
 
 **Inert flag fields removed (pv9 PR8, `purses-us3d`):** the permission-flag fields are gone from the `CollectionMembership`/`Invitation` types, the repos, the owner bootstrap, and the UI (MemberList shows the role badge only; the invite form is email-only; `PermissionCheckboxes` deleted). Per **expand/contract**, PR8 ships only the column-free *code* (the DB keeps the now-inert columns); a follow-up deploy runs the `0007` DROP once the column-free code is live — because `vercel-build` auto-runs `db:migrate` and the repos' `.select()` names every schema column, so dropping in the same deploy would 500 the still-live old code during the build.
 
-Remaining deferred follow-ups (tracked):
-
-- `0007` DROP of the inert flag columns — second deploy of `purses-us3d`;
-- ESLint repo-import boundary, the second half of o03 (`purses-25ca`).
+The `0007` DROP of the inert flag columns shipped as the second deploy of `purses-us3d` (after the PR8 column-free code went live). Remaining follow-up: the ESLint repo-import boundary, the second half of o03 (`purses-25ca`).
 
 **Lockdown backstop shipped (pv9 PR5, `purses-o03`):** `src/lib/db/route-authz-enumeration.integration.test.ts` walks every `route.ts`, exercises each collection-scoped/curator-private route+method as a **stranger** and asserts `403`/`404` (never `200`/leaky `500`), and asserts **filesystem-exhaustiveness** — a new route in neither the `PUBLIC_OR_SELF` allowlist nor the stranger set fails CI. (Also fixed: `POST /api/sort-results/[id]/shares` now authorizes before parsing the body.)
 
