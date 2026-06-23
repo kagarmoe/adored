@@ -37,15 +37,6 @@ export async function POST(request: NextRequest) {
         collectionId: col.id,
         userId: user.id,
         role: "owner",
-        canManageCollection: true,
-        canInviteMembers: true,
-        canAddItems: true,
-        canDeleteItems: true,
-        canEditMetadata: true,
-        canAddPhotos: true,
-        canDeletePhotos: true,
-        canSort: true,
-        canViewOutputs: true,
       });
       return col;
     });

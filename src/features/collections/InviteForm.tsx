@@ -2,20 +2,11 @@
 
 import { useState } from "react";
 import { Button, Input, ErrorMessage } from "@/components/ui";
-import { PermissionCheckboxes } from "./PermissionCheckboxes";
 import { apiPost } from "@/lib/api-client";
 import { z } from "zod";
 
 const inviteSchema = z.object({
   email: z.string().email("Invalid email address"),
-  canAddItems: z.boolean(),
-  canDeleteItems: z.boolean(),
-  canAddPhotos: z.boolean(),
-  canDeletePhotos: z.boolean(),
-  canInviteMembers: z.boolean(),
-  canManageCollection: z.boolean(),
-  canCreateSession: z.boolean(),
-  canViewResults: z.boolean(),
 });
 
 interface InviteFormProps {
@@ -27,17 +18,7 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    canAddItems: true,
-    canDeleteItems: false,
-    canAddPhotos: true,
-    canDeletePhotos: false,
-    canInviteMembers: false,
-    canManageCollection: false,
-    canCreateSession: true,
-    canViewResults: true,
-  });
+  const [email, setEmail] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,20 +26,10 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
     setLoading(true);
 
     try {
-      const validated = inviteSchema.parse(formData);
+      const validated = inviteSchema.parse({ email });
       await apiPost(`/api/collections/${collectionId}/invitations`, validated);
       setSuccess(true);
-      setFormData({
-        email: "",
-        canAddItems: true,
-        canDeleteItems: false,
-        canAddPhotos: true,
-        canDeletePhotos: false,
-        canInviteMembers: false,
-        canManageCollection: false,
-        canCreateSession: true,
-        canViewResults: true,
-      });
+      setEmail("");
       setTimeout(() => setSuccess(false), 3000);
       onSuccess?.();
     } catch (err: any) {
@@ -89,21 +60,10 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
         type="email"
         required
         placeholder="curator@example.com"
-        value={formData.email}
-        onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
         disabled={loading}
       />
-
-      <div>
-        <h3 className="text-ink mb-4">Permissions</h3>
-        <PermissionCheckboxes
-          values={formData}
-          onChange={(key, value) =>
-            setFormData((prev) => ({ ...prev, [key]: value }))
-          }
-          disabled={loading}
-        />
-      </div>
 
       <Button type="submit" disabled={loading}>
         {loading ? "Sending..." : "Send Invitation"}

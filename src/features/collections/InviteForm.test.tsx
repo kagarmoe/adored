@@ -23,15 +23,13 @@ function emailField(): HTMLInputElement {
 }
 
 describe("InviteForm", () => {
-  it("POSTs the invited email plus the permission flags to the invitations route, then shows success and calls onSuccess", async () => {
+  it("POSTs only the email to the invitations route, then shows success and calls onSuccess", async () => {
     (fetch as any).mockResolvedValue({ ok: true, status: 201, json: async () => ({}) });
     const onSuccess = vi.fn();
 
     render(<InviteForm collectionId="coll_01ULID" onSuccess={onSuccess} />);
 
     fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
-    // Flip a default-off permission so we prove the checkbox value reaches the body.
-    fireEvent.click(screen.getByLabelText("Manage collection"));
     fireEvent.click(screen.getByRole("button", { name: "Send Invitation" }));
 
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
@@ -41,12 +39,8 @@ describe("InviteForm", () => {
     expect(init.method).toBe("POST");
     const body = JSON.parse(init.body);
     expect(body.email).toBe("curator@example.com");
-    // Default permission flags ride along...
-    expect(body.canAddItems).toBe(true);
-    expect(body.canViewResults).toBe(true);
-    expect(body.canDeleteItems).toBe(false);
-    // ...and the one we toggled is now true.
-    expect(body.canManageCollection).toBe(true);
+    // No permission flags in the payload — the role model owns all permissions.
+    expect(Object.keys(body)).toEqual(["email"]);
 
     // Success view replaces the form, and the callback fires.
     await waitFor(() =>
