@@ -15,6 +15,10 @@ describe("jwtCallback", () => {
     const t = await jwtCallback({ token: { id: "u1", name: "Old" }, trigger: "update", session: { name: null } } as any);
     expect(t.name).toBeNull();
   });
+  it("leaves the token unchanged when no user and no update", async () => {
+    const token = { id: "u1", name: "Kim" };
+    expect(await jwtCallback({ token } as any)).toEqual(token);
+  });
 });
 
 describe("sessionCallback", () => {
@@ -22,5 +26,10 @@ describe("sessionCallback", () => {
     const s = await sessionCallback({ session: { user: { email: "a@b.c" } }, token: { id: "u1", name: "Tessa" } } as any);
     expect((s.user as any).id).toBe("u1");
     expect(s.user!.name).toBe("Tessa");
+    expect(s.user!.email).toBe("a@b.c");
+  });
+  it("returns the session untouched when there is no user", async () => {
+    const session = { expires: "2099-01-01" };
+    expect(await sessionCallback({ session, token: { id: "u1" } } as any)).toBe(session);
   });
 });
