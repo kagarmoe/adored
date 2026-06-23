@@ -18,9 +18,12 @@ export function Header() {
           <ThemeToggle />
           {session?.user && (
             <>
-              <span className="text-sm text-ink-soft">
-                {session.user.name || session.user.email}
-              </span>
+              <Link
+                href="/profile"
+                className="flex h-11 items-center rounded-control px-2 text-sm text-ink-soft transition-colors hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+              >
+                {session.user.name || session.user.email?.split("@")[0]}
+              </Link>
               <button
                 type="button"
                 onClick={() => signOut({ redirect: true, callbackUrl: "/login" })}

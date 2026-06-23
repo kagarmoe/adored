@@ -43,6 +43,9 @@ for (const theme of ["light", "dark"] as const) {
       // pv9 PR8 (purses-us3d): members page renders MemberList (role badge only,
       // permission badges removed) + InviteForm (email-only, no permission checkboxes).
       ["members", `/collections/${slug}/members`],
+      // PR1a (purses-wew): editable display-name profile (no image — the img
+      // wait below just times out harmlessly via .catch).
+      ["profile", "/profile"],
     ];
     for (const [name, url] of surfaces) {
       await page.goto(url);

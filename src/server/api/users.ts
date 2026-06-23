@@ -6,8 +6,8 @@ import { AccountDeletionService } from "@/server/services/AccountDeletionService
 import { UserRepository } from "@/server/repositories/implementations/UserRepository";
 
 const UpdateUserSchema = z.object({
-  name: z.string().min(1).optional(),
-  email: z.string().email().optional(),
+  // name-only flow: trim, bound length, allow empty (= clear). Unknown keys stripped.
+  name: z.string().trim().max(80).optional(),
 });
 
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
@@ -32,10 +32,10 @@ export class UserController {
 
   async updateCurrentUser(userId: string, data: unknown): Promise<User> {
     const parsed = UpdateUserSchema.parse(data);
-    return this.userRepo.update(userId, {
-      ...(parsed.name && { name: parsed.name }),
-      ...(parsed.email && { email: parsed.email }),
-    });
+    // No-op when there is nothing to set (email-only or empty body). An empty
+    // patch would issue an UPDATE with no SET clause → DB error; return as-is.
+    if (parsed.name === undefined) return this.getCurrentUser(userId);
+    return this.userRepo.update(userId, { name: parsed.name === "" ? null : parsed.name });
   }
 
   async deleteCurrentUser(userId: string): Promise<void> {
