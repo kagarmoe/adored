@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/21</span>
+                <span class='fraction'>0/17</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/18</span>
+                <span class='fraction'>0/14</span>
             </div>
         
             
@@ -131,11 +131,7 @@
 <a name='L66'></a><a href='#L66'>66</a>
 <a name='L67'></a><a href='#L67'>67</a>
 <a name='L68'></a><a href='#L68'>68</a>
-<a name='L69'></a><a href='#L69'>69</a>
-<a name='L70'></a><a href='#L70'>70</a>
-<a name='L71'></a><a href='#L71'>71</a>
-<a name='L72'></a><a href='#L72'>72</a>
-<a name='L73'></a><a href='#L73'>73</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L69'></a><a href='#L69'>69</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -149,10 +145,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -208,10 +200,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { getDb } from "@/lib/db";
-import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
-import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
-import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { ShareController } from "@/server/api/shares";
+import { ResultController } from "@/server/api/results";
+import { ResultItemController } from "@/server/api/result-items";
+import { ItemController } from "@/server/api/items";
 import { Badge, Card, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
 import { notFound } from "next/navigation";
@@ -222,24 +214,20 @@ interface SharedResultPageProps {
 &nbsp;
 export default async function <span class="fstat-no" title="function not covered" >SharedResultPage({</span> params }: SharedResultPageProps) {
   const <span class="cstat-no" title="statement not covered" >db = getDb();</span>
-  const shareRepo = <span class="cstat-no" title="statement not covered" >new SortResultShareRepository(db);</span>
-  const resultRepo = <span class="cstat-no" title="statement not covered" >new SortResultRepository(db);</span>
-  const resultItemRepo = <span class="cstat-no" title="statement not covered" >new SortResultItemRepository(db);</span>
-  const itemRepo = <span class="cstat-no" title="statement not covered" >new ItemRepository(db);</span>
-  const share = <span class="cstat-no" title="statement not covered" >await shareRepo.findByToken(params.token);</span>
+  const share = <span class="cstat-no" title="statement not covered" >await ShareController.fromDb(db).findByToken(params.token);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  if (!share || share.status !== "active" || (share.expiresAt &amp;&amp; share.expiresAt &lt; new Date())) {</span>
 <span class="cstat-no" title="statement not covered" >    notFound();</span>
   }
 &nbsp;
-  const result = <span class="cstat-no" title="statement not covered" >await resultRepo.findById(share.sortResultId);</span>
+  const result = <span class="cstat-no" title="statement not covered" >await ResultController.fromDb(db).getResultOrNull(share.sortResultId);</span>
 <span class="cstat-no" title="statement not covered" >  if (!result || result.status !== "finalized") {</span>
 <span class="cstat-no" title="statement not covered" >    notFound();</span>
   }
 &nbsp;
   const [resultItems, items] = <span class="cstat-no" title="statement not covered" >await Promise.all([</span>
-    resultItemRepo.findByResult(result.id),
-    itemRepo.findByCollection(result.collectionId),
+    ResultItemController.fromDb(db).listResultItems(result.id),
+    ItemController.fromDb(db).listItems(result.collectionId),
   ]);
   const itemById = <span class="cstat-no" title="statement not covered" >new Map(items.map(<span class="fstat-no" title="function not covered" >(i</span>tem) =&gt; <span class="cstat-no" title="statement not covered" >[item.id, item])</span>);</span>
   const sortedResultItems = <span class="cstat-no" title="statement not covered" >[...resultItems].sort(<span class="fstat-no" title="function not covered" >(a</span>, <span class="cstat-no" title="statement not covered" >b) =&gt; (a.manualRank ?? a.computedRank) - (b.manualRank ?? b.computedRank))</span>;</span>
@@ -286,7 +274,7 @@ export default async function <span class="fstat-no" title="function not covered
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T05:39:23.171Z
+                at 2026-06-23T07:20:41.687Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

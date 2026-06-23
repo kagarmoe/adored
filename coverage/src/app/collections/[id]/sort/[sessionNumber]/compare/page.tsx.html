@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">76.66% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>28/35</span>
+                <span class='fraction'>23/30</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">82.35% </span>
+                <span class="strong">79.31% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>28/34</span>
+                <span class='fraction'>23/29</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -202,12 +202,7 @@
 <a name='L137'></a><a href='#L137'>137</a>
 <a name='L138'></a><a href='#L138'>138</a>
 <a name='L139'></a><a href='#L139'>139</a>
-<a name='L140'></a><a href='#L140'>140</a>
-<a name='L141'></a><a href='#L141'>141</a>
-<a name='L142'></a><a href='#L142'>142</a>
-<a name='L143'></a><a href='#L143'>143</a>
-<a name='L144'></a><a href='#L144'>144</a>
-<a name='L145'></a><a href='#L145'>145</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L140'></a><a href='#L140'>140</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -232,10 +227,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -316,7 +307,6 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -355,15 +345,15 @@
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
-import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
-import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
+import { ItemController } from "@/server/api/items";
+import { SessionController } from "@/server/api/sessions";
+import { PreferenceController } from "@/server/api/preferences";
+import { DecisionController } from "@/server/api/decisions";
 import { AppLayout } from "@/components/layout";
 import { EmptyState } from "@/components/ui";
 import { CompareChoice } from "@/features/sorting/CompareChoice";
 import { selectNextPair } from "@/lib/pairwise-selection";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 &nbsp;
 interface ComparePageProps {
@@ -378,15 +368,11 @@ export default async function ComparePage({ params }: ComparePageProps) {
 &nbsp;
   const db = getDb();
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const itemRepo = new ItemRepository(db);
-  const sessionRepo = new SessionRepository(db);
-  const prefRepo = new CollectionPreferenceItemRepository(db);
-  const decisionRepo = new DecisionEventRepository(db);
 &nbsp;
   const sessionNumber = Number(params.sessionNumber);
   const sortSession =
     sessionNumber &gt; 0 &amp;&amp; Number.isInteger(sessionNumber)
-      ? await sessionRepo.findByCollectionAndNumber(collection.id, sessionNumber)
+      ? await SessionController.fromDb(db).getByCollectionAndNumber(collection.id, sessionNumber)
       : <span class="branch-1 cbranch-no" title="branch not covered" >null;</span>
 &nbsp;
   if (!sortSession || sortSession.collectionId !== collection.id) {
@@ -399,9 +385,9 @@ export default async function ComparePage({ params }: ComparePageProps) {
   }
 &nbsp;
   const [items, preferences, decisions] = await Promise.all([
-    itemRepo.findByCollection(collection.id),
-    prefRepo.findByCollection(collection.id, session.user.id),
-    decisionRepo.findBySession(sortSession.id),
+    ItemController.fromDb(db).listItems(collection.id),
+    PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id),
+    DecisionController.fromDb(db).listBySession(sortSession.id),
   ]);
 &nbsp;
   <span class="missing-if-branch" title="if path not taken" >I</span>if (items.length &lt; 2) {
@@ -456,8 +442,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
   }
 &nbsp;
   const [itemA, itemB] = pair;
-  const photoRepo = new PhotoRepository(db);
-  const covers = await photoRepo.findCoverPhotosByItemIds([itemA.id, itemB.id]);
+  const covers = await PhotoController.fromDb(db).findCoverPhotosByItemIds([itemA.id, itemB.id]);
   const coverA = covers.get(itemA.id);
   const coverB = covers.get(itemB.id);
   const heroA = coverA ? getPhotoAssetUrlForPhoto(coverA, collection.id, { w: PHOTO_WIDTH.card }) : <span class="branch-1 cbranch-no" title="branch not covered" >undefined;</span>
@@ -502,7 +487,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T05:39:23.171Z
+                at 2026-06-23T07:20:41.687Z
             </div>
         <script src="../../../../../../../prettify.js"></script>
         <script>

@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">97.61% </span>
+                <span class="strong">97.5% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>41/42</span>
+                <span class='fraction'>39/40</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">97.05% </span>
+                <span class="strong">96.87% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>33/34</span>
+                <span class='fraction'>31/32</span>
             </div>
         
             
@@ -128,8 +128,7 @@
 <a name='L63'></a><a href='#L63'>63</a>
 <a name='L64'></a><a href='#L64'>64</a>
 <a name='L65'></a><a href='#L65'>65</a>
-<a name='L66'></a><a href='#L66'>66</a>
-<a name='L67'></a><a href='#L67'>67</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L66'></a><a href='#L66'>66</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -140,8 +139,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">11x</span>
@@ -157,12 +156,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -200,14 +198,14 @@ import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { SessionController } from "@/server/api/sessions";
-import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { errorResponse } from "@/server/api/http-errors";
 &nbsp;
-// Load the session, then authorize its collection. Returns the controller-ready
-// repo + a typed guard outcome, or a NextResponse to return immediately.
+// Load the session, then authorize its collection. Returns the resolved session
+// (so callers can reuse it without re-fetching) or a NextResponse to return
+// immediately. A null session is 404; a real DB error propagates (→ 500), never
+// masked as a 404 — getSessionOrNull separates absence from failure.
 async function authorizeSession(db: ReturnType&lt;typeof getDb&gt;, sessionId: string, userId: string) {
-  const sessionRepo = new SessionRepository(db);
-  const sortSession = await sessionRepo.findById(sessionId);
+  const sortSession = await SessionController.fromDb(db).getSessionOrNull(sessionId);
   if (!sortSession) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const access = await requireApiCollectionAccess(db, sortSession.collectionId, userId);
   if (access instanceof NextResponse) return access;
@@ -219,7 +217,7 @@ async function authorizeSession(db: ReturnType&lt;typeof getDb&gt;, sessionId: s
       { status: 403 },
     );
   }
-  return { sessionRepo };
+  return { sortSession };
 }
 &nbsp;
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
@@ -228,8 +226,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
   const db = getDb();
   const guard = await authorizeSession(db, params.id, session.user.id);
   if (guard instanceof NextResponse) return guard;
-  const result = await new SessionController(guard.sessionRepo).getSession(params.id);
-  return NextResponse.json(result);
+  return NextResponse.json(guard.sortSession);
 }
 &nbsp;
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
@@ -245,7 +242,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   const guard = await authorizeSession(db, params.id, session.user.id);
   if (guard instanceof NextResponse) return guard;
   try {
-    const result = await new SessionController(guard.sessionRepo).updateSession(params.id, body);
+    const result = await SessionController.fromDb(db).updateSession(params.id, body);
     return NextResponse.json(result);
   } catch (error) {
     return errorResponse(error);
@@ -258,7 +255,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
   const db = getDb();
   const guard = await authorizeSession(db, params.id, session.user.id);
   if (guard instanceof NextResponse) return guard;
-  await new SessionController(guard.sessionRepo).deleteSession(params.id);
+  await SessionController.fromDb(db).deleteSession(params.id);
   return NextResponse.json({ message: "Session deleted" });
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -268,7 +265,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T05:39:23.171Z
+                at 2026-06-23T07:20:41.687Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

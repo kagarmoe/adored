@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">83.33% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>12/15</span>
+                <span class='fraction'>15/18</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">87.5% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>4/5</span>
+                <span class='fraction'>7/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">83.33% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>12/15</span>
+                <span class='fraction'>15/18</span>
             </div>
         
             
@@ -108,22 +108,44 @@
 <a name='L43'></a><a href='#L43'>43</a>
 <a name='L44'></a><a href='#L44'>44</a>
 <a name='L45'></a><a href='#L45'>45</a>
-<a name='L46'></a><a href='#L46'>46</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">22x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">22x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -132,6 +154,16 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -157,6 +189,8 @@
 import type { SortResult } from "@/types";
 import type { ISortResultRepository } from "@/server/repositories/SortResultRepository";
 import { FinalizeStateError } from "@/server/services/SortResultService";
+import type { Database } from "@/lib/db";
+import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 &nbsp;
 const UpdateResultSchema = z.object({
   name: z.string().min(1).optional(),
@@ -167,8 +201,12 @@ export type UpdateResultInput = z.infer&lt;typeof UpdateResultSchema&gt;;
 export class ResultController {
   constructor(private resultRepo: ISortResultRepository) {}
 &nbsp;
-  async <span class="fstat-no" title="function not covered" >listResults(c</span>ollectionId: string): Promise&lt;SortResult[]&gt; {
-<span class="cstat-no" title="statement not covered" >    return this.resultRepo.findByCollection(collectionId);</span>
+  static fromDb(db: Database): ResultController {
+    return new ResultController(new SortResultRepository(db));
+  }
+&nbsp;
+  async listResults(collectionId: string): Promise&lt;SortResult[]&gt; {
+    return this.resultRepo.findByCollection(collectionId);
   }
 &nbsp;
   async getResult(resultId: string): Promise&lt;SortResult&gt; {
@@ -177,6 +215,16 @@ export class ResultController {
 <span class="cstat-no" title="statement not covered" >      throw new Error("Result not found");</span>
     }
     return result;
+  }
+&nbsp;
+  // Returns null for an absent result so the caller maps it to notFound/404
+  // without masking a real DB error (mirrors ItemController.getItem).
+  async <span class="fstat-no" title="function not covered" >getResultOrNull(r</span>esultId: string): Promise&lt;SortResult | null&gt; {
+<span class="cstat-no" title="statement not covered" >    return this.resultRepo.findById(resultId);</span>
+  }
+&nbsp;
+  async getByCollectionAndNumber(collectionId: string, number: number): Promise&lt;SortResult | null&gt; {
+    return this.resultRepo.findByCollectionAndNumber(collectionId, number);
   }
 &nbsp;
   async updateResult(resultId: string, data: unknown): Promise&lt;SortResult&gt; {
@@ -205,7 +253,7 @@ export class ResultController {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T05:39:23.171Z
+                at 2026-06-23T07:20:41.687Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>23/23</span>
+                <span class='fraction'>18/18</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>20/20</span>
+                <span class='fraction'>15/15</span>
             </div>
         
             
@@ -114,17 +114,7 @@
 <a name='L49'></a><a href='#L49'>49</a>
 <a name='L50'></a><a href='#L50'>50</a>
 <a name='L51'></a><a href='#L51'>51</a>
-<a name='L52'></a><a href='#L52'>52</a>
-<a name='L53'></a><a href='#L53'>53</a>
-<a name='L54'></a><a href='#L54'>54</a>
-<a name='L55'></a><a href='#L55'>55</a>
-<a name='L56'></a><a href='#L56'>56</a>
-<a name='L57'></a><a href='#L57'>57</a>
-<a name='L58'></a><a href='#L58'>58</a>
-<a name='L59'></a><a href='#L59'>59</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L52'></a><a href='#L52'>52</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -144,7 +134,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">9x</span>
@@ -169,10 +159,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -185,11 +171,8 @@ import { decisionEventsTable } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
 import { getSession } from "@/lib/auth";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
-import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
-import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
-import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
-import { PreferenceStateService } from "@/server/services/PreferenceStateService";
-import { ScoringService } from "@/server/services/ScoringService";
+import { SessionController } from "@/server/api/sessions";
+import { PreferenceController } from "@/server/api/preferences";
 &nbsp;
 interface DecisionRequest {
   type: "triage" | "pairwise_compare" | "bucket_assign";
@@ -202,8 +185,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 &nbsp;
   const db = getDb();
   // Authorize BEFORE any write: the session must belong to a collection the user can access.
-  const sessionRepo = new SessionRepository(db);
-  const sortSession = await sessionRepo.findById(params.id);
+  // getSessionOrNull distinguishes absent (→404) from a real DB error (→ propagates, 500).
+  const sortSession = await SessionController.fromDb(db).getSessionOrNull(params.id);
   if (!sortSession) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const access = await requireApiCollectionAccess(db, sortSession.collectionId, session.user.id);
   if (access instanceof NextResponse) return access;
@@ -226,11 +209,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       decision: body.decision,
     }).returning();
 &nbsp;
-    const decisionRepo = new DecisionEventRepository(db);
-    const prefRepo = new CollectionPreferenceItemRepository(db);
-    const scoringService = new ScoringService(decisionRepo, sessionRepo);
-    const prefService = new PreferenceStateService(prefRepo, scoringService);
-    await prefService.recalculatePreferences(sortSession.collectionId, session.user.id);
+    await PreferenceController.fromDb(db).recalculatePreferences(sortSession.collectionId, session.user.id);
 &nbsp;
     return NextResponse.json(event, { status: 201 });
   } catch (error) {
@@ -244,7 +223,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T05:39:23.171Z
+                at 2026-06-23T07:20:41.687Z
             </div>
         <script src="../../../../../../prettify.js"></script>
         <script>

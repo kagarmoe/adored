@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">96.77% </span>
+                <span class="strong">96% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>30/31</span>
+                <span class='fraction'>24/25</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">96.77% </span>
+                <span class="strong">96% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>30/31</span>
+                <span class='fraction'>24/25</span>
             </div>
         
             
@@ -117,18 +117,7 @@
 <a name='L52'></a><a href='#L52'>52</a>
 <a name='L53'></a><a href='#L53'>53</a>
 <a name='L54'></a><a href='#L54'>54</a>
-<a name='L55'></a><a href='#L55'>55</a>
-<a name='L56'></a><a href='#L56'>56</a>
-<a name='L57'></a><a href='#L57'>57</a>
-<a name='L58'></a><a href='#L58'>58</a>
-<a name='L59'></a><a href='#L59'>59</a>
-<a name='L60'></a><a href='#L60'>60</a>
-<a name='L61'></a><a href='#L61'>61</a>
-<a name='L62'></a><a href='#L62'>62</a>
-<a name='L63'></a><a href='#L63'>63</a>
-<a name='L64'></a><a href='#L64'>64</a>
-<a name='L65'></a><a href='#L65'>65</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L55'></a><a href='#L55'>55</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -142,9 +131,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -165,9 +151,6 @@
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
@@ -182,9 +165,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -194,7 +174,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { UserController } from "@/server/api/users";
-import { UserRepository } from "@/server/repositories/implementations/UserRepository";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
 &nbsp;
@@ -206,10 +185,7 @@ export async function GET() {
     }
 &nbsp;
     const db = getDb();
-    const userRepo = new UserRepository(db);
-    const controller = new UserController(userRepo, db);
-&nbsp;
-    const user = await controller.getCurrentUser(session.user.id);
+    const user = await UserController.fromDb(db).getCurrentUser(session.user.id);
     return NextResponse.json(user);
   } catch (error) {
 <span class="cstat-no" title="statement not covered" >    return NextResponse.json(</span>
@@ -228,10 +204,7 @@ export async function PATCH(request: NextRequest) {
 &nbsp;
     const body = await request.json();
     const db = getDb();
-    const userRepo = new UserRepository(db);
-    const controller = new UserController(userRepo, db);
-&nbsp;
-    const user = await controller.updateCurrentUser(session.user.id, body);
+    const user = await UserController.fromDb(db).updateCurrentUser(session.user.id, body);
     return NextResponse.json(user);
   } catch (error) {
     return errorResponse(error);
@@ -246,10 +219,7 @@ export async function DELETE() {
     }
 &nbsp;
     const db = getDb();
-    const userRepo = new UserRepository(db);
-    const controller = new UserController(userRepo, db);
-&nbsp;
-    await controller.deleteCurrentUser(session.user.id);
+    await UserController.fromDb(db).deleteCurrentUser(session.user.id);
     return NextResponse.json({ message: "User account deleted" });
   } catch (error) {
     return errorResponse(error);
@@ -262,7 +232,7 @@ export async function DELETE() {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T05:39:23.171Z
+                at 2026-06-23T07:20:41.687Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>
