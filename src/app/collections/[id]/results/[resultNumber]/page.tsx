@@ -2,11 +2,11 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
-import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
-import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { ItemController } from "@/server/api/items";
+import { ResultItemController } from "@/server/api/result-items";
+import { ResultController } from "@/server/api/results";
+import { ShareController } from "@/server/api/shares";
+import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
 import { Badge, Button, EmptyState } from "@/components/ui";
@@ -42,15 +42,11 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
 
   const db = getDb();
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const resultRepo = new SortResultRepository(db);
-  const resultItemRepo = new SortResultItemRepository(db);
-  const itemRepo = new ItemRepository(db);
-  const shareRepo = new SortResultShareRepository(db);
 
   const resultNumber = Number(params.resultNumber);
   const result =
     resultNumber > 0 && Number.isInteger(resultNumber)
-      ? await resultRepo.findByCollectionAndNumber(collection.id, resultNumber)
+      ? await ResultController.fromDb(db).getByCollectionAndNumber(collection.id, resultNumber)
       : null;
 
   if (!result || result.collectionId !== collection.id) {
@@ -58,9 +54,9 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
   }
 
   const [resultItems, items, shares] = await Promise.all([
-    resultItemRepo.findByResult(result.id),
-    itemRepo.findByCollection(collection.id),
-    shareRepo.findByResult(result.id),
+    ResultItemController.fromDb(db).listResultItems(result.id),
+    ItemController.fromDb(db).listItems(collection.id),
+    ShareController.fromDb(db).listShares(result.id),
   ]);
 
   const itemById = new Map(items.map((item) => [item.id, item]));
@@ -74,7 +70,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
   const ranked = sortedResultItems
     .map((ri) => ({ ri, item: itemById.get(ri.itemId) }))
     .filter((r): r is { ri: typeof r.ri; item: NonNullable<typeof r.item> } => Boolean(r.item));
-  const covers = await new PhotoRepository(db).findCoverPhotosByItemIds(ranked.map((r) => r.item.id));
+  const covers = await PhotoController.fromDb(db).findCoverPhotosByItemIds(ranked.map((r) => r.item.id));
   const coverUrl = (itemId: string) => {
     const c = covers.get(itemId);
     return c ? getPhotoAssetUrlForPhoto(c, collection.id, { w: PHOTO_WIDTH.card }) : undefined;

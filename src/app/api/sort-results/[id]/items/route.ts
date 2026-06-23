@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { ResultItemController } from "@/server/api/result-items";
-import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import { getDb } from "@/lib/db";
 import { requireApiResultAccess } from "@/server/dal/collection-access";
 
@@ -14,9 +13,7 @@ export async function GET(
     const db = getDb();
     const access = await requireApiResultAccess(db, params.id, user.id);
     if (access instanceof NextResponse) return access;
-    const itemRepo = new SortResultItemRepository(db);
-    const controller = new ResultItemController(itemRepo);
-    const items = await controller.listResultItems(params.id);
+    const items = await ResultItemController.fromDb(db).listResultItems(params.id);
     return NextResponse.json(items);
   } catch (error) {
     return NextResponse.json(

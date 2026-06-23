@@ -1,8 +1,8 @@
 import { getDb } from "@/lib/db";
-import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
-import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
-import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { ShareController } from "@/server/api/shares";
+import { ResultController } from "@/server/api/results";
+import { ResultItemController } from "@/server/api/result-items";
+import { ItemController } from "@/server/api/items";
 import { Badge, Card, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
 import { notFound } from "next/navigation";
@@ -13,24 +13,20 @@ interface SharedResultPageProps {
 
 export default async function SharedResultPage({ params }: SharedResultPageProps) {
   const db = getDb();
-  const shareRepo = new SortResultShareRepository(db);
-  const resultRepo = new SortResultRepository(db);
-  const resultItemRepo = new SortResultItemRepository(db);
-  const itemRepo = new ItemRepository(db);
-  const share = await shareRepo.findByToken(params.token);
+  const share = await ShareController.fromDb(db).findByToken(params.token);
 
   if (!share || share.status !== "active" || (share.expiresAt && share.expiresAt < new Date())) {
     notFound();
   }
 
-  const result = await resultRepo.findById(share.sortResultId);
+  const result = await ResultController.fromDb(db).getResultOrNull(share.sortResultId);
   if (!result || result.status !== "finalized") {
     notFound();
   }
 
   const [resultItems, items] = await Promise.all([
-    resultItemRepo.findByResult(result.id),
-    itemRepo.findByCollection(result.collectionId),
+    ResultItemController.fromDb(db).listResultItems(result.id),
+    ItemController.fromDb(db).listItems(result.collectionId),
   ]);
   const itemById = new Map(items.map((item) => [item.id, item]));
   const sortedResultItems = [...resultItems].sort((a, b) => (a.manualRank ?? a.computedRank) - (b.manualRank ?? b.computedRank));

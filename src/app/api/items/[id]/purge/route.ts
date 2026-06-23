@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import { requireApiItemCapability } from "@/server/dal/collection-access";
 import { ItemPurgeService, ItemInResultError } from "@/server/services/ItemPurgeService";
 
@@ -35,7 +34,7 @@ export async function POST(
       return NextResponse.json({ error: "Confirmation required" }, { status: 400 });
     }
 
-    const service = new ItemPurgeService(db, new SortResultItemRepository(db));
+    const service = ItemPurgeService.fromDb(db);
     try {
       await service.purge(item, user.id);
     } catch (error) {

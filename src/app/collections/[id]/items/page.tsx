@@ -2,8 +2,8 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { ItemController } from "@/server/api/items";
+import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
 import { Button, EmptyState } from "@/components/ui";
@@ -25,10 +25,9 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
 
   const db = getDb();
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const itemRepo = new ItemRepository(db);
 
-  const items = await itemRepo.findByCollection(collection.id);
-  const covers = await new PhotoRepository(db).findCoverPhotosByItemIds(
+  const items = await ItemController.fromDb(db).listItems(collection.id);
+  const covers = await PhotoController.fromDb(db).findCoverPhotosByItemIds(
     items.map((i) => i.id),
   );
   const activeFilter = ["active", "archived", "deleted"].includes(searchParams?.status || "")

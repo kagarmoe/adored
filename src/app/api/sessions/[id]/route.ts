@@ -3,14 +3,14 @@ import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { SessionController } from "@/server/api/sessions";
-import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { errorResponse } from "@/server/api/http-errors";
 
-// Load the session, then authorize its collection. Returns the controller-ready
-// repo + a typed guard outcome, or a NextResponse to return immediately.
+// Load the session, then authorize its collection. Returns the resolved session
+// (so callers can reuse it without re-fetching) or a NextResponse to return
+// immediately. A null session is 404; a real DB error propagates (→ 500), never
+// masked as a 404 — getSessionOrNull separates absence from failure.
 async function authorizeSession(db: ReturnType<typeof getDb>, sessionId: string, userId: string) {
-  const sessionRepo = new SessionRepository(db);
-  const sortSession = await sessionRepo.findById(sessionId);
+  const sortSession = await SessionController.fromDb(db).getSessionOrNull(sessionId);
   if (!sortSession) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const access = await requireApiCollectionAccess(db, sortSession.collectionId, userId);
   if (access instanceof NextResponse) return access;
@@ -22,7 +22,7 @@ async function authorizeSession(db: ReturnType<typeof getDb>, sessionId: string,
       { status: 403 },
     );
   }
-  return { sessionRepo };
+  return { sortSession };
 }
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
@@ -31,8 +31,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
   const db = getDb();
   const guard = await authorizeSession(db, params.id, session.user.id);
   if (guard instanceof NextResponse) return guard;
-  const result = await new SessionController(guard.sessionRepo).getSession(params.id);
-  return NextResponse.json(result);
+  return NextResponse.json(guard.sortSession);
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
@@ -48,7 +47,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   const guard = await authorizeSession(db, params.id, session.user.id);
   if (guard instanceof NextResponse) return guard;
   try {
-    const result = await new SessionController(guard.sessionRepo).updateSession(params.id, body);
+    const result = await SessionController.fromDb(db).updateSession(params.id, body);
     return NextResponse.json(result);
   } catch (error) {
     return errorResponse(error);
@@ -61,6 +60,6 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
   const db = getDb();
   const guard = await authorizeSession(db, params.id, session.user.id);
   if (guard instanceof NextResponse) return guard;
-  await new SessionController(guard.sessionRepo).deleteSession(params.id);
+  await SessionController.fromDb(db).deleteSession(params.id);
   return NextResponse.json({ message: "Session deleted" });
 }

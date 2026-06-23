@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { ItemController } from "@/server/api/items";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import { errorResponse } from "@/server/api/http-errors";
 
@@ -15,11 +15,10 @@ export async function PATCH(
   }
 
   const db = getDb();
-  const itemRepo = new ItemRepository(db);
 
   try {
     // Verify item belongs to collection (belongs-to-parent).
-    const item = await itemRepo.findById(params.itemId);
+    const item = await ItemController.fromDb(db).getItem(params.itemId);
     if (!item || item.collectionId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
@@ -29,15 +28,7 @@ export async function PATCH(
     if (access instanceof NextResponse) return access;
 
     const body = await req.json();
-    const updated = await itemRepo.update(params.itemId, {
-      name: body.name,
-      brand: body.brand,
-      style: body.style,
-      color: body.color,
-      material: body.material,
-      category: body.category,
-      notes: body.notes,
-    });
+    const updated = await ItemController.fromDb(db).updateItem(params.itemId, body);
 
     return NextResponse.json(updated);
   } catch (error) {

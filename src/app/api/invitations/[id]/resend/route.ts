@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { InvitationController } from "@/server/api/invitations";
-import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 import { requireApiInvitationCapability } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
@@ -17,8 +16,7 @@ export async function POST(
     const invitation = await requireApiInvitationCapability(db, params.id, user.id, "invitations:manage");
     if (invitation instanceof NextResponse) return invitation;
 
-    const controller = new InvitationController(new InvitationRepository(db));
-    const result = await controller.resendInvitation(params.id);
+    const result = await InvitationController.fromDb(db).resendInvitation(params.id);
     return NextResponse.json(result);
   } catch (error) {
     return errorResponse(error);

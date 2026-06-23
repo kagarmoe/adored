@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type { Item } from "@/types";
 import type { IItemRepository } from "@/server/repositories/ItemRepository";
+import type { Database } from "@/lib/db";
+import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 
 const CreateItemSchema = z.object({
   name: z.string().min(1),
@@ -30,6 +32,10 @@ export type UpdateItemInput = z.infer<typeof UpdateItemSchema>;
 export class ItemController {
   constructor(private itemRepo: IItemRepository) {}
 
+  static fromDb(db: Database): ItemController {
+    return new ItemController(new ItemRepository(db));
+  }
+
   async listItems(collectionId: string): Promise<Item[]> {
     return this.itemRepo.findByCollection(collectionId);
   }
@@ -53,6 +59,10 @@ export class ItemController {
     // Returns null for an absent/soft-deleted item so the route maps it to 404
     // (a thrown "not found" was previously caught as a generic 500).
     return this.itemRepo.findById(itemId);
+  }
+
+  async getByCollectionAndNumber(collectionId: string, number: number): Promise<Item | null> {
+    return this.itemRepo.findByCollectionAndNumber(collectionId, number);
   }
 
   async updateItem(itemId: string, data: unknown): Promise<Item> {

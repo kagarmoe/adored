@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { Collection } from "@/types";
 import type { ICollectionRepository } from "@/server/repositories/CollectionRepository";
 import { generateId } from "@/lib/id";
+import type { Database } from "@/lib/db";
+import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 
 const CreateCollectionSchema = z.object({
   name: z.string().min(1),
@@ -19,6 +21,14 @@ export type UpdateCollectionInput = z.infer<typeof UpdateCollectionSchema>;
 
 export class CollectionController {
   constructor(private collectionRepo: ICollectionRepository) {}
+
+  static fromDb(db: Database): CollectionController {
+    return new CollectionController(new CollectionRepository(db));
+  }
+
+  async getIncludingDeleted(collectionId: string): Promise<Collection | null> {
+    return this.collectionRepo.findByIdIncludingDeleted(collectionId);
+  }
 
   async listCollections(userId: string): Promise<Collection[]> {
     // TODO: Fetch collections where user is a member, including owned collections

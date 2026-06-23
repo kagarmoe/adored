@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
-import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
+import { SessionController } from "@/server/api/sessions";
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -14,10 +14,6 @@ export async function POST(req: NextRequest) {
   const access = await requireApiCollectionAccess(db, collectionId, session.user.id);
   if (access instanceof NextResponse) return access;
 
-  const newSession = await new SessionRepository(db).create({
-    collectionId,
-    curatorId: session.user.id,
-    goal,
-  });
+  const newSession = await SessionController.fromDb(db).createSession(collectionId, session.user.id, { goal });
   return NextResponse.json(newSession, { status: 201 });
 }

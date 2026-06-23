@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { CollectionController } from "@/server/api/collections";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { requireApiCapability, requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
@@ -16,10 +15,7 @@ export async function GET(
     const access = await requireApiCollectionAccess(db, params.id, user.id);
     if (access instanceof NextResponse) return access;
 
-    const collectionRepo = new CollectionRepository(db);
-    const controller = new CollectionController(collectionRepo);
-
-    const collection = await controller.getCollection(params.id);
+    const collection = await CollectionController.fromDb(db).getCollection(params.id);
     return NextResponse.json(collection);
   } catch (error) {
     return errorResponse(error);
@@ -37,7 +33,7 @@ export async function PATCH(
     if (access instanceof NextResponse) return access;
 
     const body = await request.json();
-    const collection = await new CollectionController(new CollectionRepository(db)).updateCollection(params.id, body);
+    const collection = await CollectionController.fromDb(db).updateCollection(params.id, body);
     return NextResponse.json(collection);
   } catch (error) {
     return errorResponse(error);
@@ -54,7 +50,7 @@ export async function DELETE(
     const access = await requireApiCapability(db, params.id, user.id, "collection:manage");
     if (access instanceof NextResponse) return access;
 
-    const collection = await new CollectionController(new CollectionRepository(db)).deleteCollection(params.id);
+    const collection = await CollectionController.fromDb(db).deleteCollection(params.id);
     return NextResponse.json({ message: "Collection deleted", collection });
   } catch (error) {
     return errorResponse(error);

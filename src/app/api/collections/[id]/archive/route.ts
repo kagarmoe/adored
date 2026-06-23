@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { CollectionController } from "@/server/api/collections";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
@@ -17,7 +16,7 @@ export async function POST(
     const access = await requireApiCapability(db, params.id, user.id, "collection:manage");
     if (access instanceof NextResponse) return access;
 
-    const collection = await new CollectionController(new CollectionRepository(db)).archiveCollection(params.id);
+    const collection = await CollectionController.fromDb(db).archiveCollection(params.id);
     return NextResponse.json(collection);
   } catch (error) {
     return errorResponse(error);

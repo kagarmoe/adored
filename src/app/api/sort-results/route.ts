@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
-import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
-import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
-import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { SortResultService } from "@/server/services/SortResultService";
 
 interface CreateResultRequest {
@@ -31,12 +28,7 @@ export async function POST(req: NextRequest) {
 
   // Curator is ALWAYS the session user, never the request body. The service reads
   // the curator's preferences and materializes one ranked SortResultItem per row.
-  const service = new SortResultService(
-    new SortResultRepository(db),
-    new SortResultItemRepository(db),
-    new CollectionPreferenceItemRepository(db),
-    db,
-  );
+  const service = SortResultService.fromDb(db);
   const result = await service.createDraftResult(body.collectionId, session.user.id, body.name);
   return NextResponse.json(result, { status: 201 });
 }

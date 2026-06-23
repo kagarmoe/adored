@@ -3,12 +3,10 @@ import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import { MemberController } from "@/server/api/members";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 
 // Verify the [mid] membership row actually belongs to collection [id] (belongs-to-parent).
 async function membershipBelongsToCollection(db: ReturnType<typeof getDb>, mid: string, collectionId: string) {
-  const row = await new MembershipRepository(db).findById(mid);
-  return !!row && row.collectionId === collectionId;
+  return (await MemberController.fromDb(db).getByIdForCollection(mid, collectionId)) !== null;
 }
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string; mid: string } }) {
@@ -21,8 +19,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
   if (!(await membershipBelongsToCollection(db, params.mid, params.id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  const ctrl = new MemberController(new MembershipRepository(db));
-  return NextResponse.json(await ctrl.getMember(params.mid));
+  return NextResponse.json(await MemberController.fromDb(db).getMember(params.mid));
 }
 
 // PATCH removed (purses-2wzz): no UI caller; members have no editable fields under
@@ -39,6 +36,6 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
   // members:manage = owner — only the collection owner may remove members.
   const access = await requireApiCapability(db, params.id, session.user.id, "members:manage");
   if (access instanceof NextResponse) return access;
-  await new MemberController(new MembershipRepository(db)).removeMember(params.mid);
+  await MemberController.fromDb(db).removeMember(params.mid);
   return NextResponse.json({ message: "Member removed" });
 }

@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { PhotoController } from "@/server/api/photos";
 import { requireApiCapability } from "@/server/dal/collection-access";
-import { recordPooledPhoto } from "@/server/photos/recordPooledPhoto";
 import { POOL_ALLOWED_CONTENT_TYPES, POOL_MAX_BYTES } from "@/lib/uploads";
 
 class HttpError extends Error {
@@ -58,7 +57,7 @@ export async function POST(
           collectionId: string;
           uploadedBy: string;
         };
-        await recordPooledPhoto(new PhotoRepository(getDb()), {
+        await PhotoController.fromDb(getDb()).recordPooled({
           collectionId,
           uploadedBy,
           blobKey: blob.url,

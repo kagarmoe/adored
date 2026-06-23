@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { PhotoController } from "@/server/api/photos";
 import { requireApiCapability } from "@/server/dal/collection-access";
 
 // Lists a collection's pooled (unassigned) photos as JSON.
@@ -17,7 +17,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   const access = await requireApiCapability(db, params.id, session.user.id, "items:read");
   if (access instanceof NextResponse) return access;
 
-  const pool = await new PhotoRepository(db).findPoolByCollection(params.id);
+  const pool = await PhotoController.fromDb(db).findPoolByCollection(params.id);
   return NextResponse.json({
     photos: pool.map((p) => ({ id: p.id, filename: p.filename })),
   });

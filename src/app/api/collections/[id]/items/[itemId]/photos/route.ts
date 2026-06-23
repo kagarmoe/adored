@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { PhotoController } from "@/server/api/photos";
+import { ItemController } from "@/server/api/items";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import { generateId } from "@/lib/id";
 import { put } from "@vercel/blob";
@@ -20,11 +20,10 @@ export async function POST(
   }
 
   const db = getDb();
-  const itemRepo = new ItemRepository(db);
 
   try {
     // Verify item belongs to collection (belongs-to-parent).
-    const item = await itemRepo.findById(params.itemId);
+    const item = await ItemController.fromDb(db).getItem(params.itemId);
     if (!item || item.collectionId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
@@ -59,8 +58,7 @@ export async function POST(
       contentType: file.type,
     });
 
-    const photoRepo = new PhotoRepository(db);
-    const photo = await photoRepo.create({
+    const photo = await PhotoController.fromDb(db).create({
       itemId: params.itemId,
       collectionId: params.id,
       blobKey: blob.url,

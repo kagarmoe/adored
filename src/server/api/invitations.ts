@@ -3,6 +3,8 @@ import type { Invitation } from "@/types";
 import type { IInvitationRepository } from "@/server/repositories/InvitationRepository";
 import { randomBytes } from "crypto";
 import { normalizeEmail } from "@/lib/normalize-email";
+import type { Database } from "@/lib/db";
+import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 
 const CreateInvitationSchema = z.object({
   email: z.string().email(),
@@ -19,6 +21,14 @@ export type UpdateInvitationInput = z.infer<typeof UpdateInvitationSchema>;
 
 export class InvitationController {
   constructor(private invitationRepo: IInvitationRepository) {}
+
+  static fromDb(db: Database): InvitationController {
+    return new InvitationController(new InvitationRepository(db));
+  }
+
+  async listByCollection(collectionId: string): Promise<Invitation[]> {
+    return this.invitationRepo.findByCollection(collectionId);
+  }
 
   async listInvitations(): Promise<Invitation[]> {
     // TODO: Implement when InvitationRepository.findByCollection available

@@ -189,6 +189,34 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
       expect(body.curatorId).toBe(ownerId);
     });
 
+    // Regression (purses-25ca): a genuine DB error must NOT be masked as 404.
+    // The PR10 migration briefly wrapped the lookup in try { getSession } catch
+    // { 404 }, collapsing an outage into not-found. authorizeSession now calls
+    // getSessionOrNull (returns null → 404; a thrown DB error propagates).
+    //
+    // The GET handler has no error catch, so the throw propagates to the caller
+    // (Next.js's runtime turns that into an HTTP 500 in production; this unit
+    // test invokes the handler directly, so we observe the propagated throw).
+    // The point being pinned: had the masking bug survived, this call would
+    // RESOLVE to a 404 response instead of REJECTING. Together with "GET 404s an
+    // absent session id" above (null → 404), this proves 404 means ABSENT, never
+    // FAILED. Mirrors the collection-purge atomicity prototype-spy.
+    it("GET does NOT mask a real DB error as 404 (the throw propagates)", async () => {
+      const { sessionId } = await seedSession(ownerId);
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+      const spy = vi
+        .spyOn(SessionRepository.prototype, "findById")
+        .mockRejectedValueOnce(new Error("db down"));
+
+      // Rejects (error surfaces) — NOT a resolved 404. The masking bug would have
+      // swallowed this into NextResponse 404 and the assertion would fail.
+      await expect(
+        getSession(jsonReq("GET") as any, { params: { id: sessionId } } as any),
+      ).rejects.toThrow("db down");
+      expect(spy).toHaveBeenCalled();
+    });
+
     // ---- PATCH ------------------------------------------------------------
     it("PATCH 401s an unauthenticated caller — and does NOT mutate", async () => {
       const { db } = getTestDb();

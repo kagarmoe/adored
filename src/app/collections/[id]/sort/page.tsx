@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
-import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
+import { SessionController } from "@/server/api/sessions";
 import { AppLayout } from "@/components/layout";
 import { Badge, Button, Card, EmptyState } from "@/components/ui";
 import Link from "next/link";
@@ -19,10 +19,9 @@ export default async function SortPage({ params }: SortPageProps) {
 
   const db = getDb();
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const sessionRepo = new SessionRepository(db);
 
   // purses-t9l: each user sorts independently — show only this user's own sessions.
-  const sessions = await sessionRepo.findByCollectionAndCurator(collection.id, session.user.id);
+  const sessions = await SessionController.fromDb(db).listByCollectionAndCurator(collection.id, session.user.id);
   const activeSession = sessions.find((sortSession) => sortSession.status === "active");
 
   return (

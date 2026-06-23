@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
-import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
-import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { requireApiItemCapability } from "@/server/dal/collection-access";
 import { SortResultService } from "@/server/services/SortResultService";
 
@@ -25,12 +22,7 @@ export async function POST(
     const item = await requireApiItemCapability(db, params.id, user.id, "items:purge", { includeDeleted: true });
     if (item instanceof NextResponse) return item; // 404 (absent) / 403 (not owner)
 
-    const service = new SortResultService(
-      new SortResultRepository(db),
-      new SortResultItemRepository(db),
-      new CollectionPreferenceItemRepository(db),
-      db,
-    );
+    const service = SortResultService.fromDb(db);
     const { removed, remainingInFinalized } =
       await service.removeItemFromDraftResults(item.id);
 

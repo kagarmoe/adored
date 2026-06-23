@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { MemberController } from "@/server/api/members";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
@@ -17,9 +16,7 @@ export async function GET(
     const access = await requireApiCapability(db, params.id, user.id, "members:read");
     if (access instanceof NextResponse) return access;
 
-    const members = await new MemberController(
-      new MembershipRepository(db),
-    ).listMembers(params.id);
+    const members = await MemberController.fromDb(db).listMembers(params.id);
     return NextResponse.json(members);
   } catch (error) {
     return errorResponse(error);
@@ -39,9 +36,7 @@ export async function POST(
     const access = await requireApiCapability(db, params.id, user.id, "members:manage");
     if (access instanceof NextResponse) return access;
 
-    const member = await new MemberController(
-      new MembershipRepository(db),
-    ).addMember(params.id, body);
+    const member = await MemberController.fromDb(db).addMember(params.id, body);
     return NextResponse.json(member, { status: 201 });
   } catch (error) {
     return errorResponse(error);

@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { ItemController } from "@/server/api/items";
 import { AppLayout } from "@/components/layout";
 import { ItemEditForm } from "@/features/items/ItemEditForm";
 import { itemDisplayName } from "@/lib/items";
@@ -19,11 +19,10 @@ export default async function ItemEditPage({ params }: ItemEditPageProps) {
 
   const db = getDb();
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const itemRepo = new ItemRepository(db);
   const number = Number(params.itemNumber);
   const item =
     number > 0 && Number.isInteger(number)
-      ? await itemRepo.findByCollectionAndNumber(collection.id, number)
+      ? await ItemController.fromDb(db).getByCollectionAndNumber(collection.id, number)
       : null;
 
   if (!item) {

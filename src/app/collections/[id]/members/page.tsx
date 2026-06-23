@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionOwnerPage } from "@/lib/collection-access";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
+import { MemberController } from "@/server/api/members";
 import { AppLayout } from "@/components/layout";
 import { SectionHeader } from "@/components/layout/SectionHeader";
 import { MemberList } from "@/features/collections/MemberList";
@@ -21,9 +21,8 @@ export default async function MembersPage({ params }: MembersPageProps) {
   const db = getDb();
   // Owner-only page: members:manage = owner by role (purses-yqw).
   const collection = await requireCollectionOwnerPage(db, params.id, session.user.id);
-  const membershipRepo = new MembershipRepository(db);
 
-  const members = await membershipRepo.findByCollection(collection.id);
+  const members = await MemberController.fromDb(db).listMembers(collection.id);
 
   return (
     <AppLayout

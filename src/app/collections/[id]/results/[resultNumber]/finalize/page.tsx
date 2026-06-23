@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
-import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
+import { ResultController } from "@/server/api/results";
 import { AppLayout } from "@/components/layout";
 import { FinalizeResultForm } from "@/features/results/FinalizeResultForm";
 
@@ -18,12 +18,11 @@ export default async function FinalizePage({ params }: FinalizePageProps) {
 
   const db = getDb();
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const resultRepo = new SortResultRepository(db);
 
   const resultNumber = Number(params.resultNumber);
   const result =
     resultNumber > 0 && Number.isInteger(resultNumber)
-      ? await resultRepo.findByCollectionAndNumber(collection.id, resultNumber)
+      ? await ResultController.fromDb(db).getByCollectionAndNumber(collection.id, resultNumber)
       : null;
 
   if (!result || result.collectionId !== collection.id || result.curatorId !== session.user.id) {

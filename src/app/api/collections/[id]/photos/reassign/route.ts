@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import {
   ItemService,
@@ -53,10 +51,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   else return NextResponse.json({ error: "Invalid destination" }, { status: 400 });
 
   try {
-    const result = await new ItemService(
-      new ItemRepository(db),
-      new PhotoRepository(db),
-    ).reassignPhotos(params.id, photoIds as string[], dest);
+    const result = await ItemService.fromDb(db).reassignPhotos(params.id, photoIds as string[], dest);
     return NextResponse.json({ number: result.number }, { status: 200 });
   } catch (error) {
     if (error instanceof PoolGroupError) {

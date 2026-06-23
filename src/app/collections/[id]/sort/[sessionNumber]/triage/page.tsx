@@ -2,10 +2,10 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
-import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { ItemController } from "@/server/api/items";
+import { SessionController } from "@/server/api/sessions";
+import { PreferenceController } from "@/server/api/preferences";
+import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
 import { Card, EmptyState } from "@/components/ui";
@@ -24,17 +24,14 @@ export default async function TriagePage({ params }: TriagePageProps) {
 
   const db = getDb();
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const itemRepo = new ItemRepository(db);
-  const sessionRepo = new SessionRepository(db);
-  const prefRepo = new CollectionPreferenceItemRepository(db);
 
   const sessionNumber = Number(params.sessionNumber);
   const [items, sortSession, preferences] = await Promise.all([
-    itemRepo.findByCollection(collection.id),
+    ItemController.fromDb(db).listItems(collection.id),
     sessionNumber > 0 && Number.isInteger(sessionNumber)
-      ? sessionRepo.findByCollectionAndNumber(collection.id, sessionNumber)
+      ? SessionController.fromDb(db).getByCollectionAndNumber(collection.id, sessionNumber)
       : Promise.resolve(null),
-    prefRepo.findByCollection(collection.id, session.user.id),
+    PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id),
   ]);
 
   if (!sortSession || sortSession.collectionId !== collection.id) {
@@ -49,8 +46,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
   const preferencesByItemId = new Map(preferences.map((p) => [p.itemId, p]));
   const item = items.find((i) => !preferencesByItemId.has(i.id)) || null;
 
-  const photoRepo = new PhotoRepository(db);
-  const covers = item ? await photoRepo.findCoverPhotosByItemIds([item.id]) : new Map();
+  const covers = item ? await PhotoController.fromDb(db).findCoverPhotosByItemIds([item.id]) : new Map();
   const cover = item ? covers.get(item.id) : undefined;
   const heroPhotoUrl = cover ? getPhotoAssetUrlForPhoto(cover, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
 

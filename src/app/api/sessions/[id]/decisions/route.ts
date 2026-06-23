@@ -4,11 +4,8 @@ import { decisionEventsTable } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
 import { getSession } from "@/lib/auth";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
-import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
-import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
-import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
-import { PreferenceStateService } from "@/server/services/PreferenceStateService";
-import { ScoringService } from "@/server/services/ScoringService";
+import { SessionController } from "@/server/api/sessions";
+import { PreferenceController } from "@/server/api/preferences";
 
 interface DecisionRequest {
   type: "triage" | "pairwise_compare" | "bucket_assign";
@@ -21,8 +18,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const db = getDb();
   // Authorize BEFORE any write: the session must belong to a collection the user can access.
-  const sessionRepo = new SessionRepository(db);
-  const sortSession = await sessionRepo.findById(params.id);
+  // getSessionOrNull distinguishes absent (→404) from a real DB error (→ propagates, 500).
+  const sortSession = await SessionController.fromDb(db).getSessionOrNull(params.id);
   if (!sortSession) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const access = await requireApiCollectionAccess(db, sortSession.collectionId, session.user.id);
   if (access instanceof NextResponse) return access;
@@ -45,11 +42,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       decision: body.decision,
     }).returning();
 
-    const decisionRepo = new DecisionEventRepository(db);
-    const prefRepo = new CollectionPreferenceItemRepository(db);
-    const scoringService = new ScoringService(decisionRepo, sessionRepo);
-    const prefService = new PreferenceStateService(prefRepo, scoringService);
-    await prefService.recalculatePreferences(sortSession.collectionId, session.user.id);
+    await PreferenceController.fromDb(db).recalculatePreferences(sortSession.collectionId, session.user.id);
 
     return NextResponse.json(event, { status: 201 });
   } catch (error) {

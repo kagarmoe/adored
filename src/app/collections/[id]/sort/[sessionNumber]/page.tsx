@@ -2,10 +2,10 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
-import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
-import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
+import { PreferenceController } from "@/server/api/preferences";
+import { ItemController } from "@/server/api/items";
+import { SessionController } from "@/server/api/sessions";
+import { DecisionController } from "@/server/api/decisions";
 import { AppLayout } from "@/components/layout";
 import { Badge, Button, Card } from "@/components/ui";
 import { SessionAnalytics } from "@/features/sessions/SessionAnalytics";
@@ -24,16 +24,12 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
 
   const db = getDb();
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const itemRepo = new ItemRepository(db);
-  const sessionRepo = new SessionRepository(db);
-  const prefRepo = new CollectionPreferenceItemRepository(db);
-  const decisionRepo = new DecisionEventRepository(db);
 
   const sessionNumber = Number(params.sessionNumber);
   const [items, sortSession] = await Promise.all([
-    itemRepo.findByCollection(collection.id),
+    ItemController.fromDb(db).listItems(collection.id),
     sessionNumber > 0 && Number.isInteger(sessionNumber)
-      ? sessionRepo.findByCollectionAndNumber(collection.id, sessionNumber)
+      ? SessionController.fromDb(db).getByCollectionAndNumber(collection.id, sessionNumber)
       : Promise.resolve(null),
   ]);
 
@@ -49,8 +45,8 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
   }
 
   const [preferences, decisions] = await Promise.all([
-    prefRepo.findByCollection(collection.id, sortSession.curatorId),
-    decisionRepo.findBySession(sortSession.id),
+    PreferenceController.fromDb(db).listItemPreferences(collection.id, sortSession.curatorId),
+    DecisionController.fromDb(db).listBySession(sortSession.id),
   ]);
 
   const bucketCounts = {

@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { PhotoController } from "@/server/api/photos";
 import { AppLayout } from "@/components/layout";
 import { EmptyState } from "@/components/ui";
 import { PoolUpload } from "@/features/pool/PoolUpload";
@@ -20,7 +20,7 @@ export default async function PoolPage({ params }: PoolPageProps) {
 
   const db = getDb();
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const pool = await new PhotoRepository(db).findPoolByCollection(collection.id);
+  const pool = await PhotoController.fromDb(db).findPoolByCollection(collection.id);
 
   return (
     <AppLayout
