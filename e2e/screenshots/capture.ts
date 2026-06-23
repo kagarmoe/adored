@@ -16,10 +16,11 @@ const FIXTURE = "e2e/fixtures/photos/IMG_0428.jpeg";
 
 let slug = "";
 let membersSlug = "";
+let resultNumber = 0;
 
 test.beforeAll(async () => {
   const ownerId = await seedBaseline();
-  ({ slug } = await seedSortScenario(ownerId));
+  ({ slug, resultNumber } = await seedSortScenario(ownerId));
   // A collection with real owner + curator membership rows so the members shot
   // shows the RoleBadge (the baseline seed inserts collections without them).
   ({ slug: membersSlug } = await seedMembersScenario(ownerId));
@@ -44,6 +45,11 @@ for (const theme of ["light", "dark"] as const) {
       ["collections", "/collections"],
       ["items-grid", `/collections/${slug}/items`],
       ["item-detail", `/collections/${slug}/items/1`],
+      // pv9 PR2 (purses-o93): the redesigned results page — most-loved hero +
+      // "The full ranking" + the SEPARATE forward-framed Onward section ("Where
+      // these go next"), no per-tier count grid. seedSortScenario buckets one
+      // item to `low`, so the Onward section actually renders here.
+      ["results", `/collections/${slug}/results/${resultNumber}`],
       // pv9 PR8 + PR1b (purses-c0w): members page renders MemberList (RoleBadge —
       // Owner/Curator on the existing Badge variants) + email-only InviteForm.
       // Points at the seedMembersScenario collection so real role rows render.

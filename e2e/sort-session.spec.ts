@@ -180,8 +180,10 @@ test.describe("session detail → See what you love most → results", () => {
     await expect(page).toHaveURL(new RegExp(`/collections/${slug}/results/\\d+$`));
 
     // 6. The results page shows ranked items (≥1 tier populated): the most-loved
-    //    hero renders for the top-ranked item.
-    await expect(page.getByText("What you love most")).toBeVisible();
+    //    hero renders for the top-ranked item. Exact match: the page also ends on
+    //    the affirmation "What you love most is at the top." (o93), which would
+    //    otherwise make this a strict-mode 2-element match.
+    await expect(page.getByText("What you love most", { exact: true })).toBeVisible();
     await expect(page.getByRole("img").first()).toBeVisible();
   });
 

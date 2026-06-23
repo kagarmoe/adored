@@ -13,26 +13,12 @@ import { Badge, Button, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
 import { MostLovedHero } from "@/features/results/MostLovedHero";
 import { SharePanel } from "@/features/results/SharePanel";
+import { partitionRanked, effectiveBucket } from "@/lib/results-buckets";
 import Link from "next/link";
 
 interface ResultDetailPageProps {
   params: { id: string; resultNumber: string };
 }
-
-const bucketLabels = {
-  top: "Love",
-  high: "Like",
-  medium: "Maybe",
-  low: "Onward",
-};
-
-// The cool value-ramp made visible: deeper teal = more loved, palest = Onward.
-const bucketRamp: Record<"top" | "high" | "medium" | "low", string> = {
-  top: "bg-tier-love text-tier-love-ink",
-  high: "bg-tier-like text-tier-like-ink",
-  medium: "bg-tier-maybe text-tier-maybe-ink",
-  low: "bg-tier-onward text-tier-onward-ink",
-};
 
 export default async function ResultDetailPage({ params }: ResultDetailPageProps) {
   const session = await getSession();
@@ -61,16 +47,20 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
 
   const itemById = new Map(items.map((item) => [item.id, item]));
   const sortedResultItems = [...resultItems].sort((a, b) => (a.manualRank ?? a.computedRank) - (b.manualRank ?? b.computedRank));
-  const bucketCounts = sortedResultItems.reduce<Record<string, number>>((counts, item) => {
-    const bucket = item.manualBucket || item.computedBucket;
-    counts[bucket] = (counts[bucket] || 0) + 1;
-    return counts;
-  }, {});
 
-  const ranked = sortedResultItems
-    .map((ri) => ({ ri, item: itemById.get(ri.itemId) }))
-    .filter((r): r is { ri: typeof r.ri; item: NonNullable<typeof r.item> } => Boolean(r.item));
-  const covers = await PhotoController.fromDb(db).findCoverPhotosByItemIds(ranked.map((r) => r.item.id));
+  // Affirmation, not subtraction (TONE #1): the loved tiers lead and the lowest
+  // tier is partitioned into its own forward-framed Onward section — never tallied,
+  // never the headline. effectiveBucket(ri) is the single source of truth for which.
+  const { loved: lovedRows, onward: onwardRows } = partitionRanked(sortedResultItems);
+  const join = <T extends { itemId: string }>(rows: T[]) =>
+    rows
+      .map((ri) => ({ ri, item: itemById.get(ri.itemId) }))
+      .filter((r): r is { ri: typeof r.ri; item: NonNullable<typeof r.item> } => Boolean(r.item));
+  const loved = join(lovedRows);
+  const onward = join(onwardRows);
+  const covers = await PhotoController.fromDb(db).findCoverPhotosByItemIds(
+    [...loved, ...onward].map((r) => r.item.id),
+  );
   const coverUrl = (itemId: string) => {
     const c = covers.get(itemId);
     return c ? getPhotoAssetUrlForPhoto(c, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
@@ -100,41 +90,85 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
           )}
         </div>
 
-        {/* The value ramp as structure: deeper teal = more loved. */}
-        <div className="grid gap-3 sm:grid-cols-4">
-          {(["top", "high", "medium", "low"] as const).map((bucket) => (
-            <div key={bucket} className={`rounded-card px-4 py-5 ${bucketRamp[bucket]}`}>
-              <p className="text-sm font-semibold">{bucketLabels[bucket]}</p>
-              <p className="mt-1 text-3xl font-bold">{bucketCounts[bucket] || 0}</p>
-            </div>
-          ))}
-        </div>
-
-        {sortedResultItems.length === 0 || ranked.length === 0 ? (
+        {loved.length === 0 && onward.length === 0 ? (
           <EmptyState heading="No ranked items yet" message="A little more sorting and your ranking will appear here." />
         ) : (
           <div className="space-y-8">
-            <MostLovedHero
-              item={ranked[0].item}
-              collectionId={collection.slug ?? collection.id}
-              heroPhotoUrl={coverUrl(ranked[0].item.id)}
-            />
-            {ranked.length > 1 && (
-              <div className="space-y-4">
-                <h2 className="text-ink">The full ranking</h2>
+            {loved.length > 0 && (
+              <MostLovedHero
+                item={loved[0].item}
+                collectionId={collection.slug ?? collection.id}
+                heroPhotoUrl={coverUrl(loved[0].item.id)}
+              />
+            )}
+            {loved.length > 1 && (
+              <section className="space-y-4">
+                <h2 className="font-display text-2xl text-ink">The full ranking</h2>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-                  {ranked.slice(1).map(({ ri, item }) => (
+                  {loved.slice(1).map(({ ri, item }) => (
                     <ItemCard
                       key={ri.id}
                       item={item}
                       collectionId={collection.slug ?? collection.id}
                       heroPhotoUrl={coverUrl(item.id)}
-                      bucket={ri.manualBucket || ri.computedBucket}
+                      bucket={effectiveBucket(ri)}
                     />
                   ))}
                 </div>
-              </div>
+              </section>
             )}
+
+            {/* All-Onward: no loved set, no hero. Lead from the person's side —
+               honor the deciding and the clarity reached, never absence-of-love,
+               never a count (TONE #1 affirmation-not-subtraction, #4 unpressured). */}
+            {loved.length === 0 && onward.length > 0 && (
+              <section className="space-y-3">
+                <h2 className="font-display text-3xl text-ink">You&rsquo;ve made your choices.</h2>
+                <p className="text-lg text-ink">You sat with each one and let yourself feel clearly. That clarity is the gift here — and it&rsquo;s yours.</p>
+              </section>
+            )}
+
+            {/* Onward: the lowest tier, asked forward — where these go next — never
+               tallied, never framed as discarding (TONE #1, #2). */}
+            {onward.length > 0 && (
+              <section className="space-y-4">
+                <div className="space-y-1">
+                  {/* Onward is subordinate to the loved ranking (TONE #1): a quieter
+                     heading (text-xl vs the loved tail's text-2xl, ink-soft), with the
+                     "Onward" eyebrow folded INTO the heading so heading-nav users hear
+                     "Onward where these go next" as one accessible name. */}
+                  <h2 className="font-display text-xl text-ink-soft">
+                    <span className="block text-sm font-semibold uppercase tracking-wide">Onward</span>
+                    <span>Where these go next</span>
+                  </h2>
+                  <p className="text-ink-soft">These are ready to move on &mdash; to a new home, or simply on from here.</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                  {onward.map(({ ri, item }) => (
+                    <ItemCard
+                      key={ri.id}
+                      item={item}
+                      collectionId={collection.slug ?? collection.id}
+                      heroPhotoUrl={coverUrl(item.id)}
+                      bucket={effectiveBucket(ri)}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* The last beat is affirmation, never the letting-go list (TONE #1).
+               When something was loved, re-anchor to the loved set at the TOP (the
+               hero/ranking), so the close never binds by proximity to the Onward pile
+               above it. When nothing was loved, the close cannot claim "love most"
+               (it would name the very items just sent Onward) — so all-Onward ends on
+               the person-side act of looking honestly. Either way the page ends on
+               affirmation, and this is always the page's last content beat. */}
+            <p className="font-display text-xl text-ink">
+              {loved.length > 0
+                ? "What you love most is at the top."
+                : "You looked, honestly, at every one. That took something."}
+            </p>
           </div>
         )}
 
