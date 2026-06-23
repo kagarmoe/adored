@@ -7,14 +7,11 @@
 // Mocks ONLY auth (getSession/requireAuth) and getDb → test DB.
 // No @vercel/blob calls in these routes — not mocked.
 //
-// AUTHZ GAPS PINNED (do NOT fix here — tracked in the pv9 epic):
-//   purses-55c: GET /members is requireAuth-only — any authenticated user can list
-//               members of any collection (no membership/ownership check).
-//   purses-3al: POST /items/[id]/restore is requireAuth-only — any authenticated
-//               user can restore any item regardless of collection membership (IDOR).
-//   missing-404-archive-restore: POST /archive and /restore return 403 (not 404)
-//               for an absent collection because canManageCollection() uses findById,
-//               which returns null → false → "not manager" → 403.
+// AUTHZ pv9 (PR4 — all closed; tests below reflect current capability-gated behavior):
+//   purses-55c: GET /members is now members:read (curator) — no longer requireAuth-only.
+//   purses-3al: POST /items/[id]/restore is now requireApiItemCapability (items:write) — IDOR closed.
+//   archive/restore: an absent collection now returns a clean 404 (requireApiCapability
+//               resolves-then-authorizes) — was a 403 from canManageCollection → findById null.
 // @vitest-environment node
 
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";

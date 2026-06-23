@@ -16,7 +16,7 @@ class HttpError extends Error {
   }
 }
 
-async function assertCanAddPhotos(collectionId: string): Promise<string> {
+async function assertPhotosWrite(collectionId: string): Promise<string> {
   const session = await getSession();
   if (!session?.user) {
     throw new HttpError("Unauthorized", 401);
@@ -41,7 +41,7 @@ export async function POST(
       request: req,
       onBeforeGenerateToken: async () => {
         // User request: cookies present → authorize and capture the uploader.
-        const uploadedBy = await assertCanAddPhotos(params.id);
+        const uploadedBy = await assertPhotosWrite(params.id);
         return {
           allowedContentTypes: [...POOL_ALLOWED_CONTENT_TYPES],
           maximumSizeInBytes: POOL_MAX_BYTES,

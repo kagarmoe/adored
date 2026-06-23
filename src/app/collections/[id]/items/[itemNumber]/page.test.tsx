@@ -94,6 +94,10 @@ describe("ItemDetailPage redesign (carousel + info card)", () => {
   });
 
   it("hides the delete control from a view-only curator (not owner, no canDeletePhotos)", async () => {
+    // NOTE: intentional, documented display drift — post-pv9 the DELETE API allows ANY
+    // curator (photos:write = curator; the flag is inert), but the UI still hides the
+    // control from a flag-false curator. The UI is deliberately STRICTER than the API
+    // pending the UI-cluster reconciliation; this is NOT an authz invariant.
     mockRequireAccess.mockResolvedValue({ ...COLLECTION, ownerId: "someone_else" });
     membershipRepo.findByUser.mockResolvedValue({ id: "m1", canDeletePhotos: false });
     await renderPage();

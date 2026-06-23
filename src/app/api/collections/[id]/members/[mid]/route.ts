@@ -4,7 +4,6 @@ import { getDb } from "@/lib/db";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import { MemberController } from "@/server/api/members";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { errorResponse } from "@/server/api/http-errors";
 
 // Verify the [mid] membership row actually belongs to collection [id] (belongs-to-parent).
@@ -23,7 +22,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
   if (!(await membershipBelongsToCollection(db, params.mid, params.id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  const ctrl = new MemberController(new MembershipRepository(db), new CollectionRepository(db));
+  const ctrl = new MemberController(new MembershipRepository(db));
   return NextResponse.json(await ctrl.getMember(params.mid));
 }
 
@@ -45,7 +44,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   if (access instanceof NextResponse) return access;
   try {
     return NextResponse.json(
-      await new MemberController(new MembershipRepository(db), new CollectionRepository(db)).updateMember(params.mid, body),
+      await new MemberController(new MembershipRepository(db)).updateMember(params.mid, body),
     );
   } catch (error) {
     return errorResponse(error);
@@ -62,6 +61,6 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
   // members:manage = owner — only the collection owner may remove members.
   const access = await requireApiCapability(db, params.id, session.user.id, "members:manage");
   if (access instanceof NextResponse) return access;
-  await new MemberController(new MembershipRepository(db), new CollectionRepository(db)).removeMember(params.mid);
+  await new MemberController(new MembershipRepository(db)).removeMember(params.mid);
   return NextResponse.json({ message: "Member removed" });
 }

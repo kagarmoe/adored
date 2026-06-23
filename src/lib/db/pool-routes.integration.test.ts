@@ -11,9 +11,10 @@
 // hit. `pool/upload` (token-gen, no DB write) is kept as a trimmed plain unit test
 // next to its route — NOT here.
 //
-// AUTHZ as-implemented (route.ts): every pool route is member-or-owner. There is
-// NO canAddPhotos gate on these four (that gate lives only on pool/upload). 404
-// (collection / photo absent) resolves BEFORE the 403 membership check.
+// AUTHZ as-implemented (route.ts, post-pv9 PR4): every pool route is capability-gated
+// via requireApiCapability — group/reassign require photos:write, the two reads require
+// items:read (both curator-level; the canAddPhotos flag is inert under the full-curator
+// model). 404 (collection / photo absent) resolves BEFORE the 403 non-member check.
 //
 // Every "absent/0/gone" assertion is paired with a "present/non-zero before" read
 // via a repo, so a never-seeded row can't make the suite pass vacuously.
@@ -22,7 +23,6 @@ import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline, seedFullCollection, seedUserRow } from "../../../e2e/fixtures/seed";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import type { Photo } from "@/types";
 
 const { mockGetSession, mockBlobGet } = vi.hoisted(() => ({
@@ -68,7 +68,6 @@ describeDb("pool routes (route -> repo -> DB)", () => {
   let ownerId: string;
   let photoRepo: PhotoRepository;
   let itemRepo: ItemRepository;
-  let membershipRepo: MembershipRepository;
 
   beforeEach(async () => {
     await resetDb();
@@ -77,7 +76,6 @@ describeDb("pool routes (route -> repo -> DB)", () => {
     const { db } = getTestDb();
     photoRepo = new PhotoRepository(db);
     itemRepo = new ItemRepository(db);
-    membershipRepo = new MembershipRepository(db);
   });
 
   afterAll(async () => {

@@ -1,7 +1,6 @@
 import { z } from "zod";
 import type { CollectionMembership } from "@/types";
 import type { IMembershipRepository } from "@/server/repositories/MembershipRepository";
-import type { ICollectionRepository } from "@/server/repositories/CollectionRepository";
 
 const CreateMemberSchema = z.object({
   userId: z.string(),
@@ -15,10 +14,7 @@ export type CreateMemberInput = z.infer<typeof CreateMemberSchema>;
 export type UpdateMemberInput = z.infer<typeof UpdateMemberSchema>;
 
 export class MemberController {
-  constructor(
-    private membershipRepo: IMembershipRepository,
-    private collectionRepo: ICollectionRepository,
-  ) {}
+  constructor(private membershipRepo: IMembershipRepository) {}
 
   async listMembers(collectionId: string): Promise<CollectionMembership[]> {
     return this.membershipRepo.findByCollection(collectionId);
@@ -53,12 +49,5 @@ export class MemberController {
       throw new Error("Membership not found");
     }
     await this.membershipRepo.delete(membershipId);
-  }
-
-  async isCollectionManager(collectionId: string, userId: string): Promise<boolean> {
-    // TODO: Check if user is collection manager
-    const collection = await this.collectionRepo.findById(collectionId);
-    if (!collection) return false;
-    return collection.ownerId === userId;
   }
 }

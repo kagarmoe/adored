@@ -10,12 +10,11 @@
 // assert put/del WERE called with the right args). `/file` GET is covered by
 // file-route-authz.integration.test.ts.
 //
-// AUTHZ as-implemented (route.ts):
-//   - POST upload, PATCH rotate: WRITE tier (canAddPhotos || owner). A member
-//     WITHOUT canAddPhotos -> 403 (a view-only curator must not add/re-orient).
-//   - DELETE: canDeletePhotos || owner. seedFullCollection's curator member has
-//     canDeletePhotos=false, so that member -> 403 on DELETE.
-//   - set-hero: requireApiCollectionAccess (any member OR owner).
+// AUTHZ as-implemented (route.ts, post-pv9 PR4 — full-curator model):
+//   - POST upload, PATCH rotate, DELETE: photos:write = curator. ANY collection
+//     member may add/rotate/delete; the canAddPhotos/canDeletePhotos flags are inert.
+//     A true NON-MEMBER stranger -> 403 (asserted per block below).
+//   - set-hero: photos:write = curator (any member OR owner; stranger -> 403).
 //   404 (item/photo absent or belongs-to-another-parent) is resolved BEFORE the
 //   403 permission check on every handler; validation (400) only after authz.
 //
@@ -163,6 +162,20 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
       expect(res.status).toBe(201);
       expect(mockPut).toHaveBeenCalledOnce();
       expect((await photoRepo.findByItem(itemAId)).length).toBe(before + 1);
+    });
+
+    it("403s a NON-MEMBER stranger (photos:write = curator) — no put, no row", async () => {
+      // The curator-loosening covers members; this pins that a true outsider with NO
+      // membership is still rejected by requireApiCapability (role resolves to null).
+      const { collectionId, itemAId } = await seedFullCollection(ownerId);
+      const strangerId = await seedUserRow("stranger");
+      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+
+      const before = (await photoRepo.findByItem(itemAId)).length;
+      const res = await uploadPhoto(uploadReq(imageFile()) as any, itemCtx(collectionId, itemAId));
+      expect(res.status).toBe(403);
+      expect(mockPut).not.toHaveBeenCalled();
+      expect((await photoRepo.findByItem(itemAId)).length).toBe(before);
     });
 
     it("400s when no file is provided — no put, no row", async () => {
@@ -324,6 +337,21 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
       expect((await photoRepo.findById(photo.id))!.rotation).toBe(90);
     });
 
+    it("403s a NON-MEMBER stranger (photos:write = curator) — rotation unchanged", async () => {
+      const { collectionId, itemAId } = await seedFullCollection(ownerId);
+      const photo = await heroPhoto(itemAId);
+      const strangerId = await seedUserRow("stranger");
+      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+
+      expect(photo.rotation).toBe(0); // before
+      const res = await rotatePhoto(
+        jsonReq("PATCH", { rotation: 90 }) as any,
+        photoCtx(collectionId, itemAId, photo.id),
+      );
+      expect(res.status).toBe(403);
+      expect((await photoRepo.findById(photo.id))!.rotation).toBe(0); // unchanged
+    });
+
     it("400s a non-allowlisted rotation — unchanged", async () => {
       const { collectionId, itemAId } = await seedFullCollection(ownerId);
       const photo = await heroPhoto(itemAId);
@@ -434,6 +462,22 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
       expect(res.status).toBe(200);
       expect(mockDel).toHaveBeenCalled();
       expect(await photoRepo.findById(photo.id)).toBeNull(); // gone after
+    });
+
+    it("403s a NON-MEMBER stranger (photos:write = curator) — no del, row survives", async () => {
+      const { collectionId, itemAId } = await seedFullCollection(ownerId);
+      const photo = await heroPhoto(itemAId);
+      const strangerId = await seedUserRow("stranger");
+      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+
+      expect(await photoRepo.findById(photo.id)).not.toBeNull(); // present before
+      const res = await deletePhoto(
+        jsonReq("DELETE") as any,
+        photoCtx(collectionId, itemAId, photo.id),
+      );
+      expect(res.status).toBe(403);
+      expect(mockDel).not.toHaveBeenCalled();
+      expect(await photoRepo.findById(photo.id)).not.toBeNull(); // survives
     });
 
     it("200s for the owner: dels the photo's http blobKey and removes the row (present before, gone after)", async () => {
