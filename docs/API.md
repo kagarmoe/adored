@@ -4,7 +4,7 @@ Structured reference for an AI agent (or developer) calling the **Adored** HTTP 
 
 **How to read this:** [Authentication](#authentication), [Authorization model](#authorization-model), and [Status-code semantics](#status-code-semantics) apply to every route — read them first. Then use the [Route index](#route-index) and the per-family detail. Returned-entity field shapes (`Collection`, `Item`, `Photo`, `SortResult`, `SortResultItem`, `Membership`, `Invitation`, `Session`, `DecisionEvent`) live in `src/types` and the Drizzle schema (`src/lib/db/schema.ts`) — this doc names the entity rather than duplicating fields that would drift.
 
-> **Accuracy note:** this documents what the code does **today**. The cross-tenant **IDOR holes** are **closed** (pv9 PR1): every collection-scoped route is scoped to its collection via `requireApiCollectionAccess` (member-or-owner; `404` absent / `403` forbidden). Error handling is consistent (pv9 PR2: validation→`400`, state→`409`). The **role model core** is in (pv9 PR3): `membership.role` reconciled + CHECK-constrained, invitation-accept creates a curator membership, and the client-flag/`role` mass-assignment surface is closed. The remaining pv9 work is wiring every route through the **capability map** (`purses-g6o`, pv9 PR4), which tightens member/invitation management to owner; see [Known authz gaps](#known-authz-gaps).
+> **Accuracy note:** this documents what the code does **today**. The cross-tenant **IDOR holes** are **closed** (pv9 PR1): every collection-scoped route is scoped to its collection via `requireApiCollectionAccess` (member-or-owner; `404` absent / `403` forbidden). Error handling is consistent (pv9 PR2: validation→`400`, state→`409`). The **role model core** is in (pv9 PR3): `membership.role` reconciled + CHECK-constrained, invitation-accept creates a curator membership, and the client-flag/`role` mass-assignment surface is closed. Every collection-scoped route is now wired through the **capability map** (`requireApiCapability`, pv9 PR4) — owner/curator from one chokepoint; member/invitation management is owner-only. Remaining pv9 work is correctness only (account-deletion `purses-hybm`, the route-enumeration backstop `purses-o03`); see [Known authz gaps](#known-authz-gaps).
 
 ## Authentication
 
@@ -17,13 +17,13 @@ Structured reference for an AI agent (or developer) calling the **Adored** HTTP 
 
 ## Authorization model
 
-Authentication is *who you are*; authorization is *what you may touch*. The chokepoint is `src/server/dal/collection-access.ts` (do not hand-roll):
+Authentication is *who you are*; authorization is *what you may touch*. The model is **two roles** — **owner** (`collection.ownerId`) and **curator** (any member) — and one chokepoint in `src/server/dal/` (do not hand-roll):
 
-- **`requireApiCollectionAccess(db, collectionId, userId)`** — tenant gate. Returns the collection only if the user is **member or owner**; otherwise a `NextResponse`: **`404`** if the collection is absent, **`403`** if it exists but the caller is neither.
-- **`requireApiCollectionOwner(db, collectionId, userId)`** — owner-only sibling of `requireApiCollectionAccess` (a stricter gate). Returns the collection only if **`collection.ownerId === userId`**; otherwise a `NextResponse`: **`404`** if absent, **`403`** if it exists but the caller is not the owner (a member-not-owner gets `403`, same as a non-member). Used by destructive collection-owner ops where membership is insufficient (item `purge`, `remove-from-sorts`).
-- **`requireApiResultAccess(db, resultId, userId)`** — for `sort-results`. Resolves the result, runs the collection gate on `result.collectionId`, then additionally requires **`result.curatorId === userId`** (results are curator-private). `404` absent, `403` if not a member **or** not the owning curator.
-- **Sessions** use an inline `authorizeSession` of the same shape (collection access + `session.curatorId === userId`).
-- **Older routes** (`requireAuth`-only) sometimes add an **inline** check instead of the DAL guard — `canManageCollection`, `isOwner`, `isCollectionManager`, or a `membership.canX` flag → `403`. These are correctly guarded; the detail names the exact check per method.
+- **Effective role** (`capabilities.ts` `resolveEffectiveRole`): **owner** iff `collection.ownerId === userId`; **curator** iff a membership row exists; else **none**. `membership.role` is a **display label only**, never read for an authz decision. The legacy `can*` permission flags are **inert** (kept for the out-of-scope UI; never enforced).
+- **`requireApiCapability(db, collectionId, userId, op)`** — the gate. `op` is an `Operation` mapped to a minimum role by the compile-exhaustive **`CAPABILITIES`** table: curator ops (`collection:read`, `members:read`, `items:read`, `items:write`, `photos:write`, `sessions:write`, `preferences:write`) and owner ops (`collection:manage`/`:purge`/`:audit`, `members:manage`, `invitations:read`/`:manage`, `items:purge`). Returns the collection, or a `NextResponse`: **`404`** absent, **`403`** if the effective role doesn't satisfy `op`.
+- **Resource wrappers** `requireApiItemCapability(db, itemId, userId, op, {includeDeleted?})` and `requireApiInvitationCapability(db, invitationId, userId, op)` resolve the resource → its `collectionId` → delegate, returning the resolved entity. Item resolution is `findById` by default (soft-deleted → `404`); lifecycle ops (`restore`/`purge`/`remove-from-sorts`) pass `includeDeleted:true`.
+- **`requireApiCollectionAccess`** / **`requireApiCollectionOwner`** are thin wrappers over `requireApiCapability` (`collection:read` / `collection:manage`) — behavior-identical (member-or-owner / owner-only).
+- **`requireApiResultAccess(db, resultId, userId)`** — for `sort-results`: collection gate on `result.collectionId` **plus** `result.curatorId === userId` (curator-private). **Sessions** use an inline `authorizeSession` of the same shape.
 - **Child routes** (`members/[mid]`, `items/[rid]`, `shares/[sid]`, item-photo routes) also enforce **belongs-to-parent**: resolve the child and return **`404`** if `child.parentId !== pathId`. Prevents IDOR-via-path-id.
 
 Path params at the API layer are **always ULIDs**, never slugs (slugs are client-side nav). Handlers narrow a guard result with `instanceof NextResponse` and otherwise proceed with the resolved entity.
@@ -57,7 +57,7 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 
 ## Route index
 
-**Access** legend: **public** · **self** (`requireAuth`, acts only on the caller's own data) · **member** (collection member-or-owner, `requireApiCollectionAccess`) · **manager** (`canManage`/`canEditMetadata`/`isCollectionManager`) · **owner** · **curator** (`requireApiResultAccess`/`authorizeSession`).
+**Access** legend (`requireApiCapability(op)` unless noted): **public** · **self** (`requireAuth`, acts only on the caller's own data) · **curator** (any collection member — curator-level `op`; `member` is used interchangeably) · **owner** (`collection.ownerId` — owner-level `op`) · **result-curator** (`requireApiResultAccess`/`authorizeSession` — collection access **+** `curatorId === userId`, for sessions/sort-results).
 
 ### auth & user
 | Method | Path | Access |
@@ -82,35 +82,35 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 | Method | Path | Access |
 |---|---|---|
 | GET·POST | `/api/collections/[id]/items` | member |
-| PATCH | `/api/collections/[id]/items/[itemId]` | manager (`canEditMetadata`) |
+| PATCH | `/api/collections/[id]/items/[itemId]` | curator (`items:write`) |
 
 ### item photos
 | Method | Path | Access |
 |---|---|---|
-| POST | `/api/collections/[id]/items/[itemId]/photos` | member (`canAddPhotos`/owner) |
-| DELETE | `…/photos/[photoId]` | member (`canDeletePhotos`/owner) |
-| PATCH | `…/photos/[photoId]` | member (`canAddPhotos`/owner) |
-| GET | `…/photos/[photoId]/file` | member |
-| POST | `…/photos/[photoId]/set-hero` | member |
+| POST | `/api/collections/[id]/items/[itemId]/photos` | curator (`photos:write`) |
+| DELETE | `…/photos/[photoId]` | curator (`photos:write`) |
+| PATCH | `…/photos/[photoId]` | curator (`photos:write`) |
+| GET | `…/photos/[photoId]/file` | curator (`items:read`) |
+| POST | `…/photos/[photoId]/set-hero` | curator (`photos:write`) |
 
 ### pool & photos
 | Method | Path | Access |
 |---|---|---|
-| POST | `/api/collections/[id]/pool/group` | member |
-| GET | `/api/collections/[id]/pool/photos` | member |
-| GET | `/api/collections/[id]/pool/photos/[photoId]/file` | member |
-| POST | `/api/collections/[id]/pool/upload` | member (`canAddPhotos`/owner) |
-| POST | `/api/collections/[id]/photos/reassign` | member |
+| POST | `/api/collections/[id]/pool/group` | curator (`photos:write`) |
+| GET | `/api/collections/[id]/pool/photos` | curator (`items:read`) |
+| GET | `/api/collections/[id]/pool/photos/[photoId]/file` | curator (`items:read`) |
+| POST | `/api/collections/[id]/pool/upload` | curator (`photos:write`) |
+| POST | `/api/collections/[id]/photos/reassign` | curator (`photos:write`) |
 
 ### members & invitations
 | Method | Path | Access |
 |---|---|---|
-| GET | `/api/collections/[id]/members` | member |
-| POST | `/api/collections/[id]/members` | manager |
-| GET·PATCH·DELETE | `/api/collections/[id]/members/[mid]` | member (GET) / manager (PATCH·DELETE) |
-| GET·POST | `/api/collections/[id]/invitations` | member |
-| GET·PATCH·DELETE | `/api/invitations/[id]` | member |
-| POST | `/api/invitations/[id]/resend` | member |
+| GET | `/api/collections/[id]/members` | curator (`members:read`) |
+| POST | `/api/collections/[id]/members` | owner (`members:manage`) |
+| GET·PATCH·DELETE | `/api/collections/[id]/members/[mid]` | curator (GET) / owner (PATCH·DELETE) |
+| GET·POST | `/api/collections/[id]/invitations` | owner (`invitations:read`/`:manage`) |
+| GET·PATCH·DELETE | `/api/invitations/[id]` | owner (`invitations:manage`) |
+| POST | `/api/invitations/[id]/resend` | owner (`invitations:manage`) |
 | GET | `/api/invitations/accept` | public (token) |
 | POST | `/api/invitations/accept` | self (token + email match) |
 
@@ -199,21 +199,21 @@ Authenticated. **Body** → `createCollection`; also creates the caller's **owne
 `getSession` + `requireApiCollectionAccess` (member-or-owner). `GET` → `Item[]`. `POST` body → `201 Item`. `400` invalid JSON; `401`/`403`/`404`.
 
 ### `PATCH /api/collections/[id]/items/[itemId]`
-`getSession` + **belongs-to-parent** (`item.collectionId !== id` → `404`) + `membership.canEditMetadata` → `403`. **Body:** `{ name?, brand?, style?, color?, material?, category?, notes? }` (all nullable). Returns updated `Item`. `400` on failure; `401`.
+`getSession` + **belongs-to-parent** (`item.collectionId !== id` → `404`) + `requireApiCapability("items:write")` (**curator** — any member; the old `canEditMetadata` flag is inert). **Body:** `{ name?, brand?, style?, color?, material?, category?, notes? }` (all nullable). Returns updated `Item`. `400` invalid input; `401`/`403`/`404`.
 
 ## item photos
 
 ### `POST /api/collections/[id]/items/[itemId]/photos`
-`getSession` + belongs-to-parent (`404`) + (`canAddPhotos` or owner) → `403`. **Body:** `multipart/form-data` with `file` (must be `image/*`). Stores to Vercel Blob (private). **Returns** `201 Photo`. `400` no file / not an image; `413` over `MAX_UPLOAD_BYTES`; `401`.
+`getSession` + belongs-to-parent (`404`) + `requireApiCapability("photos:write")` (**curator**; the old `canAddPhotos` flag is inert). **Body:** `multipart/form-data` with `file` (must be `image/*`). Stores to Vercel Blob (private). **Returns** `201 Photo`. `400` no file / not an image; `413` over `MAX_UPLOAD_BYTES`; `401`/`403`/`404`.
 
 ### `DELETE /api/collections/[id]/items/[itemId]/photos/[photoId]`
-`getSession` + belongs-to-parent (`404`) + (`canDeletePhotos` or owner) → `403`; also `photo.itemId` must match (`404`). Deletes blob + row, then best-effort sweeps the photo's persisted resized variants (`variants/<collectionId>/<photoId>/`). `200 { success: true }`. `400` on failure; `401`.
+`getSession` + belongs-to-parent (`404`) + `requireApiCapability("photos:write")` (**curator**; the old `canDeletePhotos` flag is inert); also `photo.itemId` must match (`404`). Deletes blob + row, then best-effort sweeps the photo's persisted resized variants (`variants/<collectionId>/<photoId>/`). `200 { success: true }`. `400` on failure; `401`/`403`/`404`.
 
 ### `GET /api/collections/[id]/items/[itemId]/photos/[photoId]/file`
 `getSession` + belongs-to-parent (`404`) + (member or owner) → `403`. Then delegates to `servePhotoFile` (`src/lib/photo-serving.ts`). Optional `?w=` selects a server-resized variant (allowlist `160|320|640|1280`; other/invalid → `400`); omitted → the full-resolution original streamed verbatim. Resized variants are EXIF auto-oriented `image/webp`; originals keep their stored `Content-Type`. Caching: `Cache-Control: private, max-age=300, must-revalidate` + a strong variant `ETag` (`"photoId:w|orig:updatedAtMs"`) compared **app-side** (the client `If-None-Match` is **not** forwarded to Vercel Blob) → `304`. Source over `RESIZE_MAX_SOURCE_BYTES` (25 MB) or excess decoded pixels → `400`; blob missing → `404`; processing failure → generic `500`; `401`. `runtime = "nodejs"` (sharp). `next/image` keeps `unoptimized` (private blobs + cookie auth). Resized variants are **persisted** to Blob (`variants/<collectionId>/<photoId>/w<w>-v<v>.webp`, resize-once-globally) and served on a HIT without re-decoding; the variant store is best-effort (a get/put failure falls back to on-the-fly resize).
 
 ### `PATCH /api/collections/[id]/items/[itemId]/photos/[photoId]`
-Rotate a photo (persisted, non-destructive). **Body:** `{ rotation: 0|90|180|270 }` (absolute clockwise degrees). `getSession` + belongs-to-parent (`404`) resolved **before** the permission check, then **`canAddPhotos` or owner** (`403`) — a write tier, not the bare-member read tier (a view-only curator cannot re-orient shared photos). Validates `rotation` ∈ the set (else `400`, incl. bad/missing JSON); `PhotoRepository.update` runs only after authz+validation pass. `200 { rotation, updatedAt }` (the new `updatedAt` cache-busts the image URL). `401`. Applied at serve time by `servePhotoFile` (`.rotate()` EXIF then `.rotate(rotation)`); the blob is never rewritten.
+Rotate a photo (persisted, non-destructive). **Body:** `{ rotation: 0|90|180|270 }` (absolute clockwise degrees). `getSession` + belongs-to-parent (`404`) resolved **before** the permission check, then `requireApiCapability("photos:write")` (**curator**; the old `canAddPhotos` flag is inert). Validates `rotation` ∈ the set (else `400`, incl. bad/missing JSON); `PhotoRepository.update` runs only after authz+validation pass. `200 { rotation, updatedAt }` (the new `updatedAt` cache-busts the image URL). `401`. Applied at serve time by `servePhotoFile` (`.rotate()` EXIF then `.rotate(rotation)`); the blob is never rewritten.
 
 ### `POST /api/collections/[id]/items/[itemId]/photos/[photoId]/set-hero`
 `getSession` + belongs-to-parent (`404`) + `requireApiCollectionAccess` (`403`/`404`). Sets the item's hero photo. `200 { success: true }`. `400` on failure; `401`.
@@ -243,19 +243,19 @@ Unified "Move to…". **Body:** `{ photoIds: string[], destination: { type: "ite
 `getSession` + `requireApiCollectionAccess` (member-or-owner). Lists the collection's members. `401`/`403`/`404`. (IDOR closed — pv9 PR1, `purses-55c`.)
 
 ### `POST /api/collections/[id]/members`
-`requireAuth` + `isCollectionManager` → `403`. **Body:** `{ userId }` only — permission flags and `role` are **no longer accepted** (pv9 PR3); the added member is always a **curator**. `201` member. `400` invalid input.
+`requireAuth` + `requireApiCapability("members:manage")` (**owner**; pv9 PR4 — closes `purses-lgql`). **Body:** `{ userId }` only — permission flags and `role` are **not accepted** (pv9 PR3); the added member is always a **curator**. `201` member. `400` invalid input; `403`/`404`.
 
 ### `GET·PATCH·DELETE /api/collections/[id]/members/[mid]`
-`getSession` + belongs-to-parent (`membership.collectionId !== id` → `404`). `GET` additionally `requireApiCollectionAccess` (member). `PATCH`/`DELETE` require `isCollectionManager` → `403`. `PATCH` body → updated member (`400` invalid JSON); `DELETE` → `{ message }`.
+`getSession` + belongs-to-parent (`membership.collectionId !== id` → `404`). `GET` requires `members:read` (**curator**). `PATCH`/`DELETE` require `members:manage` (**owner**). `PATCH` is currently a **no-op** (members have no mutable fields under the role model — returns `200` with the unchanged member; disposition tracked in `purses-2wzz`); `DELETE` → `{ message }`. `401`/`403`/`404`.
 
 ### `GET·POST /api/collections/[id]/invitations`
-`getSession` + `requireApiCollectionAccess` (member). `GET` → `Invitation[]`. `POST` **body:** `{ email }` only (normalized) — permission flags are **no longer accepted** (pv9 PR3; an accepted invite becomes a curator). `201 Invitation`; invalid/missing email → `400` (pv9 PR2). (Owner-only tightening of invitation create lands in PR4, `purses-4wj2`.)
+`getSession` + `requireApiCapability` — **owner** (`invitations:read` for `GET`, `invitations:manage` for `POST`; pv9 PR4 — closes `purses-4wj2` GAP A). `GET` → `Invitation[]`. `POST` **body:** `{ email }` only (normalized) — no permission flags (an accepted invite becomes a curator). `201 Invitation`; invalid/missing email → `400`. `403`/`404`.
 
 ### `GET·PATCH·DELETE /api/invitations/[id]`
-`requireAuth` + resolve the invitation (`404` absent) + `requireApiCollectionAccess(invitation.collectionId)` (member-or-owner). `PATCH` body → updated `Invitation` (`400` invalid JSON); `DELETE` → `{ message }`. `401`/`403`/`404`. (IDOR closed — pv9 PR1, `purses-nj7`; the owner-only tightening of invitation management lands with the role model, `purses-g6o`.)
+`requireAuth` + `requireApiInvitationCapability(id, userId, "invitations:manage")` — resolves the invitation (`404` absent) then requires **owner** of its collection. `PATCH` body → updated `Invitation` (`400` invalid input); `DELETE` → `{ message }`. `401`/`403`/`404`. (pv9 PR4 tightened this from member-or-owner to owner; `purses-nj7`/`purses-g6o`.)
 
 ### `POST /api/invitations/[id]/resend`
-`requireAuth` + resolve the invitation (`404` absent) + `requireApiCollectionAccess(invitation.collectionId)` (member-or-owner). `401`/`403`/`404`. (IDOR closed — pv9 PR1, `purses-nj7`.)
+`requireAuth` + `requireApiInvitationCapability(id, userId, "invitations:manage")` (**owner**). `401`/`403`/`404`.
 
 ### `GET·POST /api/invitations/accept?token=`
 `GET` is **public** (token-based) — returns the `Invitation` for the token (a preview for the accept landing page). `POST` is **authenticated** and binds the invitation to the caller: `getSession` (`401` if none) → resolve by `?token=` (`400` missing, `404` unknown) → the invitation must be **`pending`** (else **`409`**) → the caller's **DB-canonical email** must equal the invitation email (both `normalizeEmail`d — trim + lowercase; else **`403`**) → in one transaction, create a **`role:"curator"`** `Membership` for the caller and set the invitation `status:"accepted", acceptedAt`. **Idempotent** via the `(collectionId,userId)` unique index (`createIfAbsent` / `onConflictDoNothing` — a repeat/concurrent accept yields `200` with exactly one membership, never a `500`). `200` on success. (`purses-8zcc`, pv9 PR3.)
@@ -342,11 +342,12 @@ Curator-private results, gated by `requireApiResultAccess` (member-or-owner **an
 
 The cross-tenant **IDOR holes are closed** (pv9 PR1, 2026-06-22): `GET /api/collections/[id]`, `GET …/members`, `GET·PATCH·DELETE /api/invitations/[id]` + `/resend`, `POST /api/items` + `GET·PATCH·DELETE /api/items/[id]` + `/restore`, and `…/preferences/*` are all scoped to their collection via `requireApiCollectionAccess` (member-or-owner; `404` absent / `403` forbidden).
 
-Remaining pv9 work (no longer tenant-isolation holes — capability/correctness):
+**The role model is fully wired (pv9 PR1–PR4).** There are no known tenant-isolation holes. Authorization for every collection-scoped route flows through `requireApiCapability(op)` against the Owner/Curator `CAPABILITIES` map (`src/server/dal/capabilities.ts`): owner = `collection.ownerId`, curator = any member, `membership.role` display-only, the legacy `can*` flags inert. Member management and invitation create/read/manage are **owner-only** (`purses-lgql`, `purses-4wj2` GAP A — closed in PR4); item/photo CRUD is **curator** (full-curator). `POST /api/invitations/accept` creates a curator membership bound to the caller's email, pending-guarded, idempotent (`purses-8zcc`). Create/update routes reject client-supplied flags/`role` (escalation surface closed); owner bootstrap is transactional. Migration `0006` reconciles `memberships.role` + `CHECK (role IN ('owner','curator'))`.
 
-- **Role/capability collapse** (`purses-crt`, `purses-89g`, `purses-g6o`): the 10 boolean permission flags are barely enforced; collapsing to `membership.role` (Owner/Curator) and routing every route through a `requireApiCapability` map. This will tighten member management and invitation create/manage to **owner-only** (currently member-or-owner) — `purses-lgql` (`isCollectionManager` ignores `canManageCollection`), `purses-4wj2` (invitation create ignores `canInviteMembers`).
-- **Role/capability enforcement migration** (`purses-g6o`, pv9 PR4): the DAL capability core exists (`src/server/dal/capabilities.ts` — `CAPABILITIES: Record<Operation, Role>`, `resolveEffectiveRole` [owner = `collection.ownerId`; any member = curator; `membership.role` is display-only], `requireApiCapability` + `requireApiItemCapability`/`requireApiInvitationCapability`), but routes still call the member-or-owner guards. PR4 migrates each route to `requireApiCapability(op)`, which tightens member management + invitation create/manage to **owner** (`purses-lgql`, `purses-4wj2` GAP A) and dissolves the inert flags.
+Remaining pv9 work (correctness/cleanup, not authz holes):
 
-**Implemented in pv9 PR3 (role model core):** `POST /api/invitations/accept` now creates a `role:"curator"` `Membership` bound to the caller's email, rejects non-pending invitations (`409`), and is idempotent (`purses-8zcc` resolved). Invitation-create and member-add/update **no longer accept client-supplied permission flags or `role`** (the mass-assignment/privilege-escalation surface is closed); members are always curator. Owner bootstrap (collection create + owner membership) is **transactional**. Migration `0006` reconciles `memberships.role` and adds a `CHECK (role IN ('owner','curator'))`.
+- **Account deletion** (`purses-hybm`, pv9 PR6): `DELETE /api/users/me` still soft-deletes (nulls `emailVerified`) without cascade/PII-scrub.
+- **Lockdown backstop** (`purses-o03`, pv9 PR5): a route-enumeration CI test asserting every collection-scoped route 403/404s a stranger.
+- **Deferred cleanups:** drop the inert flag columns/type fields after the UI cluster (`purses-us3d`); ESLint repo-import boundary (`purses-25ca`); member-PATCH no-op disposition (`purses-2wzz`); soft-delete audit attribution (`purses-wfgj`).
 
 Implemented (formerly no-op stubs): `POST /api/items/[id]/purge` is a real owner-only hard-delete cascade with a `409`-in-result guard, alongside owner-only `POST /api/items/[id]/remove-from-sorts` — **purses-u3p** resolved for item purge. **`POST /api/collections/[id]/purge`** is a real owner-only whole-collection cascade purge (name-confirm + `collection.purge` audit). The former sort-results no-op-success stubs — `DELETE /api/sort-results/[id]`, `DELETE /api/sort-results/[id]/items/[rid]`, and the empty `GET …/shares` listing — are also implemented.
