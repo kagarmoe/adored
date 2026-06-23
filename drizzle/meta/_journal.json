@@ -50,6 +50,13 @@
       "when": 1782079476062,
       "tag": "0006_authz_role_check",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1782192114840,
+      "tag": "0007_cold_steve_rogers",
+      "breakpoints": true
     }
   ]
 }
