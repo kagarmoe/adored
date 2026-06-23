@@ -109,6 +109,10 @@ export class AccountDeletionService {
     // ---- Phase 5: account-level audit row -------------------------------- //
     // collectionId is NOT NULL with no FK — use a sentinel so this event is
     // attributable without a natural collection context (purses-obe0).
+    // INVARIANT: never JOIN audit_log.collectionId → collections; "__account__"
+    // is a sentinel for account-scoped events. It cannot collide with a
+    // generatable collection id (those are prefixed ULIDs), so it never surfaces
+    // in an owner's per-collection audit view (findByCollection).
     await new AuditLogRepository(this.db).record({
       actorId: userId,
       action: "account.delete",

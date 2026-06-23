@@ -720,6 +720,40 @@ describeDb("AccountDeletionService via DELETE /api/users/me", () => {
   });
 
   // ==========================================================================
+  // purses-obe0 (sentinel invariant) — the account.delete row's sentinel
+  // collectionId="__account__" must NEVER surface in an owner's per-collection
+  // audit view. Proves the magic string can't collide with a generatable
+  // collection id (those are prefixed ULIDs) and stays out of findByCollection.
+  // ==========================================================================
+  it("purses-obe0: the account.delete sentinel row never surfaces in a real collection's audit view", async () => {
+    const { db } = getTestDb();
+    const { AuditLogRepository } = await import(
+      "@/server/repositories/implementations/AuditLogRepository"
+    );
+
+    mockGetSession.mockResolvedValue({ user: { id: userId } });
+    const res = await meDelete();
+    expect(res.status).toBe(200);
+
+    const auditRepo = new AuditLogRepository(db);
+
+    // The account.delete row IS written (non-vacuous guard) under the sentinel.
+    const sentinelRows = await auditRepo.findByCollection("__account__");
+    expect(sentinelRows.some((r) => r.action === "account.delete")).toBe(true);
+
+    // V's surviving (real) collection CB must NEVER see the account.delete row —
+    // its per-collection audit view is scoped by collectionId and the sentinel
+    // is not a real collection id.
+    const cbAudit = await auditRepo.findByCollection(cbCollectionId);
+    expect(cbAudit.some((r) => r.action === "account.delete")).toBe(false);
+
+    // Belt-and-suspenders: even the (now-purged) owned collection CA's id never
+    // carried the account-level row — that row lives only under the sentinel.
+    const caAudit = await auditRepo.findByCollection(caCollectionId);
+    expect(caAudit.some((r) => r.action === "account.delete")).toBe(false);
+  });
+
+  // ==========================================================================
   // F2 — borrowed photos (U uploaded into V's collection) must SURVIVE but be
   // de-identified (uploaded_by → tombstone), NOT deleted.
   // ==========================================================================

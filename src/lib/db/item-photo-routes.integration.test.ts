@@ -655,7 +655,8 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
 // purses-wfgj — audit attribution for soft-delete (item.delete) and photo delete
 // (photo.delete). Real handler → AuditLogRepository → ephemeral Postgres.
 // Asserts the audit row exists with the correct action, actorId, targetId, and
-// collectionId after the operation succeeds.
+// collectionId after the operation succeeds, and that the soft-delete + audit
+// insert are tx-bound: exactly ONE audit row per committed delete (atomicity).
 // ============================================================================
 describeDb("purses-wfgj: audit attribution for item soft-delete and photo delete", () => {
   let ownerId: string;
@@ -687,9 +688,10 @@ describeDb("purses-wfgj: audit attribution for item soft-delete and photo delete
 
     // Audit row must exist with exact attribution.
     const rows = await auditRepo.findByCollection(collectionId);
-    const row = rows.find((r) => r.action === "item.delete");
-    expect(row).toBeDefined();
-    expect(row).toMatchObject({
+    const deleteRows = rows.filter((r) => r.action === "item.delete");
+    // Tx-bound: exactly one audit row per committed soft-delete (atomicity).
+    expect(deleteRows).toHaveLength(1);
+    expect(deleteRows[0]).toMatchObject({
       action: "item.delete",
       targetType: "item",
       targetId: itemAId,
@@ -729,9 +731,10 @@ describeDb("purses-wfgj: audit attribution for item soft-delete and photo delete
     expect(res.status).toBe(200);
 
     const rows = await auditRepo.findByCollection(collectionId);
-    const row = rows.find((r) => r.action === "photo.delete");
-    expect(row).toBeDefined();
-    expect(row).toMatchObject({
+    const deleteRows = rows.filter((r) => r.action === "photo.delete");
+    // Tx-bound: exactly one audit row per committed photo delete (atomicity).
+    expect(deleteRows).toHaveLength(1);
+    expect(deleteRows[0]).toMatchObject({
       action: "photo.delete",
       targetType: "photo",
       targetId: photo.id,
