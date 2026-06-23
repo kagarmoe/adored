@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 
 const { mockGetSession, mockRequireAccess, redirectMock, resultRepo, resultItemRepo, itemRepo, shareRepo, photoRepo } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
@@ -98,7 +98,7 @@ describe("ResultDetailPage SharePanel curator gate (axn)", () => {
 });
 
 describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
-  // One item per bucket so each tier-count card, the Onward (low) tier, and the
+  // One item per bucket so the loved ranking, the Onward (low) section, and the
   // most-loved hero all have something to render.
   const TOP = { id: "i_top", collectionId: "coll_01ABCDEF", number: 1, name: "Top Bag", brand: null, status: "active" };
   const HIGH = { id: "i_high", collectionId: "coll_01ABCDEF", number: 2, name: "High Bag", brand: null, status: "active" };
@@ -116,22 +116,24 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
     photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map());
   });
 
-  it("renders all four tier-count cards with their human labels (Love/Like/Maybe/Onward)", async () => {
+  it("does not render a bold per-tier count tally (no count-shaming)", async () => {
     const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
     render(ui);
-    // "Love" is also the most-loved-hero copy ("What you love most"), so scope to the tier labels.
-    for (const label of ["Love", "Like", "Maybe", "Onward"]) {
-      expect(screen.getAllByText(label).length).toBeGreaterThan(0);
-    }
+    // The old design showed a 4-up grid of bold integer counts (one "1" per tier).
+    // Epic B removes it: tallying what's in each bucket is count-shaming (TONE #1, #4).
+    expect(screen.queryAllByText("1").length).toBe(0);
+    expect(screen.queryByText("0")).toBeNull();
   });
 
-  it("counts each tier independently (one item in each → every card shows 1, no zeros)", async () => {
+  it("keeps the tier labels on the cards/sections (Like/Maybe via badges, Onward in its section)", async () => {
     const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
-    render(ui);
-    // Four tier cards, each with exactly one item; the only counts on the page are 1s.
-    const ones = screen.getAllByText("1");
-    expect(ones.length).toBe(4);
-    expect(screen.queryByText("0")).toBeNull();
+    const { container } = render(ui);
+    // Labels now live on the ItemCard badges (title=) and the Onward section,
+    // not on a count grid. The dot badges carry Like/Maybe via their title attribute.
+    expect(container.querySelector('[title="Like"]')).not.toBeNull();
+    expect(container.querySelector('[title="Maybe"]')).not.toBeNull();
+    // "Onward" is the lowest tier's gentle label, surfaced in its own section.
+    expect(screen.getAllByText(/onward|where these go next/i).length).toBeGreaterThan(0);
   });
 
   it("labels the lowest tier as 'Onward' (the gentle visible label is present)", async () => {
@@ -164,13 +166,29 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
     expect(hero!.getAttribute("href")).toContain("/items/1");
   });
 
-  it("renders the remaining items under 'The full ranking' (everything past the hero)", async () => {
+  it("keeps the lowest tier OUT of 'The full ranking' and in a separate Onward section", async () => {
     const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
     render(ui);
-    expect(screen.getByRole("heading", { name: /the full ranking/i })).toBeInTheDocument();
-    for (const name of ["High Bag", "Med Bag", "Low Bag"]) {
-      expect(screen.getByText(name)).toBeInTheDocument();
-    }
+    const fullRanking = screen.getByRole("heading", { name: /the full ranking/i }).closest("section")!;
+    expect(within(fullRanking).getByText("High Bag")).toBeInTheDocument();
+    expect(within(fullRanking).getByText("Med Bag")).toBeInTheDocument();
+    expect(within(fullRanking).queryByText("Low Bag")).toBeNull();
+    const onward = screen.getByRole("heading", { name: /where these go next|onward/i }).closest("section")!;
+    expect(within(onward).getByText("Low Bag")).toBeInTheDocument();
+  });
+
+  it("ends the page on an affirmation beat, not the Onward section", async () => {
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const { container } = render(ui);
+    // A quiet, person-side closing line is present (distinct from the hero's
+    // "What you love most" — this is the page's final affirmation beat)...
+    const affirmation = screen.getByText(/these are the things you love|honored/i);
+    expect(affirmation).toBeInTheDocument();
+    // ...and it is the page's last content beat — it comes after the Onward section
+    // in document order, so letting-go is never the structural headline (TONE #1).
+    const onwardHeading = screen.getByRole("heading", { name: /where these go next/i });
+    const position = onwardHeading.compareDocumentPosition(affirmation);
+    expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("shows the gentle empty state (not a broken hero) when the result has no ranked items", async () => {
