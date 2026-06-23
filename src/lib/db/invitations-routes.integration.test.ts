@@ -250,10 +250,12 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(inv!.canSort).toBe(true);
     });
 
-    it("400s an invalid body (non-boolean flag) via errorResponse — and does NOT mutate (purses-pv9)", async () => {
-      // updateInvitation UpdateInvitationSchema.parse()es the body; a non-boolean flag
-      // is a ZodError, now mapped to 400 by errorResponse (was 500). Authz (collection
-      // access) runs BEFORE the parse, so it is unchanged.
+    it("a flag in the PATCH body is stripped, not 400'd — symmetric with the member side (purses-8zcc F3b)", async () => {
+      // UpdateInvitationSchema is now empty: flag fields are no longer declared, so a
+      // body flag (even a malformed one) is an unknown key that Zod strips — the PATCH
+      // returns 200 and the DB row is unchanged. Previously a non-boolean flag was a
+      // ZodError→400 while a valid flag silently no-op'd: an asymmetry with the member
+      // side (which 200s). Symmetric now.
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const collectionId = await seedBareCollection(ownerId);
       const { id } = await seedInvitation(collectionId); // seeded canSort: true
@@ -262,7 +264,7 @@ describeDb("Invitation routes — real DB integration", () => {
         makeRequest("PATCH", `http://localhost/api/invitations/${id}`, { canSort: "nope" }) as any,
         { params: { id } },
       );
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(200);
 
       // Unchanged: canSort is still the seeded true.
       const { db } = getTestDb();
@@ -564,13 +566,55 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(memberships).toHaveLength(1);
     });
 
+    it("conflict path — membership already exists on a still-pending invitation → 200, accepted, exactly 1 membership (no rollback)", async () => {
+      // Genuine idempotency test (not the tautological sequential double-accept):
+      // the invitee is ALREADY a member while the invitation is STILL pending
+      // (e.g. the owner pre-added them). A single accept must hit the unique
+      // conflict on the membership insert WITHOUT poisoning the transaction —
+      // the invitation update + commit must still land. Pre-onConflictDoNothing
+      // this was a 500 with the invitation stuck pending (postgres-js latches the
+      // 23505 error inside the no-savepoint tx).
+      const collectionId = await seedBareCollection(ownerId);
+      const inviteeId = await seedUserRow("conflict-acceptee");
+      const { db } = getTestDb();
+      const token = generateId("tok");
+      const inv = await new InvitationRepository(db).create({
+        collectionId,
+        email: `conflict-acceptee-${inviteeId}@adored.test`,
+        token,
+      });
+
+      // Invitee is already a curator member (invitation still pending).
+      await new MembershipRepository(db).create({
+        collectionId,
+        userId: inviteeId,
+        role: "curator",
+      });
+
+      mockGetSession.mockResolvedValue({ user: { id: inviteeId } });
+
+      const req = makeNextRequest("POST", `http://localhost/api/invitations/accept?token=${token}`);
+      const res = await acceptPost(req as any);
+      expect(res.status).toBe(200);
+
+      // Invitation update landed (transaction was NOT rolled back).
+      const updated = await new InvitationRepository(db).findById(inv.id);
+      expect(updated!.status).toBe("accepted");
+      expect(updated!.acceptedAt).not.toBeNull();
+
+      // Still exactly one membership — the conflicting insert was a no-op.
+      const memberships = await new MembershipRepository(db).findByCollection(collectionId);
+      expect(memberships).toHaveLength(1);
+      expect(memberships[0].userId).toBe(inviteeId);
+    });
+
     it("accepting an invitation creates a curator membership row for the invitee", async () => {
       const collectionId = await seedBareCollection(ownerId);
       const inviteeId = await seedUserRow("nogap");
       // Re-seed invitation with the invitee's actual email
       const { db } = getTestDb();
       const token2 = generateId("tok");
-      const inv2 = await new InvitationRepository(db).create({
+      await new InvitationRepository(db).create({
         collectionId,
         email: `nogap-${inviteeId}@adored.test`,
         token: token2,

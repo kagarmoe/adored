@@ -5,6 +5,7 @@ import { InvitationRepository } from "@/server/repositories/implementations/Invi
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { UserRepository } from "@/server/repositories/implementations/UserRepository";
 import { withTransaction } from "@/lib/transactions";
+import { normalizeEmail } from "@/lib/normalize-email";
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,7 +50,8 @@ export async function POST(request: NextRequest) {
 
     // Require session — POST accept must know who is accepting.
     const session = await getSession();
-    if (!session?.user?.id) {
+    const userId = session?.user?.id;
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -74,12 +76,13 @@ export async function POST(request: NextRequest) {
 
     // Identity guard — the session user's email must match the invitation email.
     const userRepo = new UserRepository(db);
-    const dbUser = await userRepo.findById(session.user.id);
+    const dbUser = await userRepo.findById(userId);
     if (!dbUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    const normalize = (e: string) => e.trim().toLowerCase();
-    if (normalize(dbUser.email) !== normalize(invitation.email)) {
+    // user.email is nullable in the schema (the User type overstates it). A user
+    // with no email can never match an invitation — clean 403, not a 500 on trim.
+    if (!dbUser.email || normalizeEmail(dbUser.email) !== normalizeEmail(invitation.email)) {
       return NextResponse.json(
         { error: "This invitation is for a different account" },
         { status: 403 }
@@ -91,19 +94,14 @@ export async function POST(request: NextRequest) {
       const txMembershipRepo = new MembershipRepository(tx);
       const txInvRepo = new InvitationRepository(tx);
 
-      // Insert membership; unique constraint violation means already a member — proceed.
-      try {
-        await txMembershipRepo.create({
-          collectionId: invitation.collectionId,
-          userId: session.user.id,
-          role: "curator",
-        });
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (!msg.includes("unique") && !msg.includes("duplicate") && !msg.includes("23505")) {
-          throw err;
-        }
-      }
+      // Idempotency arbiter: the (collection_id, user_id) unique index. createIfAbsent
+      // uses onConflictDoNothing, so a duplicate raises NO error and does not poison
+      // the transaction — the invitation update + commit still land.
+      await txMembershipRepo.createIfAbsent({
+        collectionId: invitation.collectionId,
+        userId,
+        role: "curator",
+      });
 
       await txInvRepo.update(invitation.id, {
         status: "accepted",

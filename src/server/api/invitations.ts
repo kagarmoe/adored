@@ -2,21 +2,17 @@ import { z } from "zod";
 import type { Invitation } from "@/types";
 import type { IInvitationRepository } from "@/server/repositories/InvitationRepository";
 import { randomBytes } from "crypto";
+import { normalizeEmail } from "@/lib/normalize-email";
 
 const CreateInvitationSchema = z.object({
   email: z.string().email(),
 });
 
-const UpdateInvitationSchema = z.object({
-  canManageCollection: z.boolean().optional(),
-  canInviteMembers: z.boolean().optional(),
-  canAddItems: z.boolean().optional(),
-  canEditMetadata: z.boolean().optional(),
-  canAddPhotos: z.boolean().optional(),
-  canDeletePhotos: z.boolean().optional(),
-  canSort: z.boolean().optional(),
-  canViewOutputs: z.boolean().optional(),
-});
+// Invitation flags are inert (DB-default only) and not mutable via PATCH — the
+// repo update allow-list writes only status/acceptedAt. An empty schema keeps the
+// member side and invitation side symmetric: an unknown flag key is stripped, not
+// a 400. (Flag columns/fields are dropped in the deferred contract migration.)
+const UpdateInvitationSchema = z.object({});
 
 export type CreateInvitationInput = z.infer<typeof CreateInvitationSchema>;
 export type UpdateInvitationInput = z.infer<typeof UpdateInvitationSchema>;
@@ -34,7 +30,7 @@ export class InvitationController {
     data: unknown,
   ): Promise<Invitation & { token: string }> {
     const parsed = CreateInvitationSchema.parse(data);
-    const email = parsed.email.trim().toLowerCase();
+    const email = normalizeEmail(parsed.email);
     const token = randomBytes(32).toString("hex");
     // Flags are not accepted from callers — DB column defaults govern all permissions.
     const invitation = await this.invitationRepo.create({
