@@ -177,15 +177,29 @@ describeDb("requireApiItemCapability — purses-89g", () => {
     expect((result as any).id).toBe(item.id);
   });
 
-  it("resolves soft-deleted items (uses findByIdIncludingDeleted)", async () => {
+  it("resolves a soft-deleted item ONLY with includeDeleted (lifecycle ops)", async () => {
     const { db } = getTestDb();
     const collectionId = await seedCollection(ownerId);
     const item = await new ItemRepository(db).create({ collectionId });
     await new ItemRepository(db).softDelete(item.id);
-    // items:purge is an owner-level op; should still gate (not 404) because we resolve incl. deleted
-    const result = await requireApiItemCapability(db, item.id, ownerId, "items:purge");
-    expect(result).not.toBeInstanceOf(Response);
-    expect((result as any).id).toBe(item.id);
+    // Lifecycle op (purge/restore/remove-from-sorts) opts in → resolves the deleted row.
+    const ok = await requireApiItemCapability(db, item.id, ownerId, "items:purge", {
+      includeDeleted: true,
+    });
+    expect(ok).not.toBeInstanceOf(Response);
+    expect((ok as any).id).toBe(item.id);
+  });
+
+  it("404s a soft-deleted item for a read/edit op (default resolution, no leak)", async () => {
+    const { db } = getTestDb();
+    const collectionId = await seedCollection(ownerId);
+    const item = await new ItemRepository(db).create({ collectionId });
+    await new ItemRepository(db).softDelete(item.id);
+    // Default (no includeDeleted): a soft-deleted item is invisible to reads/edits — 404,
+    // matching the pre-pv9 GET /items/[id] findById behavior (no soft-deleted-item leak).
+    const result = await requireApiItemCapability(db, item.id, ownerId, "items:read");
+    expect(result).toBeInstanceOf(Response);
+    expect((result as Response).status).toBe(404);
   });
 
   it("403s a non-member trying to access an item from a foreign collection", async () => {

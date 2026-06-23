@@ -47,15 +47,26 @@ export async function requireApiCapability(
 
 // ─── Resource wrappers ───────────────────────────────────────────────────────
 
-// Resolve an item (including soft-deleted — needed for lifecycle/purge ops),
-// then gate by capability. 404 if the item is absent.
+// Resolve an item, then gate by capability. 404 if the item is absent.
+//
+// Resolution strategy is explicit, NOT derived from `op`: a soft-deleted item is
+// invisible (404) to read/edit/soft-delete ops — matching the pre-pv9 GET/PATCH/DELETE
+// `findById` behavior — but the lifecycle ops that ACT on a soft-deleted row
+// (restore, purge, remove-from-sorts) must pass `{ includeDeleted: true }` to resolve
+// it. Default is the safe-for-reads `findById` so a route can never accidentally leak a
+// soft-deleted item as 200. (`op` alone can't decide: restore is items:write yet needs
+// the deleted row, while edit is items:write and must 404 on it.)
 export async function requireApiItemCapability(
   db: Database,
   itemId: string,
   userId: string,
   op: Operation,
+  opts: { includeDeleted?: boolean } = {},
 ): Promise<Item | NextResponse> {
-  const item = await new ItemRepository(db).findByIdIncludingDeleted(itemId);
+  const repo = new ItemRepository(db);
+  const item = opts.includeDeleted
+    ? await repo.findByIdIncludingDeleted(itemId)
+    : await repo.findById(itemId);
   if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const access = await requireApiCapability(db, item.collectionId, userId, op);
