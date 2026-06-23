@@ -43,12 +43,17 @@ describe("InviteForm", () => {
     // No permission flags in the payload — the role model owns all permissions.
     expect(Object.keys(body)).toEqual(["email"]);
 
-    // Success view replaces the form, and the callback fires.
+    // Success status appears, and the callback fires.
     await waitFor(() =>
       expect(screen.getByText("Invitation sent successfully!")).toBeInTheDocument(),
     );
     expect(onSuccess).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole("button", { name: "Send Invitation" })).not.toBeInTheDocument();
+
+    // The form stays mounted alongside the success status, so the user can invite
+    // again immediately — and the email field was cleared.
+    expect(screen.getByRole("button", { name: "Send Invitation" })).toBeInTheDocument();
+    expect(emailField()).toBeInTheDocument();
+    expect(emailField().value).toBe("");
   });
 
   it("a malformed email blocks submission — no fetch (native type=email guard fires before zod)", async () => {
@@ -73,17 +78,16 @@ describe("InviteForm", () => {
     fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Send Invitation" }));
 
-    // The success confirmation is exposed to assistive tech as a live status region.
-    expect(await screen.findByRole("status")).toHaveTextContent(/sent/i);
+    // The live status region pre-exists (always mounted) so its text change is
+    // announced reliably; on success it carries the confirmation text.
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/sent/i));
   });
 
-  it("clears the success timer on unmount (no state update after unmount)", async () => {
+  it("clears the success timer on unmount (no leaked timer)", async () => {
     vi.useFakeTimers();
     try {
       (fetch as any).mockResolvedValue({ ok: true, status: 201, json: async () => ({}) });
-      // A setState-after-unmount would log here; we also assert the timer is gone
-      // (the real, non-tautological guard — see getTimerCount below).
-      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       const { unmount } = render(<InviteForm collectionId="coll_01ULID" />);
       fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
@@ -102,15 +106,6 @@ describe("InviteForm", () => {
       // call setSuccess on the dead tree. getTimerCount === 0 proves it was cleared.
       unmount();
       expect(vi.getTimerCount()).toBe(0);
-
-      // And advancing past 3s fires nothing — no throw, no setState-after-unmount.
-      expect(() => {
-        act(() => {
-          vi.advanceTimersByTime(3000);
-        });
-      }).not.toThrow();
-      expect(errorSpy).not.toHaveBeenCalled();
-      errorSpy.mockRestore();
     } finally {
       vi.useRealTimers();
     }

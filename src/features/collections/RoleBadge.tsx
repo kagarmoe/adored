@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui";
 
 interface RoleBadgeProps {
-  role: "owner" | "curator" | string;
+  role: "owner" | "curator";
 }
 
 // Roles are identity, not a value-ramp: each maps to its own role Badge variant,

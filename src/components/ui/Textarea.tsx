@@ -25,9 +25,9 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
             w-full bg-surface border border-hairline rounded-control px-4 py-3 text-ink
             transition-shadow duration-200 ease-gentle
             placeholder:text-ink-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
-            focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed
+            focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed
             resize-none
-            ${error ? "border-error focus:ring-error" : ""}
+            ${error ? "border-error focus-visible:ring-error" : ""}
             ${className}
           `}
           ref={ref}

@@ -50,21 +50,20 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
     }
   }
 
-  if (success) {
-    return (
-      <div
-        role="status"
-        aria-live="polite"
-        className="bg-success-soft border border-success-soft rounded-lg px-4 py-3 text-success-deep"
-      >
-        Invitation sent successfully!
-      </div>
-    );
-  }
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
       {error && <ErrorMessage message={error} />}
+
+      {/* Persistent live region: pre-existing in the DOM so the text change on
+          success is announced reliably (a region mounted together with its text
+          is frequently skipped by screen readers). */}
+      <div role="status" aria-live="polite">
+        {success && (
+          <div className="bg-success-soft border border-success-soft rounded-control px-4 py-3 text-success-deep">
+            Invitation sent successfully!
+          </div>
+        )}
+      </div>
 
       <Input
         label="Email address"
