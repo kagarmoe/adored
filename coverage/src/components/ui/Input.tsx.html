@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>3/3</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">77.77% </span>
+                <span class="strong">81.81% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>7/9</span>
+                <span class='fraction'>9/11</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>3/3</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
@@ -98,29 +98,22 @@
 <a name='L33'></a><a href='#L33'>33</a>
 <a name='L34'></a><a href='#L34'>34</a>
 <a name='L35'></a><a href='#L35'>35</a>
-<a name='L36'></a><a href='#L36'>36</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">333x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">32x</span>
+<span class="cline-any cline-yes">359x</span>
+<span class="cline-any cline-yes">359x</span>
+<span class="cline-any cline-yes">359x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -129,7 +122,24 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">30x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">32x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -140,30 +150,35 @@ interface InputProps extends React.InputHTMLAttributes&lt;HTMLInputElement&gt; {
   error?: string;
 }
 &nbsp;
-const Input = React.forwardRef&lt;HTMLInputElement, InputProps&gt;(({ label, error, className = "", ...props }, ref) =&gt; (
-  &lt;div className="w-full"&gt;
-    {label &amp;&amp; (
-      &lt;label className="block text-sm font-medium text-ink mb-2"&gt;
-        {label}
-        {props.required &amp;&amp; &lt;span className="text-error"&gt;*&lt;/span&gt;}
-      &lt;/label&gt;
-    )}
-    &lt;input
-      className={`
-        w-full bg-surface border border-hairline rounded-control px-4 py-3 text-ink
-        transition-shadow duration-200 ease-gentle
-        placeholder:text-ink-soft focus:outline-none focus:ring-2 focus:ring-primary
-        focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed
-        h-12 min-h-12
-        ${error ? <span class="branch-0 cbranch-no" title="branch not covered" >"border-error focus:ring-error" : "</span>"}
-        ${className}
-      `}
-      ref={ref}
-      {...props}
-    /&gt;
-    {error &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >&lt;p className="text-error text-sm mt-2"&gt;{error}&lt;/p&gt;}</span>
-  &lt;/div&gt;
-));
+const Input = React.forwardRef&lt;HTMLInputElement, InputProps&gt;(({ label, error, className = "", id, ...props }, ref) =&gt; {
+  const generatedId = React.useId();
+  const inputId = id ?? generatedId;
+  return (
+    &lt;div className="w-full"&gt;
+      {label &amp;&amp; (
+        &lt;label htmlFor={inputId} className="block text-sm font-medium text-ink mb-2"&gt;
+          {label}
+          {props.required &amp;&amp; &lt;span className="text-error"&gt;*&lt;/span&gt;}
+        &lt;/label&gt;
+      )}
+      &lt;input
+        id={inputId}
+        className={`
+          w-full bg-surface border border-hairline rounded-control px-4 py-3 text-ink
+          transition-shadow duration-200 ease-gentle
+          placeholder:text-ink-soft focus:outline-none focus:ring-2 focus:ring-primary
+          focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed
+          h-12 min-h-12
+          ${error ? <span class="branch-0 cbranch-no" title="branch not covered" >"border-error focus:ring-error" : "</span>"}
+          ${className}
+        `}
+        ref={ref}
+        {...props}
+      /&gt;
+      {error &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >&lt;p className="text-error text-sm mt-2"&gt;{error}&lt;/p&gt;}</span>
+    &lt;/div&gt;
+  );
+});
 Input.displayName = "Input";
 &nbsp;
 export { Input };
@@ -175,7 +190,7 @@ export type { InputProps };
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T07:20:41.687Z
+                at 2026-06-23T21:24:08.814Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
