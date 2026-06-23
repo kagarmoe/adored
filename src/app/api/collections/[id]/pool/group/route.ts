@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import { ItemService, PoolGroupError, MAX_GROUP_PHOTOS } from "@/server/services/ItemService";
 
@@ -43,7 +41,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   // mode is lenient: "each" makes one item per photo; anything else falls back to "combine".
   const mode = (body as { mode?: unknown })?.mode === "each" ? "each" : "combine";
 
-  const service = new ItemService(new ItemRepository(db), new PhotoRepository(db));
+  const service = ItemService.fromDb(db);
   try {
     if (mode === "each") {
       const items = await service.createItemsFromPoolEach(params.id, photoIds as string[]);

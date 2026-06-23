@@ -47,6 +47,10 @@ export class ItemPurgeService {
     private sortResultItemRepo: SortResultItemRepository,
   ) {}
 
+  static fromDb(db: Database): ItemPurgeService {
+    return new ItemPurgeService(db, new SortResultItemRepository(db));
+  }
+
   async purge(item: Item, actorId: string): Promise<void> {
     if (await this.sortResultItemRepo.existsByItem(item.id)) {
       throw new ItemInResultError();

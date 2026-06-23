@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { CollectionController } from "@/server/api/collections";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
+import { MemberController } from "@/server/api/members";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
 import { withTransaction } from "@/lib/transactions";
@@ -11,10 +10,7 @@ export async function GET() {
   try {
     const user = await requireAuth();
     const db = getDb();
-    const collectionRepo = new CollectionRepository(db);
-    const controller = new CollectionController(collectionRepo);
-
-    const collections = await controller.listCollections(user.id);
+    const collections = await CollectionController.fromDb(db).listCollections(user.id);
     return NextResponse.json(collections);
   } catch (error) {
     return errorResponse(error);
@@ -28,16 +24,8 @@ export async function POST(request: NextRequest) {
 
     const db = getDb();
     const collection = await withTransaction(db, async (tx) => {
-      const txCollectionRepo = new CollectionRepository(tx);
-      const txMembershipRepo = new MembershipRepository(tx);
-      const txController = new CollectionController(txCollectionRepo);
-
-      const col = await txController.createCollection(user.id, body);
-      await txMembershipRepo.create({
-        collectionId: col.id,
-        userId: user.id,
-        role: "owner",
-      });
+      const col = await CollectionController.fromDb(tx).createCollection(user.id, body);
+      await MemberController.fromDb(tx).addOwner(col.id, user.id);
       return col;
     });
     return NextResponse.json(collection, { status: 201 });

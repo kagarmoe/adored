@@ -8,6 +8,7 @@ import {
   isResultNumberConflict,
 } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
+import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import {
   rankPreferencesToItems,
   cloneItemsFrom,
@@ -57,6 +58,15 @@ export class SortResultService {
     private preferenceRepo: ICollectionPreferenceItemRepository,
     private db: Database,
   ) {}
+
+  static fromDb(db: Database): SortResultService {
+    return new SortResultService(
+      new SortResultRepository(db),
+      new SortResultItemRepository(db),
+      new CollectionPreferenceItemRepository(db),
+      db,
+    );
+  }
 
   async createDraftResult(
     collectionId: string,

@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { PhotoController } from "@/server/api/photos";
+import { ItemController } from "@/server/api/items";
 import { requireApiCapability } from "@/server/dal/collection-access";
-import { AuditLogRepository } from "@/server/repositories/implementations/AuditLogRepository";
-import { withTransaction } from "@/lib/transactions";
 import { del } from "@vercel/blob";
 import { ALLOWED_ROTATIONS } from "@/lib/photos";
 import { deleteVariants, variantPrefix } from "@/lib/photo-variants";
@@ -21,15 +19,15 @@ export async function PATCH(
   }
 
   const db = getDb();
-  const photoRepo = new PhotoRepository(db);
-  const itemRepo = new ItemRepository(db);
+  const photoCtrl = PhotoController.fromDb(db);
+  const itemCtrl = ItemController.fromDb(db);
 
   try {
-    const item = await itemRepo.findById(params.itemId);
+    const item = await itemCtrl.getItem(params.itemId);
     if (!item || item.collectionId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    const photo = await photoRepo.findById(params.photoId);
+    const photo = await photoCtrl.findById(params.photoId);
     if (!photo || photo.itemId !== params.itemId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
@@ -48,7 +46,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid rotation" }, { status: 400 });
     }
 
-    const updated = await photoRepo.update(params.photoId, { rotation: rotation as number });
+    const updated = await photoCtrl.update(params.photoId, { rotation: rotation as number });
     return NextResponse.json({ rotation: updated.rotation, updatedAt: updated.updatedAt });
   } catch {
     return NextResponse.json({ error: "Rotate failed" }, { status: 500 });
@@ -68,12 +66,12 @@ export async function DELETE(
   const actorId = session.user.id;
 
   const db = getDb();
-  const photoRepo = new PhotoRepository(db);
-  const itemRepo = new ItemRepository(db);
+  const photoCtrl = PhotoController.fromDb(db);
+  const itemCtrl = ItemController.fromDb(db);
 
   try {
     // Verify item belongs to collection (belongs-to-parent).
-    const item = await itemRepo.findById(params.itemId);
+    const item = await itemCtrl.getItem(params.itemId);
     if (!item || item.collectionId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
@@ -83,26 +81,16 @@ export async function DELETE(
     const access = await requireApiCapability(db, params.id, actorId, "photos:write");
     if (access instanceof NextResponse) return access;
 
-    const photo = await photoRepo.findById(params.photoId);
+    const photo = await photoCtrl.findById(params.photoId);
     if (!photo || photo.itemId !== params.itemId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    // Row soft-delete + audit in ONE transaction (mirrors ItemPurgeService): a
-    // committed delete always has exactly one audit row — if the audit insert
-    // throws, the soft-delete rolls back, so a photo is never deleted without
-    // attribution (purses-wfgj). Blob del + variant sweep are external side
-    // effects that can't roll back, so they run post-commit (best-effort).
-    await withTransaction(db, async (tx) => {
-      await new PhotoRepository(tx).delete(params.photoId);
-      await new AuditLogRepository(tx).record({
-        actorId,
-        action: "photo.delete",
-        targetType: "photo",
-        targetId: photo.id,
-        collectionId: params.id,
-      });
-    });
+    // Row delete + audit in ONE transaction via PhotoController.deleteWithAudit:
+    // a committed delete always has exactly one audit row — if the audit insert
+    // throws, the delete rolls back (purses-wfgj). Blob del + variant sweep are
+    // external side effects that can't roll back, so they run post-commit (best-effort).
+    await photoCtrl.deleteWithAudit(photo, actorId);
 
     // Best-effort, post-commit: only http(s) keys are real blob URLs; a del
     // failure is inert (orphaned, sweepable) — the DB delete already committed.

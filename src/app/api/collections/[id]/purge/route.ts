@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { CollectionController } from "@/server/api/collections";
 import { CollectionPurgeService } from "@/server/services/CollectionPurgeService";
 
 const ConfirmSchema = z.object({ confirm: z.string() });
@@ -20,7 +20,7 @@ export async function POST(
     const user = await requireAuth();
     const db = getDb();
 
-    const collection = await new CollectionRepository(db).findByIdIncludingDeleted(params.id);
+    const collection = await CollectionController.fromDb(db).getIncludingDeleted(params.id);
     if (!collection) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }

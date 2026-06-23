@@ -54,4 +54,8 @@ export class MemberController {
     }
     await this.membershipRepo.delete(membershipId);
   }
+
+  async addOwner(collectionId: string, userId: string): Promise<CollectionMembership> {
+    return this.membershipRepo.create({ collectionId, userId, role: "owner" });
+  }
 }

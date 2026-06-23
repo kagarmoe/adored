@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { PhotoController } from "@/server/api/photos";
+import { ItemController } from "@/server/api/items";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import { servePhotoFile } from "@/lib/photo-serving";
 
@@ -19,16 +19,14 @@ export async function GET(
   }
 
   const db = getDb();
-  const photoRepo = new PhotoRepository(db);
-  const itemRepo = new ItemRepository(db);
 
   try {
-    const item = await itemRepo.findById(params.itemId);
+    const item = await ItemController.fromDb(db).getItem(params.itemId);
     if (!item || item.collectionId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const photo = await photoRepo.findById(params.photoId);
+    const photo = await PhotoController.fromDb(db).findById(params.photoId);
     if (!photo || photo.itemId !== params.itemId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }

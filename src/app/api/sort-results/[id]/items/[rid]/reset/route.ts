@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { ResultItemController } from "@/server/api/result-items";
-import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import { getDb } from "@/lib/db";
 import { requireApiResultAccess } from "@/server/dal/collection-access";
 
@@ -20,13 +19,12 @@ export async function POST(
         { status: 409 },
       );
     }
-    const existing = await new SortResultItemRepository(db).findById(params.rid);
-    if (!existing || existing.sortResultId !== params.id) {
+    const ctrl = ResultItemController.fromDb(db);
+    const existing = await ctrl.getByIdForResult(params.rid, params.id);
+    if (!existing) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    const itemRepo = new SortResultItemRepository(db);
-    const controller = new ResultItemController(itemRepo);
-    const item = await controller.resetResultItem(params.rid);
+    const item = await ctrl.resetResultItem(params.rid);
     return NextResponse.json(item);
   } catch (error) {
     return NextResponse.json(

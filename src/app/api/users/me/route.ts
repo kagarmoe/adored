@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { UserController } from "@/server/api/users";
-import { UserRepository } from "@/server/repositories/implementations/UserRepository";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
 
@@ -13,10 +12,7 @@ export async function GET() {
     }
 
     const db = getDb();
-    const userRepo = new UserRepository(db);
-    const controller = new UserController(userRepo, db);
-
-    const user = await controller.getCurrentUser(session.user.id);
+    const user = await UserController.fromDb(db).getCurrentUser(session.user.id);
     return NextResponse.json(user);
   } catch (error) {
     return NextResponse.json(
@@ -35,10 +31,7 @@ export async function PATCH(request: NextRequest) {
 
     const body = await request.json();
     const db = getDb();
-    const userRepo = new UserRepository(db);
-    const controller = new UserController(userRepo, db);
-
-    const user = await controller.updateCurrentUser(session.user.id, body);
+    const user = await UserController.fromDb(db).updateCurrentUser(session.user.id, body);
     return NextResponse.json(user);
   } catch (error) {
     return errorResponse(error);
@@ -53,10 +46,7 @@ export async function DELETE() {
     }
 
     const db = getDb();
-    const userRepo = new UserRepository(db);
-    const controller = new UserController(userRepo, db);
-
-    await controller.deleteCurrentUser(session.user.id);
+    await UserController.fromDb(db).deleteCurrentUser(session.user.id);
     return NextResponse.json({ message: "User account deleted" });
   } catch (error) {
     return errorResponse(error);

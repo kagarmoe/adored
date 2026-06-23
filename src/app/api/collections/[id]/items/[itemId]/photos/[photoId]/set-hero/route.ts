@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { requireApiCapability } from "@/server/dal/collection-access";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { ItemController } from "@/server/api/items";
+import { PhotoController } from "@/server/api/photos";
 
 export async function POST(
   _req: NextRequest,
@@ -13,12 +13,12 @@ export async function POST(
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const db = getDb();
-  const item = await new ItemRepository(db).findById(params.itemId);
+  const item = await ItemController.fromDb(db).getItem(params.itemId);
   if (!item || item.collectionId !== params.id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  const photoRepo = new PhotoRepository(db);
-  const photo = await photoRepo.findById(params.photoId);
+  const photoCtrl = PhotoController.fromDb(db);
+  const photo = await photoCtrl.findById(params.photoId);
   if (!photo || photo.itemId !== params.itemId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
@@ -28,7 +28,7 @@ export async function POST(
   if (access instanceof NextResponse) return access;
 
   try {
-    await photoRepo.setHero(params.photoId, params.itemId);
+    await photoCtrl.setHero(params.photoId, params.itemId);
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Set hero failed" }, { status: 400 });

@@ -3,6 +3,7 @@ import type { Photo } from "@/types";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { AuditLogRepository } from "@/server/repositories/implementations/AuditLogRepository";
 import { withTransaction } from "@/lib/transactions";
+import { recordPooledPhoto, type PooledPhotoInput } from "@/server/photos/recordPooledPhoto";
 
 export class PhotoController {
   private photoRepo: PhotoRepository;
@@ -51,5 +52,9 @@ export class PhotoController {
 
   async create(data: Parameters<PhotoRepository["create"]>[0]): Promise<Photo> {
     return this.photoRepo.create(data);
+  }
+
+  async recordPooled(input: PooledPhotoInput): Promise<Photo> {
+    return recordPooledPhoto(this.photoRepo, input);
   }
 }

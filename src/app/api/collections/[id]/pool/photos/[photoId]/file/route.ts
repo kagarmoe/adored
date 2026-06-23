@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { PhotoController } from "@/server/api/photos";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import { servePhotoFile } from "@/lib/photo-serving";
 
@@ -18,10 +18,9 @@ export async function GET(
   }
 
   const db = getDb();
-  const photoRepo = new PhotoRepository(db);
 
   try {
-    const photo = await photoRepo.findById(params.photoId);
+    const photo = await PhotoController.fromDb(db).findById(params.photoId);
     // Only this collection's pooled (unassigned) photos are served here.
     if (!photo || photo.collectionId !== params.id || photo.itemId !== null) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });

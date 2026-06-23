@@ -3,6 +3,7 @@ import type { IItemRepository } from "@/server/repositories/ItemRepository";
 import type { IPhotoRepository } from "@/server/repositories/PhotoRepository";
 import type { Database } from "@/lib/db";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { AuditLogRepository } from "@/server/repositories/implementations/AuditLogRepository";
 import { withTransaction } from "@/lib/transactions";
 
@@ -28,6 +29,10 @@ export class ItemService {
     private repo: IItemRepository,
     private photoRepo: IPhotoRepository,
   ) {}
+
+  static fromDb(db: Database): ItemService {
+    return new ItemService(new ItemRepository(db), new PhotoRepository(db));
+  }
 
   // Make one item from selected pooled photos: pre-validate availability, then
   // create the (nameless, catalog-numbered) item and assign the photos with the
