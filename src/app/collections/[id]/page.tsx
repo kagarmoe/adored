@@ -2,9 +2,9 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
-import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
+import { ItemController } from "@/server/api/items";
+import { SessionController } from "@/server/api/sessions";
+import { ResultController } from "@/server/api/results";
 import { AppLayout } from "@/components/layout";
 import { Badge, Button, Card } from "@/components/ui";
 import { AbandonSessionButton } from "@/features/sessions/AbandonSessionButton";
@@ -22,15 +22,12 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
 
   const db = getDb();
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const itemRepo = new ItemRepository(db);
-  const sessionRepo = new SessionRepository(db);
-  const resultRepo = new SortResultRepository(db);
   const [items, sessions, results] = await Promise.all([
-    itemRepo.findByCollection(collection.id),
+    ItemController.fromDb(db).listItems(collection.id),
     // purses-t9l: each user sorts independently — the active-session card + count
     // reflect only this user's own sessions, never another curator's.
-    sessionRepo.findByCollectionAndCurator(collection.id, session.user.id),
-    resultRepo.findByCollection(collection.id),
+    SessionController.fromDb(db).listByCollectionAndCurator(collection.id, session.user.id),
+    ResultController.fromDb(db).listResults(collection.id),
   ]);
 
   const activeSession = sessions.find((sortSession) => sortSession.status === "active");

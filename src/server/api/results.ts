@@ -30,6 +30,16 @@ export class ResultController {
     return result;
   }
 
+  // Returns null for an absent result so the caller maps it to notFound/404
+  // without masking a real DB error (mirrors ItemController.getItem).
+  async getResultOrNull(resultId: string): Promise<SortResult | null> {
+    return this.resultRepo.findById(resultId);
+  }
+
+  async getByCollectionAndNumber(collectionId: string, number: number): Promise<SortResult | null> {
+    return this.resultRepo.findByCollectionAndNumber(collectionId, number);
+  }
+
   async updateResult(resultId: string, data: unknown): Promise<SortResult> {
     const parsed = UpdateResultSchema.parse(data);
     return this.resultRepo.update(resultId, parsed);

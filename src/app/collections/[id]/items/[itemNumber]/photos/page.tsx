@@ -2,8 +2,8 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { ItemController } from "@/server/api/items";
+import { PhotoController } from "@/server/api/photos";
 import { AppLayout } from "@/components/layout";
 import { Card } from "@/components/ui";
 import { PhotoUpload } from "@/features/items/PhotoUpload";
@@ -22,22 +22,20 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
 
   const db = getDb();
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const itemRepo = new ItemRepository(db);
-  const photoRepo = new PhotoRepository(db);
 
   const number = Number(params.itemNumber);
   const item =
     number > 0 && Number.isInteger(number)
-      ? await itemRepo.findByCollectionAndNumber(collection.id, number)
+      ? await ItemController.fromDb(db).getByCollectionAndNumber(collection.id, number)
       : null;
 
   if (!item) {
     redirect(`/collections/${collection.slug ?? collection.id}/items`);
   }
 
-  const photos = await photoRepo.findByItem(item.id);
+  const photos = await PhotoController.fromDb(db).findByItem(item.id);
 
-  const allItems = await itemRepo.findByCollection(collection.id);
+  const allItems = await ItemController.fromDb(db).listItems(collection.id);
   const otherItems = allItems
     .filter((i) => i.id !== item.id)
     .map((i) => ({ id: i.id, number: i.number, name: i.name }));

@@ -26,6 +26,10 @@ export class MemberController {
     return this.membershipRepo.findByCollection(collectionId);
   }
 
+  async getByUser(userId: string, collectionId: string): Promise<CollectionMembership | null> {
+    return this.membershipRepo.findByUser(userId, collectionId);
+  }
+
   async addMember(collectionId: string, data: unknown): Promise<CollectionMembership> {
     const parsed = CreateMemberSchema.parse(data);
     // New members always start as curator; flags use DB column defaults.

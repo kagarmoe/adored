@@ -61,6 +61,10 @@ export class ItemController {
     return this.itemRepo.findById(itemId);
   }
 
+  async getByCollectionAndNumber(collectionId: string, number: number): Promise<Item | null> {
+    return this.itemRepo.findByCollectionAndNumber(collectionId, number);
+  }
+
   async updateItem(itemId: string, data: unknown): Promise<Item> {
     const parsed = UpdateItemSchema.parse(data);
     return this.itemRepo.update(itemId, parsed);

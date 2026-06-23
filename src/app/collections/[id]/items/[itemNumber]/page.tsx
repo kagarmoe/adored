@@ -2,9 +2,9 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
+import { ItemController } from "@/server/api/items";
+import { PhotoController } from "@/server/api/photos";
+import { MemberController } from "@/server/api/members";
 import { AppLayout } from "@/components/layout";
 import { Button, Card } from "@/components/ui";
 import { ItemMetadata } from "@/features/items/ItemMetadata";
@@ -25,28 +25,25 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
 
   const db = getDb();
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const itemRepo = new ItemRepository(db);
-  const photoRepo = new PhotoRepository(db);
-  const membershipRepo = new MembershipRepository(db);
 
   // Show the delete control to any member (owner or curator) — the DELETE API
   // enforces the same photos:write = member-or-owner rule, so this matches the
   // real authz boundary without relying on the now-removed per-flag fields.
-  const membership = await membershipRepo.findByUser(session.user.id, collection.id);
+  const membership = await MemberController.fromDb(db).getByUser(session.user.id, collection.id);
   const canDeletePhotos =
     collection.ownerId === session.user.id || membership !== null;
 
   const number = Number(params.itemNumber);
   const item =
     number > 0 && Number.isInteger(number)
-      ? await itemRepo.findByCollectionAndNumber(collection.id, number)
+      ? await ItemController.fromDb(db).getByCollectionAndNumber(collection.id, number)
       : null;
 
   if (!item) {
     redirect(`/collections/${collection.slug ?? collection.id}/items`);
   }
 
-  const photos = await photoRepo.findByItem(item.id);
+  const photos = await PhotoController.fromDb(db).findByItem(item.id);
   const nav = `/collections/${collection.slug ?? collection.id}/items/${item.number}`;
   const editHref = `${nav}/edit`;
   const photosHref = `${nav}/photos`;

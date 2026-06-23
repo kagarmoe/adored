@@ -1,8 +1,8 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { CollectionController } from "@/server/api/collections";
+import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
 import { buttonVariants, EmptyState } from "@/components/ui";
@@ -21,9 +21,8 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
   }
 
   const db = getDb();
-  const collectionRepo = new CollectionRepository(db);
-  const collections = await collectionRepo.findByOwner(session.user.id);
-  const covers = await new PhotoRepository(db).findCoverPhotosByCollectionIds(
+  const collections = await CollectionController.fromDb(db).listCollections(session.user.id);
+  const covers = await PhotoController.fromDb(db).findCoverPhotosByCollectionIds(
     collections.map((c) => c.id),
   );
   const activeFilter = searchParams?.status === "active" || searchParams?.status === "archived"

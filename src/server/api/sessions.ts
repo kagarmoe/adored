@@ -51,6 +51,14 @@ export class SessionController {
     return this.sessionRepo.findById(sessionId);
   }
 
+  async listByCollectionAndCurator(collectionId: string, curatorId: string): Promise<Session[]> {
+    return this.sessionRepo.findByCollectionAndCurator(collectionId, curatorId);
+  }
+
+  async getByCollectionAndNumber(collectionId: string, number: number): Promise<Session | null> {
+    return this.sessionRepo.findByCollectionAndNumber(collectionId, number);
+  }
+
   async updateSession(sessionId: string, data: unknown): Promise<Session> {
     const parsed = UpdateSessionSchema.parse(data);
     return this.sessionRepo.update(sessionId, parsed);

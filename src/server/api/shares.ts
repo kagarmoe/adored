@@ -29,6 +29,12 @@ export class ShareController {
     return share && share.sortResultId === resultId ? share : null;
   }
 
+  // Raw token lookup (no validation) — the shared-results page applies its own
+  // status/expiry/finalized gating. viewSharedResult is the validating variant.
+  async findByToken(token: string): Promise<SortResultShare | null> {
+    return this.shareRepo.findByToken(token);
+  }
+
   async listShares(resultId: string): Promise<SortResultShare[]> {
     return this.shareRepo.findByResult(resultId);
   }

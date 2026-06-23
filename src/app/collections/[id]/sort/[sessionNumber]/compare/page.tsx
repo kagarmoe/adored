@@ -2,15 +2,15 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
-import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
-import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
+import { ItemController } from "@/server/api/items";
+import { SessionController } from "@/server/api/sessions";
+import { PreferenceController } from "@/server/api/preferences";
+import { DecisionController } from "@/server/api/decisions";
 import { AppLayout } from "@/components/layout";
 import { EmptyState } from "@/components/ui";
 import { CompareChoice } from "@/features/sorting/CompareChoice";
 import { selectNextPair } from "@/lib/pairwise-selection";
-import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 
 interface ComparePageProps {
@@ -25,15 +25,11 @@ export default async function ComparePage({ params }: ComparePageProps) {
 
   const db = getDb();
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const itemRepo = new ItemRepository(db);
-  const sessionRepo = new SessionRepository(db);
-  const prefRepo = new CollectionPreferenceItemRepository(db);
-  const decisionRepo = new DecisionEventRepository(db);
 
   const sessionNumber = Number(params.sessionNumber);
   const sortSession =
     sessionNumber > 0 && Number.isInteger(sessionNumber)
-      ? await sessionRepo.findByCollectionAndNumber(collection.id, sessionNumber)
+      ? await SessionController.fromDb(db).getByCollectionAndNumber(collection.id, sessionNumber)
       : null;
 
   if (!sortSession || sortSession.collectionId !== collection.id) {
@@ -46,9 +42,9 @@ export default async function ComparePage({ params }: ComparePageProps) {
   }
 
   const [items, preferences, decisions] = await Promise.all([
-    itemRepo.findByCollection(collection.id),
-    prefRepo.findByCollection(collection.id, session.user.id),
-    decisionRepo.findBySession(sortSession.id),
+    ItemController.fromDb(db).listItems(collection.id),
+    PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id),
+    DecisionController.fromDb(db).listBySession(sortSession.id),
   ]);
 
   if (items.length < 2) {
@@ -103,8 +99,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
   }
 
   const [itemA, itemB] = pair;
-  const photoRepo = new PhotoRepository(db);
-  const covers = await photoRepo.findCoverPhotosByItemIds([itemA.id, itemB.id]);
+  const covers = await PhotoController.fromDb(db).findCoverPhotosByItemIds([itemA.id, itemB.id]);
   const coverA = covers.get(itemA.id);
   const coverB = covers.get(itemB.id);
   const heroA = coverA ? getPhotoAssetUrlForPhoto(coverA, collection.id, { w: PHOTO_WIDTH.card }) : undefined;

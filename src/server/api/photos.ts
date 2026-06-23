@@ -24,6 +24,18 @@ export class PhotoController {
     return this.photoRepo.findPoolByCollection(collectionId);
   }
 
+  async findByItem(itemId: string): Promise<Photo[]> {
+    return this.photoRepo.findByItem(itemId);
+  }
+
+  async findCoverPhotosByItemIds(itemIds: string[]): Promise<Map<string, Photo>> {
+    return this.photoRepo.findCoverPhotosByItemIds(itemIds);
+  }
+
+  async findCoverPhotosByCollectionIds(collectionIds: string[]): Promise<Map<string, Photo>> {
+    return this.photoRepo.findCoverPhotosByCollectionIds(collectionIds);
+  }
+
   async update(photoId: string, data: Partial<Photo>): Promise<Photo> {
     return this.photoRepo.update(photoId, data);
   }
