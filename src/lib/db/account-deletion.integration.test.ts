@@ -606,4 +606,208 @@ describeDb("AccountDeletionService via DELETE /api/users/me", () => {
       SessionRepository.prototype.deleteByCurator = original;
     }
   });
+
+  // ==========================================================================
+  // F1 — soft-deleted OWNED collections must be purged (were skipped before).
+  // ==========================================================================
+  it("F1: purges a SOFT-DELETED owned collection and its children/blobs", async () => {
+    const { db } = getTestDb();
+
+    // Seed a SECOND owned collection for U that is soft-deleted (archived).
+    const archivedColId = generateId("col");
+    const archivedKey = "https://blob.example/archived-hero.jpg";
+    await db.insert(collectionsTable).values({
+      id: archivedColId,
+      ownerId: userId,
+      name: "Archived CA",
+      slug: `arch-${archivedColId}`,
+      status: "archived",
+      deletedAt: new Date(), // SOFT-DELETED
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    const archivedItemId = generateId("item");
+    await db.insert(itemsTable).values({
+      id: archivedItemId,
+      collectionId: archivedColId,
+      name: "Archived Item",
+      unit: "imperial",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    const archivedPhotoId = generateId("photo");
+    await db.insert(photosTable).values({
+      id: archivedPhotoId,
+      itemId: archivedItemId,
+      collectionId: archivedColId,
+      blobKey: archivedKey,
+      filename: "archived-hero.jpg",
+      mimeType: "image/jpeg",
+      fileSize: 1,
+      uploadedBy: userId,
+      isHero: true,
+      rotation: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    // BEFORE: present.
+    expect(await countRows(db, collectionsTable, eq(collectionsTable.id, archivedColId))).toBe(1);
+    expect(await countRows(db, itemsTable, eq(itemsTable.id, archivedItemId))).toBe(1);
+    expect(await countRows(db, photosTable, eq(photosTable.id, archivedPhotoId))).toBe(1);
+
+    mockGetSession.mockResolvedValue({ user: { id: userId } });
+    const res = await meDelete();
+    expect(res.status).toBe(200);
+
+    // AFTER: the soft-deleted owned collection is fully purged (RED on old code,
+    // which enumerated via findByOwner = active-only).
+    expect(await countRows(db, collectionsTable, eq(collectionsTable.id, archivedColId))).toBe(0);
+    expect(await countRows(db, itemsTable, eq(itemsTable.id, archivedItemId))).toBe(0);
+    expect(await countRows(db, photosTable, eq(photosTable.id, archivedPhotoId))).toBe(0);
+    expect(mockDel).toHaveBeenCalledWith(archivedKey);
+  });
+
+  // ==========================================================================
+  // F6a — owned-collection purge writes the canonical collection.purge audit row
+  // (proves reuse of CollectionPurgeService, not a hand-copied cascade).
+  // ==========================================================================
+  it("F6a: owned-collection purge writes a collection.purge audit row", async () => {
+    const { db } = getTestDb();
+    const { auditLogTable } = await import("@/lib/db/schema");
+
+    mockGetSession.mockResolvedValue({ user: { id: userId } });
+    const res = await meDelete();
+    expect(res.status).toBe(200);
+
+    const auditRows = await db
+      .select()
+      .from(auditLogTable)
+      .where(eq(auditLogTable.collectionId, caCollectionId));
+    expect(auditRows.length).toBeGreaterThanOrEqual(1);
+    expect(auditRows.some((r) => r.action === "collection.purge" && r.actorId === userId)).toBe(true);
+  });
+
+  // ==========================================================================
+  // F2 — borrowed photos (U uploaded into V's collection) must SURVIVE but be
+  // de-identified (uploaded_by → tombstone), NOT deleted.
+  // ==========================================================================
+  it("F2: scrubs uploaded_by on borrowed photos; row + V's collection survive", async () => {
+    const { db } = getTestDb();
+
+    // U uploads a photo onto V's item in V's (borrowed) collection CB.
+    const borrowedPhotoId = generateId("photo");
+    const borrowedPhotoKey = "https://blob.example/borrowed-by-u.jpg";
+    await db.insert(photosTable).values({
+      id: borrowedPhotoId,
+      itemId: cbItemId, // V's item
+      collectionId: cbCollectionId, // V's collection
+      blobKey: borrowedPhotoKey,
+      filename: "borrowed-by-u.jpg",
+      mimeType: "image/jpeg",
+      fileSize: 1,
+      uploadedBy: userId, // U uploaded it
+      isHero: false,
+      rotation: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    // BEFORE: photo present, uploaded_by = U.
+    const before = await db.select().from(photosTable).where(eq(photosTable.id, borrowedPhotoId));
+    expect(before).toHaveLength(1);
+    expect(before[0].uploadedBy).toBe(userId);
+
+    mockGetSession.mockResolvedValue({ user: { id: userId } });
+    const res = await meDelete();
+    expect(res.status).toBe(200);
+
+    // AFTER: photo ROW SURVIVES (V's content) but uploaded_by is the tombstone.
+    const after = await db.select().from(photosTable).where(eq(photosTable.id, borrowedPhotoId));
+    expect(after).toHaveLength(1); // NOT deleted
+    expect(after[0].uploadedBy).toBe(`deleted+${userId}@deleted.invalid`);
+    expect(after[0].blobKey).toBe(borrowedPhotoKey); // blob untouched
+    // The borrowed blob must NOT have been del'd.
+    expect(mockDel).not.toHaveBeenCalledWith(borrowedPhotoKey);
+    // V's collection intact.
+    expect(await countRows(db, collectionsTable, eq(collectionsTable.id, cbCollectionId))).toBe(1);
+  });
+
+  // ==========================================================================
+  // F3 — an accepted invitation with U's email in V's collection must SURVIVE
+  // but have its email scrubbed to the tombstone.
+  // ==========================================================================
+  it("F3: scrubs invitation email in borrowed collection; row survives", async () => {
+    const { db } = getTestDb();
+
+    // An accepted invitation in V's collection carrying U's email.
+    const borrowedInvId = generateId("inv");
+    const uEmail = `u-${userId}@adored.test`;
+    await db.insert(invitationsTable).values({
+      id: borrowedInvId,
+      collectionId: cbCollectionId, // V's collection
+      email: uEmail, // U's email
+      token: generateId("invtok"),
+      status: "accepted",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    // BEFORE: present with U's email.
+    const before = await db.select().from(invitationsTable).where(eq(invitationsTable.id, borrowedInvId));
+    expect(before).toHaveLength(1);
+    expect(before[0].email).toBe(uEmail);
+
+    mockGetSession.mockResolvedValue({ user: { id: userId } });
+    const res = await meDelete();
+    expect(res.status).toBe(200);
+
+    // AFTER: row SURVIVES (V's collection) but email is the tombstone.
+    const after = await db.select().from(invitationsTable).where(eq(invitationsTable.id, borrowedInvId));
+    expect(after).toHaveLength(1); // NOT deleted
+    expect(after[0].email).toBe(`deleted+${userId}@deleted.invalid`);
+  });
+
+  // ==========================================================================
+  // F4 — partial failure must NOT scrub PII and must surface a non-2xx, so the
+  // op is retryable with PII intact.
+  // ==========================================================================
+  it("F4: when an owned-collection purge throws, PII is NOT scrubbed and route returns 500", async () => {
+    const { db } = getTestDb();
+
+    // Force CollectionPurgeService.purge to reject once.
+    const { CollectionPurgeService } = await import(
+      "@/server/services/CollectionPurgeService"
+    );
+    const original = CollectionPurgeService.prototype.purge;
+    CollectionPurgeService.prototype.purge = async () => {
+      throw new Error("simulated purge failure");
+    };
+
+    try {
+      mockGetSession.mockResolvedValue({ user: { id: userId } });
+      const res = await meDelete();
+
+      // Route surfaces a non-2xx (errorResponse maps a generic Error → 500).
+      expect(res.status).toBe(500);
+
+      // PII intact — email still U's, password still set, emailVerified set.
+      const userRow = await rawUserRow(userId);
+      expect(userRow).not.toBeNull();
+      expect(userRow!.email).toBe(`u-${userId}@adored.test`);
+      expect(userRow!.password).toBe("hashed");
+      expect(userRow!.emailVerified).not.toBeNull();
+
+      // account/session rows still present.
+      const acctRows = await db.select().from(accountTable).where(eq(accountTable.userId, userId));
+      expect(acctRows.length).toBeGreaterThanOrEqual(1);
+      const sessRows = await db.select().from(sessionTable).where(eq(sessionTable.userId, userId));
+      expect(sessRows.length).toBeGreaterThanOrEqual(1);
+
+      // Borrowed slice NOT touched either (abort happened before phase 2).
+      expect(await countRows(db, membershipsTable, eq(membershipsTable.id, uMembershipId))).toBe(1);
+    } finally {
+      CollectionPurgeService.prototype.purge = original;
+    }
+  });
 });

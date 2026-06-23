@@ -1,7 +1,7 @@
-import { del } from "@vercel/blob";
 import type { Database } from "@/lib/db";
 import { withTransaction } from "@/lib/transactions";
-import { deleteVariants, variantPrefix } from "@/lib/photo-variants";
+import { accountTombstone } from "@/server/services/account-tombstone";
+import { CollectionPurgeService } from "@/server/services/CollectionPurgeService";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
@@ -10,107 +10,99 @@ import { DecisionEventRepository } from "@/server/repositories/implementations/D
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { UserRepository } from "@/server/repositories/implementations/UserRepository";
 
 /**
- * Permanently erase a user's data and scrub their PII.
+ * Permanently erase a user's data and scrub their PII. Irreversible.
  *
- * Owned collections: full children-first cascade in one `withTransaction` per
- * collection (mirrors CollectionPurgeService). No FK has ON DELETE CASCADE, so
- * the order is: sort_result_shares → sort_result_items → sort_results →
- * decision_events → sessions → preferences → photos → items → invitations →
- * memberships → collection. Partial failure (a later collection's tx fails) is
- * acceptable per spec — it is logged and the rest continue.
+ * Phase 1 — Owned collections (incl. SOFT-DELETED): each is purged via
+ * `CollectionPurgeService.purge` (canonical child-first cascade + audit row +
+ * blob del). Resolution uses `findByOwnerIncludingDeleted` so archived
+ * collections are not skipped. ALL owned purges run first; if ANY throws, we
+ * throw AFTER the loop — BEFORE the borrowed pass and BEFORE the PII scrub — so
+ * the route returns 500 and the op is retryable with PII still intact. We never
+ * scrub a user who still owns un-purged data.
  *
- * Borrowed collections (curator in another owner's collection): delete the
- * user's curator-scoped slice child-first across ALL collections in one pass:
- * sort_result_shares (by curator) → sort_result_items (by curator) →
- * sort_results (by curator) → decision_events (by curator) → sessions (by
- * curator) → preferences (by curator) → memberships (by user). The owner's
- * own rows in those collections are NOT touched.
+ * Phase 2 — Borrowed collections (the user is a curator in someone else's
+ * collection). In ONE transaction, delete the user's curator-PRIVATE slice
+ * child-first: sort_result_shares → sort_result_items → sort_results →
+ * decision_events → sessions → preferences → memberships. The owner's own rows
+ * are untouched.
  *
- * User row + auth: `purgeAndScrub` scrubs PII and hard-deletes account /
- * session / verificationToken rows.
+ * Phase 3 — Scrub SHARED content the user contributed into OTHER owners'
+ * collections (must SURVIVE, only de-identified): photos' uploaded_by and any
+ * invitation email matching the user → the tombstone. (Owned-collection photos
+ * and invitations are already purged in phase 1, so these targets are
+ * borrowed-only.)
  *
- * Blobs: best-effort `del` AFTER commit (a failure is logged, never fatal).
+ * Phase 4 — User row + auth: `purgeAndScrub` (transactional) scrubs PII and
+ * deletes account / session / verificationToken rows.
  */
 export class AccountDeletionService {
   constructor(private db: Database) {}
 
   async deleteCurrentUser(userId: string): Promise<void> {
-    // ------------------------------------------------------------------ //
-    // 1. Owned collections — full cascade, one tx per collection           //
-    // ------------------------------------------------------------------ //
-    const ownedCollections = await new CollectionRepository(this.db).findByOwner(userId);
-    const allBlobKeys: string[] = [];
-    const allVariantPrefixes: string[] = [];
+    // ---- Phase 1: owned collections (incl. soft-deleted) ----------------- //
+    const ownedCollections = await new CollectionRepository(
+      this.db,
+    ).findByOwnerIncludingDeleted(userId);
+
+    const purgeService = new CollectionPurgeService(this.db);
+    const failures: Array<{ collectionId: string; error: unknown }> = [];
 
     for (const collection of ownedCollections) {
       try {
-        const keys = await withTransaction(this.db, async (tx) => {
-          await new SortResultShareRepository(tx).deleteByCollection(collection.id);
-          await new SortResultItemRepository(tx).deleteByCollection(collection.id);
-          await new SortResultRepository(tx).deleteByCollection(collection.id);
-          await new DecisionEventRepository(tx).deleteByCollection(collection.id);
-          await new SessionRepository(tx).deleteByCollection(collection.id);
-          await new CollectionPreferenceItemRepository(tx).deleteByCollection(collection.id);
-          const blobKeys = await new PhotoRepository(tx).hardDeleteByCollection(collection.id);
-          await new ItemRepository(tx).hardDeleteByCollection(collection.id);
-          await new InvitationRepository(tx).deleteByCollection(collection.id);
-          await new MembershipRepository(tx).deleteByCollection(collection.id);
-          await new CollectionRepository(tx).hardDelete(collection.id);
-          return blobKeys;
-        });
-        allBlobKeys.push(...keys);
-        allVariantPrefixes.push(variantPrefix(collection.id));
-      } catch (err) {
-        // Partial failure: log and continue with remaining collections.
-        // The spec explicitly permits this ("acceptable per spec, log it").
+        // CollectionPurgeService cascades, writes the collection.purge audit row,
+        // and dels blobs — reusing it fixes drift and restores the audit trail.
+        await purgeService.purge(collection, userId);
+      } catch (error) {
+        failures.push({ collectionId: collection.id, error });
         console.error(
-          `AccountDeletionService: cascade failed for owned collection ${collection.id} (userId=${userId}); continuing`,
-          err,
+          `AccountDeletionService: purge failed for owned collection ${collection.id} (userId=${userId})`,
+          error,
         );
       }
     }
 
-    // ------------------------------------------------------------------ //
-    // 2. Borrowed collections — curator-scoped slice, one cross-collection //
-    //    pass per table (child-first to respect no-cascade FKs)            //
-    // ------------------------------------------------------------------ //
-    // Order: shares → result-items → sort-results (share+item are children of
-    // sort_result); then decision-events → sessions (decision is child of
-    // session); then preferences; then memberships.
-    await new SortResultShareRepository(this.db).deleteByCurator(userId);
-    await new SortResultItemRepository(this.db).deleteByCurator(userId);
-    await new SortResultRepository(this.db).deleteByCurator(userId);
-    await new DecisionEventRepository(this.db).deleteByCurator(userId);
-    await new SessionRepository(this.db).deleteByCurator(userId);
-    await new CollectionPreferenceItemRepository(this.db).deleteByCurator(userId);
-    await new MembershipRepository(this.db).deleteByUser(userId);
+    // Abort BEFORE the borrowed pass and BEFORE any PII scrub if any owned
+    // collection failed to purge — the user still owns un-erased data, so the
+    // op must surface a 500 and stay retryable with PII intact. We never scrub
+    // a user who still owns un-purged data.
+    if (failures.length > 0) {
+      throw new Error(
+        `Account deletion aborted: ${failures.length} owned collection(s) failed to purge ` +
+          `(${failures.map((f) => f.collectionId).join(", ")}); PII left intact for retry.`,
+      );
+    }
 
-    // ------------------------------------------------------------------ //
-    // 3. User row + auth tables — scrub PII, delete tokens                 //
-    // ------------------------------------------------------------------ //
+    // ---- Phase 2: borrowed curator-private slice (one tx) ---------------- //
+    // Child-first: shares + result-items are children of sort_results;
+    // decision_events are children of sessions.
+    await withTransaction(this.db, async (tx) => {
+      await new SortResultShareRepository(tx).deleteByCurator(userId);
+      await new SortResultItemRepository(tx).deleteByCurator(userId);
+      await new SortResultRepository(tx).deleteByCurator(userId);
+      await new DecisionEventRepository(tx).deleteByCurator(userId);
+      await new SessionRepository(tx).deleteByCurator(userId);
+      await new CollectionPreferenceItemRepository(tx).deleteByCurator(userId);
+      await new MembershipRepository(tx).deleteByUser(userId);
+    });
+
+    // ---- Phase 3: scrub shared content in borrowed collections ----------- //
+    // De-identify (do NOT delete) the user's photos and invitation email that
+    // live in OTHER owners' collections — that content belongs to those owners.
+    const tombstone = accountTombstone(userId);
+    const oldUser = await new UserRepository(this.db).findById(userId);
+    const oldEmail = oldUser?.email ?? null;
+
+    await new PhotoRepository(this.db).scrubUploader(userId, tombstone);
+    if (oldEmail) {
+      await new InvitationRepository(this.db).scrubEmail(oldEmail, tombstone);
+    }
+
+    // ---- Phase 4: user row + auth (transactional) ----------------------- //
     await new UserRepository(this.db).purgeAndScrub(userId);
-
-    // ------------------------------------------------------------------ //
-    // 4. Blobs — best-effort, post-commit                                  //
-    // ------------------------------------------------------------------ //
-    const httpKeys = allBlobKeys.filter((k) => k.startsWith("http"));
-    const blobResults = await Promise.allSettled(httpKeys.map((k) => del(k)));
-    for (const r of blobResults) {
-      if (r.status === "rejected") {
-        console.error(
-          "AccountDeletionService: blob del failed (orphaned, sweepable)",
-          r.reason,
-        );
-      }
-    }
-
-    // Best-effort: sweep resized variants for every purged owned collection.
-    await Promise.allSettled(allVariantPrefixes.map((p) => deleteVariants(p)));
   }
 }
