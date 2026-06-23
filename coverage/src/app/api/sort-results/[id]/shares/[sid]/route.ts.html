@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">85.71% </span>
+                <span class="strong">87.5% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>36/42</span>
+                <span class='fraction'>35/40</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">44.73% </span>
+                <span class="strong">83.33% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>17/38</span>
+                <span class='fraction'>15/18</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">92.3% </span>
+                <span class="strong">94.59% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>36/39</span>
+                <span class='fraction'>35/37</span>
             </div>
         
             
@@ -134,18 +134,8 @@
 <a name='L69'></a><a href='#L69'>69</a>
 <a name='L70'></a><a href='#L70'>70</a>
 <a name='L71'></a><a href='#L71'>71</a>
-<a name='L72'></a><a href='#L72'>72</a>
-<a name='L73'></a><a href='#L73'>73</a>
-<a name='L74'></a><a href='#L74'>74</a>
-<a name='L75'></a><a href='#L75'>75</a>
-<a name='L76'></a><a href='#L76'>76</a>
-<a name='L77'></a><a href='#L77'>77</a>
-<a name='L78'></a><a href='#L78'>78</a>
-<a name='L79'></a><a href='#L79'>79</a>
-<a name='L80'></a><a href='#L80'>80</a>
-<a name='L81'></a><a href='#L81'>81</a>
-<a name='L82'></a><a href='#L82'>82</a>
-<a name='L83'></a><a href='#L83'>83</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L72'></a><a href='#L72'>72</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -175,9 +165,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -194,12 +181,6 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -222,9 +203,6 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NextRequest, NextResponse } from "next/server";
@@ -233,6 +211,7 @@ import { ShareController } from "@/server/api/shares";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { getDb } from "@/lib/db";
 import { requireApiResultAccess } from "@/server/dal/collection-access";
+import { errorResponse } from "@/server/api/http-errors";
 &nbsp;
 export async function GET(
   _request: NextRequest,
@@ -249,10 +228,7 @@ export async function GET(
     }
     return NextResponse.json(share);
   } catch (error) {
-<span class="cstat-no" title="statement not covered" >    return NextResponse.json(</span>
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error &amp;&amp; error.message === "Unauthorized" ? 401 : 500 }
-    );
+<span class="cstat-no" title="statement not covered" >    return errorResponse(error);</span>
   }
 }
 &nbsp;
@@ -275,13 +251,7 @@ export async function PATCH(
     const share = await controller.updateShare(params.sid, body);
     return NextResponse.json(share);
   } catch (error) {
-    <span class="missing-if-branch" title="else path not taken" >E</span>if (error instanceof SyntaxError) {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
-<span class="cstat-no" title="statement not covered" >    return NextResponse.json(</span>
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >error.message === "Unauthorized" ? 4</span>01 : 500 }
-    );
+    return errorResponse(error);
   }
 }
 &nbsp;
@@ -303,10 +273,7 @@ export async function DELETE(
     await controller.revokeShare(params.sid);
     return NextResponse.json({ message: "Share revoked" });
   } catch (error) {
-<span class="cstat-no" title="statement not covered" >    return NextResponse.json(</span>
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error &amp;&amp; error.message === "Unauthorized" ? 401 : 500 }
-    );
+<span class="cstat-no" title="statement not covered" >    return errorResponse(error);</span>
   }
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -316,7 +283,7 @@ export async function DELETE(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-22T23:23:26.081Z
+                at 2026-06-23T00:22:19.036Z
             </div>
         <script src="../../../../../../../prettify.js"></script>
         <script>
