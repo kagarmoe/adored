@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
-import { requireApiCollectionOwner } from "@/server/dal/collection-access";
+import { requireApiItemCapability } from "@/server/dal/collection-access";
 import { SortResultService } from "@/server/services/SortResultService";
 
 // Owner-only bulk-detach: remove an item from all DRAFT sort results in one call,
@@ -22,13 +21,9 @@ export async function POST(
     const user = await requireAuth();
     const db = getDb();
 
-    const item = await new ItemRepository(db).findByIdIncludingDeleted(params.id);
-    if (!item) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-
-    const owned = await requireApiCollectionOwner(db, item.collectionId, user.id);
-    if (owned instanceof NextResponse) return owned; // 404 (absent) / 403 (not owner)
+    // items:purge = owner. includeDeleted: true — item may be soft-deleted pre-purge.
+    const item = await requireApiItemCapability(db, params.id, user.id, "items:purge", { includeDeleted: true });
+    if (item instanceof NextResponse) return item; // 404 (absent) / 403 (not owner)
 
     const service = new SortResultService(
       new SortResultRepository(db),

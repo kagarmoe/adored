@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
-import { requireApiCollectionOwner } from "@/server/dal/collection-access";
+import { requireApiItemCapability } from "@/server/dal/collection-access";
 import { ItemPurgeService, ItemInResultError } from "@/server/services/ItemPurgeService";
 
 const PurgeConfirmSchema = z.object({ confirm: z.literal("PURGE") });
@@ -21,13 +20,9 @@ export async function POST(
     const user = await requireAuth();
     const db = getDb();
 
-    const item = await new ItemRepository(db).findByIdIncludingDeleted(params.id);
-    if (!item) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-
-    const owned = await requireApiCollectionOwner(db, item.collectionId, user.id);
-    if (owned instanceof NextResponse) return owned; // 404 (absent) / 403 (not owner)
+    // items:purge = owner. includeDeleted: true — the item to purge may be soft-deleted.
+    const item = await requireApiItemCapability(db, params.id, user.id, "items:purge", { includeDeleted: true });
+    if (item instanceof NextResponse) return item; // 404 (absent) / 403 (not owner)
 
     // Authz passed — only now parse + validate the confirm body.
     let body: unknown;
