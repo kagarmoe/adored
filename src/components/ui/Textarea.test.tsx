@@ -7,6 +7,11 @@ it("associates the label with the control", () => {
   expect(screen.getByLabelText("Story")).toBeInstanceOf(HTMLTextAreaElement);
 });
 
+it("links an explicit id when provided", () => {
+  render(<Textarea id="story" label="Story" value="" onChange={() => {}} />);
+  expect(screen.getByLabelText("Story").id).toBe("story");
+});
+
 it("associates the error text and marks the control invalid", () => {
   render(<Textarea label="Story" error="Too long" value="" onChange={() => {}} />);
   const ta = screen.getByLabelText("Story");
