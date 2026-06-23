@@ -90,9 +90,6 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
     const memberId = await seedUserRow("file-member");
     await new MembershipRepository(getTestDb().db).create({
       collectionId, userId: memberId, role: "curator",
-      canManageCollection: false, canInviteMembers: false, canAddItems: false,
-      canEditMetadata: false, canAddPhotos: false, canDeletePhotos: false,
-      canSort: false, canViewOutputs: true,
     });
     mockGetSession.mockResolvedValue({ user: { id: memberId } });
     const res = await GET(req() as any, { params: { id: collectionId, itemId, photoId } });

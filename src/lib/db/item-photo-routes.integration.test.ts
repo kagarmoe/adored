@@ -109,9 +109,9 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
     await closeDb();
   });
 
-  /** The seeded curator member's userId already has canAddPhotos=true,
-   *  canDeletePhotos=false (see seedFullCollection). The active hero photo lives
-   *  on itemA with an http blobKey; itemB carries a soft-deleted photo. */
+  /** The seeded curator member (see seedFullCollection) has role:"curator".
+   *  The active hero photo lives on itemA with an http blobKey;
+   *  itemB carries a soft-deleted photo. */
 
   // ===================== POST upload =====================================
   describe("POST upload", () => {
@@ -140,22 +140,14 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
       expect(mockPut).not.toHaveBeenCalled();
     });
 
-    it("201s a curator member regardless of canAddPhotos flag (photos:write = curator, full-curator model)", async () => {
-      // Full-curator: canAddPhotos flag is inert — any collection member may upload photos.
+    it("201s a curator member (photos:write = curator, full-curator model)", async () => {
+      // Full-curator: any collection member may upload photos — role decides, not flags.
       const { collectionId, itemAId } = await seedFullCollection(ownerId);
       const viewerId = await seedUserRow("viewer");
       await membershipRepo.create({
         collectionId,
         userId: viewerId,
         role: "curator",
-        canManageCollection: false,
-        canInviteMembers: false,
-        canAddItems: false,
-        canEditMetadata: false,
-        canAddPhotos: false,   // flag is inert
-        canDeletePhotos: false,
-        canSort: false,
-        canViewOutputs: true,
       });
       mockGetSession.mockResolvedValue({ user: { id: viewerId } });
 
@@ -243,7 +235,7 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
       expect(created!.isHero).toBe(false);
     });
 
-    it("201s for a member WITH canAddPhotos (write tier)", async () => {
+    it("201s for a curator member (write tier)", async () => {
       const { collectionId, itemAId, memberId } = await seedFullCollection(ownerId);
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
@@ -310,8 +302,8 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
       expect((await photoRepo.findById(bPhoto.id))!.rotation).toBe(0);
     });
 
-    it("200s a curator member regardless of canAddPhotos flag and persists rotation (photos:write = curator)", async () => {
-      // Full-curator: canAddPhotos flag is inert — any collection member may rotate photos.
+    it("200s a curator member and persists rotation (photos:write = curator)", async () => {
+      // Full-curator: any collection member may rotate photos — role decides, not flags.
       const { collectionId, itemAId } = await seedFullCollection(ownerId);
       const photo = await heroPhoto(itemAId);
       const viewerId = await seedUserRow("viewer");
@@ -319,14 +311,6 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
         collectionId,
         userId: viewerId,
         role: "curator",
-        canManageCollection: false,
-        canInviteMembers: false,
-        canAddItems: false,
-        canEditMetadata: false,
-        canAddPhotos: false,   // flag is inert
-        canDeletePhotos: false,
-        canSort: false,
-        canViewOutputs: true,
       });
       mockGetSession.mockResolvedValue({ user: { id: viewerId } });
 
@@ -380,7 +364,7 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
       expect((await photoRepo.findById(photo.id))!.rotation).toBe(270); // after
     });
 
-    it("200s for a member WITH canAddPhotos and persists the rotation", async () => {
+    it("200s for a curator member and persists the rotation", async () => {
       const { collectionId, itemAId, memberId } = await seedFullCollection(ownerId);
       const photo = await heroPhoto(itemAId);
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
@@ -499,8 +483,8 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
       expect(await photoRepo.findById(photo.id)).toBeNull(); // gone after
     });
 
-    it("200s for a stranger-but-member curator and removes the row (flag=false, still allowed)", async () => {
-      // canDeletePhotos=false is irrelevant; any curator satisfies photos:write.
+    it("200s for a curator member and removes the row", async () => {
+      // Any curator satisfies photos:write — role only, no flags.
       const { collectionId, itemAId } = await seedFullCollection(ownerId);
       const photo = await heroPhoto(itemAId);
       const deleterId = await seedUserRow("deleter");
@@ -508,14 +492,6 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
         collectionId,
         userId: deleterId,
         role: "curator",
-        canManageCollection: false,
-        canInviteMembers: false,
-        canAddItems: false,
-        canEditMetadata: false,
-        canAddPhotos: false,
-        canDeletePhotos: false, // inert
-        canSort: false,
-        canViewOutputs: true,
       });
       mockGetSession.mockResolvedValue({ user: { id: deleterId } });
 

@@ -65,9 +65,6 @@ describeDb("POST /api/items/[id]/purge (route -> service -> DB) — purses-u3p",
     });
     await new MembershipRepository(db).create({
       collectionId, userId: memberId, role: "curator",
-      canManageCollection: false, canInviteMembers: false, canAddItems: true,
-      canEditMetadata: true, canAddPhotos: true, canDeletePhotos: true,
-      canSort: true, canViewOutputs: true,
     });
     return memberId;
   }

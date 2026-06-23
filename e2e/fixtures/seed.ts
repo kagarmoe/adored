@@ -442,14 +442,6 @@ export async function seedFullCollection(ownerId: string): Promise<FullSeedIds> 
     collectionId,
     userId: memberId,
     role: "curator",
-    canManageCollection: false,
-    canInviteMembers: false,
-    canAddItems: true,
-    canEditMetadata: true,
-    canAddPhotos: true,
-    canDeletePhotos: false,
-    canSort: true,
-    canViewOutputs: true,
   });
 
   const itemRepo = new ItemRepository(db);
@@ -533,14 +525,6 @@ export async function seedFullCollection(ownerId: string): Promise<FullSeedIds> 
     collectionId,
     email: "invitee@adored.test",
     token: generateId("invtok"),
-    canManageCollection: false,
-    canInviteMembers: false,
-    canAddItems: true,
-    canEditMetadata: true,
-    canAddPhotos: true,
-    canDeletePhotos: false,
-    canSort: true,
-    canViewOutputs: true,
   });
 
   return {

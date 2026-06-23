@@ -163,14 +163,6 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
       collectionId,
       userId: memberId,
       role: "curator",
-      canManageCollection: false,
-      canInviteMembers: false,
-      canAddItems: true,
-      canEditMetadata: true,
-      canAddPhotos: true,
-      canDeletePhotos: false,
-      canSort: true,
-      canViewOutputs: true,
     });
 
     const itemRepo = new ItemRepository(db);
@@ -259,14 +251,6 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
       collectionId,
       email: "invitee@adored.test",
       token: generateId("invtok"),
-      canManageCollection: false,
-      canInviteMembers: false,
-      canAddItems: true,
-      canEditMetadata: true,
-      canAddPhotos: true,
-      canDeletePhotos: false,
-      canSort: true,
-      canViewOutputs: true,
     });
 
     return { collectionId, name: COLLECTION_NAME, memberId, itemAId: itemA.id, itemBId: itemB.id, sessionId: session.id };

@@ -12,9 +12,6 @@
 //     NOT consult any per-permission flag.
 //
 // PINNED GAPS (do not fix — purses-4wj2; purses-pv9 authz epic):
-//   - GAP A (canInviteMembers not enforced, purses-nj7 family): POST creates an invitation
-//     for ANY collection member, even one whose membership has canInviteMembers=false. The
-//     route gate is member-or-owner only, so a non-privileged member can invite. Pinned below.
 //   - GAP B (validation → 500 not 400): a missing/invalid email makes the controller's Zod
 //     parse throw, which the POST handler maps to 500 (the only non-401 catch branch), not a
 //     400. Pinned below.
@@ -59,18 +56,14 @@ function jsonReq(method: string, body?: unknown): Request {
   });
 }
 
-/** Add a member to a collection with the given permission flags (default: no invite perm). */
-async function addMember(
-  collectionId: string,
-  overrides: { canInviteMembers?: boolean } = {},
-): Promise<string> {
+/** Add a curator member to a collection. */
+async function addMember(collectionId: string): Promise<string> {
   const { db } = getTestDb();
   const memberId = await seedUserRow("member");
   await new MembershipRepository(db).create({
     collectionId,
     userId: memberId,
     role: "curator",
-    canInviteMembers: overrides.canInviteMembers ?? false,
   });
   return memberId;
 }
@@ -86,14 +79,6 @@ async function seedInvitation(
     collectionId,
     email,
     token,
-    canManageCollection: false,
-    canInviteMembers: false,
-    canAddItems: true,
-    canEditMetadata: true,
-    canAddPhotos: true,
-    canDeletePhotos: false,
-    canSort: true,
-    canViewOutputs: true,
   });
   return { id: inv.id, token };
 }
@@ -236,8 +221,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       expect(await new InvitationRepository(db).findByCollection(collectionId)).toHaveLength(0);
 
       const res = await POST(
-        // canInviteMembers is stripped by T1 (flag mass-assignment dropped); only email persists.
-        jsonReq("POST", { email: "newinvitee@adored.test", canInviteMembers: true }) as any,
+        jsonReq("POST", { email: "newinvitee@adored.test" }) as any,
         { params: { id: collectionId } } as any,
       );
       expect(res.status).toBe(201);
@@ -251,8 +235,6 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       expect(persisted!.collectionId).toBe(collectionId);
       expect(persisted!.email).toBe("newinvitee@adored.test");
       expect(persisted!.token).toBe(body.token);
-      // Flag stripped by T1 — canInviteMembers uses DB column default (false).
-      expect(persisted!.canInviteMembers).toBe(false);
       expect(persisted!.status).toBe("pending");
     });
 
@@ -261,7 +243,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
     it("403s a curator member (non-owner) creating an invitation — no row created (4wj2-A)", async () => {
       const { db } = getTestDb();
       const collectionId = await seedBareCollection(ownerId);
-      const memberId = await addMember(collectionId, { canInviteMembers: false });
+      const memberId = await addMember(collectionId);
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
       const res = await POST(jsonReq("POST", { email: "gap@adored.test" }) as any, {
@@ -273,10 +255,10 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       expect(created).toHaveLength(0);
     });
 
-    it("403s a curator member WITH canInviteMembers flag (flag is inert — invitations:manage = owner)", async () => {
+    it("403s a curator member (invitations:manage = owner, not member)", async () => {
       const { db } = getTestDb();
       const collectionId = await seedBareCollection(ownerId);
-      const memberId = await addMember(collectionId, { canInviteMembers: true });
+      const memberId = await addMember(collectionId);
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
       const res = await POST(jsonReq("POST", { email: "flagged@adored.test" }) as any, {
