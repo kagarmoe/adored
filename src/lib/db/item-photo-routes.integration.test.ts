@@ -433,9 +433,9 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
       expect(await photoRepo.findById(bPhoto.id)).not.toBeNull();
     });
 
-    it("200s a curator member regardless of canDeletePhotos flag and removes the row (photos:write = curator)", async () => {
-      // Full-curator: canDeletePhotos flag is inert — any collection member may delete photos.
-      // seedFullCollection's curator member has canDeletePhotos=false (flag is now inert).
+    it("200s any curator member and removes the row (photos:write = curator)", async () => {
+      // Full-curator: any collection member may delete photos (no per-flag gate; the
+      // permission flags were removed in pv9 PR8). seedFullCollection seeds a plain curator.
       const { collectionId, itemAId, memberId } = await seedFullCollection(ownerId);
       const photo = await heroPhoto(itemAId);
       mockGetSession.mockResolvedValue({ user: { id: memberId } });

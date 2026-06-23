@@ -40,6 +40,9 @@ for (const theme of ["light", "dark"] as const) {
       ["collections", "/collections"],
       ["items-grid", `/collections/${slug}/items`],
       ["item-detail", `/collections/${slug}/items/1`],
+      // pv9 PR8 (purses-us3d): members page renders MemberList (role badge only,
+      // permission badges removed) + InviteForm (email-only, no permission checkboxes).
+      ["members", `/collections/${slug}/members`],
     ];
     for (const [name, url] of surfaces) {
       await page.goto(url);
