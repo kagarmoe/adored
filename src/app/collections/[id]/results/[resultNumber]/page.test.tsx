@@ -198,4 +198,27 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
     expect(screen.getByText(/no ranked items yet/i)).toBeInTheDocument();
     expect(screen.queryByText("What you love most")).toBeNull();
   });
+
+  // The most tone-dangerous screen: everything landed in the lowest tier, so there
+  // is no loved set and no hero. The page must still lead with affirmation — honoring
+  // the act of deciding / the clarity reached — and must never imply nothing was loved
+  // or surface a count (TONE #1 affirmation-not-subtraction, #4 unpressured).
+  it("an all-Onward result leads with affirmation, never 'nothing loved' or a count", async () => {
+    resultItemRepo.findByResult.mockResolvedValue([
+      { id: "ri_low1", itemId: "i_low", computedRank: 1, manualRank: null, computedBucket: "low", manualBucket: null },
+    ]);
+    itemRepo.findByCollection.mockResolvedValue([{ id: "i_low", collectionId: "coll_01ABCDEF", number: 4, name: "Low Bag", brand: null, status: "active" }]);
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const { container } = render(ui);
+    expect(screen.getByText(/you('ve| have) made your choices|honored|clarity/i)).toBeInTheDocument();
+    // Assert against visible copy, not raw HTML: Tailwind utility classes
+    // (inset-0, translate-y-0, duration-200) contain "0 " and would false-match
+    // the brief's bare-count guard. The user never sees those — the count/absence
+    // framing we forbid would land in rendered text (TONE #1, #4).
+    const visibleText = container.textContent ?? "";
+    expect(visibleText).not.toMatch(/nothing|none of|\b0\b/i);
+    // No loved set means no hero and no "full ranking" headline.
+    expect(screen.queryByText("What you love most")).toBeNull();
+    expect(screen.queryByText(/the full ranking/i)).toBeNull();
+  });
 });

@@ -118,6 +118,16 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
               </section>
             )}
 
+            {/* All-Onward: no loved set, no hero. Lead from the person's side —
+               honor the deciding and the clarity reached, never absence-of-love,
+               never a count (TONE #1 affirmation-not-subtraction, #4 unpressured). */}
+            {loved.length === 0 && onward.length > 0 && (
+              <section className="space-y-3">
+                <h2 className="font-display text-3xl text-ink">You&rsquo;ve made your choices.</h2>
+                <p className="text-lg text-ink">You sat with each one and let yourself feel clearly. That clarity is the gift here — and it&rsquo;s yours.</p>
+              </section>
+            )}
+
             {/* Onward: the lowest tier, asked forward — where these go next — never
                tallied, never framed as discarding (TONE #1, #2). */}
             {onward.length > 0 && (
@@ -125,7 +135,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
                 <div className="space-y-1">
                   <p className="text-sm font-semibold uppercase tracking-wide text-ink-soft">Onward</p>
                   <h2 className="font-display text-2xl text-ink">Where these go next</h2>
-                  <p className="text-ink-soft">These have given what they had to give — they can move on to someone new.</p>
+                  <p className="text-ink-soft">These are ready for a new home, where someone else can love them next.</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                   {onward.map(({ ri, item }) => (
