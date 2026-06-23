@@ -16951,7 +16951,7 @@
       "label": "preferences",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L116",
+      "source_location": "L117",
       "_origin": "ast",
       "id": "docs_api_preferences",
       "community": 107,
@@ -16961,7 +16961,7 @@
       "label": "items (top-level)",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L122",
+      "source_location": "L123",
       "_origin": "ast",
       "id": "docs_api_items_top_level",
       "community": 107,
@@ -16971,7 +16971,7 @@
       "label": "sessions",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L131",
+      "source_location": "L132",
       "_origin": "ast",
       "id": "docs_api_sessions",
       "community": 107,
@@ -16981,7 +16981,7 @@
       "label": "sort-results",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L138",
+      "source_location": "L139",
       "_origin": "ast",
       "id": "docs_api_sort_results",
       "community": 107,
@@ -16991,7 +16991,7 @@
       "label": "shares",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L149",
+      "source_location": "L150",
       "_origin": "ast",
       "id": "docs_api_shares",
       "community": 107,
@@ -17001,9 +17001,9 @@
       "label": "auth & user",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L158",
+      "source_location": "L159",
       "_origin": "ast",
-      "id": "docs_api_auth_user_158",
+      "id": "docs_api_auth_user_159",
       "community": 150,
       "norm_label": "auth & user"
     },
@@ -17011,7 +17011,7 @@
       "label": "`GET\u00b7POST /api/auth/[...nextauth]`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L160",
+      "source_location": "L161",
       "_origin": "ast",
       "id": "docs_api_get_post_api_auth_nextauth",
       "community": 150,
@@ -17021,7 +17021,7 @@
       "label": "`POST /api/auth/signup`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L163",
+      "source_location": "L164",
       "_origin": "ast",
       "id": "docs_api_post_api_auth_signup",
       "community": 150,
@@ -17031,7 +17031,7 @@
       "label": "`GET\u00b7PATCH\u00b7DELETE /api/users/me`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L166",
+      "source_location": "L167",
       "_origin": "ast",
       "id": "docs_api_get_patch_delete_api_users_me",
       "community": 150,
@@ -17041,9 +17041,9 @@
       "label": "collections (core)",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L169",
+      "source_location": "L170",
       "_origin": "ast",
-      "id": "docs_api_collections_core_169",
+      "id": "docs_api_collections_core_170",
       "community": 122,
       "norm_label": "collections (core)"
     },
@@ -17051,7 +17051,7 @@
       "label": "`GET /api/collections`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L171",
+      "source_location": "L172",
       "_origin": "ast",
       "id": "docs_api_get_api_collections",
       "community": 122,
@@ -17061,7 +17061,7 @@
       "label": "`POST /api/collections`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L174",
+      "source_location": "L175",
       "_origin": "ast",
       "id": "docs_api_post_api_collections",
       "community": 122,
@@ -17071,7 +17071,7 @@
       "label": "`GET /api/collections/[id]`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L177",
+      "source_location": "L178",
       "_origin": "ast",
       "id": "docs_api_get_api_collections_id",
       "community": 122,
@@ -17081,7 +17081,7 @@
       "label": "`PATCH /api/collections/[id]`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L180",
+      "source_location": "L181",
       "_origin": "ast",
       "id": "docs_api_patch_api_collections_id",
       "community": 122,
@@ -17091,7 +17091,7 @@
       "label": "`DELETE /api/collections/[id]`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L183",
+      "source_location": "L184",
       "_origin": "ast",
       "id": "docs_api_delete_api_collections_id",
       "community": 122,
@@ -17101,7 +17101,7 @@
       "label": "`POST /api/collections/[id]/archive` \u00b7 `/restore`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L186",
+      "source_location": "L187",
       "_origin": "ast",
       "id": "docs_api_post_api_collections_id_archive_restore",
       "community": 122,
@@ -17111,7 +17111,7 @@
       "label": "`POST /api/collections/[id]/purge`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L189",
+      "source_location": "L190",
       "_origin": "ast",
       "id": "docs_api_post_api_collections_id_purge",
       "community": 122,
@@ -17121,7 +17121,7 @@
       "label": "`GET /api/collections/[id]/audit`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L192",
+      "source_location": "L193",
       "_origin": "ast",
       "id": "docs_api_get_api_collections_id_audit",
       "community": 122,
@@ -17131,9 +17131,9 @@
       "label": "collection items",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L195",
+      "source_location": "L196",
       "_origin": "ast",
-      "id": "docs_api_collection_items_195",
+      "id": "docs_api_collection_items_196",
       "community": 104,
       "norm_label": "collection items"
     },
@@ -17141,7 +17141,7 @@
       "label": "`GET\u00b7POST /api/collections/[id]/items`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L197",
+      "source_location": "L198",
       "_origin": "ast",
       "id": "docs_api_get_post_api_collections_id_items",
       "community": 104,
@@ -17151,7 +17151,7 @@
       "label": "`PATCH /api/collections/[id]/items/[itemId]`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L200",
+      "source_location": "L201",
       "_origin": "ast",
       "id": "docs_api_patch_api_collections_id_items_itemid",
       "community": 104,
@@ -17161,9 +17161,9 @@
       "label": "item photos",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L203",
+      "source_location": "L204",
       "_origin": "ast",
-      "id": "docs_api_item_photos_203",
+      "id": "docs_api_item_photos_204",
       "community": 144,
       "norm_label": "item photos"
     },
@@ -17171,7 +17171,7 @@
       "label": "`POST /api/collections/[id]/items/[itemId]/photos`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L205",
+      "source_location": "L206",
       "_origin": "ast",
       "id": "docs_api_post_api_collections_id_items_itemid_photos",
       "community": 144,
@@ -17181,7 +17181,7 @@
       "label": "`DELETE /api/collections/[id]/items/[itemId]/photos/[photoId]`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L208",
+      "source_location": "L209",
       "_origin": "ast",
       "id": "docs_api_delete_api_collections_id_items_itemid_photos_photoid",
       "community": 144,
@@ -17191,7 +17191,7 @@
       "label": "`GET /api/collections/[id]/items/[itemId]/photos/[photoId]/file`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L211",
+      "source_location": "L212",
       "_origin": "ast",
       "id": "docs_api_get_api_collections_id_items_itemid_photos_photoid_file",
       "community": 144,
@@ -17201,7 +17201,7 @@
       "label": "`PATCH /api/collections/[id]/items/[itemId]/photos/[photoId]`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L214",
+      "source_location": "L215",
       "_origin": "ast",
       "id": "docs_api_patch_api_collections_id_items_itemid_photos_photoid",
       "community": 144,
@@ -17211,7 +17211,7 @@
       "label": "`POST /api/collections/[id]/items/[itemId]/photos/[photoId]/set-hero`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L217",
+      "source_location": "L218",
       "_origin": "ast",
       "id": "docs_api_post_api_collections_id_items_itemid_photos_photoid_set_hero",
       "community": 144,
@@ -17221,9 +17221,9 @@
       "label": "pool & photos",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L220",
+      "source_location": "L221",
       "_origin": "ast",
-      "id": "docs_api_pool_photos_220",
+      "id": "docs_api_pool_photos_221",
       "community": 138,
       "norm_label": "pool & photos"
     },
@@ -17231,7 +17231,7 @@
       "label": "`POST /api/collections/[id]/pool/group`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L224",
+      "source_location": "L225",
       "_origin": "ast",
       "id": "docs_api_post_api_collections_id_pool_group",
       "community": 138,
@@ -17241,7 +17241,7 @@
       "label": "`GET /api/collections/[id]/pool/photos`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L227",
+      "source_location": "L228",
       "_origin": "ast",
       "id": "docs_api_get_api_collections_id_pool_photos",
       "community": 138,
@@ -17251,7 +17251,7 @@
       "label": "`GET /api/collections/[id]/pool/photos/[photoId]/file`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L230",
+      "source_location": "L231",
       "_origin": "ast",
       "id": "docs_api_get_api_collections_id_pool_photos_photoid_file",
       "community": 138,
@@ -17261,7 +17261,7 @@
       "label": "`POST /api/collections/[id]/pool/upload`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L233",
+      "source_location": "L234",
       "_origin": "ast",
       "id": "docs_api_post_api_collections_id_pool_upload",
       "community": 138,
@@ -17271,7 +17271,7 @@
       "label": "`POST /api/collections/[id]/photos/reassign`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L236",
+      "source_location": "L237",
       "_origin": "ast",
       "id": "docs_api_post_api_collections_id_photos_reassign",
       "community": 138,
@@ -17281,9 +17281,9 @@
       "label": "members & invitations",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L239",
+      "source_location": "L240",
       "_origin": "ast",
-      "id": "docs_api_members_invitations_239",
+      "id": "docs_api_members_invitations_240",
       "community": 123,
       "norm_label": "members & invitations"
     },
@@ -17291,7 +17291,7 @@
       "label": "`GET /api/collections/[id]/members`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L241",
+      "source_location": "L242",
       "_origin": "ast",
       "id": "docs_api_get_api_collections_id_members",
       "community": 123,
@@ -17301,7 +17301,7 @@
       "label": "`POST /api/collections/[id]/members`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L244",
+      "source_location": "L245",
       "_origin": "ast",
       "id": "docs_api_post_api_collections_id_members",
       "community": 123,
@@ -17311,7 +17311,7 @@
       "label": "`GET\u00b7PATCH\u00b7DELETE /api/collections/[id]/members/[mid]`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L247",
+      "source_location": "L248",
       "_origin": "ast",
       "id": "docs_api_get_patch_delete_api_collections_id_members_mid",
       "community": 123,
@@ -17321,7 +17321,7 @@
       "label": "`GET\u00b7POST /api/collections/[id]/invitations`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L250",
+      "source_location": "L251",
       "_origin": "ast",
       "id": "docs_api_get_post_api_collections_id_invitations",
       "community": 123,
@@ -17331,7 +17331,7 @@
       "label": "`GET\u00b7PATCH\u00b7DELETE /api/invitations/[id]`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L253",
+      "source_location": "L254",
       "_origin": "ast",
       "id": "docs_api_get_patch_delete_api_invitations_id",
       "community": 123,
@@ -17341,7 +17341,7 @@
       "label": "`POST /api/invitations/[id]/resend`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L256",
+      "source_location": "L257",
       "_origin": "ast",
       "id": "docs_api_post_api_invitations_id_resend",
       "community": 123,
@@ -17351,7 +17351,7 @@
       "label": "`GET\u00b7POST /api/invitations/accept?token=`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L259",
+      "source_location": "L260",
       "_origin": "ast",
       "id": "docs_api_get_post_api_invitations_accept_token",
       "community": 123,
@@ -17361,9 +17361,9 @@
       "label": "preferences",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L262",
+      "source_location": "L263",
       "_origin": "ast",
-      "id": "docs_api_preferences_262",
+      "id": "docs_api_preferences_263",
       "community": 104,
       "norm_label": "preferences"
     },
@@ -17371,7 +17371,7 @@
       "label": "`GET /api/collections/[id]/preferences/items`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L266",
+      "source_location": "L267",
       "_origin": "ast",
       "id": "docs_api_get_api_collections_id_preferences_items",
       "community": 104,
@@ -17381,7 +17381,7 @@
       "label": "`POST /api/collections/[id]/preferences/recalculate`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L269",
+      "source_location": "L270",
       "_origin": "ast",
       "id": "docs_api_post_api_collections_id_preferences_recalculate",
       "community": 104,
@@ -17391,9 +17391,9 @@
       "label": "items (top-level)",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L272",
+      "source_location": "L273",
       "_origin": "ast",
-      "id": "docs_api_items_top_level_272",
+      "id": "docs_api_items_top_level_273",
       "community": 145,
       "norm_label": "items (top-level)"
     },
@@ -17401,7 +17401,7 @@
       "label": "`POST /api/items?collectionId=`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L276",
+      "source_location": "L277",
       "_origin": "ast",
       "id": "docs_api_post_api_items_collectionid",
       "community": 145,
@@ -17411,7 +17411,7 @@
       "label": "`GET\u00b7PATCH\u00b7DELETE /api/items/[id]`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L279",
+      "source_location": "L280",
       "_origin": "ast",
       "id": "docs_api_get_patch_delete_api_items_id",
       "community": 145,
@@ -17421,7 +17421,7 @@
       "label": "`POST /api/items/[id]/restore`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L282",
+      "source_location": "L283",
       "_origin": "ast",
       "id": "docs_api_post_api_items_id_restore",
       "community": 145,
@@ -17431,7 +17431,7 @@
       "label": "`POST /api/items/[id]/purge`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L285",
+      "source_location": "L286",
       "_origin": "ast",
       "id": "docs_api_post_api_items_id_purge",
       "community": 145,
@@ -17441,7 +17441,7 @@
       "label": "`POST /api/items/[id]/remove-from-sorts`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L288",
+      "source_location": "L289",
       "_origin": "ast",
       "id": "docs_api_post_api_items_id_remove_from_sorts",
       "community": 145,
@@ -17451,9 +17451,9 @@
       "label": "sessions",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L291",
+      "source_location": "L292",
       "_origin": "ast",
-      "id": "docs_api_sessions_291",
+      "id": "docs_api_sessions_292",
       "community": 152,
       "norm_label": "sessions"
     },
@@ -17461,7 +17461,7 @@
       "label": "`POST /api/sessions`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L295",
+      "source_location": "L296",
       "_origin": "ast",
       "id": "docs_api_post_api_sessions",
       "community": 152,
@@ -17471,7 +17471,7 @@
       "label": "`GET\u00b7PATCH\u00b7DELETE /api/sessions/[id]`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L298",
+      "source_location": "L299",
       "_origin": "ast",
       "id": "docs_api_get_patch_delete_api_sessions_id",
       "community": 152,
@@ -17481,7 +17481,7 @@
       "label": "`POST /api/sessions/[id]/decisions`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L301",
+      "source_location": "L302",
       "_origin": "ast",
       "id": "docs_api_post_api_sessions_id_decisions",
       "community": 152,
@@ -17491,9 +17491,9 @@
       "label": "sort-results",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L304",
+      "source_location": "L305",
       "_origin": "ast",
-      "id": "docs_api_sort_results_304",
+      "id": "docs_api_sort_results_305",
       "community": 124,
       "norm_label": "sort-results"
     },
@@ -17501,7 +17501,7 @@
       "label": "`POST /api/sort-results`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L308",
+      "source_location": "L309",
       "_origin": "ast",
       "id": "docs_api_post_api_sort_results",
       "community": 124,
@@ -17511,7 +17511,7 @@
       "label": "`GET\u00b7PATCH\u00b7DELETE /api/sort-results/[id]`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L311",
+      "source_location": "L312",
       "_origin": "ast",
       "id": "docs_api_get_patch_delete_api_sort_results_id",
       "community": 124,
@@ -17521,7 +17521,7 @@
       "label": "`POST /api/sort-results/[id]/finalize`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L314",
+      "source_location": "L315",
       "_origin": "ast",
       "id": "docs_api_post_api_sort_results_id_finalize",
       "community": 124,
@@ -17531,7 +17531,7 @@
       "label": "`POST /api/sort-results/[id]/supersede`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L317",
+      "source_location": "L318",
       "_origin": "ast",
       "id": "docs_api_post_api_sort_results_id_supersede",
       "community": 124,
@@ -17541,7 +17541,7 @@
       "label": "`GET /api/sort-results/[id]/items`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L320",
+      "source_location": "L321",
       "_origin": "ast",
       "id": "docs_api_get_api_sort_results_id_items",
       "community": 124,
@@ -17551,7 +17551,7 @@
       "label": "`GET\u00b7PATCH\u00b7DELETE /api/sort-results/[id]/items/[rid]`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L323",
+      "source_location": "L324",
       "_origin": "ast",
       "id": "docs_api_get_patch_delete_api_sort_results_id_items_rid",
       "community": 124,
@@ -17561,7 +17561,7 @@
       "label": "`POST /api/sort-results/[id]/items/[rid]/reset`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L326",
+      "source_location": "L327",
       "_origin": "ast",
       "id": "docs_api_post_api_sort_results_id_items_rid_reset",
       "community": 124,
@@ -17571,9 +17571,9 @@
       "label": "shares",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L329",
+      "source_location": "L330",
       "_origin": "ast",
-      "id": "docs_api_shares_329",
+      "id": "docs_api_shares_330",
       "community": 151,
       "norm_label": "shares"
     },
@@ -17581,7 +17581,7 @@
       "label": "`GET\u00b7POST /api/sort-results/[id]/shares`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L331",
+      "source_location": "L332",
       "_origin": "ast",
       "id": "docs_api_get_post_api_sort_results_id_shares",
       "community": 151,
@@ -17591,7 +17591,7 @@
       "label": "`GET\u00b7PATCH\u00b7DELETE /api/sort-results/[id]/shares/[sid]`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L334",
+      "source_location": "L335",
       "_origin": "ast",
       "id": "docs_api_get_patch_delete_api_sort_results_id_shares_sid",
       "community": 151,
@@ -17601,7 +17601,7 @@
       "label": "`GET /api/shared-results/[token]`",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L337",
+      "source_location": "L338",
       "_origin": "ast",
       "id": "docs_api_get_api_shared_results_token",
       "community": 151,
@@ -17611,7 +17611,7 @@
       "label": "Known authz gaps",
       "file_type": "document",
       "source_file": "docs/API.md",
-      "source_location": "L340",
+      "source_location": "L341",
       "_origin": "ast",
       "id": "docs_api_known_authz_gaps",
       "community": 104,
@@ -17681,7 +17681,7 @@
       "label": "Rename story (PurseInator \u2192 Adored)",
       "file_type": "document",
       "source_file": "docs/ARCHITECTURE.md",
-      "source_location": "L158",
+      "source_location": "L163",
       "_origin": "ast",
       "id": "docs_architecture_rename_story_purseinator_adored",
       "community": 117,
@@ -17691,7 +17691,7 @@
       "label": "Where we're going",
       "file_type": "document",
       "source_file": "docs/ARCHITECTURE.md",
-      "source_location": "L166",
+      "source_location": "L171",
       "_origin": "ast",
       "id": "docs_architecture_where_we_re_going",
       "community": 117,
@@ -17701,7 +17701,7 @@
       "label": "Reference deep-dives",
       "file_type": "document",
       "source_file": "docs/ARCHITECTURE.md",
-      "source_location": "L179",
+      "source_location": "L184",
       "_origin": "ast",
       "id": "docs_architecture_reference_deep_dives",
       "community": 117,
@@ -24894,9 +24894,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "fixtures_db",
-      "confidence_score": 1.0
+      "target": "fixtures_db"
     },
     {
       "relation": "imports_from",
@@ -24916,9 +24916,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "fixtures_db",
-      "confidence_score": 1.0
+      "target": "fixtures_db"
     },
     {
       "relation": "imports_from",
@@ -25180,9 +25180,9 @@
       "source_file": "src/lib/db/role-constraint.integration.test.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_role_constraint_integration_test",
-      "target": "fixtures_db",
-      "confidence_score": 1.0
+      "target": "fixtures_db"
     },
     {
       "relation": "imports_from",
@@ -25460,9 +25460,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "fixtures_db_gettestdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_gettestdb"
     },
     {
       "relation": "imports",
@@ -25515,9 +25515,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "fixtures_db_gettestdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_gettestdb"
     },
     {
       "relation": "calls",
@@ -25526,9 +25526,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L49",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test_addcurator",
-      "target": "fixtures_db_gettestdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_gettestdb"
     },
     {
       "relation": "calls",
@@ -25537,9 +25537,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L38",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test_seedcollection",
-      "target": "fixtures_db_gettestdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_gettestdb"
     },
     {
       "relation": "calls",
@@ -25548,9 +25548,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L67",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test_seedinvitation",
-      "target": "fixtures_db_gettestdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_gettestdb"
     },
     {
       "relation": "imports",
@@ -26175,9 +26175,9 @@
       "source_file": "src/lib/db/role-constraint.integration.test.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_role_constraint_integration_test",
-      "target": "fixtures_db_gettestdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_gettestdb"
     },
     {
       "relation": "imports",
@@ -26648,9 +26648,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "fixtures_db_resetdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_resetdb"
     },
     {
       "relation": "imports",
@@ -26670,9 +26670,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "fixtures_db_resetdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_resetdb"
     },
     {
       "relation": "imports",
@@ -26934,9 +26934,9 @@
       "source_file": "src/lib/db/role-constraint.integration.test.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_role_constraint_integration_test",
-      "target": "fixtures_db_resetdb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_resetdb"
     },
     {
       "relation": "imports",
@@ -27044,9 +27044,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "fixtures_db_closedb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_closedb"
     },
     {
       "relation": "imports",
@@ -27066,9 +27066,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "fixtures_db_closedb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_closedb"
     },
     {
       "relation": "imports",
@@ -27330,9 +27330,9 @@
       "source_file": "src/lib/db/role-constraint.integration.test.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_role_constraint_integration_test",
-      "target": "fixtures_db_closedb",
-      "confidence_score": 1.0
+      "target": "fixtures_db_closedb"
     },
     {
       "relation": "imports",
@@ -27440,9 +27440,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "fixtures_mock_auth",
-      "confidence_score": 1.0
+      "target": "fixtures_mock_auth"
     },
     {
       "relation": "imports_from",
@@ -27536,9 +27536,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "fixtures_mock_auth_mockauth",
-      "confidence_score": 1.0
+      "target": "fixtures_mock_auth_mockauth"
     },
     {
       "relation": "imports",
@@ -27633,9 +27633,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "fixtures_seed",
-      "confidence_score": 1.0
+      "target": "fixtures_seed"
     },
     {
       "relation": "imports_from",
@@ -27644,9 +27644,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "fixtures_seed",
-      "confidence_score": 1.0
+      "target": "fixtures_seed"
     },
     {
       "relation": "imports_from",
@@ -27886,9 +27886,9 @@
       "source_file": "src/lib/db/role-constraint.integration.test.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_role_constraint_integration_test",
-      "target": "fixtures_seed",
-      "confidence_score": 1.0
+      "target": "fixtures_seed"
     },
     {
       "relation": "imports_from",
@@ -28521,9 +28521,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "fixtures_seed_seedbaseline",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seedbaseline"
     },
     {
       "relation": "imports",
@@ -28532,9 +28532,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "fixtures_seed_seedbaseline",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seedbaseline"
     },
     {
       "relation": "imports",
@@ -28774,9 +28774,9 @@
       "source_file": "src/lib/db/role-constraint.integration.test.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_role_constraint_integration_test",
-      "target": "fixtures_seed_seedbaseline",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seedbaseline"
     },
     {
       "relation": "imports",
@@ -29148,9 +29148,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "fixtures_seed_seedbarecollection",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seedbarecollection"
     },
     {
       "relation": "imports",
@@ -29214,9 +29214,9 @@
       "source_file": "src/lib/db/role-constraint.integration.test.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_role_constraint_integration_test",
-      "target": "fixtures_seed_seedbarecollection",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seedbarecollection"
     },
     {
       "relation": "imports",
@@ -29269,9 +29269,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "fixtures_seed_seeduserrow",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seeduserrow"
     },
     {
       "relation": "imports",
@@ -29280,9 +29280,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "fixtures_seed_seeduserrow",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seeduserrow"
     },
     {
       "relation": "imports",
@@ -32039,9 +32039,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "invitations_route",
-      "confidence_score": 1.0
+      "target": "invitations_route"
     },
     {
       "relation": "imports_from",
@@ -32257,9 +32257,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "invitations_route_post",
-      "confidence_score": 1.0
+      "target": "invitations_route_post"
     },
     {
       "relation": "imports",
@@ -33949,9 +33949,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "members_route",
-      "confidence_score": 1.0
+      "target": "members_route"
     },
     {
       "relation": "imports_from",
@@ -34200,9 +34200,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "members_route_post",
-      "confidence_score": 1.0
+      "target": "members_route_post"
     },
     {
       "relation": "imports",
@@ -36501,9 +36501,9 @@
       "source_file": "src/app/api/collections/route.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "collections_route",
-      "target": "lib_transactions",
-      "confidence_score": 1.0
+      "target": "lib_transactions"
     },
     {
       "relation": "imports",
@@ -36512,9 +36512,9 @@
       "source_file": "src/app/api/collections/route.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "collections_route",
-      "target": "lib_transactions_withtransaction",
-      "confidence_score": 1.0
+      "target": "lib_transactions_withtransaction"
     },
     {
       "relation": "imports_from",
@@ -37144,9 +37144,9 @@
       "source_file": "src/app/api/invitations/accept/route.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "accept_route",
-      "target": "implementations_membershiprepository",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository"
     },
     {
       "relation": "imports",
@@ -37155,9 +37155,9 @@
       "source_file": "src/app/api/invitations/accept/route.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "accept_route",
-      "target": "implementations_membershiprepository_membershiprepository",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository_membershiprepository"
     },
     {
       "relation": "imports_from",
@@ -37166,9 +37166,9 @@
       "source_file": "src/app/api/invitations/accept/route.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "accept_route",
-      "target": "implementations_userrepository",
-      "confidence_score": 1.0
+      "target": "implementations_userrepository"
     },
     {
       "relation": "imports",
@@ -37177,9 +37177,9 @@
       "source_file": "src/app/api/invitations/accept/route.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "accept_route",
-      "target": "implementations_userrepository_userrepository",
-      "confidence_score": 1.0
+      "target": "implementations_userrepository_userrepository"
     },
     {
       "relation": "imports_from",
@@ -37188,9 +37188,9 @@
       "source_file": "src/app/api/invitations/accept/route.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "accept_route",
-      "target": "lib_auth",
-      "confidence_score": 1.0
+      "target": "lib_auth"
     },
     {
       "relation": "imports",
@@ -37199,9 +37199,9 @@
       "source_file": "src/app/api/invitations/accept/route.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "accept_route",
-      "target": "lib_auth_getsession",
-      "confidence_score": 1.0
+      "target": "lib_auth_getsession"
     },
     {
       "relation": "imports_from",
@@ -37232,9 +37232,9 @@
       "source_file": "src/app/api/invitations/accept/route.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "accept_route",
-      "target": "lib_normalize_email",
-      "confidence_score": 1.0
+      "target": "lib_normalize_email"
     },
     {
       "relation": "imports",
@@ -37243,9 +37243,9 @@
       "source_file": "src/app/api/invitations/accept/route.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "accept_route",
-      "target": "lib_normalize_email_normalizeemail",
-      "confidence_score": 1.0
+      "target": "lib_normalize_email_normalizeemail"
     },
     {
       "relation": "imports_from",
@@ -37254,9 +37254,9 @@
       "source_file": "src/app/api/invitations/accept/route.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "accept_route",
-      "target": "lib_transactions",
-      "confidence_score": 1.0
+      "target": "lib_transactions"
     },
     {
       "relation": "imports",
@@ -37265,9 +37265,9 @@
       "source_file": "src/app/api/invitations/accept/route.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "accept_route",
-      "target": "lib_transactions_withtransaction",
-      "confidence_score": 1.0
+      "target": "lib_transactions_withtransaction"
     },
     {
       "relation": "imports_from",
@@ -55134,9 +55134,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "db_authz_flag_security_integration_test_makenextrequest",
-      "confidence_score": 1.0
+      "target": "db_authz_flag_security_integration_test_makenextrequest"
     },
     {
       "relation": "contains",
@@ -55144,9 +55144,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "db_authz_flag_security_integration_test_mockgetsession",
-      "confidence_score": 1.0
+      "target": "db_authz_flag_security_integration_test_mockgetsession"
     },
     {
       "relation": "imports_from",
@@ -55155,9 +55155,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L24",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "implementations_invitationrepository",
-      "confidence_score": 1.0
+      "target": "implementations_invitationrepository"
     },
     {
       "relation": "imports",
@@ -55166,9 +55166,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L24",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "implementations_invitationrepository_invitationrepository",
-      "confidence_score": 1.0
+      "target": "implementations_invitationrepository_invitationrepository"
     },
     {
       "relation": "imports_from",
@@ -55177,9 +55177,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "implementations_membershiprepository",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository"
     },
     {
       "relation": "imports",
@@ -55188,9 +55188,9 @@
       "source_file": "src/lib/db/authz-flag-security.integration.test.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_authz_flag_security_integration_test",
-      "target": "implementations_membershiprepository_membershiprepository",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository_membershiprepository"
     },
     {
       "relation": "imports_from",
@@ -55402,9 +55402,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "dal_collection_access",
-      "confidence_score": 1.0
+      "target": "dal_collection_access"
     },
     {
       "relation": "imports",
@@ -55413,9 +55413,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "dal_collection_access_requireapicapability",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapicapability"
     },
     {
       "relation": "imports",
@@ -55424,9 +55424,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "dal_collection_access_requireapicollectionaccess",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapicollectionaccess"
     },
     {
       "relation": "imports",
@@ -55435,9 +55435,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "dal_collection_access_requireapicollectionowner",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapicollectionowner"
     },
     {
       "relation": "imports",
@@ -55446,9 +55446,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "dal_collection_access_requireapiinvitationcapability",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapiinvitationcapability"
     },
     {
       "relation": "imports",
@@ -55457,9 +55457,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "dal_collection_access_requireapiitemcapability",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapiitemcapability"
     },
     {
       "relation": "imports",
@@ -55468,9 +55468,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "dal_collection_access_requireapiresultaccess",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapiresultaccess"
     },
     {
       "relation": "contains",
@@ -55478,9 +55478,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L48",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "db_collection_access_integration_test_addcurator",
-      "confidence_score": 1.0
+      "target": "db_collection_access_integration_test_addcurator"
     },
     {
       "relation": "contains",
@@ -55488,9 +55488,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "db_collection_access_integration_test_mockgetsession",
-      "confidence_score": 1.0
+      "target": "db_collection_access_integration_test_mockgetsession"
     },
     {
       "relation": "contains",
@@ -55498,9 +55498,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L37",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "db_collection_access_integration_test_seedcollection",
-      "confidence_score": 1.0
+      "target": "db_collection_access_integration_test_seedcollection"
     },
     {
       "relation": "contains",
@@ -55508,9 +55508,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L66",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "db_collection_access_integration_test_seedinvitation",
-      "confidence_score": 1.0
+      "target": "db_collection_access_integration_test_seedinvitation"
     },
     {
       "relation": "imports_from",
@@ -55519,9 +55519,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "implementations_invitationrepository",
-      "confidence_score": 1.0
+      "target": "implementations_invitationrepository"
     },
     {
       "relation": "imports",
@@ -55530,9 +55530,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "implementations_invitationrepository_invitationrepository",
-      "confidence_score": 1.0
+      "target": "implementations_invitationrepository_invitationrepository"
     },
     {
       "relation": "imports_from",
@@ -55541,9 +55541,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "implementations_itemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_itemrepository"
     },
     {
       "relation": "imports",
@@ -55552,9 +55552,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "implementations_itemrepository_itemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_itemrepository_itemrepository"
     },
     {
       "relation": "imports_from",
@@ -55563,9 +55563,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "implementations_membershiprepository",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository"
     },
     {
       "relation": "imports",
@@ -55574,9 +55574,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "implementations_membershiprepository_membershiprepository",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository_membershiprepository"
     },
     {
       "relation": "imports_from",
@@ -55585,9 +55585,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "implementations_sortresultrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultrepository"
     },
     {
       "relation": "imports",
@@ -55596,9 +55596,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "implementations_sortresultrepository_sortresultrepository",
-      "confidence_score": 1.0
+      "target": "implementations_sortresultrepository_sortresultrepository"
     },
     {
       "relation": "imports_from",
@@ -55607,9 +55607,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "lib_id",
-      "confidence_score": 1.0
+      "target": "lib_id"
     },
     {
       "relation": "imports",
@@ -55618,9 +55618,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test",
-      "target": "lib_id_generateid",
-      "confidence_score": 1.0
+      "target": "lib_id_generateid"
     },
     {
       "relation": "calls",
@@ -55629,9 +55629,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L39",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test_seedcollection",
-      "target": "lib_id_generateid",
-      "confidence_score": 1.0
+      "target": "lib_id_generateid"
     },
     {
       "relation": "calls",
@@ -55640,9 +55640,9 @@
       "source_file": "src/lib/db/collection-access.integration.test.ts",
       "source_location": "L71",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_collection_access_integration_test_seedinvitation",
-      "target": "lib_id_generateid",
-      "confidence_score": 1.0
+      "target": "lib_id_generateid"
     },
     {
       "relation": "contains",
@@ -58351,9 +58351,9 @@
       "source_file": "src/lib/db/role-constraint.integration.test.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_role_constraint_integration_test",
-      "target": "db_schema",
-      "confidence_score": 1.0
+      "target": "db_schema"
     },
     {
       "relation": "imports",
@@ -58362,9 +58362,9 @@
       "source_file": "src/lib/db/role-constraint.integration.test.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_role_constraint_integration_test",
-      "target": "db_schema_membershipstable",
-      "confidence_score": 1.0
+      "target": "db_schema_membershipstable"
     },
     {
       "relation": "imports_from",
@@ -58373,9 +58373,9 @@
       "source_file": "src/lib/db/role-constraint.integration.test.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_role_constraint_integration_test",
-      "target": "implementations_membershiprepository",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository"
     },
     {
       "relation": "imports",
@@ -58384,9 +58384,9 @@
       "source_file": "src/lib/db/role-constraint.integration.test.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_role_constraint_integration_test",
-      "target": "implementations_membershiprepository_membershiprepository",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository_membershiprepository"
     },
     {
       "relation": "imports_from",
@@ -58395,9 +58395,9 @@
       "source_file": "src/lib/db/role-constraint.integration.test.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_role_constraint_integration_test",
-      "target": "lib_id",
-      "confidence_score": 1.0
+      "target": "lib_id"
     },
     {
       "relation": "imports",
@@ -58406,9 +58406,9 @@
       "source_file": "src/lib/db/role-constraint.integration.test.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "db_role_constraint_integration_test",
-      "target": "lib_id_generateid",
-      "confidence_score": 1.0
+      "target": "lib_id_generateid"
     },
     {
       "relation": "contains",
@@ -60980,9 +60980,9 @@
       "source_file": "src/server/api/invitations.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "api_invitations",
-      "target": "lib_normalize_email",
-      "confidence_score": 1.0
+      "target": "lib_normalize_email"
     },
     {
       "relation": "contains",
@@ -60990,9 +60990,9 @@
       "source_file": "src/lib/normalize-email.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_normalize_email",
-      "target": "lib_normalize_email_normalizeemail",
-      "confidence_score": 1.0
+      "target": "lib_normalize_email_normalizeemail"
     },
     {
       "relation": "imports",
@@ -61001,9 +61001,9 @@
       "source_file": "src/server/api/invitations.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "api_invitations",
-      "target": "lib_normalize_email_normalizeemail",
-      "confidence_score": 1.0
+      "target": "lib_normalize_email_normalizeemail"
     },
     {
       "relation": "calls",
@@ -64277,9 +64277,9 @@
       "source_file": "src/server/dal/capabilities.test.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_capabilities_test",
-      "target": "dal_capabilities",
-      "confidence_score": 1.0
+      "target": "dal_capabilities"
     },
     {
       "relation": "imports",
@@ -64288,9 +64288,9 @@
       "source_file": "src/server/dal/capabilities.test.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_capabilities_test",
-      "target": "dal_capabilities_capabilities",
-      "confidence_score": 1.0
+      "target": "dal_capabilities_capabilities"
     },
     {
       "relation": "imports",
@@ -64299,9 +64299,9 @@
       "source_file": "src/server/dal/capabilities.test.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_capabilities_test",
-      "target": "dal_capabilities_operation",
-      "confidence_score": 1.0
+      "target": "dal_capabilities_operation"
     },
     {
       "relation": "imports",
@@ -64310,9 +64310,9 @@
       "source_file": "src/server/dal/capabilities.test.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_capabilities_test",
-      "target": "dal_capabilities_resolveeffectiverole",
-      "confidence_score": 1.0
+      "target": "dal_capabilities_resolveeffectiverole"
     },
     {
       "relation": "imports",
@@ -64321,9 +64321,9 @@
       "source_file": "src/server/dal/capabilities.test.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_capabilities_test",
-      "target": "dal_capabilities_rolesatisfies",
-      "confidence_score": 1.0
+      "target": "dal_capabilities_rolesatisfies"
     },
     {
       "relation": "contains",
@@ -64331,9 +64331,9 @@
       "source_file": "src/server/dal/capabilities.ts",
       "source_location": "L24",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_capabilities",
-      "target": "dal_capabilities_capabilities",
-      "confidence_score": 1.0
+      "target": "dal_capabilities_capabilities"
     },
     {
       "relation": "contains",
@@ -64341,9 +64341,9 @@
       "source_file": "src/server/dal/capabilities.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_capabilities",
-      "target": "dal_capabilities_operation",
-      "confidence_score": 1.0
+      "target": "dal_capabilities_operation"
     },
     {
       "relation": "contains",
@@ -64351,9 +64351,9 @@
       "source_file": "src/server/dal/capabilities.ts",
       "source_location": "L50",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_capabilities",
-      "target": "dal_capabilities_resolveeffectiverole",
-      "confidence_score": 1.0
+      "target": "dal_capabilities_resolveeffectiverole"
     },
     {
       "relation": "contains",
@@ -64361,9 +64361,9 @@
       "source_file": "src/server/dal/capabilities.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_capabilities",
-      "target": "dal_capabilities_role",
-      "confidence_score": 1.0
+      "target": "dal_capabilities_role"
     },
     {
       "relation": "contains",
@@ -64371,9 +64371,9 @@
       "source_file": "src/server/dal/capabilities.ts",
       "source_location": "L42",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_capabilities",
-      "target": "dal_capabilities_rolesatisfies",
-      "confidence_score": 1.0
+      "target": "dal_capabilities_rolesatisfies"
     },
     {
       "relation": "imports_from",
@@ -64382,9 +64382,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access",
-      "target": "dal_capabilities",
-      "confidence_score": 1.0
+      "target": "dal_capabilities"
     },
     {
       "relation": "imports",
@@ -64393,9 +64393,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access",
-      "target": "dal_capabilities_operation",
-      "confidence_score": 1.0
+      "target": "dal_capabilities_operation"
     },
     {
       "relation": "imports",
@@ -64404,9 +64404,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access",
-      "target": "dal_capabilities_capabilities",
-      "confidence_score": 1.0
+      "target": "dal_capabilities_capabilities"
     },
     {
       "relation": "imports",
@@ -64415,9 +64415,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access",
-      "target": "dal_capabilities_rolesatisfies",
-      "confidence_score": 1.0
+      "target": "dal_capabilities_rolesatisfies"
     },
     {
       "relation": "calls",
@@ -64437,9 +64437,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access",
-      "target": "dal_capabilities_resolveeffectiverole",
-      "confidence_score": 1.0
+      "target": "dal_capabilities_resolveeffectiverole"
     },
     {
       "relation": "calls",
@@ -64511,9 +64511,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access",
-      "target": "dal_collection_access_requireapicapability",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapicapability"
     },
     {
       "relation": "contains",
@@ -64541,9 +64541,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L79",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access",
-      "target": "dal_collection_access_requireapiinvitationcapability",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapiinvitationcapability"
     },
     {
       "relation": "contains",
@@ -64551,9 +64551,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access",
-      "target": "dal_collection_access_requireapiitemcapability",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapiitemcapability"
     },
     {
       "relation": "contains",
@@ -64594,9 +64594,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access",
-      "target": "implementations_invitationrepository",
-      "confidence_score": 1.0
+      "target": "implementations_invitationrepository"
     },
     {
       "relation": "imports",
@@ -64605,9 +64605,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access",
-      "target": "implementations_invitationrepository_invitationrepository",
-      "confidence_score": 1.0
+      "target": "implementations_invitationrepository_invitationrepository"
     },
     {
       "relation": "imports_from",
@@ -64616,9 +64616,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access",
-      "target": "implementations_itemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_itemrepository"
     },
     {
       "relation": "imports",
@@ -64627,9 +64627,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access",
-      "target": "implementations_itemrepository_itemrepository",
-      "confidence_score": 1.0
+      "target": "implementations_itemrepository_itemrepository"
     },
     {
       "relation": "imports_from",
@@ -64693,9 +64693,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access",
-      "target": "types_domain_invitation",
-      "confidence_score": 1.0
+      "target": "types_domain_invitation"
     },
     {
       "relation": "imports",
@@ -64704,9 +64704,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access",
-      "target": "types_domain_item",
-      "confidence_score": 1.0
+      "target": "types_domain_item"
     },
     {
       "relation": "imports",
@@ -64737,9 +64737,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L107",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access_requireapicollectionaccess",
-      "target": "dal_collection_access_requireapicapability",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapicapability"
     },
     {
       "relation": "calls",
@@ -64748,9 +64748,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L126",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access_requireapicollectionowner",
-      "target": "dal_collection_access_requireapicapability",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapicapability"
     },
     {
       "relation": "calls",
@@ -64759,9 +64759,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L88",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access_requireapiinvitationcapability",
-      "target": "dal_collection_access_requireapicapability",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapicapability"
     },
     {
       "relation": "calls",
@@ -64770,9 +64770,9 @@
       "source_file": "src/server/dal/collection-access.ts",
       "source_location": "L72",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "dal_collection_access_requireapiitemcapability",
-      "target": "dal_collection_access_requireapicapability",
-      "confidence_score": 1.0
+      "target": "dal_collection_access_requireapicapability"
     },
     {
       "relation": "calls",
@@ -68330,9 +68330,9 @@
       "source_file": "src/server/repositories/implementations/MembershipRepository.ts",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_membershiprepository_membershiprepository",
-      "target": "implementations_membershiprepository_membershiprepository_createifabsent",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository_membershiprepository_createifabsent"
     },
     {
       "relation": "method",
@@ -68400,9 +68400,9 @@
       "source_file": "src/server/repositories/implementations/MembershipRepository.ts",
       "source_location": "L62",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_membershiprepository_membershiprepository",
-      "target": "implementations_membershiprepository_membershiprepository_toinsertvalues",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository_membershiprepository_toinsertvalues"
     },
     {
       "relation": "method",
@@ -68443,9 +68443,9 @@
       "source_file": "src/server/repositories/implementations/MembershipRepository.ts",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_membershiprepository_membershiprepository_create",
-      "target": "implementations_membershiprepository_membershiprepository_toinsertvalues",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository_membershiprepository_toinsertvalues"
     },
     {
       "relation": "references",
@@ -68465,9 +68465,9 @@
       "source_file": "src/server/repositories/implementations/MembershipRepository.ts",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_membershiprepository_membershiprepository_createifabsent",
-      "target": "implementations_membershiprepository_membershiprepository_maptomembership",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository_membershiprepository_maptomembership"
     },
     {
       "relation": "calls",
@@ -68476,9 +68476,9 @@
       "source_file": "src/server/repositories/implementations/MembershipRepository.ts",
       "source_location": "L54",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_membershiprepository_membershiprepository_createifabsent",
-      "target": "implementations_membershiprepository_membershiprepository_toinsertvalues",
-      "confidence_score": 1.0
+      "target": "implementations_membershiprepository_membershiprepository_toinsertvalues"
     },
     {
       "relation": "references",
@@ -68487,9 +68487,9 @@
       "source_file": "src/server/repositories/implementations/MembershipRepository.ts",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "implementations_membershiprepository_membershiprepository_createifabsent",
-      "target": "types_domain_collectionmembership",
-      "confidence_score": 1.0
+      "target": "types_domain_collectionmembership"
     },
     {
       "relation": "calls",
@@ -75226,11 +75226,11 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L158",
+      "source_location": "L159",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_auth_user_158"
+      "target": "docs_api_auth_user_159",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -75256,21 +75256,21 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L195",
+      "source_location": "L196",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_collection_items_195"
+      "target": "docs_api_collection_items_196",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L169",
+      "source_location": "L170",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_collections_core_169"
+      "target": "docs_api_collections_core_170",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -75286,21 +75286,21 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L203",
+      "source_location": "L204",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_item_photos_203"
+      "target": "docs_api_item_photos_204",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L272",
+      "source_location": "L273",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_items_top_level_272"
+      "target": "docs_api_items_top_level_273",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -75316,31 +75316,31 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L239",
+      "source_location": "L240",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_members_invitations_239"
+      "target": "docs_api_members_invitations_240",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L220",
+      "source_location": "L221",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_pool_photos_220"
+      "target": "docs_api_pool_photos_221",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L262",
+      "source_location": "L263",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_preferences_262"
+      "target": "docs_api_preferences_263",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -75356,31 +75356,31 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L291",
+      "source_location": "L292",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_sessions_291"
+      "target": "docs_api_sessions_292",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L329",
+      "source_location": "L330",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_shares_329"
+      "target": "docs_api_shares_330",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L304",
+      "source_location": "L305",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "docs_api_api_reference_agent_first",
-      "target": "docs_api_sort_results_304"
+      "target": "docs_api_sort_results_305",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -75506,501 +75506,501 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L166",
+      "source_location": "L167",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_auth_user_158",
-      "target": "docs_api_get_patch_delete_api_users_me"
+      "source": "docs_api_auth_user_159",
+      "target": "docs_api_get_patch_delete_api_users_me",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L160",
+      "source_location": "L161",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_auth_user_158",
-      "target": "docs_api_get_post_api_auth_nextauth"
+      "source": "docs_api_auth_user_159",
+      "target": "docs_api_get_post_api_auth_nextauth",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L163",
+      "source_location": "L164",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_auth_user_158",
-      "target": "docs_api_post_api_auth_signup"
+      "source": "docs_api_auth_user_159",
+      "target": "docs_api_post_api_auth_signup",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L183",
+      "source_location": "L184",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_collections_core_169",
-      "target": "docs_api_delete_api_collections_id"
+      "source": "docs_api_collections_core_170",
+      "target": "docs_api_delete_api_collections_id",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L171",
+      "source_location": "L172",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_collections_core_169",
-      "target": "docs_api_get_api_collections"
+      "source": "docs_api_collections_core_170",
+      "target": "docs_api_get_api_collections",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L177",
+      "source_location": "L178",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_collections_core_169",
-      "target": "docs_api_get_api_collections_id"
+      "source": "docs_api_collections_core_170",
+      "target": "docs_api_get_api_collections_id",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L192",
+      "source_location": "L193",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_collections_core_169",
-      "target": "docs_api_get_api_collections_id_audit"
+      "source": "docs_api_collections_core_170",
+      "target": "docs_api_get_api_collections_id_audit",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L180",
+      "source_location": "L181",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_collections_core_169",
-      "target": "docs_api_patch_api_collections_id"
+      "source": "docs_api_collections_core_170",
+      "target": "docs_api_patch_api_collections_id",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L174",
+      "source_location": "L175",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_collections_core_169",
-      "target": "docs_api_post_api_collections"
+      "source": "docs_api_collections_core_170",
+      "target": "docs_api_post_api_collections",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L186",
+      "source_location": "L187",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_collections_core_169",
-      "target": "docs_api_post_api_collections_id_archive_restore"
+      "source": "docs_api_collections_core_170",
+      "target": "docs_api_post_api_collections_id_archive_restore",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L189",
+      "source_location": "L190",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_collections_core_169",
-      "target": "docs_api_post_api_collections_id_purge"
+      "source": "docs_api_collections_core_170",
+      "target": "docs_api_post_api_collections_id_purge",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L197",
+      "source_location": "L198",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_collection_items_195",
-      "target": "docs_api_get_post_api_collections_id_items"
+      "source": "docs_api_collection_items_196",
+      "target": "docs_api_get_post_api_collections_id_items",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L200",
+      "source_location": "L201",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_collection_items_195",
-      "target": "docs_api_patch_api_collections_id_items_itemid"
+      "source": "docs_api_collection_items_196",
+      "target": "docs_api_patch_api_collections_id_items_itemid",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L208",
+      "source_location": "L209",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_item_photos_203",
-      "target": "docs_api_delete_api_collections_id_items_itemid_photos_photoid"
+      "source": "docs_api_item_photos_204",
+      "target": "docs_api_delete_api_collections_id_items_itemid_photos_photoid",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L211",
+      "source_location": "L212",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_item_photos_203",
-      "target": "docs_api_get_api_collections_id_items_itemid_photos_photoid_file"
+      "source": "docs_api_item_photos_204",
+      "target": "docs_api_get_api_collections_id_items_itemid_photos_photoid_file",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L214",
+      "source_location": "L215",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_item_photos_203",
-      "target": "docs_api_patch_api_collections_id_items_itemid_photos_photoid"
+      "source": "docs_api_item_photos_204",
+      "target": "docs_api_patch_api_collections_id_items_itemid_photos_photoid",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L205",
+      "source_location": "L206",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_item_photos_203",
-      "target": "docs_api_post_api_collections_id_items_itemid_photos"
+      "source": "docs_api_item_photos_204",
+      "target": "docs_api_post_api_collections_id_items_itemid_photos",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L217",
+      "source_location": "L218",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_item_photos_203",
-      "target": "docs_api_post_api_collections_id_items_itemid_photos_photoid_set_hero"
+      "source": "docs_api_item_photos_204",
+      "target": "docs_api_post_api_collections_id_items_itemid_photos_photoid_set_hero",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L227",
+      "source_location": "L228",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_pool_photos_220",
-      "target": "docs_api_get_api_collections_id_pool_photos"
+      "source": "docs_api_pool_photos_221",
+      "target": "docs_api_get_api_collections_id_pool_photos",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L230",
+      "source_location": "L231",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_pool_photos_220",
-      "target": "docs_api_get_api_collections_id_pool_photos_photoid_file"
+      "source": "docs_api_pool_photos_221",
+      "target": "docs_api_get_api_collections_id_pool_photos_photoid_file",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L236",
+      "source_location": "L237",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_pool_photos_220",
-      "target": "docs_api_post_api_collections_id_photos_reassign"
+      "source": "docs_api_pool_photos_221",
+      "target": "docs_api_post_api_collections_id_photos_reassign",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L224",
+      "source_location": "L225",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_pool_photos_220",
-      "target": "docs_api_post_api_collections_id_pool_group"
+      "source": "docs_api_pool_photos_221",
+      "target": "docs_api_post_api_collections_id_pool_group",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L233",
+      "source_location": "L234",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_pool_photos_220",
-      "target": "docs_api_post_api_collections_id_pool_upload"
+      "source": "docs_api_pool_photos_221",
+      "target": "docs_api_post_api_collections_id_pool_upload",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L241",
+      "source_location": "L242",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_members_invitations_239",
-      "target": "docs_api_get_api_collections_id_members"
+      "source": "docs_api_members_invitations_240",
+      "target": "docs_api_get_api_collections_id_members",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L247",
+      "source_location": "L248",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_members_invitations_239",
-      "target": "docs_api_get_patch_delete_api_collections_id_members_mid"
+      "source": "docs_api_members_invitations_240",
+      "target": "docs_api_get_patch_delete_api_collections_id_members_mid",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L253",
+      "source_location": "L254",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_members_invitations_239",
-      "target": "docs_api_get_patch_delete_api_invitations_id"
+      "source": "docs_api_members_invitations_240",
+      "target": "docs_api_get_patch_delete_api_invitations_id",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L250",
+      "source_location": "L251",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_members_invitations_239",
-      "target": "docs_api_get_post_api_collections_id_invitations"
+      "source": "docs_api_members_invitations_240",
+      "target": "docs_api_get_post_api_collections_id_invitations",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L259",
+      "source_location": "L260",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_members_invitations_239",
-      "target": "docs_api_get_post_api_invitations_accept_token"
+      "source": "docs_api_members_invitations_240",
+      "target": "docs_api_get_post_api_invitations_accept_token",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L244",
+      "source_location": "L245",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_members_invitations_239",
-      "target": "docs_api_post_api_collections_id_members"
+      "source": "docs_api_members_invitations_240",
+      "target": "docs_api_post_api_collections_id_members",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L256",
+      "source_location": "L257",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_members_invitations_239",
-      "target": "docs_api_post_api_invitations_id_resend"
+      "source": "docs_api_members_invitations_240",
+      "target": "docs_api_post_api_invitations_id_resend",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L266",
+      "source_location": "L267",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_preferences_262",
-      "target": "docs_api_get_api_collections_id_preferences_items"
+      "source": "docs_api_preferences_263",
+      "target": "docs_api_get_api_collections_id_preferences_items",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L269",
+      "source_location": "L270",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_preferences_262",
-      "target": "docs_api_post_api_collections_id_preferences_recalculate"
+      "source": "docs_api_preferences_263",
+      "target": "docs_api_post_api_collections_id_preferences_recalculate",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L279",
+      "source_location": "L280",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_items_top_level_272",
-      "target": "docs_api_get_patch_delete_api_items_id"
+      "source": "docs_api_items_top_level_273",
+      "target": "docs_api_get_patch_delete_api_items_id",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L276",
+      "source_location": "L277",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_items_top_level_272",
-      "target": "docs_api_post_api_items_collectionid"
+      "source": "docs_api_items_top_level_273",
+      "target": "docs_api_post_api_items_collectionid",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L285",
+      "source_location": "L286",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_items_top_level_272",
-      "target": "docs_api_post_api_items_id_purge"
+      "source": "docs_api_items_top_level_273",
+      "target": "docs_api_post_api_items_id_purge",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L288",
+      "source_location": "L289",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_items_top_level_272",
-      "target": "docs_api_post_api_items_id_remove_from_sorts"
+      "source": "docs_api_items_top_level_273",
+      "target": "docs_api_post_api_items_id_remove_from_sorts",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L282",
+      "source_location": "L283",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_items_top_level_272",
-      "target": "docs_api_post_api_items_id_restore"
+      "source": "docs_api_items_top_level_273",
+      "target": "docs_api_post_api_items_id_restore",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L298",
+      "source_location": "L299",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_sessions_291",
-      "target": "docs_api_get_patch_delete_api_sessions_id"
+      "source": "docs_api_sessions_292",
+      "target": "docs_api_get_patch_delete_api_sessions_id",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L295",
+      "source_location": "L296",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_sessions_291",
-      "target": "docs_api_post_api_sessions"
+      "source": "docs_api_sessions_292",
+      "target": "docs_api_post_api_sessions",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L301",
+      "source_location": "L302",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_sessions_291",
-      "target": "docs_api_post_api_sessions_id_decisions"
+      "source": "docs_api_sessions_292",
+      "target": "docs_api_post_api_sessions_id_decisions",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L320",
+      "source_location": "L321",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_sort_results_304",
-      "target": "docs_api_get_api_sort_results_id_items"
+      "source": "docs_api_sort_results_305",
+      "target": "docs_api_get_api_sort_results_id_items",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L311",
+      "source_location": "L312",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_sort_results_304",
-      "target": "docs_api_get_patch_delete_api_sort_results_id"
+      "source": "docs_api_sort_results_305",
+      "target": "docs_api_get_patch_delete_api_sort_results_id",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L323",
+      "source_location": "L324",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_sort_results_304",
-      "target": "docs_api_get_patch_delete_api_sort_results_id_items_rid"
+      "source": "docs_api_sort_results_305",
+      "target": "docs_api_get_patch_delete_api_sort_results_id_items_rid",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L308",
+      "source_location": "L309",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_sort_results_304",
-      "target": "docs_api_post_api_sort_results"
+      "source": "docs_api_sort_results_305",
+      "target": "docs_api_post_api_sort_results",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L314",
+      "source_location": "L315",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_sort_results_304",
-      "target": "docs_api_post_api_sort_results_id_finalize"
+      "source": "docs_api_sort_results_305",
+      "target": "docs_api_post_api_sort_results_id_finalize",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L326",
+      "source_location": "L327",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_sort_results_304",
-      "target": "docs_api_post_api_sort_results_id_items_rid_reset"
+      "source": "docs_api_sort_results_305",
+      "target": "docs_api_post_api_sort_results_id_items_rid_reset",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L317",
+      "source_location": "L318",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_sort_results_304",
-      "target": "docs_api_post_api_sort_results_id_supersede"
+      "source": "docs_api_sort_results_305",
+      "target": "docs_api_post_api_sort_results_id_supersede",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L337",
+      "source_location": "L338",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_shares_329",
-      "target": "docs_api_get_api_shared_results_token"
+      "source": "docs_api_shares_330",
+      "target": "docs_api_get_api_shared_results_token",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L334",
+      "source_location": "L335",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_shares_329",
-      "target": "docs_api_get_patch_delete_api_sort_results_id_shares_sid"
+      "source": "docs_api_shares_330",
+      "target": "docs_api_get_patch_delete_api_sort_results_id_shares_sid",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/API.md",
-      "source_location": "L331",
+      "source_location": "L332",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_api_shares_329",
-      "target": "docs_api_get_post_api_sort_results_id_shares"
+      "source": "docs_api_shares_330",
+      "target": "docs_api_get_post_api_sort_results_id_shares",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -82384,5 +82384,5 @@
       "source_file": "docs/ARCHITECTURE.md"
     }
   ],
-  "built_at_commit": "c73bfbe6d20dff23177edb2ccb691c5ed7acdc26"
+  "built_at_commit": "41c9a7519c10d369e77e79ccc3df245954f511b2"
 }
