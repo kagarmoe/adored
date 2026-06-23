@@ -283,13 +283,10 @@ function buildStrangerCases(
       { email: "new-member@adored.test" }),
 
     // ── /api/collections/[id]/members/[mid] ───────────────────────────────
+    // PATCH removed (purses-2wzz): no UI caller; method no longer exported.
     c("collections/[id]/members/[mid]/route.ts", "GET",
       `/api/collections/${collectionId}/members/${membershipId}`,
       { id: collectionId, mid: membershipId }),
-    c("collections/[id]/members/[mid]/route.ts", "PATCH",
-      `/api/collections/${collectionId}/members/${membershipId}`,
-      { id: collectionId, mid: membershipId },
-      { role: "curator" }),
     c("collections/[id]/members/[mid]/route.ts", "DELETE",
       `/api/collections/${collectionId}/members/${membershipId}`,
       { id: collectionId, mid: membershipId }),

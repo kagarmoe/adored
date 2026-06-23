@@ -1,17 +1,19 @@
 // @vitest-environment node
 // Honest real-DB integration for the member-management route:
-// real GET/PATCH/DELETE /api/collections/[id]/members/[mid] handlers ->
+// real GET/DELETE /api/collections/[id]/members/[mid] handlers ->
 // requireApiCollectionAccess + MemberController -> MembershipRepository ->
 // ephemeral Postgres. Mocks ONLY the two true boundaries: auth (so we can drive
 // owner / curator-member / stranger) and getDb -> the test db. This route touches
 // no blob store, so no @vercel/blob mock.
 //
+// PATCH was removed (purses-2wzz): no UI caller; members have no editable fields
+// under the role model (UpdateMemberSchema was empty; repo update wrote only updatedAt).
+// Next.js returns 405 automatically for the now-unexported PATCH method.
+//
 // AUTHZ as-implemented (route.ts + collection-access.ts):
 //   - GET: 401 unauth; then requireApiCapability("members:read") (curator) -> 404
 //     absent collection / 403 outsider; then belongs-to-parent -> 404 if the [mid]
 //     membership row's collectionId !== [id]; else 200 returns the membership.
-//   - PATCH: 401 unauth; 400 invalid JSON; belongs-to-parent 404 (runs BEFORE the
-//     role gate); then requireApiCapability("members:manage") (owner) -> 403; else updateMember.
 //   - DELETE: 401 unauth; belongs-to-parent 404 (BEFORE the role gate); then
 //     requireApiCapability("members:manage") (owner) -> 403; else removeMember.
 //
@@ -44,7 +46,7 @@ vi.mock("@/lib/auth", () => ({
 }));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
-import { GET, PATCH, DELETE } from "@/app/api/collections/[id]/members/[mid]/route";
+import { GET, DELETE } from "@/app/api/collections/[id]/members/[mid]/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -149,143 +151,8 @@ describeDb("member-management route (route -> repo -> DB)", () => {
     });
   });
 
-  // ---- PATCH --------------------------------------------------------------
-  describe("PATCH", () => {
-    it("401s an unauthenticated caller — and does NOT mutate", async () => {
-      const { collectionId, memberId } = await seedFullCollection(ownerId);
-      const mid = await memberMembershipId(collectionId, memberId);
-      mockGetSession.mockResolvedValue(null);
-
-      const res = await PATCH(jsonReq("PATCH", { canManageCollection: true }) as any, ctx(collectionId, mid));
-      expect(res.status).toBe(401);
-      // As-seeded before pairing: still false (seedFullCollection sets canManageCollection=false).
-      expect((await repo.findById(mid))!.canManageCollection).toBe(false);
-    });
-
-    it("400s on an invalid JSON body — and does NOT mutate", async () => {
-      const { collectionId, memberId } = await seedFullCollection(ownerId);
-      const mid = await memberMembershipId(collectionId, memberId);
-      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-
-      const badReq = new Request("http://localhost/x", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: "{not json",
-      });
-      const res = await PATCH(badReq as any, ctx(collectionId, mid));
-      expect(res.status).toBe(400);
-      expect((await repo.findById(mid))!.canAddItems).toBe(true); // untouched (seeded true)
-    });
-
-    it("404s when the [mid] membership belongs to a DIFFERENT collection — and does NOT mutate it", async () => {
-      const { collectionId } = await seedFullCollection(ownerId);
-      const other = await seedFullCollection(ownerId);
-      const foreignMid = await memberMembershipId(other.collectionId, other.memberId);
-      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-
-      const res = await PATCH(jsonReq("PATCH", { canManageCollection: true }) as any, ctx(collectionId, foreignMid));
-      expect(res.status).toBe(404);
-      // The foreign row is untouched (belongs-to-parent runs before any mutation).
-      expect((await repo.findById(foreignMid))!.canManageCollection).toBe(false);
-    });
-
-    it("403s a curator member (non-owner) — and leaves the target membership unchanged", async () => {
-      const { collectionId, memberId } = await seedFullCollection(ownerId);
-      const mid = await memberMembershipId(collectionId, memberId);
-      // The curator member tries to grant THEMSELVES manage rights.
-      mockGetSession.mockResolvedValue({ user: { id: memberId } });
-
-      const res = await PATCH(jsonReq("PATCH", { canManageCollection: true }) as any, ctx(collectionId, mid));
-      expect(res.status).toBe(403);
-      expect((await repo.findById(mid))!.canManageCollection).toBe(false);
-    });
-
-    it("403s a member WITH canManageCollection=true (members:manage = owner by role, flag is inert — purses-lgql)", async () => {
-      // members:manage requires "owner" role derived from collection.ownerId — the
-      // canManageCollection flag is inert. A curator is always 403 on member management.
-      const { collectionId } = await seedFullCollection(ownerId);
-      // A member of THIS collection explicitly granted canManageCollection.
-      const managerUserId = await seedUserRow("manager");
-      await repo.create({
-        collectionId,
-        userId: managerUserId,
-        role: "curator",
-        canManageCollection: true,
-        canInviteMembers: false,
-        canAddItems: false,
-        canEditMetadata: false,
-        canAddPhotos: false,
-        canDeletePhotos: false,
-        canSort: false,
-        canViewOutputs: false,
-      });
-      // A separate target membership in the SAME collection the "manager" tries to edit.
-      const targetUserId = await seedUserRow("target");
-      const targetMembership = await repo.create({
-        collectionId,
-        userId: targetUserId,
-        role: "curator",
-        canManageCollection: false,
-        canInviteMembers: false,
-        canAddItems: false,
-        canEditMetadata: false,
-        canAddPhotos: false,
-        canDeletePhotos: false,
-        canSort: false,
-        canViewOutputs: false,
-      });
-      mockGetSession.mockResolvedValue({ user: { id: managerUserId } });
-
-      const res = await PATCH(jsonReq("PATCH", { canAddItems: true }) as any, ctx(collectionId, targetMembership.id));
-      expect(res.status).toBe(403);
-      // Unchanged: the flag the would-be manager tried to set never persisted.
-      expect((await repo.findById(targetMembership.id))!.canAddItems).toBe(false);
-    });
-
-    it("200s for the owner — flags are no longer mutable via PATCH (T1: allow-list is empty)", async () => {
-      // After T1: UpdateMemberSchema is z.object({}) — all flag fields stripped.
-      // MembershipRepository.update() allow-list only writes updatedAt.
-      // PATCH returns 200 but flags remain unchanged.
-      const { collectionId, memberId } = await seedFullCollection(ownerId);
-      const mid = await memberMembershipId(collectionId, memberId);
-      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-
-      // As-seeded before guard — flags are at their seeded values.
-      const before = await repo.findById(mid);
-      expect(before!.canManageCollection).toBe(false);
-      expect(before!.canDeletePhotos).toBe(false);
-
-      const res = await PATCH(
-        jsonReq("PATCH", { canManageCollection: true, canDeletePhotos: true }) as any,
-        ctx(collectionId, mid),
-      );
-      expect(res.status).toBe(200);
-
-      // Flags are unchanged — client-supplied values were stripped by schema + repo allow-list.
-      const after = await repo.findById(mid);
-      expect(after!.canManageCollection).toBe(false);
-      expect(after!.canDeletePhotos).toBe(false);
-      expect(after!.canAddItems).toBe(true);
-    });
-
-    it("owner PATCH with invalid flag type — 200 (unknown keys stripped, no ZodError) (T1: purses-pv9)", async () => {
-      // After T1: UpdateMemberSchema is z.object({}) — unknown keys like canManageCollection
-      // are stripped silently (not a ZodError). No mutation, returns 200.
-      const { collectionId, memberId } = await seedFullCollection(ownerId);
-      const mid = await memberMembershipId(collectionId, memberId);
-      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      expect((await repo.findById(mid))!.canManageCollection).toBe(false);
-
-      const res = await PATCH(
-        jsonReq("PATCH", { canManageCollection: "yes" }) as any,
-        ctx(collectionId, mid),
-      );
-      // Unknown key stripped by empty schema → no ZodError → 200 (nothing written).
-      expect(res.status).toBe(200);
-      // Flag unchanged.
-      expect((await repo.findById(mid))!.canManageCollection).toBe(false);
-    });
-  });
+  // PATCH tests removed (purses-2wzz): PATCH export dropped from route.ts.
+  // Next.js returns 405 for the unexported method; no handler to test.
 
   // ---- DELETE -------------------------------------------------------------
   describe("DELETE", () => {

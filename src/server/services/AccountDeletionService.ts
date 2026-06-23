@@ -13,6 +13,7 @@ import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepo
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { UserRepository } from "@/server/repositories/implementations/UserRepository";
+import { AuditLogRepository } from "@/server/repositories/implementations/AuditLogRepository";
 
 /**
  * Permanently erase a user's data and scrub their PII. Irreversible.
@@ -104,5 +105,21 @@ export class AccountDeletionService {
 
     // ---- Phase 4: user row + auth (transactional) ----------------------- //
     await new UserRepository(this.db).purgeAndScrub(userId);
+
+    // ---- Phase 5: account-level audit row -------------------------------- //
+    // collectionId is NOT NULL with no FK — use a sentinel so this event is
+    // attributable without a natural collection context (purses-obe0).
+    // INVARIANT: never JOIN audit_log.collectionId → collections; "__account__"
+    // is a sentinel for account-scoped events. It cannot collide with a
+    // generatable collection id (those are prefixed ULIDs), so it never surfaces
+    // in an owner's per-collection audit view (findByCollection).
+    await new AuditLogRepository(this.db).record({
+      actorId: userId,
+      action: "account.delete",
+      targetType: "user",
+      targetId: userId,
+      collectionId: "__account__",
+      metadata: { ownedCollections: ownedCollections.length },
+    });
   }
 }

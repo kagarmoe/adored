@@ -6,12 +6,7 @@ const CreateMemberSchema = z.object({
   userId: z.string(),
 });
 
-// No caller-supplied fields are accepted on update — role and flags are managed
-// by the role model, not by raw client input.
-const UpdateMemberSchema = z.object({});
-
 export type CreateMemberInput = z.infer<typeof CreateMemberSchema>;
-export type UpdateMemberInput = z.infer<typeof UpdateMemberSchema>;
 
 export class MemberController {
   constructor(private membershipRepo: IMembershipRepository) {}
@@ -38,10 +33,8 @@ export class MemberController {
     return membership;
   }
 
-  async updateMember(membershipId: string, data: unknown): Promise<CollectionMembership> {
-    const parsed = UpdateMemberSchema.parse(data);
-    return this.membershipRepo.update(membershipId, parsed);
-  }
+  // updateMember removed (purses-2wzz): PATCH /members/[mid] had no UI caller and
+  // members have no editable fields under the role model.
 
   async removeMember(membershipId: string): Promise<void> {
     const membership = await this.membershipRepo.findById(membershipId);

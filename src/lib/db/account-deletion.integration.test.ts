@@ -689,6 +689,71 @@ describeDb("AccountDeletionService via DELETE /api/users/me", () => {
   });
 
   // ==========================================================================
+  // purses-obe0 — account deletion writes an attributable account.delete audit row
+  // with actor + owned-collection count. The collectionId sentinel "__account__"
+  // satisfies the NOT NULL column with no natural collection context.
+  // ==========================================================================
+  it("purses-obe0: account deletion writes an account.delete audit row attributed to the actor", async () => {
+    const { db } = getTestDb();
+    const { auditLogTable } = await import("@/lib/db/schema");
+
+    mockGetSession.mockResolvedValue({ user: { id: userId } });
+    const res = await meDelete();
+    expect(res.status).toBe(200);
+
+    // Find the account.delete audit row (collectionId sentinel "__account__").
+    const auditRows = await db
+      .select()
+      .from(auditLogTable)
+      .where(eq(auditLogTable.action, "account.delete"));
+
+    expect(auditRows).toHaveLength(1);
+    expect(auditRows[0]).toMatchObject({
+      action: "account.delete",
+      targetType: "user",
+      targetId: userId,
+      actorId: userId,
+      collectionId: "__account__",
+    });
+    // metadata.ownedCollections reflects how many owned collections were purged (1 seeded).
+    expect((auditRows[0].metadata as Record<string, number>).ownedCollections).toBe(1);
+  });
+
+  // ==========================================================================
+  // purses-obe0 (sentinel invariant) — the account.delete row's sentinel
+  // collectionId="__account__" must NEVER surface in an owner's per-collection
+  // audit view. Proves the magic string can't collide with a generatable
+  // collection id (those are prefixed ULIDs) and stays out of findByCollection.
+  // ==========================================================================
+  it("purses-obe0: the account.delete sentinel row never surfaces in a real collection's audit view", async () => {
+    const { db } = getTestDb();
+    const { AuditLogRepository } = await import(
+      "@/server/repositories/implementations/AuditLogRepository"
+    );
+
+    mockGetSession.mockResolvedValue({ user: { id: userId } });
+    const res = await meDelete();
+    expect(res.status).toBe(200);
+
+    const auditRepo = new AuditLogRepository(db);
+
+    // The account.delete row IS written (non-vacuous guard) under the sentinel.
+    const sentinelRows = await auditRepo.findByCollection("__account__");
+    expect(sentinelRows.some((r) => r.action === "account.delete")).toBe(true);
+
+    // V's surviving (real) collection CB must NEVER see the account.delete row —
+    // its per-collection audit view is scoped by collectionId and the sentinel
+    // is not a real collection id.
+    const cbAudit = await auditRepo.findByCollection(cbCollectionId);
+    expect(cbAudit.some((r) => r.action === "account.delete")).toBe(false);
+
+    // Belt-and-suspenders: even the (now-purged) owned collection CA's id never
+    // carried the account-level row — that row lives only under the sentinel.
+    const caAudit = await auditRepo.findByCollection(caCollectionId);
+    expect(caAudit.some((r) => r.action === "account.delete")).toBe(false);
+  });
+
+  // ==========================================================================
   // F2 — borrowed photos (U uploaded into V's collection) must SURVIVE but be
   // de-identified (uploaded_by → tombstone), NOT deleted.
   // ==========================================================================

@@ -30,6 +30,7 @@ import {
 } from "../../../e2e/fixtures/seed";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
+import { AuditLogRepository } from "@/server/repositories/implementations/AuditLogRepository";
 
 const { mockGetSession, mockPut, mockDel } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
@@ -58,6 +59,7 @@ import {
   DELETE as deletePhoto,
 } from "@/app/api/collections/[id]/items/[itemId]/photos/[photoId]/route";
 import { POST as setHero } from "@/app/api/collections/[id]/items/[itemId]/photos/[photoId]/set-hero/route";
+import { DELETE as deleteItem } from "@/app/api/items/[id]/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -646,5 +648,119 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
       expect((await photoRepo.findById(second.id))!.isHero).toBe(true);
       expect((await photoRepo.findById(priorHero.id))!.isHero).toBe(false);
     });
+  });
+});
+
+// ============================================================================
+// purses-wfgj — audit attribution for soft-delete (item.delete) and photo delete
+// (photo.delete). Real handler → AuditLogRepository → ephemeral Postgres.
+// Asserts the audit row exists with the correct action, actorId, targetId, and
+// collectionId after the operation succeeds, and that the soft-delete + audit
+// insert are tx-bound: exactly ONE audit row per committed delete (atomicity).
+// ============================================================================
+describeDb("purses-wfgj: audit attribution for item soft-delete and photo delete", () => {
+  let ownerId: string;
+  let auditRepo: AuditLogRepository;
+
+  beforeEach(async () => {
+    await resetDb();
+    vi.clearAllMocks();
+    mockPut.mockResolvedValue({ url: BLOB_UPLOAD_URL });
+    mockDel.mockResolvedValue(undefined);
+    ownerId = await seedBaseline();
+    const { db } = getTestDb();
+    auditRepo = new AuditLogRepository(db);
+  });
+
+  afterAll(async () => {
+    await closeDb();
+  });
+
+  it("item soft-delete: curator gets 200 and an item.delete audit row with actorId=curator", async () => {
+    const { collectionId, itemAId, memberId } = await seedFullCollection(ownerId);
+    mockGetSession.mockResolvedValue({ user: { id: memberId } });
+
+    const res = await deleteItem(
+      new Request(`http://localhost/api/items/${itemAId}`, { method: "DELETE" }) as any,
+      { params: { id: itemAId } },
+    );
+    expect(res.status).toBe(200);
+
+    // Audit row must exist with exact attribution.
+    const rows = await auditRepo.findByCollection(collectionId);
+    const deleteRows = rows.filter((r) => r.action === "item.delete");
+    // Tx-bound: exactly one audit row per committed soft-delete (atomicity).
+    expect(deleteRows).toHaveLength(1);
+    expect(deleteRows[0]).toMatchObject({
+      action: "item.delete",
+      targetType: "item",
+      targetId: itemAId,
+      collectionId,
+      actorId: memberId,
+    });
+  });
+
+  it("item soft-delete: owner gets 200 and an item.delete audit row with actorId=owner", async () => {
+    const { collectionId, itemAId } = await seedFullCollection(ownerId);
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    const res = await deleteItem(
+      new Request(`http://localhost/api/items/${itemAId}`, { method: "DELETE" }) as any,
+      { params: { id: itemAId } },
+    );
+    expect(res.status).toBe(200);
+
+    const rows = await auditRepo.findByCollection(collectionId);
+    const row = rows.find((r) => r.action === "item.delete");
+    expect(row).toBeDefined();
+    expect(row!.actorId).toBe(ownerId);
+    expect(row!.targetId).toBe(itemAId);
+  });
+
+  it("photo delete: curator gets 200 and a photo.delete audit row with actorId=curator", async () => {
+    const { collectionId, itemAId, memberId } = await seedFullCollection(ownerId);
+    const { db } = getTestDb();
+    const photoRepo = new PhotoRepository(db);
+    const [photo] = await photoRepo.findByItem(itemAId);
+    mockGetSession.mockResolvedValue({ user: { id: memberId } });
+
+    const res = await deletePhoto(
+      jsonReq("DELETE") as any,
+      { params: { id: collectionId, itemId: itemAId, photoId: photo.id } } as any,
+    );
+    expect(res.status).toBe(200);
+
+    const rows = await auditRepo.findByCollection(collectionId);
+    const deleteRows = rows.filter((r) => r.action === "photo.delete");
+    // Tx-bound: exactly one audit row per committed photo delete (atomicity).
+    expect(deleteRows).toHaveLength(1);
+    expect(deleteRows[0]).toMatchObject({
+      action: "photo.delete",
+      targetType: "photo",
+      targetId: photo.id,
+      collectionId,
+      actorId: memberId,
+    });
+  });
+
+  it("photo delete: owner gets 200 and a photo.delete audit row with actorId=owner", async () => {
+    const { collectionId, itemAId } = await seedFullCollection(ownerId);
+    const { db } = getTestDb();
+    const photoRepo = new PhotoRepository(db);
+    const [photo] = await photoRepo.findByItem(itemAId);
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    const res = await deletePhoto(
+      jsonReq("DELETE") as any,
+      { params: { id: collectionId, itemId: itemAId, photoId: photo.id } } as any,
+    );
+    expect(res.status).toBe(200);
+
+    const rows = await auditRepo.findByCollection(collectionId);
+    const row = rows.find((r) => r.action === "photo.delete");
+    expect(row).toBeDefined();
+    expect(row!.actorId).toBe(ownerId);
+    expect(row!.targetId).toBe(photo.id);
+    expect(row!.collectionId).toBe(collectionId);
   });
 });

@@ -4,6 +4,8 @@ import { getDb } from "@/lib/db";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { requireApiCapability } from "@/server/dal/collection-access";
+import { AuditLogRepository } from "@/server/repositories/implementations/AuditLogRepository";
+import { withTransaction } from "@/lib/transactions";
 import { del } from "@vercel/blob";
 import { ALLOWED_ROTATIONS } from "@/lib/photos";
 import { deleteVariants, variantPrefix } from "@/lib/photo-variants";
@@ -61,6 +63,9 @@ export async function DELETE(
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  // Capture before the tx closure — TS loses the `!session?.user` narrowing inside
+  // an async callback, and this is the audit actor.
+  const actorId = session.user.id;
 
   const db = getDb();
   const photoRepo = new PhotoRepository(db);
@@ -74,7 +79,8 @@ export async function DELETE(
     }
 
     // photos:write = curator — any curator may delete photos (full-curator model).
-    const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
+    // Curator-level by owner decision; attributed via audit (purses-opir/wfgj).
+    const access = await requireApiCapability(db, params.id, actorId, "photos:write");
     if (access instanceof NextResponse) return access;
 
     const photo = await photoRepo.findById(params.photoId);
@@ -82,13 +88,27 @@ export async function DELETE(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    // Row soft-delete + audit in ONE transaction (mirrors ItemPurgeService): a
+    // committed delete always has exactly one audit row — if the audit insert
+    // throws, the soft-delete rolls back, so a photo is never deleted without
+    // attribution (purses-wfgj). Blob del + variant sweep are external side
+    // effects that can't roll back, so they run post-commit (best-effort).
+    await withTransaction(db, async (tx) => {
+      await new PhotoRepository(tx).delete(params.photoId);
+      await new AuditLogRepository(tx).record({
+        actorId,
+        action: "photo.delete",
+        targetType: "photo",
+        targetId: photo.id,
+        collectionId: params.id,
+      });
+    });
+
+    // Best-effort, post-commit: only http(s) keys are real blob URLs; a del
+    // failure is inert (orphaned, sweepable) — the DB delete already committed.
     if (photo.blobKey.startsWith("http")) {
       await del(photo.blobKey);
     }
-
-    await photoRepo.delete(params.photoId);
-
-    // Best-effort: sweep any persisted resized variants for this photo.
     await deleteVariants(variantPrefix(params.id, params.photoId)).catch(() => {});
 
     return NextResponse.json({ success: true });
