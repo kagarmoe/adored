@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/611dabb1e45d1f58f919293ea30f0e88ce9ba265",
-        "commitHash": "611dabb1e45d1f58f919293ea30f0e88ce9ba265",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27993117676"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/95181a53d7ab6969877f541829b95e1ac1532d58",
+        "commitHash": "95181a53d7ab6969877f541829b95e1ac1532d58",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27996063971"
       },
       "gitCommit": {
-        "shortHash": "611dabb",
-        "hash": "611dabb1e45d1f58f919293ea30f0e88ce9ba265",
-        "subject": "api: error-handling sweep — ZodError→400, finalize 409, signup timing (pv9 PR2) (#236)",
-        "body": "api: error-handling sweep — ZodError→400, finalize 409, signup timing (pv9 PR2) (#236)\n\n* feat(api): FinalizeStateError + errorResponse helper (purses-ydph, purses-7jds)\n\nAdd FinalizeStateError to SortResultService mirroring Delete/SupersedeStateError.\nAdd state guard in ResultController.finalizeResult (finalized→throws FinalizeStateError).\nCreate src/server/api/http-errors.ts with errorResponse(error) mapping all typed\nerrors to canonical HTTP statuses (SyntaxError→400, ZodError→400, state errors→409,\nUnauthorized→401, else→500). Unit-tested 9 branches in http-errors.test.ts.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(api): roll out errorResponse across routes; flip pins RED→GREEN (purses-7jds, purses-4wj2, purses-ydph)\n\nApply errorResponse(error) to every route that previously swallowed ZodError/state\nerrors as 500: collections/[id]/items POST, items POST, collections/[id]/invitations POST,\nsort-results/[id]/finalize POST, sort-results/[id]/items/[rid] GET+PATCH+DELETE,\nsort-results/[id]/shares GET+POST, sort-results/[id]/shares/[sid] GET+PATCH+DELETE,\nusers/me PATCH. ZodError->400, FinalizeStateError->409, UnauthorizedError->401.\n\nAdd UnauthorizedError to mockAuth factory and inline vi.hoisted mocks so errorResponse's\ninstanceof check resolves correctly under all test mock patterns.\n\nPins flipped (RED->GREEN): re-finalize 200->409; bad-enum PATCH 500->400; items-POST\nmissing-name throw->400; items/route POST 500->400; invitation missing/malformed email\n500->400; users/me empty-name PATCH 500->400.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(security): equalize signup dup-email timing (purses-zeyd)\n\nIn the existing-user branch, run await bcrypt.hash(password, 12) (throwaway result)\nbefore the early 201 return so the duplicate-email path spends equivalent CPU time\nto the real signup path. Eliminates the timing oracle that leaked email existence.\nNo change to the 201 response or the single-row assertion in the integration test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(api): complete errorResponse rollout — ZodError->400 on all body-parsing routes (purses-pv9)\n\nFinish the §5.2 rollout the PR2 review flagged as half-migrated. Route every\nremaining catch on a route whose controller .parse()es the request body through\nerrorResponse(error), so ZodError maps to 400 (not 500). Authz/guard returns\n(401/403/404, instanceof NextResponse early-returns) stay BEFORE the try; no\nauthz behavior changes; no 404-from-message mapping introduced.\n\nRoutes:\n- items/[id] PATCH (updateItem) + GET/DELETE catches unified\n- collections POST (createCollection) + GET catch unified\n- collections/[id] PATCH (updateCollection) + GET/DELETE catches unified\n- collections/[id]/members POST (addMember) + GET catch unified\n- collections/[id]/members/[mid] PATCH (updateMember) — wrap final call (was unhandled 500)\n- invitations/[id] PATCH (updateInvitation) + GET/DELETE catches unified\n- sessions/[id] PATCH (updateSession) — wrap final call (was unhandled 500)\n- sort-results/[id] PATCH (updateResult) + GET/DELETE catches unified\n  (DELETE's DeleteResultStateError->409 preserved via errorResponse)\n\nTests (integration-over-mocked, real DB, assert state on the negative path):\n- new validation->400 case per route (invalid body -> 400 + no row written/changed)\n- flipped core-routes collections-POST missing-name 500->400 (with no-row state)\n- added UnauthorizedError to the inline @/lib/auth mocks in members-routes,\n  sessions-routes, sort-pipeline so errorResponse's instanceof check resolves\n\nOut of scope (verified no request-body .parse()): preferences items/recalculate,\naudit, purge, archive/restore, remove-from-sorts, item restore/purge,\nsort-results items GET / reset / supersede, invitations resend, decisions POST\n(interface cast, no parse), collections items/[itemId] PATCH (already 400).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* docs(api): finalize 409 + consistent validation-400/state-409 (pv9 PR2)\n\nRefs: purses-ydph, purses-7jds, purses-4wj2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* chore(graphify): refresh after pv9 PR2 (error-handling sweep)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "95181a5",
+        "hash": "95181a53d7ab6969877f541829b95e1ac1532d58",
+        "subject": "authz: Owner/Curator role model core + DAL capability chokepoint (pv9 PR3) (#237)",
+        "body": "authz: Owner/Curator role model core + DAL capability chokepoint (pv9 PR3) (#237)\n\n* feat(dal): capability map + resolveEffectiveRole (purses-89g)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* feat(dal): requireApiCapability + resource wrappers; re-express guards (purses-89g)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(dal): requireApiItemCapability resolution is explicit, not op-derived (review)\n\nPR3a review (security): findByIdIncludingDeleted was applied to ALL ops — a read/edit op\nrouted through the wrapper would return a soft-deleted item (200) instead of 404. Add an\nexplicit includeDeleted opt-in (default false → findById, matching pre-pv9 GET behavior);\nlifecycle callers (restore/purge/remove-from-sorts) pass includeDeleted:true. Tested both modes.\n\nRefs: purses-89g\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): drop client flag/role mass-assignment from invitation+member create/update (purses-pv9)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): transactional owner bootstrap — atomic collection+membership create (purses-crt)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* feat(authz): real invitation accept — curator membership + identity/state guards (purses-8zcc)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* feat(db): 0006 role reconcile + CHECK constraint (additive, purses-crt)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): update repo interfaces + pin-flip tests to match T1 flag-stripping\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): accept idempotency via onConflictDoNothing + null-email guard + schema/snapshot cleanup (purses-8zcc, purses-crt)\n\nF1: accept double-accept idempotency was broken. The membership insert was a\ncreate()+try/catch that string-matched the 23505 unique violation, then continued\nthe invitation UPDATE in the SAME postgres-js transaction. A query error inside a\nno-savepoint tx poisons it (postgres-js latches the error and rolls back at scope\nend), so the follow-up update + COMMIT rolled back → 500, invitation stuck pending.\nFix per spec §5.3: add MembershipRepository.createIfAbsent (onConflictDoNothing on\nthe (collection_id, user_id) unique index) — no error is raised on conflict, so the\ntx is never poisoned. Removed the fragile string-match catch entirely. Added a\ngenuine conflict-path test (member pre-exists on a still-pending invitation → one\naccept → 200, accepted, exactly 1 membership) that is RED on the old code (500).\n\nF3a: guard nullable dbUser.email before normalizing — a null email is a clean 403,\nnot a 500 on .trim().\n\nF3b: strip the 8 inert flag fields from UpdateInvitationSchema (now empty), matching\nthe member-side cleanup — a PATCH flag is stripped (200), not an asymmetric 400.\n\nF2: 0006_snapshot.json had id == 0005's id and prevId == 0004's id (verbatim copy).\nGave it a fresh id and set prevId to 0005's id so future drizzle-kit generate chains.\n\nF5: extracted normalizeEmail() helper; used on both the invitation-create write side\nand the accept compare side so they can't drift.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* docs(authz): role model core + accept membership (pv9 PR3) — API.md + ARCHITECTURE decision 17\n\nRefs: purses-crt, purses-89g, purses-8zcc\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* chore(graphify): refresh after pv9 PR3 (role model core)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1782173824000
+          "time": 1782178502000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1782173824000
+          "time": 1782178502000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/611dabb1e45d1f58f919293ea30f0e88ce9ba265",
-            "commitHash": "611dabb1e45d1f58f919293ea30f0e88ce9ba265",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27993117676"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/95181a53d7ab6969877f541829b95e1ac1532d58",
+            "commitHash": "95181a53d7ab6969877f541829b95e1ac1532d58",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27996063971"
           },
           "gitCommit": {
-            "shortHash": "611dabb",
-            "hash": "611dabb1e45d1f58f919293ea30f0e88ce9ba265",
-            "subject": "api: error-handling sweep — ZodError→400, finalize 409, signup timing (pv9 PR2) (#236)",
-            "body": "api: error-handling sweep — ZodError→400, finalize 409, signup timing (pv9 PR2) (#236)\n\n* feat(api): FinalizeStateError + errorResponse helper (purses-ydph, purses-7jds)\n\nAdd FinalizeStateError to SortResultService mirroring Delete/SupersedeStateError.\nAdd state guard in ResultController.finalizeResult (finalized→throws FinalizeStateError).\nCreate src/server/api/http-errors.ts with errorResponse(error) mapping all typed\nerrors to canonical HTTP statuses (SyntaxError→400, ZodError→400, state errors→409,\nUnauthorized→401, else→500). Unit-tested 9 branches in http-errors.test.ts.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(api): roll out errorResponse across routes; flip pins RED→GREEN (purses-7jds, purses-4wj2, purses-ydph)\n\nApply errorResponse(error) to every route that previously swallowed ZodError/state\nerrors as 500: collections/[id]/items POST, items POST, collections/[id]/invitations POST,\nsort-results/[id]/finalize POST, sort-results/[id]/items/[rid] GET+PATCH+DELETE,\nsort-results/[id]/shares GET+POST, sort-results/[id]/shares/[sid] GET+PATCH+DELETE,\nusers/me PATCH. ZodError->400, FinalizeStateError->409, UnauthorizedError->401.\n\nAdd UnauthorizedError to mockAuth factory and inline vi.hoisted mocks so errorResponse's\ninstanceof check resolves correctly under all test mock patterns.\n\nPins flipped (RED->GREEN): re-finalize 200->409; bad-enum PATCH 500->400; items-POST\nmissing-name throw->400; items/route POST 500->400; invitation missing/malformed email\n500->400; users/me empty-name PATCH 500->400.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(security): equalize signup dup-email timing (purses-zeyd)\n\nIn the existing-user branch, run await bcrypt.hash(password, 12) (throwaway result)\nbefore the early 201 return so the duplicate-email path spends equivalent CPU time\nto the real signup path. Eliminates the timing oracle that leaked email existence.\nNo change to the 201 response or the single-row assertion in the integration test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(api): complete errorResponse rollout — ZodError->400 on all body-parsing routes (purses-pv9)\n\nFinish the §5.2 rollout the PR2 review flagged as half-migrated. Route every\nremaining catch on a route whose controller .parse()es the request body through\nerrorResponse(error), so ZodError maps to 400 (not 500). Authz/guard returns\n(401/403/404, instanceof NextResponse early-returns) stay BEFORE the try; no\nauthz behavior changes; no 404-from-message mapping introduced.\n\nRoutes:\n- items/[id] PATCH (updateItem) + GET/DELETE catches unified\n- collections POST (createCollection) + GET catch unified\n- collections/[id] PATCH (updateCollection) + GET/DELETE catches unified\n- collections/[id]/members POST (addMember) + GET catch unified\n- collections/[id]/members/[mid] PATCH (updateMember) — wrap final call (was unhandled 500)\n- invitations/[id] PATCH (updateInvitation) + GET/DELETE catches unified\n- sessions/[id] PATCH (updateSession) — wrap final call (was unhandled 500)\n- sort-results/[id] PATCH (updateResult) + GET/DELETE catches unified\n  (DELETE's DeleteResultStateError->409 preserved via errorResponse)\n\nTests (integration-over-mocked, real DB, assert state on the negative path):\n- new validation->400 case per route (invalid body -> 400 + no row written/changed)\n- flipped core-routes collections-POST missing-name 500->400 (with no-row state)\n- added UnauthorizedError to the inline @/lib/auth mocks in members-routes,\n  sessions-routes, sort-pipeline so errorResponse's instanceof check resolves\n\nOut of scope (verified no request-body .parse()): preferences items/recalculate,\naudit, purge, archive/restore, remove-from-sorts, item restore/purge,\nsort-results items GET / reset / supersede, invitations resend, decisions POST\n(interface cast, no parse), collections items/[itemId] PATCH (already 400).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* docs(api): finalize 409 + consistent validation-400/state-409 (pv9 PR2)\n\nRefs: purses-ydph, purses-7jds, purses-4wj2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* chore(graphify): refresh after pv9 PR2 (error-handling sweep)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "95181a5",
+            "hash": "95181a53d7ab6969877f541829b95e1ac1532d58",
+            "subject": "authz: Owner/Curator role model core + DAL capability chokepoint (pv9 PR3) (#237)",
+            "body": "authz: Owner/Curator role model core + DAL capability chokepoint (pv9 PR3) (#237)\n\n* feat(dal): capability map + resolveEffectiveRole (purses-89g)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* feat(dal): requireApiCapability + resource wrappers; re-express guards (purses-89g)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(dal): requireApiItemCapability resolution is explicit, not op-derived (review)\n\nPR3a review (security): findByIdIncludingDeleted was applied to ALL ops — a read/edit op\nrouted through the wrapper would return a soft-deleted item (200) instead of 404. Add an\nexplicit includeDeleted opt-in (default false → findById, matching pre-pv9 GET behavior);\nlifecycle callers (restore/purge/remove-from-sorts) pass includeDeleted:true. Tested both modes.\n\nRefs: purses-89g\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): drop client flag/role mass-assignment from invitation+member create/update (purses-pv9)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): transactional owner bootstrap — atomic collection+membership create (purses-crt)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* feat(authz): real invitation accept — curator membership + identity/state guards (purses-8zcc)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* feat(db): 0006 role reconcile + CHECK constraint (additive, purses-crt)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): update repo interfaces + pin-flip tests to match T1 flag-stripping\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): accept idempotency via onConflictDoNothing + null-email guard + schema/snapshot cleanup (purses-8zcc, purses-crt)\n\nF1: accept double-accept idempotency was broken. The membership insert was a\ncreate()+try/catch that string-matched the 23505 unique violation, then continued\nthe invitation UPDATE in the SAME postgres-js transaction. A query error inside a\nno-savepoint tx poisons it (postgres-js latches the error and rolls back at scope\nend), so the follow-up update + COMMIT rolled back → 500, invitation stuck pending.\nFix per spec §5.3: add MembershipRepository.createIfAbsent (onConflictDoNothing on\nthe (collection_id, user_id) unique index) — no error is raised on conflict, so the\ntx is never poisoned. Removed the fragile string-match catch entirely. Added a\ngenuine conflict-path test (member pre-exists on a still-pending invitation → one\naccept → 200, accepted, exactly 1 membership) that is RED on the old code (500).\n\nF3a: guard nullable dbUser.email before normalizing — a null email is a clean 403,\nnot a 500 on .trim().\n\nF3b: strip the 8 inert flag fields from UpdateInvitationSchema (now empty), matching\nthe member-side cleanup — a PATCH flag is stripped (200), not an asymmetric 400.\n\nF2: 0006_snapshot.json had id == 0005's id and prevId == 0004's id (verbatim copy).\nGave it a fresh id and set prevId to 0005's id so future drizzle-kit generate chains.\n\nF5: extracted normalizeEmail() helper; used on both the invitation-create write side\nand the accept compare side so they can't drift.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* docs(authz): role model core + accept membership (pv9 PR3) — API.md + ARCHITECTURE decision 17\n\nRefs: purses-crt, purses-89g, purses-8zcc\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* chore(graphify): refresh after pv9 PR3 (role model core)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782173824000
+              "time": 1782178502000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782173824000
+              "time": 1782178502000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/611dabb1e45d1f58f919293ea30f0e88ce9ba265",
-            "commitHash": "611dabb1e45d1f58f919293ea30f0e88ce9ba265",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27993117676"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/95181a53d7ab6969877f541829b95e1ac1532d58",
+            "commitHash": "95181a53d7ab6969877f541829b95e1ac1532d58",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27996063971"
           },
           "gitCommit": {
-            "shortHash": "611dabb",
-            "hash": "611dabb1e45d1f58f919293ea30f0e88ce9ba265",
-            "subject": "api: error-handling sweep — ZodError→400, finalize 409, signup timing (pv9 PR2) (#236)",
-            "body": "api: error-handling sweep — ZodError→400, finalize 409, signup timing (pv9 PR2) (#236)\n\n* feat(api): FinalizeStateError + errorResponse helper (purses-ydph, purses-7jds)\n\nAdd FinalizeStateError to SortResultService mirroring Delete/SupersedeStateError.\nAdd state guard in ResultController.finalizeResult (finalized→throws FinalizeStateError).\nCreate src/server/api/http-errors.ts with errorResponse(error) mapping all typed\nerrors to canonical HTTP statuses (SyntaxError→400, ZodError→400, state errors→409,\nUnauthorized→401, else→500). Unit-tested 9 branches in http-errors.test.ts.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(api): roll out errorResponse across routes; flip pins RED→GREEN (purses-7jds, purses-4wj2, purses-ydph)\n\nApply errorResponse(error) to every route that previously swallowed ZodError/state\nerrors as 500: collections/[id]/items POST, items POST, collections/[id]/invitations POST,\nsort-results/[id]/finalize POST, sort-results/[id]/items/[rid] GET+PATCH+DELETE,\nsort-results/[id]/shares GET+POST, sort-results/[id]/shares/[sid] GET+PATCH+DELETE,\nusers/me PATCH. ZodError->400, FinalizeStateError->409, UnauthorizedError->401.\n\nAdd UnauthorizedError to mockAuth factory and inline vi.hoisted mocks so errorResponse's\ninstanceof check resolves correctly under all test mock patterns.\n\nPins flipped (RED->GREEN): re-finalize 200->409; bad-enum PATCH 500->400; items-POST\nmissing-name throw->400; items/route POST 500->400; invitation missing/malformed email\n500->400; users/me empty-name PATCH 500->400.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(security): equalize signup dup-email timing (purses-zeyd)\n\nIn the existing-user branch, run await bcrypt.hash(password, 12) (throwaway result)\nbefore the early 201 return so the duplicate-email path spends equivalent CPU time\nto the real signup path. Eliminates the timing oracle that leaked email existence.\nNo change to the 201 response or the single-row assertion in the integration test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(api): complete errorResponse rollout — ZodError->400 on all body-parsing routes (purses-pv9)\n\nFinish the §5.2 rollout the PR2 review flagged as half-migrated. Route every\nremaining catch on a route whose controller .parse()es the request body through\nerrorResponse(error), so ZodError maps to 400 (not 500). Authz/guard returns\n(401/403/404, instanceof NextResponse early-returns) stay BEFORE the try; no\nauthz behavior changes; no 404-from-message mapping introduced.\n\nRoutes:\n- items/[id] PATCH (updateItem) + GET/DELETE catches unified\n- collections POST (createCollection) + GET catch unified\n- collections/[id] PATCH (updateCollection) + GET/DELETE catches unified\n- collections/[id]/members POST (addMember) + GET catch unified\n- collections/[id]/members/[mid] PATCH (updateMember) — wrap final call (was unhandled 500)\n- invitations/[id] PATCH (updateInvitation) + GET/DELETE catches unified\n- sessions/[id] PATCH (updateSession) — wrap final call (was unhandled 500)\n- sort-results/[id] PATCH (updateResult) + GET/DELETE catches unified\n  (DELETE's DeleteResultStateError->409 preserved via errorResponse)\n\nTests (integration-over-mocked, real DB, assert state on the negative path):\n- new validation->400 case per route (invalid body -> 400 + no row written/changed)\n- flipped core-routes collections-POST missing-name 500->400 (with no-row state)\n- added UnauthorizedError to the inline @/lib/auth mocks in members-routes,\n  sessions-routes, sort-pipeline so errorResponse's instanceof check resolves\n\nOut of scope (verified no request-body .parse()): preferences items/recalculate,\naudit, purge, archive/restore, remove-from-sorts, item restore/purge,\nsort-results items GET / reset / supersede, invitations resend, decisions POST\n(interface cast, no parse), collections items/[itemId] PATCH (already 400).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* docs(api): finalize 409 + consistent validation-400/state-409 (pv9 PR2)\n\nRefs: purses-ydph, purses-7jds, purses-4wj2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* chore(graphify): refresh after pv9 PR2 (error-handling sweep)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "95181a5",
+            "hash": "95181a53d7ab6969877f541829b95e1ac1532d58",
+            "subject": "authz: Owner/Curator role model core + DAL capability chokepoint (pv9 PR3) (#237)",
+            "body": "authz: Owner/Curator role model core + DAL capability chokepoint (pv9 PR3) (#237)\n\n* feat(dal): capability map + resolveEffectiveRole (purses-89g)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* feat(dal): requireApiCapability + resource wrappers; re-express guards (purses-89g)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(dal): requireApiItemCapability resolution is explicit, not op-derived (review)\n\nPR3a review (security): findByIdIncludingDeleted was applied to ALL ops — a read/edit op\nrouted through the wrapper would return a soft-deleted item (200) instead of 404. Add an\nexplicit includeDeleted opt-in (default false → findById, matching pre-pv9 GET behavior);\nlifecycle callers (restore/purge/remove-from-sorts) pass includeDeleted:true. Tested both modes.\n\nRefs: purses-89g\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): drop client flag/role mass-assignment from invitation+member create/update (purses-pv9)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): transactional owner bootstrap — atomic collection+membership create (purses-crt)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* feat(authz): real invitation accept — curator membership + identity/state guards (purses-8zcc)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* feat(db): 0006 role reconcile + CHECK constraint (additive, purses-crt)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): update repo interfaces + pin-flip tests to match T1 flag-stripping\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): accept idempotency via onConflictDoNothing + null-email guard + schema/snapshot cleanup (purses-8zcc, purses-crt)\n\nF1: accept double-accept idempotency was broken. The membership insert was a\ncreate()+try/catch that string-matched the 23505 unique violation, then continued\nthe invitation UPDATE in the SAME postgres-js transaction. A query error inside a\nno-savepoint tx poisons it (postgres-js latches the error and rolls back at scope\nend), so the follow-up update + COMMIT rolled back → 500, invitation stuck pending.\nFix per spec §5.3: add MembershipRepository.createIfAbsent (onConflictDoNothing on\nthe (collection_id, user_id) unique index) — no error is raised on conflict, so the\ntx is never poisoned. Removed the fragile string-match catch entirely. Added a\ngenuine conflict-path test (member pre-exists on a still-pending invitation → one\naccept → 200, accepted, exactly 1 membership) that is RED on the old code (500).\n\nF3a: guard nullable dbUser.email before normalizing — a null email is a clean 403,\nnot a 500 on .trim().\n\nF3b: strip the 8 inert flag fields from UpdateInvitationSchema (now empty), matching\nthe member-side cleanup — a PATCH flag is stripped (200), not an asymmetric 400.\n\nF2: 0006_snapshot.json had id == 0005's id and prevId == 0004's id (verbatim copy).\nGave it a fresh id and set prevId to 0005's id so future drizzle-kit generate chains.\n\nF5: extracted normalizeEmail() helper; used on both the invitation-create write side\nand the accept compare side so they can't drift.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* docs(authz): role model core + accept membership (pv9 PR3) — API.md + ARCHITECTURE decision 17\n\nRefs: purses-crt, purses-89g, purses-8zcc\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* chore(graphify): refresh after pv9 PR3 (role model core)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782173824000
+              "time": 1782178502000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782173824000
+              "time": 1782178502000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/611dabb1e45d1f58f919293ea30f0e88ce9ba265",
-            "commitHash": "611dabb1e45d1f58f919293ea30f0e88ce9ba265",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27993117676"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/95181a53d7ab6969877f541829b95e1ac1532d58",
+            "commitHash": "95181a53d7ab6969877f541829b95e1ac1532d58",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27996063971"
           },
           "gitCommit": {
-            "shortHash": "611dabb",
-            "hash": "611dabb1e45d1f58f919293ea30f0e88ce9ba265",
-            "subject": "api: error-handling sweep — ZodError→400, finalize 409, signup timing (pv9 PR2) (#236)",
-            "body": "api: error-handling sweep — ZodError→400, finalize 409, signup timing (pv9 PR2) (#236)\n\n* feat(api): FinalizeStateError + errorResponse helper (purses-ydph, purses-7jds)\n\nAdd FinalizeStateError to SortResultService mirroring Delete/SupersedeStateError.\nAdd state guard in ResultController.finalizeResult (finalized→throws FinalizeStateError).\nCreate src/server/api/http-errors.ts with errorResponse(error) mapping all typed\nerrors to canonical HTTP statuses (SyntaxError→400, ZodError→400, state errors→409,\nUnauthorized→401, else→500). Unit-tested 9 branches in http-errors.test.ts.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(api): roll out errorResponse across routes; flip pins RED→GREEN (purses-7jds, purses-4wj2, purses-ydph)\n\nApply errorResponse(error) to every route that previously swallowed ZodError/state\nerrors as 500: collections/[id]/items POST, items POST, collections/[id]/invitations POST,\nsort-results/[id]/finalize POST, sort-results/[id]/items/[rid] GET+PATCH+DELETE,\nsort-results/[id]/shares GET+POST, sort-results/[id]/shares/[sid] GET+PATCH+DELETE,\nusers/me PATCH. ZodError->400, FinalizeStateError->409, UnauthorizedError->401.\n\nAdd UnauthorizedError to mockAuth factory and inline vi.hoisted mocks so errorResponse's\ninstanceof check resolves correctly under all test mock patterns.\n\nPins flipped (RED->GREEN): re-finalize 200->409; bad-enum PATCH 500->400; items-POST\nmissing-name throw->400; items/route POST 500->400; invitation missing/malformed email\n500->400; users/me empty-name PATCH 500->400.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(security): equalize signup dup-email timing (purses-zeyd)\n\nIn the existing-user branch, run await bcrypt.hash(password, 12) (throwaway result)\nbefore the early 201 return so the duplicate-email path spends equivalent CPU time\nto the real signup path. Eliminates the timing oracle that leaked email existence.\nNo change to the 201 response or the single-row assertion in the integration test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(api): complete errorResponse rollout — ZodError->400 on all body-parsing routes (purses-pv9)\n\nFinish the §5.2 rollout the PR2 review flagged as half-migrated. Route every\nremaining catch on a route whose controller .parse()es the request body through\nerrorResponse(error), so ZodError maps to 400 (not 500). Authz/guard returns\n(401/403/404, instanceof NextResponse early-returns) stay BEFORE the try; no\nauthz behavior changes; no 404-from-message mapping introduced.\n\nRoutes:\n- items/[id] PATCH (updateItem) + GET/DELETE catches unified\n- collections POST (createCollection) + GET catch unified\n- collections/[id] PATCH (updateCollection) + GET/DELETE catches unified\n- collections/[id]/members POST (addMember) + GET catch unified\n- collections/[id]/members/[mid] PATCH (updateMember) — wrap final call (was unhandled 500)\n- invitations/[id] PATCH (updateInvitation) + GET/DELETE catches unified\n- sessions/[id] PATCH (updateSession) — wrap final call (was unhandled 500)\n- sort-results/[id] PATCH (updateResult) + GET/DELETE catches unified\n  (DELETE's DeleteResultStateError->409 preserved via errorResponse)\n\nTests (integration-over-mocked, real DB, assert state on the negative path):\n- new validation->400 case per route (invalid body -> 400 + no row written/changed)\n- flipped core-routes collections-POST missing-name 500->400 (with no-row state)\n- added UnauthorizedError to the inline @/lib/auth mocks in members-routes,\n  sessions-routes, sort-pipeline so errorResponse's instanceof check resolves\n\nOut of scope (verified no request-body .parse()): preferences items/recalculate,\naudit, purge, archive/restore, remove-from-sorts, item restore/purge,\nsort-results items GET / reset / supersede, invitations resend, decisions POST\n(interface cast, no parse), collections items/[itemId] PATCH (already 400).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* docs(api): finalize 409 + consistent validation-400/state-409 (pv9 PR2)\n\nRefs: purses-ydph, purses-7jds, purses-4wj2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* chore(graphify): refresh after pv9 PR2 (error-handling sweep)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "95181a5",
+            "hash": "95181a53d7ab6969877f541829b95e1ac1532d58",
+            "subject": "authz: Owner/Curator role model core + DAL capability chokepoint (pv9 PR3) (#237)",
+            "body": "authz: Owner/Curator role model core + DAL capability chokepoint (pv9 PR3) (#237)\n\n* feat(dal): capability map + resolveEffectiveRole (purses-89g)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* feat(dal): requireApiCapability + resource wrappers; re-express guards (purses-89g)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(dal): requireApiItemCapability resolution is explicit, not op-derived (review)\n\nPR3a review (security): findByIdIncludingDeleted was applied to ALL ops — a read/edit op\nrouted through the wrapper would return a soft-deleted item (200) instead of 404. Add an\nexplicit includeDeleted opt-in (default false → findById, matching pre-pv9 GET behavior);\nlifecycle callers (restore/purge/remove-from-sorts) pass includeDeleted:true. Tested both modes.\n\nRefs: purses-89g\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): drop client flag/role mass-assignment from invitation+member create/update (purses-pv9)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): transactional owner bootstrap — atomic collection+membership create (purses-crt)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* feat(authz): real invitation accept — curator membership + identity/state guards (purses-8zcc)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* feat(db): 0006 role reconcile + CHECK constraint (additive, purses-crt)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): update repo interfaces + pin-flip tests to match T1 flag-stripping\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): accept idempotency via onConflictDoNothing + null-email guard + schema/snapshot cleanup (purses-8zcc, purses-crt)\n\nF1: accept double-accept idempotency was broken. The membership insert was a\ncreate()+try/catch that string-matched the 23505 unique violation, then continued\nthe invitation UPDATE in the SAME postgres-js transaction. A query error inside a\nno-savepoint tx poisons it (postgres-js latches the error and rolls back at scope\nend), so the follow-up update + COMMIT rolled back → 500, invitation stuck pending.\nFix per spec §5.3: add MembershipRepository.createIfAbsent (onConflictDoNothing on\nthe (collection_id, user_id) unique index) — no error is raised on conflict, so the\ntx is never poisoned. Removed the fragile string-match catch entirely. Added a\ngenuine conflict-path test (member pre-exists on a still-pending invitation → one\naccept → 200, accepted, exactly 1 membership) that is RED on the old code (500).\n\nF3a: guard nullable dbUser.email before normalizing — a null email is a clean 403,\nnot a 500 on .trim().\n\nF3b: strip the 8 inert flag fields from UpdateInvitationSchema (now empty), matching\nthe member-side cleanup — a PATCH flag is stripped (200), not an asymmetric 400.\n\nF2: 0006_snapshot.json had id == 0005's id and prevId == 0004's id (verbatim copy).\nGave it a fresh id and set prevId to 0005's id so future drizzle-kit generate chains.\n\nF5: extracted normalizeEmail() helper; used on both the invitation-create write side\nand the accept compare side so they can't drift.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* docs(authz): role model core + accept membership (pv9 PR3) — API.md + ARCHITECTURE decision 17\n\nRefs: purses-crt, purses-89g, purses-8zcc\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* chore(graphify): refresh after pv9 PR3 (role model core)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782173824000
+              "time": 1782178502000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782173824000
+              "time": 1782178502000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/611dabb1e45d1f58f919293ea30f0e88ce9ba265",
-            "commitHash": "611dabb1e45d1f58f919293ea30f0e88ce9ba265",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27993117676"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/95181a53d7ab6969877f541829b95e1ac1532d58",
+            "commitHash": "95181a53d7ab6969877f541829b95e1ac1532d58",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/27996063971"
           },
           "gitCommit": {
-            "shortHash": "611dabb",
-            "hash": "611dabb1e45d1f58f919293ea30f0e88ce9ba265",
-            "subject": "api: error-handling sweep — ZodError→400, finalize 409, signup timing (pv9 PR2) (#236)",
-            "body": "api: error-handling sweep — ZodError→400, finalize 409, signup timing (pv9 PR2) (#236)\n\n* feat(api): FinalizeStateError + errorResponse helper (purses-ydph, purses-7jds)\n\nAdd FinalizeStateError to SortResultService mirroring Delete/SupersedeStateError.\nAdd state guard in ResultController.finalizeResult (finalized→throws FinalizeStateError).\nCreate src/server/api/http-errors.ts with errorResponse(error) mapping all typed\nerrors to canonical HTTP statuses (SyntaxError→400, ZodError→400, state errors→409,\nUnauthorized→401, else→500). Unit-tested 9 branches in http-errors.test.ts.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(api): roll out errorResponse across routes; flip pins RED→GREEN (purses-7jds, purses-4wj2, purses-ydph)\n\nApply errorResponse(error) to every route that previously swallowed ZodError/state\nerrors as 500: collections/[id]/items POST, items POST, collections/[id]/invitations POST,\nsort-results/[id]/finalize POST, sort-results/[id]/items/[rid] GET+PATCH+DELETE,\nsort-results/[id]/shares GET+POST, sort-results/[id]/shares/[sid] GET+PATCH+DELETE,\nusers/me PATCH. ZodError->400, FinalizeStateError->409, UnauthorizedError->401.\n\nAdd UnauthorizedError to mockAuth factory and inline vi.hoisted mocks so errorResponse's\ninstanceof check resolves correctly under all test mock patterns.\n\nPins flipped (RED->GREEN): re-finalize 200->409; bad-enum PATCH 500->400; items-POST\nmissing-name throw->400; items/route POST 500->400; invitation missing/malformed email\n500->400; users/me empty-name PATCH 500->400.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(security): equalize signup dup-email timing (purses-zeyd)\n\nIn the existing-user branch, run await bcrypt.hash(password, 12) (throwaway result)\nbefore the early 201 return so the duplicate-email path spends equivalent CPU time\nto the real signup path. Eliminates the timing oracle that leaked email existence.\nNo change to the 201 response or the single-row assertion in the integration test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(api): complete errorResponse rollout — ZodError->400 on all body-parsing routes (purses-pv9)\n\nFinish the §5.2 rollout the PR2 review flagged as half-migrated. Route every\nremaining catch on a route whose controller .parse()es the request body through\nerrorResponse(error), so ZodError maps to 400 (not 500). Authz/guard returns\n(401/403/404, instanceof NextResponse early-returns) stay BEFORE the try; no\nauthz behavior changes; no 404-from-message mapping introduced.\n\nRoutes:\n- items/[id] PATCH (updateItem) + GET/DELETE catches unified\n- collections POST (createCollection) + GET catch unified\n- collections/[id] PATCH (updateCollection) + GET/DELETE catches unified\n- collections/[id]/members POST (addMember) + GET catch unified\n- collections/[id]/members/[mid] PATCH (updateMember) — wrap final call (was unhandled 500)\n- invitations/[id] PATCH (updateInvitation) + GET/DELETE catches unified\n- sessions/[id] PATCH (updateSession) — wrap final call (was unhandled 500)\n- sort-results/[id] PATCH (updateResult) + GET/DELETE catches unified\n  (DELETE's DeleteResultStateError->409 preserved via errorResponse)\n\nTests (integration-over-mocked, real DB, assert state on the negative path):\n- new validation->400 case per route (invalid body -> 400 + no row written/changed)\n- flipped core-routes collections-POST missing-name 500->400 (with no-row state)\n- added UnauthorizedError to the inline @/lib/auth mocks in members-routes,\n  sessions-routes, sort-pipeline so errorResponse's instanceof check resolves\n\nOut of scope (verified no request-body .parse()): preferences items/recalculate,\naudit, purge, archive/restore, remove-from-sorts, item restore/purge,\nsort-results items GET / reset / supersede, invitations resend, decisions POST\n(interface cast, no parse), collections items/[itemId] PATCH (already 400).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* docs(api): finalize 409 + consistent validation-400/state-409 (pv9 PR2)\n\nRefs: purses-ydph, purses-7jds, purses-4wj2\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* chore(graphify): refresh after pv9 PR2 (error-handling sweep)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "95181a5",
+            "hash": "95181a53d7ab6969877f541829b95e1ac1532d58",
+            "subject": "authz: Owner/Curator role model core + DAL capability chokepoint (pv9 PR3) (#237)",
+            "body": "authz: Owner/Curator role model core + DAL capability chokepoint (pv9 PR3) (#237)\n\n* feat(dal): capability map + resolveEffectiveRole (purses-89g)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* feat(dal): requireApiCapability + resource wrappers; re-express guards (purses-89g)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(dal): requireApiItemCapability resolution is explicit, not op-derived (review)\n\nPR3a review (security): findByIdIncludingDeleted was applied to ALL ops — a read/edit op\nrouted through the wrapper would return a soft-deleted item (200) instead of 404. Add an\nexplicit includeDeleted opt-in (default false → findById, matching pre-pv9 GET behavior);\nlifecycle callers (restore/purge/remove-from-sorts) pass includeDeleted:true. Tested both modes.\n\nRefs: purses-89g\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): drop client flag/role mass-assignment from invitation+member create/update (purses-pv9)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): transactional owner bootstrap — atomic collection+membership create (purses-crt)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* feat(authz): real invitation accept — curator membership + identity/state guards (purses-8zcc)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* feat(db): 0006 role reconcile + CHECK constraint (additive, purses-crt)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): update repo interfaces + pin-flip tests to match T1 flag-stripping\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* fix(authz): accept idempotency via onConflictDoNothing + null-email guard + schema/snapshot cleanup (purses-8zcc, purses-crt)\n\nF1: accept double-accept idempotency was broken. The membership insert was a\ncreate()+try/catch that string-matched the 23505 unique violation, then continued\nthe invitation UPDATE in the SAME postgres-js transaction. A query error inside a\nno-savepoint tx poisons it (postgres-js latches the error and rolls back at scope\nend), so the follow-up update + COMMIT rolled back → 500, invitation stuck pending.\nFix per spec §5.3: add MembershipRepository.createIfAbsent (onConflictDoNothing on\nthe (collection_id, user_id) unique index) — no error is raised on conflict, so the\ntx is never poisoned. Removed the fragile string-match catch entirely. Added a\ngenuine conflict-path test (member pre-exists on a still-pending invitation → one\naccept → 200, accepted, exactly 1 membership) that is RED on the old code (500).\n\nF3a: guard nullable dbUser.email before normalizing — a null email is a clean 403,\nnot a 500 on .trim().\n\nF3b: strip the 8 inert flag fields from UpdateInvitationSchema (now empty), matching\nthe member-side cleanup — a PATCH flag is stripped (200), not an asymmetric 400.\n\nF2: 0006_snapshot.json had id == 0005's id and prevId == 0004's id (verbatim copy).\nGave it a fresh id and set prevId to 0005's id so future drizzle-kit generate chains.\n\nF5: extracted normalizeEmail() helper; used on both the invitation-create write side\nand the accept compare side so they can't drift.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* docs(authz): role model core + accept membership (pv9 PR3) — API.md + ARCHITECTURE decision 17\n\nRefs: purses-crt, purses-89g, purses-8zcc\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n* chore(graphify): refresh after pv9 PR3 (role model core)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Eqwo7NfuXs3szfbuZhuBdH\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782173824000
+              "time": 1782178502000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782173824000
+              "time": 1782178502000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 950,
+                  "duration": 919,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:19:35.182Z",
+                  "startTime": "2026-06-23T01:38:07.949Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -310,12 +310,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3925,
+                      "duration": 20286,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:19:36.642Z",
+                      "startTime": "2026-06-23T01:38:09.555Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -344,12 +344,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2024,
+                      "duration": 2804,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:23.888Z",
+                      "startTime": "2026-06-23T01:40:04.512Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -378,12 +378,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2328,
+                      "duration": 753,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:21:40.707Z",
+                      "startTime": "2026-06-23T01:40:56.582Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -422,12 +422,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1900,
+                  "duration": 2493,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:19:41.002Z",
+                  "startTime": "2026-06-23T01:38:31.577Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -456,12 +456,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1589,
+                  "duration": 2049,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:19:42.953Z",
+                  "startTime": "2026-06-23T01:38:34.140Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -490,12 +490,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1595,
+                  "duration": 2054,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:20:26.089Z",
+                  "startTime": "2026-06-23T01:40:07.534Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -524,12 +524,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1831,
+                  "duration": 2300,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:20:27.727Z",
+                  "startTime": "2026-06-23T01:40:09.665Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -558,12 +558,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1580,
+                  "duration": 915,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:22:02.880Z",
+                  "startTime": "2026-06-23T01:40:59.665Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -592,12 +592,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1255,
+                  "duration": 1305,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:22:04.534Z",
+                  "startTime": "2026-06-23T01:41:00.629Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -634,12 +634,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1221,
+                  "duration": 1554,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:19:44.568Z",
+                  "startTime": "2026-06-23T01:38:36.231Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -668,12 +668,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1192,
+                  "duration": 1526,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:19:45.833Z",
+                  "startTime": "2026-06-23T01:38:37.841Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -702,12 +702,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1739,
+                  "duration": 2251,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:19:47.040Z",
+                  "startTime": "2026-06-23T01:38:39.390Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -736,12 +736,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1212,
+                  "duration": 1558,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:20:29.594Z",
+                  "startTime": "2026-06-23T01:40:11.993Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -770,12 +770,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1194,
+                  "duration": 1388,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:20:30.846Z",
+                  "startTime": "2026-06-23T01:40:13.631Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -804,12 +804,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1446,
+                  "duration": 1923,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:20:32.060Z",
+                  "startTime": "2026-06-23T01:40:15.043Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -838,12 +838,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 794,
+                  "duration": 711,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:22:05.826Z",
+                  "startTime": "2026-06-23T01:41:01.964Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -872,12 +872,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 670,
+                  "duration": 764,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:22:06.679Z",
+                  "startTime": "2026-06-23T01:41:02.718Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -906,12 +906,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 935,
+                  "duration": 1078,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:22:07.373Z",
+                  "startTime": "2026-06-23T01:41:03.504Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -955,12 +955,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 748,
+                      "duration": 950,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:19:48.806Z",
+                      "startTime": "2026-06-23T01:38:41.674Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -989,12 +989,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1290,
+                      "duration": 1609,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:19:49.624Z",
+                      "startTime": "2026-06-23T01:38:42.706Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1023,12 +1023,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 976,
+                      "duration": 1295,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:19:50.938Z",
+                      "startTime": "2026-06-23T01:38:44.339Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1057,12 +1057,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 703,
+                      "duration": 831,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:33.531Z",
+                      "startTime": "2026-06-23T01:40:16.998Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1091,12 +1091,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1013,
+                      "duration": 1374,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:34.315Z",
+                      "startTime": "2026-06-23T01:40:17.916Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1125,12 +1125,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 707,
+                      "duration": 934,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:35.341Z",
+                      "startTime": "2026-06-23T01:40:19.325Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1159,12 +1159,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 409,
+                      "duration": 456,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:08.344Z",
+                      "startTime": "2026-06-23T01:41:04.622Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1193,12 +1193,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 640,
+                      "duration": 673,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:08.799Z",
+                      "startTime": "2026-06-23T01:41:05.139Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1227,12 +1227,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 387,
+                      "duration": 455,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:09.450Z",
+                      "startTime": "2026-06-23T01:41:05.832Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1278,12 +1278,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1388,
+                      "duration": 2096,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:19:51.933Z",
+                      "startTime": "2026-06-23T01:38:45.660Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1312,12 +1312,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1256,
+                      "duration": 1518,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:36.068Z",
+                      "startTime": "2026-06-23T01:40:20.297Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1346,12 +1346,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 689,
+                      "duration": 700,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:09.866Z",
+                      "startTime": "2026-06-23T01:41:06.311Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1397,12 +1397,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1379,
+                      "duration": 1755,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:19:53.389Z",
+                      "startTime": "2026-06-23T01:38:47.850Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1431,12 +1431,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1376,
+                      "duration": 1908,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:37.376Z",
+                      "startTime": "2026-06-23T01:40:21.881Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1465,12 +1465,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 671,
+                      "duration": 708,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:10.588Z",
+                      "startTime": "2026-06-23T01:41:07.075Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1516,12 +1516,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 677,
+                      "duration": 868,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:19:54.820Z",
+                      "startTime": "2026-06-23T01:38:49.674Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1550,12 +1550,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 857,
+                      "duration": 1050,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:19:55.575Z",
+                      "startTime": "2026-06-23T01:38:50.611Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1584,12 +1584,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 700,
+                      "duration": 940,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:38.894Z",
+                      "startTime": "2026-06-23T01:40:23.864Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1618,12 +1618,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 958,
+                      "duration": 873,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:39.652Z",
+                      "startTime": "2026-06-23T01:40:24.868Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1652,12 +1652,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 372,
+                      "duration": 420,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:11.299Z",
+                      "startTime": "2026-06-23T01:41:07.822Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1686,12 +1686,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 348,
+                      "duration": 412,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:11.712Z",
+                      "startTime": "2026-06-23T01:41:08.277Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1737,12 +1737,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3044,
+                      "duration": 3172,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:19:56.475Z",
+                      "startTime": "2026-06-23T01:38:51.760Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1771,12 +1771,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2576,
+                      "duration": 3859,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:19:59.558Z",
+                      "startTime": "2026-06-23T01:38:55.038Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1805,12 +1805,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2199,
+                      "duration": 2337,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:40.637Z",
+                      "startTime": "2026-06-23T01:40:25.797Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1839,12 +1839,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2328,
+                      "duration": 3022,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:42.884Z",
+                      "startTime": "2026-06-23T01:40:28.187Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1873,12 +1873,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 820,
+                      "duration": 903,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:12.099Z",
+                      "startTime": "2026-06-23T01:41:08.716Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1907,12 +1907,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 702,
+                      "duration": 731,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:12.972Z",
+                      "startTime": "2026-06-23T01:41:09.658Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1958,12 +1958,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1324,
+                      "duration": 1837,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:02.159Z",
+                      "startTime": "2026-06-23T01:38:58.950Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1992,12 +1992,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1537,
+                      "duration": 1963,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:03.552Z",
+                      "startTime": "2026-06-23T01:39:00.916Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2026,12 +2026,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1153,
+                      "duration": 1536,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:45.243Z",
+                      "startTime": "2026-06-23T01:40:31.240Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2060,12 +2060,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1404,
+                      "duration": 1578,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:46.459Z",
+                      "startTime": "2026-06-23T01:40:32.858Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2094,12 +2094,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 429,
+                      "duration": 472,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:13.701Z",
+                      "startTime": "2026-06-23T01:41:10.420Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2128,12 +2128,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 506,
+                      "duration": 612,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:14.160Z",
+                      "startTime": "2026-06-23T01:41:10.940Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2179,12 +2179,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1128,
+                      "duration": 1291,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:05.111Z",
+                      "startTime": "2026-06-23T01:39:02.915Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2213,12 +2213,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1772,
+                      "duration": 1040,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:06.249Z",
+                      "startTime": "2026-06-23T01:39:04.218Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2247,12 +2247,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 887,
+                      "duration": 1021,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:08.027Z",
+                      "startTime": "2026-06-23T01:39:05.267Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2281,12 +2281,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1025,
+                      "duration": 1332,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:47.892Z",
+                      "startTime": "2026-06-23T01:40:34.475Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2315,12 +2315,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 893,
+                      "duration": 1037,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:48.926Z",
+                      "startTime": "2026-06-23T01:40:35.816Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2349,12 +2349,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 883,
+                      "duration": 1023,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:49.826Z",
+                      "startTime": "2026-06-23T01:40:36.863Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2383,12 +2383,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 941,
+                      "duration": 1080,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:14.685Z",
+                      "startTime": "2026-06-23T01:41:11.574Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2417,12 +2417,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 896,
+                      "duration": 1037,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:15.632Z",
+                      "startTime": "2026-06-23T01:41:12.666Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2451,12 +2451,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 892,
+                      "duration": 1022,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:16.534Z",
+                      "startTime": "2026-06-23T01:41:13.712Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2495,12 +2495,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 605,
+                  "duration": 808,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:20:08.932Z",
+                  "startTime": "2026-06-23T01:39:06.312Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2529,12 +2529,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 779,
+                  "duration": 1666,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:20:09.569Z",
+                  "startTime": "2026-06-23T01:39:07.163Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2563,12 +2563,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 629,
+                  "duration": 751,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:20:50.726Z",
+                  "startTime": "2026-06-23T01:40:37.909Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2597,12 +2597,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 702,
+                  "duration": 921,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:20:51.384Z",
+                  "startTime": "2026-06-23T01:40:38.694Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2631,12 +2631,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 233,
+                  "duration": 261,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:22:17.444Z",
+                  "startTime": "2026-06-23T01:41:14.755Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2665,12 +2665,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 483,
+                  "duration": 513,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:22:17.708Z",
+                  "startTime": "2026-06-23T01:41:15.049Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2714,12 +2714,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 869,
+                      "duration": 2367,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:10.366Z",
+                      "startTime": "2026-06-23T01:39:08.881Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2748,12 +2748,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 701,
+                      "duration": 836,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:52.107Z",
+                      "startTime": "2026-06-23T01:40:39.650Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2782,12 +2782,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 469,
+                      "duration": 528,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:18.337Z",
+                      "startTime": "2026-06-23T01:41:15.584Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2826,12 +2826,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 688,
+                  "duration": 3501,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:20:11.309Z",
+                  "startTime": "2026-06-23T01:39:11.513Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2860,12 +2860,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 620,
+                  "duration": 1392,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:20:12.016Z",
+                  "startTime": "2026-06-23T01:39:15.035Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2894,12 +2894,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 642,
+                  "duration": 1081,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:20:12.648Z",
+                  "startTime": "2026-06-23T01:39:16.446Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2928,12 +2928,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 641,
+                  "duration": 778,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:20:52.864Z",
+                  "startTime": "2026-06-23T01:40:40.566Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2962,12 +2962,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 551,
+                  "duration": 737,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:20:53.531Z",
+                  "startTime": "2026-06-23T01:40:41.364Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2996,12 +2996,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 628,
+                  "duration": 734,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:20:54.097Z",
+                  "startTime": "2026-06-23T01:40:42.127Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3030,12 +3030,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 221,
+                  "duration": 236,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:22:18.858Z",
+                  "startTime": "2026-06-23T01:41:16.184Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3064,12 +3064,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 222,
+                  "duration": 285,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:22:19.093Z",
+                  "startTime": "2026-06-23T01:41:16.434Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3098,12 +3098,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 209,
+                  "duration": 243,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T00:22:19.324Z",
+                  "startTime": "2026-06-23T01:41:16.734Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3147,12 +3147,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 875,
+                      "duration": 2718,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:13.304Z",
+                      "startTime": "2026-06-23T01:39:17.711Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3181,12 +3181,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 984,
+                      "duration": 1210,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:54.742Z",
+                      "startTime": "2026-06-23T01:40:42.883Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3215,12 +3215,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 349,
+                      "duration": 436,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:19.618Z",
+                      "startTime": "2026-06-23T01:41:16.989Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3266,12 +3266,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 927,
+                      "duration": 1506,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:14.229Z",
+                      "startTime": "2026-06-23T01:39:22.572Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3300,12 +3300,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1017,
+                      "duration": 2288,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:15.205Z",
+                      "startTime": "2026-06-23T01:39:26.347Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3334,12 +3334,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1074,
+                      "duration": 6787,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:16.238Z",
+                      "startTime": "2026-06-23T01:39:28.666Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3368,12 +3368,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1155,
+                      "duration": 1496,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:55.907Z",
+                      "startTime": "2026-06-23T01:40:44.153Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3402,12 +3402,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1733,
+                      "duration": 1600,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:57.108Z",
+                      "startTime": "2026-06-23T01:40:45.713Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3436,12 +3436,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1322,
+                      "duration": 1256,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:58.870Z",
+                      "startTime": "2026-06-23T01:40:47.344Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3470,12 +3470,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 364,
+                      "duration": 421,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:19.998Z",
+                      "startTime": "2026-06-23T01:41:17.463Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3504,12 +3504,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 548,
+                      "duration": 709,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:20.392Z",
+                      "startTime": "2026-06-23T01:41:17.918Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3538,12 +3538,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 384,
+                      "duration": 436,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:20.955Z",
+                      "startTime": "2026-06-23T01:41:18.646Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3580,12 +3580,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3277,
+                      "duration": 5253,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:17.335Z",
+                      "startTime": "2026-06-23T01:39:35.484Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3614,12 +3614,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1123,
+                      "duration": 1644,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:20.716Z",
+                      "startTime": "2026-06-23T01:39:41.326Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3648,12 +3648,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4732,
+                      "duration": 3513,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:21:00.216Z",
+                      "startTime": "2026-06-23T01:40:48.625Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3682,12 +3682,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1272,
+                      "duration": 1520,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:21:05.433Z",
+                      "startTime": "2026-06-23T01:40:52.194Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3716,12 +3716,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1347,
+                      "duration": 1356,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:21.358Z",
+                      "startTime": "2026-06-23T01:41:19.099Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3750,12 +3750,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 366,
+                      "duration": 426,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:22.736Z",
+                      "startTime": "2026-06-23T01:41:20.495Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3792,12 +3792,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 857,
+                      "duration": 1304,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:21.852Z",
+                      "startTime": "2026-06-23T01:39:42.993Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3826,12 +3826,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 604,
+                      "duration": 946,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:20:22.721Z",
+                      "startTime": "2026-06-23T01:39:44.333Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3860,12 +3860,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 758,
+                      "duration": 1268,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:21:06.726Z",
+                      "startTime": "2026-06-23T01:40:53.740Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3894,12 +3894,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 778,
+                      "duration": 786,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:21:07.515Z",
+                      "startTime": "2026-06-23T01:40:55.035Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3928,12 +3928,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 211,
+                      "duration": 243,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:23.118Z",
+                      "startTime": "2026-06-23T01:41:20.940Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3962,12 +3962,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 208,
+                      "duration": 237,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T00:22:23.340Z",
+                      "startTime": "2026-06-23T01:41:21.198Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3987,8 +3987,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-23T00:18:32.793Z",
-    "duration": 231054.411,
+    "startTime": "2026-06-23T01:36:58.483Z",
+    "duration": 263260.924,
     "expected": 103,
     "skipped": 0,
     "unexpected": 0,

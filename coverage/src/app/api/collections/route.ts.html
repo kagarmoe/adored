@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>19/19</span>
+                <span class='fraction'>21/21</span>
             </div>
         
             
@@ -39,14 +39,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>2/2</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>19/19</span>
+                <span class='fraction'>21/21</span>
             </div>
         
             
@@ -115,7 +115,12 @@
 <a name='L50'></a><a href='#L50'>50</a>
 <a name='L51'></a><a href='#L51'>51</a>
 <a name='L52'></a><a href='#L52'>52</a>
-<a name='L53'></a><a href='#L53'>53</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -137,18 +142,19 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -164,7 +170,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NextRequest, NextResponse } from "next/server";
@@ -174,6 +182,7 @@ import { CollectionRepository } from "@/server/repositories/implementations/Coll
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
+import { withTransaction } from "@/lib/transactions";
 &nbsp;
 export async function GET() {
   try {
@@ -195,24 +204,27 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 &nbsp;
     const db = getDb();
-    const collectionRepo = new CollectionRepository(db);
-    const membershipRepo = new MembershipRepository(db);
-    const controller = new CollectionController(collectionRepo);
+    const collection = await withTransaction(db, async (tx) =&gt; {
+      const txCollectionRepo = new CollectionRepository(tx);
+      const txMembershipRepo = new MembershipRepository(tx);
+      const txController = new CollectionController(txCollectionRepo);
 &nbsp;
-    const collection = await controller.createCollection(user.id, body);
-    await membershipRepo.create({
-      collectionId: collection.id,
-      userId: user.id,
-      role: "owner",
-      canManageCollection: true,
-      canInviteMembers: true,
-      canAddItems: true,
-      canDeleteItems: true,
-      canEditMetadata: true,
-      canAddPhotos: true,
-      canDeletePhotos: true,
-      canSort: true,
-      canViewOutputs: true,
+      const col = await txController.createCollection(user.id, body);
+      await txMembershipRepo.create({
+        collectionId: col.id,
+        userId: user.id,
+        role: "owner",
+        canManageCollection: true,
+        canInviteMembers: true,
+        canAddItems: true,
+        canDeleteItems: true,
+        canEditMetadata: true,
+        canAddPhotos: true,
+        canDeletePhotos: true,
+        canSort: true,
+        canViewOutputs: true,
+      });
+      return col;
     });
     return NextResponse.json(collection, { status: 201 });
   } catch (error) {
@@ -226,7 +238,7 @@ export async function POST(request: NextRequest) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T00:22:19.036Z
+                at 2026-06-23T01:40:48.016Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>
