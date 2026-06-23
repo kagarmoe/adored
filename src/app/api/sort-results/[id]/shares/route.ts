@@ -30,10 +30,12 @@ export async function POST(
 ) {
   try {
     const user = await requireAuth();
-    const body = await request.json();
     const db = getDb();
+    // Authz BEFORE body parse: an unauthorized caller must get 403/404, never a
+    // body-shape 400 that leaks the result's existence (§3.4 oracle posture).
     const access = await requireApiResultAccess(db, params.id, user.id);
     if (access instanceof NextResponse) return access;
+    const body = await request.json();
     const shareRepo = new SortResultShareRepository(db);
     const controller = new ShareController(shareRepo);
     const share = await controller.createShare(params.id, body);
