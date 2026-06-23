@@ -226,14 +226,17 @@ describeDb("PATCH /api/users/me", () => {
     expect(row?.name).toBe("Updated Name");
   });
 
-  it("updates the user's email and the DB row reflects the change", async () => {
+  it("ignores an email field (name-only endpoint)", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
+    // Email mutation is intentionally out of scope here (spec §5.1): the schema
+    // strips `email`, so this body parses to {} and is a no-op. The endpoint
+    // returns 200 and the seeded email is left UNCHANGED.
     const res = await mePatch(makeRequest("PATCH", { email: "new@adored.test" }) as any);
     expect(res.status).toBe(200);
 
     const row = await rawUserRow(ownerId);
-    expect(row?.email).toBe("new@adored.test");
+    expect(row?.email).toBe("e2e@adored.test");
   });
 
   it("401 when no session", async () => {
@@ -256,13 +259,16 @@ describeDb("PATCH /api/users/me", () => {
     expect(res.status).toBe(400);
   });
 
-  it("400 on invalid payload (zod validation: empty name)", async () => {
+  it("empty name clears it (200, null)", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-    // UpdateUserSchema requires name: min(1) — empty string fails validation.
-    // ZodError is now caught by errorResponse and mapped to 400.
+    // Name-only + empty-clears contract (spec §5.1): an empty name is NOT a 400.
+    // It clears the display name, persisting null, and returns 200.
     const res = await mePatch(makeRequest("PATCH", { name: "" }) as any);
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(200);
+
+    const row = await rawUserRow(ownerId);
+    expect(row?.name).toBeNull();
   });
 });
 

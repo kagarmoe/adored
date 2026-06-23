@@ -32,9 +32,10 @@ export class UserController {
 
   async updateCurrentUser(userId: string, data: unknown): Promise<User> {
     const parsed = UpdateUserSchema.parse(data);
-    const patch: { name?: string | null } = {};
-    if (parsed.name !== undefined) patch.name = parsed.name === "" ? null : parsed.name;
-    return this.userRepo.update(userId, patch);
+    // No-op when there is nothing to set (email-only or empty body). An empty
+    // patch would issue an UPDATE with no SET clause → DB error; return as-is.
+    if (parsed.name === undefined) return this.getCurrentUser(userId);
+    return this.userRepo.update(userId, { name: parsed.name === "" ? null : parsed.name });
   }
 
   async deleteCurrentUser(userId: string): Promise<void> {

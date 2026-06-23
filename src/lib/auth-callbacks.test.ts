@@ -19,6 +19,14 @@ describe("jwtCallback", () => {
     const token = { id: "u1", name: "Kim" };
     expect(await jwtCallback({ token } as any)).toEqual(token);
   });
+  it("leaves name untouched on update when session has no name key", async () => {
+    const t = await jwtCallback({ token: { name: "Old" }, trigger: "update", session: {} } as any);
+    expect(t.name).toBe("Old");
+  });
+  it("coerces an empty-string update to null (DB persists null, not '')", async () => {
+    const t = await jwtCallback({ token: {}, trigger: "update", session: { name: "" } } as any);
+    expect(t.name).toBeNull();
+  });
 });
 
 describe("sessionCallback", () => {

@@ -6,7 +6,9 @@ export async function jwtCallback({ token, user, trigger, session }: any): Promi
     token.name = user.name ?? null;
   }
   if (trigger === "update" && session && "name" in session) {
-    token.name = session.name; // string | null
+    // The form sends "" to clear; the DB persists null. Coerce so the live
+    // session matches the DB single-source-of-truth.
+    token.name = session.name === "" ? null : session.name; // string | null
   }
   return token;
 }

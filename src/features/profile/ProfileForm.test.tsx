@@ -44,15 +44,16 @@ describe("ProfileForm", () => {
     );
   });
 
-  it("surfaces a failing save through ErrorMessage and shows no confirmation", async () => {
+  it("announces a failing save in an assertive live region and shows no confirmation", async () => {
     apiPatch.mockRejectedValueOnce(new Error("Something went wrong"));
     render(<ProfileForm initialName={null} email="a@b.c" />);
 
     await userEvent.type(screen.getByLabelText(/name/i), "Tessa");
     await userEvent.click(screen.getByRole("button", { name: /save/i }));
 
+    // The error must be in the role="alert" live region so screen readers announce it.
     await waitFor(() =>
-      expect(screen.getByText("Something went wrong")).toBeInTheDocument(),
+      expect(screen.getByRole("alert")).toHaveTextContent("Something went wrong"),
     );
     expect(update).not.toHaveBeenCalled();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
