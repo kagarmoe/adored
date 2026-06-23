@@ -370,10 +370,8 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       expect(row!.name).toBe("Renamed Collection");
     });
 
-    it("returns 403 for a non-member (curator member has canManageCollection=false — treated as 403)", async () => {
-      // The curator member has canManageCollection=false. The controller's
-      // canManageCollection only returns true for the owner (membership check
-      // is a TODO). So the member gets 403.
+    it("returns 403 for a curator member (collection:manage = owner only)", async () => {
+      // collection:manage requires owner role — a curator member always gets 403.
       const seed = await seedFullCollection(ownerId);
       mockGetSession.mockResolvedValue({ user: { id: seed.memberId } });
       const res = await collectionPatch(
@@ -520,9 +518,9 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       expect(res.status).toBe(404);
     });
 
-    it("returns 403 when authenticated user lacks canEditMetadata", async () => {
+    it("returns 403 when caller is not a member (items:write = curator)", async () => {
+      // items:write requires curator role — a non-member (stranger) always gets 403.
       const seed = await seedFullCollection(ownerId);
-      // Create a stranger with no membership in this collection
       const strangerId = await seedUserRow("stranger-item");
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
       const res = await itemPatch(
@@ -534,9 +532,9 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       expect(res.status).toBe(403);
     });
 
-    it("member with canEditMetadata=true can update item — asserts real column change", async () => {
+    it("curator member can update item metadata (items:write = curator, full-curator model)", async () => {
+      // items:write = curator — any collection member may edit metadata (canEditMetadata flag is inert).
       const seed = await seedFullCollection(ownerId);
-      // seed.memberId has canEditMetadata=true (curator role from seedFullCollection)
       mockGetSession.mockResolvedValue({ user: { id: seed.memberId } });
       const res = await itemPatch(
         nextReq("PATCH", `http://localhost/api/collections/${seed.collectionId}/items/${seed.itemBId}`, {
@@ -623,10 +621,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       expect(body.error).toMatch(/collectionId/);
     });
 
-    it("creates a real item row in the DB (authz gap pv9: no membership check)", async () => {
-      // NOTE (pv9): this route does NOT verify membership — any authenticated user
-      // can create items in any collection. This is a missing tenant check; flagged
-      // but not fixed here per the task spec.
+    it("creates a real item row in the DB for the owner (items:write = curator)", async () => {
       const seed = await seedFullCollection(ownerId);
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await itemsPost(

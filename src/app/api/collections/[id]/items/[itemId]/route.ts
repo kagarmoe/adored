@@ -2,17 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
-
-interface ItemUpdateRequest {
-  name?: string;
-  brand?: string | null;
-  style?: string | null;
-  color?: string | null;
-  material?: string | null;
-  category?: string | null;
-  notes?: string | null;
-}
+import { requireApiCapability } from "@/server/dal/collection-access";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function PATCH(
   req: NextRequest,
@@ -25,24 +16,19 @@ export async function PATCH(
 
   const db = getDb();
   const itemRepo = new ItemRepository(db);
-  const membershipRepo = new MembershipRepository(db);
 
   try {
-    // Verify item belongs to collection and user has permission
+    // Verify item belongs to collection (belongs-to-parent).
     const item = await itemRepo.findById(params.itemId);
     if (!item || item.collectionId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const membership = await membershipRepo.findByUser(
-      session.user.id,
-      params.id
-    );
-    if (!membership || !membership.canEditMetadata) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    // items:write = curator — any curator may edit metadata (full-curator model).
+    const access = await requireApiCapability(db, params.id, session.user.id, "items:write");
+    if (access instanceof NextResponse) return access;
 
-    const body: ItemUpdateRequest = await req.json();
+    const body = await req.json();
     const updated = await itemRepo.update(params.itemId, {
       name: body.name,
       brand: body.brand,
@@ -55,9 +41,6 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Update failed" },
-      { status: 400 }
-    );
+    return errorResponse(error);
   }
 }
