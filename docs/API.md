@@ -107,7 +107,7 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 |---|---|---|
 | GET | `/api/collections/[id]/members` | curator (`members:read`) |
 | POST | `/api/collections/[id]/members` | owner (`members:manage`) |
-| GET·PATCH·DELETE | `/api/collections/[id]/members/[mid]` | curator (GET) / owner (PATCH·DELETE) |
+| GET·DELETE | `/api/collections/[id]/members/[mid]` | curator (GET) / owner (DELETE) |
 | GET·POST | `/api/collections/[id]/invitations` | owner (`invitations:read`/`:manage`) |
 | GET·PATCH·DELETE | `/api/invitations/[id]` | owner (`invitations:manage`) |
 | POST | `/api/invitations/[id]/resend` | owner (`invitations:manage`) |
@@ -245,8 +245,8 @@ Unified "Move to…". **Body:** `{ photoIds: string[], destination: { type: "ite
 ### `POST /api/collections/[id]/members`
 `requireAuth` + `requireApiCapability("members:manage")` (**owner**; pv9 PR4 — closes `purses-lgql`). **Body:** `{ userId }` only — permission flags and `role` are **not accepted** (pv9 PR3); the added member is always a **curator**. `201` member. `400` invalid input; `403`/`404`.
 
-### `GET·PATCH·DELETE /api/collections/[id]/members/[mid]`
-`getSession` + belongs-to-parent (`membership.collectionId !== id` → `404`). `GET` requires `members:read` (**curator**). `PATCH`/`DELETE` require `members:manage` (**owner**). `PATCH` is currently a **no-op** (members have no mutable fields under the role model — returns `200` with the unchanged member; disposition tracked in `purses-2wzz`); `DELETE` → `{ message }`. `401`/`403`/`404`.
+### `GET·DELETE /api/collections/[id]/members/[mid]`
+`getSession` + belongs-to-parent (`membership.collectionId !== id` → `404`). `GET` requires `members:read` (**curator**). `DELETE` requires `members:manage` (**owner**) → `{ message }`. **There is no `PATCH`** — members have no mutable fields under the role model (role is fixed at curator, permission flags are inert), so the endpoint was removed (`purses-2wzz`); an unexported method returns `405`. `401`/`403`/`404`.
 
 ### `GET·POST /api/collections/[id]/invitations`
 `getSession` + `requireApiCapability` — **owner** (`invitations:read` for `GET`, `invitations:manage` for `POST`; pv9 PR4 — closes `purses-4wj2` GAP A). `GET` → `Invitation[]`. `POST` **body:** `{ email }` only (normalized) — no permission flags (an accepted invite becomes a curator). `201 Invitation`; invalid/missing email → `400`. `403`/`404`.
@@ -346,14 +346,12 @@ The cross-tenant **IDOR holes are closed** (pv9 PR1, 2026-06-22): `GET /api/coll
 
 **Account deletion is real (pv9 PR6, `purses-hybm`):** `DELETE /api/users/me` purges all owned data (incl. soft-deleted collections) + scrubs PII (see its detail). The pv9 epic's in-scope work is **complete**.
 
-Deferred follow-ups (cleanup/hardening, tracked):
+**Audit attribution (pv9 PR7):** destructive ops are attributed in the append-only `audit_log` (actor from session, written tx-bound with the mutation): `item.delete` / `photo.delete` on curator soft-delete/delete (`purses-wfgj`), `account.delete` on account deletion (`purses-obe0`), alongside the existing `item.purge` / `collection.purge`. Curator photo-delete is kept (owner's full-curator decision) and now attributed (`purses-opir`). The no-op member `PATCH` was removed (`purses-2wzz`).
+
+Remaining deferred follow-ups (tracked):
 
 - drop the inert flag columns/type fields after the UI cluster (`purses-us3d`);
-- ESLint repo-import boundary, the second half of o03 (`purses-25ca`);
-- member-PATCH no-op disposition (`purses-2wzz`);
-- soft-delete audit attribution (`purses-wfgj`);
-- reconsider photo-delete as owner-only (`purses-opir`);
-- top-level `account.delete` audit row (`purses-obe0`).
+- ESLint repo-import boundary, the second half of o03 (`purses-25ca`).
 
 **Lockdown backstop shipped (pv9 PR5, `purses-o03`):** `src/lib/db/route-authz-enumeration.integration.test.ts` walks every `route.ts`, exercises each collection-scoped/curator-private route+method as a **stranger** and asserts `403`/`404` (never `200`/leaky `500`), and asserts **filesystem-exhaustiveness** — a new route in neither the `PUBLIC_OR_SELF` allowlist nor the stranger set fails CI. (Also fixed: `POST /api/sort-results/[id]/shares` now authorizes before parsing the body.)
 
