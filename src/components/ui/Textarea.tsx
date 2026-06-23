@@ -6,30 +6,41 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, className = "", ...props }, ref) => (
-    <div className="w-full">
-      {label && (
-        <label className="block text-sm font-medium text-ink mb-2">
-          {label}
-          {props.required && <span className="text-error">*</span>}
-        </label>
-      )}
-      <textarea
-        className={`
-          w-full bg-surface border border-hairline rounded-control px-4 py-3 text-ink
-          transition-shadow duration-200 ease-gentle
-          placeholder:text-ink-soft focus:outline-none focus:ring-2 focus:ring-primary
-          focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed
-          resize-none
-          ${error ? "border-error focus:ring-error" : ""}
-          ${className}
-        `}
-        ref={ref}
-        {...props}
-      />
-      {error && <p className="text-error text-sm mt-2">{error}</p>}
-    </div>
-  )
+  ({ label, error, className = "", id, ...props }, ref) => {
+    const generatedId = React.useId();
+    const textareaId = id ?? generatedId;
+    return (
+      <div className="w-full">
+        {label && (
+          <label htmlFor={textareaId} className="block text-sm font-medium text-ink mb-2">
+            {label}
+            {props.required && <span className="text-error">*</span>}
+          </label>
+        )}
+        <textarea
+          id={textareaId}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${textareaId}-error` : undefined}
+          className={`
+            w-full bg-surface border border-hairline rounded-control px-4 py-3 text-ink
+            transition-shadow duration-200 ease-gentle
+            placeholder:text-ink-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
+            focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed
+            resize-none
+            ${error ? "border-error focus:ring-error" : ""}
+            ${className}
+          `}
+          ref={ref}
+          {...props}
+        />
+        {error && (
+          <p id={`${textareaId}-error`} className="text-error text-sm mt-2">
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
 );
 Textarea.displayName = "Textarea";
 
