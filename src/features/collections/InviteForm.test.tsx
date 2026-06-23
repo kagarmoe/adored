@@ -4,7 +4,8 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 // Boundary: fetch only. InviteForm posts through the REAL @/lib/api-client
-// (apiPost) and the REAL zod schema, and renders the REAL PermissionCheckboxes.
+// (apiPost) and the REAL zod schema. The invite is email-only under the role model
+// (no permission checkboxes — an accepted invite becomes a curator).
 // It does NOT use next/navigation — success is communicated via an in-place
 // success view and the onSuccess callback. Nothing to mock but fetch.
 import { InviteForm } from "./InviteForm";
