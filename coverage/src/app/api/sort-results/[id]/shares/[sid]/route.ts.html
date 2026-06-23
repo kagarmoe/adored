@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">87.5% </span>
+                <span class="strong">95% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>35/40</span>
+                <span class='fraction'>38/40</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">83.33% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>15/18</span>
+                <span class='fraction'>18/18</span>
             </div>
         
             
@@ -146,11 +146,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -165,14 +165,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -188,11 +188,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -221,7 +221,7 @@ export async function GET(
     const user = await requireAuth();
     const db = getDb();
     const access = await requireApiResultAccess(db, params.id, user.id);
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (access instanceof NextResponse) <span class="cstat-no" title="statement not covered" >return access;</span>
+    if (access instanceof NextResponse) return access;
     const share = await new SortResultShareRepository(db).findById(params.sid);
     if (!share || share.sortResultId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -241,7 +241,7 @@ export async function PATCH(
     const body = await request.json();
     const db = getDb();
     const access = await requireApiResultAccess(db, params.id, user.id);
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (access instanceof NextResponse) <span class="cstat-no" title="statement not covered" >return access;</span>
+    if (access instanceof NextResponse) return access;
     const existing = await new SortResultShareRepository(db).findById(params.sid);
     if (!existing || existing.sortResultId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -263,7 +263,7 @@ export async function DELETE(
     const user = await requireAuth();
     const db = getDb();
     const access = await requireApiResultAccess(db, params.id, user.id);
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (access instanceof NextResponse) <span class="cstat-no" title="statement not covered" >return access;</span>
+    if (access instanceof NextResponse) return access;
     const existing = await new SortResultShareRepository(db).findById(params.sid);
     if (!existing || existing.sortResultId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -283,7 +283,7 @@ export async function DELETE(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-23T02:42:20.683Z
+                at 2026-06-23T03:09:52.885Z
             </div>
         <script src="../../../../../../../prettify.js"></script>
         <script>
