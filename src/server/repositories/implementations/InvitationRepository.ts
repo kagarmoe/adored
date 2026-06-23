@@ -104,6 +104,20 @@ export class InvitationRepository implements IInvitationRepository {
     await this.db.delete(invitationsTable).where(eq(invitationsTable.collectionId, collectionId));
   }
 
+  // Scrub the email (NOT delete the row). Used during account deletion for an
+  // invitation the user accepted in ANOTHER owner's collection: the invitation
+  // belongs to that owner's collection (survives), but its email must no longer
+  // identify the deleted user. Matches by the user's OLD email. Returns the
+  // affected-row count.
+  async scrubEmail(oldEmail: string, tombstone: string): Promise<number> {
+    const rows = await this.db
+      .update(invitationsTable)
+      .set({ email: tombstone, updatedAt: new Date() })
+      .where(eq(invitationsTable.email, oldEmail))
+      .returning({ id: invitationsTable.id });
+    return rows.length;
+  }
+
   private mapToInvitation(row: any): Invitation {
     return {
       id: row.id,

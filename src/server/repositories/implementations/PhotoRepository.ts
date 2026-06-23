@@ -323,6 +323,19 @@ export class PhotoRepository implements IPhotoRepository {
     return rows.map((r) => r.blobKey);
   }
 
+  // Scrub the uploader identifier (NOT delete the row). Used during account
+  // deletion for photos the user contributed into OTHER owners' collections:
+  // the photo is shared content that must survive, but its uploaded_by must no
+  // longer link back to the deleted user. Returns the affected-row count.
+  async scrubUploader(userId: string, tombstone: string): Promise<number> {
+    const rows = await this.db
+      .update(photosTable)
+      .set({ uploadedBy: tombstone, updatedAt: new Date() })
+      .where(eq(photosTable.uploadedBy, userId))
+      .returning({ id: photosTable.id });
+    return rows.length;
+  }
+
   private mapToPhoto(row: any): Photo {
     return {
       id: row.id,

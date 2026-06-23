@@ -10,6 +10,8 @@ export interface ICollectionRepository {
   findById(id: string): Promise<Collection | null>;
   findBySlug(slug: string): Promise<Collection | null>;
   findByOwner(ownerId: string): Promise<Collection[]>;
+  // Every owned collection incl. soft-deleted — account deletion must purge archived ones too.
+  findByOwnerIncludingDeleted(ownerId: string): Promise<Collection[]>;
   update(id: string, data: Partial<Omit<Collection, "id" | "createdAt" | "slug">>): Promise<Collection>;
   softDelete(id: string): Promise<Collection>;
   // Resolve a collection WITHOUT the deletedAt filter — purge must find a
