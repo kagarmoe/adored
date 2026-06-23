@@ -6,8 +6,8 @@ import { AccountDeletionService } from "@/server/services/AccountDeletionService
 import { UserRepository } from "@/server/repositories/implementations/UserRepository";
 
 const UpdateUserSchema = z.object({
-  name: z.string().min(1).optional(),
-  email: z.string().email().optional(),
+  // name-only flow: trim, bound length, allow empty (= clear). Unknown keys stripped.
+  name: z.string().trim().max(80).optional(),
 });
 
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
@@ -32,10 +32,9 @@ export class UserController {
 
   async updateCurrentUser(userId: string, data: unknown): Promise<User> {
     const parsed = UpdateUserSchema.parse(data);
-    return this.userRepo.update(userId, {
-      ...(parsed.name && { name: parsed.name }),
-      ...(parsed.email && { email: parsed.email }),
-    });
+    const patch: { name?: string | null } = {};
+    if (parsed.name !== undefined) patch.name = parsed.name === "" ? null : parsed.name;
+    return this.userRepo.update(userId, patch);
   }
 
   async deleteCurrentUser(userId: string): Promise<void> {
