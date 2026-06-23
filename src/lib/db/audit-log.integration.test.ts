@@ -342,9 +342,6 @@ describeDb("GET /api/collections/[id]/audit (owner-only) — purses-ite", () => 
     memberId = await seedUserRow("member");
     await new MembershipRepository(db).create({
       collectionId, userId: memberId, role: "curator",
-      canManageCollection: false, canInviteMembers: false, canAddItems: true,
-      canEditMetadata: true, canAddPhotos: true, canDeletePhotos: false,
-      canSort: true, canViewOutputs: true,
     });
 
     // A stranger: a real user with NO membership anywhere. Must be 403 on the

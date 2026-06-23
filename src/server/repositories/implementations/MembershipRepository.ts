@@ -13,15 +13,6 @@ export class MembershipRepository implements IMembershipRepository {
     collectionId: string;
     userId: string;
     role?: "owner" | "curator";
-    canManageCollection?: boolean;
-    canInviteMembers?: boolean;
-    canAddItems?: boolean;
-    canDeleteItems?: boolean;
-    canEditMetadata?: boolean;
-    canAddPhotos?: boolean;
-    canDeletePhotos?: boolean;
-    canSort?: boolean;
-    canViewOutputs?: boolean;
   }): Promise<CollectionMembership> {
     const [mem] = await this.db
       .insert(membershipsTable)
@@ -35,15 +26,6 @@ export class MembershipRepository implements IMembershipRepository {
     collectionId: string;
     userId: string;
     role?: "owner" | "curator";
-    canManageCollection?: boolean;
-    canInviteMembers?: boolean;
-    canAddItems?: boolean;
-    canDeleteItems?: boolean;
-    canEditMetadata?: boolean;
-    canAddPhotos?: boolean;
-    canDeletePhotos?: boolean;
-    canSort?: boolean;
-    canViewOutputs?: boolean;
   }): Promise<CollectionMembership | null> {
     // onConflictDoNothing on the (collection_id, user_id) unique index: a
     // duplicate insert is a no-op that raises NO error, so this is safe to call
@@ -64,30 +46,12 @@ export class MembershipRepository implements IMembershipRepository {
     collectionId: string;
     userId: string;
     role?: "owner" | "curator";
-    canManageCollection?: boolean;
-    canInviteMembers?: boolean;
-    canAddItems?: boolean;
-    canDeleteItems?: boolean;
-    canEditMetadata?: boolean;
-    canAddPhotos?: boolean;
-    canDeletePhotos?: boolean;
-    canSort?: boolean;
-    canViewOutputs?: boolean;
   }) {
     return {
       id: data.id || generateId("mem"),
       collectionId: data.collectionId,
       userId: data.userId,
       role: data.role ?? "curator",
-      canManageCollection: data.canManageCollection ?? false,
-      canInviteMembers: data.canInviteMembers ?? false,
-      canAddItems: data.canAddItems ?? true,
-      canDeleteItems: data.canDeleteItems ?? false,
-      canEditMetadata: data.canEditMetadata ?? true,
-      canAddPhotos: data.canAddPhotos ?? true,
-      canDeletePhotos: data.canDeletePhotos ?? false,
-      canSort: data.canSort ?? true,
-      canViewOutputs: data.canViewOutputs ?? true,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -155,15 +119,6 @@ export class MembershipRepository implements IMembershipRepository {
       collectionId: row.collectionId,
       userId: row.userId,
       role: row.role || "curator",
-      canManageCollection: row.canManageCollection,
-      canInviteMembers: row.canInviteMembers,
-      canAddItems: row.canAddItems,
-      canDeleteItems: row.canDeleteItems,
-      canEditMetadata: row.canEditMetadata,
-      canAddPhotos: row.canAddPhotos,
-      canDeletePhotos: row.canDeletePhotos,
-      canSort: row.canSort,
-      canViewOutputs: row.canViewOutputs,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

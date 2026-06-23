@@ -177,7 +177,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       const newUserId = await seedUserRow("new-member");
 
       const res = await membersPost(
-        postReq({ userId: newUserId, canSort: true, canViewOutputs: true }),
+        postReq({ userId: newUserId }),
         { params: { id: collectionId } },
       );
       expect(res.status).toBe(201);
@@ -189,7 +189,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       const membershipRepo = new MembershipRepository(db);
       const memberships = await membershipRepo.findByCollection(collectionId);
       expect(memberships).toHaveLength(1);
-      expect(memberships[0]).toMatchObject({ collectionId, userId: newUserId, canSort: true });
+      expect(memberships[0]).toMatchObject({ collectionId, userId: newUserId, role: "curator" });
     });
 
     it("400 on invalid JSON body", async () => {
@@ -228,7 +228,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       const before = await new MembershipRepository(db).findByCollection(collectionId);
 
       const res = await membersPost(
-        postReq({ canSort: true }), // no userId
+        postReq({}), // no userId
         { params: { id: collectionId } },
       );
       expect(res.status).toBe(400);

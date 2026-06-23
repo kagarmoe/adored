@@ -4,7 +4,8 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 // Boundary: fetch only. InviteForm posts through the REAL @/lib/api-client
-// (apiPost) and the REAL zod schema, and renders the REAL PermissionCheckboxes.
+// (apiPost) and the REAL zod schema. The invite is email-only under the role model
+// (no permission checkboxes — an accepted invite becomes a curator).
 // It does NOT use next/navigation — success is communicated via an in-place
 // success view and the onSuccess callback. Nothing to mock but fetch.
 import { InviteForm } from "./InviteForm";
@@ -23,15 +24,13 @@ function emailField(): HTMLInputElement {
 }
 
 describe("InviteForm", () => {
-  it("POSTs the invited email plus the permission flags to the invitations route, then shows success and calls onSuccess", async () => {
+  it("POSTs only the email to the invitations route, then shows success and calls onSuccess", async () => {
     (fetch as any).mockResolvedValue({ ok: true, status: 201, json: async () => ({}) });
     const onSuccess = vi.fn();
 
     render(<InviteForm collectionId="coll_01ULID" onSuccess={onSuccess} />);
 
     fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
-    // Flip a default-off permission so we prove the checkbox value reaches the body.
-    fireEvent.click(screen.getByLabelText("Manage collection"));
     fireEvent.click(screen.getByRole("button", { name: "Send Invitation" }));
 
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
@@ -41,12 +40,8 @@ describe("InviteForm", () => {
     expect(init.method).toBe("POST");
     const body = JSON.parse(init.body);
     expect(body.email).toBe("curator@example.com");
-    // Default permission flags ride along...
-    expect(body.canAddItems).toBe(true);
-    expect(body.canViewResults).toBe(true);
-    expect(body.canDeleteItems).toBe(false);
-    // ...and the one we toggled is now true.
-    expect(body.canManageCollection).toBe(true);
+    // No permission flags in the payload — the role model owns all permissions.
+    expect(Object.keys(body)).toEqual(["email"]);
 
     // Success view replaces the form, and the callback fires.
     await waitFor(() =>

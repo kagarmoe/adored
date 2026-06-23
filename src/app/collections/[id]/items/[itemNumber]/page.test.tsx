@@ -93,14 +93,11 @@ describe("ItemDetailPage redesign (carousel + info card)", () => {
     expect(screen.getAllByRole("button", { name: /delete this photo/i }).length).toBeGreaterThan(0);
   });
 
-  it("hides the delete control from a view-only curator (not owner, no canDeletePhotos)", async () => {
-    // NOTE: intentional, documented display drift — post-pv9 the DELETE API allows ANY
-    // curator (photos:write = curator; the flag is inert), but the UI still hides the
-    // control from a flag-false curator. The UI is deliberately STRICTER than the API
-    // pending the UI-cluster reconciliation; this is NOT an authz invariant.
+  it("shows the delete control to a curator member (any member may delete — role model, not flags)", async () => {
+    // photos:write = member-or-owner; flags are gone. Any curator sees the control.
     mockRequireAccess.mockResolvedValue({ ...COLLECTION, ownerId: "someone_else" });
-    membershipRepo.findByUser.mockResolvedValue({ id: "m1", canDeletePhotos: false });
+    membershipRepo.findByUser.mockResolvedValue({ id: "m1", role: "curator" });
     await renderPage();
-    expect(screen.queryByRole("button", { name: /delete this photo/i })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /delete this photo/i }).length).toBeGreaterThan(0);
   });
 });

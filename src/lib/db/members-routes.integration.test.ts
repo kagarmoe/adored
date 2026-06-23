@@ -17,8 +17,8 @@
 //   - DELETE: 401 unauth; belongs-to-parent 404 (BEFORE the role gate); then
 //     requireApiCapability("members:manage") (owner) -> 403; else removeMember.
 //
-// purses-lgql CLOSED: members:manage = owner (role-derived from ownerId). The
-// canManageCollection flag is inert — a curator is always 403 on member management.
+// purses-lgql CLOSED: members:manage = owner (role-derived from ownerId).
+// A curator is always 403 on member management — role only, no flags.
 //
 // Every "unchanged / gone after" assertion is paired with a "present / as-seeded
 // before" read via MembershipRepository, so a never-seeded row can't make the suite

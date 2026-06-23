@@ -16,8 +16,9 @@ interface ItemPhotoCarouselProps {
   collectionId: string;
   itemName: string;
   addPhotosHref: string;
-  /** Whether this viewer may delete photos (owner or canDeletePhotos). When
-   *  false the per-photo delete control is hidden — it would only 403. */
+  /** Whether this viewer may delete photos. Under the role model any curator
+   *  (member-or-owner) may delete (photos:write); when false the per-photo
+   *  delete control is hidden — it would only 403. */
   canDelete?: boolean;
 }
 

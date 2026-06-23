@@ -42,14 +42,6 @@ async function addCurator(collectionId: string, userId: string): Promise<void> {
     collectionId,
     userId,
     role: "curator",
-    canManageCollection: false,
-    canInviteMembers: false,
-    canAddItems: true,
-    canEditMetadata: true,
-    canAddPhotos: true,
-    canDeletePhotos: false,
-    canSort: true,
-    canViewOutputs: true,
   });
 }
 

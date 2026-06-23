@@ -84,14 +84,6 @@ async function seedInvitation(
     collectionId,
     email,
     token,
-    canManageCollection: false,
-    canInviteMembers: false,
-    canAddItems: true,
-    canEditMetadata: true,
-    canAddPhotos: true,
-    canDeletePhotos: false,
-    canSort: true,
-    canViewOutputs: true,
   });
   return { id: inv.id, token };
 }
@@ -205,9 +197,9 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(body.error).toMatch(/invalid json/i);
     });
 
-    it("happy path — PATCH invitation returns 200; flag fields are no longer mutable via PATCH (purses-pv9 T1)", async () => {
-      // After T1: InvitationRepository.update() allow-list only permits status/acceptedAt.
-      // Flag fields sent via PATCH are stripped — the DB row is unchanged.
+    it("happy path — PATCH invitation returns 200; unknown fields are stripped (purses-pv9 T1, purses-us3d)", async () => {
+      // Flag columns no longer exist; unknown keys in PATCH body are stripped by the
+      // empty UpdateInvitationSchema — the row is unchanged, the response is 200.
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const collectionId = await seedBareCollection(ownerId);
       const { id } = await seedInvitation(collectionId);
@@ -221,12 +213,11 @@ describeDb("Invitation routes — real DB integration", () => {
       );
       expect(res.status).toBe(200);
 
-      // Flags were not mutated — DB row retains seeded values (canSort=true, canDeletePhotos=false).
+      // DB row is unchanged — status still pending.
       const { db } = getTestDb();
       const updated = await new InvitationRepository(db).findById(id);
       expect(updated).not.toBeNull();
-      expect(updated!.canSort).toBe(true);
-      expect(updated!.canDeletePhotos).toBe(false);
+      expect(updated!.status).toBe("pending");
     });
 
     it("403s a stranger patching another user's invitation — and does NOT mutate", async () => {
@@ -236,7 +227,7 @@ describeDb("Invitation routes — real DB integration", () => {
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
 
       const collectionId = await seedBareCollection(ownerId);
-      const { id } = await seedInvitation(collectionId); // seeded canSort: true
+      const { id } = await seedInvitation(collectionId);
 
       const res = await patchInvitation(
         makeRequest("PATCH", `http://localhost/api/invitations/${id}`, { canSort: false }) as any,
@@ -244,10 +235,10 @@ describeDb("Invitation routes — real DB integration", () => {
       );
       expect(res.status).toBe(403);
 
-      // The mutation did NOT land — canSort is still the seeded true.
+      // The invitation was not mutated — status still pending.
       const { db } = getTestDb();
       const inv = await new InvitationRepository(db).findById(id);
-      expect(inv!.canSort).toBe(true);
+      expect(inv!.status).toBe("pending");
     });
 
     it("a flag in the PATCH body is stripped, not 400'd — symmetric with the member side (purses-8zcc F3b)", async () => {
@@ -258,7 +249,7 @@ describeDb("Invitation routes — real DB integration", () => {
       // side (which 200s). Symmetric now.
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const collectionId = await seedBareCollection(ownerId);
-      const { id } = await seedInvitation(collectionId); // seeded canSort: true
+      const { id } = await seedInvitation(collectionId);
 
       const res = await patchInvitation(
         makeRequest("PATCH", `http://localhost/api/invitations/${id}`, { canSort: "nope" }) as any,
@@ -266,10 +257,10 @@ describeDb("Invitation routes — real DB integration", () => {
       );
       expect(res.status).toBe(200);
 
-      // Unchanged: canSort is still the seeded true.
+      // Unchanged: status is still pending.
       const { db } = getTestDb();
       const inv = await new InvitationRepository(db).findById(id);
-      expect(inv!.canSort).toBe(true);
+      expect(inv!.status).toBe("pending");
     });
   });
 

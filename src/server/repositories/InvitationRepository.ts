@@ -5,14 +5,6 @@ export interface IInvitationRepository {
     collectionId: string;
     email: string;
     token: string;
-    canManageCollection?: boolean;
-    canInviteMembers?: boolean;
-    canAddItems?: boolean;
-    canEditMetadata?: boolean;
-    canAddPhotos?: boolean;
-    canDeletePhotos?: boolean;
-    canSort?: boolean;
-    canViewOutputs?: boolean;
   }): Promise<Invitation>;
   findById(id: string): Promise<Invitation | null>;
   findByToken(token: string): Promise<Invitation | null>;

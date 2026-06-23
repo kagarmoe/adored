@@ -29,11 +29,12 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   const photoRepo = new PhotoRepository(db);
   const membershipRepo = new MembershipRepository(db);
 
-  // Same tier the photo-DELETE route enforces — so we only show a delete control
-  // the viewer can actually use (a view-only curator would just get a 403).
+  // Show the delete control to any member (owner or curator) — the DELETE API
+  // enforces the same photos:write = member-or-owner rule, so this matches the
+  // real authz boundary without relying on the now-removed per-flag fields.
   const membership = await membershipRepo.findByUser(session.user.id, collection.id);
   const canDeletePhotos =
-    collection.ownerId === session.user.id || Boolean(membership?.canDeletePhotos);
+    collection.ownerId === session.user.id || membership !== null;
 
   const number = Number(params.itemNumber);
   const item =

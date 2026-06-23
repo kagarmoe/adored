@@ -14,7 +14,6 @@ export function MemberList({ members, canManage = false }: MemberListProps) {
           <tr>
             <th className="text-left px-4 py-3 font-semibold text-ink">Member</th>
             <th className="text-left px-4 py-3 font-semibold text-ink">Role</th>
-            <th className="text-left px-4 py-3 font-semibold text-ink">Permissions</th>
             {canManage && <th className="text-left px-4 py-3 font-semibold text-ink">Actions</th>}
           </tr>
         </thead>
@@ -31,14 +30,6 @@ export function MemberList({ members, canManage = false }: MemberListProps) {
                 <Badge variant={member.role === "owner" ? "high" : "medium"}>
                   {member.role === "owner" ? "Owner" : "Curator"}
                 </Badge>
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex flex-wrap gap-1">
-                  {member.canAddItems && <Badge variant="low">Add items</Badge>}
-                  {member.canCreateSession && <Badge variant="low">Sort</Badge>}
-                  {member.canViewResults && <Badge variant="low">View results</Badge>}
-                  {member.canManageCollection && <Badge variant="medium">Manage</Badge>}
-                </div>
               </td>
               {canManage && member.role !== "owner" && (
                 <td className="px-4 py-3">

@@ -46,7 +46,7 @@ describeDb("T1 — client-supplied flags/role stripped (authz flag security)", (
     await closeDb();
   });
 
-  it("createInvitation strips client canManageCollection=true — flag not persisted", async () => {
+  it("createInvitation ignores unknown body keys — only email is accepted (flags dropped in purses-us3d)", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const collectionId = await seedBareCollection(ownerId);
 
@@ -61,17 +61,18 @@ describeDb("T1 — client-supplied flags/role stripped (authz flag security)", (
     const res = await invitationsPost(
       makeNextRequest("POST", `http://localhost/api/collections/${collectionId}/invitations`, {
         email: "t1@test.com",
-        canManageCollection: true,
+        canManageCollection: true, // unknown field — stripped by schema
       }),
       { params: { id: collectionId } },
     );
     expect(res.status).toBe(201);
 
-    // The created invitation must NOT have canManageCollection=true
+    // The invitation was created; flag columns no longer exist on the type.
     const body = await res.json();
     const inv = await new InvitationRepository(db).findById(body.id);
     expect(inv).not.toBeNull();
-    expect(inv!.canManageCollection).toBe(false);
+    expect(inv!.email).toBe("t1@test.com");
+    expect(inv!.status).toBe("pending");
   });
 
   it("addMember ignores body role and flags — created membership is always role:curator", async () => {
@@ -97,11 +98,10 @@ describeDb("T1 — client-supplied flags/role stripped (authz flag security)", (
     );
     expect(res.status).toBe(201);
 
-    // Membership must be curator with no elevated flags
+    // Membership must be role:curator regardless of what was in the body
     const mem = await new MembershipRepository(db).findByUser(strangerId, collectionId);
     expect(mem).not.toBeNull();
     expect(mem!.role).toBe("curator");
-    expect(mem!.canManageCollection).toBe(false);
   });
 
   it("MembershipRepository.update ignores role and collectionId — only updatedAt changes", async () => {
@@ -115,11 +115,10 @@ describeDb("T1 — client-supplied flags/role stripped (authz flag security)", (
       role: "curator",
     });
 
-    // Attempt to escalate via update
+    // Attempt to escalate via update (role + collectionId are immutable; flags are gone)
     await new MembershipRepository(db).update(mem.id, {
       role: "owner" as any,
       collectionId: "other-col-id",
-      canManageCollection: true,
     });
 
     // Re-fetch and assert nothing sensitive changed
@@ -127,6 +126,5 @@ describeDb("T1 — client-supplied flags/role stripped (authz flag security)", (
     expect(updated).not.toBeNull();
     expect(updated!.role).toBe("curator");
     expect(updated!.collectionId).toBe(collectionId);
-    expect(updated!.canManageCollection).toBe(false);
   });
 });

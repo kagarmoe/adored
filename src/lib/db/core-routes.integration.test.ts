@@ -497,15 +497,6 @@ describeDb("Group E — core route integration tests (real DB)", () => {
         collectionId: seed2.collectionId,
         userId: ownerId,
         role: "owner",
-        canManageCollection: true,
-        canInviteMembers: true,
-        canAddItems: true,
-        canDeleteItems: true,
-        canEditMetadata: true,
-        canAddPhotos: true,
-        canDeletePhotos: true,
-        canSort: true,
-        canViewOutputs: true,
       });
 
       // itemAId belongs to seed, not seed2
@@ -561,22 +552,13 @@ describeDb("Group E — core route integration tests (real DB)", () => {
 
     it("owner can update their own item metadata", async () => {
       const seed = await seedFullCollection(ownerId);
-      // Owner must have a membership row with canEditMetadata; create one
+      // Owner needs a membership row so requireApiCapability finds them as member-or-owner.
       const { db } = getTestDb();
       const membershipRepo = new MembershipRepository(db);
       await membershipRepo.create({
         collectionId: seed.collectionId,
         userId: ownerId,
         role: "owner",
-        canManageCollection: true,
-        canInviteMembers: true,
-        canAddItems: true,
-        canDeleteItems: true,
-        canEditMetadata: true,
-        canAddPhotos: true,
-        canDeletePhotos: true,
-        canSort: true,
-        canViewOutputs: true,
       });
 
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });

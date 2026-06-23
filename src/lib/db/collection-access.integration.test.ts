@@ -51,14 +51,6 @@ async function addCurator(collectionId: string, userId: string): Promise<void> {
     collectionId,
     userId,
     role: "curator",
-    canManageCollection: false,
-    canInviteMembers: false,
-    canAddItems: true,
-    canEditMetadata: true,
-    canAddPhotos: true,
-    canDeletePhotos: false,
-    canSort: true,
-    canViewOutputs: true,
   });
 }
 
@@ -69,14 +61,6 @@ async function seedInvitation(collectionId: string): Promise<string> {
     collectionId,
     email: "invitee@adored.test",
     token: generateId("tok"),
-    canManageCollection: false,
-    canInviteMembers: false,
-    canAddItems: true,
-    canEditMetadata: true,
-    canAddPhotos: true,
-    canDeletePhotos: false,
-    canSort: true,
-    canViewOutputs: true,
   });
   return inv.id;
 }

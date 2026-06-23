@@ -13,14 +13,6 @@ export class InvitationRepository implements IInvitationRepository {
     collectionId: string;
     email: string;
     token: string;
-    canManageCollection?: boolean;
-    canInviteMembers?: boolean;
-    canAddItems?: boolean;
-    canEditMetadata?: boolean;
-    canAddPhotos?: boolean;
-    canDeletePhotos?: boolean;
-    canSort?: boolean;
-    canViewOutputs?: boolean;
   }): Promise<Invitation> {
     const id = data.id || generateId("inv");
     const [inv] = await this.db
@@ -30,14 +22,6 @@ export class InvitationRepository implements IInvitationRepository {
         collectionId: data.collectionId,
         email: data.email,
         token: data.token,
-        canManageCollection: data.canManageCollection ?? false,
-        canInviteMembers: data.canInviteMembers ?? false,
-        canAddItems: data.canAddItems ?? true,
-        canEditMetadata: data.canEditMetadata ?? true,
-        canAddPhotos: data.canAddPhotos ?? true,
-        canDeletePhotos: data.canDeletePhotos ?? false,
-        canSort: data.canSort ?? true,
-        canViewOutputs: data.canViewOutputs ?? true,
         status: "pending",
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -124,14 +108,6 @@ export class InvitationRepository implements IInvitationRepository {
       collectionId: row.collectionId,
       email: row.email,
       token: row.token,
-      canManageCollection: row.canManageCollection,
-      canInviteMembers: row.canInviteMembers,
-      canAddItems: row.canAddItems,
-      canEditMetadata: row.canEditMetadata,
-      canAddPhotos: row.canAddPhotos,
-      canDeletePhotos: row.canDeletePhotos,
-      canSort: row.canSort,
-      canViewOutputs: row.canViewOutputs,
       status: row.status as "pending" | "accepted" | "revoked",
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

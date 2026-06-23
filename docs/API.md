@@ -348,9 +348,11 @@ The cross-tenant **IDOR holes are closed** (pv9 PR1, 2026-06-22): `GET /api/coll
 
 **Audit attribution (pv9 PR7):** destructive ops are attributed in the append-only `audit_log` (actor from session, written tx-bound with the mutation): `item.delete` / `photo.delete` on curator soft-delete/delete (`purses-wfgj`), `account.delete` on account deletion (`purses-obe0`), alongside the existing `item.purge` / `collection.purge`. Curator photo-delete is kept (owner's full-curator decision) and now attributed (`purses-opir`). The no-op member `PATCH` was removed (`purses-2wzz`).
 
+**Inert flag fields removed (pv9 PR8, `purses-us3d`):** the permission-flag fields are gone from the `CollectionMembership`/`Invitation` types, the repos, the owner bootstrap, and the UI (MemberList shows the role badge only; the invite form is email-only; `PermissionCheckboxes` deleted). Per **expand/contract**, PR8 ships only the column-free *code* (the DB keeps the now-inert columns); a follow-up deploy runs the `0007` DROP once the column-free code is live — because `vercel-build` auto-runs `db:migrate` and the repos' `.select()` names every schema column, so dropping in the same deploy would 500 the still-live old code during the build.
+
 Remaining deferred follow-ups (tracked):
 
-- drop the inert flag columns/type fields after the UI cluster (`purses-us3d`);
+- `0007` DROP of the inert flag columns — second deploy of `purses-us3d`;
 - ESLint repo-import boundary, the second half of o03 (`purses-25ca`).
 
 **Lockdown backstop shipped (pv9 PR5, `purses-o03`):** `src/lib/db/route-authz-enumeration.integration.test.ts` walks every `route.ts`, exercises each collection-scoped/curator-private route+method as a **stranger** and asserts `403`/`404` (never `200`/leaky `500`), and asserts **filesystem-exhaustiveness** — a new route in neither the `PUBLIC_OR_SELF` allowlist nor the stranger set fails CI. (Also fixed: `POST /api/sort-results/[id]/shares` now authorizes before parsing the body.)

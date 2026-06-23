@@ -61,14 +61,6 @@ async function addMember(collectionId: string): Promise<string> {
     collectionId,
     userId: memberId,
     role: "curator",
-    canManageCollection: false,
-    canInviteMembers: false,
-    canAddItems: true,
-    canEditMetadata: true,
-    canAddPhotos: true,
-    canDeletePhotos: false,
-    canSort: true,
-    canViewOutputs: true,
   });
   return memberId;
 }
