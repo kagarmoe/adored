@@ -139,7 +139,8 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
       expect(mockPut).not.toHaveBeenCalled();
     });
 
-    it("403s a member WITHOUT canAddPhotos — no put, no row", async () => {
+    it("201s a curator member regardless of canAddPhotos flag (photos:write = curator, full-curator model)", async () => {
+      // Full-curator: canAddPhotos flag is inert — any collection member may upload photos.
       const { collectionId, itemAId } = await seedFullCollection(ownerId);
       const viewerId = await seedUserRow("viewer");
       await membershipRepo.create({
@@ -150,7 +151,7 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
         canInviteMembers: false,
         canAddItems: false,
         canEditMetadata: false,
-        canAddPhotos: false,
+        canAddPhotos: false,   // flag is inert
         canDeletePhotos: false,
         canSort: false,
         canViewOutputs: true,
@@ -159,9 +160,9 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
 
       const before = (await photoRepo.findByItem(itemAId)).length;
       const res = await uploadPhoto(uploadReq(imageFile()) as any, itemCtx(collectionId, itemAId));
-      expect(res.status).toBe(403);
-      expect(mockPut).not.toHaveBeenCalled();
-      expect((await photoRepo.findByItem(itemAId)).length).toBe(before);
+      expect(res.status).toBe(201);
+      expect(mockPut).toHaveBeenCalledOnce();
+      expect((await photoRepo.findByItem(itemAId)).length).toBe(before + 1);
     });
 
     it("400s when no file is provided — no put, no row", async () => {
@@ -294,7 +295,8 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
       expect((await photoRepo.findById(bPhoto.id))!.rotation).toBe(0);
     });
 
-    it("403s a member WITHOUT canAddPhotos — rotation unchanged", async () => {
+    it("200s a curator member regardless of canAddPhotos flag and persists rotation (photos:write = curator)", async () => {
+      // Full-curator: canAddPhotos flag is inert — any collection member may rotate photos.
       const { collectionId, itemAId } = await seedFullCollection(ownerId);
       const photo = await heroPhoto(itemAId);
       const viewerId = await seedUserRow("viewer");
@@ -306,19 +308,20 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
         canInviteMembers: false,
         canAddItems: false,
         canEditMetadata: false,
-        canAddPhotos: false,
+        canAddPhotos: false,   // flag is inert
         canDeletePhotos: false,
         canSort: false,
         canViewOutputs: true,
       });
       mockGetSession.mockResolvedValue({ user: { id: viewerId } });
 
+      expect(photo.rotation).toBe(0); // before
       const res = await rotatePhoto(
         jsonReq("PATCH", { rotation: 90 }) as any,
         photoCtx(collectionId, itemAId, photo.id),
       );
-      expect(res.status).toBe(403);
-      expect((await photoRepo.findById(photo.id))!.rotation).toBe(0);
+      expect(res.status).toBe(200);
+      expect((await photoRepo.findById(photo.id))!.rotation).toBe(90);
     });
 
     it("400s a non-allowlisted rotation — unchanged", async () => {
@@ -416,19 +419,21 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
       expect(await photoRepo.findById(bPhoto.id)).not.toBeNull();
     });
 
-    it("403s a member WITHOUT canDeletePhotos — no del, row survives", async () => {
-      // seedFullCollection's curator member has canDeletePhotos=false.
+    it("200s a curator member regardless of canDeletePhotos flag and removes the row (photos:write = curator)", async () => {
+      // Full-curator: canDeletePhotos flag is inert — any collection member may delete photos.
+      // seedFullCollection's curator member has canDeletePhotos=false (flag is now inert).
       const { collectionId, itemAId, memberId } = await seedFullCollection(ownerId);
       const photo = await heroPhoto(itemAId);
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
+      expect(await photoRepo.findById(photo.id)).not.toBeNull(); // present before
       const res = await deletePhoto(
         jsonReq("DELETE") as any,
         photoCtx(collectionId, itemAId, photo.id),
       );
-      expect(res.status).toBe(403);
-      expect(mockDel).not.toHaveBeenCalled();
-      expect(await photoRepo.findById(photo.id)).not.toBeNull();
+      expect(res.status).toBe(200);
+      expect(mockDel).toHaveBeenCalled();
+      expect(await photoRepo.findById(photo.id)).toBeNull(); // gone after
     });
 
     it("200s for the owner: dels the photo's http blobKey and removes the row (present before, gone after)", async () => {
@@ -448,7 +453,8 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
       expect(await photoRepo.findById(photo.id)).toBeNull(); // gone after
     });
 
-    it("200s for a member WITH canDeletePhotos and removes the row", async () => {
+    it("200s for a stranger-but-member curator and removes the row (flag=false, still allowed)", async () => {
+      // canDeletePhotos=false is irrelevant; any curator satisfies photos:write.
       const { collectionId, itemAId } = await seedFullCollection(ownerId);
       const photo = await heroPhoto(itemAId);
       const deleterId = await seedUserRow("deleter");
@@ -461,7 +467,7 @@ describeDb("item-photo routes (route -> repo -> DB)", () => {
         canAddItems: false,
         canEditMetadata: false,
         canAddPhotos: false,
-        canDeletePhotos: true,
+        canDeletePhotos: false, // inert
         canSort: false,
         canViewOutputs: true,
       });

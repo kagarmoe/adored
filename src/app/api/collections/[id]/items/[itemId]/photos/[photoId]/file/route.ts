@@ -3,8 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireApiCapability } from "@/server/dal/collection-access";
 import { servePhotoFile } from "@/lib/photo-serving";
 
 // sharp (used by servePhotoFile) is a native addon — pin the Node runtime.
@@ -22,8 +21,6 @@ export async function GET(
   const db = getDb();
   const photoRepo = new PhotoRepository(db);
   const itemRepo = new ItemRepository(db);
-  const membershipRepo = new MembershipRepository(db);
-  const collectionRepo = new CollectionRepository(db);
 
   try {
     const item = await itemRepo.findById(params.itemId);
@@ -36,12 +33,9 @@ export async function GET(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const membership = await membershipRepo.findByUser(session.user.id, params.id);
-    const collection = await collectionRepo.findById(params.id);
-    const isOwner = collection?.ownerId === session.user.id;
-    if (!membership && !isOwner) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    // items:read = curator — any curator may view photo files (full-curator model).
+    const access = await requireApiCapability(db, params.id, session.user.id, "items:read");
+    if (access instanceof NextResponse) return access;
 
     return servePhotoFile(
       {

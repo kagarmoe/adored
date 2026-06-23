@@ -3,17 +3,12 @@ import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
-import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
-import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
+import { requireApiCapability } from "@/server/dal/collection-access";
 import { del } from "@vercel/blob";
 import { ALLOWED_ROTATIONS } from "@/lib/photos";
 import { deleteVariants, variantPrefix } from "@/lib/photo-variants";
 
-// Rotate a photo (persisted, non-destructive). Authz is a WRITE tier
-// (canAddPhotos|owner), not the bare-member read tier — a view-only curator must
-// not silently re-orient shared photos. Resource existence (404) is fully
-// resolved before the permission check (403), and validation (400) only after
-// authz, so update never runs on a rejected request.
+// Rotate a photo (persisted, non-destructive). photos:write = curator (full-curator model).
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string; itemId: string; photoId: string } }
@@ -26,8 +21,6 @@ export async function PATCH(
   const db = getDb();
   const photoRepo = new PhotoRepository(db);
   const itemRepo = new ItemRepository(db);
-  const membershipRepo = new MembershipRepository(db);
-  const collectionRepo = new CollectionRepository(db);
 
   try {
     const item = await itemRepo.findById(params.itemId);
@@ -39,12 +32,9 @@ export async function PATCH(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const membership = await membershipRepo.findByUser(session.user.id, params.id);
-    const collection = await collectionRepo.findById(params.id);
-    const isOwner = collection?.ownerId === session.user.id;
-    if ((!membership || !membership.canAddPhotos) && !isOwner) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    // photos:write = curator — any curator may rotate photos (full-curator model).
+    const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
+    if (access instanceof NextResponse) return access;
 
     let rotation: unknown;
     try {
@@ -75,43 +65,30 @@ export async function DELETE(
   const db = getDb();
   const photoRepo = new PhotoRepository(db);
   const itemRepo = new ItemRepository(db);
-  const membershipRepo = new MembershipRepository(db);
-  const collectionRepo = new CollectionRepository(db);
 
   try {
-    // Verify item belongs to collection and user has permission
+    // Verify item belongs to collection (belongs-to-parent).
     const item = await itemRepo.findById(params.itemId);
     if (!item || item.collectionId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const membership = await membershipRepo.findByUser(
-      session.user.id,
-      params.id
-    );
-    const collection = await collectionRepo.findById(params.id);
-    const isOwner = collection?.ownerId === session.user.id;
-    if ((!membership || !membership.canDeletePhotos) && !isOwner) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    // photos:write = curator — any curator may delete photos (full-curator model).
+    const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
+    if (access instanceof NextResponse) return access;
 
-    // Get photo to find blob URL
     const photo = await photoRepo.findById(params.photoId);
     if (!photo || photo.itemId !== params.itemId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     if (photo.blobKey.startsWith("http")) {
-      // Delete from blob storage if it's a URL
       await del(photo.blobKey);
     }
 
-    // Delete from database
     await photoRepo.delete(params.photoId);
 
-    // Best-effort: sweep any persisted resized variants for this photo (all
-    // widths + versions). `deleteVariants` already swallows; the extra `.catch`
-    // guarantees a cache-cleanup failure can never fail a successful delete.
+    // Best-effort: sweep any persisted resized variants for this photo.
     await deleteVariants(variantPrefix(params.id, params.photoId)).catch(() => {});
 
     return NextResponse.json({ success: true });
