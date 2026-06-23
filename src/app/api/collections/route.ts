@@ -5,6 +5,7 @@ import { CollectionRepository } from "@/server/repositories/implementations/Coll
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
+import { withTransaction } from "@/lib/transactions";
 
 export async function GET() {
   try {
@@ -26,24 +27,27 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const db = getDb();
-    const collectionRepo = new CollectionRepository(db);
-    const membershipRepo = new MembershipRepository(db);
-    const controller = new CollectionController(collectionRepo);
+    const collection = await withTransaction(db, async (tx) => {
+      const txCollectionRepo = new CollectionRepository(tx);
+      const txMembershipRepo = new MembershipRepository(tx);
+      const txController = new CollectionController(txCollectionRepo);
 
-    const collection = await controller.createCollection(user.id, body);
-    await membershipRepo.create({
-      collectionId: collection.id,
-      userId: user.id,
-      role: "owner",
-      canManageCollection: true,
-      canInviteMembers: true,
-      canAddItems: true,
-      canDeleteItems: true,
-      canEditMetadata: true,
-      canAddPhotos: true,
-      canDeletePhotos: true,
-      canSort: true,
-      canViewOutputs: true,
+      const col = await txController.createCollection(user.id, body);
+      await txMembershipRepo.create({
+        collectionId: col.id,
+        userId: user.id,
+        role: "owner",
+        canManageCollection: true,
+        canInviteMembers: true,
+        canAddItems: true,
+        canDeleteItems: true,
+        canEditMetadata: true,
+        canAddPhotos: true,
+        canDeletePhotos: true,
+        canSort: true,
+        canViewOutputs: true,
+      });
+      return col;
     });
     return NextResponse.json(collection, { status: 201 });
   } catch (error) {
