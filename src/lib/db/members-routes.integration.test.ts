@@ -246,12 +246,15 @@ describeDb("member-management route (route -> repo -> DB)", () => {
       expect((await repo.findById(targetMembership.id))!.canAddItems).toBe(false);
     });
 
-    it("200s for the owner and persists the role/flag mutation", async () => {
+    it("200s for the owner — flags are no longer mutable via PATCH (T1: allow-list is empty)", async () => {
+      // After T1: UpdateMemberSchema is z.object({}) — all flag fields stripped.
+      // MembershipRepository.update() allow-list only writes updatedAt.
+      // PATCH returns 200 but flags remain unchanged.
       const { collectionId, memberId } = await seedFullCollection(ownerId);
       const mid = await memberMembershipId(collectionId, memberId);
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-      // As-seeded before guard.
+      // As-seeded before guard — flags are at their seeded values.
       const before = await repo.findById(mid);
       expect(before!.canManageCollection).toBe(false);
       expect(before!.canDeletePhotos).toBe(false);
@@ -262,29 +265,28 @@ describeDb("member-management route (route -> repo -> DB)", () => {
       );
       expect(res.status).toBe(200);
 
+      // Flags are unchanged — client-supplied values were stripped by schema + repo allow-list.
       const after = await repo.findById(mid);
-      expect(after!.canManageCollection).toBe(true);
-      expect(after!.canDeletePhotos).toBe(true);
-      // Untouched flags are preserved.
+      expect(after!.canManageCollection).toBe(false);
+      expect(after!.canDeletePhotos).toBe(false);
       expect(after!.canAddItems).toBe(true);
     });
 
-    it("owner gets 400 on an invalid body (non-boolean flag) via errorResponse — and does NOT mutate (purses-pv9)", async () => {
-      // updateMember UpdateMemberSchema.parse()es the body; a non-boolean flag is a
-      // ZodError, now mapped to 400 by errorResponse (was an unhandled 500). The 403
-      // manager guard runs BEFORE updateMember, so authz is unchanged.
+    it("owner PATCH with invalid flag type — 200 (unknown keys stripped, no ZodError) (T1: purses-pv9)", async () => {
+      // After T1: UpdateMemberSchema is z.object({}) — unknown keys like canManageCollection
+      // are stripped silently (not a ZodError). No mutation, returns 200.
       const { collectionId, memberId } = await seedFullCollection(ownerId);
       const mid = await memberMembershipId(collectionId, memberId);
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      // As-seeded before: canManageCollection is false.
       expect((await repo.findById(mid))!.canManageCollection).toBe(false);
 
       const res = await PATCH(
         jsonReq("PATCH", { canManageCollection: "yes" }) as any,
         ctx(collectionId, mid),
       );
-      expect(res.status).toBe(400);
-      // Unchanged: the invalid flag never persisted.
+      // Unknown key stripped by empty schema → no ZodError → 200 (nothing written).
+      expect(res.status).toBe(200);
+      // Flag unchanged.
       expect((await repo.findById(mid))!.canManageCollection).toBe(false);
     });
   });

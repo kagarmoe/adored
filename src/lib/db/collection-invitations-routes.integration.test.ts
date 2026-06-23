@@ -70,14 +70,7 @@ async function addMember(
     collectionId,
     userId: memberId,
     role: "curator",
-    canManageCollection: false,
     canInviteMembers: overrides.canInviteMembers ?? false,
-    canAddItems: true,
-    canEditMetadata: true,
-    canAddPhotos: true,
-    canDeletePhotos: false,
-    canSort: true,
-    canViewOutputs: true,
   });
   return memberId;
 }
@@ -245,6 +238,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       expect(await new InvitationRepository(db).findByCollection(collectionId)).toHaveLength(0);
 
       const res = await POST(
+        // canInviteMembers is stripped by T1 (flag mass-assignment dropped); only email persists.
         jsonReq("POST", { email: "newinvitee@adored.test", canInviteMembers: true }) as any,
         { params: { id: collectionId } } as any,
       );
@@ -259,7 +253,8 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       expect(persisted!.collectionId).toBe(collectionId);
       expect(persisted!.email).toBe("newinvitee@adored.test");
       expect(persisted!.token).toBe(body.token);
-      expect(persisted!.canInviteMembers).toBe(true);
+      // Flag stripped by T1 — canInviteMembers uses DB column default (false).
+      expect(persisted!.canInviteMembers).toBe(false);
       expect(persisted!.status).toBe("pending");
     });
 

@@ -229,6 +229,31 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       expect(membership!.role).toBe("owner");
     });
 
+    it("membership create failure rolls back collection — no orphan collection (atomic)", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const { db } = getTestDb();
+      const before = await new CollectionRepository(db).findByOwner(ownerId);
+
+      // Spy on MembershipRepository.prototype.create to reject once
+      const { MembershipRepository: MR } = await import(
+        "@/server/repositories/implementations/MembershipRepository"
+      );
+      const spy = vi
+        .spyOn(MR.prototype, "create")
+        .mockRejectedValueOnce(new Error("DB failure"));
+
+      const res = await collectionsPost(
+        nextReq("POST", "http://localhost/api/collections", { name: "Atomic Test" }),
+      );
+      expect(res.status).toBe(500);
+
+      // No orphan collection
+      const after = await new CollectionRepository(db).findByOwner(ownerId);
+      expect(after).toHaveLength(before.length);
+
+      spy.mockRestore();
+    });
+
     it("returns 400 for missing name — no collection created (purses-pv9)", async () => {
       // CollectionController.createCollection CreateCollectionSchema.parse()es the body;
       // a missing name is a ZodError, now mapped to 400 by errorResponse (was 500).

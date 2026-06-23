@@ -43,6 +43,13 @@
       "when": 1781993076062,
       "tag": "0005_nebulous_warbird",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1782079476062,
+      "tag": "0006_authz_role_check",
+      "breakpoints": true
     }
   ]
 }

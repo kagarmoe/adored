@@ -4,7 +4,7 @@ Structured reference for an AI agent (or developer) calling the **Adored** HTTP 
 
 **How to read this:** [Authentication](#authentication), [Authorization model](#authorization-model), and [Status-code semantics](#status-code-semantics) apply to every route — read them first. Then use the [Route index](#route-index) and the per-family detail. Returned-entity field shapes (`Collection`, `Item`, `Photo`, `SortResult`, `SortResultItem`, `Membership`, `Invitation`, `Session`, `DecisionEvent`) live in `src/types` and the Drizzle schema (`src/lib/db/schema.ts`) — this doc names the entity rather than duplicating fields that would drift.
 
-> **Accuracy note:** this documents what the code does **today**. The cross-tenant **IDOR holes** are **closed** (pv9 PR1, 2026-06-22): every collection-scoped route is now scoped to its collection via `requireApiCollectionAccess` (member-or-owner; `404` absent / `403` forbidden). Remaining pv9 work is the **role/capability migration** (collapse the barely-enforced flags to Owner/Curator, tighten member/invitation management to owner — `purses-g6o`, `purses-crt`) and the **invitation-accept** membership creation (`purses-8zcc`); see [Known authz gaps](#known-authz-gaps).
+> **Accuracy note:** this documents what the code does **today**. The cross-tenant **IDOR holes** are **closed** (pv9 PR1): every collection-scoped route is scoped to its collection via `requireApiCollectionAccess` (member-or-owner; `404` absent / `403` forbidden). Error handling is consistent (pv9 PR2: validation→`400`, state→`409`). The **role model core** is in (pv9 PR3): `membership.role` reconciled + CHECK-constrained, invitation-accept creates a curator membership, and the client-flag/`role` mass-assignment surface is closed. The remaining pv9 work is wiring every route through the **capability map** (`purses-g6o`, pv9 PR4), which tightens member/invitation management to owner; see [Known authz gaps](#known-authz-gaps).
 
 ## Authentication
 
@@ -13,7 +13,7 @@ Structured reference for an AI agent (or developer) calling the **Adored** HTTP 
   - `requireAuth()` (`src/lib/auth.ts`) — throws `"Unauthorized"`; the handler maps it to **`401`**.
   - `getSession()` + an inline `if (!session?.user) → 401` — same effect, used by the newer routes that then call a DAL guard.
 - **Sign-up:** `POST /api/auth/signup` (public) creates a credentials account; sign-in goes through the NextAuth handler.
-- **public** routes need no session: the NextAuth handler, signup, `invitations/accept`, and `shared-results/[token]`.
+- **public** routes need no session: the NextAuth handler, signup, `GET /invitations/accept` (token preview), and `shared-results/[token]`. (**`POST /invitations/accept` now requires a session** — it binds the invite to the caller's account; see its detail.)
 
 ## Authorization model
 
@@ -111,7 +111,8 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 | GET·POST | `/api/collections/[id]/invitations` | member |
 | GET·PATCH·DELETE | `/api/invitations/[id]` | member |
 | POST | `/api/invitations/[id]/resend` | member |
-| GET·POST | `/api/invitations/accept` | public (token) |
+| GET | `/api/invitations/accept` | public (token) |
+| POST | `/api/invitations/accept` | self (token + email match) |
 
 ### preferences
 | Method | Path | Access |
@@ -172,7 +173,7 @@ Authenticated; acts **only on the caller** (`session.user.id`), so no IDOR. `GET
 Authenticated. Returns the caller's `Collection[]`. `401`/`500`.
 
 ### `POST /api/collections`
-Authenticated. **Body** → `createCollection`; also creates the caller's **owner** `Membership` (all permission flags true). **Returns** `201 Collection`. `400` invalid JSON. Owner is forced from the session.
+Authenticated. **Body** → `createCollection`; also creates the caller's **owner** `Membership` (`role:"owner"`) **in one transaction** (pv9 PR3 — no orphaned-owner window). **Returns** `201 Collection`. `400` invalid JSON. Owner is forced from the session.
 
 ### `GET /api/collections/[id]`
 `getSession` + `requireApiCollectionAccess` (member-or-owner). Returns the `Collection`. `401`/`403`/`404` (`404` absent before membership is evaluated). (IDOR closed — pv9 PR1, `purses-55c`.)
@@ -242,13 +243,13 @@ Unified "Move to…". **Body:** `{ photoIds: string[], destination: { type: "ite
 `getSession` + `requireApiCollectionAccess` (member-or-owner). Lists the collection's members. `401`/`403`/`404`. (IDOR closed — pv9 PR1, `purses-55c`.)
 
 ### `POST /api/collections/[id]/members`
-`requireAuth` + `isCollectionManager` → `403`. Body → `201` member. `400` invalid JSON.
+`requireAuth` + `isCollectionManager` → `403`. **Body:** `{ userId }` only — permission flags and `role` are **no longer accepted** (pv9 PR3); the added member is always a **curator**. `201` member. `400` invalid input.
 
 ### `GET·PATCH·DELETE /api/collections/[id]/members/[mid]`
 `getSession` + belongs-to-parent (`membership.collectionId !== id` → `404`). `GET` additionally `requireApiCollectionAccess` (member). `PATCH`/`DELETE` require `isCollectionManager` → `403`. `PATCH` body → updated member (`400` invalid JSON); `DELETE` → `{ message }`.
 
 ### `GET·POST /api/collections/[id]/invitations`
-`getSession` + `requireApiCollectionAccess` (member). `GET` → `Invitation[]`. `POST` body → `201 Invitation` (`500` on failure).
+`getSession` + `requireApiCollectionAccess` (member). `GET` → `Invitation[]`. `POST` **body:** `{ email }` only (normalized) — permission flags are **no longer accepted** (pv9 PR3; an accepted invite becomes a curator). `201 Invitation`; invalid/missing email → `400` (pv9 PR2). (Owner-only tightening of invitation create lands in PR4, `purses-4wj2`.)
 
 ### `GET·PATCH·DELETE /api/invitations/[id]`
 `requireAuth` + resolve the invitation (`404` absent) + `requireApiCollectionAccess(invitation.collectionId)` (member-or-owner). `PATCH` body → updated `Invitation` (`400` invalid JSON); `DELETE` → `{ message }`. `401`/`403`/`404`. (IDOR closed — pv9 PR1, `purses-nj7`; the owner-only tightening of invitation management lands with the role model, `purses-g6o`.)
@@ -257,7 +258,7 @@ Unified "Move to…". **Body:** `{ photoIds: string[], destination: { type: "ite
 `requireAuth` + resolve the invitation (`404` absent) + `requireApiCollectionAccess(invitation.collectionId)` (member-or-owner). `401`/`403`/`404`. (IDOR closed — pv9 PR1, `purses-nj7`.)
 
 ### `GET·POST /api/invitations/accept?token=`
-**Public**, token-based. `GET` returns the `Invitation` for the token. `POST` marks it `accepted`. `400` missing token; `404` token not found; `500`. **Note:** `POST` currently only flips status — it does **not** create a `Membership` (incomplete).
+`GET` is **public** (token-based) — returns the `Invitation` for the token (a preview for the accept landing page). `POST` is **authenticated** and binds the invitation to the caller: `getSession` (`401` if none) → resolve by `?token=` (`400` missing, `404` unknown) → the invitation must be **`pending`** (else **`409`**) → the caller's **DB-canonical email** must equal the invitation email (both `normalizeEmail`d — trim + lowercase; else **`403`**) → in one transaction, create a **`role:"curator"`** `Membership` for the caller and set the invitation `status:"accepted", acceptedAt`. **Idempotent** via the `(collectionId,userId)` unique index (`createIfAbsent` / `onConflictDoNothing` — a repeat/concurrent accept yields `200` with exactly one membership, never a `500`). `200` on success. (`purses-8zcc`, pv9 PR3.)
 
 ## preferences
 
@@ -344,6 +345,8 @@ The cross-tenant **IDOR holes are closed** (pv9 PR1, 2026-06-22): `GET /api/coll
 Remaining pv9 work (no longer tenant-isolation holes — capability/correctness):
 
 - **Role/capability collapse** (`purses-crt`, `purses-89g`, `purses-g6o`): the 10 boolean permission flags are barely enforced; collapsing to `membership.role` (Owner/Curator) and routing every route through a `requireApiCapability` map. This will tighten member management and invitation create/manage to **owner-only** (currently member-or-owner) — `purses-lgql` (`isCollectionManager` ignores `canManageCollection`), `purses-4wj2` (invitation create ignores `canInviteMembers`).
-- **Invitation accept** (`purses-8zcc`): `POST /api/invitations/accept` flips `status` only — it does **not** create a `Membership` and has no state guard. Fix creates a curator membership, binds to the invited email, and rejects non-pending invitations.
+- **Role/capability enforcement migration** (`purses-g6o`, pv9 PR4): the DAL capability core exists (`src/server/dal/capabilities.ts` — `CAPABILITIES: Record<Operation, Role>`, `resolveEffectiveRole` [owner = `collection.ownerId`; any member = curator; `membership.role` is display-only], `requireApiCapability` + `requireApiItemCapability`/`requireApiInvitationCapability`), but routes still call the member-or-owner guards. PR4 migrates each route to `requireApiCapability(op)`, which tightens member management + invitation create/manage to **owner** (`purses-lgql`, `purses-4wj2` GAP A) and dissolves the inert flags.
+
+**Implemented in pv9 PR3 (role model core):** `POST /api/invitations/accept` now creates a `role:"curator"` `Membership` bound to the caller's email, rejects non-pending invitations (`409`), and is idempotent (`purses-8zcc` resolved). Invitation-create and member-add/update **no longer accept client-supplied permission flags or `role`** (the mass-assignment/privilege-escalation surface is closed); members are always curator. Owner bootstrap (collection create + owner membership) is **transactional**. Migration `0006` reconciles `memberships.role` and adds a `CHECK (role IN ('owner','curator'))`.
 
 Implemented (formerly no-op stubs): `POST /api/items/[id]/purge` is a real owner-only hard-delete cascade with a `409`-in-result guard, alongside owner-only `POST /api/items/[id]/remove-from-sorts` — **purses-u3p** resolved for item purge. **`POST /api/collections/[id]/purge`** is a real owner-only whole-collection cascade purge (name-confirm + `collection.purge` audit). The former sort-results no-op-success stubs — `DELETE /api/sort-results/[id]`, `DELETE /api/sort-results/[id]/items/[rid]`, and the empty `GET …/shares` listing — are also implemented.

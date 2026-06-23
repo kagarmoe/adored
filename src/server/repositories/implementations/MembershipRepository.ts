@@ -13,38 +13,84 @@ export class MembershipRepository implements IMembershipRepository {
     collectionId: string;
     userId: string;
     role?: "owner" | "curator";
-    canManageCollection: boolean;
-    canInviteMembers: boolean;
-    canAddItems: boolean;
+    canManageCollection?: boolean;
+    canInviteMembers?: boolean;
+    canAddItems?: boolean;
     canDeleteItems?: boolean;
-    canEditMetadata: boolean;
-    canAddPhotos: boolean;
-    canDeletePhotos: boolean;
-    canSort: boolean;
-    canViewOutputs: boolean;
+    canEditMetadata?: boolean;
+    canAddPhotos?: boolean;
+    canDeletePhotos?: boolean;
+    canSort?: boolean;
+    canViewOutputs?: boolean;
   }): Promise<CollectionMembership> {
-    const id = data.id || generateId("mem");
     const [mem] = await this.db
       .insert(membershipsTable)
-      .values({
-        id,
-        collectionId: data.collectionId,
-        userId: data.userId,
-        role: data.role ?? "curator",
-        canManageCollection: data.canManageCollection,
-        canInviteMembers: data.canInviteMembers,
-        canAddItems: data.canAddItems,
-        canDeleteItems: data.canDeleteItems ?? false,
-        canEditMetadata: data.canEditMetadata,
-        canAddPhotos: data.canAddPhotos,
-        canDeletePhotos: data.canDeletePhotos,
-        canSort: data.canSort,
-        canViewOutputs: data.canViewOutputs,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
+      .values(this.toInsertValues(data))
       .returning();
     return this.mapToMembership(mem);
+  }
+
+  async createIfAbsent(data: {
+    id?: string;
+    collectionId: string;
+    userId: string;
+    role?: "owner" | "curator";
+    canManageCollection?: boolean;
+    canInviteMembers?: boolean;
+    canAddItems?: boolean;
+    canDeleteItems?: boolean;
+    canEditMetadata?: boolean;
+    canAddPhotos?: boolean;
+    canDeletePhotos?: boolean;
+    canSort?: boolean;
+    canViewOutputs?: boolean;
+  }): Promise<CollectionMembership | null> {
+    // onConflictDoNothing on the (collection_id, user_id) unique index: a
+    // duplicate insert is a no-op that raises NO error, so this is safe to call
+    // inside a transaction (postgres-js would otherwise latch a 23505 error and
+    // roll back the whole tx at scope end). Returns null when nothing was inserted.
+    const [mem] = await this.db
+      .insert(membershipsTable)
+      .values(this.toInsertValues(data))
+      .onConflictDoNothing({
+        target: [membershipsTable.collectionId, membershipsTable.userId],
+      })
+      .returning();
+    return mem ? this.mapToMembership(mem) : null;
+  }
+
+  private toInsertValues(data: {
+    id?: string;
+    collectionId: string;
+    userId: string;
+    role?: "owner" | "curator";
+    canManageCollection?: boolean;
+    canInviteMembers?: boolean;
+    canAddItems?: boolean;
+    canDeleteItems?: boolean;
+    canEditMetadata?: boolean;
+    canAddPhotos?: boolean;
+    canDeletePhotos?: boolean;
+    canSort?: boolean;
+    canViewOutputs?: boolean;
+  }) {
+    return {
+      id: data.id || generateId("mem"),
+      collectionId: data.collectionId,
+      userId: data.userId,
+      role: data.role ?? "curator",
+      canManageCollection: data.canManageCollection ?? false,
+      canInviteMembers: data.canInviteMembers ?? false,
+      canAddItems: data.canAddItems ?? true,
+      canDeleteItems: data.canDeleteItems ?? false,
+      canEditMetadata: data.canEditMetadata ?? true,
+      canAddPhotos: data.canAddPhotos ?? true,
+      canDeletePhotos: data.canDeletePhotos ?? false,
+      canSort: data.canSort ?? true,
+      canViewOutputs: data.canViewOutputs ?? true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
   }
 
   async findById(id: string): Promise<CollectionMembership | null> {
@@ -76,13 +122,13 @@ export class MembershipRepository implements IMembershipRepository {
     return mems.map((m) => this.mapToMembership(m));
   }
 
-  async update(id: string, data: Partial<CollectionMembership>): Promise<CollectionMembership> {
+  async update(id: string, _data: Partial<CollectionMembership>): Promise<CollectionMembership> {
+    // Allow-list: no caller-supplied fields are permitted through membership update.
+    // Role, flags, collectionId, and userId are immutable after creation.
+    // Only updatedAt is written to mark the row touched.
     const [mem] = await this.db
       .update(membershipsTable)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
+      .set({ updatedAt: new Date() })
       .where(eq(membershipsTable.id, id))
       .returning();
     return this.mapToMembership(mem);

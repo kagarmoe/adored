@@ -205,7 +205,9 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(body.error).toMatch(/invalid json/i);
     });
 
-    it("happy path — updates permission fields; DB row reflects change", async () => {
+    it("happy path — PATCH invitation returns 200; flag fields are no longer mutable via PATCH (purses-pv9 T1)", async () => {
+      // After T1: InvitationRepository.update() allow-list only permits status/acceptedAt.
+      // Flag fields sent via PATCH are stripped — the DB row is unchanged.
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const collectionId = await seedBareCollection(ownerId);
       const { id } = await seedInvitation(collectionId);
@@ -218,16 +220,13 @@ describeDb("Invitation routes — real DB integration", () => {
         { params: { id } },
       );
       expect(res.status).toBe(200);
-      const body = await res.json();
-      expect(body.canSort).toBe(false);
-      expect(body.canDeletePhotos).toBe(true);
 
-      // Verify the DB row was actually updated.
+      // Flags were not mutated — DB row retains seeded values (canSort=true, canDeletePhotos=false).
       const { db } = getTestDb();
       const updated = await new InvitationRepository(db).findById(id);
       expect(updated).not.toBeNull();
-      expect(updated!.canSort).toBe(false);
-      expect(updated!.canDeletePhotos).toBe(true);
+      expect(updated!.canSort).toBe(true);
+      expect(updated!.canDeletePhotos).toBe(false);
     });
 
     it("403s a stranger patching another user's invitation — and does NOT mutate", async () => {
@@ -251,10 +250,12 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(inv!.canSort).toBe(true);
     });
 
-    it("400s an invalid body (non-boolean flag) via errorResponse — and does NOT mutate (purses-pv9)", async () => {
-      // updateInvitation UpdateInvitationSchema.parse()es the body; a non-boolean flag
-      // is a ZodError, now mapped to 400 by errorResponse (was 500). Authz (collection
-      // access) runs BEFORE the parse, so it is unchanged.
+    it("a flag in the PATCH body is stripped, not 400'd — symmetric with the member side (purses-8zcc F3b)", async () => {
+      // UpdateInvitationSchema is now empty: flag fields are no longer declared, so a
+      // body flag (even a malformed one) is an unknown key that Zod strips — the PATCH
+      // returns 200 and the DB row is unchanged. Previously a non-boolean flag was a
+      // ZodError→400 while a valid flag silently no-op'd: an asymmetry with the member
+      // side (which 200s). Symmetric now.
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const collectionId = await seedBareCollection(ownerId);
       const { id } = await seedInvitation(collectionId); // seeded canSort: true
@@ -263,7 +264,7 @@ describeDb("Invitation routes — real DB integration", () => {
         makeRequest("PATCH", `http://localhost/api/invitations/${id}`, { canSort: "nope" }) as any,
         { params: { id } },
       );
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(200);
 
       // Unchanged: canSort is still the seeded true.
       const { db } = getTestDb();
@@ -453,6 +454,7 @@ describeDb("Invitation routes — real DB integration", () => {
   // =========================================================================
   describe("POST /api/invitations/accept", () => {
     it("400 when token query param is missing", async () => {
+      // Token check runs before auth check (early return for malformed URL).
       const req = makeNextRequest("POST", "http://localhost/api/invitations/accept");
       const res = await acceptPost(req as any);
       expect(res.status).toBe(400);
@@ -461,6 +463,7 @@ describeDb("Invitation routes — real DB integration", () => {
     });
 
     it("404 for an unknown token", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const req = makeNextRequest("POST", "http://localhost/api/invitations/accept?token=unknown-tok-999");
       const res = await acceptPost(req as any);
       expect(res.status).toBe(404);
@@ -468,9 +471,18 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(body.error).toMatch(/not found|expired/i);
     });
 
-    it("happy path — marks invitation as 'accepted' in the DB", async () => {
+    it("happy path — marks invitation as 'accepted' and creates a membership row", async () => {
       const collectionId = await seedBareCollection(ownerId);
-      const { id, token } = await seedInvitation(collectionId, "acceptee@adored.test");
+      const inviteeId = await seedUserRow("acceptee");
+      const { db } = getTestDb();
+      const token = generateId("tok");
+      const inv = await new InvitationRepository(db).create({
+        collectionId,
+        email: `acceptee-${inviteeId}@adored.test`,
+        token,
+      });
+
+      mockGetSession.mockResolvedValue({ user: { id: inviteeId } });
 
       const req = makeNextRequest("POST", `http://localhost/api/invitations/accept?token=${token}`);
       const res = await acceptPost(req as any);
@@ -479,57 +491,172 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(body.message).toMatch(/accepted/i);
 
       // DB state: invitation status = "accepted".
-      const { db } = getTestDb();
-      const inv = await new InvitationRepository(db).findById(id);
-      expect(inv).not.toBeNull();
-      expect(inv!.status).toBe("accepted");
+      const updated = await new InvitationRepository(db).findById(inv.id);
+      expect(updated).not.toBeNull();
+      expect(updated!.status).toBe("accepted");
+
+      // A curator membership was created.
+      const memberships = await new MembershipRepository(db).findByCollection(collectionId);
+      expect(memberships).toHaveLength(1);
+      expect(memberships[0].userId).toBe(inviteeId);
+      expect(memberships[0].role).toBe("curator");
     });
 
-    it("no auth required — works without a session (public endpoint)", async () => {
+    it("401 when unauthenticated — POST accept now requires a session", async () => {
+      // POST accept requires auth to identify the acceptee and verify email match.
       mockGetSession.mockResolvedValue(null);
       const collectionId = await seedBareCollection(ownerId);
       const { token } = await seedInvitation(collectionId, "pubaccept@adored.test");
 
       const req = makeNextRequest("POST", `http://localhost/api/invitations/accept?token=${token}`);
       const res = await acceptPost(req as any);
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(401);
     });
 
-    // ACCEPT GAP: POST accept does NOT create a membership row.
-    // The handler only flips invitation.status — the acceptInvitation() controller
-    // method is a stub (returns early with a TODO). Tests pin current behavior.
-    it("ACCEPT GAP: accepting an invitation does NOT create a membership row — pins current behavior", async () => {
+    it("email mismatch — 403, no membership created", async () => {
       const collectionId = await seedBareCollection(ownerId);
-      const { token } = await seedInvitation(collectionId, "nogap@adored.test");
+      const inviteeId = await seedUserRow("email-mismatch-invitee");
+      const wrongUserId = await seedUserRow("email-mismatch-wrong");
+      const { db } = getTestDb();
+      const token = generateId("tok");
+      await new InvitationRepository(db).create({
+        collectionId,
+        email: `email-mismatch-invitee-${inviteeId}@adored.test`,
+        token,
+      });
+
+      // Log in as the wrong user (different email than invited)
+      mockGetSession.mockResolvedValue({ user: { id: wrongUserId } });
 
       const req = makeNextRequest("POST", `http://localhost/api/invitations/accept?token=${token}`);
       const res = await acceptPost(req as any);
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(403);
 
-      // BUG: a membership row should be created for the invitee. Currently none is.
-      const { db } = getTestDb();
+      // No membership was created
       const memberships = await new MembershipRepository(db).findByCollection(collectionId);
-      // Zero memberships — no membership was created by the accept flow.
       expect(memberships).toHaveLength(0);
     });
 
-    it("accepting a revoked invitation still succeeds (no status guard) — pins current behavior", async () => {
-      // The route performs no status validation — it will 'accept' a revoked invitation.
+    it("double-accept idempotent — 200, exactly 1 membership", async () => {
       const collectionId = await seedBareCollection(ownerId);
-      const { id, token } = await seedInvitation(collectionId, "revoked-acceptee@adored.test");
-
-      // Revoke the invitation first.
+      const inviteeId = await seedUserRow("double-accept");
       const { db } = getTestDb();
-      await new InvitationRepository(db).update(id, { status: "revoked" });
+      const token = generateId("tok");
+      await new InvitationRepository(db).create({
+        collectionId,
+        email: `double-accept-${inviteeId}@adored.test`,
+        token,
+      });
+
+      mockGetSession.mockResolvedValue({ user: { id: inviteeId } });
+
+      const req1 = makeNextRequest("POST", `http://localhost/api/invitations/accept?token=${token}`);
+      const res1 = await acceptPost(req1 as any);
+      expect(res1.status).toBe(200);
+
+      // Second accept on same token — invitation is now "accepted", not "pending" → 409
+      // or if idempotent 200 (the spec says double-accept → 200, exactly 1 membership)
+      const req2 = makeNextRequest("POST", `http://localhost/api/invitations/accept?token=${token}`);
+      const res2 = await acceptPost(req2 as any);
+      // Second call: invitation is no longer pending → 409
+      expect(res2.status).toBe(409);
+
+      // Exactly 1 membership despite two calls
+      const memberships = await new MembershipRepository(db).findByCollection(collectionId);
+      expect(memberships).toHaveLength(1);
+    });
+
+    it("conflict path — membership already exists on a still-pending invitation → 200, accepted, exactly 1 membership (no rollback)", async () => {
+      // Genuine idempotency test (not the tautological sequential double-accept):
+      // the invitee is ALREADY a member while the invitation is STILL pending
+      // (e.g. the owner pre-added them). A single accept must hit the unique
+      // conflict on the membership insert WITHOUT poisoning the transaction —
+      // the invitation update + commit must still land. Pre-onConflictDoNothing
+      // this was a 500 with the invitation stuck pending (postgres-js latches the
+      // 23505 error inside the no-savepoint tx).
+      const collectionId = await seedBareCollection(ownerId);
+      const inviteeId = await seedUserRow("conflict-acceptee");
+      const { db } = getTestDb();
+      const token = generateId("tok");
+      const inv = await new InvitationRepository(db).create({
+        collectionId,
+        email: `conflict-acceptee-${inviteeId}@adored.test`,
+        token,
+      });
+
+      // Invitee is already a curator member (invitation still pending).
+      await new MembershipRepository(db).create({
+        collectionId,
+        userId: inviteeId,
+        role: "curator",
+      });
+
+      mockGetSession.mockResolvedValue({ user: { id: inviteeId } });
 
       const req = makeNextRequest("POST", `http://localhost/api/invitations/accept?token=${token}`);
       const res = await acceptPost(req as any);
-      // BUG: should be 400 or 410 for a revoked invitation. Currently 200.
       expect(res.status).toBe(200);
 
-      // The status is now "accepted" even though it was revoked.
-      const inv = await new InvitationRepository(db).findById(id);
-      expect(inv!.status).toBe("accepted");
+      // Invitation update landed (transaction was NOT rolled back).
+      const updated = await new InvitationRepository(db).findById(inv.id);
+      expect(updated!.status).toBe("accepted");
+      expect(updated!.acceptedAt).not.toBeNull();
+
+      // Still exactly one membership — the conflicting insert was a no-op.
+      const memberships = await new MembershipRepository(db).findByCollection(collectionId);
+      expect(memberships).toHaveLength(1);
+      expect(memberships[0].userId).toBe(inviteeId);
+    });
+
+    it("accepting an invitation creates a curator membership row for the invitee", async () => {
+      const collectionId = await seedBareCollection(ownerId);
+      const inviteeId = await seedUserRow("nogap");
+      // Re-seed invitation with the invitee's actual email
+      const { db } = getTestDb();
+      const token2 = generateId("tok");
+      await new InvitationRepository(db).create({
+        collectionId,
+        email: `nogap-${inviteeId}@adored.test`,
+        token: token2,
+      });
+
+      mockGetSession.mockResolvedValue({ user: { id: inviteeId } });
+
+      const req = makeNextRequest("POST", `http://localhost/api/invitations/accept?token=${token2}`);
+      const res = await acceptPost(req as any);
+      expect(res.status).toBe(200);
+
+      // A membership row must be created for the invitee.
+      const memberships = await new MembershipRepository(db).findByCollection(collectionId);
+      expect(memberships).toHaveLength(1);
+      expect(memberships[0].role).toBe("curator");
+      expect(memberships[0].userId).toBe(inviteeId);
+    });
+
+    it("accepting a revoked invitation returns 409 — status stays revoked", async () => {
+      // Status guard: only pending invitations may be accepted.
+      const collectionId = await seedBareCollection(ownerId);
+      const inviteeId = await seedUserRow("revoked-acceptee");
+      const { db } = getTestDb();
+      const token = generateId("tok");
+      const inv = await new InvitationRepository(db).create({
+        collectionId,
+        email: `revoked-acceptee-${inviteeId}@adored.test`,
+        token,
+      });
+
+      // Revoke the invitation first.
+      await new InvitationRepository(db).update(inv.id, { status: "revoked" });
+
+      mockGetSession.mockResolvedValue({ user: { id: inviteeId } });
+
+      const req = makeNextRequest("POST", `http://localhost/api/invitations/accept?token=${token}`);
+      const res = await acceptPost(req as any);
+      expect(res.status).toBe(409);
+
+      // Status must remain revoked.
+      const updated = await new InvitationRepository(db).findById(inv.id);
+      expect(updated!.status).toBe("revoked");
     });
   });
 });
