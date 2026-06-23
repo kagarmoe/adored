@@ -9,16 +9,20 @@
 //
 // Then follow docs/cookbook/add-images-to-pr.md to release + embed them.
 import { test } from "@playwright/test";
-import { seedBaseline, seedSortScenario } from "../fixtures/seed";
+import { seedBaseline, seedSortScenario, seedMembersScenario } from "../fixtures/seed";
 
 // A real photo so the shots show a real rendered image, not a placeholder.
 const FIXTURE = "e2e/fixtures/photos/IMG_0428.jpeg";
 
 let slug = "";
+let membersSlug = "";
 
 test.beforeAll(async () => {
   const ownerId = await seedBaseline();
   ({ slug } = await seedSortScenario(ownerId));
+  // A collection with real owner + curator membership rows so the members shot
+  // shows the RoleBadge (the baseline seed inserts collections without them).
+  ({ slug: membersSlug } = await seedMembersScenario(ownerId));
 });
 
 for (const theme of ["light", "dark"] as const) {
@@ -40,9 +44,10 @@ for (const theme of ["light", "dark"] as const) {
       ["collections", "/collections"],
       ["items-grid", `/collections/${slug}/items`],
       ["item-detail", `/collections/${slug}/items/1`],
-      // pv9 PR8 (purses-us3d): members page renders MemberList (role badge only,
-      // permission badges removed) + InviteForm (email-only, no permission checkboxes).
-      ["members", `/collections/${slug}/members`],
+      // pv9 PR8 + PR1b (purses-c0w): members page renders MemberList (RoleBadge —
+      // Owner/Curator on the existing Badge variants) + email-only InviteForm.
+      // Points at the seedMembersScenario collection so real role rows render.
+      ["members", `/collections/${membersSlug}/members`],
       // PR1a (purses-wew): editable display-name profile (no image — the img
       // wait below just times out harmlessly via .catch).
       ["profile", "/profile"],
