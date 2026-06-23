@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { ItemController } from "@/server/api/items";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { requireApiItemCapability } from "@/server/dal/collection-access";
+import { AuditLogRepository } from "@/server/repositories/implementations/AuditLogRepository";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
 
@@ -55,6 +56,16 @@ export async function DELETE(
 
     const controller = new ItemController(new ItemRepository(db));
     const deleted = await controller.deleteItem(params.id);
+
+    // Attribute soft-delete: append-only audit row (purses-wfgj).
+    await new AuditLogRepository(db).record({
+      actorId: user.id,
+      action: "item.delete",
+      targetType: "item",
+      targetId: item.id,
+      collectionId: item.collectionId,
+    });
+
     return NextResponse.json({ message: "Item deleted", item: deleted });
   } catch (error) {
     return errorResponse(error);

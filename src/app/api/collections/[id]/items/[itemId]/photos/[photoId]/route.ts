@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { requireApiCapability } from "@/server/dal/collection-access";
+import { AuditLogRepository } from "@/server/repositories/implementations/AuditLogRepository";
 import { del } from "@vercel/blob";
 import { ALLOWED_ROTATIONS } from "@/lib/photos";
 import { deleteVariants, variantPrefix } from "@/lib/photo-variants";
@@ -74,6 +75,7 @@ export async function DELETE(
     }
 
     // photos:write = curator — any curator may delete photos (full-curator model).
+    // Curator-level by owner decision; attributed via audit (purses-opir/wfgj).
     const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
     if (access instanceof NextResponse) return access;
 
@@ -87,6 +89,15 @@ export async function DELETE(
     }
 
     await photoRepo.delete(params.photoId);
+
+    // Attribute photo delete: append-only audit row (purses-wfgj).
+    await new AuditLogRepository(db).record({
+      actorId: session.user.id,
+      action: "photo.delete",
+      targetType: "photo",
+      targetId: photo.id,
+      collectionId: params.id,
+    });
 
     // Best-effort: sweep any persisted resized variants for this photo.
     await deleteVariants(variantPrefix(params.id, params.photoId)).catch(() => {});
