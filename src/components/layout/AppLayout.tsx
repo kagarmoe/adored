@@ -16,14 +16,19 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-export function AppLayout({ breadcrumbs, children }: AppLayoutProps) {
+export function AppLayout({ breadcrumbs, actions, children }: AppLayoutProps) {
   return (
     <div className="flex flex-col min-h-screen bg-ground">
       <Header />
 
       <main className="flex-1 pt-20">
         <PageContainer>
-          {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
+          {(breadcrumbs || actions) && (
+            <div className="flex items-center justify-between gap-4">
+              {breadcrumbs ? <Breadcrumbs items={breadcrumbs} /> : <span />}
+              {actions}
+            </div>
+          )}
           {children}
         </PageContainer>
       </main>
