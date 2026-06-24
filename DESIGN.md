@@ -139,7 +139,7 @@ Flat by default. In **light**, surfaces sit on white and lift by a soft, cool sh
 - **Buttons:** 10px radius, min height 44px. **Primary:** teal fill, white text (dark: cornflower fill, dark text). **Secondary/ghost:** transparent or soft-aqua, ink/teal text. **Danger:** the reserved error red — only for truly destructive, irreversible actions; sober, not loud.
 - **Cards:** 16px radius, surface fill, soft shadow + hairline (light) / hairline + glow (dark); the selected card uses a teal border + a check, never colour alone.
 - **Inputs:** surface fill, hairline border, 10px radius, 44px height; focus → teal ring; error → error border + a message, never colour alone.
-- **Badges / buckets:** tier badges use the value-ramp tokens + label + icon. Status badges are semantic where meaningful, neutral (hairline) otherwise.
+- **Badges / buckets:** tier badges use the value-ramp tokens + label + icon. Status badges are semantic where meaningful, neutral (hairline) otherwise. A **benign, in-progress** status (e.g. a paused sort) is **not** a warning — it uses a cool-blue benign chip (`accent-cornflower` fill + `ink` text, AA-gated), never a safety/amber hue ("Brand never speaks Danger").
 - **Theme toggle:** top-right of the shell; 44px tap target; honours reduced-motion.
 - **Patient waiting (Not yet):** when a deferred ("Not yet") item resurfaces, a calm banner — a cool-blue benign chip (`accent-cornflower`) with `ink` text (not `ink-soft`: ink-soft on cornflower fails light-theme AA) plus a non-state moon glyph so hue is never the sole signal. Crossfade in with `--ease-gentle`; instant under reduced-motion. Gentle, never urgent: no remaining count, no inbox or "resting place" framing — the item simply comes back when the person is ready.
 
