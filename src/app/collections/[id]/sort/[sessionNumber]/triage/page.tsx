@@ -8,6 +8,7 @@ import { PreferenceController } from "@/server/api/preferences";
 import { DispositionController } from "@/server/api/dispositions";
 import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
+import Link from "next/link";
 import { AppLayout } from "@/components/layout";
 import { Card, EmptyState } from "@/components/ui";
 import { DecisionControls } from "@/features/sorting/DecisionControls";
@@ -76,6 +77,16 @@ export default async function TriagePage({ params }: TriagePageProps) {
           {decided > 0 && (
             <p className="mt-2 text-sm text-ink-soft">{decided} decided so far</p>
           )}
+          {/* A quiet way back to the ones set aside — count-free, low-emphasis, and
+              well below the decision so it never competes with it (TONE.md 4). */}
+          <p className="mt-1 text-sm">
+            <Link
+              href={`/collections/${collection.slug ?? collection.id}/sort/set-aside`}
+              className="text-ink-soft underline underline-offset-2 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-sm"
+            >
+              Set aside
+            </Link>
+          </p>
         </div>
 
         {!item ? (
