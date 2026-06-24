@@ -52,6 +52,14 @@ export class SessionRepository implements ISessionRepository {
     return session ? this.mapToSession(session) : null;
   }
 
+  async findByIdIncludingDeleted(id: string): Promise<Session | null> {
+    const [session] = await this.db
+      .select()
+      .from(sessionsTable)
+      .where(eq(sessionsTable.id, id));
+    return session ? this.mapToSession(session) : null;
+  }
+
   async findByCollectionAndNumber(
     collectionId: string,
     number: number,
@@ -135,6 +143,15 @@ export class SessionRepository implements ISessionRepository {
     const [session] = await this.db
       .update(sessionsTable)
       .set({ deletedAt: new Date(), updatedAt: new Date() })
+      .where(eq(sessionsTable.id, id))
+      .returning();
+    return this.mapToSession(session);
+  }
+
+  async restore(id: string): Promise<Session> {
+    const [session] = await this.db
+      .update(sessionsTable)
+      .set({ deletedAt: null, status: "active", updatedAt: new Date() })
       .where(eq(sessionsTable.id, id))
       .returning();
     return this.mapToSession(session);

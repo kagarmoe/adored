@@ -7,12 +7,17 @@ export interface ISessionRepository {
     goal?: string;
   }): Promise<Session>;
   findById(id: string): Promise<Session | null>;
+  // Resolve a session WITHOUT the deletedAt filter — undo must find a set-aside
+  // (soft-deleted) session that findById can't reach, so it can be restored.
+  findByIdIncludingDeleted(id: string): Promise<Session | null>;
   findActive(collectionId: string, curatorId: string): Promise<Session | null>;
   findByCollection(collectionId: string): Promise<Session[]>;
   findByCollectionAndCurator(collectionId: string, curatorId: string): Promise<Session[]>;
   findByCollectionAndNumber(collectionId: string, number: number): Promise<Session | null>;
   update(id: string, data: Partial<Omit<Session, "id" | "createdAt">>): Promise<Session>;
   softDelete(id: string): Promise<Session>;
+  // Reverse softDelete — clear deletedAt and re-activate. Undoing "set aside".
+  restore(id: string): Promise<Session>;
   // Delete every session of the collection (direct collection_id). Purge-only.
   deleteByCollection(collectionId: string): Promise<void>;
 }
