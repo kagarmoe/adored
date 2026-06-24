@@ -6,8 +6,8 @@ import { ItemController } from "@/server/api/items";
 import { SessionController } from "@/server/api/sessions";
 import { ResultController } from "@/server/api/results";
 import { AppLayout } from "@/components/layout";
-import { Badge, Button, Card } from "@/components/ui";
-import { AbandonSessionButton } from "@/features/sessions/AbandonSessionButton";
+import { Card } from "@/components/ui";
+import { ActiveSessionPanel } from "@/features/sessions/ActiveSessionPanel";
 import Link from "next/link";
 
 interface CollectionPageProps {
@@ -99,27 +99,18 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
           ))}
         </div>
 
-        {activeSession && (
-          <Card padding="lg" className="border-hairline bg-accent-aqua">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="mb-2 flex items-center gap-2">
-                  <h2 className="text-lg text-ink">Active Sorting Session</h2>
-                  <Badge variant="active">active</Badge>
-                </div>
-                <p className="text-sm text-ink">
-                  {activeSession.goal || "Preference discovery"}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Link href={`/collections/${collection.slug ?? collection.id}/sort/${activeSession.number}`}>
-                  <Button>Resume</Button>
-                </Link>
-                <AbandonSessionButton sessionId={activeSession.id} />
-              </div>
-            </div>
-          </Card>
-        )}
+        {/* Mounted UNCONDITIONALLY (not inside `{activeSession && …}`) so the
+            persistent set-aside Undo survives the refresh that flips
+            activeSession to null — the island shows nothing when there's no
+            session and no pending undo. */}
+        <ActiveSessionPanel
+          session={
+            activeSession
+              ? { id: activeSession.id, number: activeSession.number, goal: activeSession.goal }
+              : null
+          }
+          resumeHref={`/collections/${collection.slug ?? collection.id}/sort/${activeSession?.number}`}
+        />
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -1,0 +1,184 @@
+// @vitest-environment jsdom
+import "@testing-library/jest-dom";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+
+const refresh = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
+
+import { ActiveSessionPanel } from "./ActiveSessionPanel";
+
+const session = { id: "sess_1", number: 3, goal: "Find my favorites" };
+const resumeHref = "/collections/my-bags/sort/3";
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  global.fetch = vi.fn();
+});
+
+describe("ActiveSessionPanel", () => {
+  it("renders the session card with goal and a Resume link when a session is present", () => {
+    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    expect(screen.getByText(/find my favorites/i)).toBeInTheDocument();
+    const resume = screen.getByRole("link", { name: /resume/i });
+    expect(resume).toHaveAttribute("href", resumeHref);
+  });
+
+  it("renders nothing visible when there is no session and no undo", () => {
+    const { container } = render(<ActiveSessionPanel session={null} resumeHref={resumeHref} />);
+    expect(screen.queryByText(/active/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("a single tap only reveals the confirm — it does NOT DELETE", () => {
+    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(screen.getByText(/set this session aside\?/i)).toBeInTheDocument();
+  });
+
+  it("moves focus to the safe default (Never mind) when the confirm appears", () => {
+    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    expect(screen.getByRole("button", { name: /never mind/i })).toHaveFocus();
+  });
+
+  it("backing out keeps the session — no API call, confirm dismissed", () => {
+    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /never mind/i }));
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(screen.queryByText(/set this session aside\?/i)).not.toBeInTheDocument();
+  });
+
+  it("only the confirm's Set aside DELETEs the session and refreshes", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
+    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // reveal
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // confirm
+    await waitFor(() =>
+      expect(global.fetch).toHaveBeenCalledWith("/api/sessions/sess_1", { method: "DELETE" }),
+    );
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("shows a persistent Undo notice after set-aside that SURVIVES the session prop going null", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
+    const { rerender } = render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // reveal
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // confirm
+    const notice = await screen.findByRole("status");
+    expect(notice).toHaveTextContent(/set aside/i);
+    expect(screen.getByRole("button", { name: /undo/i })).toBeInTheDocument();
+
+    // The refresh that follows set-aside flips activeSession to null upstream: the
+    // parent re-renders the (unconditionally mounted) island with session={null}.
+    // The undo state lives in the island, so the notice must STILL be here — this
+    // is the whole point (PR2 lesson: undo inside the conditional card vanishes).
+    rerender(<ActiveSessionPanel session={null} resumeHref={resumeHref} />);
+    expect(screen.queryByText(/find my favorites/i)).not.toBeInTheDocument();
+    const stillThere = screen.getByRole("status");
+    expect(stillThere).toHaveTextContent(/set aside/i);
+    expect(screen.getByRole("button", { name: /undo/i })).toBeInTheDocument();
+  });
+
+  it("clicking Undo POSTs to the restore route and refreshes, clearing the notice", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
+    const { rerender } = render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    await screen.findByRole("button", { name: /undo/i });
+    rerender(<ActiveSessionPanel session={null} resumeHref={resumeHref} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /undo/i }));
+    await waitFor(() =>
+      expect(global.fetch).toHaveBeenCalledWith("/api/sessions/sess_1/restore", {
+        method: "POST",
+      }),
+    );
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(2)); // set-aside + undo
+    await waitFor(() => expect(screen.queryByRole("status")).not.toBeInTheDocument());
+  });
+
+  it("ignores a rapid double-confirm — only one DELETE is sent", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
+    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // reveal
+    const confirm = screen.getByRole("button", { name: /^set aside$/i });
+    fireEvent.click(confirm);
+    fireEvent.click(confirm);
+    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    expect((global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
+  });
+
+  it("ignores a rapid double-tap on Undo — only one restore POST is sent", async () => {
+    let resolve!: (v: unknown) => void;
+    (global.fetch as unknown as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ ok: true }) // set-aside DELETE
+      .mockReturnValueOnce(new Promise((r) => { resolve = r; })); // restore POST hangs
+    const { rerender } = render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    await screen.findByRole("button", { name: /undo/i });
+    rerender(<ActiveSessionPanel session={null} resumeHref={resumeHref} />);
+
+    const undo = screen.getByRole("button", { name: /undo/i });
+    fireEvent.click(undo);
+    fireEvent.click(undo);
+    resolve({ ok: true });
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(2));
+    // 1 DELETE + 1 POST, not 1 + 2.
+    expect((global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(2);
+  });
+
+  it("a failed set-aside shows a gentle role=status message and does NOT refresh", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: false });
+    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    await waitFor(() => expect(screen.getByRole("status")).toBeInTheDocument());
+    expect(screen.getByRole("status")).toHaveTextContent(/another try/i);
+    expect(refresh).not.toHaveBeenCalled();
+    // No undo offered when nothing was set aside.
+    expect(screen.queryByRole("button", { name: /undo/i })).not.toBeInTheDocument();
+  });
+
+  it("a network rejection on set-aside is caught — gentle message, no refresh", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("offline"));
+    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    await waitFor(() => expect(screen.getByRole("status")).toBeInTheDocument());
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("a failed Undo shows a gentle message and keeps the undo affordance (no refresh)", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ ok: true }) // set-aside ok
+      .mockResolvedValueOnce({ ok: false }); // restore fails
+    const { rerender } = render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    await screen.findByRole("button", { name: /undo/i });
+    rerender(<ActiveSessionPanel session={null} resumeHref={resumeHref} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /undo/i }));
+    // The error renders as a SECOND role=status alongside the persistent undo
+    // notice, so target the gentle message by its text rather than by role.
+    await screen.findByText(/another try/i);
+    expect(refresh).toHaveBeenCalledTimes(1); // only the set-aside; undo did not refresh
+    expect(screen.getByRole("button", { name: /undo/i })).toBeInTheDocument();
+  });
+
+  it("renders a decorative middot that is hidden from screen readers in the undo notice", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
+    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    const notice = await screen.findByRole("status");
+    const sep = notice.querySelector('[aria-hidden="true"]');
+    expect(sep).not.toBeNull();
+    expect(sep).toHaveTextContent("·");
+  });
+});

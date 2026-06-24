@@ -14,7 +14,7 @@ vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
-  // The active-session card now renders AbandonSessionButton (a client island
+  // The active-session card now renders ActiveSessionPanel (a client island
   // that calls useRouter).
   useRouter: () => ({ refresh: vi.fn() }),
 }));
