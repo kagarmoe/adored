@@ -9,6 +9,7 @@ import { SortResultRepository } from "@/server/repositories/implementations/Sort
 import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
+import { ItemDispositionRepository } from "@/server/repositories/implementations/ItemDispositionRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
@@ -41,6 +42,9 @@ export class CollectionPurgeService {
       await new DecisionEventRepository(tx).deleteByCollection(collection.id);
       await new SessionRepository(tx).deleteByCollection(collection.id);
       await new CollectionPreferenceItemRepository(tx).deleteByCollection(collection.id);
+      // No ON DELETE CASCADE on the item_dispositions FK — clear it before the
+      // items hard-delete or that delete throws a 23503.
+      await new ItemDispositionRepository(tx).deleteByCollection(collection.id);
       const keys = await new PhotoRepository(tx).hardDeleteByCollection(collection.id);
       const itemsDeleted = await new ItemRepository(tx).hardDeleteByCollection(collection.id);
       await new InvitationRepository(tx).deleteByCollection(collection.id);
