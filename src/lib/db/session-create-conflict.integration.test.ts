@@ -1,12 +1,12 @@
 // @vitest-environment node
-// 4bhh safety net: the sessions_active_unique UNIQUE(collection_id, curator_id)
-// index covers EVERY row of a (collection, curator) slot — active, paused,
-// completed, AND soft-deleted (set-aside) — because it has no partial WHERE.
-// So a second POST /api/sessions into an occupied slot collides on 23505. The
-// repo's create() only retried sessions_collection_number_unique, so the active
-// collision (and, worse, the soft-deleted one that findActive can't see) fell
-// through to a raw 500. This pins the gentle 409 everywhere, NOT a 500, and that
-// the losing insert leaves NO second row behind.
+// 4bhh root-fix proof: after migration 0009 the sessions_active_unique
+// UNIQUE(collection_id, curator_id) index is PARTIAL — it covers ONLY in-progress
+// rows (deleted_at IS NULL AND status IN ('active','paused')). So the slot is held
+// by an active OR paused session; terminal (completed/abandoned) and soft-deleted
+// (set-aside) rows FREE the slot, and a fresh create into that freed slot succeeds.
+// A second create while an in-progress session still holds the slot collides on
+// 23505, which the repo maps to a gentle 409 — NOT a raw 500 — and the losing
+// insert leaves no second row behind.
 //
 // Honest real-DB seam: real POST handler -> SessionController -> SessionRepository
 // -> ephemeral Postgres. Mocks ONLY the two true boundaries (auth + getDb).
@@ -44,7 +44,7 @@ function jsonReq(body?: unknown): Request {
   });
 }
 
-describeDb("POST /api/sessions existing-session conflict -> 409 (4bhh safety net)", () => {
+describeDb("POST /api/sessions slot conflict — partial sessions_active_unique (4bhh)", () => {
   let ownerId: string;
 
   beforeEach(async () => {
@@ -57,7 +57,7 @@ describeDb("POST /api/sessions existing-session conflict -> 409 (4bhh safety net
     await closeDb();
   });
 
-  it("409s (NOT 500) a second create while an ACTIVE session exists — and inserts no second row", async () => {
+  it("409s (NOT 500) a second create while an ACTIVE session holds the slot — and inserts no second row", async () => {
     const { db } = getTestDb();
     const collectionId = await seedBareCollection(ownerId);
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
@@ -75,30 +75,50 @@ describeDb("POST /api/sessions existing-session conflict -> 409 (4bhh safety net
     expect(await new SessionRepository(db).findByCollection(collectionId)).toHaveLength(1);
   });
 
-  it("409s (NOT 500) a create when a SOFT-DELETED (set-aside) session holds the slot — the gap findActive can't see", async () => {
+  it("201s a new create after the slot's session is SET ASIDE (soft-deleted) — terminal rows free the slot (purses-4bhh)", async () => {
     const { db } = getTestDb();
     const repo = new SessionRepository(db);
     const collectionId = await seedBareCollection(ownerId);
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-
-    // Occupy the (collection, curator) slot, then set it aside (soft-delete).
     const created = await repo.create({ collectionId, curatorId: ownerId });
     await repo.softDelete(created.id);
-    // findActive (filters deletedAt) sees nothing — but the row still holds the
-    // unique slot, so the unconditional index still collides on insert.
-    expect(await repo.findActive(collectionId, ownerId)).toBeNull();
+    const res = await createSession(jsonReq({ collectionId }) as any);
+    expect(res.status).toBe(201);                      // was 409 under the old unconditional index
+    expect(await repo.findByCollection(collectionId)).toHaveLength(1); // the new active one
+  });
 
+  it("201s a new create after the slot's session is COMPLETED", async () => {
+    const { db } = getTestDb();
+    const repo = new SessionRepository(db);
+    const collectionId = await seedBareCollection(ownerId);
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const created = await repo.create({ collectionId, curatorId: ownerId });
+    await repo.update(created.id, { status: "completed" });
+    const res = await createSession(jsonReq({ collectionId }) as any);
+    expect(res.status).toBe(201);
+  });
+
+  it("201s a new create after the slot's session is ABANDONED", async () => {
+    const { db } = getTestDb();
+    const repo = new SessionRepository(db);
+    const collectionId = await seedBareCollection(ownerId);
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const created = await repo.create({ collectionId, curatorId: ownerId });
+    await repo.update(created.id, { status: "abandoned" });
+    const res = await createSession(jsonReq({ collectionId }) as any);
+    expect(res.status).toBe(201);
+  });
+
+  it("409s a create while a PAUSED session holds the slot (partial predicate includes paused)", async () => {
+    const { db } = getTestDb();
+    const repo = new SessionRepository(db);
+    const collectionId = await seedBareCollection(ownerId);
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const created = await repo.create({ collectionId, curatorId: ownerId });
+    await repo.update(created.id, { status: "paused" });
     const res = await createSession(jsonReq({ collectionId }) as any);
     expect(res.status).toBe(409);
     const body = await res.json();
     expect(body.error).toMatch(/already have a sort in progress/i);
-
-    // No NEW row inserted: the only row is the soft-deleted one (findByCollection
-    // filters deleted, so it reads 0 live rows — and including-deleted is still 1).
-    expect(await repo.findByCollection(collectionId)).toHaveLength(0);
-    const all = await db
-      .select()
-      .from((await import("@/lib/db/schema")).sessionsTable);
-    expect(all.filter((r: any) => r.collectionId === collectionId)).toHaveLength(1);
   });
 });

@@ -64,6 +64,13 @@
       "when": 1782287074409,
       "tag": "0008_cynical_zodiak",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1782330805291,
+      "tag": "0009_partial_active_session",
+      "breakpoints": true
     }
   ]
 }

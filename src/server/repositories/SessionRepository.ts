@@ -11,6 +11,10 @@ export interface ISessionRepository {
   // (soft-deleted) session that findById can't reach, so it can be restored.
   findByIdIncludingDeleted(id: string): Promise<Session | null>;
   findActive(collectionId: string, curatorId: string): Promise<Session | null>;
+  // The in-progress session (active OR paused, not soft-deleted) holding the
+  // partial-index slot — the row restore would collide with. findActive misses
+  // a paused holder; restore's pre-check needs this wider view.
+  findInProgress(collectionId: string, curatorId: string): Promise<Session | null>;
   findByCollection(collectionId: string): Promise<Session[]>;
   findByCollectionAndCurator(collectionId: string, curatorId: string): Promise<Session[]>;
   findByCollectionAndNumber(collectionId: string, number: number): Promise<Session | null>;

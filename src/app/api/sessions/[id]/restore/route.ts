@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { SessionController } from "@/server/api/sessions";
+import { errorResponse } from "@/server/api/http-errors";
 
 // Undo "set aside": re-activate a soft-deleted session. The active
 // GET/PATCH/DELETE handlers 404 on soft-deleted rows, so restore needs its own
@@ -28,6 +29,14 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
       { status: 403 },
     );
   }
-  const restored = await SessionController.fromDb(db).restoreSession(params.id);
-  return NextResponse.json(restored);
+  // Auth (401/404/collection/curator) is resolved ABOVE, before the try — those
+  // are deliberate status responses, not errors to map. Only the restore itself
+  // can raise CurrentSessionExistsError (a newer in-progress session now holds
+  // the slot), which errorResponse turns into a gentle 409 instead of a raw 500.
+  try {
+    const restored = await SessionController.fromDb(db).restoreSession(params.id);
+    return NextResponse.json(restored);
+  } catch (error) {
+    return errorResponse(error); // CurrentSessionExistsError -> 409
+  }
 }

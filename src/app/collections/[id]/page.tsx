@@ -30,7 +30,12 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
     ResultController.fromDb(db).listResults(collection.id),
   ]);
 
-  const activeSession = sessions.find((sortSession) => sortSession.status === "active");
+  // purses-4bhh / purses-ydeu: at most one open session at a time, and a paused
+  // sort is still the *current* one — surface it here (with a real un-pause) just
+  // like the sort landing does, not only active sessions.
+  const currentSession = sessions.find(
+    (sortSession) => sortSession.status === "active" || sortSession.status === "paused",
+  );
   const finalizedResults = results.filter((result) => result.status === "finalized");
   const stats = [
     { label: "Items", value: items.length },
@@ -99,17 +104,24 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
           ))}
         </div>
 
-        {/* Mounted UNCONDITIONALLY (not inside `{activeSession && …}`) so the
+        {/* Mounted UNCONDITIONALLY (not inside `{currentSession && …}`) so the
             persistent set-aside Undo survives the refresh that flips
-            activeSession to null — the island shows nothing when there's no
+            currentSession to null — the island shows nothing when there's no
             session and no pending undo. */}
         <ActiveSessionPanel
           session={
-            activeSession
-              ? { id: activeSession.id, number: activeSession.number, goal: activeSession.goal }
+            currentSession
+              ? {
+                  id: currentSession.id,
+                  number: currentSession.number,
+                  goal: currentSession.goal,
+                  // The find() predicate above guarantees active|paused; narrow
+                  // the broader SessionStatus to the panel's strict prop.
+                  status: currentSession.status as "active" | "paused",
+                }
               : null
           }
-          resumeHref={`/collections/${collection.slug ?? collection.id}/sort/${activeSession?.number}`}
+          resumeHref={`/collections/${collection.slug ?? collection.id}/sort/${currentSession?.number}`}
         />
 
         {/* Dashboard Grid */}

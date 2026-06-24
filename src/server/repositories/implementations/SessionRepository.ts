@@ -1,4 +1,4 @@
-import { eq, and, isNull, sql } from "drizzle-orm";
+import { eq, and, isNull, inArray, sql } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { sessionsTable } from "@/lib/db/schema";
 import type { ISessionRepository } from "../SessionRepository";
@@ -6,11 +6,14 @@ import type { Session } from "@/types";
 import { generateId } from "@/lib/id";
 
 /**
- * Thrown when a curator already holds a session in a (collection, curator) slot
- * and tries to create another. The slot is enforced by the unconditional
- * sessions_active_unique index, so this covers active, paused, completed, AND
- * soft-deleted (set-aside) rows — the cases findActive can't see. Routes map it
- * to a gentle 409 — never a 500.
+ * Thrown when a curator already holds an IN-PROGRESS session in a (collection,
+ * curator) slot and tries to occupy it again. After migration 0009 the
+ * sessions_active_unique index is PARTIAL — it covers only in-progress rows
+ * (deleted_at IS NULL AND status IN ('active','paused')). Terminal (completed/
+ * abandoned) and soft-deleted (set-aside) rows no longer hold the slot, so they
+ * don't collide. This fires on create into an occupied slot AND on restore that
+ * would re-activate a set-aside session a newer one has since superseded. Routes
+ * map it to a gentle 409 — never a 500.
  */
 export class CurrentSessionExistsError extends Error {
   constructor() {
@@ -50,10 +53,12 @@ export class SessionRepository implements ISessionRepository {
           .returning();
         return this.mapToSession(session);
       } catch (error) {
-        // The (collection, curator) slot is already occupied — active, paused,
-        // completed, OR soft-deleted (the unconditional sessions_active_unique
-        // index spans every row). Surface a gentle, typed 409 instead of a raw
-        // 500. Not retried — a fresh number won't free a slot held by curator.
+        // The (collection, curator) slot is held by an IN-PROGRESS session
+        // (active or paused, not soft-deleted) — the only rows the partial
+        // sessions_active_unique index covers after migration 0009. Terminal
+        // and soft-deleted rows free the slot and don't collide. Surface a
+        // gentle, typed 409 instead of a raw 500. Not retried — a fresh number
+        // won't free a slot held by the curator's live session.
         if (isCurrentSessionConflict(error)) throw new CurrentSessionExistsError();
         if (isSessionNumberConflict(error) && attempt < 4) continue;
         throw error;
@@ -121,6 +126,24 @@ export class SessionRepository implements ISessionRepository {
     return session ? this.mapToSession(session) : null;
   }
 
+  // The in-progress session (active OR paused, not soft-deleted) holding the
+  // partial-index slot — mirrors findActive but widens status to match the
+  // partial predicate so restore's pre-check sees a paused holder too.
+  async findInProgress(collectionId: string, curatorId: string): Promise<Session | null> {
+    const [session] = await this.db
+      .select()
+      .from(sessionsTable)
+      .where(
+        and(
+          eq(sessionsTable.collectionId, collectionId),
+          eq(sessionsTable.curatorId, curatorId),
+          inArray(sessionsTable.status, ["active", "paused"]),
+          isNull(sessionsTable.deletedAt),
+        ),
+      );
+    return session ? this.mapToSession(session) : null;
+  }
+
   async findByCollection(collectionId: string): Promise<Session[]> {
     const sessions = await this.db
       .select()
@@ -149,12 +172,22 @@ export class SessionRepository implements ISessionRepository {
   }
 
   async update(id: string, data: Partial<Session>): Promise<Session> {
-    const [session] = await this.db
-      .update(sessionsTable)
-      .set({ ...data, updatedAt: new Date() })
-      .where(eq(sessionsTable.id, id))
-      .returning();
-    return this.mapToSession(session);
+    try {
+      const [session] = await this.db
+        .update(sessionsTable)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(sessionsTable.id, id))
+        .returning();
+      return this.mapToSession(session);
+    } catch (error) {
+      // The THIRD in-progress writer. A terminal→in-progress transition
+      // (e.g. PATCH a completed session back to active/paused) re-enters the
+      // partial sessions_active_unique predicate; if a newer in-progress
+      // session already holds the slot, the partial index raises 23505. Surface
+      // the gentle, typed 409 — mirrors create()/restore() — never a raw 500.
+      if (isCurrentSessionConflict(error)) throw new CurrentSessionExistsError();
+      throw error;
+    }
   }
 
   async softDelete(id: string): Promise<Session> {
@@ -167,12 +200,22 @@ export class SessionRepository implements ISessionRepository {
   }
 
   async restore(id: string): Promise<Session> {
-    const [session] = await this.db
-      .update(sessionsTable)
-      .set({ deletedAt: null, status: "active", updatedAt: new Date() })
-      .where(eq(sessionsTable.id, id))
-      .returning();
-    return this.mapToSession(session);
+    try {
+      const [session] = await this.db
+        .update(sessionsTable)
+        .set({ deletedAt: null, status: "active", updatedAt: new Date() })
+        .where(eq(sessionsTable.id, id))
+        .returning();
+      return this.mapToSession(session);
+    } catch (error) {
+      // The partial index now lets a set-aside session be superseded: a newer
+      // in-progress session can occupy the slot while this one is soft-deleted.
+      // Re-activating this row would put TWO in-progress sessions in the slot,
+      // so the partial unique index raises 23505. Surface a gentle 409, not a
+      // raw 500. Mirrors create()'s conflict handling.
+      if (isCurrentSessionConflict(error)) throw new CurrentSessionExistsError();
+      throw error;
+    }
   }
 
   async deleteByCollection(collectionId: string): Promise<void> {

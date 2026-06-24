@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Badge, Button, Card } from "@/components/ui";
+import { ResumeControl } from "@/features/sorting/ResumeControl";
 
 // The collection landing page's active-session affordance, restructured so the
 // "set aside" undo SURVIVES the refresh that makes the session disappear.
@@ -24,6 +25,7 @@ interface SessionSummary {
   id: string;
   number: number | null;
   goal: string | null;
+  status: "active" | "paused";
 }
 
 export function ActiveSessionPanel({
@@ -38,6 +40,10 @@ export function ActiveSessionPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [undo, setUndo] = useState<string | null>(null);
+  // A restore that 409s is terminal: a newer sort now holds the slot, so this
+  // set-aside one can't come back. We render ONE settled voice (no live Undo)
+  // instead of contradicting the undo invite with an error beside it.
+  const [settled, setSettled] = useState(false);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const inFlight = useRef(false);
 
@@ -76,6 +82,13 @@ export function ActiveSessionPanel({
     setError("");
     try {
       const res = await fetch(`/api/sessions/${undo}/restore`, { method: "POST" });
+      // 409: a newer in-progress sort now holds the slot, so this set-aside one
+      // can't come back. Settle into ONE voice — no live Undo to click (it would
+      // only 409 again). There is nothing to refresh to.
+      if (res.status === 409) {
+        setSettled(true);
+        return;
+      }
       if (!res.ok) throw new Error("restore failed");
       setUndo(null);
       router.refresh(); // the restored session reappears as the card
@@ -85,6 +98,17 @@ export function ActiveSessionPanel({
       setBusy(false);
       inFlight.current = false;
     }
+  }
+
+  // A 409 on restore is terminal — render a SINGLE settled state, no live Undo
+  // (it would only 409 again) and no contradicting error beside the invite. This
+  // MUST take precedence over the undo-invite block below.
+  if (settled) {
+    return (
+      <p role="status" className="text-sm text-ink-soft">
+        Set aside. You&rsquo;ve started a new sort since, so this one stays put.
+      </p>
+    );
   }
 
   // Persistent undo takes precedence: once set aside, show the undo notice (and
@@ -116,22 +140,38 @@ export function ActiveSessionPanel({
 
   if (!session) return null;
 
+  const paused = session.status === "paused";
+
   return (
     <Card padding="lg" className="border-hairline bg-accent-aqua">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="mb-2 flex items-center gap-2">
-            <h2 className="text-lg text-ink">Active Sorting Session</h2>
-            <Badge variant="active">active</Badge>
+            <h2 className="text-lg text-ink">
+              {paused ? "Your sort is paused" : "Active Sorting Session"}
+            </h2>
+            <Badge variant={session.status}>{session.status}</Badge>
           </div>
-          <p className="text-sm text-ink">{session.goal || "Preference discovery"}</p>
+          <p className="text-sm text-ink">
+            {paused
+              ? "Your sort is safe — pick up where you left off."
+              : session.goal || "Preference discovery"}
+          </p>
         </div>
         <div className="flex flex-col items-start gap-2 sm:items-end">
           {!confirming ? (
             <div className="flex gap-2">
-              <Link href={resumeHref}>
-                <Button>Resume</Button>
-              </Link>
+              {/* A paused row stays status='paused' in the DB — a bare Link would
+                  land the curator mid-sort while the row says paused, desyncing
+                  the in-progress predicate. ResumeControl PATCHes status:active
+                  THEN navigates, so the DB and the URL agree. */}
+              {paused ? (
+                <ResumeControl sessionId={session.id} sortHref={resumeHref} />
+              ) : (
+                <Link href={resumeHref}>
+                  <Button>Resume</Button>
+                </Link>
+              )}
               <Button variant="secondary" onClick={() => setConfirming(true)}>
                 Set aside
               </Button>
