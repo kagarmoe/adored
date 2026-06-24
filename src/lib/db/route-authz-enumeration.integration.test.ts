@@ -462,6 +462,14 @@ function buildStrangerCases(
       `/api/sessions/${sessionId}`,
       { id: sessionId }),
 
+    // ── /api/sessions/[id]/restore (curator-private) ──────────────────────
+    // sessionId belongs to the owner. The restore route resolves the session
+    // INCLUDING soft-deleted, so an active sessionId resolves fine; the stranger
+    // then fails the collection-membership gate (before the curator gate) → 403.
+    c("sessions/[id]/restore/route.ts", "POST",
+      `/api/sessions/${sessionId}/restore`,
+      { id: sessionId }),
+
     // ── /api/sessions/[id]/decisions (curator-private) ────────────────────
     c("sessions/[id]/decisions/route.ts", "POST",
       `/api/sessions/${sessionId}/decisions`,
