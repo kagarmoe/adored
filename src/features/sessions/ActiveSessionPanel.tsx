@@ -44,6 +44,9 @@ export function ActiveSessionPanel({
   // set-aside one can't come back. We render ONE settled voice (no live Undo)
   // instead of contradicting the undo invite with an error beside it.
   const [settled, setSettled] = useState(false);
+  // True while the paused ResumeControl's PATCH is in flight — disables the
+  // sibling "Set aside" so a resume and a set-aside can't race on the same row.
+  const [resumeBusy, setResumeBusy] = useState(false);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const inFlight = useRef(false);
 
@@ -148,7 +151,7 @@ export function ActiveSessionPanel({
         <div>
           <div className="mb-2 flex items-center gap-2">
             <h2 className="text-lg text-ink">
-              {paused ? "Your sort is paused" : "Active Sorting Session"}
+              {paused ? "Your sort is paused" : "Active Session"}
             </h2>
             <Badge variant={session.status}>{session.status}</Badge>
           </div>
@@ -166,13 +169,23 @@ export function ActiveSessionPanel({
                   the in-progress predicate. ResumeControl PATCHes status:active
                   THEN navigates, so the DB and the URL agree. */}
               {paused ? (
-                <ResumeControl sessionId={session.id} sortHref={resumeHref} />
+                <ResumeControl
+                  sessionId={session.id}
+                  sortHref={resumeHref}
+                  onBusyChange={setResumeBusy}
+                />
               ) : (
                 <Link href={resumeHref}>
                   <Button>Resume</Button>
                 </Link>
               )}
-              <Button variant="secondary" onClick={() => setConfirming(true)}>
+              {/* Disabled while a resume PATCH is in flight so a curator can't
+                  open the set-aside confirm and DELETE mid-resume (same row). */}
+              <Button
+                variant="secondary"
+                onClick={() => setConfirming(true)}
+                disabled={resumeBusy}
+              >
                 Set aside
               </Button>
             </div>

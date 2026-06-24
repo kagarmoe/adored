@@ -11,9 +11,14 @@ import { Button } from "@/components/ui";
 export function ResumeControl({
   sessionId,
   sortHref,
+  onBusyChange,
 }: {
   sessionId: string;
   sortHref: string;
+  // Optional: lets a parent (the collection card) disable its sibling "Set aside"
+  // while a resume PATCH is in flight, so the two can't fire concurrently on the
+  // same session. Standalone callers (the sort landing) simply omit it.
+  onBusyChange?: (busy: boolean) => void;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -24,6 +29,7 @@ export function ResumeControl({
     if (inFlight.current) return; // a double-tap before `busy` renders is a no-op
     inFlight.current = true;
     setBusy(true);
+    onBusyChange?.(true);
     setError("");
     try {
       const res = await fetch(`/api/sessions/${sessionId}`, {
@@ -32,10 +38,11 @@ export function ResumeControl({
         body: JSON.stringify({ status: "active" }),
       });
       if (!res.ok) throw new Error("resume failed");
-      router.push(sortHref); // back to where they left off
+      router.push(sortHref); // back to where they left off (this island then unmounts)
     } catch {
       setError("That didn't go through — give it another try in a moment.");
       setBusy(false);
+      onBusyChange?.(false);
       inFlight.current = false;
     }
   }
