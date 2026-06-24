@@ -29,6 +29,7 @@ let triageSlug = "";
 let triageSessionNumber = 0;
 let waitingSlug = "";
 let waitingSessionNumber = 0;
+let setAsideSlug = "";
 
 test.beforeAll(async () => {
   const ownerId = await seedBaseline();
@@ -64,6 +65,18 @@ test.beforeAll(async () => {
     curatorId: ownerId,
     itemId: waiting.itemIds[1],
     disposition: "deferred",
+  });
+
+  // Epic C PR2: the count-free "Set aside" list. A 2-item journey where one item
+  // carries a `set_aside` disposition — so the list renders one Card row (cover +
+  // name + "Bring back"), not the EmptyState. Mirrors the patient-waiting seed.
+  const setAside = await seedJourneyScenario(ownerId, 2);
+  setAsideSlug = setAside.slug;
+  await new ItemDispositionRepository(db).upsert({
+    collectionId: setAside.collectionId,
+    curatorId: ownerId,
+    itemId: setAside.itemIds[0],
+    disposition: "set_aside",
   });
 });
 
@@ -102,6 +115,9 @@ for (const theme of ["light", "dark"] as const) {
       // prompt, and the patient-waiting "Ready when you are" resurfacing state.
       ["triage", `/collections/${triageSlug}/sort/${triageSessionNumber}/triage`],
       ["triage-patient-waiting", `/collections/${waitingSlug}/sort/${waitingSessionNumber}/triage`],
+      // Epic C PR2: the count-free "Set aside" list — one set-aside item (cover +
+      // name + quiet "Bring back"), reached from triage's quiet "Set aside" link.
+      ["set-aside", `/collections/${setAsideSlug}/sort/set-aside`],
     ];
     for (const [name, url] of surfaces) {
       await page.goto(url);

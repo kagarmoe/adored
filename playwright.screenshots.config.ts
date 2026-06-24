@@ -10,6 +10,10 @@ export default defineConfig({
   ...base,
   testMatch: ["**/auth.setup.ts", "**/screenshots/capture.ts"],
   reporter: [["list"]],
+  // Each capture test walks EVERY surface sequentially (goto + image-settle per
+  // surface). As surfaces grow the cumulative time exceeds Playwright's default
+  // 30s per-test budget — generous here because this run never joins the CI gate.
+  timeout: 120_000,
   // setup (auth) + the two viewports the cookbook reviews. Desktop omitted.
   projects: base.projects!.filter((p) => ["setup", "tablet", "phone"].includes(p.name!)),
 });
