@@ -6,6 +6,7 @@ import { getSession } from "@/lib/auth";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { SessionController } from "@/server/api/sessions";
 import { PreferenceController } from "@/server/api/preferences";
+import { DispositionController } from "@/server/api/dispositions";
 
 interface DecisionRequest {
   type: "triage" | "pairwise_compare" | "bucket_assign";
@@ -43,6 +44,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }).returning();
 
     await PreferenceController.fromDb(db).recalculatePreferences(sortSession.collectionId, session.user.id);
+
+    // disposed <=> untriaged: triaging an item clears any prior disposition for
+    // this curator, so a previously set_aside/deferred item can't be both at once.
+    if (body.type === "triage") {
+      const itemId = (body.decision as { itemId?: string }).itemId;
+      if (itemId) await DispositionController.fromDb(db).bringBack(itemId, session.user.id);
+    }
 
     return NextResponse.json(event, { status: 201 });
   } catch (error) {

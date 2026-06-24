@@ -1,9 +1,16 @@
-import type { CollectionPreferenceItem, Item } from "@/types";
+import type { CollectionPreferenceItem, Disposition, Item } from "@/types";
 
 interface SelectionOptions {
   preferences: CollectionPreferenceItem[];
   items: Item[];
   decidedPairs: Set<string>;
+  /**
+   * Items the curator has disposed (set_aside / deferred). A disposed item is
+   * never offered as a pairing candidate — it has no preference row, so the
+   * score-sort below would otherwise score it `?? 0` and treat it as eligible.
+   * Optional + defaults to empty: existing callers are unaffected.
+   */
+  dispositionByItemId?: Map<string, Disposition>;
 }
 
 /**
@@ -13,10 +20,13 @@ interface SelectionOptions {
 export function selectNextPair(options: SelectionOptions): [Item, Item] | null {
   const { preferences, items, decidedPairs } = options;
 
+  const disposed = options.dispositionByItemId ?? new Map<string, Disposition>();
+  const eligible = items.filter((i) => !disposed.has(i.id));
+
   const prefMap = new Map(preferences.map((p) => [p.itemId, p]));
 
   // Sort items by score (descending)
-  const sorted = [...items].sort((a, b) => {
+  const sorted = [...eligible].sort((a, b) => {
     const scoreA = prefMap.get(a.id)?.score ?? 0;
     const scoreB = prefMap.get(b.id)?.score ?? 0;
     return scoreB - scoreA;

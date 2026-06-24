@@ -6,6 +6,7 @@ import { ItemController } from "@/server/api/items";
 import { SessionController } from "@/server/api/sessions";
 import { PreferenceController } from "@/server/api/preferences";
 import { DecisionController } from "@/server/api/decisions";
+import { DispositionController } from "@/server/api/dispositions";
 import { AppLayout } from "@/components/layout";
 import { EmptyState } from "@/components/ui";
 import { CompareChoice } from "@/features/sorting/CompareChoice";
@@ -41,11 +42,15 @@ export default async function ComparePage({ params }: ComparePageProps) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
-  const [items, preferences, decisions] = await Promise.all([
+  const [items, preferences, decisions, dispositions] = await Promise.all([
     ItemController.fromDb(db).listItems(collection.id),
     PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id),
     DecisionController.fromDb(db).listBySession(sortSession.id),
+    DispositionController.fromDb(db).listDispositions(collection.id, session.user.id),
   ]);
+
+  // A disposed item (set_aside / deferred) is never offered for pairwise compare.
+  const dispositionByItemId = new Map(dispositions.map((d) => [d.itemId, d.disposition]));
 
   if (items.length < 2) {
     return (
@@ -78,6 +83,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
     preferences,
     items,
     decidedPairs,
+    dispositionByItemId,
   });
 
   if (!pair) {
