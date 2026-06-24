@@ -8,6 +8,7 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     [t.ink, t.ground, 4.5, "ink on ground"],
     [t.ink, t.surface, 4.5, "ink on surface"],
     [t.inkSoft, t.ground, 4.5, "ink-soft on ground"],
+    [t.inkSoft, t.surface, 4.5, "ink-soft on surface (quiet secondary copy)"],
     [t.primaryInk, t.primary, 4.5, "primary-ink on primary"],
     [t.primary, t.ground, 4.5, "primary text/link on ground"],
     [t.primary, t.surface, 3.0, "primary border on surface"],

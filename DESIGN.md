@@ -141,6 +141,7 @@ Flat by default. In **light**, surfaces sit on white and lift by a soft, cool sh
 - **Inputs:** surface fill, hairline border, 10px radius, 44px height; focus → teal ring; error → error border + a message, never colour alone.
 - **Badges / buckets:** tier badges use the value-ramp tokens + label + icon. Status badges are semantic where meaningful, neutral (hairline) otherwise.
 - **Theme toggle:** top-right of the shell; 44px tap target; honours reduced-motion.
+- **Patient waiting (Not yet):** when a set-aside ("Not yet") item resurfaces, a calm banner — a cool-blue benign chip (`accent-cornflower`) with `ink` text (not `ink-soft`: ink-soft on cornflower fails light-theme AA) plus a non-state moon glyph so hue is never the sole signal. Crossfade in with `--ease-gentle`; instant under reduced-motion. Gentle, never urgent: no remaining count, no inbox or "resting place" framing — the item simply comes back when the person is ready.
 
 ## 6. Do's and Don'ts
 
