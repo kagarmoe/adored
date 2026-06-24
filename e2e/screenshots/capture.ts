@@ -137,6 +137,11 @@ for (const theme of ["light", "dark"] as const) {
       // sort is safe — pick up where you left off" + Resume, with "New Session"
       // gated (purses-4bhh). Reached after "Take a break" in the sort chrome.
       ["sort-paused", `/collections/${pausedSlug}/sort`],
+      // purses-ydeu: the same paused session, now surfaced on the COLLECTION page.
+      // It used to show no card (active-only); now ActiveSessionPanel renders the
+      // status-aware paused card ("Your sort is paused" / "Your sort is safe") with
+      // a real un-pause Resume. Reuses the pausedSlug seed above.
+      ["collection-paused", `/collections/${pausedSlug}`],
     ];
     for (const [name, url] of surfaces) {
       await page.goto(url);
