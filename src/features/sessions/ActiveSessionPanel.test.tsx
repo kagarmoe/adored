@@ -220,6 +220,27 @@ describe("ActiveSessionPanel", () => {
     expect(screen.getByRole("button", { name: /undo/i })).toBeInTheDocument();
   });
 
+  it("a restore 409 settles into a single 'started a new sort' state — no live Undo, no refresh", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ ok: true }) // set-aside DELETE ok
+      .mockResolvedValueOnce({ ok: false, status: 409 }); // restore 409 — slot taken
+    const { rerender } = render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    await screen.findByRole("button", { name: /undo/i });
+    rerender(<ActiveSessionPanel session={null} resumeHref={resumeHref} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /undo/i }));
+
+    // Settled: the single gentle "started a new sort" notice renders…
+    await screen.findByText(/started a new sort/i);
+    // …with NO live Undo button anymore (fix B — one voice, not undo + error).
+    expect(screen.queryByRole("button", { name: /undo/i })).not.toBeInTheDocument();
+    // The 409 is terminal — there is nothing to refresh to, so refresh stays at 1
+    // (only the set-aside), NOT called again after the 409.
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
   it("renders a decorative middot that is hidden from screen readers in the undo notice", async () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
     render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);

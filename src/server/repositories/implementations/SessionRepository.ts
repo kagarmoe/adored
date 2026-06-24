@@ -172,12 +172,22 @@ export class SessionRepository implements ISessionRepository {
   }
 
   async update(id: string, data: Partial<Session>): Promise<Session> {
-    const [session] = await this.db
-      .update(sessionsTable)
-      .set({ ...data, updatedAt: new Date() })
-      .where(eq(sessionsTable.id, id))
-      .returning();
-    return this.mapToSession(session);
+    try {
+      const [session] = await this.db
+        .update(sessionsTable)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(sessionsTable.id, id))
+        .returning();
+      return this.mapToSession(session);
+    } catch (error) {
+      // The THIRD in-progress writer. A terminal→in-progress transition
+      // (e.g. PATCH a completed session back to active/paused) re-enters the
+      // partial sessions_active_unique predicate; if a newer in-progress
+      // session already holds the slot, the partial index raises 23505. Surface
+      // the gentle, typed 409 — mirrors create()/restore() — never a raw 500.
+      if (isCurrentSessionConflict(error)) throw new CurrentSessionExistsError();
+      throw error;
+    }
   }
 
   async softDelete(id: string): Promise<Session> {

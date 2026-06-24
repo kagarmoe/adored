@@ -40,6 +40,10 @@ export function ActiveSessionPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [undo, setUndo] = useState<string | null>(null);
+  // A restore that 409s is terminal: a newer sort now holds the slot, so this
+  // set-aside one can't come back. We render ONE settled voice (no live Undo)
+  // instead of contradicting the undo invite with an error beside it.
+  const [settled, setSettled] = useState(false);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const inFlight = useRef(false);
 
@@ -79,10 +83,10 @@ export function ActiveSessionPanel({
     try {
       const res = await fetch(`/api/sessions/${undo}/restore`, { method: "POST" });
       // 409: a newer in-progress sort now holds the slot, so this set-aside one
-      // can't come back. Say so gently and leave the undo notice in place —
-      // there is nothing to refresh to.
+      // can't come back. Settle into ONE voice — no live Undo to click (it would
+      // only 409 again). There is nothing to refresh to.
       if (res.status === 409) {
-        setError("You've started a new sort since, so this one stays set aside.");
+        setSettled(true);
         return;
       }
       if (!res.ok) throw new Error("restore failed");
@@ -94,6 +98,17 @@ export function ActiveSessionPanel({
       setBusy(false);
       inFlight.current = false;
     }
+  }
+
+  // A 409 on restore is terminal — render a SINGLE settled state, no live Undo
+  // (it would only 409 again) and no contradicting error beside the invite. This
+  // MUST take precedence over the undo-invite block below.
+  if (settled) {
+    return (
+      <p role="status" className="text-sm text-ink-soft">
+        Set aside. You&rsquo;ve started a new sort since, so this one stays put.
+      </p>
+    );
   }
 
   // Persistent undo takes precedence: once set aside, show the undo notice (and
