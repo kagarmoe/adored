@@ -18,6 +18,7 @@ import { MembershipRepository } from "@/server/repositories/implementations/Memb
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
+import { ItemDispositionRepository } from "@/server/repositories/implementations/ItemDispositionRepository";
 
 const { mockGetSession, mockBlobDel } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
@@ -111,6 +112,14 @@ describeDb("POST /api/items/[id]/purge (route -> service -> DB) — purses-u3p",
     return Number((rows as unknown as { n: number }[])[0].n);
   }
 
+  async function dispositionRowCount(itemId: string): Promise<number> {
+    const { db } = getTestDb();
+    const rows = await db.execute(
+      sql`SELECT count(*)::int AS n FROM item_dispositions WHERE item_id = ${itemId}`,
+    );
+    return Number((rows as unknown as { n: number }[])[0].n);
+  }
+
   beforeEach(async () => {
     await resetDb();
     vi.clearAllMocks();
@@ -144,6 +153,29 @@ describeDb("POST /api/items/[id]/purge (route -> service -> DB) — purses-u3p",
     const delledKeys = mockBlobDel.mock.calls.map((c) => c[0]).sort();
     expect(delledKeys).toEqual([HTTP_KEY_A, HTTP_KEY_B].sort());
     expect(delledKeys).not.toContain(NON_HTTP_KEY);
+  });
+
+  it("(a2) owner purge also removes the item's disposition row (no FK 23503 violation)", async () => {
+    // The item_dispositions FK has NO ON DELETE CASCADE, so a leftover disposition
+    // would block the item hard-delete with a 23503. Seed one (set_aside) for the
+    // owner, then prove the route purge succeeds and the row is gone.
+    const { db } = getTestDb();
+    const itemId = await seedItemWithChildren();
+    await new ItemDispositionRepository(db).upsert({
+      collectionId,
+      curatorId: ownerId,
+      itemId,
+      disposition: "set_aside",
+    });
+    expect(await dispositionRowCount(itemId)).toBe(1); // non-vacuous BEFORE
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    const res = await purge(purgeReq({ confirm: "PURGE" }) as any, { params: { id: itemId } });
+    expect(res.status).toBe(200);
+
+    expect(await new ItemRepository(db).findByIdIncludingDeleted(itemId)).toBeNull();
+    expect(await dispositionRowCount(itemId)).toBe(0);
+    expect(await new ItemDispositionRepository(db).findByItem(itemId, ownerId)).toBeNull();
   });
 
   it("(b) 409 when the item is in a sort result; nothing is deleted", async () => {

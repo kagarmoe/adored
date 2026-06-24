@@ -5,6 +5,7 @@ import { del } from "@vercel/blob";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
+import { ItemDispositionRepository } from "@/server/repositories/implementations/ItemDispositionRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import { AuditLogRepository } from "@/server/repositories/implementations/AuditLogRepository";
 
@@ -58,6 +59,9 @@ export class ItemPurgeService {
 
     const blobKeys = await withTransaction(this.db, async (tx) => {
       const preferencesDeleted = await new CollectionPreferenceItemRepository(tx).deleteByItem(item.id);
+      // The item_dispositions FK has no ON DELETE CASCADE, so a leftover
+      // disposition would block the item hard-delete with a 23503.
+      await new ItemDispositionRepository(tx).deleteByItem(item.id);
       const keys = await new PhotoRepository(tx).hardDeleteByItem(item.id);
       await new ItemRepository(tx).hardDelete(item.id);
       // Tx-bound by construction — a committed purge always has exactly one audit

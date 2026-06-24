@@ -9,7 +9,15 @@
 //
 // Then follow docs/cookbook/add-images-to-pr.md to release + embed them.
 import { test } from "@playwright/test";
-import { seedBaseline, seedSortScenario, seedMembersScenario } from "../fixtures/seed";
+import {
+  seedBaseline,
+  seedSortScenario,
+  seedMembersScenario,
+  seedJourneyScenario,
+} from "../fixtures/seed";
+import { getTestDb } from "../fixtures/db";
+import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
+import { ItemDispositionRepository } from "@/server/repositories/implementations/ItemDispositionRepository";
 
 // A real photo so the shots show a real rendered image, not a placeholder.
 const FIXTURE = "e2e/fixtures/photos/IMG_0428.jpeg";
@@ -17,6 +25,10 @@ const FIXTURE = "e2e/fixtures/photos/IMG_0428.jpeg";
 let slug = "";
 let membersSlug = "";
 let resultNumber = 0;
+let triageSlug = "";
+let triageSessionNumber = 0;
+let waitingSlug = "";
+let waitingSessionNumber = 0;
 
 test.beforeAll(async () => {
   const ownerId = await seedBaseline();
@@ -24,6 +36,35 @@ test.beforeAll(async () => {
   // A collection with real owner + curator membership rows so the members shot
   // shows the RoleBadge (the baseline seed inserts collections without them).
   ({ slug: membersSlug } = await seedMembersScenario(ownerId));
+
+  // Epic C PR1: an UNTRIAGED journey so the triage shot shows the focused item,
+  // the four tiers, and the quiet "Not yet" defer action below the hairline.
+  ({ slug: triageSlug, sessionNumber: triageSessionNumber } =
+    await seedJourneyScenario(ownerId, 3));
+
+  // Epic C PR1: the patient-waiting state. A 2-item journey where item A is
+  // already triaged (a preference row) and item B is deferred — so the ONLY
+  // remaining untriaged item is deferred → selectTriageItem sets showingDeferred
+  // and the "Ready when you are" banner renders.
+  const waiting = await seedJourneyScenario(ownerId, 2);
+  waitingSlug = waiting.slug;
+  waitingSessionNumber = waiting.sessionNumber;
+  const { db } = getTestDb();
+  await new CollectionPreferenceItemRepository(db).create({
+    collectionId: waiting.collectionId,
+    curatorId: ownerId,
+    itemId: waiting.itemIds[0],
+    score: 0.875,
+    confidence: 0.1,
+    rankBucket: "top",
+    comparisonCount: 1,
+  });
+  await new ItemDispositionRepository(db).upsert({
+    collectionId: waiting.collectionId,
+    curatorId: ownerId,
+    itemId: waiting.itemIds[1],
+    disposition: "deferred",
+  });
 });
 
 for (const theme of ["light", "dark"] as const) {
@@ -57,6 +98,10 @@ for (const theme of ["light", "dark"] as const) {
       // PR1a (purses-wew): editable display-name profile (no image — the img
       // wait below just times out harmlessly via .catch).
       ["profile", "/profile"],
+      // Epic C PR1: triage with the "Not yet" defer affordance + person-side
+      // prompt, and the patient-waiting "Ready when you are" resurfacing state.
+      ["triage", `/collections/${triageSlug}/sort/${triageSessionNumber}/triage`],
+      ["triage-patient-waiting", `/collections/${waitingSlug}/sort/${waitingSessionNumber}/triage`],
     ];
     for (const [name, url] of surfaces) {
       await page.goto(url);

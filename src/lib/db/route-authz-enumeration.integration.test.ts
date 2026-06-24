@@ -363,6 +363,21 @@ function buildStrangerCases(
       { id: collectionId },
       { photoIds: [], destination: { type: "pool" } }),
 
+    // ── /api/collections/[id]/dispositions (Epic C PR1) ───────────────────
+    // POST/DELETE resolve the ITEM (requireApiItemCapability "preferences:write"); a
+    // stranger fails the capability gate → 403. GET uses requireApiCollectionAccess →
+    // 403 for a non-member. Body supplied on POST so authz fires before any parse.
+    c("collections/[id]/dispositions/route.ts", "GET",
+      `/api/collections/${collectionId}/dispositions`,
+      { id: collectionId }),
+    c("collections/[id]/dispositions/route.ts", "POST",
+      `/api/collections/${collectionId}/dispositions`,
+      { id: collectionId },
+      { itemId: itemAId, disposition: "deferred" }),
+    c("collections/[id]/dispositions/[itemId]/route.ts", "DELETE",
+      `/api/collections/${collectionId}/dispositions/${itemAId}`,
+      { id: collectionId, itemId: itemAId }),
+
     // ── /api/collections/[id]/preferences/items ───────────────────────────
     c("collections/[id]/preferences/items/route.ts", "GET",
       `/api/collections/${collectionId}/preferences/items`,

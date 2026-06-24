@@ -3,13 +3,14 @@ import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-const { mockGetSession, mockRequireAccess, itemRepo, sessionRepo, prefRepo, photoRepo } = vi.hoisted(() => ({
+const { mockGetSession, mockRequireAccess, itemRepo, sessionRepo, prefRepo, photoRepo, dispRepo } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockRequireAccess: vi.fn(),
   itemRepo: { findByCollection: vi.fn() },
   sessionRepo: { findByCollectionAndNumber: vi.fn() },
-  prefRepo: { findByCollection: vi.fn() },
+  prefRepo: { findByCollection: vi.fn(), findByItem: vi.fn() },
   photoRepo: { findCoverPhotosByItemIds: vi.fn() },
+  dispRepo: { findByCollectionAndCurator: vi.fn() },
 }));
 
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
@@ -21,6 +22,7 @@ vi.mock("@/server/repositories/implementations/ItemRepository", () => ({ ItemRep
 vi.mock("@/server/repositories/implementations/SessionRepository", () => ({ SessionRepository: vi.fn(function () { return sessionRepo; }) }));
 vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({ CollectionPreferenceItemRepository: vi.fn(function () { return prefRepo; }) }));
 vi.mock("@/server/repositories/implementations/PhotoRepository", () => ({ PhotoRepository: vi.fn(function () { return photoRepo; }) }));
+vi.mock("@/server/repositories/implementations/ItemDispositionRepository", () => ({ ItemDispositionRepository: vi.fn(function () { return dispRepo; }) }));
 
 import TriagePage from "./page";
 
@@ -35,6 +37,7 @@ beforeEach(() => {
   sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_1", collectionId: "coll_01ABCDEF", number: 1, status: "active", curatorId: "u1" });
   prefRepo.findByCollection.mockResolvedValue([]);
   photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map([["item_1", { id: "photo_1", itemId: "item_1" }]]));
+  dispRepo.findByCollectionAndCurator.mockResolvedValue([]);
 });
 
 describe("TriagePage integrity guard", () => {
@@ -66,5 +69,77 @@ describe("TriagePage hero image", () => {
     render(ui);
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
     expect(screen.getByText("B")).toBeInTheDocument();
+  });
+});
+
+describe("TriagePage person-side copy & affordances", () => {
+  it("uses a person-side prompt, not a machine-side bucket instruction", async () => {
+    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    render(ui);
+    expect(screen.getByRole("heading", { name: /how do you feel about this one\?/i })).toBeInTheDocument();
+    expect(screen.queryByText(/assign the current item to a preference bucket/i)).not.toBeInTheDocument();
+  });
+
+  it("renders the 'Not yet' defer control wired to collection.id (ULID), not the slug", async () => {
+    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    render(ui);
+    // The control is a client island; assert it rendered with its accessible label.
+    expect(screen.getByRole("button", { name: /not yet/i })).toBeInTheDocument();
+  });
+});
+
+describe("TriagePage ceiling-free progress (TONE 1 & 4)", () => {
+  it("shows no total, no remaining count, and no 'of N' framing", async () => {
+    prefRepo.findByCollection.mockResolvedValue([{ itemId: "item_done", disposition: "top" }]);
+    itemRepo.findByCollection.mockResolvedValue([
+      ITEM,
+      { id: "item_done", collectionId: "coll_01ABCDEF", number: 8, name: "Done", brand: null, status: "active" },
+    ]);
+    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const { container } = render(ui);
+    // Counts what was decided, never what's left — and never "X of Y".
+    expect(screen.getByText(/1 decided so far/i)).toBeInTheDocument();
+    expect(screen.queryByText(/\bof\s+\d+\b/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/\d+\s+(left|remaining|to go|undecided)/i)).not.toBeInTheDocument();
+    // No filling progress bar (an inline width style is the tell of the old bar).
+    expect(container.querySelector('[style*="width"]')).toBeNull();
+  });
+
+  it("omits the cue entirely before the first decision (no '0 decided')", async () => {
+    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    render(ui);
+    expect(screen.queryByText(/decided so far/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("TriagePage patient-waiting skin (showingDeferred)", () => {
+  it("renders the 'Ready when you are' treatment when only deferred items remain", async () => {
+    dispRepo.findByCollectionAndCurator.mockResolvedValue([
+      { itemId: "item_1", disposition: "deferred" },
+    ]);
+    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    render(ui);
+    expect(screen.getByText(/ready when you are/i)).toBeInTheDocument();
+    // a11y: the banner is a live region so its appearance is announced once on
+    // the refreshed page. It carries the "Ready when you are" copy.
+    expect(screen.getByRole("status")).toHaveTextContent(/ready when you are/i);
+    // Never a remaining-count / inbox framing.
+    expect(screen.queryByText(/\d+\s+left/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/inbox|resting place/i)).not.toBeInTheDocument();
+    // The deferred item still comes forward to be decided.
+    expect(screen.getByRole("button", { name: /^love$/i })).toBeInTheDocument();
+  });
+
+  it("does NOT show the patient-waiting treatment while active items remain", async () => {
+    dispRepo.findByCollectionAndCurator.mockResolvedValue([
+      { itemId: "item_deferred", disposition: "deferred" },
+    ]);
+    itemRepo.findByCollection.mockResolvedValue([
+      ITEM,
+      { id: "item_deferred", collectionId: "coll_01ABCDEF", number: 9, name: "Later", brand: null, status: "active" },
+    ]);
+    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    render(ui);
+    expect(screen.queryByText(/ready when you are/i)).not.toBeInTheDocument();
   });
 });

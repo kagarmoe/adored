@@ -5,12 +5,15 @@ import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemController } from "@/server/api/items";
 import { SessionController } from "@/server/api/sessions";
 import { PreferenceController } from "@/server/api/preferences";
+import { DispositionController } from "@/server/api/dispositions";
 import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
 import { Card, EmptyState } from "@/components/ui";
 import { DecisionControls } from "@/features/sorting/DecisionControls";
+import { DeferControl } from "@/features/sorting/DeferControl";
 import { ItemCard } from "@/features/items/ItemCard";
+import { selectTriageItem } from "@/lib/triage-selection";
 
 interface TriagePageProps {
   params: { id: string; sessionNumber: string };
@@ -26,12 +29,13 @@ export default async function TriagePage({ params }: TriagePageProps) {
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
 
   const sessionNumber = Number(params.sessionNumber);
-  const [items, sortSession, preferences] = await Promise.all([
+  const [items, sortSession, preferences, dispositions] = await Promise.all([
     ItemController.fromDb(db).listItems(collection.id),
     sessionNumber > 0 && Number.isInteger(sessionNumber)
       ? SessionController.fromDb(db).getByCollectionAndNumber(collection.id, sessionNumber)
       : Promise.resolve(null),
     PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id),
+    DispositionController.fromDb(db).listDispositions(collection.id, session.user.id),
   ]);
 
   if (!sortSession || sortSession.collectionId !== collection.id) {
@@ -43,15 +47,18 @@ export default async function TriagePage({ params }: TriagePageProps) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
-  const preferencesByItemId = new Map(preferences.map((p) => [p.itemId, p]));
-  const item = items.find((i) => !preferencesByItemId.has(i.id)) || null;
+  const preferenceItemIds = new Set(preferences.map((p) => p.itemId));
+  const dispositionByItemId = new Map(dispositions.map((d) => [d.itemId, d.disposition]));
+  const { item, showingDeferred } = selectTriageItem(items, preferenceItemIds, dispositionByItemId);
 
   const covers = item ? await PhotoController.fromDb(db).findCoverPhotosByItemIds([item.id]) : new Map();
   const cover = item ? covers.get(item.id) : undefined;
   const heroPhotoUrl = cover ? getPhotoAssetUrlForPhoto(cover, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
 
-  const totalItems = items.length;
-  const triaged = preferences.length;
+  // Ceiling-free cue: count only what the person has affirmed (TONE.md 1 & 4).
+  // Never a total, a remaining count, or a filling-to-100% bar — no count-down,
+  // no completion guilt.
+  const decided = preferences.length;
 
   return (
     <AppLayout
@@ -63,39 +70,46 @@ export default async function TriagePage({ params }: TriagePageProps) {
       ]}
     >
       <div className="mx-auto max-w-xl space-y-6">
-        <div className="flex items-end justify-between">
-          <div>
-            <h1 className="text-3xl text-ink">Triage</h1>
-            <p className="mt-2 text-ink-soft">Assign the current item to a preference bucket.</p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm text-ink-soft">{triaged} of {totalItems}</p>
-            <div className="mt-2 w-32 bg-accent-aqua rounded-full h-2">
-              <div
-                className="bg-primary h-2 rounded-full transition-all"
-                style={{ width: `${totalItems > 0 ? (triaged / totalItems) * 100 : 0}%` }}
-              />
-            </div>
-          </div>
+        <div>
+          <h1 className="text-3xl text-ink">How do you feel about this one?</h1>
+          {decided > 0 && (
+            <p className="mt-2 text-sm text-ink-soft">{decided} decided so far</p>
+          )}
         </div>
 
         {!item ? (
-          <EmptyState heading="All items triaged!" message="You&apos;ve completed triage for all items. View results to see your ranked order." />
+          <EmptyState heading="You&apos;ve looked at everything for now" message="You&apos;ve thought through each one. View results to see what you love most." />
         ) : (
           <>
+            {showingDeferred && (
+              <div role="status" className="flex items-center gap-2 rounded-control bg-accent-cornflower px-4 py-3 text-ink transition-opacity duration-300 ease-gentle motion-reduce:transition-none">
+                <span aria-hidden className="text-lg leading-none">☾</span>
+                <p className="text-sm">
+                  <span className="font-medium">Ready when you are.</span>{" "}
+                  This one was waiting for you — no rush.
+                </p>
+              </div>
+            )}
             <ItemCard item={item} collectionId={collection.slug ?? collection.id} heroPhotoUrl={heroPhotoUrl} imageClassName="h-64" />
             <Card padding="lg">
-              <DecisionControls
-                key={item.id}
-                sessionId={sortSession.id}
-                type="triage"
-                decisions={[
-                  { label: "Love", decision: { itemId: item.id, result: "top" } },
-                  { label: "Like", decision: { itemId: item.id, result: "high" } },
-                  { label: "Maybe", decision: { itemId: item.id, result: "medium" } },
-                  { label: "Onward", decision: { itemId: item.id, result: "low" } },
-                ]}
-              />
+              <div className="space-y-4">
+                <DecisionControls
+                  key={item.id}
+                  sessionId={sortSession.id}
+                  type="triage"
+                  decisions={[
+                    { label: "Love", decision: { itemId: item.id, result: "top" } },
+                    { label: "Like", decision: { itemId: item.id, result: "high" } },
+                    { label: "Maybe", decision: { itemId: item.id, result: "medium" } },
+                    { label: "Onward", decision: { itemId: item.id, result: "low" } },
+                  ]}
+                />
+                {/* Quiet, demoted escape: the four tiers stay the primary row;
+                    "Not yet" sits below a hairline as a low-pressure exit. */}
+                <div className="border-t border-hairline pt-3">
+                  <DeferControl collectionId={collection.id} itemId={item.id} />
+                </div>
+              </div>
             </Card>
           </>
         )}

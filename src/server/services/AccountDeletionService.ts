@@ -9,6 +9,7 @@ import { SortResultRepository } from "@/server/repositories/implementations/Sort
 import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
+import { ItemDispositionRepository } from "@/server/repositories/implementations/ItemDispositionRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
@@ -88,6 +89,10 @@ export class AccountDeletionService {
       await new DecisionEventRepository(tx).deleteByCurator(userId);
       await new SessionRepository(tx).deleteByCurator(userId);
       await new CollectionPreferenceItemRepository(tx).deleteByCurator(userId);
+      // The user's disposition rows in OTHER owners' collections (curator-private
+      // slice). The item_dispositions FK has no cascade; the borrowed item/collection
+      // survive, so only this curator's rows are cleared.
+      await new ItemDispositionRepository(tx).deleteByCurator(userId);
       await new MembershipRepository(tx).deleteByUser(userId);
     });
 

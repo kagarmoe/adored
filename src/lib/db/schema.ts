@@ -277,6 +277,36 @@ export const preferencesTable = pgTable(
   }),
 );
 
+// ===== ITEM DISPOSITIONS (curator-scoped: 'set_aside' = Not Mine, 'deferred' = Not Yet) =====
+export const itemDispositionsTable = pgTable(
+  "item_dispositions",
+  {
+    id: text("id").primaryKey(),
+    collectionId: text("collection_id")
+      .notNull()
+      .references(() => collectionsTable.id),
+    curatorId: text("curator_id")
+      .notNull()
+      .references(() => user.id),
+    itemId: text("item_id")
+      .notNull()
+      .references(() => itemsTable.id),
+    disposition: text("disposition").notNull(), // 'set_aside' | 'deferred'
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    itemCuratorUnique: uniqueIndex("item_dispositions_item_curator_unique").on(
+      table.itemId,
+      table.curatorId,
+    ),
+    collectionCuratorIdx: index("item_dispositions_collection_curator_idx").on(
+      table.collectionId,
+      table.curatorId,
+    ),
+  }),
+);
+
 // ===== SORT RESULTS =====
 export const sortResultsTable = pgTable(
   "sort_results",

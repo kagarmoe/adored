@@ -178,6 +178,19 @@ export interface CollectionPreferenceItem {
   updatedAt: Date;
 }
 
+// ===== ITEM DISPOSITION =====
+export type Disposition = "set_aside" | "deferred";
+
+export interface ItemDisposition {
+  id: string;
+  collectionId: string;
+  curatorId: string;
+  itemId: string;
+  disposition: Disposition;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // ===== SORT RESULT =====
 export type SortResultStatus = "draft" | "finalized";
 

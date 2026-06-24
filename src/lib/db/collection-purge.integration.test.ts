@@ -29,6 +29,7 @@ import { SortResultShareRepository } from "@/server/repositories/implementations
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { AuditLogRepository } from "@/server/repositories/implementations/AuditLogRepository";
+import { ItemDispositionRepository } from "@/server/repositories/implementations/ItemDispositionRepository";
 
 const { mockGetSession, mockBlobDel, mockBlobList } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
@@ -84,6 +85,7 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
   const countItems = countOf("items");
   const countPhotos = countOf("photos");
   const countPreferences = countOf("preferences");
+  const countDispositions = countOf("item_dispositions");
   const countSessions = countOf("sessions");
   const countSortResults = countOf("sort_results");
   const countInvitations = countOf("invitations");
@@ -116,6 +118,7 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
       items: await countItems(cid),
       photos: await countPhotos(cid),
       preferences: await countPreferences(cid),
+      dispositions: await countDispositions(cid),
       sessions: await countSessions(cid),
       decisionEvents: await countDecisions(cid),
       sortResults: await countSortResults(cid),
@@ -212,6 +215,16 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
       comparisonCount: 0,
     });
 
+    // The owner's disposition on item A. The item_dispositions FK has NO cascade,
+    // so a leftover row would block the items hard-delete — the whole-collection
+    // purge must erase it too.
+    await new ItemDispositionRepository(db).upsert({
+      collectionId,
+      curatorId: ownerId,
+      itemId: itemA.id,
+      disposition: "set_aside",
+    });
+
     // A DRAFT result + 1 result-item.
     const resultRepo = new SortResultRepository(db);
     const resultItemRepo = new SortResultItemRepository(db);
@@ -288,6 +301,7 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
       items: 2,
       photos: 2,
       preferences: 1,
+      dispositions: 1,
       sessions: 1,
       decisionEvents: 1,
       sortResults: 2,
@@ -311,6 +325,7 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
       items: 0,
       photos: 0,
       preferences: 0,
+      dispositions: 0,
       sessions: 0,
       decisionEvents: 0,
       sortResults: 0,

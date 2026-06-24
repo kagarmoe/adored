@@ -39,6 +39,7 @@ import {
   sortResultSharesTable,
   invitationsTable,
   membershipsTable,
+  itemDispositionsTable,
 } from "@/lib/db/schema";
 
 // ---- hoisted mocks ---------------------------------------------------------
@@ -100,6 +101,7 @@ describeDb("AccountDeletionService via DELETE /api/users/me", () => {
   let caShareId: string;
   let caInvitationId: string;
   let caMembershipId: string; // U's owner membership in CA
+  let caDispositionId: string; // U's disposition on CA's item (owned-purge path)
 
   // IDs seeded for borrowed collection CB (owned by V)
   let cbCollectionId: string;
@@ -114,6 +116,7 @@ describeDb("AccountDeletionService via DELETE /api/users/me", () => {
   let uCbResultId: string; // U's sort result in CB
   let uCbResultItemId: string; // U's result-item in CB
   let uCbShareId: string; // U's share in CB
+  let uCbDispositionId: string; // U's disposition on V's item in CB (curator-private path)
 
   beforeEach(async () => {
     await resetDb();
@@ -318,6 +321,20 @@ describeDb("AccountDeletionService via DELETE /api/users/me", () => {
       updatedAt: new Date(),
     });
 
+    // U's disposition on CA's item — erased via the OWNED purge path (Phase 1
+    // CollectionPurgeService -> deleteByCollection). The FK has no cascade, so a
+    // leftover row would block CA's items hard-delete.
+    caDispositionId = generateId("disp");
+    await db.insert(itemDispositionsTable).values({
+      id: caDispositionId,
+      collectionId: caCollectionId,
+      curatorId: userId,
+      itemId: caItemId,
+      disposition: "set_aside",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
     // ---- Seed borrowed collection CB (owned by V) --------------------------
     cbCollectionId = generateId("col");
     await db.insert(collectionsTable).values({
@@ -456,6 +473,20 @@ describeDb("AccountDeletionService via DELETE /api/users/me", () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+
+    // U's disposition on V's item in CB — erased via the BORROWED curator-private
+    // path (Phase 2 deleteByCurator). V's collection/item survive; only U's
+    // disposition row goes.
+    uCbDispositionId = generateId("disp");
+    await db.insert(itemDispositionsTable).values({
+      id: uCbDispositionId,
+      collectionId: cbCollectionId,
+      curatorId: userId,
+      itemId: cbItemId,
+      disposition: "deferred",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
   });
 
   afterAll(async () => {
@@ -478,8 +509,10 @@ describeDb("AccountDeletionService via DELETE /api/users/me", () => {
     expect(await countRows(db, sortResultSharesTable, eq(sortResultSharesTable.id, caShareId))).toBe(1);
     expect(await countRows(db, invitationsTable, eq(invitationsTable.id, caInvitationId))).toBe(1);
     expect(await countRows(db, membershipsTable, eq(membershipsTable.id, caMembershipId))).toBe(1);
+    expect(await countRows(db, itemDispositionsTable, eq(itemDispositionsTable.id, caDispositionId))).toBe(1);
     // Borrowed-slice BEFORE
     expect(await countRows(db, membershipsTable, eq(membershipsTable.id, uMembershipId))).toBe(1);
+    expect(await countRows(db, itemDispositionsTable, eq(itemDispositionsTable.id, uCbDispositionId))).toBe(1);
     expect(await countRows(db, sessionsTable, eq(sessionsTable.id, uCbSessionId))).toBe(1);
     expect(await countRows(db, decisionEventsTable, eq(decisionEventsTable.id, uCbDecisionEventId))).toBe(1);
     expect(await countRows(db, preferencesTable, eq(preferencesTable.id, uCbPrefId))).toBe(1);
@@ -514,9 +547,11 @@ describeDb("AccountDeletionService via DELETE /api/users/me", () => {
     expect(await countRows(db, sortResultSharesTable, eq(sortResultSharesTable.id, caShareId))).toBe(0);
     expect(await countRows(db, invitationsTable, eq(invitationsTable.id, caInvitationId))).toBe(0);
     expect(await countRows(db, membershipsTable, eq(membershipsTable.id, caMembershipId))).toBe(0);
+    expect(await countRows(db, itemDispositionsTable, eq(itemDispositionsTable.id, caDispositionId))).toBe(0);
 
     // ---- AFTER: U's borrowed slice in CB gone -----------------------------
     expect(await countRows(db, membershipsTable, eq(membershipsTable.id, uMembershipId))).toBe(0);
+    expect(await countRows(db, itemDispositionsTable, eq(itemDispositionsTable.id, uCbDispositionId))).toBe(0);
     expect(await countRows(db, sessionsTable, eq(sessionsTable.id, uCbSessionId))).toBe(0);
     expect(await countRows(db, decisionEventsTable, eq(decisionEventsTable.id, uCbDecisionEventId))).toBe(0);
     expect(await countRows(db, preferencesTable, eq(preferencesTable.id, uCbPrefId))).toBe(0);
