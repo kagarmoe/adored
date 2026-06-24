@@ -47,6 +47,15 @@ describe("DeferControl", () => {
     await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
   });
 
+  it("busy label is 'Just a moment…', not PR2 set_aside vocabulary", async () => {
+    // Hold the fetch unresolved so the in-flight (busy) label is observable.
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockReturnValue(new Promise(() => {}));
+    render(<DeferControl collectionId="c1" itemId="i1" />);
+    fireEvent.click(screen.getByRole("button", { name: /not yet/i }));
+    await waitFor(() => expect(screen.getByText("Just a moment…")).toBeInTheDocument());
+    expect(screen.queryByText(/setting aside/i)).not.toBeInTheDocument();
+  });
+
   it("a non-ok response shows a gentle role=status message and does NOT refresh", async () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: false });
     render(<DeferControl collectionId="c1" itemId="i1" />);

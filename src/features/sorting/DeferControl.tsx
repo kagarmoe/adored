@@ -55,7 +55,7 @@ export function DeferControl({
         title="I'll come back to this"
         aria-label="Not yet — I'll come back to this"
       >
-        {busy ? "Setting aside…" : "Not yet"}
+        {busy ? "Just a moment…" : "Not yet"}
       </Button>
       {error && (
         <span role="status" className="text-sm text-ink-soft">

@@ -120,6 +120,9 @@ describe("TriagePage patient-waiting skin (showingDeferred)", () => {
     const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
     render(ui);
     expect(screen.getByText(/ready when you are/i)).toBeInTheDocument();
+    // a11y: the banner is a live region so its appearance is announced once on
+    // the refreshed page. It carries the "Ready when you are" copy.
+    expect(screen.getByRole("status")).toHaveTextContent(/ready when you are/i);
     // Never a remaining-count / inbox framing.
     expect(screen.queryByText(/\d+\s+left/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/inbox|resting place/i)).not.toBeInTheDocument();

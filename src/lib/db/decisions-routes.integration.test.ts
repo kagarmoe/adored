@@ -17,6 +17,8 @@ import { mockAuth } from "../../../e2e/fixtures/mock-auth";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { ItemDispositionRepository } from "@/server/repositories/implementations/ItemDispositionRepository";
+import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
+import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 
 const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
 
@@ -96,5 +98,41 @@ describeDb("decisions route — clear-disposition-on-triage (route -> repo -> DB
 
     // The unrelated deferred item is untouched — only triage clears dispositions.
     expect(await dispRepo.findByItem(itemC.id, ownerId)).not.toBeNull();
+  });
+
+  it("clear-on-triage is ATOMIC: a disposition-clear failure rolls back the event AND the preference (item stays disposed, never both ranked and disposed)", async () => {
+    const { db } = getTestDb();
+    const collectionId = await seedBareCollection(ownerId);
+    const item = await new ItemRepository(db).create({ collectionId, name: "Deferred bag" });
+    const sortSession = await new SessionRepository(db).create({ collectionId, curatorId: ownerId });
+
+    const dispRepo = new ItemDispositionRepository(db);
+    await dispRepo.upsert({ collectionId, curatorId: ownerId, itemId: item.id, disposition: "deferred" });
+    expect(await dispRepo.findByItem(item.id, ownerId)).not.toBeNull();
+
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    // Force the final write in the tx (the disposition clear) to fail AFTER the
+    // event insert + preference recalc have run. Without a transaction this would
+    // leave the item both ranked (preference) and disposed — the bug under test.
+    const spy = vi
+      .spyOn(ItemDispositionRepository.prototype, "delete")
+      .mockRejectedValueOnce(new Error("simulated clear failure"));
+    try {
+      const res = await postDecision(
+        decisionReq(sortSession.id, { type: "triage", decision: { itemId: item.id, result: "top" } }) as any,
+        { params: { id: sortSession.id } } as any,
+      );
+      // The route maps the thrown error to a 500.
+      expect(res.status).toBe(500);
+    } finally {
+      spy.mockRestore();
+    }
+
+    // Transaction rolled back: NO event row and NO preference row persisted.
+    expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
+    expect(await new CollectionPreferenceItemRepository(db).findByCollection(collectionId, ownerId)).toHaveLength(0);
+    // And the disposition the curator set earlier is still there — the item is
+    // disposed XOR triaged, never both (disposed <=> untriaged invariant holds).
+    expect(await dispRepo.findByItem(item.id, ownerId)).not.toBeNull();
   });
 });
