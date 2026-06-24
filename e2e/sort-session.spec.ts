@@ -52,7 +52,7 @@ test.describe("sort session → triage", () => {
     );
     expect(page.url()).not.toMatch(/\/collections\/col_[^/]+\/sort/);
 
-    await expect(page.getByRole("heading", { name: "Triage", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "How do you feel about this one?", exact: true })).toBeVisible();
     // A pending item is shown with its hero photo (authenticated image render).
     await expect(page.getByRole("img").first()).toBeVisible();
     // Tier buttons are the tap-first affordance.
@@ -64,7 +64,7 @@ test.describe("sort session → triage", () => {
     page,
   }) => {
     await page.goto(`/collections/${slug}/sort/${sessionNumber}/triage`);
-    await expect(page.getByRole("heading", { name: "Triage", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "How do you feel about this one?", exact: true })).toBeVisible();
 
     await page.reload();
 
@@ -73,7 +73,7 @@ test.describe("sort session → triage", () => {
     await expect(page).toHaveURL(
       new RegExp(`/collections/${slug}/sort/${sessionNumber}/triage`),
     );
-    await expect(page.getByRole("heading", { name: "Triage", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "How do you feel about this one?", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Love" })).toBeVisible();
   });
 
@@ -109,7 +109,7 @@ test.describe("sort session → triage", () => {
       page.url().match(/\/sort\/(\d+)\/triage$/),
       "expected a numeric session in the triage landing URL",
     ).not.toBeNull();
-    await expect(page.getByRole("heading", { name: "Triage", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "How do you feel about this one?", exact: true })).toBeVisible();
   });
 });
 
@@ -141,19 +141,19 @@ test.describe("session detail → See what you love most → results", () => {
     //    the reused client instance MUST re-enable its tiers — otherwise a normal
     //    user is stuck on item 1 with every button frozen on "Saving...".
     await page.goto(`/collections/${slug}/sort/${sessionNumber}/triage`);
-    await expect(page.getByRole("heading", { name: "Triage", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "How do you feel about this one?", exact: true })).toBeVisible();
 
     // Item 1: tap a tier, then confirm the page advanced (the second item is now
-    // pending) via the triaged-count, AND that the tiers re-enabled for item 2.
+    // pending) via the ceiling-free decided cue, AND that the tiers re-enabled for item 2.
     await page.getByRole("button", { name: "Love" }).click();
-    await expect(page.getByText("1 of 2")).toBeVisible();
+    await expect(page.getByText("1 decided so far")).toBeVisible();
     await expect(page.getByRole("button", { name: "Love" })).toBeEnabled();
     await expect(page.getByRole("button", { name: "Onward" })).toBeEnabled();
 
     // Item 2: a second tap must succeed on the re-enabled control and complete
-    // triage (2 of 2) — the proof a user can actually sort past the first item.
+    // triage (2 decided) — the proof a user can actually sort past the first item.
     await page.getByRole("button", { name: "Like" }).click();
-    await expect(page.getByText("2 of 2")).toBeVisible();
+    await expect(page.getByText("2 decided so far")).toBeVisible();
 
     // 2. Move to compare and choose one card (tapping a card IS the choice).
     await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
