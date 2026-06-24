@@ -39,13 +39,13 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 | `401` | **Unauthenticated** — no valid session |
 | `403` | **Authenticated but not allowed** — not member/owner/manager, or not the owning curator |
 | `404` | Absent **or** hidden for tenant isolation (a collection/result you may not see resolves to `404` before membership is checked) |
-| `409` | Conflict (pool group/reassign) |
+| `409` | Conflict (state/uniqueness — pool group/reassign, finalized-result guards, an existing sort already in a curator's session slot) |
 | `413` | Payload too large (photo upload over the size limit) |
 | `500` | Unhandled server error |
 
 **403-vs-404:** absence is reported `404` before membership is evaluated; a resource that exists but is off-limits is `403`. A `404` can mean "not visible to you," not only "no such id."
 
-**Validation & state errors are consistent (pv9 PR2):** every body-parsing route maps a failed Zod `.parse` (and malformed JSON) to **`400`** — not `500` — via the shared `errorResponse` helper (`src/server/api/http-errors.ts`), which also maps typed state errors (`DeleteResultStateError`/`SupersedeStateError`/`FinalizeStateError`) to **`409`** and `UnauthorizedError` to **`401`**. Authz guards still return their `401`/`403`/`404` **before** the parse.
+**Validation & state errors are consistent (pv9 PR2):** every body-parsing route maps a failed Zod `.parse` (and malformed JSON) to **`400`** — not `500` — via the shared `errorResponse` helper (`src/server/api/http-errors.ts`), which also maps typed state/uniqueness errors (`DeleteResultStateError`/`SupersedeStateError`/`FinalizeStateError`/`CurrentSessionExistsError`) to **`409`** and `UnauthorizedError` to **`401`**. Authz guards still return their `401`/`403`/`404` **before** the parse.
 
 ## Cross-cutting invariants
 
@@ -141,6 +141,7 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 |---|---|---|
 | POST | `/api/sessions` | member |
 | GET·PATCH·DELETE | `/api/sessions/[id]` | curator |
+| POST | `/api/sessions/[id]/restore` | result-curator |
 | POST | `/api/sessions/[id]/decisions` | curator |
 
 ### sort-results
@@ -314,10 +315,13 @@ These routes are now scoped to the item's collection (IDOR closed — pv9 PR1, `
 Curator-scoped sorting sessions. `goal` is optional free text.
 
 ### `POST /api/sessions`
-`getSession` + `requireApiCollectionAccess(body.collectionId)`. **Body:** `{ collectionId, goal? }` (`400` missing `collectionId`). `curatorId` forced from session. `201 Session`.
+`getSession` + `requireApiCollectionAccess(body.collectionId)`. **Body:** `{ collectionId, goal? }` (`400` missing `collectionId`). `curatorId` forced from session. `201 Session`. **`409`** (`CurrentSessionExistsError` → "You already have a sort in progress for this collection.") when the curator already occupies the `(collection_id, curator_id)` slot — the unconditional `sessions_active_unique` index forbids a second session, spanning **active / paused / completed / set-aside (soft-deleted)** rows. The `create` repo retries only the `(collection_id, number)` race; a `sessions_active_unique` 23505 is mapped (via the shared `errorResponse`) to this gentle `409`, **never a `500`** (the previous behavior). This is an **interim mitigation** (`purses-4bhh`): the sort landing also UI-gates "New Session" while an active/paused session exists; the root partial-index + guard redesign remains in `purses-4bhh`. (See ARCHITECTURE decisions log, entry 21.)
 
 ### `GET·PATCH·DELETE /api/sessions/[id]`
-`getSession` + `authorizeSession` (`404` absent; `403` not a member; `403` not the session's curator — even other members/owners are denied). `GET` → `Session`; `PATCH` body → updated `Session` (`400` invalid JSON); `DELETE` → `{ message }`.
+`getSession` + `authorizeSession` (`404` absent; `403` not a member; `403` not the session's curator — even other members/owners are denied). `GET` → `Session`; `PATCH` body → updated `Session` (`400` invalid JSON); `DELETE` → `{ message }` (**set aside** — a soft-delete; reversible via `…/restore`). **`PATCH` accepted fields** (`UpdateSessionSchema`): `{ status?: "active" | "paused" | "completed" | "abandoned", goal? }` — `status: "paused"` drives **pause** ("Take a break") and `status: "active"` drives **resume**.
+
+### `POST /api/sessions/[id]/restore`
+Undo "set aside" — re-activate a soft-deleted (set-aside) session. `getSession` (`401`) → resolve **including soft-deleted** (`getSessionIncludingDeletedOrNull` / `findByIdIncludingDeleted`, since the `GET·PATCH·DELETE` getters `404` on soft-deleted rows) → **`404`** if truly absent → `requireApiCollectionAccess` (`403`/`404`) → **`403`** if `session.curatorId !== user.id` (**purses-t9l** — only the session's own curator may restore; a *different* curator who is a member of the shared collection passes the collection gate, so this curator check is the only thing that closes the IDOR). On success, `restore` clears `deletedAt` and sets `status: "active"` → `200 Session`. A null lookup is `404`; a thrown DB error propagates (`500`), never masked as `404`.
 
 ### `POST /api/sessions/[id]/decisions`
 `getSession` + session resolve (`404`) + `requireApiCollectionAccess` + curator-scope (`403`) — authorized **before any write**. **Body:** `{ type: "triage" | "pairwise_compare" | "bucket_assign", decision: object }`. The event insert, the preference recalc, and — for `type: "triage"` — clearing any disposition for the triaged item all run in **one `withTransaction`** (atomic: all commit or all roll back). Clearing on triage enforces `disposed ⟺ untriaged` (a previously `set_aside`/`deferred` item can't be both ranked and disposed). `201` event; `500` on failure. (Hardening note: the triage branch reads `decision.itemId` untyped and does not assert it is in-scope — `purses-mels`, LOW, not exploitable since `bringBack`'s delete is keyed to the caller's own `curatorId` and idempotent.)
