@@ -13,7 +13,9 @@ import { AppLayout } from "@/components/layout";
 import { Card, EmptyState } from "@/components/ui";
 import { DecisionControls } from "@/features/sorting/DecisionControls";
 import { DeferControl } from "@/features/sorting/DeferControl";
-import { SetAsideControl } from "@/features/sorting/SetAsideControl";
+import { TriageUndoProvider } from "@/features/sorting/TriageUndoProvider";
+import { TriageUndoNotice } from "@/features/sorting/TriageUndoNotice";
+import { SetAsideButton } from "@/features/sorting/SetAsideButton";
 import { ItemCard } from "@/features/items/ItemCard";
 import { selectTriageItem } from "@/lib/triage-selection";
 
@@ -71,65 +73,74 @@ export default async function TriagePage({ params }: TriagePageProps) {
         { label: "Triage" },
       ]}
     >
-      <div className="mx-auto max-w-xl space-y-6">
-        <div>
-          <h1 className="text-3xl text-ink">How do you feel about this one?</h1>
-          {decided > 0 && (
-            <p className="mt-2 text-sm text-ink-soft">{decided} decided so far</p>
-          )}
-          {/* A quiet way back to the ones set aside — count-free, low-emphasis, and
-              well below the decision so it never competes with it (TONE.md 4). */}
-          <p className="mt-1 text-sm">
-            <Link
-              href={`/collections/${collection.slug ?? collection.id}/sort/set-aside`}
-              className="text-ink-soft underline underline-offset-2 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-sm"
-            >
-              Set aside
-            </Link>
-          </p>
-        </div>
-
-        {!item ? (
-          <EmptyState heading="You&apos;ve looked at everything for now" message="You&apos;ve thought through each one. View results to see what you love most." />
-        ) : (
-          <>
-            {showingDeferred && (
-              <div role="status" className="flex items-center gap-2 rounded-control bg-accent-cornflower px-4 py-3 text-ink transition-opacity duration-300 ease-gentle motion-reduce:transition-none">
-                <span aria-hidden className="text-lg leading-none">☾</span>
-                <p className="text-sm">
-                  <span className="font-medium">Ready when you are.</span>{" "}
-                  This one was waiting for you — no rush.
-                </p>
-              </div>
+      <TriageUndoProvider collectionId={collection.id}>
+        <div className="mx-auto max-w-xl space-y-6">
+          <div>
+            <h1 className="text-3xl text-ink">How do you feel about this one?</h1>
+            {decided > 0 && (
+              <p className="mt-2 text-sm text-ink-soft">{decided} decided so far</p>
             )}
-            <ItemCard item={item} collectionId={collection.slug ?? collection.id} heroPhotoUrl={heroPhotoUrl} imageClassName="h-64" />
-            <Card padding="lg">
-              <div className="space-y-4">
-                <DecisionControls
-                  key={item.id}
-                  sessionId={sortSession.id}
-                  type="triage"
-                  decisions={[
-                    { label: "Love", decision: { itemId: item.id, result: "top" } },
-                    { label: "Like", decision: { itemId: item.id, result: "high" } },
-                    { label: "Maybe", decision: { itemId: item.id, result: "medium" } },
-                    { label: "Onward", decision: { itemId: item.id, result: "low" } },
-                  ]}
-                />
-                {/* Quiet, demoted escape: the four tiers stay the primary row;
-                    "Not yet" and "Not mine" sit below a hairline as two distinct
-                    low-pressure exits. SetAsideControl is intentionally UN-KEYED
-                    so its inline "Bring back" undo survives router.refresh() —
-                    keying it by item.id would reset the undo on every item. */}
-                <div className="flex flex-wrap items-start gap-x-6 gap-y-3 border-t border-hairline pt-3">
-                  <DeferControl collectionId={collection.id} itemId={item.id} />
-                  <SetAsideControl collectionId={collection.id} itemId={item.id} itemName={item.name} />
+            {/* A quiet way back to the ones set aside — count-free, low-emphasis, and
+                well below the decision so it never competes with it (TONE.md 4). */}
+            <p className="mt-1 text-sm">
+              <Link
+                href={`/collections/${collection.slug ?? collection.id}/sort/set-aside`}
+                className="text-ink-soft underline underline-offset-2 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-sm"
+              >
+                Set aside
+              </Link>
+            </p>
+          </div>
+
+          {/* The inline set-aside undo notice lives OUTSIDE the item ternary so it
+              survives item === null: setting aside the LAST untriaged item empties
+              the queue and unmounts the item branch, but the "Bring back" escape
+              must still be reachable (spec §11). */}
+          <TriageUndoNotice />
+
+          {!item ? (
+            <EmptyState heading="You&apos;ve looked at everything for now" message="You&apos;ve thought through each one. View results to see what you love most." />
+          ) : (
+            <>
+              {showingDeferred && (
+                <div className="flex items-center gap-2 rounded-control bg-accent-cornflower px-4 py-3 text-ink transition-opacity duration-300 ease-gentle motion-reduce:transition-none">
+                  <span aria-hidden className="text-lg leading-none">☾</span>
+                  <p className="text-sm">
+                    <span className="font-medium">Ready when you are.</span>{" "}
+                    This one was waiting for you — no rush.
+                  </p>
                 </div>
-              </div>
-            </Card>
-          </>
-        )}
-      </div>
+              )}
+              <ItemCard item={item} collectionId={collection.slug ?? collection.id} heroPhotoUrl={heroPhotoUrl} imageClassName="h-64" />
+              <Card padding="lg">
+                <div className="space-y-4">
+                  <DecisionControls
+                    key={item.id}
+                    sessionId={sortSession.id}
+                    type="triage"
+                    decisions={[
+                      { label: "Love", decision: { itemId: item.id, result: "top" } },
+                      { label: "Like", decision: { itemId: item.id, result: "high" } },
+                      { label: "Maybe", decision: { itemId: item.id, result: "medium" } },
+                      { label: "Onward", decision: { itemId: item.id, result: "low" } },
+                    ]}
+                  />
+                  {/* Quiet, demoted escape: the four tiers stay the primary row;
+                      "Not yet" and "Not mine" sit below a hairline as two distinct
+                      low-pressure exits. SetAsideButton is intentionally UN-KEYED so
+                      focus stays on it across router.refresh() (it doesn't drop to
+                      <body>); its "Bring back" undo lives in TriageUndoNotice above,
+                      hoisted out of this branch so it survives the queue emptying. */}
+                  <div className="flex flex-wrap items-start gap-x-6 gap-y-3 border-t border-hairline pt-3">
+                    <DeferControl collectionId={collection.id} itemId={item.id} />
+                    <SetAsideButton itemId={item.id} itemName={item.name} />
+                  </div>
+                </div>
+              </Card>
+            </>
+          )}
+        </div>
+      </TriageUndoProvider>
     </AppLayout>
   );
 }

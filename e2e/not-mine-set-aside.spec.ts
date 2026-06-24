@@ -164,6 +164,73 @@ test.describe("triage — 'Not mine' set-aside flow", () => {
     ).toBeVisible();
   });
 
+  test("setting aside the LAST item empties the queue, yet the inline 'Bring back' notice stays visible AND clickable", async ({
+    page,
+  }) => {
+    await page.goto(`/collections/${slug}/sort/${sessionNumber}/triage`);
+    await expect(
+      page.getByRole("heading", { name: "How do you feel about this one?" }),
+    ).toBeVisible();
+
+    // ── Drain to the last item. With 3 seeded items, set two aside; a different
+    // item focuses each time. (Bring-back from the prior test returned its item,
+    // and these tests share the seed; rather than assume a clean queue, we set
+    // aside until the "Not mine" button is gone — the queue is empty.)
+    //
+    // Each tap awaits the real POST so we don't race the refresh that brings the
+    // next item forward (or empties the queue).
+    const notMine = () => page.getByRole("button", { name: /Not mine/ });
+    for (let guard = 0; guard < 6; guard++) {
+      if ((await notMine().count()) === 0) break; // queue already empty
+      const setAsideName = await focusedItemName(page).catch(() => "");
+      await Promise.all([page.waitForResponse(isSetAsidePost), notMine().click()]);
+      // After the refresh settles, either a different item focuses or the queue
+      // empties (button gone). Wait for one of those before the next iteration.
+      await expect(async () => {
+        const gone = (await notMine().count()) === 0;
+        const nowName = gone ? "" : await focusedItemName(page).catch(() => "");
+        expect(gone || nowName !== setAsideName).toBe(true);
+      }).toPass({ timeout: 10_000 });
+    }
+
+    // The queue is now empty: the item branch unmounted, so the empty state shows
+    // and the "Not mine" button is gone. This is the exact moment the OLD code
+    // dropped the undo (the notice lived inside the item branch).
+    await expect(notMine()).toHaveCount(0);
+    await expect(
+      page.getByRole("heading", { name: /You.?ve looked at everything/ }),
+    ).toBeVisible();
+
+    // THE FIX: the inline undo notice for the LAST item set aside is STILL here,
+    // hoisted outside the empty-state branch — visible AND its "Bring back" is
+    // clickable on the now-empty triage screen.
+    const notice = page.getByRole("status").filter({ hasText: "Set aside" });
+    await expect(notice).toBeVisible();
+    const inlineBringBack = notice.getByRole("button", { name: /Bring back/ });
+    await expect(inlineBringBack).toBeVisible();
+    const broughtBackName = (await notice.innerText())
+      .replace(/^Set aside —\s*/, "")
+      .replace(/\s*·\s*Bring back\s*$/, "")
+      .trim();
+
+    // Click it: the DELETE reverses the set-aside, the item returns to the queue,
+    // and triage shows a focusable item again (the empty state recedes).
+    await Promise.all([
+      page.waitForResponse(isBringBackDelete),
+      inlineBringBack.click(),
+    ]);
+    await expect(notice).toHaveCount(0);
+    await expect(notMine()).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "How do you feel about this one?" }),
+    ).toBeVisible();
+    // The brought-back item is the one we just reversed (it re-entered the queue).
+    await expect(async () => {
+      const nowName = await focusedItemName(page);
+      expect(nowName).toEqual(broughtBackName);
+    }).toPass({ timeout: 10_000 });
+  });
+
   test("no ceiling: neither triage nor the set-aside list shows an 'of N' total or remaining count", async ({
     page,
   }) => {

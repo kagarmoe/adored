@@ -127,9 +127,11 @@ describe("TriagePage patient-waiting skin (showingDeferred)", () => {
     const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
     render(ui);
     expect(screen.getByText(/ready when you are/i)).toBeInTheDocument();
-    // a11y: the banner is a live region so its appearance is announced once on
-    // the refreshed page. It carries the "Ready when you are" copy.
-    expect(screen.getByRole("status")).toHaveTextContent(/ready when you are/i);
+    // a11y (whole-branch review, fix B): the banner is persistent VISUAL CONTEXT
+    // re-rendered on every refresh, NOT a discrete state change to announce — and
+    // role="status" here would compete with the undo notice's live region. So the
+    // copy renders but is NOT a status live region. The H1 conveys the screen.
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     // Never a remaining-count / inbox framing.
     expect(screen.queryByText(/\d+\s+left/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/inbox|resting place/i)).not.toBeInTheDocument();
