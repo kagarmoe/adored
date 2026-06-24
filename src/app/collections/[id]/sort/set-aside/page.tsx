@@ -7,7 +7,7 @@ import { DispositionController } from "@/server/api/dispositions";
 import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
-import { Card, EmptyState } from "@/components/ui";
+import { Card, CardImage, EmptyState } from "@/components/ui";
 import { BringBackControl } from "@/features/sorting/BringBackControl";
 
 interface SetAsidePageProps {
@@ -76,21 +76,24 @@ export default async function SetAsidePage({ params }: SetAsidePageProps) {
                 <li key={item.id}>
                   <Card padding="md">
                     <div className="flex items-center gap-4">
-                      {coverUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                      {/* CardImage degrades to the calm ☾ fallback on a missing
+                          OR failed cover load — never the browser's broken glyph
+                          (gentle by duty of care). unoptimized so auth cookies
+                          reach the protected /file route. */}
+                      <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-control">
+                        <CardImage
                           src={coverUrl}
                           alt=""
-                          className="h-16 w-16 flex-shrink-0 rounded-control object-cover"
+                          fallback={
+                            <div
+                              aria-hidden
+                              className="flex h-full w-full items-center justify-center bg-accent-aqua text-2xl text-ink-soft"
+                            >
+                              ☾
+                            </div>
+                          }
                         />
-                      ) : (
-                        <div
-                          aria-hidden
-                          className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-control bg-accent-aqua text-2xl text-ink-soft"
-                        >
-                          ☾
-                        </div>
-                      )}
+                      </div>
                       <span className="min-w-0 flex-1 truncate text-base text-ink">
                         {item.name ?? "This one"}
                       </span>
