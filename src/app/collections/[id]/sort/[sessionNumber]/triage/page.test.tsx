@@ -86,6 +86,13 @@ describe("TriagePage person-side copy & affordances", () => {
     // The control is a client island; assert it rendered with its accessible label.
     expect(screen.getByRole("button", { name: /not yet/i })).toBeInTheDocument();
   });
+
+  it("renders the 'Not mine' set-aside control as a second quiet escape", async () => {
+    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    render(ui);
+    // The set-aside island sits beside "Not yet"; assert its accessible label.
+    expect(screen.getByRole("button", { name: /not mine/i })).toBeInTheDocument();
+  });
 });
 
 describe("TriagePage ceiling-free progress (TONE 1 & 4)", () => {

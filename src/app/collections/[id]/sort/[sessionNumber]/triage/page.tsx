@@ -12,6 +12,7 @@ import { AppLayout } from "@/components/layout";
 import { Card, EmptyState } from "@/components/ui";
 import { DecisionControls } from "@/features/sorting/DecisionControls";
 import { DeferControl } from "@/features/sorting/DeferControl";
+import { SetAsideControl } from "@/features/sorting/SetAsideControl";
 import { ItemCard } from "@/features/items/ItemCard";
 import { selectTriageItem } from "@/lib/triage-selection";
 
@@ -105,9 +106,13 @@ export default async function TriagePage({ params }: TriagePageProps) {
                   ]}
                 />
                 {/* Quiet, demoted escape: the four tiers stay the primary row;
-                    "Not yet" sits below a hairline as a low-pressure exit. */}
-                <div className="border-t border-hairline pt-3">
+                    "Not yet" and "Not mine" sit below a hairline as two distinct
+                    low-pressure exits. SetAsideControl is intentionally UN-KEYED
+                    so its inline "Bring back" undo survives router.refresh() —
+                    keying it by item.id would reset the undo on every item. */}
+                <div className="flex flex-wrap items-start gap-x-6 gap-y-3 border-t border-hairline pt-3">
                   <DeferControl collectionId={collection.id} itemId={item.id} />
+                  <SetAsideControl collectionId={collection.id} itemId={item.id} itemName={item.name} />
                 </div>
               </div>
             </Card>
