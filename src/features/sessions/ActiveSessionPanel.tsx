@@ -76,6 +76,13 @@ export function ActiveSessionPanel({
     setError("");
     try {
       const res = await fetch(`/api/sessions/${undo}/restore`, { method: "POST" });
+      // 409: a newer in-progress sort now holds the slot, so this set-aside one
+      // can't come back. Say so gently and leave the undo notice in place —
+      // there is nothing to refresh to.
+      if (res.status === 409) {
+        setError("You've started a new sort since, so this one stays set aside.");
+        return;
+      }
       if (!res.ok) throw new Error("restore failed");
       setUndo(null);
       router.refresh(); // the restored session reappears as the card

@@ -2,7 +2,10 @@ import { z } from "zod";
 import type { Session } from "@/types";
 import type { ISessionRepository } from "@/server/repositories/SessionRepository";
 import type { Database } from "@/lib/db";
-import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
+import {
+  SessionRepository,
+  CurrentSessionExistsError,
+} from "@/server/repositories/implementations/SessionRepository";
 
 const CreateSessionSchema = z.object({
   goal: z.string().optional(),
@@ -17,8 +20,9 @@ export type CreateSessionInput = z.infer<typeof CreateSessionSchema>;
 export type UpdateSessionInput = z.infer<typeof UpdateSessionSchema>;
 
 // Defined in the repository (where the unique-violation is caught) to keep the
-// api -> repo dependency direction clean; re-exported here for route callers.
-export { CurrentSessionExistsError } from "@/server/repositories/implementations/SessionRepository";
+// api -> repo dependency direction clean; re-exported here for route callers
+// (and used directly by restoreSession's friendly pre-check below).
+export { CurrentSessionExistsError };
 
 export class SessionController {
   constructor(private sessionRepo: ISessionRepository) {}
@@ -72,8 +76,23 @@ export class SessionController {
     await this.sessionRepo.softDelete(sessionId);
   }
 
-  // Undo "set aside" — re-activate a soft-deleted session.
+  // Undo "set aside" — re-activate a soft-deleted session. After migration 0009
+  // the partial index frees the slot on set-aside, so a NEWER in-progress
+  // session may already hold it; re-activating this one would put two
+  // in-progress sessions in the slot. The friendly pre-check rejects that with a
+  // gentle 409 BEFORE the UPDATE; the repo's restore() catch is the race
+  // backstop if a session is created between this read and the UPDATE.
   async restoreSession(sessionId: string): Promise<Session> {
+    const target = await this.sessionRepo.findByIdIncludingDeleted(sessionId);
+    if (target) {
+      const inProgress = await this.sessionRepo.findInProgress(
+        target.collectionId,
+        target.curatorId,
+      );
+      if (inProgress && inProgress.id !== sessionId) {
+        throw new CurrentSessionExistsError();
+      }
+    }
     return this.sessionRepo.restore(sessionId);
   }
 }
