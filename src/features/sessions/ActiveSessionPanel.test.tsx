@@ -21,7 +21,7 @@ beforeEach(() => {
 describe("ActiveSessionPanel", () => {
   it("renders the session card with goal and a Resume link when an active session is present", () => {
     render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
-    expect(screen.getByText(/active sorting session/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Active Session" })).toBeInTheDocument();
     expect(screen.getByText(/find my favorites/i)).toBeInTheDocument();
     const resume = screen.getByRole("link", { name: /resume/i });
     expect(resume).toHaveAttribute("href", resumeHref);
@@ -42,8 +42,27 @@ describe("ActiveSessionPanel", () => {
     expect(
       screen.getByText(/your sort is safe — pick up where you left off\./i),
     ).toBeInTheDocument();
-    // The hardcoded active heading must NOT appear for a paused session.
-    expect(screen.queryByText(/active sorting session/i)).not.toBeInTheDocument();
+    // The active heading must NOT appear for a paused session.
+    expect(screen.queryByRole("heading", { name: "Active Session" })).not.toBeInTheDocument();
+  });
+
+  it("disables Set aside while a paused Resume PATCH is in flight (no concurrent set-aside)", async () => {
+    let resolve!: (v: unknown) => void;
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(
+      new Promise((r) => {
+        resolve = r;
+      }),
+    ); // the resume PATCH hangs
+    render(<ActiveSessionPanel session={pausedSession} resumeHref={resumeHref} />);
+    expect(screen.getByRole("button", { name: /^set aside$/i })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: /resume/i }));
+    // While the PATCH is in flight, the sibling Set aside is disabled so the two
+    // can't race on the same row.
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /^set aside$/i })).toBeDisabled(),
+    );
+    resolve({ ok: true });
   });
 
   it("for a paused session, Resume PATCHes status:active then navigates (ResumeControl, not a bare link)", async () => {
