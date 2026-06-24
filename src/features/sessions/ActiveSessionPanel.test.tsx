@@ -4,11 +4,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 const refresh = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
+const push = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push }) }));
 
 import { ActiveSessionPanel } from "./ActiveSessionPanel";
 
-const session = { id: "sess_1", number: 3, goal: "Find my favorites" };
+const session = { id: "sess_1", number: 3, goal: "Find my favorites", status: "active" as const };
+const pausedSession = { ...session, status: "paused" as const };
 const resumeHref = "/collections/my-bags/sort/3";
 
 beforeEach(() => {
@@ -17,11 +19,58 @@ beforeEach(() => {
 });
 
 describe("ActiveSessionPanel", () => {
-  it("renders the session card with goal and a Resume link when a session is present", () => {
+  it("renders the session card with goal and a Resume link when an active session is present", () => {
     render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    expect(screen.getByText(/active sorting session/i)).toBeInTheDocument();
     expect(screen.getByText(/find my favorites/i)).toBeInTheDocument();
     const resume = screen.getByRole("link", { name: /resume/i });
     expect(resume).toHaveAttribute("href", resumeHref);
+  });
+
+  it("for an active session, Resume is a link and issues no PATCH", () => {
+    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    const resume = screen.getByRole("link", { name: /resume/i });
+    expect(resume).toHaveAttribute("href", resumeHref);
+    fireEvent.click(resume);
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("for a paused session, renders the person-side paused copy and a Badge", () => {
+    render(<ActiveSessionPanel session={pausedSession} resumeHref={resumeHref} />);
+    expect(screen.getByText(/your sort is paused/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/your sort is safe — pick up where you left off\./i),
+    ).toBeInTheDocument();
+    // The hardcoded active heading must NOT appear for a paused session.
+    expect(screen.queryByText(/active sorting session/i)).not.toBeInTheDocument();
+  });
+
+  it("for a paused session, Resume PATCHes status:active then navigates (ResumeControl, not a bare link)", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
+    render(<ActiveSessionPanel session={pausedSession} resumeHref={resumeHref} />);
+    // ResumeControl renders a <button>, not an <a> — there is no Resume link.
+    expect(screen.queryByRole("link", { name: /resume/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /resume/i }));
+    await waitFor(() =>
+      expect(global.fetch).toHaveBeenCalledWith("/api/sessions/sess_1", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "active" }),
+      }),
+    );
+    await waitFor(() => expect(push).toHaveBeenCalledWith(resumeHref));
+  });
+
+  it("set aside / undo works the same for a paused session", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
+    render(<ActiveSessionPanel session={pausedSession} resumeHref={resumeHref} />);
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // reveal
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // confirm
+    await waitFor(() =>
+      expect(global.fetch).toHaveBeenCalledWith("/api/sessions/sess_1", { method: "DELETE" }),
+    );
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
   });
 
   it("renders nothing visible when there is no session and no undo", () => {

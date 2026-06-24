@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Badge, Button, Card } from "@/components/ui";
+import { ResumeControl } from "@/features/sorting/ResumeControl";
 
 // The collection landing page's active-session affordance, restructured so the
 // "set aside" undo SURVIVES the refresh that makes the session disappear.
@@ -24,6 +25,7 @@ interface SessionSummary {
   id: string;
   number: number | null;
   goal: string | null;
+  status: "active" | "paused";
 }
 
 export function ActiveSessionPanel({
@@ -123,22 +125,38 @@ export function ActiveSessionPanel({
 
   if (!session) return null;
 
+  const paused = session.status === "paused";
+
   return (
     <Card padding="lg" className="border-hairline bg-accent-aqua">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="mb-2 flex items-center gap-2">
-            <h2 className="text-lg text-ink">Active Sorting Session</h2>
-            <Badge variant="active">active</Badge>
+            <h2 className="text-lg text-ink">
+              {paused ? "Your sort is paused" : "Active Sorting Session"}
+            </h2>
+            <Badge variant={session.status}>{session.status}</Badge>
           </div>
-          <p className="text-sm text-ink">{session.goal || "Preference discovery"}</p>
+          <p className="text-sm text-ink">
+            {paused
+              ? "Your sort is safe — pick up where you left off."
+              : session.goal || "Preference discovery"}
+          </p>
         </div>
         <div className="flex flex-col items-start gap-2 sm:items-end">
           {!confirming ? (
             <div className="flex gap-2">
-              <Link href={resumeHref}>
-                <Button>Resume</Button>
-              </Link>
+              {/* A paused row stays status='paused' in the DB — a bare Link would
+                  land the curator mid-sort while the row says paused, desyncing
+                  the in-progress predicate. ResumeControl PATCHes status:active
+                  THEN navigates, so the DB and the URL agree. */}
+              {paused ? (
+                <ResumeControl sessionId={session.id} sortHref={resumeHref} />
+              ) : (
+                <Link href={resumeHref}>
+                  <Button>Resume</Button>
+                </Link>
+              )}
               <Button variant="secondary" onClick={() => setConfirming(true)}>
                 Set aside
               </Button>
