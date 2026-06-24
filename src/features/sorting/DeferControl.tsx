@@ -8,7 +8,7 @@ import { Button } from "@/components/ui";
 // aside for later (a `deferred` disposition) and refreshes so the next item
 // comes forward. No confirm step — defer is reversible and low-stakes, so a
 // two-step gate would add friction to a gentle escape (TONE.md, commitment 4).
-// In-flight guard mirrors AbandonSessionButton so a double-tap sends one POST.
+// In-flight guard mirrors ActiveSessionPanel so a double-tap sends one POST.
 //
 // collectionId MUST be the ULID collection.id, not the slug: the dispositions
 // API authorizes the item then asserts item.collectionId === params.id, which

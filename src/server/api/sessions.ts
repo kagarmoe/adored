@@ -16,6 +16,10 @@ const UpdateSessionSchema = z.object({
 export type CreateSessionInput = z.infer<typeof CreateSessionSchema>;
 export type UpdateSessionInput = z.infer<typeof UpdateSessionSchema>;
 
+// Defined in the repository (where the unique-violation is caught) to keep the
+// api -> repo dependency direction clean; re-exported here for route callers.
+export { CurrentSessionExistsError } from "@/server/repositories/implementations/SessionRepository";
+
 export class SessionController {
   constructor(private sessionRepo: ISessionRepository) {}
 
@@ -44,6 +48,13 @@ export class SessionController {
     return this.sessionRepo.findById(sessionId);
   }
 
+  // Like getSessionOrNull but reaches set-aside (soft-deleted) sessions too, so
+  // the undo path can confirm a session exists before restoring it. Returns null
+  // for an absent session (-> 404) without swallowing real DB/infra errors.
+  async getSessionIncludingDeletedOrNull(sessionId: string): Promise<Session | null> {
+    return this.sessionRepo.findByIdIncludingDeleted(sessionId);
+  }
+
   async listByCollectionAndCurator(collectionId: string, curatorId: string): Promise<Session[]> {
     return this.sessionRepo.findByCollectionAndCurator(collectionId, curatorId);
   }
@@ -59,5 +70,10 @@ export class SessionController {
 
   async deleteSession(sessionId: string): Promise<void> {
     await this.sessionRepo.softDelete(sessionId);
+  }
+
+  // Undo "set aside" — re-activate a soft-deleted session.
+  async restoreSession(sessionId: string): Promise<Session> {
+    return this.sessionRepo.restore(sessionId);
   }
 }

@@ -15,7 +15,7 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     [t.sparkInk, t.spark, 4.5, "text on spark"],
     [t.ink, t.accentAqua, 4.5, "ink on accent-aqua (chips/cards)"],
     [t.ink, t.accentSky, 4.5, "ink on accent-sky"],
-    [t.ink, t.accentCornflower, 4.5, "ink on accent-cornflower"],
+    [t.ink, t.accentCornflower, 4.5, "ink on accent-cornflower (Not yet banner + paused badge)"],
     [t.ink, t.accentPeriwinkle, 4.5, "ink on accent-periwinkle"],
     [t.tierLoveInk, t.tierLove, 4.5, "text on Love chip"],
     [t.tierLikeInk, t.tierLike, 4.5, "text on Like chip"],

@@ -16,6 +16,7 @@ import { DeferControl } from "@/features/sorting/DeferControl";
 import { TriageUndoProvider } from "@/features/sorting/TriageUndoProvider";
 import { TriageUndoNotice } from "@/features/sorting/TriageUndoNotice";
 import { SetAsideButton } from "@/features/sorting/SetAsideButton";
+import { TakeABreakControl } from "@/features/sorting/TakeABreakControl";
 import { ItemCard } from "@/features/items/ItemCard";
 import { selectTriageItem } from "@/lib/triage-selection";
 
@@ -72,6 +73,12 @@ export default async function TriagePage({ params }: TriagePageProps) {
         { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}` },
         { label: "Triage" },
       ]}
+      actions={
+        <TakeABreakControl
+          sessionId={sortSession.id}
+          collectionHref={`/collections/${collection.slug ?? collection.id}`}
+        />
+      }
     >
       <TriageUndoProvider collectionId={collection.id}>
         <div className="mx-auto max-w-xl space-y-6">

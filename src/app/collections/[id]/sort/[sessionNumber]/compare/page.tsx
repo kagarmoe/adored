@@ -10,6 +10,7 @@ import { DispositionController } from "@/server/api/dispositions";
 import { AppLayout } from "@/components/layout";
 import { EmptyState } from "@/components/ui";
 import { CompareChoice } from "@/features/sorting/CompareChoice";
+import { TakeABreakControl } from "@/features/sorting/TakeABreakControl";
 import { selectNextPair } from "@/lib/pairwise-selection";
 import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
@@ -42,6 +43,15 @@ export default async function ComparePage({ params }: ComparePageProps) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
+  // "Take a break" stays reachable in every state of the compare screen — even
+  // the not-enough-items / all-done branches — so stepping away is never gated.
+  const breakAction = (
+    <TakeABreakControl
+      sessionId={sortSession.id}
+      collectionHref={`/collections/${collection.slug ?? collection.id}`}
+    />
+  );
+
   const [items, preferences, decisions, dispositions] = await Promise.all([
     ItemController.fromDb(db).listItems(collection.id),
     PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id),
@@ -61,6 +71,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
           { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}` },
           { label: "Compare" },
         ]}
+        actions={breakAction}
       >
         <EmptyState
           heading="Not enough items"
@@ -95,6 +106,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
           { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}` },
           { label: "Compare" },
         ]}
+        actions={breakAction}
       >
         <EmptyState
           heading="All comparisons complete"
@@ -120,6 +132,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
         { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}` },
         { label: "Compare" },
       ]}
+      actions={breakAction}
     >
       <div className="mx-auto max-w-2xl space-y-6">
         <div>

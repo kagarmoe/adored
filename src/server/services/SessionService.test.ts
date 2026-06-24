@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { SessionService } from "./SessionService";
+import { CurrentSessionExistsError } from "@/server/repositories/implementations/SessionRepository";
 import type { Session } from "@/types";
 import type { ISessionRepository } from "@/server/repositories/SessionRepository";
 
@@ -45,7 +46,7 @@ describe("SessionService.createSession", () => {
     expect(result).toBe(created);
   });
 
-  it("throws when an active session already exists for the curator", async () => {
+  it("throws a gentle CurrentSessionExistsError (-> 409) when an active session already exists for the curator", async () => {
     const create = vi.fn();
     const repo = {
       findActive: async () => session(),
@@ -54,7 +55,7 @@ describe("SessionService.createSession", () => {
 
     await expect(
       new SessionService(repo).createSession(COLLECTION, CURATOR),
-    ).rejects.toThrow(/active session already exists/i);
+    ).rejects.toBeInstanceOf(CurrentSessionExistsError);
     expect(create).not.toHaveBeenCalled();
   });
 });

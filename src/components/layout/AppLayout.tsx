@@ -16,14 +16,23 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-export function AppLayout({ breadcrumbs, children }: AppLayoutProps) {
+export function AppLayout({ breadcrumbs, actions, children }: AppLayoutProps) {
   return (
     <div className="flex flex-col min-h-screen bg-ground">
       <Header />
 
       <main className="flex-1 pt-20">
         <PageContainer>
-          {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
+          {(breadcrumbs || actions) && (
+            <div className="flex items-center justify-between gap-4">
+              {breadcrumbs ? <Breadcrumbs items={breadcrumbs} /> : <span />}
+              {/* shrink-0: a long, scrolling breadcrumb must not squeeze or wrap
+                  the action (e.g. "Take a break") on a tablet-width row. The
+                  bottom margin stays on Breadcrumbs so the 19 action-less pages
+                  keep their exact spacing. */}
+              {actions && <div className="shrink-0 mb-6">{actions}</div>}
+            </div>
+          )}
           {children}
         </PageContainer>
       </main>

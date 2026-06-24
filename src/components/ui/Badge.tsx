@@ -13,7 +13,10 @@ const badgeVariants = cva("inline-flex items-center justify-center font-semibold
       draft: "bg-accent-aqua text-ink",
       finalized: "bg-success-soft text-success-deep",
       active: "bg-accent-aqua text-ink",
-      paused: "bg-warning-soft text-warning-deep",
+      // Pause is calm, reversible, and not an error — it must NOT speak Danger
+      // (DESIGN.md: brand never poaches safety hues). Cool-blue benign, matching
+      // the "Patient waiting / Not yet" treatment (accent-cornflower + ink).
+      paused: "bg-accent-cornflower text-ink",
       completed: "bg-success-soft text-success-deep",
       abandoned: "bg-hairline text-ink",
       archived: "bg-hairline text-ink",

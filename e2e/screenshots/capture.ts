@@ -18,6 +18,7 @@ import {
 import { getTestDb } from "../fixtures/db";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { ItemDispositionRepository } from "@/server/repositories/implementations/ItemDispositionRepository";
+import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 
 // A real photo so the shots show a real rendered image, not a placeholder.
 const FIXTURE = "e2e/fixtures/photos/IMG_0428.jpeg";
@@ -30,6 +31,7 @@ let triageSessionNumber = 0;
 let waitingSlug = "";
 let waitingSessionNumber = 0;
 let setAsideSlug = "";
+let pausedSlug = "";
 
 test.beforeAll(async () => {
   const ownerId = await seedBaseline();
@@ -78,6 +80,19 @@ test.beforeAll(async () => {
     itemId: setAside.itemIds[0],
     disposition: "set_aside",
   });
+
+  // Epic C PR3: the calm PAUSED sort landing. A journey whose session is flipped
+  // to `paused` (mirrors the patient-waiting/set-aside seeds upserting state) so
+  // /sort renders the calm "Your sort is paused" card with Resume, and gates the
+  // "New Session" button (purses-4bhh).
+  const paused = await seedJourneyScenario(ownerId, 2);
+  pausedSlug = paused.slug;
+  const pausedSession = await new SessionRepository(db).findActive(
+    paused.collectionId,
+    ownerId,
+  );
+  if (!pausedSession) throw new Error("capture: paused seed had no active session to pause");
+  await new SessionRepository(db).update(pausedSession.id, { status: "paused" });
 });
 
 for (const theme of ["light", "dark"] as const) {
@@ -118,6 +133,10 @@ for (const theme of ["light", "dark"] as const) {
       // Epic C PR2: the count-free "Set aside" list — one set-aside item (cover +
       // name + quiet "Bring back"), reached from triage's quiet "Set aside" link.
       ["set-aside", `/collections/${setAsideSlug}/sort/set-aside`],
+      // Epic C PR3: the calm PAUSED sort landing — "Your sort is paused" + "Your
+      // sort is safe — pick up where you left off" + Resume, with "New Session"
+      // gated (purses-4bhh). Reached after "Take a break" in the sort chrome.
+      ["sort-paused", `/collections/${pausedSlug}/sort`],
     ];
     for (const [name, url] of surfaces) {
       await page.goto(url);
