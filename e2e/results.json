@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/61e19c5ee2b0a4239594beb420c494f52190e2ca",
-        "commitHash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28091286728"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/38a990f424b94104b4a77ecb3b8aeee1be27afec",
+        "commitHash": "38a990f424b94104b4a77ecb3b8aeee1be27afec",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28095029261"
       },
       "gitCommit": {
-        "shortHash": "61e19c5",
-        "hash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
-        "subject": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)",
-        "body": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)\n\n* spec: Epic C gentle-affordances design (pause / Not-Mine / Not-Yet / session undo)\n\nDesign spec for the gentle-affordances cluster (purses-z76, purses-1an,\npurses-x5u, purses-2f3f). Owner forks settled; data model = a curator-scoped\nitem_dispositions table governing triage-queue eligibility. Discovered latent\nbug filed as purses-4bhh (sessions_active_unique over-enforces).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* spec: fold 7-persona adversarial review into Epic C design\n\nBLOCK resolved (pairing exclusion is load-bearing — disposed items are NOT\nauto-excluded from selectNextPair). Folded: disposed<=>untriaged boundary\ninvariant (409 + clear-on-triage), cross-collection IDOR via item-capability\nguard, per-item purge erasure vector, AA ink-on-chip fix + contrast gate,\ncount-shaming progress cue removal, pause/New-Session 4bhh gating, co-member\nIDOR + idempotency + undo-survives-refresh tests, six-affordance layout contract.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* plan: Epic C PR1 (item_dispositions + Not-Yet) task-by-task\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(db): item_dispositions table + domain types (Epic C PR1)\n\n* feat(repo): ItemDispositionRepository with upsert/delete + DB tests (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): DispositionController + disposed<=>untriaged 409 invariant (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(erasure): delete item_dispositions on item/collection/account purge (Epic C PR1)\n\nThe item_dispositions FK has no ON DELETE CASCADE, so a leftover disposition\nrow blocked the parent item/collection hard-delete with a 23503 violation.\nWire ItemDispositionRepository erasure (tx-bound) into all three deletion\nservices BEFORE the parent row is hard-deleted:\n- ItemPurgeService: deleteByItem before ItemRepository.hardDelete\n- CollectionPurgeService: deleteByCollection before hardDeleteByCollection\n- AccountDeletionService: deleteByCurator in the Phase-2 curator-private tx\n\nEach integration test now seeds a disposition and asserts it is gone after\nthe purge/deletion (account-deletion covers both the owned-collection and\nborrowed curator-private paths).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): /collections/[id]/dispositions routes with IDOR guards (Epic C PR1)\n\nPOST/GET on /dispositions and DELETE on /dispositions/[itemId]. POST/DELETE\nresolve the item via requireApiItemCapability(\"preferences:write\") then assert\nitem.collectionId === params.id (404 on mismatch — no cross-collection oracle).\nGET uses requireApiCollectionAccess and scopes the list to session.user.id.\ncuratorId is always session.user.id, never from the body.\n\nDispositions are keyed (itemId, curatorId), so a co-member's DELETE/GET only\ntouches/reads their own rows — the co-member IDOR is closed by construction.\n\nRegisters the 3 new route+method cases in the route-authz-enumeration backstop.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat: selectTriageItem queue-eligibility pure function (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): exclude disposed items from pairing; clear disposition on triage (Epic C PR1)\n\nselectNextPair now filters set_aside/deferred items out of pairing candidates\n(a disposed item has no preference row, so the score-sort scored it ?? 0 and\ntreated it as eligible). compare/page.tsx fetches the curator's dispositions and\npasses them in. The decisions route clears any disposition on a triage decision,\nkeeping the disposed<=>untriaged invariant. Uses DispositionController.bringBack\n(not the repo directly) to satisfy the src/app no-restricted-imports rule.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): Not-yet defer affordance + patient-waiting + ceiling-free progress (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): Not-yet defer flow across tablet/phone/desktop (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): sync sort-session triage assertions to ceiling-free copy (Epic C PR1)\n\nTask 8 replaced the triage H1 'Triage' with 'How do you feel about this one?'\nand the '{n} of {N}' progress with '{n} decided so far'. Update the 5 heading\nassertions and 2 progress assertions in sort-session.spec.ts to match — same\ntest intent (triage renders; progression past item 1).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): atomic clear-on-triage + disposed-exclusion DB proof + copy/a11y fixes (Epic C PR1 whole-branch review)\n\nA. Wrap the decisions route's three writes (event insert, preference recalc,\n   triage-only disposition clear) in a single withTransaction so a partial\n   failure can't leave an item both ranked and disposed (disposed<=>untriaged).\n   Capture userId once — tx-closure loses the session.user narrowing.\nB. Add un-mocked DB proof (disposition-exclusion.integration.test.ts) that a\n   deferred item is absent from the real compare path AND from preferences,\n   while A/B still pair (spec §8).\nC. DeferControl busy label: \"Setting aside…\" → \"Just a moment…\" (PR2 set_aside\n   vocabulary was leaking into the PR1 defer action).\nD. DESIGN.md: a \"deferred\" (not \"set-aside\") item resurfaces.\nE. Add role=\"status\" to the patient-waiting banner so it's announced on refresh.\n\nTests: +ATOMIC rollback test (FAIL on non-tx route, PASS on tx route),\n+disposition-exclusion suite, +DeferControl busy-label test, +triage banner\nrole=status assertion. 21 unit + 12 DB pass; build + lint clean.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* docs: sync API/ARCHITECTURE for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(graphify): refresh committed graph for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(screenshots): add triage + patient-waiting surfaces (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "38a990f",
+        "hash": "38a990f424b94104b4a77ecb3b8aeee1be27afec",
+        "subject": "Epic C PR2 — \"Not mine\" (set aside) (#249)",
+        "body": "Epic C PR2 — \"Not mine\" (set aside) (#249)\n\n* plan: Epic C PR2 (Not Mine / set aside) task-by-task\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): \"Not mine\" set-aside affordance + persistent inline undo (Epic C PR2)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): durable \"Set aside\" list + bring-back (Epic C PR2)\n\n- BringBackControl: ghost \"Bring back\" → idempotent DELETE disposition +\n  router.refresh(); in-flight guard + gentle role=\"status\" error (mirrors\n  DeferControl/SetAsideControl). ULID-not-slug per the dispositions API.\n- /collections/[id]/sort/set-aside: Server Component mirroring triage auth\n  (getSession→/login, requireCollectionAccess). Composes the curator-scoped,\n  set_aside-filtered data path (DispositionController.listDispositions →\n  ItemController.listItems filter → PhotoController covers). Calm, COUNT-FREE\n  list + person-side empty state. ULID to BringBackControl, slug for nav.\n- Quiet, count-free \"Set aside\" link from triage (ink-soft, below the decision).\n\nTests: BringBackControl.test.tsx (jsdom: DELETE URL + refresh, error, double-tap);\nset-aside-list.integration.test.ts (un-mocked pg: only A not deferred-B, and a\nsecond curator sees none — curator-scoped).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* refactor(set-aside): use CardImage for covers (calm broken-load fallback) (Epic C PR2)\n\nWhole-task review minor: raw <img> works but CardImage degrades to the calm ☾\nfallback on a failed cover load instead of the browser's broken glyph\n(gentle-by-duty-of-care). One image convention, like ItemCard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): Not-mine set-aside + bring-back across viewports (Epic C PR2)\n\nAdds e2e/not-mine-set-aside.spec.ts (runs in all 3 viewport projects): set\naside the focused triage item via \"Not mine\" → it leaves the flow → the\npersistent inline undo notice and the dedicated count-free \"Set aside\" list\nboth bring it back, awaiting the real 2xx POST/DELETE side effects (no sleeps).\nA second test asserts no count/backlog framing on triage or the list.\n\nAlso adds a \"set-aside\" screenshot surface to capture.ts (a journey scenario\nwith one set_aside disposition) so light+dark shots of the list are produced,\nand raises the screenshots-config per-test timeout — the capture test walks\nevery surface sequentially and the new surface tipped it past the 30s default.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(set-aside): hoist inline undo outside the empty-state branch + a11y (Epic C PR2 whole-branch review)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(graphify): refresh graph for Not-Mine set-aside (Epic C PR2)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1782295938000
+          "time": 1782300276000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1782295938000
+          "time": 1782300276000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/61e19c5ee2b0a4239594beb420c494f52190e2ca",
-            "commitHash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28091286728"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/38a990f424b94104b4a77ecb3b8aeee1be27afec",
+            "commitHash": "38a990f424b94104b4a77ecb3b8aeee1be27afec",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28095029261"
           },
           "gitCommit": {
-            "shortHash": "61e19c5",
-            "hash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
-            "subject": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)",
-            "body": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)\n\n* spec: Epic C gentle-affordances design (pause / Not-Mine / Not-Yet / session undo)\n\nDesign spec for the gentle-affordances cluster (purses-z76, purses-1an,\npurses-x5u, purses-2f3f). Owner forks settled; data model = a curator-scoped\nitem_dispositions table governing triage-queue eligibility. Discovered latent\nbug filed as purses-4bhh (sessions_active_unique over-enforces).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* spec: fold 7-persona adversarial review into Epic C design\n\nBLOCK resolved (pairing exclusion is load-bearing — disposed items are NOT\nauto-excluded from selectNextPair). Folded: disposed<=>untriaged boundary\ninvariant (409 + clear-on-triage), cross-collection IDOR via item-capability\nguard, per-item purge erasure vector, AA ink-on-chip fix + contrast gate,\ncount-shaming progress cue removal, pause/New-Session 4bhh gating, co-member\nIDOR + idempotency + undo-survives-refresh tests, six-affordance layout contract.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* plan: Epic C PR1 (item_dispositions + Not-Yet) task-by-task\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(db): item_dispositions table + domain types (Epic C PR1)\n\n* feat(repo): ItemDispositionRepository with upsert/delete + DB tests (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): DispositionController + disposed<=>untriaged 409 invariant (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(erasure): delete item_dispositions on item/collection/account purge (Epic C PR1)\n\nThe item_dispositions FK has no ON DELETE CASCADE, so a leftover disposition\nrow blocked the parent item/collection hard-delete with a 23503 violation.\nWire ItemDispositionRepository erasure (tx-bound) into all three deletion\nservices BEFORE the parent row is hard-deleted:\n- ItemPurgeService: deleteByItem before ItemRepository.hardDelete\n- CollectionPurgeService: deleteByCollection before hardDeleteByCollection\n- AccountDeletionService: deleteByCurator in the Phase-2 curator-private tx\n\nEach integration test now seeds a disposition and asserts it is gone after\nthe purge/deletion (account-deletion covers both the owned-collection and\nborrowed curator-private paths).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): /collections/[id]/dispositions routes with IDOR guards (Epic C PR1)\n\nPOST/GET on /dispositions and DELETE on /dispositions/[itemId]. POST/DELETE\nresolve the item via requireApiItemCapability(\"preferences:write\") then assert\nitem.collectionId === params.id (404 on mismatch — no cross-collection oracle).\nGET uses requireApiCollectionAccess and scopes the list to session.user.id.\ncuratorId is always session.user.id, never from the body.\n\nDispositions are keyed (itemId, curatorId), so a co-member's DELETE/GET only\ntouches/reads their own rows — the co-member IDOR is closed by construction.\n\nRegisters the 3 new route+method cases in the route-authz-enumeration backstop.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat: selectTriageItem queue-eligibility pure function (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): exclude disposed items from pairing; clear disposition on triage (Epic C PR1)\n\nselectNextPair now filters set_aside/deferred items out of pairing candidates\n(a disposed item has no preference row, so the score-sort scored it ?? 0 and\ntreated it as eligible). compare/page.tsx fetches the curator's dispositions and\npasses them in. The decisions route clears any disposition on a triage decision,\nkeeping the disposed<=>untriaged invariant. Uses DispositionController.bringBack\n(not the repo directly) to satisfy the src/app no-restricted-imports rule.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): Not-yet defer affordance + patient-waiting + ceiling-free progress (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): Not-yet defer flow across tablet/phone/desktop (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): sync sort-session triage assertions to ceiling-free copy (Epic C PR1)\n\nTask 8 replaced the triage H1 'Triage' with 'How do you feel about this one?'\nand the '{n} of {N}' progress with '{n} decided so far'. Update the 5 heading\nassertions and 2 progress assertions in sort-session.spec.ts to match — same\ntest intent (triage renders; progression past item 1).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): atomic clear-on-triage + disposed-exclusion DB proof + copy/a11y fixes (Epic C PR1 whole-branch review)\n\nA. Wrap the decisions route's three writes (event insert, preference recalc,\n   triage-only disposition clear) in a single withTransaction so a partial\n   failure can't leave an item both ranked and disposed (disposed<=>untriaged).\n   Capture userId once — tx-closure loses the session.user narrowing.\nB. Add un-mocked DB proof (disposition-exclusion.integration.test.ts) that a\n   deferred item is absent from the real compare path AND from preferences,\n   while A/B still pair (spec §8).\nC. DeferControl busy label: \"Setting aside…\" → \"Just a moment…\" (PR2 set_aside\n   vocabulary was leaking into the PR1 defer action).\nD. DESIGN.md: a \"deferred\" (not \"set-aside\") item resurfaces.\nE. Add role=\"status\" to the patient-waiting banner so it's announced on refresh.\n\nTests: +ATOMIC rollback test (FAIL on non-tx route, PASS on tx route),\n+disposition-exclusion suite, +DeferControl busy-label test, +triage banner\nrole=status assertion. 21 unit + 12 DB pass; build + lint clean.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* docs: sync API/ARCHITECTURE for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(graphify): refresh committed graph for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(screenshots): add triage + patient-waiting surfaces (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "38a990f",
+            "hash": "38a990f424b94104b4a77ecb3b8aeee1be27afec",
+            "subject": "Epic C PR2 — \"Not mine\" (set aside) (#249)",
+            "body": "Epic C PR2 — \"Not mine\" (set aside) (#249)\n\n* plan: Epic C PR2 (Not Mine / set aside) task-by-task\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): \"Not mine\" set-aside affordance + persistent inline undo (Epic C PR2)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): durable \"Set aside\" list + bring-back (Epic C PR2)\n\n- BringBackControl: ghost \"Bring back\" → idempotent DELETE disposition +\n  router.refresh(); in-flight guard + gentle role=\"status\" error (mirrors\n  DeferControl/SetAsideControl). ULID-not-slug per the dispositions API.\n- /collections/[id]/sort/set-aside: Server Component mirroring triage auth\n  (getSession→/login, requireCollectionAccess). Composes the curator-scoped,\n  set_aside-filtered data path (DispositionController.listDispositions →\n  ItemController.listItems filter → PhotoController covers). Calm, COUNT-FREE\n  list + person-side empty state. ULID to BringBackControl, slug for nav.\n- Quiet, count-free \"Set aside\" link from triage (ink-soft, below the decision).\n\nTests: BringBackControl.test.tsx (jsdom: DELETE URL + refresh, error, double-tap);\nset-aside-list.integration.test.ts (un-mocked pg: only A not deferred-B, and a\nsecond curator sees none — curator-scoped).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* refactor(set-aside): use CardImage for covers (calm broken-load fallback) (Epic C PR2)\n\nWhole-task review minor: raw <img> works but CardImage degrades to the calm ☾\nfallback on a failed cover load instead of the browser's broken glyph\n(gentle-by-duty-of-care). One image convention, like ItemCard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): Not-mine set-aside + bring-back across viewports (Epic C PR2)\n\nAdds e2e/not-mine-set-aside.spec.ts (runs in all 3 viewport projects): set\naside the focused triage item via \"Not mine\" → it leaves the flow → the\npersistent inline undo notice and the dedicated count-free \"Set aside\" list\nboth bring it back, awaiting the real 2xx POST/DELETE side effects (no sleeps).\nA second test asserts no count/backlog framing on triage or the list.\n\nAlso adds a \"set-aside\" screenshot surface to capture.ts (a journey scenario\nwith one set_aside disposition) so light+dark shots of the list are produced,\nand raises the screenshots-config per-test timeout — the capture test walks\nevery surface sequentially and the new surface tipped it past the 30s default.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(set-aside): hoist inline undo outside the empty-state branch + a11y (Epic C PR2 whole-branch review)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(graphify): refresh graph for Not-Mine set-aside (Epic C PR2)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782295938000
+              "time": 1782300276000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782295938000
+              "time": 1782300276000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/61e19c5ee2b0a4239594beb420c494f52190e2ca",
-            "commitHash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28091286728"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/38a990f424b94104b4a77ecb3b8aeee1be27afec",
+            "commitHash": "38a990f424b94104b4a77ecb3b8aeee1be27afec",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28095029261"
           },
           "gitCommit": {
-            "shortHash": "61e19c5",
-            "hash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
-            "subject": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)",
-            "body": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)\n\n* spec: Epic C gentle-affordances design (pause / Not-Mine / Not-Yet / session undo)\n\nDesign spec for the gentle-affordances cluster (purses-z76, purses-1an,\npurses-x5u, purses-2f3f). Owner forks settled; data model = a curator-scoped\nitem_dispositions table governing triage-queue eligibility. Discovered latent\nbug filed as purses-4bhh (sessions_active_unique over-enforces).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* spec: fold 7-persona adversarial review into Epic C design\n\nBLOCK resolved (pairing exclusion is load-bearing — disposed items are NOT\nauto-excluded from selectNextPair). Folded: disposed<=>untriaged boundary\ninvariant (409 + clear-on-triage), cross-collection IDOR via item-capability\nguard, per-item purge erasure vector, AA ink-on-chip fix + contrast gate,\ncount-shaming progress cue removal, pause/New-Session 4bhh gating, co-member\nIDOR + idempotency + undo-survives-refresh tests, six-affordance layout contract.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* plan: Epic C PR1 (item_dispositions + Not-Yet) task-by-task\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(db): item_dispositions table + domain types (Epic C PR1)\n\n* feat(repo): ItemDispositionRepository with upsert/delete + DB tests (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): DispositionController + disposed<=>untriaged 409 invariant (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(erasure): delete item_dispositions on item/collection/account purge (Epic C PR1)\n\nThe item_dispositions FK has no ON DELETE CASCADE, so a leftover disposition\nrow blocked the parent item/collection hard-delete with a 23503 violation.\nWire ItemDispositionRepository erasure (tx-bound) into all three deletion\nservices BEFORE the parent row is hard-deleted:\n- ItemPurgeService: deleteByItem before ItemRepository.hardDelete\n- CollectionPurgeService: deleteByCollection before hardDeleteByCollection\n- AccountDeletionService: deleteByCurator in the Phase-2 curator-private tx\n\nEach integration test now seeds a disposition and asserts it is gone after\nthe purge/deletion (account-deletion covers both the owned-collection and\nborrowed curator-private paths).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): /collections/[id]/dispositions routes with IDOR guards (Epic C PR1)\n\nPOST/GET on /dispositions and DELETE on /dispositions/[itemId]. POST/DELETE\nresolve the item via requireApiItemCapability(\"preferences:write\") then assert\nitem.collectionId === params.id (404 on mismatch — no cross-collection oracle).\nGET uses requireApiCollectionAccess and scopes the list to session.user.id.\ncuratorId is always session.user.id, never from the body.\n\nDispositions are keyed (itemId, curatorId), so a co-member's DELETE/GET only\ntouches/reads their own rows — the co-member IDOR is closed by construction.\n\nRegisters the 3 new route+method cases in the route-authz-enumeration backstop.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat: selectTriageItem queue-eligibility pure function (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): exclude disposed items from pairing; clear disposition on triage (Epic C PR1)\n\nselectNextPair now filters set_aside/deferred items out of pairing candidates\n(a disposed item has no preference row, so the score-sort scored it ?? 0 and\ntreated it as eligible). compare/page.tsx fetches the curator's dispositions and\npasses them in. The decisions route clears any disposition on a triage decision,\nkeeping the disposed<=>untriaged invariant. Uses DispositionController.bringBack\n(not the repo directly) to satisfy the src/app no-restricted-imports rule.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): Not-yet defer affordance + patient-waiting + ceiling-free progress (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): Not-yet defer flow across tablet/phone/desktop (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): sync sort-session triage assertions to ceiling-free copy (Epic C PR1)\n\nTask 8 replaced the triage H1 'Triage' with 'How do you feel about this one?'\nand the '{n} of {N}' progress with '{n} decided so far'. Update the 5 heading\nassertions and 2 progress assertions in sort-session.spec.ts to match — same\ntest intent (triage renders; progression past item 1).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): atomic clear-on-triage + disposed-exclusion DB proof + copy/a11y fixes (Epic C PR1 whole-branch review)\n\nA. Wrap the decisions route's three writes (event insert, preference recalc,\n   triage-only disposition clear) in a single withTransaction so a partial\n   failure can't leave an item both ranked and disposed (disposed<=>untriaged).\n   Capture userId once — tx-closure loses the session.user narrowing.\nB. Add un-mocked DB proof (disposition-exclusion.integration.test.ts) that a\n   deferred item is absent from the real compare path AND from preferences,\n   while A/B still pair (spec §8).\nC. DeferControl busy label: \"Setting aside…\" → \"Just a moment…\" (PR2 set_aside\n   vocabulary was leaking into the PR1 defer action).\nD. DESIGN.md: a \"deferred\" (not \"set-aside\") item resurfaces.\nE. Add role=\"status\" to the patient-waiting banner so it's announced on refresh.\n\nTests: +ATOMIC rollback test (FAIL on non-tx route, PASS on tx route),\n+disposition-exclusion suite, +DeferControl busy-label test, +triage banner\nrole=status assertion. 21 unit + 12 DB pass; build + lint clean.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* docs: sync API/ARCHITECTURE for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(graphify): refresh committed graph for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(screenshots): add triage + patient-waiting surfaces (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "38a990f",
+            "hash": "38a990f424b94104b4a77ecb3b8aeee1be27afec",
+            "subject": "Epic C PR2 — \"Not mine\" (set aside) (#249)",
+            "body": "Epic C PR2 — \"Not mine\" (set aside) (#249)\n\n* plan: Epic C PR2 (Not Mine / set aside) task-by-task\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): \"Not mine\" set-aside affordance + persistent inline undo (Epic C PR2)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): durable \"Set aside\" list + bring-back (Epic C PR2)\n\n- BringBackControl: ghost \"Bring back\" → idempotent DELETE disposition +\n  router.refresh(); in-flight guard + gentle role=\"status\" error (mirrors\n  DeferControl/SetAsideControl). ULID-not-slug per the dispositions API.\n- /collections/[id]/sort/set-aside: Server Component mirroring triage auth\n  (getSession→/login, requireCollectionAccess). Composes the curator-scoped,\n  set_aside-filtered data path (DispositionController.listDispositions →\n  ItemController.listItems filter → PhotoController covers). Calm, COUNT-FREE\n  list + person-side empty state. ULID to BringBackControl, slug for nav.\n- Quiet, count-free \"Set aside\" link from triage (ink-soft, below the decision).\n\nTests: BringBackControl.test.tsx (jsdom: DELETE URL + refresh, error, double-tap);\nset-aside-list.integration.test.ts (un-mocked pg: only A not deferred-B, and a\nsecond curator sees none — curator-scoped).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* refactor(set-aside): use CardImage for covers (calm broken-load fallback) (Epic C PR2)\n\nWhole-task review minor: raw <img> works but CardImage degrades to the calm ☾\nfallback on a failed cover load instead of the browser's broken glyph\n(gentle-by-duty-of-care). One image convention, like ItemCard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): Not-mine set-aside + bring-back across viewports (Epic C PR2)\n\nAdds e2e/not-mine-set-aside.spec.ts (runs in all 3 viewport projects): set\naside the focused triage item via \"Not mine\" → it leaves the flow → the\npersistent inline undo notice and the dedicated count-free \"Set aside\" list\nboth bring it back, awaiting the real 2xx POST/DELETE side effects (no sleeps).\nA second test asserts no count/backlog framing on triage or the list.\n\nAlso adds a \"set-aside\" screenshot surface to capture.ts (a journey scenario\nwith one set_aside disposition) so light+dark shots of the list are produced,\nand raises the screenshots-config per-test timeout — the capture test walks\nevery surface sequentially and the new surface tipped it past the 30s default.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(set-aside): hoist inline undo outside the empty-state branch + a11y (Epic C PR2 whole-branch review)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(graphify): refresh graph for Not-Mine set-aside (Epic C PR2)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782295938000
+              "time": 1782300276000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782295938000
+              "time": 1782300276000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/61e19c5ee2b0a4239594beb420c494f52190e2ca",
-            "commitHash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28091286728"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/38a990f424b94104b4a77ecb3b8aeee1be27afec",
+            "commitHash": "38a990f424b94104b4a77ecb3b8aeee1be27afec",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28095029261"
           },
           "gitCommit": {
-            "shortHash": "61e19c5",
-            "hash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
-            "subject": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)",
-            "body": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)\n\n* spec: Epic C gentle-affordances design (pause / Not-Mine / Not-Yet / session undo)\n\nDesign spec for the gentle-affordances cluster (purses-z76, purses-1an,\npurses-x5u, purses-2f3f). Owner forks settled; data model = a curator-scoped\nitem_dispositions table governing triage-queue eligibility. Discovered latent\nbug filed as purses-4bhh (sessions_active_unique over-enforces).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* spec: fold 7-persona adversarial review into Epic C design\n\nBLOCK resolved (pairing exclusion is load-bearing — disposed items are NOT\nauto-excluded from selectNextPair). Folded: disposed<=>untriaged boundary\ninvariant (409 + clear-on-triage), cross-collection IDOR via item-capability\nguard, per-item purge erasure vector, AA ink-on-chip fix + contrast gate,\ncount-shaming progress cue removal, pause/New-Session 4bhh gating, co-member\nIDOR + idempotency + undo-survives-refresh tests, six-affordance layout contract.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* plan: Epic C PR1 (item_dispositions + Not-Yet) task-by-task\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(db): item_dispositions table + domain types (Epic C PR1)\n\n* feat(repo): ItemDispositionRepository with upsert/delete + DB tests (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): DispositionController + disposed<=>untriaged 409 invariant (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(erasure): delete item_dispositions on item/collection/account purge (Epic C PR1)\n\nThe item_dispositions FK has no ON DELETE CASCADE, so a leftover disposition\nrow blocked the parent item/collection hard-delete with a 23503 violation.\nWire ItemDispositionRepository erasure (tx-bound) into all three deletion\nservices BEFORE the parent row is hard-deleted:\n- ItemPurgeService: deleteByItem before ItemRepository.hardDelete\n- CollectionPurgeService: deleteByCollection before hardDeleteByCollection\n- AccountDeletionService: deleteByCurator in the Phase-2 curator-private tx\n\nEach integration test now seeds a disposition and asserts it is gone after\nthe purge/deletion (account-deletion covers both the owned-collection and\nborrowed curator-private paths).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): /collections/[id]/dispositions routes with IDOR guards (Epic C PR1)\n\nPOST/GET on /dispositions and DELETE on /dispositions/[itemId]. POST/DELETE\nresolve the item via requireApiItemCapability(\"preferences:write\") then assert\nitem.collectionId === params.id (404 on mismatch — no cross-collection oracle).\nGET uses requireApiCollectionAccess and scopes the list to session.user.id.\ncuratorId is always session.user.id, never from the body.\n\nDispositions are keyed (itemId, curatorId), so a co-member's DELETE/GET only\ntouches/reads their own rows — the co-member IDOR is closed by construction.\n\nRegisters the 3 new route+method cases in the route-authz-enumeration backstop.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat: selectTriageItem queue-eligibility pure function (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): exclude disposed items from pairing; clear disposition on triage (Epic C PR1)\n\nselectNextPair now filters set_aside/deferred items out of pairing candidates\n(a disposed item has no preference row, so the score-sort scored it ?? 0 and\ntreated it as eligible). compare/page.tsx fetches the curator's dispositions and\npasses them in. The decisions route clears any disposition on a triage decision,\nkeeping the disposed<=>untriaged invariant. Uses DispositionController.bringBack\n(not the repo directly) to satisfy the src/app no-restricted-imports rule.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): Not-yet defer affordance + patient-waiting + ceiling-free progress (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): Not-yet defer flow across tablet/phone/desktop (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): sync sort-session triage assertions to ceiling-free copy (Epic C PR1)\n\nTask 8 replaced the triage H1 'Triage' with 'How do you feel about this one?'\nand the '{n} of {N}' progress with '{n} decided so far'. Update the 5 heading\nassertions and 2 progress assertions in sort-session.spec.ts to match — same\ntest intent (triage renders; progression past item 1).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): atomic clear-on-triage + disposed-exclusion DB proof + copy/a11y fixes (Epic C PR1 whole-branch review)\n\nA. Wrap the decisions route's three writes (event insert, preference recalc,\n   triage-only disposition clear) in a single withTransaction so a partial\n   failure can't leave an item both ranked and disposed (disposed<=>untriaged).\n   Capture userId once — tx-closure loses the session.user narrowing.\nB. Add un-mocked DB proof (disposition-exclusion.integration.test.ts) that a\n   deferred item is absent from the real compare path AND from preferences,\n   while A/B still pair (spec §8).\nC. DeferControl busy label: \"Setting aside…\" → \"Just a moment…\" (PR2 set_aside\n   vocabulary was leaking into the PR1 defer action).\nD. DESIGN.md: a \"deferred\" (not \"set-aside\") item resurfaces.\nE. Add role=\"status\" to the patient-waiting banner so it's announced on refresh.\n\nTests: +ATOMIC rollback test (FAIL on non-tx route, PASS on tx route),\n+disposition-exclusion suite, +DeferControl busy-label test, +triage banner\nrole=status assertion. 21 unit + 12 DB pass; build + lint clean.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* docs: sync API/ARCHITECTURE for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(graphify): refresh committed graph for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(screenshots): add triage + patient-waiting surfaces (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "38a990f",
+            "hash": "38a990f424b94104b4a77ecb3b8aeee1be27afec",
+            "subject": "Epic C PR2 — \"Not mine\" (set aside) (#249)",
+            "body": "Epic C PR2 — \"Not mine\" (set aside) (#249)\n\n* plan: Epic C PR2 (Not Mine / set aside) task-by-task\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): \"Not mine\" set-aside affordance + persistent inline undo (Epic C PR2)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): durable \"Set aside\" list + bring-back (Epic C PR2)\n\n- BringBackControl: ghost \"Bring back\" → idempotent DELETE disposition +\n  router.refresh(); in-flight guard + gentle role=\"status\" error (mirrors\n  DeferControl/SetAsideControl). ULID-not-slug per the dispositions API.\n- /collections/[id]/sort/set-aside: Server Component mirroring triage auth\n  (getSession→/login, requireCollectionAccess). Composes the curator-scoped,\n  set_aside-filtered data path (DispositionController.listDispositions →\n  ItemController.listItems filter → PhotoController covers). Calm, COUNT-FREE\n  list + person-side empty state. ULID to BringBackControl, slug for nav.\n- Quiet, count-free \"Set aside\" link from triage (ink-soft, below the decision).\n\nTests: BringBackControl.test.tsx (jsdom: DELETE URL + refresh, error, double-tap);\nset-aside-list.integration.test.ts (un-mocked pg: only A not deferred-B, and a\nsecond curator sees none — curator-scoped).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* refactor(set-aside): use CardImage for covers (calm broken-load fallback) (Epic C PR2)\n\nWhole-task review minor: raw <img> works but CardImage degrades to the calm ☾\nfallback on a failed cover load instead of the browser's broken glyph\n(gentle-by-duty-of-care). One image convention, like ItemCard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): Not-mine set-aside + bring-back across viewports (Epic C PR2)\n\nAdds e2e/not-mine-set-aside.spec.ts (runs in all 3 viewport projects): set\naside the focused triage item via \"Not mine\" → it leaves the flow → the\npersistent inline undo notice and the dedicated count-free \"Set aside\" list\nboth bring it back, awaiting the real 2xx POST/DELETE side effects (no sleeps).\nA second test asserts no count/backlog framing on triage or the list.\n\nAlso adds a \"set-aside\" screenshot surface to capture.ts (a journey scenario\nwith one set_aside disposition) so light+dark shots of the list are produced,\nand raises the screenshots-config per-test timeout — the capture test walks\nevery surface sequentially and the new surface tipped it past the 30s default.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(set-aside): hoist inline undo outside the empty-state branch + a11y (Epic C PR2 whole-branch review)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(graphify): refresh graph for Not-Mine set-aside (Epic C PR2)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782295938000
+              "time": 1782300276000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782295938000
+              "time": 1782300276000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/61e19c5ee2b0a4239594beb420c494f52190e2ca",
-            "commitHash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28091286728"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/38a990f424b94104b4a77ecb3b8aeee1be27afec",
+            "commitHash": "38a990f424b94104b4a77ecb3b8aeee1be27afec",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28095029261"
           },
           "gitCommit": {
-            "shortHash": "61e19c5",
-            "hash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
-            "subject": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)",
-            "body": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)\n\n* spec: Epic C gentle-affordances design (pause / Not-Mine / Not-Yet / session undo)\n\nDesign spec for the gentle-affordances cluster (purses-z76, purses-1an,\npurses-x5u, purses-2f3f). Owner forks settled; data model = a curator-scoped\nitem_dispositions table governing triage-queue eligibility. Discovered latent\nbug filed as purses-4bhh (sessions_active_unique over-enforces).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* spec: fold 7-persona adversarial review into Epic C design\n\nBLOCK resolved (pairing exclusion is load-bearing — disposed items are NOT\nauto-excluded from selectNextPair). Folded: disposed<=>untriaged boundary\ninvariant (409 + clear-on-triage), cross-collection IDOR via item-capability\nguard, per-item purge erasure vector, AA ink-on-chip fix + contrast gate,\ncount-shaming progress cue removal, pause/New-Session 4bhh gating, co-member\nIDOR + idempotency + undo-survives-refresh tests, six-affordance layout contract.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* plan: Epic C PR1 (item_dispositions + Not-Yet) task-by-task\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(db): item_dispositions table + domain types (Epic C PR1)\n\n* feat(repo): ItemDispositionRepository with upsert/delete + DB tests (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): DispositionController + disposed<=>untriaged 409 invariant (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(erasure): delete item_dispositions on item/collection/account purge (Epic C PR1)\n\nThe item_dispositions FK has no ON DELETE CASCADE, so a leftover disposition\nrow blocked the parent item/collection hard-delete with a 23503 violation.\nWire ItemDispositionRepository erasure (tx-bound) into all three deletion\nservices BEFORE the parent row is hard-deleted:\n- ItemPurgeService: deleteByItem before ItemRepository.hardDelete\n- CollectionPurgeService: deleteByCollection before hardDeleteByCollection\n- AccountDeletionService: deleteByCurator in the Phase-2 curator-private tx\n\nEach integration test now seeds a disposition and asserts it is gone after\nthe purge/deletion (account-deletion covers both the owned-collection and\nborrowed curator-private paths).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): /collections/[id]/dispositions routes with IDOR guards (Epic C PR1)\n\nPOST/GET on /dispositions and DELETE on /dispositions/[itemId]. POST/DELETE\nresolve the item via requireApiItemCapability(\"preferences:write\") then assert\nitem.collectionId === params.id (404 on mismatch — no cross-collection oracle).\nGET uses requireApiCollectionAccess and scopes the list to session.user.id.\ncuratorId is always session.user.id, never from the body.\n\nDispositions are keyed (itemId, curatorId), so a co-member's DELETE/GET only\ntouches/reads their own rows — the co-member IDOR is closed by construction.\n\nRegisters the 3 new route+method cases in the route-authz-enumeration backstop.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat: selectTriageItem queue-eligibility pure function (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): exclude disposed items from pairing; clear disposition on triage (Epic C PR1)\n\nselectNextPair now filters set_aside/deferred items out of pairing candidates\n(a disposed item has no preference row, so the score-sort scored it ?? 0 and\ntreated it as eligible). compare/page.tsx fetches the curator's dispositions and\npasses them in. The decisions route clears any disposition on a triage decision,\nkeeping the disposed<=>untriaged invariant. Uses DispositionController.bringBack\n(not the repo directly) to satisfy the src/app no-restricted-imports rule.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): Not-yet defer affordance + patient-waiting + ceiling-free progress (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): Not-yet defer flow across tablet/phone/desktop (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): sync sort-session triage assertions to ceiling-free copy (Epic C PR1)\n\nTask 8 replaced the triage H1 'Triage' with 'How do you feel about this one?'\nand the '{n} of {N}' progress with '{n} decided so far'. Update the 5 heading\nassertions and 2 progress assertions in sort-session.spec.ts to match — same\ntest intent (triage renders; progression past item 1).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): atomic clear-on-triage + disposed-exclusion DB proof + copy/a11y fixes (Epic C PR1 whole-branch review)\n\nA. Wrap the decisions route's three writes (event insert, preference recalc,\n   triage-only disposition clear) in a single withTransaction so a partial\n   failure can't leave an item both ranked and disposed (disposed<=>untriaged).\n   Capture userId once — tx-closure loses the session.user narrowing.\nB. Add un-mocked DB proof (disposition-exclusion.integration.test.ts) that a\n   deferred item is absent from the real compare path AND from preferences,\n   while A/B still pair (spec §8).\nC. DeferControl busy label: \"Setting aside…\" → \"Just a moment…\" (PR2 set_aside\n   vocabulary was leaking into the PR1 defer action).\nD. DESIGN.md: a \"deferred\" (not \"set-aside\") item resurfaces.\nE. Add role=\"status\" to the patient-waiting banner so it's announced on refresh.\n\nTests: +ATOMIC rollback test (FAIL on non-tx route, PASS on tx route),\n+disposition-exclusion suite, +DeferControl busy-label test, +triage banner\nrole=status assertion. 21 unit + 12 DB pass; build + lint clean.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* docs: sync API/ARCHITECTURE for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(graphify): refresh committed graph for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(screenshots): add triage + patient-waiting surfaces (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "38a990f",
+            "hash": "38a990f424b94104b4a77ecb3b8aeee1be27afec",
+            "subject": "Epic C PR2 — \"Not mine\" (set aside) (#249)",
+            "body": "Epic C PR2 — \"Not mine\" (set aside) (#249)\n\n* plan: Epic C PR2 (Not Mine / set aside) task-by-task\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): \"Not mine\" set-aside affordance + persistent inline undo (Epic C PR2)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): durable \"Set aside\" list + bring-back (Epic C PR2)\n\n- BringBackControl: ghost \"Bring back\" → idempotent DELETE disposition +\n  router.refresh(); in-flight guard + gentle role=\"status\" error (mirrors\n  DeferControl/SetAsideControl). ULID-not-slug per the dispositions API.\n- /collections/[id]/sort/set-aside: Server Component mirroring triage auth\n  (getSession→/login, requireCollectionAccess). Composes the curator-scoped,\n  set_aside-filtered data path (DispositionController.listDispositions →\n  ItemController.listItems filter → PhotoController covers). Calm, COUNT-FREE\n  list + person-side empty state. ULID to BringBackControl, slug for nav.\n- Quiet, count-free \"Set aside\" link from triage (ink-soft, below the decision).\n\nTests: BringBackControl.test.tsx (jsdom: DELETE URL + refresh, error, double-tap);\nset-aside-list.integration.test.ts (un-mocked pg: only A not deferred-B, and a\nsecond curator sees none — curator-scoped).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* refactor(set-aside): use CardImage for covers (calm broken-load fallback) (Epic C PR2)\n\nWhole-task review minor: raw <img> works but CardImage degrades to the calm ☾\nfallback on a failed cover load instead of the browser's broken glyph\n(gentle-by-duty-of-care). One image convention, like ItemCard.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): Not-mine set-aside + bring-back across viewports (Epic C PR2)\n\nAdds e2e/not-mine-set-aside.spec.ts (runs in all 3 viewport projects): set\naside the focused triage item via \"Not mine\" → it leaves the flow → the\npersistent inline undo notice and the dedicated count-free \"Set aside\" list\nboth bring it back, awaiting the real 2xx POST/DELETE side effects (no sleeps).\nA second test asserts no count/backlog framing on triage or the list.\n\nAlso adds a \"set-aside\" screenshot surface to capture.ts (a journey scenario\nwith one set_aside disposition) so light+dark shots of the list are produced,\nand raises the screenshots-config per-test timeout — the capture test walks\nevery surface sequentially and the new surface tipped it past the 30s default.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(set-aside): hoist inline undo outside the empty-state branch + a11y (Epic C PR2 whole-branch review)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(graphify): refresh graph for Not-Mine set-aside (Epic C PR2)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782295938000
+              "time": 1782300276000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782295938000
+              "time": 1782300276000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 935,
+                  "duration": 1011,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:14:57.085Z",
+                  "startTime": "2026-06-24T11:27:48.819Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -310,12 +310,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 8415,
+                      "duration": 10310,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:14:58.736Z",
+                      "startTime": "2026-06-24T11:27:50.545Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -344,12 +344,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2883,
+                      "duration": 3864,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:13.947Z",
+                      "startTime": "2026-06-24T11:30:14.586Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -378,12 +378,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 774,
+                      "duration": 2609,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:17:49.338Z",
+                      "startTime": "2026-06-24T11:32:10.612Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -422,12 +422,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2929,
+                  "duration": 2592,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:15:07.835Z",
+                  "startTime": "2026-06-24T11:28:01.741Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -456,12 +456,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2300,
+                  "duration": 2226,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:15:10.847Z",
+                  "startTime": "2026-06-24T11:28:04.384Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -490,12 +490,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2083,
+                  "duration": 3091,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:16:17.017Z",
+                  "startTime": "2026-06-24T11:30:18.916Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -524,12 +524,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1932,
+                  "duration": 3125,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:16:19.168Z",
+                  "startTime": "2026-06-24T11:30:22.090Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -558,12 +558,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1273,
+                  "duration": 1415,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:17:51.710Z",
+                  "startTime": "2026-06-24T11:32:18.699Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -592,12 +592,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1509,
+                  "duration": 1695,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:17:53.031Z",
+                  "startTime": "2026-06-24T11:32:20.189Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -634,12 +634,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1594,
+                  "duration": 1633,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:15:13.176Z",
+                  "startTime": "2026-06-24T11:28:06.659Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -668,12 +668,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1524,
+                  "duration": 1618,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:15:14.818Z",
+                  "startTime": "2026-06-24T11:28:08.366Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -702,12 +702,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2303,
+                  "duration": 2458,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:15:16.372Z",
+                  "startTime": "2026-06-24T11:28:10.011Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -736,12 +736,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1565,
+                  "duration": 2085,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:16:21.127Z",
+                  "startTime": "2026-06-24T11:30:25.274Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -770,12 +770,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1525,
+                  "duration": 1909,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:16:22.758Z",
+                  "startTime": "2026-06-24T11:30:27.398Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -804,12 +804,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1877,
+                  "duration": 2982,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:16:24.304Z",
+                  "startTime": "2026-06-24T11:30:29.342Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -838,12 +838,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 851,
+                  "duration": 921,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:17:54.565Z",
+                  "startTime": "2026-06-24T11:32:21.942Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -872,12 +872,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 917,
+                  "duration": 974,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:17:55.483Z",
+                  "startTime": "2026-06-24T11:32:22.918Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -906,12 +906,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1415,
+                  "duration": 1350,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:17:56.446Z",
+                  "startTime": "2026-06-24T11:32:23.918Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -955,12 +955,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1167,
+                      "duration": 1189,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:18.720Z",
+                      "startTime": "2026-06-24T11:28:12.499Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -989,12 +989,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1610,
+                      "duration": 1562,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:20.004Z",
+                      "startTime": "2026-06-24T11:28:13.772Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1023,12 +1023,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1358,
+                      "duration": 1522,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:21.644Z",
+                      "startTime": "2026-06-24T11:28:15.366Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1057,12 +1057,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 877,
+                      "duration": 1222,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:26.216Z",
+                      "startTime": "2026-06-24T11:30:32.376Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1091,12 +1091,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1309,
+                      "duration": 2206,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:27.198Z",
+                      "startTime": "2026-06-24T11:30:33.816Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1125,12 +1125,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 803,
+                      "duration": 923,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:28.531Z",
+                      "startTime": "2026-06-24T11:30:36.067Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1159,12 +1159,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 700,
+                      "duration": 738,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:17:57.920Z",
+                      "startTime": "2026-06-24T11:32:25.313Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1193,12 +1193,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 985,
+                      "duration": 1017,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:17:58.749Z",
+                      "startTime": "2026-06-24T11:32:26.233Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1227,12 +1227,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 508,
+                      "duration": 654,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:17:59.752Z",
+                      "startTime": "2026-06-24T11:32:27.291Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1278,12 +1278,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2425,
+                      "duration": 1857,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:23.121Z",
+                      "startTime": "2026-06-24T11:28:16.922Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1312,12 +1312,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1626,
+                      "duration": 1863,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:29.367Z",
+                      "startTime": "2026-06-24T11:30:37.018Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1346,12 +1346,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 936,
+                      "duration": 1301,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:00.308Z",
+                      "startTime": "2026-06-24T11:32:27.989Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1397,12 +1397,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1954,
+                      "duration": 1888,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:25.627Z",
+                      "startTime": "2026-06-24T11:28:18.939Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1431,12 +1431,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1829,
+                      "duration": 2067,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:31.060Z",
+                      "startTime": "2026-06-24T11:30:38.959Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1465,12 +1465,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1001,
+                      "duration": 1114,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:01.359Z",
+                      "startTime": "2026-06-24T11:32:29.372Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1516,12 +1516,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 950,
+                      "duration": 968,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:27.659Z",
+                      "startTime": "2026-06-24T11:28:20.896Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1550,12 +1550,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1107,
+                      "duration": 1224,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:28.682Z",
+                      "startTime": "2026-06-24T11:28:21.955Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1584,12 +1584,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 816,
+                      "duration": 892,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:32.953Z",
+                      "startTime": "2026-06-24T11:30:41.115Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1618,12 +1618,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1152,
+                      "duration": 1404,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:33.841Z",
+                      "startTime": "2026-06-24T11:30:42.062Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1657,7 +1657,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:02.403Z",
+                      "startTime": "2026-06-24T11:32:30.550Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1686,12 +1686,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 517,
+                      "duration": 496,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:03.046Z",
+                      "startTime": "2026-06-24T11:32:31.162Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1737,12 +1737,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3297,
+                      "duration": 3348,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:29.843Z",
+                      "startTime": "2026-06-24T11:28:23.252Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1771,12 +1771,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3988,
+                      "duration": 3628,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:33.253Z",
+                      "startTime": "2026-06-24T11:28:26.655Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1805,12 +1805,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3002,
+                      "duration": 3110,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:35.017Z",
+                      "startTime": "2026-06-24T11:30:43.516Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1839,12 +1839,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3178,
+                      "duration": 3270,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:38.076Z",
+                      "startTime": "2026-06-24T11:30:46.680Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1873,12 +1873,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1174,
+                      "duration": 1217,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:03.600Z",
+                      "startTime": "2026-06-24T11:32:31.691Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1907,12 +1907,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 993,
+                      "duration": 1219,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:04.873Z",
+                      "startTime": "2026-06-24T11:32:32.959Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1958,12 +1958,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1970,
+                      "duration": 1829,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:37.325Z",
+                      "startTime": "2026-06-24T11:28:30.320Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1992,12 +1992,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2170,
+                      "duration": 2043,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:39.387Z",
+                      "startTime": "2026-06-24T11:28:32.217Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2026,12 +2026,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1406,
+                      "duration": 1848,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:41.299Z",
+                      "startTime": "2026-06-24T11:30:49.991Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2060,12 +2060,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1667,
+                      "duration": 1612,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:42.777Z",
+                      "startTime": "2026-06-24T11:30:51.918Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2094,12 +2094,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 685,
+                      "duration": 639,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:05.910Z",
+                      "startTime": "2026-06-24T11:32:34.215Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2128,12 +2128,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 813,
+                      "duration": 769,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:06.692Z",
+                      "startTime": "2026-06-24T11:32:34.904Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2179,12 +2179,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1227,
+                      "duration": 1423,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:41.627Z",
+                      "startTime": "2026-06-24T11:28:34.290Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2213,12 +2213,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1051,
+                      "duration": 1191,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:42.890Z",
+                      "startTime": "2026-06-24T11:28:35.722Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2247,12 +2247,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1056,
+                      "duration": 1144,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:43.950Z",
+                      "startTime": "2026-06-24T11:28:36.924Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2281,12 +2281,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1342,
+                      "duration": 1362,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:44.475Z",
+                      "startTime": "2026-06-24T11:30:53.559Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2315,12 +2315,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1052,
+                      "duration": 1216,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:45.831Z",
+                      "startTime": "2026-06-24T11:30:54.930Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2349,12 +2349,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1023,
+                      "duration": 1141,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:46.894Z",
+                      "startTime": "2026-06-24T11:30:56.155Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2383,12 +2383,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1311,
+                      "duration": 1202,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:07.563Z",
+                      "startTime": "2026-06-24T11:32:35.698Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2417,12 +2417,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1207,
+                      "duration": 1167,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:08.885Z",
+                      "startTime": "2026-06-24T11:32:36.908Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2451,12 +2451,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1235,
+                      "duration": 1147,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:10.102Z",
+                      "startTime": "2026-06-24T11:32:38.083Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2495,12 +2495,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 847,
+                  "duration": 863,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:15:45.031Z",
+                  "startTime": "2026-06-24T11:28:38.094Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2529,12 +2529,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1041,
+                  "duration": 1936,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:15:45.928Z",
+                  "startTime": "2026-06-24T11:28:38.998Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2563,12 +2563,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 751,
+                  "duration": 820,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:16:47.938Z",
+                  "startTime": "2026-06-24T11:30:57.323Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2597,12 +2597,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 919,
+                  "duration": 1053,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:16:48.729Z",
+                  "startTime": "2026-06-24T11:30:58.180Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2631,12 +2631,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 319,
+                  "duration": 322,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:18:11.410Z",
+                  "startTime": "2026-06-24T11:32:39.254Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2665,12 +2665,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 681,
+                  "duration": 751,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:18:11.808Z",
+                  "startTime": "2026-06-24T11:32:39.613Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2707,12 +2707,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 847,
+                  "duration": 1860,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:15:46.998Z",
+                  "startTime": "2026-06-24T11:28:40.986Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2741,12 +2741,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 789,
+                  "duration": 1844,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:15:47.926Z",
+                  "startTime": "2026-06-24T11:28:43.066Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2775,12 +2775,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1037,
+                  "duration": 2770,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:15:48.749Z",
+                  "startTime": "2026-06-24T11:28:44.972Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2809,12 +2809,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 733,
+                  "duration": 824,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:16:49.683Z",
+                  "startTime": "2026-06-24T11:30:59.273Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2843,12 +2843,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 790,
+                  "duration": 754,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:16:50.526Z",
+                  "startTime": "2026-06-24T11:31:00.178Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2877,12 +2877,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 910,
+                  "duration": 975,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:16:51.346Z",
+                  "startTime": "2026-06-24T11:31:00.949Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2911,12 +2911,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 408,
+                  "duration": 374,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:18:12.549Z",
+                  "startTime": "2026-06-24T11:32:40.406Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2945,12 +2945,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 443,
+                  "duration": 398,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:18:13.040Z",
+                  "startTime": "2026-06-24T11:32:40.838Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2979,12 +2979,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 552,
+                  "duration": 522,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:18:13.500Z",
+                  "startTime": "2026-06-24T11:32:41.252Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2996,6 +2996,329 @@
           "file": "members.spec.ts",
           "line": 70,
           "column": 5
+        }
+      ]
+    },
+    {
+      "title": "not-mine-set-aside.spec.ts",
+      "file": "not-mine-set-aside.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "triage — 'Not mine' set-aside flow",
+          "file": "not-mine-set-aside.spec.ts",
+          "line": 50,
+          "column": 6,
+          "specs": [
+            {
+              "title": "set aside the focused item → it leaves the flow → inline undo + list bring-back both return it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10568,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-24T11:28:48.079Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "42356fc52ff3393421b8-f36511c1a84bbef45c34",
+              "file": "not-mine-set-aside.spec.ts",
+              "line": 65,
+              "column": 7
+            },
+            {
+              "title": "setting aside the LAST item empties the queue, yet the inline 'Bring back' notice stays visible AND clickable",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 9941,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-24T11:29:00.019Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "42356fc52ff3393421b8-82c35b2c2c487b2f5a8d",
+              "file": "not-mine-set-aside.spec.ts",
+              "line": 167,
+              "column": 7
+            },
+            {
+              "title": "no ceiling: neither triage nor the set-aside list shows an 'of N' total or remaining count",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1364,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-24T11:29:09.984Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "42356fc52ff3393421b8-73f613ca510333902b26",
+              "file": "not-mine-set-aside.spec.ts",
+              "line": 234,
+              "column": 7
+            },
+            {
+              "title": "set aside the focused item → it leaves the flow → inline undo + list bring-back both return it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3713,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-24T11:31:01.977Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "42356fc52ff3393421b8-2b08902bbf2ec3cbec58",
+              "file": "not-mine-set-aside.spec.ts",
+              "line": 65,
+              "column": 7
+            },
+            {
+              "title": "setting aside the LAST item empties the queue, yet the inline 'Bring back' notice stays visible AND clickable",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3582,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-24T11:31:05.753Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "42356fc52ff3393421b8-0dcf6099555c3daeb32a",
+              "file": "not-mine-set-aside.spec.ts",
+              "line": 167,
+              "column": 7
+            },
+            {
+              "title": "no ceiling: neither triage nor the set-aside list shows an 'of N' total or remaining count",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1230,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-24T11:31:09.355Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "42356fc52ff3393421b8-42a42e98adbb9df71e06",
+              "file": "not-mine-set-aside.spec.ts",
+              "line": 234,
+              "column": 7
+            },
+            {
+              "title": "set aside the focused item → it leaves the flow → inline undo + list bring-back both return it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1315,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-24T11:32:41.817Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "42356fc52ff3393421b8-1af770f9c67077a9446e",
+              "file": "not-mine-set-aside.spec.ts",
+              "line": 65,
+              "column": 7
+            },
+            {
+              "title": "setting aside the LAST item empties the queue, yet the inline 'Bring back' notice stays visible AND clickable",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1146,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-24T11:32:43.182Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "42356fc52ff3393421b8-7368f02de21d0cbed3a6",
+              "file": "not-mine-set-aside.spec.ts",
+              "line": 167,
+              "column": 7
+            },
+            {
+              "title": "no ceiling: neither triage nor the set-aside list shows an 'of N' total or remaining count",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 709,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-24T11:32:44.342Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "42356fc52ff3393421b8-b28e7adfc6c0defa6146",
+              "file": "not-mine-set-aside.spec.ts",
+              "line": 234,
+              "column": 7
+            }
+          ]
         }
       ]
     },
@@ -3028,12 +3351,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2487,
+                      "duration": 3387,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:49.843Z",
+                      "startTime": "2026-06-24T11:29:11.425Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3062,12 +3385,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1250,
+                      "duration": 1410,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:52.397Z",
+                      "startTime": "2026-06-24T11:29:14.933Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3096,12 +3419,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3315,
+                      "duration": 3475,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:52.307Z",
+                      "startTime": "2026-06-24T11:31:10.623Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3130,12 +3453,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1496,
+                      "duration": 1532,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:55.686Z",
+                      "startTime": "2026-06-24T11:31:14.165Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3164,12 +3487,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1241,
+                      "duration": 971,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:14.113Z",
+                      "startTime": "2026-06-24T11:32:45.069Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3198,12 +3521,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 463,
+                      "duration": 613,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:15.438Z",
+                      "startTime": "2026-06-24T11:32:46.084Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3242,12 +3565,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1101,
+                  "duration": 1530,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:15:53.679Z",
+                  "startTime": "2026-06-24T11:29:16.425Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3276,12 +3599,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1080,
+                  "duration": 1286,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:16:57.215Z",
+                  "startTime": "2026-06-24T11:31:15.749Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3310,12 +3633,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 433,
+                  "duration": 445,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:18:15.927Z",
+                  "startTime": "2026-06-24T11:32:46.726Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3359,12 +3682,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1144,
+                      "duration": 1498,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:54.808Z",
+                      "startTime": "2026-06-24T11:29:18.030Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3393,12 +3716,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1306,
+                      "duration": 1401,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:58.328Z",
+                      "startTime": "2026-06-24T11:31:17.064Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3427,12 +3750,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 619,
+                      "duration": 588,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:16.378Z",
+                      "startTime": "2026-06-24T11:32:47.188Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3478,12 +3801,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1157,
+                      "duration": 1488,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:56.050Z",
+                      "startTime": "2026-06-24T11:29:19.727Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3512,12 +3835,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1426,
+                      "duration": 1448,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:59.716Z",
+                      "startTime": "2026-06-24T11:31:18.574Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3546,12 +3869,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 623,
+                      "duration": 563,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:17.060Z",
+                      "startTime": "2026-06-24T11:32:47.832Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3590,12 +3913,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 759,
+                  "duration": 992,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:15:57.333Z",
+                  "startTime": "2026-06-24T11:29:21.520Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3624,12 +3947,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 851,
+                  "duration": 997,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:15:58.127Z",
+                  "startTime": "2026-06-24T11:29:22.548Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3658,12 +3981,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 826,
+                  "duration": 1071,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:15:59.000Z",
+                  "startTime": "2026-06-24T11:29:23.565Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3692,12 +4015,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 902,
+                  "duration": 944,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:17:01.220Z",
+                  "startTime": "2026-06-24T11:31:20.296Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3726,12 +4049,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 743,
+                  "duration": 892,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:17:02.145Z",
+                  "startTime": "2026-06-24T11:31:21.275Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3760,12 +4083,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 780,
+                  "duration": 919,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:17:02.906Z",
+                  "startTime": "2026-06-24T11:31:22.191Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3794,12 +4117,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 261,
+                  "duration": 249,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:18:17.745Z",
+                  "startTime": "2026-06-24T11:32:48.465Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3828,12 +4151,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 250,
+                  "duration": 268,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:18:18.021Z",
+                  "startTime": "2026-06-24T11:32:48.730Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3862,12 +4185,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 283,
+                  "duration": 272,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-24T10:18:18.286Z",
+                  "startTime": "2026-06-24T11:32:49.009Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3911,12 +4234,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1160,
+                      "duration": 1076,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:15:59.857Z",
+                      "startTime": "2026-06-24T11:29:24.676Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3945,12 +4268,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1280,
+                      "duration": 1549,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:17:03.712Z",
+                      "startTime": "2026-06-24T11:31:23.139Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3979,12 +4302,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 463,
+                      "duration": 461,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:18.592Z",
+                      "startTime": "2026-06-24T11:32:49.296Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4030,12 +4353,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1228,
+                      "duration": 1433,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:01.113Z",
+                      "startTime": "2026-06-24T11:29:25.884Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4064,12 +4387,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1391,
+                      "duration": 2032,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:02.406Z",
+                      "startTime": "2026-06-24T11:29:27.388Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4098,12 +4421,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1468,
+                      "duration": 1870,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:03.831Z",
+                      "startTime": "2026-06-24T11:29:29.464Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4132,12 +4455,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1481,
+                      "duration": 1523,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:17:05.080Z",
+                      "startTime": "2026-06-24T11:31:24.757Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4166,12 +4489,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1858,
+                      "duration": 1947,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:17:06.632Z",
+                      "startTime": "2026-06-24T11:31:26.342Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4200,12 +4523,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1432,
+                      "duration": 1444,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:17:08.563Z",
+                      "startTime": "2026-06-24T11:31:28.376Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4234,12 +4557,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 479,
+                      "duration": 522,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:19.112Z",
+                      "startTime": "2026-06-24T11:32:49.800Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4268,12 +4591,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 697,
+                      "duration": 864,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:19.626Z",
+                      "startTime": "2026-06-24T11:32:50.355Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4302,12 +4625,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 518,
+                      "duration": 550,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:20.336Z",
+                      "startTime": "2026-06-24T11:32:51.237Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4344,12 +4667,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4440,
+                      "duration": 5108,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:05.331Z",
+                      "startTime": "2026-06-24T11:29:31.387Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4378,12 +4701,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1612,
+                      "duration": 2455,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:09.841Z",
+                      "startTime": "2026-06-24T11:29:36.573Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4412,12 +4735,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4435,
+                      "duration": 4488,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:17:10.022Z",
+                      "startTime": "2026-06-24T11:31:29.860Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4446,12 +4769,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1433,
+                      "duration": 2405,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:17:14.526Z",
+                      "startTime": "2026-06-24T11:31:34.421Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4480,12 +4803,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1468,
+                      "duration": 1721,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:20.872Z",
+                      "startTime": "2026-06-24T11:32:51.802Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4514,12 +4837,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 522,
+                      "duration": 508,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:22.385Z",
+                      "startTime": "2026-06-24T11:32:53.565Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4556,12 +4879,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 860,
+                      "duration": 1689,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:11.485Z",
+                      "startTime": "2026-06-24T11:29:39.055Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4590,12 +4913,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 823,
+                      "duration": 1244,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:16:12.371Z",
+                      "startTime": "2026-06-24T11:29:40.761Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4624,12 +4947,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1171,
+                      "duration": 1814,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:17:15.985Z",
+                      "startTime": "2026-06-24T11:31:36.858Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4658,12 +4981,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1034,
+                      "duration": 1068,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:17:17.174Z",
+                      "startTime": "2026-06-24T11:31:38.704Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4692,12 +5015,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 242,
+                      "duration": 295,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:22.928Z",
+                      "startTime": "2026-06-24T11:32:54.088Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4726,12 +5049,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 254,
+                      "duration": 280,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-24T10:18:23.184Z",
+                      "startTime": "2026-06-24T11:32:54.401Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4751,9 +5074,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-24T10:13:44.939Z",
-    "duration": 278801.83800000005,
-    "expected": 124,
+    "startTime": "2026-06-24T11:26:34.182Z",
+    "duration": 380856.141,
+    "expected": 133,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0
