@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9189a9df53c2a5e2a645b078cf17e83382437cf3",
-        "commitHash": "9189a9df53c2a5e2a645b078cf17e83382437cf3",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28064284588"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/61e19c5ee2b0a4239594beb420c494f52190e2ca",
+        "commitHash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28091286728"
       },
       "gitCommit": {
-        "shortHash": "9189a9d",
-        "hash": "9189a9df53c2a5e2a645b078cf17e83382437cf3",
-        "subject": "PR2 — o93 results: letting-go / Onward section (the P1 headline) (#247)",
-        "body": "PR2 — o93 results: letting-go / Onward section (the P1 headline) (#247)\n\n* plan: PR2 o93 results letting-go/Onward (partition, no count tally, affirmation end-beat)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(results): effectiveBucket + partitionRanked helper (single source of truth)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(results): partition loved vs Onward, drop count tally, affirmation end-beat (purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(results): gentle all-Onward leading affirmation (purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(results): conditional end-beat so all-Onward never claims 'loved most' (review fold)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(results): pairwise choice changes materialized ranking order (regression guard, purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(e2e): results renders Onward as a separate section; capture surface (purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* results: re-anchor close + subordinate Onward + a11y headings (pv9 PR2 whole-branch folds)\n\nWhole-branch-review folds on the P1 results tone centerpiece (TONE.md first-order):\n\n- Re-anchor the loved>0 close to the loved set at the top: \"These are the\n  things you love most.\" (bound by proximity to the Onward pile above it) ->\n  \"What you love most is at the top.\" Still the page's last beat.\n- Subordinate Onward below the loved ranking: heading text-2xl ink -> text-xl\n  ink-soft; fold the standalone \"Onward\" eyebrow <p> into the <h2> as a span so\n  heading-nav reads \"Onward where these go next\" as one accessible name.\n- Warmer, person-side all-Onward close: \"You saw each one clearly - that's the\n  work.\" -> \"You looked, honestly, at every one. That took something.\"\n- Truthful Onward forward line: drop the \"someone else can love them next\"\n  presumption -> \"ready to move on - to a new home, or simply on from here.\"\n- a11y: MostLovedHero \"What you love most\" span -> <h2> (used only by results\n  page; heading order stays valid).\n- Coverage: add loved.length===1 edge (hero, no full-ranking tail, Onward\n  renders, close affirms the top).\n- Update unit + e2e assertions; make e2e hero getByText exact (close now shares\n  the \"What you love most\" prefix).\n\nGates: vitest 26/26, build + lint (0 errors), playwright results specs 7/7.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph for PR2 (results Onward partition)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(e2e): exact-match the hero assertion in sort-session (o93 end-beat collision)\n\nThe o93 affirmation end-beat 'What you love most is at the top.' shares the\n'What you love most' substring with the hero h2, so getByText(substring) hit a\nstrict-mode 2-element match. Full e2e suite: 118 passed.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "61e19c5",
+        "hash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
+        "subject": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)",
+        "body": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)\n\n* spec: Epic C gentle-affordances design (pause / Not-Mine / Not-Yet / session undo)\n\nDesign spec for the gentle-affordances cluster (purses-z76, purses-1an,\npurses-x5u, purses-2f3f). Owner forks settled; data model = a curator-scoped\nitem_dispositions table governing triage-queue eligibility. Discovered latent\nbug filed as purses-4bhh (sessions_active_unique over-enforces).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* spec: fold 7-persona adversarial review into Epic C design\n\nBLOCK resolved (pairing exclusion is load-bearing — disposed items are NOT\nauto-excluded from selectNextPair). Folded: disposed<=>untriaged boundary\ninvariant (409 + clear-on-triage), cross-collection IDOR via item-capability\nguard, per-item purge erasure vector, AA ink-on-chip fix + contrast gate,\ncount-shaming progress cue removal, pause/New-Session 4bhh gating, co-member\nIDOR + idempotency + undo-survives-refresh tests, six-affordance layout contract.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* plan: Epic C PR1 (item_dispositions + Not-Yet) task-by-task\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(db): item_dispositions table + domain types (Epic C PR1)\n\n* feat(repo): ItemDispositionRepository with upsert/delete + DB tests (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): DispositionController + disposed<=>untriaged 409 invariant (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(erasure): delete item_dispositions on item/collection/account purge (Epic C PR1)\n\nThe item_dispositions FK has no ON DELETE CASCADE, so a leftover disposition\nrow blocked the parent item/collection hard-delete with a 23503 violation.\nWire ItemDispositionRepository erasure (tx-bound) into all three deletion\nservices BEFORE the parent row is hard-deleted:\n- ItemPurgeService: deleteByItem before ItemRepository.hardDelete\n- CollectionPurgeService: deleteByCollection before hardDeleteByCollection\n- AccountDeletionService: deleteByCurator in the Phase-2 curator-private tx\n\nEach integration test now seeds a disposition and asserts it is gone after\nthe purge/deletion (account-deletion covers both the owned-collection and\nborrowed curator-private paths).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): /collections/[id]/dispositions routes with IDOR guards (Epic C PR1)\n\nPOST/GET on /dispositions and DELETE on /dispositions/[itemId]. POST/DELETE\nresolve the item via requireApiItemCapability(\"preferences:write\") then assert\nitem.collectionId === params.id (404 on mismatch — no cross-collection oracle).\nGET uses requireApiCollectionAccess and scopes the list to session.user.id.\ncuratorId is always session.user.id, never from the body.\n\nDispositions are keyed (itemId, curatorId), so a co-member's DELETE/GET only\ntouches/reads their own rows — the co-member IDOR is closed by construction.\n\nRegisters the 3 new route+method cases in the route-authz-enumeration backstop.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat: selectTriageItem queue-eligibility pure function (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): exclude disposed items from pairing; clear disposition on triage (Epic C PR1)\n\nselectNextPair now filters set_aside/deferred items out of pairing candidates\n(a disposed item has no preference row, so the score-sort scored it ?? 0 and\ntreated it as eligible). compare/page.tsx fetches the curator's dispositions and\npasses them in. The decisions route clears any disposition on a triage decision,\nkeeping the disposed<=>untriaged invariant. Uses DispositionController.bringBack\n(not the repo directly) to satisfy the src/app no-restricted-imports rule.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): Not-yet defer affordance + patient-waiting + ceiling-free progress (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): Not-yet defer flow across tablet/phone/desktop (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): sync sort-session triage assertions to ceiling-free copy (Epic C PR1)\n\nTask 8 replaced the triage H1 'Triage' with 'How do you feel about this one?'\nand the '{n} of {N}' progress with '{n} decided so far'. Update the 5 heading\nassertions and 2 progress assertions in sort-session.spec.ts to match — same\ntest intent (triage renders; progression past item 1).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): atomic clear-on-triage + disposed-exclusion DB proof + copy/a11y fixes (Epic C PR1 whole-branch review)\n\nA. Wrap the decisions route's three writes (event insert, preference recalc,\n   triage-only disposition clear) in a single withTransaction so a partial\n   failure can't leave an item both ranked and disposed (disposed<=>untriaged).\n   Capture userId once — tx-closure loses the session.user narrowing.\nB. Add un-mocked DB proof (disposition-exclusion.integration.test.ts) that a\n   deferred item is absent from the real compare path AND from preferences,\n   while A/B still pair (spec §8).\nC. DeferControl busy label: \"Setting aside…\" → \"Just a moment…\" (PR2 set_aside\n   vocabulary was leaking into the PR1 defer action).\nD. DESIGN.md: a \"deferred\" (not \"set-aside\") item resurfaces.\nE. Add role=\"status\" to the patient-waiting banner so it's announced on refresh.\n\nTests: +ATOMIC rollback test (FAIL on non-tx route, PASS on tx route),\n+disposition-exclusion suite, +DeferControl busy-label test, +triage banner\nrole=status assertion. 21 unit + 12 DB pass; build + lint clean.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* docs: sync API/ARCHITECTURE for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(graphify): refresh committed graph for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(screenshots): add triage + patient-waiting surfaces (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1782257547000
+          "time": 1782295938000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1782257547000
+          "time": 1782295938000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9189a9df53c2a5e2a645b078cf17e83382437cf3",
-            "commitHash": "9189a9df53c2a5e2a645b078cf17e83382437cf3",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28064284588"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/61e19c5ee2b0a4239594beb420c494f52190e2ca",
+            "commitHash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28091286728"
           },
           "gitCommit": {
-            "shortHash": "9189a9d",
-            "hash": "9189a9df53c2a5e2a645b078cf17e83382437cf3",
-            "subject": "PR2 — o93 results: letting-go / Onward section (the P1 headline) (#247)",
-            "body": "PR2 — o93 results: letting-go / Onward section (the P1 headline) (#247)\n\n* plan: PR2 o93 results letting-go/Onward (partition, no count tally, affirmation end-beat)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(results): effectiveBucket + partitionRanked helper (single source of truth)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(results): partition loved vs Onward, drop count tally, affirmation end-beat (purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(results): gentle all-Onward leading affirmation (purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(results): conditional end-beat so all-Onward never claims 'loved most' (review fold)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(results): pairwise choice changes materialized ranking order (regression guard, purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(e2e): results renders Onward as a separate section; capture surface (purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* results: re-anchor close + subordinate Onward + a11y headings (pv9 PR2 whole-branch folds)\n\nWhole-branch-review folds on the P1 results tone centerpiece (TONE.md first-order):\n\n- Re-anchor the loved>0 close to the loved set at the top: \"These are the\n  things you love most.\" (bound by proximity to the Onward pile above it) ->\n  \"What you love most is at the top.\" Still the page's last beat.\n- Subordinate Onward below the loved ranking: heading text-2xl ink -> text-xl\n  ink-soft; fold the standalone \"Onward\" eyebrow <p> into the <h2> as a span so\n  heading-nav reads \"Onward where these go next\" as one accessible name.\n- Warmer, person-side all-Onward close: \"You saw each one clearly - that's the\n  work.\" -> \"You looked, honestly, at every one. That took something.\"\n- Truthful Onward forward line: drop the \"someone else can love them next\"\n  presumption -> \"ready to move on - to a new home, or simply on from here.\"\n- a11y: MostLovedHero \"What you love most\" span -> <h2> (used only by results\n  page; heading order stays valid).\n- Coverage: add loved.length===1 edge (hero, no full-ranking tail, Onward\n  renders, close affirms the top).\n- Update unit + e2e assertions; make e2e hero getByText exact (close now shares\n  the \"What you love most\" prefix).\n\nGates: vitest 26/26, build + lint (0 errors), playwright results specs 7/7.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph for PR2 (results Onward partition)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(e2e): exact-match the hero assertion in sort-session (o93 end-beat collision)\n\nThe o93 affirmation end-beat 'What you love most is at the top.' shares the\n'What you love most' substring with the hero h2, so getByText(substring) hit a\nstrict-mode 2-element match. Full e2e suite: 118 passed.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "61e19c5",
+            "hash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
+            "subject": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)",
+            "body": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)\n\n* spec: Epic C gentle-affordances design (pause / Not-Mine / Not-Yet / session undo)\n\nDesign spec for the gentle-affordances cluster (purses-z76, purses-1an,\npurses-x5u, purses-2f3f). Owner forks settled; data model = a curator-scoped\nitem_dispositions table governing triage-queue eligibility. Discovered latent\nbug filed as purses-4bhh (sessions_active_unique over-enforces).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* spec: fold 7-persona adversarial review into Epic C design\n\nBLOCK resolved (pairing exclusion is load-bearing — disposed items are NOT\nauto-excluded from selectNextPair). Folded: disposed<=>untriaged boundary\ninvariant (409 + clear-on-triage), cross-collection IDOR via item-capability\nguard, per-item purge erasure vector, AA ink-on-chip fix + contrast gate,\ncount-shaming progress cue removal, pause/New-Session 4bhh gating, co-member\nIDOR + idempotency + undo-survives-refresh tests, six-affordance layout contract.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* plan: Epic C PR1 (item_dispositions + Not-Yet) task-by-task\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(db): item_dispositions table + domain types (Epic C PR1)\n\n* feat(repo): ItemDispositionRepository with upsert/delete + DB tests (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): DispositionController + disposed<=>untriaged 409 invariant (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(erasure): delete item_dispositions on item/collection/account purge (Epic C PR1)\n\nThe item_dispositions FK has no ON DELETE CASCADE, so a leftover disposition\nrow blocked the parent item/collection hard-delete with a 23503 violation.\nWire ItemDispositionRepository erasure (tx-bound) into all three deletion\nservices BEFORE the parent row is hard-deleted:\n- ItemPurgeService: deleteByItem before ItemRepository.hardDelete\n- CollectionPurgeService: deleteByCollection before hardDeleteByCollection\n- AccountDeletionService: deleteByCurator in the Phase-2 curator-private tx\n\nEach integration test now seeds a disposition and asserts it is gone after\nthe purge/deletion (account-deletion covers both the owned-collection and\nborrowed curator-private paths).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): /collections/[id]/dispositions routes with IDOR guards (Epic C PR1)\n\nPOST/GET on /dispositions and DELETE on /dispositions/[itemId]. POST/DELETE\nresolve the item via requireApiItemCapability(\"preferences:write\") then assert\nitem.collectionId === params.id (404 on mismatch — no cross-collection oracle).\nGET uses requireApiCollectionAccess and scopes the list to session.user.id.\ncuratorId is always session.user.id, never from the body.\n\nDispositions are keyed (itemId, curatorId), so a co-member's DELETE/GET only\ntouches/reads their own rows — the co-member IDOR is closed by construction.\n\nRegisters the 3 new route+method cases in the route-authz-enumeration backstop.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat: selectTriageItem queue-eligibility pure function (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): exclude disposed items from pairing; clear disposition on triage (Epic C PR1)\n\nselectNextPair now filters set_aside/deferred items out of pairing candidates\n(a disposed item has no preference row, so the score-sort scored it ?? 0 and\ntreated it as eligible). compare/page.tsx fetches the curator's dispositions and\npasses them in. The decisions route clears any disposition on a triage decision,\nkeeping the disposed<=>untriaged invariant. Uses DispositionController.bringBack\n(not the repo directly) to satisfy the src/app no-restricted-imports rule.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): Not-yet defer affordance + patient-waiting + ceiling-free progress (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): Not-yet defer flow across tablet/phone/desktop (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): sync sort-session triage assertions to ceiling-free copy (Epic C PR1)\n\nTask 8 replaced the triage H1 'Triage' with 'How do you feel about this one?'\nand the '{n} of {N}' progress with '{n} decided so far'. Update the 5 heading\nassertions and 2 progress assertions in sort-session.spec.ts to match — same\ntest intent (triage renders; progression past item 1).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): atomic clear-on-triage + disposed-exclusion DB proof + copy/a11y fixes (Epic C PR1 whole-branch review)\n\nA. Wrap the decisions route's three writes (event insert, preference recalc,\n   triage-only disposition clear) in a single withTransaction so a partial\n   failure can't leave an item both ranked and disposed (disposed<=>untriaged).\n   Capture userId once — tx-closure loses the session.user narrowing.\nB. Add un-mocked DB proof (disposition-exclusion.integration.test.ts) that a\n   deferred item is absent from the real compare path AND from preferences,\n   while A/B still pair (spec §8).\nC. DeferControl busy label: \"Setting aside…\" → \"Just a moment…\" (PR2 set_aside\n   vocabulary was leaking into the PR1 defer action).\nD. DESIGN.md: a \"deferred\" (not \"set-aside\") item resurfaces.\nE. Add role=\"status\" to the patient-waiting banner so it's announced on refresh.\n\nTests: +ATOMIC rollback test (FAIL on non-tx route, PASS on tx route),\n+disposition-exclusion suite, +DeferControl busy-label test, +triage banner\nrole=status assertion. 21 unit + 12 DB pass; build + lint clean.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* docs: sync API/ARCHITECTURE for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(graphify): refresh committed graph for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(screenshots): add triage + patient-waiting surfaces (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782257547000
+              "time": 1782295938000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782257547000
+              "time": 1782295938000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9189a9df53c2a5e2a645b078cf17e83382437cf3",
-            "commitHash": "9189a9df53c2a5e2a645b078cf17e83382437cf3",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28064284588"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/61e19c5ee2b0a4239594beb420c494f52190e2ca",
+            "commitHash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28091286728"
           },
           "gitCommit": {
-            "shortHash": "9189a9d",
-            "hash": "9189a9df53c2a5e2a645b078cf17e83382437cf3",
-            "subject": "PR2 — o93 results: letting-go / Onward section (the P1 headline) (#247)",
-            "body": "PR2 — o93 results: letting-go / Onward section (the P1 headline) (#247)\n\n* plan: PR2 o93 results letting-go/Onward (partition, no count tally, affirmation end-beat)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(results): effectiveBucket + partitionRanked helper (single source of truth)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(results): partition loved vs Onward, drop count tally, affirmation end-beat (purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(results): gentle all-Onward leading affirmation (purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(results): conditional end-beat so all-Onward never claims 'loved most' (review fold)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(results): pairwise choice changes materialized ranking order (regression guard, purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(e2e): results renders Onward as a separate section; capture surface (purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* results: re-anchor close + subordinate Onward + a11y headings (pv9 PR2 whole-branch folds)\n\nWhole-branch-review folds on the P1 results tone centerpiece (TONE.md first-order):\n\n- Re-anchor the loved>0 close to the loved set at the top: \"These are the\n  things you love most.\" (bound by proximity to the Onward pile above it) ->\n  \"What you love most is at the top.\" Still the page's last beat.\n- Subordinate Onward below the loved ranking: heading text-2xl ink -> text-xl\n  ink-soft; fold the standalone \"Onward\" eyebrow <p> into the <h2> as a span so\n  heading-nav reads \"Onward where these go next\" as one accessible name.\n- Warmer, person-side all-Onward close: \"You saw each one clearly - that's the\n  work.\" -> \"You looked, honestly, at every one. That took something.\"\n- Truthful Onward forward line: drop the \"someone else can love them next\"\n  presumption -> \"ready to move on - to a new home, or simply on from here.\"\n- a11y: MostLovedHero \"What you love most\" span -> <h2> (used only by results\n  page; heading order stays valid).\n- Coverage: add loved.length===1 edge (hero, no full-ranking tail, Onward\n  renders, close affirms the top).\n- Update unit + e2e assertions; make e2e hero getByText exact (close now shares\n  the \"What you love most\" prefix).\n\nGates: vitest 26/26, build + lint (0 errors), playwright results specs 7/7.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph for PR2 (results Onward partition)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(e2e): exact-match the hero assertion in sort-session (o93 end-beat collision)\n\nThe o93 affirmation end-beat 'What you love most is at the top.' shares the\n'What you love most' substring with the hero h2, so getByText(substring) hit a\nstrict-mode 2-element match. Full e2e suite: 118 passed.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "61e19c5",
+            "hash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
+            "subject": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)",
+            "body": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)\n\n* spec: Epic C gentle-affordances design (pause / Not-Mine / Not-Yet / session undo)\n\nDesign spec for the gentle-affordances cluster (purses-z76, purses-1an,\npurses-x5u, purses-2f3f). Owner forks settled; data model = a curator-scoped\nitem_dispositions table governing triage-queue eligibility. Discovered latent\nbug filed as purses-4bhh (sessions_active_unique over-enforces).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* spec: fold 7-persona adversarial review into Epic C design\n\nBLOCK resolved (pairing exclusion is load-bearing — disposed items are NOT\nauto-excluded from selectNextPair). Folded: disposed<=>untriaged boundary\ninvariant (409 + clear-on-triage), cross-collection IDOR via item-capability\nguard, per-item purge erasure vector, AA ink-on-chip fix + contrast gate,\ncount-shaming progress cue removal, pause/New-Session 4bhh gating, co-member\nIDOR + idempotency + undo-survives-refresh tests, six-affordance layout contract.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* plan: Epic C PR1 (item_dispositions + Not-Yet) task-by-task\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(db): item_dispositions table + domain types (Epic C PR1)\n\n* feat(repo): ItemDispositionRepository with upsert/delete + DB tests (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): DispositionController + disposed<=>untriaged 409 invariant (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(erasure): delete item_dispositions on item/collection/account purge (Epic C PR1)\n\nThe item_dispositions FK has no ON DELETE CASCADE, so a leftover disposition\nrow blocked the parent item/collection hard-delete with a 23503 violation.\nWire ItemDispositionRepository erasure (tx-bound) into all three deletion\nservices BEFORE the parent row is hard-deleted:\n- ItemPurgeService: deleteByItem before ItemRepository.hardDelete\n- CollectionPurgeService: deleteByCollection before hardDeleteByCollection\n- AccountDeletionService: deleteByCurator in the Phase-2 curator-private tx\n\nEach integration test now seeds a disposition and asserts it is gone after\nthe purge/deletion (account-deletion covers both the owned-collection and\nborrowed curator-private paths).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): /collections/[id]/dispositions routes with IDOR guards (Epic C PR1)\n\nPOST/GET on /dispositions and DELETE on /dispositions/[itemId]. POST/DELETE\nresolve the item via requireApiItemCapability(\"preferences:write\") then assert\nitem.collectionId === params.id (404 on mismatch — no cross-collection oracle).\nGET uses requireApiCollectionAccess and scopes the list to session.user.id.\ncuratorId is always session.user.id, never from the body.\n\nDispositions are keyed (itemId, curatorId), so a co-member's DELETE/GET only\ntouches/reads their own rows — the co-member IDOR is closed by construction.\n\nRegisters the 3 new route+method cases in the route-authz-enumeration backstop.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat: selectTriageItem queue-eligibility pure function (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): exclude disposed items from pairing; clear disposition on triage (Epic C PR1)\n\nselectNextPair now filters set_aside/deferred items out of pairing candidates\n(a disposed item has no preference row, so the score-sort scored it ?? 0 and\ntreated it as eligible). compare/page.tsx fetches the curator's dispositions and\npasses them in. The decisions route clears any disposition on a triage decision,\nkeeping the disposed<=>untriaged invariant. Uses DispositionController.bringBack\n(not the repo directly) to satisfy the src/app no-restricted-imports rule.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): Not-yet defer affordance + patient-waiting + ceiling-free progress (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): Not-yet defer flow across tablet/phone/desktop (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): sync sort-session triage assertions to ceiling-free copy (Epic C PR1)\n\nTask 8 replaced the triage H1 'Triage' with 'How do you feel about this one?'\nand the '{n} of {N}' progress with '{n} decided so far'. Update the 5 heading\nassertions and 2 progress assertions in sort-session.spec.ts to match — same\ntest intent (triage renders; progression past item 1).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): atomic clear-on-triage + disposed-exclusion DB proof + copy/a11y fixes (Epic C PR1 whole-branch review)\n\nA. Wrap the decisions route's three writes (event insert, preference recalc,\n   triage-only disposition clear) in a single withTransaction so a partial\n   failure can't leave an item both ranked and disposed (disposed<=>untriaged).\n   Capture userId once — tx-closure loses the session.user narrowing.\nB. Add un-mocked DB proof (disposition-exclusion.integration.test.ts) that a\n   deferred item is absent from the real compare path AND from preferences,\n   while A/B still pair (spec §8).\nC. DeferControl busy label: \"Setting aside…\" → \"Just a moment…\" (PR2 set_aside\n   vocabulary was leaking into the PR1 defer action).\nD. DESIGN.md: a \"deferred\" (not \"set-aside\") item resurfaces.\nE. Add role=\"status\" to the patient-waiting banner so it's announced on refresh.\n\nTests: +ATOMIC rollback test (FAIL on non-tx route, PASS on tx route),\n+disposition-exclusion suite, +DeferControl busy-label test, +triage banner\nrole=status assertion. 21 unit + 12 DB pass; build + lint clean.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* docs: sync API/ARCHITECTURE for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(graphify): refresh committed graph for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(screenshots): add triage + patient-waiting surfaces (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782257547000
+              "time": 1782295938000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782257547000
+              "time": 1782295938000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9189a9df53c2a5e2a645b078cf17e83382437cf3",
-            "commitHash": "9189a9df53c2a5e2a645b078cf17e83382437cf3",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28064284588"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/61e19c5ee2b0a4239594beb420c494f52190e2ca",
+            "commitHash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28091286728"
           },
           "gitCommit": {
-            "shortHash": "9189a9d",
-            "hash": "9189a9df53c2a5e2a645b078cf17e83382437cf3",
-            "subject": "PR2 — o93 results: letting-go / Onward section (the P1 headline) (#247)",
-            "body": "PR2 — o93 results: letting-go / Onward section (the P1 headline) (#247)\n\n* plan: PR2 o93 results letting-go/Onward (partition, no count tally, affirmation end-beat)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(results): effectiveBucket + partitionRanked helper (single source of truth)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(results): partition loved vs Onward, drop count tally, affirmation end-beat (purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(results): gentle all-Onward leading affirmation (purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(results): conditional end-beat so all-Onward never claims 'loved most' (review fold)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(results): pairwise choice changes materialized ranking order (regression guard, purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(e2e): results renders Onward as a separate section; capture surface (purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* results: re-anchor close + subordinate Onward + a11y headings (pv9 PR2 whole-branch folds)\n\nWhole-branch-review folds on the P1 results tone centerpiece (TONE.md first-order):\n\n- Re-anchor the loved>0 close to the loved set at the top: \"These are the\n  things you love most.\" (bound by proximity to the Onward pile above it) ->\n  \"What you love most is at the top.\" Still the page's last beat.\n- Subordinate Onward below the loved ranking: heading text-2xl ink -> text-xl\n  ink-soft; fold the standalone \"Onward\" eyebrow <p> into the <h2> as a span so\n  heading-nav reads \"Onward where these go next\" as one accessible name.\n- Warmer, person-side all-Onward close: \"You saw each one clearly - that's the\n  work.\" -> \"You looked, honestly, at every one. That took something.\"\n- Truthful Onward forward line: drop the \"someone else can love them next\"\n  presumption -> \"ready to move on - to a new home, or simply on from here.\"\n- a11y: MostLovedHero \"What you love most\" span -> <h2> (used only by results\n  page; heading order stays valid).\n- Coverage: add loved.length===1 edge (hero, no full-ranking tail, Onward\n  renders, close affirms the top).\n- Update unit + e2e assertions; make e2e hero getByText exact (close now shares\n  the \"What you love most\" prefix).\n\nGates: vitest 26/26, build + lint (0 errors), playwright results specs 7/7.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph for PR2 (results Onward partition)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(e2e): exact-match the hero assertion in sort-session (o93 end-beat collision)\n\nThe o93 affirmation end-beat 'What you love most is at the top.' shares the\n'What you love most' substring with the hero h2, so getByText(substring) hit a\nstrict-mode 2-element match. Full e2e suite: 118 passed.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "61e19c5",
+            "hash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
+            "subject": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)",
+            "body": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)\n\n* spec: Epic C gentle-affordances design (pause / Not-Mine / Not-Yet / session undo)\n\nDesign spec for the gentle-affordances cluster (purses-z76, purses-1an,\npurses-x5u, purses-2f3f). Owner forks settled; data model = a curator-scoped\nitem_dispositions table governing triage-queue eligibility. Discovered latent\nbug filed as purses-4bhh (sessions_active_unique over-enforces).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* spec: fold 7-persona adversarial review into Epic C design\n\nBLOCK resolved (pairing exclusion is load-bearing — disposed items are NOT\nauto-excluded from selectNextPair). Folded: disposed<=>untriaged boundary\ninvariant (409 + clear-on-triage), cross-collection IDOR via item-capability\nguard, per-item purge erasure vector, AA ink-on-chip fix + contrast gate,\ncount-shaming progress cue removal, pause/New-Session 4bhh gating, co-member\nIDOR + idempotency + undo-survives-refresh tests, six-affordance layout contract.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* plan: Epic C PR1 (item_dispositions + Not-Yet) task-by-task\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(db): item_dispositions table + domain types (Epic C PR1)\n\n* feat(repo): ItemDispositionRepository with upsert/delete + DB tests (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): DispositionController + disposed<=>untriaged 409 invariant (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(erasure): delete item_dispositions on item/collection/account purge (Epic C PR1)\n\nThe item_dispositions FK has no ON DELETE CASCADE, so a leftover disposition\nrow blocked the parent item/collection hard-delete with a 23503 violation.\nWire ItemDispositionRepository erasure (tx-bound) into all three deletion\nservices BEFORE the parent row is hard-deleted:\n- ItemPurgeService: deleteByItem before ItemRepository.hardDelete\n- CollectionPurgeService: deleteByCollection before hardDeleteByCollection\n- AccountDeletionService: deleteByCurator in the Phase-2 curator-private tx\n\nEach integration test now seeds a disposition and asserts it is gone after\nthe purge/deletion (account-deletion covers both the owned-collection and\nborrowed curator-private paths).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): /collections/[id]/dispositions routes with IDOR guards (Epic C PR1)\n\nPOST/GET on /dispositions and DELETE on /dispositions/[itemId]. POST/DELETE\nresolve the item via requireApiItemCapability(\"preferences:write\") then assert\nitem.collectionId === params.id (404 on mismatch — no cross-collection oracle).\nGET uses requireApiCollectionAccess and scopes the list to session.user.id.\ncuratorId is always session.user.id, never from the body.\n\nDispositions are keyed (itemId, curatorId), so a co-member's DELETE/GET only\ntouches/reads their own rows — the co-member IDOR is closed by construction.\n\nRegisters the 3 new route+method cases in the route-authz-enumeration backstop.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat: selectTriageItem queue-eligibility pure function (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): exclude disposed items from pairing; clear disposition on triage (Epic C PR1)\n\nselectNextPair now filters set_aside/deferred items out of pairing candidates\n(a disposed item has no preference row, so the score-sort scored it ?? 0 and\ntreated it as eligible). compare/page.tsx fetches the curator's dispositions and\npasses them in. The decisions route clears any disposition on a triage decision,\nkeeping the disposed<=>untriaged invariant. Uses DispositionController.bringBack\n(not the repo directly) to satisfy the src/app no-restricted-imports rule.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): Not-yet defer affordance + patient-waiting + ceiling-free progress (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): Not-yet defer flow across tablet/phone/desktop (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): sync sort-session triage assertions to ceiling-free copy (Epic C PR1)\n\nTask 8 replaced the triage H1 'Triage' with 'How do you feel about this one?'\nand the '{n} of {N}' progress with '{n} decided so far'. Update the 5 heading\nassertions and 2 progress assertions in sort-session.spec.ts to match — same\ntest intent (triage renders; progression past item 1).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): atomic clear-on-triage + disposed-exclusion DB proof + copy/a11y fixes (Epic C PR1 whole-branch review)\n\nA. Wrap the decisions route's three writes (event insert, preference recalc,\n   triage-only disposition clear) in a single withTransaction so a partial\n   failure can't leave an item both ranked and disposed (disposed<=>untriaged).\n   Capture userId once — tx-closure loses the session.user narrowing.\nB. Add un-mocked DB proof (disposition-exclusion.integration.test.ts) that a\n   deferred item is absent from the real compare path AND from preferences,\n   while A/B still pair (spec §8).\nC. DeferControl busy label: \"Setting aside…\" → \"Just a moment…\" (PR2 set_aside\n   vocabulary was leaking into the PR1 defer action).\nD. DESIGN.md: a \"deferred\" (not \"set-aside\") item resurfaces.\nE. Add role=\"status\" to the patient-waiting banner so it's announced on refresh.\n\nTests: +ATOMIC rollback test (FAIL on non-tx route, PASS on tx route),\n+disposition-exclusion suite, +DeferControl busy-label test, +triage banner\nrole=status assertion. 21 unit + 12 DB pass; build + lint clean.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* docs: sync API/ARCHITECTURE for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(graphify): refresh committed graph for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(screenshots): add triage + patient-waiting surfaces (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782257547000
+              "time": 1782295938000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782257547000
+              "time": 1782295938000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9189a9df53c2a5e2a645b078cf17e83382437cf3",
-            "commitHash": "9189a9df53c2a5e2a645b078cf17e83382437cf3",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28064284588"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/61e19c5ee2b0a4239594beb420c494f52190e2ca",
+            "commitHash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28091286728"
           },
           "gitCommit": {
-            "shortHash": "9189a9d",
-            "hash": "9189a9df53c2a5e2a645b078cf17e83382437cf3",
-            "subject": "PR2 — o93 results: letting-go / Onward section (the P1 headline) (#247)",
-            "body": "PR2 — o93 results: letting-go / Onward section (the P1 headline) (#247)\n\n* plan: PR2 o93 results letting-go/Onward (partition, no count tally, affirmation end-beat)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(results): effectiveBucket + partitionRanked helper (single source of truth)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(results): partition loved vs Onward, drop count tally, affirmation end-beat (purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(results): gentle all-Onward leading affirmation (purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(results): conditional end-beat so all-Onward never claims 'loved most' (review fold)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(results): pairwise choice changes materialized ranking order (regression guard, purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(e2e): results renders Onward as a separate section; capture surface (purses-o93)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* results: re-anchor close + subordinate Onward + a11y headings (pv9 PR2 whole-branch folds)\n\nWhole-branch-review folds on the P1 results tone centerpiece (TONE.md first-order):\n\n- Re-anchor the loved>0 close to the loved set at the top: \"These are the\n  things you love most.\" (bound by proximity to the Onward pile above it) ->\n  \"What you love most is at the top.\" Still the page's last beat.\n- Subordinate Onward below the loved ranking: heading text-2xl ink -> text-xl\n  ink-soft; fold the standalone \"Onward\" eyebrow <p> into the <h2> as a span so\n  heading-nav reads \"Onward where these go next\" as one accessible name.\n- Warmer, person-side all-Onward close: \"You saw each one clearly - that's the\n  work.\" -> \"You looked, honestly, at every one. That took something.\"\n- Truthful Onward forward line: drop the \"someone else can love them next\"\n  presumption -> \"ready to move on - to a new home, or simply on from here.\"\n- a11y: MostLovedHero \"What you love most\" span -> <h2> (used only by results\n  page; heading order stays valid).\n- Coverage: add loved.length===1 edge (hero, no full-ranking tail, Onward\n  renders, close affirms the top).\n- Update unit + e2e assertions; make e2e hero getByText exact (close now shares\n  the \"What you love most\" prefix).\n\nGates: vitest 26/26, build + lint (0 errors), playwright results specs 7/7.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph for PR2 (results Onward partition)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(e2e): exact-match the hero assertion in sort-session (o93 end-beat collision)\n\nThe o93 affirmation end-beat 'What you love most is at the top.' shares the\n'What you love most' substring with the hero h2, so getByText(substring) hit a\nstrict-mode 2-element match. Full e2e suite: 118 passed.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "61e19c5",
+            "hash": "61e19c5ee2b0a4239594beb420c494f52190e2ca",
+            "subject": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)",
+            "body": "Epic C PR1 — item dispositions + Not-Yet (defer) (#248)\n\n* spec: Epic C gentle-affordances design (pause / Not-Mine / Not-Yet / session undo)\n\nDesign spec for the gentle-affordances cluster (purses-z76, purses-1an,\npurses-x5u, purses-2f3f). Owner forks settled; data model = a curator-scoped\nitem_dispositions table governing triage-queue eligibility. Discovered latent\nbug filed as purses-4bhh (sessions_active_unique over-enforces).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* spec: fold 7-persona adversarial review into Epic C design\n\nBLOCK resolved (pairing exclusion is load-bearing — disposed items are NOT\nauto-excluded from selectNextPair). Folded: disposed<=>untriaged boundary\ninvariant (409 + clear-on-triage), cross-collection IDOR via item-capability\nguard, per-item purge erasure vector, AA ink-on-chip fix + contrast gate,\ncount-shaming progress cue removal, pause/New-Session 4bhh gating, co-member\nIDOR + idempotency + undo-survives-refresh tests, six-affordance layout contract.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* plan: Epic C PR1 (item_dispositions + Not-Yet) task-by-task\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(db): item_dispositions table + domain types (Epic C PR1)\n\n* feat(repo): ItemDispositionRepository with upsert/delete + DB tests (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): DispositionController + disposed<=>untriaged 409 invariant (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(erasure): delete item_dispositions on item/collection/account purge (Epic C PR1)\n\nThe item_dispositions FK has no ON DELETE CASCADE, so a leftover disposition\nrow blocked the parent item/collection hard-delete with a 23503 violation.\nWire ItemDispositionRepository erasure (tx-bound) into all three deletion\nservices BEFORE the parent row is hard-deleted:\n- ItemPurgeService: deleteByItem before ItemRepository.hardDelete\n- CollectionPurgeService: deleteByCollection before hardDeleteByCollection\n- AccountDeletionService: deleteByCurator in the Phase-2 curator-private tx\n\nEach integration test now seeds a disposition and asserts it is gone after\nthe purge/deletion (account-deletion covers both the owned-collection and\nborrowed curator-private paths).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(api): /collections/[id]/dispositions routes with IDOR guards (Epic C PR1)\n\nPOST/GET on /dispositions and DELETE on /dispositions/[itemId]. POST/DELETE\nresolve the item via requireApiItemCapability(\"preferences:write\") then assert\nitem.collectionId === params.id (404 on mismatch — no cross-collection oracle).\nGET uses requireApiCollectionAccess and scopes the list to session.user.id.\ncuratorId is always session.user.id, never from the body.\n\nDispositions are keyed (itemId, curatorId), so a co-member's DELETE/GET only\ntouches/reads their own rows — the co-member IDOR is closed by construction.\n\nRegisters the 3 new route+method cases in the route-authz-enumeration backstop.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat: selectTriageItem queue-eligibility pure function (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): exclude disposed items from pairing; clear disposition on triage (Epic C PR1)\n\nselectNextPair now filters set_aside/deferred items out of pairing candidates\n(a disposed item has no preference row, so the score-sort scored it ?? 0 and\ntreated it as eligible). compare/page.tsx fetches the curator's dispositions and\npasses them in. The decisions route clears any disposition on a triage decision,\nkeeping the disposed<=>untriaged invariant. Uses DispositionController.bringBack\n(not the repo directly) to satisfy the src/app no-restricted-imports rule.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* feat(triage): Not-yet defer affordance + patient-waiting + ceiling-free progress (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): Not-yet defer flow across tablet/phone/desktop (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* test(e2e): sync sort-session triage assertions to ceiling-free copy (Epic C PR1)\n\nTask 8 replaced the triage H1 'Triage' with 'How do you feel about this one?'\nand the '{n} of {N}' progress with '{n} decided so far'. Update the 5 heading\nassertions and 2 progress assertions in sort-session.spec.ts to match — same\ntest intent (triage renders; progression past item 1).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* fix(sort): atomic clear-on-triage + disposed-exclusion DB proof + copy/a11y fixes (Epic C PR1 whole-branch review)\n\nA. Wrap the decisions route's three writes (event insert, preference recalc,\n   triage-only disposition clear) in a single withTransaction so a partial\n   failure can't leave an item both ranked and disposed (disposed<=>untriaged).\n   Capture userId once — tx-closure loses the session.user narrowing.\nB. Add un-mocked DB proof (disposition-exclusion.integration.test.ts) that a\n   deferred item is absent from the real compare path AND from preferences,\n   while A/B still pair (spec §8).\nC. DeferControl busy label: \"Setting aside…\" → \"Just a moment…\" (PR2 set_aside\n   vocabulary was leaking into the PR1 defer action).\nD. DESIGN.md: a \"deferred\" (not \"set-aside\") item resurfaces.\nE. Add role=\"status\" to the patient-waiting banner so it's announced on refresh.\n\nTests: +ATOMIC rollback test (FAIL on non-tx route, PASS on tx route),\n+disposition-exclusion suite, +DeferControl busy-label test, +triage banner\nrole=status assertion. 21 unit + 12 DB pass; build + lint clean.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* docs: sync API/ARCHITECTURE for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(graphify): refresh committed graph for item_dispositions + Not-Yet (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n* chore(screenshots): add triage + patient-waiting surfaces (Epic C PR1)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Pbw6ZGrY8VvxyvbAEDpKjq\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782257547000
+              "time": 1782295938000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782257547000
+              "time": 1782295938000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 846,
+                  "duration": 935,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:34:46.690Z",
+                  "startTime": "2026-06-24T10:14:57.085Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -310,12 +310,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 7867,
+                      "duration": 8415,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:34:48.166Z",
+                      "startTime": "2026-06-24T10:14:58.736Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -344,12 +344,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2756,
+                      "duration": 2883,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:19.611Z",
+                      "startTime": "2026-06-24T10:16:13.947Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -378,12 +378,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 701,
+                      "duration": 774,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:18.302Z",
+                      "startTime": "2026-06-24T10:17:49.338Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -422,12 +422,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2293,
+                  "duration": 2929,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:34:56.684Z",
+                  "startTime": "2026-06-24T10:15:07.835Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -456,12 +456,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1972,
+                  "duration": 2300,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:34:59.044Z",
+                  "startTime": "2026-06-24T10:15:10.847Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -490,12 +490,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2101,
+                  "duration": 2083,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:36:22.547Z",
+                  "startTime": "2026-06-24T10:16:17.017Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -524,12 +524,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2272,
+                  "duration": 1932,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:36:24.722Z",
+                  "startTime": "2026-06-24T10:16:19.168Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -558,12 +558,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 934,
+                  "duration": 1273,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:19.829Z",
+                  "startTime": "2026-06-24T10:17:51.710Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -592,12 +592,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1177,
+                  "duration": 1509,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:20.809Z",
+                  "startTime": "2026-06-24T10:17:53.031Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -634,12 +634,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2345,
+                  "duration": 1594,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:35:01.056Z",
+                  "startTime": "2026-06-24T10:15:13.176Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -668,12 +668,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3868,
+                  "duration": 1524,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:35:03.463Z",
+                  "startTime": "2026-06-24T10:15:14.818Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -702,12 +702,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2854,
+                  "duration": 2303,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:35:07.351Z",
+                  "startTime": "2026-06-24T10:15:16.372Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -736,12 +736,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1557,
+                  "duration": 1565,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:36:27.026Z",
+                  "startTime": "2026-06-24T10:16:21.127Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -770,12 +770,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1557,
+                  "duration": 1525,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:36:28.643Z",
+                  "startTime": "2026-06-24T10:16:22.758Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -804,12 +804,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1772,
+                  "duration": 1877,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:36:30.227Z",
+                  "startTime": "2026-06-24T10:16:24.304Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -838,12 +838,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 666,
+                  "duration": 851,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:22.056Z",
+                  "startTime": "2026-06-24T10:17:54.565Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -872,12 +872,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 707,
+                  "duration": 917,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:22.769Z",
+                  "startTime": "2026-06-24T10:17:55.483Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -906,12 +906,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1031,
+                  "duration": 1415,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:23.499Z",
+                  "startTime": "2026-06-24T10:17:56.446Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -955,12 +955,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2400,
+                      "duration": 1167,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:35:10.445Z",
+                      "startTime": "2026-06-24T10:15:18.720Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -989,12 +989,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3083,
+                      "duration": 1610,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:35:19.023Z",
+                      "startTime": "2026-06-24T10:15:20.004Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1023,12 +1023,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4882,
+                      "duration": 1358,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:35:22.131Z",
+                      "startTime": "2026-06-24T10:15:21.644Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1057,12 +1057,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 920,
+                      "duration": 877,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:32.034Z",
+                      "startTime": "2026-06-24T10:16:26.216Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1091,12 +1091,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1320,
+                      "duration": 1309,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:33.038Z",
+                      "startTime": "2026-06-24T10:16:27.198Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1125,12 +1125,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 916,
+                      "duration": 803,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:34.378Z",
+                      "startTime": "2026-06-24T10:16:28.531Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1159,12 +1159,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 461,
+                      "duration": 700,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:24.561Z",
+                      "startTime": "2026-06-24T10:17:57.920Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1193,12 +1193,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 717,
+                      "duration": 985,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:25.074Z",
+                      "startTime": "2026-06-24T10:17:58.749Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1227,12 +1227,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 422,
+                      "duration": 508,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:25.806Z",
+                      "startTime": "2026-06-24T10:17:59.752Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1278,12 +1278,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2373,
+                      "duration": 2425,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:35:27.643Z",
+                      "startTime": "2026-06-24T10:15:23.121Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1312,12 +1312,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1769,
+                      "duration": 1626,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:35.323Z",
+                      "startTime": "2026-06-24T10:16:29.367Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1346,12 +1346,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 672,
+                      "duration": 936,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:26.267Z",
+                      "startTime": "2026-06-24T10:18:00.308Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1397,12 +1397,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2197,
+                      "duration": 1954,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:35:31.267Z",
+                      "startTime": "2026-06-24T10:15:25.627Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1431,12 +1431,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1821,
+                      "duration": 1829,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:37.145Z",
+                      "startTime": "2026-06-24T10:16:31.060Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1465,12 +1465,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 716,
+                      "duration": 1001,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:26.986Z",
+                      "startTime": "2026-06-24T10:18:01.359Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1516,12 +1516,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1237,
+                      "duration": 950,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:35:33.606Z",
+                      "startTime": "2026-06-24T10:15:27.659Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1550,12 +1550,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1066,
+                      "duration": 1107,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:35:34.925Z",
+                      "startTime": "2026-06-24T10:15:28.682Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1584,12 +1584,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 906,
+                      "duration": 816,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:39.045Z",
+                      "startTime": "2026-06-24T10:16:32.953Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1618,12 +1618,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1055,
+                      "duration": 1152,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:40.061Z",
+                      "startTime": "2026-06-24T10:16:33.841Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1652,12 +1652,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 405,
+                      "duration": 566,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:27.741Z",
+                      "startTime": "2026-06-24T10:18:02.403Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1686,12 +1686,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 370,
+                      "duration": 517,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:28.177Z",
+                      "startTime": "2026-06-24T10:18:03.046Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1737,12 +1737,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3927,
+                      "duration": 3297,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:35:36.109Z",
+                      "startTime": "2026-06-24T10:15:29.843Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1771,12 +1771,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5051,
+                      "duration": 3988,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:35:40.464Z",
+                      "startTime": "2026-06-24T10:15:33.253Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1805,12 +1805,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3036,
+                      "duration": 3002,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:41.146Z",
+                      "startTime": "2026-06-24T10:16:35.017Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1839,12 +1839,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3355,
+                      "duration": 3178,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:44.235Z",
+                      "startTime": "2026-06-24T10:16:38.076Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1873,12 +1873,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 838,
+                      "duration": 1174,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:28.568Z",
+                      "startTime": "2026-06-24T10:18:03.600Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1907,12 +1907,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 767,
+                      "duration": 993,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:29.434Z",
+                      "startTime": "2026-06-24T10:18:04.873Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1958,12 +1958,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1980,
+                      "duration": 1970,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:35:45.553Z",
+                      "startTime": "2026-06-24T10:15:37.325Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1992,12 +1992,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2586,
+                      "duration": 2170,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:35:47.683Z",
+                      "startTime": "2026-06-24T10:15:39.387Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2026,12 +2026,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1437,
+                      "duration": 1406,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:47.618Z",
+                      "startTime": "2026-06-24T10:16:41.299Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2060,12 +2060,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1503,
+                      "duration": 1667,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:49.123Z",
+                      "startTime": "2026-06-24T10:16:42.777Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2094,12 +2094,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 413,
+                      "duration": 685,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:30.230Z",
+                      "startTime": "2026-06-24T10:18:05.910Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2128,12 +2128,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 538,
+                      "duration": 813,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:30.678Z",
+                      "startTime": "2026-06-24T10:18:06.692Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2179,12 +2179,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1334,
+                      "duration": 1227,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:35:50.324Z",
+                      "startTime": "2026-06-24T10:15:41.627Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2213,12 +2213,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1110,
+                      "duration": 1051,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:35:51.671Z",
+                      "startTime": "2026-06-24T10:15:42.890Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2247,12 +2247,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1067,
+                      "duration": 1056,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:35:52.790Z",
+                      "startTime": "2026-06-24T10:15:43.950Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2281,12 +2281,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1244,
+                      "duration": 1342,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:50.655Z",
+                      "startTime": "2026-06-24T10:16:44.475Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2315,12 +2315,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 965,
+                      "duration": 1052,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:51.907Z",
+                      "startTime": "2026-06-24T10:16:45.831Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2349,12 +2349,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 950,
+                      "duration": 1023,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:52.882Z",
+                      "startTime": "2026-06-24T10:16:46.894Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2383,12 +2383,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1052,
+                      "duration": 1311,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:31.238Z",
+                      "startTime": "2026-06-24T10:18:07.563Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2417,12 +2417,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 964,
+                      "duration": 1207,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:32.297Z",
+                      "startTime": "2026-06-24T10:18:08.885Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2451,12 +2451,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 946,
+                      "duration": 1235,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:33.272Z",
+                      "startTime": "2026-06-24T10:18:10.102Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2495,12 +2495,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 907,
+                  "duration": 847,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:35:53.894Z",
+                  "startTime": "2026-06-24T10:15:45.031Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2529,12 +2529,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1433,
+                  "duration": 1041,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:35:54.875Z",
+                  "startTime": "2026-06-24T10:15:45.928Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2563,12 +2563,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 762,
+                  "duration": 751,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:36:53.855Z",
+                  "startTime": "2026-06-24T10:16:47.938Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2597,12 +2597,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 846,
+                  "duration": 919,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:36:54.660Z",
+                  "startTime": "2026-06-24T10:16:48.729Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2631,12 +2631,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 264,
+                  "duration": 319,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:34.238Z",
+                  "startTime": "2026-06-24T10:18:11.410Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2665,12 +2665,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 513,
+                  "duration": 681,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:34.532Z",
+                  "startTime": "2026-06-24T10:18:11.808Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2707,12 +2707,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1269,
+                  "duration": 847,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:35:56.344Z",
+                  "startTime": "2026-06-24T10:15:46.998Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2741,12 +2741,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 729,
+                  "duration": 789,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:35:57.808Z",
+                  "startTime": "2026-06-24T10:15:47.926Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2775,12 +2775,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 917,
+                  "duration": 1037,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:35:58.555Z",
+                  "startTime": "2026-06-24T10:15:48.749Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2809,12 +2809,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 660,
+                  "duration": 733,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:36:55.528Z",
+                  "startTime": "2026-06-24T10:16:49.683Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2843,12 +2843,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 668,
+                  "duration": 790,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:36:56.262Z",
+                  "startTime": "2026-06-24T10:16:50.526Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2877,12 +2877,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 836,
+                  "duration": 910,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:36:56.947Z",
+                  "startTime": "2026-06-24T10:16:51.346Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2911,12 +2911,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 303,
+                  "duration": 408,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:35.065Z",
+                  "startTime": "2026-06-24T10:18:12.549Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2945,12 +2945,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 304,
+                  "duration": 443,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:35.419Z",
+                  "startTime": "2026-06-24T10:18:13.040Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2979,12 +2979,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 389,
+                  "duration": 552,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:35.735Z",
+                  "startTime": "2026-06-24T10:18:13.500Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2996,6 +2996,227 @@
           "file": "members.spec.ts",
           "line": 70,
           "column": 5
+        }
+      ]
+    },
+    {
+      "title": "not-yet-defer.spec.ts",
+      "file": "not-yet-defer.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "triage — 'Not yet' defer flow",
+          "file": "not-yet-defer.spec.ts",
+          "line": 35,
+          "column": 6,
+          "specs": [
+            {
+              "title": "defer the focused item → it leaves the pass → resurfaces last with the patient-waiting skin",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2487,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-24T10:15:49.843Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9301536102fe8fd6f25a-02dc1ef15209fee6da98",
+              "file": "not-yet-defer.spec.ts",
+              "line": 50,
+              "column": 7
+            },
+            {
+              "title": "no ceiling: progress is affirm-only — never an 'of N' total or remaining count",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1250,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-24T10:15:52.397Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9301536102fe8fd6f25a-f8ac60e101a02760aadd",
+              "file": "not-yet-defer.spec.ts",
+              "line": 128,
+              "column": 7
+            },
+            {
+              "title": "defer the focused item → it leaves the pass → resurfaces last with the patient-waiting skin",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3315,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-24T10:16:52.307Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9301536102fe8fd6f25a-54890061a60a04a3ed47",
+              "file": "not-yet-defer.spec.ts",
+              "line": 50,
+              "column": 7
+            },
+            {
+              "title": "no ceiling: progress is affirm-only — never an 'of N' total or remaining count",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "phone",
+                  "projectName": "phone",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1496,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-24T10:16:55.686Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9301536102fe8fd6f25a-6dd015c97ea66eb34f60",
+              "file": "not-yet-defer.spec.ts",
+              "line": 128,
+              "column": 7
+            },
+            {
+              "title": "defer the focused item → it leaves the pass → resurfaces last with the patient-waiting skin",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1241,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-24T10:18:14.113Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9301536102fe8fd6f25a-152e725e7fe5ec2b1826",
+              "file": "not-yet-defer.spec.ts",
+              "line": 50,
+              "column": 7
+            },
+            {
+              "title": "no ceiling: progress is affirm-only — never an 'of N' total or remaining count",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 463,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-06-24T10:18:15.438Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9301536102fe8fd6f25a-769848714f9831d36d39",
+              "file": "not-yet-defer.spec.ts",
+              "line": 128,
+              "column": 7
+            }
+          ]
         }
       ]
     },
@@ -3021,12 +3242,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1021,
+                  "duration": 1101,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:35:59.515Z",
+                  "startTime": "2026-06-24T10:15:53.679Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3055,12 +3276,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 951,
+                  "duration": 1080,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:36:57.826Z",
+                  "startTime": "2026-06-24T10:16:57.215Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3089,12 +3310,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 391,
+                  "duration": 433,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:36.152Z",
+                  "startTime": "2026-06-24T10:18:15.927Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3138,12 +3359,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1077,
+                      "duration": 1144,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:00.557Z",
+                      "startTime": "2026-06-24T10:15:54.808Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3172,12 +3393,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1213,
+                      "duration": 1306,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:58.798Z",
+                      "startTime": "2026-06-24T10:16:58.328Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3206,12 +3427,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 567,
+                      "duration": 619,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:36.557Z",
+                      "startTime": "2026-06-24T10:18:16.378Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3257,12 +3478,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1113,
+                      "duration": 1157,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:01.718Z",
+                      "startTime": "2026-06-24T10:15:56.050Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3291,12 +3512,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1438,
+                      "duration": 1426,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:00.094Z",
+                      "startTime": "2026-06-24T10:16:59.716Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3325,12 +3546,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 530,
+                      "duration": 623,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:37.185Z",
+                      "startTime": "2026-06-24T10:18:17.060Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3369,12 +3590,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 857,
+                  "duration": 759,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:36:02.909Z",
+                  "startTime": "2026-06-24T10:15:57.333Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3403,12 +3624,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 724,
+                  "duration": 851,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:36:03.793Z",
+                  "startTime": "2026-06-24T10:15:58.127Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3437,12 +3658,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 779,
+                  "duration": 826,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:36:04.538Z",
+                  "startTime": "2026-06-24T10:15:59.000Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3471,12 +3692,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 775,
+                  "duration": 902,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:01.624Z",
+                  "startTime": "2026-06-24T10:17:01.220Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3505,12 +3726,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 821,
+                  "duration": 743,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:02.432Z",
+                  "startTime": "2026-06-24T10:17:02.145Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3539,12 +3760,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 732,
+                  "duration": 780,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:03.272Z",
+                  "startTime": "2026-06-24T10:17:02.906Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3573,12 +3794,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 223,
+                  "duration": 261,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:37.764Z",
+                  "startTime": "2026-06-24T10:18:17.745Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3607,12 +3828,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 219,
+                  "duration": 250,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:38.000Z",
+                  "startTime": "2026-06-24T10:18:18.021Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3641,12 +3862,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 236,
+                  "duration": 283,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-06-23T23:37:38.232Z",
+                  "startTime": "2026-06-24T10:18:18.286Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3690,12 +3911,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1121,
+                      "duration": 1160,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:05.341Z",
+                      "startTime": "2026-06-24T10:15:59.857Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3724,12 +3945,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1212,
+                      "duration": 1280,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:04.023Z",
+                      "startTime": "2026-06-24T10:17:03.712Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3758,12 +3979,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 353,
+                      "duration": 463,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:38.483Z",
+                      "startTime": "2026-06-24T10:18:18.592Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3809,12 +4030,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1192,
+                      "duration": 1228,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:06.534Z",
+                      "startTime": "2026-06-24T10:16:01.113Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3843,12 +4064,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1338,
+                      "duration": 1391,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:07.861Z",
+                      "startTime": "2026-06-24T10:16:02.406Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3877,12 +4098,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1347,
+                      "duration": 1468,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:09.229Z",
+                      "startTime": "2026-06-24T10:16:03.831Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3911,12 +4132,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1484,
+                      "duration": 1481,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:05.303Z",
+                      "startTime": "2026-06-24T10:17:05.080Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3945,12 +4166,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1698,
+                      "duration": 1858,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:06.841Z",
+                      "startTime": "2026-06-24T10:17:06.632Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3979,12 +4200,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1365,
+                      "duration": 1432,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:08.587Z",
+                      "startTime": "2026-06-24T10:17:08.563Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4013,12 +4234,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 446,
+                      "duration": 479,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:38.871Z",
+                      "startTime": "2026-06-24T10:18:19.112Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4047,12 +4268,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 626,
+                      "duration": 697,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:39.354Z",
+                      "startTime": "2026-06-24T10:18:19.626Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4081,12 +4302,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 437,
+                      "duration": 518,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:40.000Z",
+                      "startTime": "2026-06-24T10:18:20.336Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4123,12 +4344,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4587,
+                      "duration": 4440,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:10.606Z",
+                      "startTime": "2026-06-24T10:16:05.331Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4157,12 +4378,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1531,
+                      "duration": 1612,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:15.241Z",
+                      "startTime": "2026-06-24T10:16:09.841Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4191,12 +4412,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4013,
+                      "duration": 4435,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:10.005Z",
+                      "startTime": "2026-06-24T10:17:10.022Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4225,12 +4446,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1509,
+                      "duration": 1433,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:14.080Z",
+                      "startTime": "2026-06-24T10:17:14.526Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4259,12 +4480,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1423,
+                      "duration": 1468,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:40.452Z",
+                      "startTime": "2026-06-24T10:18:20.872Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4293,12 +4514,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 415,
+                      "duration": 522,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:41.909Z",
+                      "startTime": "2026-06-24T10:18:22.385Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4335,12 +4556,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1288,
+                      "duration": 860,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:16.793Z",
+                      "startTime": "2026-06-24T10:16:11.485Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4369,12 +4590,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 751,
+                      "duration": 823,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:36:18.101Z",
+                      "startTime": "2026-06-24T10:16:12.371Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4403,12 +4624,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 830,
+                      "duration": 1171,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:15.630Z",
+                      "startTime": "2026-06-24T10:17:15.985Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4437,12 +4658,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1142,
+                      "duration": 1034,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:16.497Z",
+                      "startTime": "2026-06-24T10:17:17.174Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4471,12 +4692,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 230,
+                      "duration": 242,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:42.339Z",
+                      "startTime": "2026-06-24T10:18:22.928Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4505,12 +4726,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 219,
+                      "duration": 254,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-06-23T23:37:42.580Z",
+                      "startTime": "2026-06-24T10:18:23.184Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4530,9 +4751,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-06-23T23:33:43.531Z",
-    "duration": 239513.646,
-    "expected": 118,
+    "startTime": "2026-06-24T10:13:44.939Z",
+    "duration": 278801.83800000005,
+    "expected": 124,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0
