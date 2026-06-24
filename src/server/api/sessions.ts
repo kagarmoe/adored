@@ -16,6 +16,10 @@ const UpdateSessionSchema = z.object({
 export type CreateSessionInput = z.infer<typeof CreateSessionSchema>;
 export type UpdateSessionInput = z.infer<typeof UpdateSessionSchema>;
 
+// Defined in the repository (where the unique-violation is caught) to keep the
+// api -> repo dependency direction clean; re-exported here for route callers.
+export { CurrentSessionExistsError } from "@/server/repositories/implementations/SessionRepository";
+
 export class SessionController {
   constructor(private sessionRepo: ISessionRepository) {}
 

@@ -1,5 +1,6 @@
 import type { Session } from "@/types";
 import type { ISessionRepository } from "@/server/repositories/SessionRepository";
+import { CurrentSessionExistsError } from "@/server/repositories/implementations/SessionRepository";
 
 export class SessionService {
   constructor(private repo: ISessionRepository) {}
@@ -9,11 +10,12 @@ export class SessionService {
     curatorId: string,
     goal?: string,
   ): Promise<Session> {
+    // Pre-check the active slot for a fast, friendly 409; the repo's create()
+    // is the real safety net (it also catches paused/completed/soft-deleted
+    // collisions findActive can't see). Both surface CurrentSessionExistsError.
     const existing = await this.repo.findActive(collectionId, curatorId);
     if (existing) {
-      throw new Error(
-        `Active session already exists for curator ${curatorId} in collection ${collectionId}`,
-      );
+      throw new CurrentSessionExistsError();
     }
     return this.repo.create({ collectionId, curatorId, goal });
   }

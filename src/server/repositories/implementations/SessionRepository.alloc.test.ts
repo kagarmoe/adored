@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { SessionRepository } from "./SessionRepository";
+import { SessionRepository, CurrentSessionExistsError } from "./SessionRepository";
 
 const { selectWhere, insertReturning } = vi.hoisted(() => ({
   selectWhere: vi.fn(),
@@ -51,10 +51,15 @@ describe("SessionRepository.create number allocation", () => {
     expect(selectWhere).toHaveBeenCalledTimes(2);
   });
 
-  it("does NOT retry the one-session-per-curator constraint — it surfaces", async () => {
+  it("does NOT retry the one-session-per-curator constraint — it surfaces a gentle CurrentSessionExistsError (4bhh)", async () => {
+    // sessions_active_unique covers the whole (collection, curator) slot incl.
+    // soft-deleted rows; a fresh number can't free it, so it is NOT retried and
+    // maps to a 409 (CurrentSessionExistsError), never a raw 500.
     selectWhere.mockResolvedValue([{ max: 5 }]);
     insertReturning.mockRejectedValueOnce({ code: "23505", message: 'duplicate key value violates unique constraint "sessions_active_unique"' });
-    await expect(new SessionRepository(db).create({ collectionId: "c1", curatorId: "u1" })).rejects.toMatchObject({ code: "23505" });
-    expect(valuesSpy.mock.calls.length).toBe(1);
+    await expect(
+      new SessionRepository(db).create({ collectionId: "c1", curatorId: "u1" }),
+    ).rejects.toBeInstanceOf(CurrentSessionExistsError);
+    expect(valuesSpy.mock.calls.length).toBe(1); // not retried
   });
 });

@@ -5,6 +5,20 @@ import type { ISessionRepository } from "../SessionRepository";
 import type { Session } from "@/types";
 import { generateId } from "@/lib/id";
 
+/**
+ * Thrown when a curator already holds a session in a (collection, curator) slot
+ * and tries to create another. The slot is enforced by the unconditional
+ * sessions_active_unique index, so this covers active, paused, completed, AND
+ * soft-deleted (set-aside) rows — the cases findActive can't see. Routes map it
+ * to a gentle 409 — never a 500.
+ */
+export class CurrentSessionExistsError extends Error {
+  constructor() {
+    super("You already have a sort in progress for this collection.");
+    this.name = "CurrentSessionExistsError";
+  }
+}
+
 export class SessionRepository implements ISessionRepository {
   constructor(private db: Database) {}
 
@@ -26,8 +40,7 @@ export class SessionRepository implements ISessionRepository {
     };
 
     // Auto-allocate MAX+1, retry on the UNIQUE(collection_id, number) race
-    // (a retry-able insert — simpler than locking the max; a transaction is available but unnecessary here). Any other
-    // unique violation (e.g. sessions_active_unique) surfaces, not retried.
+    // (a retry-able insert — simpler than locking the max; a transaction is available but unnecessary here).
     for (let attempt = 0; attempt < 5; attempt++) {
       const number = await this.getNextSessionNumber(data.collectionId);
       try {
@@ -37,6 +50,11 @@ export class SessionRepository implements ISessionRepository {
           .returning();
         return this.mapToSession(session);
       } catch (error) {
+        // The (collection, curator) slot is already occupied — active, paused,
+        // completed, OR soft-deleted (the unconditional sessions_active_unique
+        // index spans every row). Surface a gentle, typed 409 instead of a raw
+        // 500. Not retried — a fresh number won't free a slot held by curator.
+        if (isCurrentSessionConflict(error)) throw new CurrentSessionExistsError();
         if (isSessionNumberConflict(error) && attempt < 4) continue;
         throw error;
       }
@@ -184,8 +202,16 @@ export class SessionRepository implements ISessionRepository {
 
 function isSessionNumberConflict(error: unknown): boolean {
   // Retry ONLY the UNIQUE(collection_id, number) race — any other unique
-  // violation (incl. sessions_active_unique) is a real condition and must surface.
+  // violation is a real condition and must surface.
   const code = (error as { code?: string })?.code;
   const message = (error as { message?: string })?.message ?? "";
   return code === "23505" && message.includes("sessions_collection_number_unique");
+}
+
+function isCurrentSessionConflict(error: unknown): boolean {
+  // The UNIQUE(collection_id, curator_id) slot is occupied. Sibling of
+  // isSessionNumberConflict — NOT retried; mapped to a gentle 409.
+  const code = (error as { code?: string })?.code;
+  const message = (error as { message?: string })?.message ?? "";
+  return code === "23505" && message.includes("sessions_active_unique");
 }

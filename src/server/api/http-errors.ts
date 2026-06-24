@@ -6,6 +6,7 @@ import {
   SupersedeStateError,
   FinalizeStateError,
 } from "@/server/services/SortResultService";
+import { CurrentSessionExistsError } from "@/server/repositories/implementations/SessionRepository";
 
 /**
  * Shared error-to-HTTP-response mapper for API route handlers.
@@ -19,7 +20,8 @@ import {
  *   ZodError                 → 400 "Invalid input" + flatten details
  *   DeleteResultStateError
  *   | SupersedeStateError
- *   | FinalizeStateError     → 409 (error.message)
+ *   | FinalizeStateError
+ *   | CurrentSessionExistsError → 409 (error.message)
  *   UnauthorizedError
  *   | Error("Unauthorized")  → 401
  *   any other Error          → 500 (error.message)
@@ -38,7 +40,8 @@ export function errorResponse(error: unknown): NextResponse {
   if (
     error instanceof DeleteResultStateError ||
     error instanceof SupersedeStateError ||
-    error instanceof FinalizeStateError
+    error instanceof FinalizeStateError ||
+    error instanceof CurrentSessionExistsError
   ) {
     return NextResponse.json({ error: error.message }, { status: 409 });
   }
