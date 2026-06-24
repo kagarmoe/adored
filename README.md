@@ -159,13 +159,14 @@ src/
 
 ## Database Schema
 
-The Drizzle schema (`src/lib/db/schema.ts`) defines 15 tables. The core domain tables:
+The Drizzle schema (`src/lib/db/schema.ts`) defines 16 tables. The core domain tables:
 - **collections** — Curated collections with metadata
 - **items** — Collection items (handbags, shoes, etc.)
 - **photos** — Item photos with hero photo support
 - **memberships** — Collection team members with 9 permission flags
 - **sessions** — Sorting sessions with decision tracking
 - **decision_events** — Append-only decision events (triage, pairwise)
+- **item_dispositions** — per-curator triage shelving (`set_aside` / `deferred`); parks an untriaged item out of the sort queue
 - **sort_results** / **sort_result_items** / **sort_result_shares** — finalized rankings + tokenized public shares
 - **collection_preference_items** — per-curator computed preferences
 - **invitations** — Email invitations with expiring tokens

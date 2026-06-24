@@ -530,6 +530,7 @@ sessions
 decision_events
 
 collection_preference_items
+item_dispositions
 
 sort_results
 sort_result_items

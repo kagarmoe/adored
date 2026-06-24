@@ -120,6 +120,13 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 | GET | `/api/collections/[id]/preferences/items` | member (scoped to caller) |
 | POST | `/api/collections/[id]/preferences/recalculate` | member (scoped to caller) |
 
+### dispositions
+| Method | Path | Access |
+|---|---|---|
+| POST | `/api/collections/[id]/dispositions` | curator (`preferences:write`, scoped to caller) |
+| GET | `/api/collections/[id]/dispositions` | member (scoped to caller) |
+| DELETE | `/api/collections/[id]/dispositions/[itemId]` | curator (`preferences:write`, scoped to caller) |
+
 ### items (top-level)
 | Method | Path | Access |
 |---|---|---|
@@ -270,6 +277,19 @@ Returns the caller's per-item preference state for the collection. `401`/`403`/`
 ### `POST /api/collections/[id]/preferences/recalculate`
 Recomputes the caller's preferences. `{ message, preferences }`. `401`/`403`/`404`/`500`.
 
+## dispositions
+
+Curator-private triage shelving (Epic C PR1). A **disposition** parks an *untriaged* item out of the sort queue without a verdict: `set_aside` (Not Mine — excluded entirely) or `deferred` (Not Yet — resurfaces at the end of the pass). Rows are scoped per `(item_id, curator_id)` (`UNIQUE`); `curatorId` is always the session user. The governing invariant is **`disposed ⟺ untriaged`**: an item with a `CollectionPreferenceItem` row may not be disposed (`POST` → `409`), and triaging a disposed item clears its disposition (see `POST …/decisions`). Disposed items emit no decision events, so they are simply absent from results with no `ScoringService` change. PR1 wires only `deferred` (Not Yet) in the UI; `set_aside` (Not Mine) is a later PR.
+
+### `POST /api/collections/[id]/dispositions`
+`getSession` → resolve the item via `requireApiItemCapability(itemId, "preferences:write")` (gates on the item's **real** collection; `404` absent / `403` forbidden) → **then** assert `item.collectionId === params.id` else `404` (no cross-collection oracle). **Body:** `{ itemId, disposition: "set_aside" | "deferred" }` (zod; `400` invalid JSON / missing `itemId` / bad enum). `curatorId` forced from session. **`409`** (`PreferenceExistsError`) if the item already has a preference row for the caller (the `disposed ⟺ untriaged` invariant). On success, upserts the disposition (`ON CONFLICT (item_id, curator_id)`) → `201 ItemDisposition`. `401`/`500`.
+
+### `GET /api/collections/[id]/dispositions?disposition=set_aside|deferred`
+`getSession` + `requireApiCollectionAccess` (member-or-owner; `404` absent / `403` forbidden). Lists the **caller's own** dispositions for the collection (scoped to the session `curatorId` server-side). The `disposition` query param is a **filter hint only** — an absent/unrecognized value returns the full list; it never widens scope. `200 ItemDisposition[]`. `401`/`500`.
+
+### `DELETE /api/collections/[id]/dispositions/[itemId]`
+"Bring back." Same guard as `POST`: `requireApiItemCapability(itemId, "preferences:write")` + `item.collectionId === params.id` else `404`. Deletes the caller's disposition for the item, keyed `(item_id, curator_id = session)`. **Idempotent** — a no-op when no row exists still returns `200 { message: "Brought back" }`. `401`/`403`/`404`.
+
 ## items (top-level)
 
 These routes are now scoped to the item's collection (IDOR closed — pv9 PR1, `purses-3al`). The collection-scoped `…/collections/[id]/items*` routes remain the primary surface.
@@ -300,7 +320,7 @@ Curator-scoped sorting sessions. `goal` is optional free text.
 `getSession` + `authorizeSession` (`404` absent; `403` not a member; `403` not the session's curator — even other members/owners are denied). `GET` → `Session`; `PATCH` body → updated `Session` (`400` invalid JSON); `DELETE` → `{ message }`.
 
 ### `POST /api/sessions/[id]/decisions`
-`getSession` + session resolve (`404`) + `requireApiCollectionAccess` + curator-scope (`403`) — authorized **before any write**. **Body:** `{ type: "triage" | "pairwise_compare" | "bucket_assign", decision: object }`. Inserts a `DecisionEvent`, then recalculates the curator's preferences. `201` event; `500` on failure.
+`getSession` + session resolve (`404`) + `requireApiCollectionAccess` + curator-scope (`403`) — authorized **before any write**. **Body:** `{ type: "triage" | "pairwise_compare" | "bucket_assign", decision: object }`. The event insert, the preference recalc, and — for `type: "triage"` — clearing any disposition for the triaged item all run in **one `withTransaction`** (atomic: all commit or all roll back). Clearing on triage enforces `disposed ⟺ untriaged` (a previously `set_aside`/`deferred` item can't be both ranked and disposed). `201` event; `500` on failure. (Hardening note: the triage branch reads `decision.itemId` untyped and does not assert it is in-scope — `purses-mels`, LOW, not exploitable since `bringBack`'s delete is keyed to the caller's own `curatorId` and idempotent.)
 
 ## sort-results
 
