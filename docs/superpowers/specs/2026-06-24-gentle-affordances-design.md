@@ -131,7 +131,7 @@ const showingDeferred = active.length === 0 && deferred.length > 0;
 
 A **quiet secondary action** on the triage screen, in a visually-separated sub-row **below** the four tier buttons (concrete layout contract in §7), ghost-styled. Selecting it does **not** record a triage decision — it upserts `disposition='set_aside'`; the item card crossfades to the next (reduced-motion → instant).
 
-- **Copy:** "Not mine" (sub: "set aside — not mine to decide"). Never "discard / skip / trash". After: a brief inline `role="status"` notice "Set aside · **Undo**".
+- **Copy:** "Not mine" (sub: "set aside — not mine to decide"). Never "discard / skip / trash". After: a brief inline `role="status"` notice "Set aside · **Bring back**".
 - **Excluded from pairing (load-bearing, §3.1):** `compare/page.tsx` filters disposed items out of the candidate list passed to `lib/pairwise-selection.ts` (the draft's "PairingService candidate filter" reference was wrong — `PairingService` is not the live compare path).
 - **Durable retrieval (fork 3):** a count-free "Set aside" list reachable by a quiet link (label "Set aside", no number). Each row = item photo + name + "Bring back" (delete disposition → re-enters the queue). Patient holding, not an inbox.
 
@@ -153,7 +153,7 @@ Second quiet secondary action: "Not yet" (sub: "I'll come back to this") → ups
 
 Restructure `AbandonSessionButton` into a client island that survives `router.refresh()`:
 
-- **State machine:** `idle (current-session card)` → `confirming` → `setAside (notice: "Set aside — you can bring it back · Undo")`. On success the island stays mounted at a stable tree position and shows the undo notice; `router.refresh()` updates the rest of the page. **No auto-dismiss timer** (a countdown reads as a deadline — TONE 4); the notice persists until Undo or navigation.
+- **State machine:** `idle (current-session card)` → `confirming` → `setAside (notice: "Set aside — you can bring it back · Bring back")`. On success the island stays mounted at a stable tree position and shows the undo notice; `router.refresh()` updates the rest of the page. **No auto-dismiss timer** (a countdown reads as a deadline — TONE 4); the notice persists until Bring back or navigation.
 - **Undo → restore:** new `POST /api/sessions/[id]/restore` using a new repo `findByIdIncludingDeleted` + `restore` (clear `deletedAt`). **Authorize first** — collection access + `curatorId === userId` on the include-deleted row — and only then call `restore`; `update()` is never reached by an unauthorized caller.
 - Durable session retrieval beyond the on-page undo is out of scope (the bead asks only for confirmation + undo).
 
