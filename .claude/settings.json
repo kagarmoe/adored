@@ -1,4 +1,10 @@
 {
+  "permissions": {
+    "allow": [
+      "Write(.git/sdd/**)",
+      "Edit(.git/sdd/**)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -20,5 +26,8 @@
         ]
       }
     ]
+  },
+  "worktree": {
+    "bgIsolation": "none"
   }
 }
