@@ -2,8 +2,9 @@ import type { Item } from "@/types";
 
 // Optional bounds for the workspace item preview. Omit both and findByCollection
 // keeps today's behavior (full, unordered collection read for the /items grid).
-// `orderBy: "number"` is index-backed (items_collection_number_unique) and unique,
-// so it needs no tiebreaker; `number` is the only supported order key for now.
+// `orderBy: "number"` sorts number ASC with an id ASC tiebreaker (number is
+// nullable, so determinism can't rest on it alone); `number` is the only
+// supported order key for now.
 export interface FindByCollectionOptions {
   limit?: number;
   orderBy?: "number";

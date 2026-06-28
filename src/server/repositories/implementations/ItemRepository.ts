@@ -85,9 +85,10 @@ export class ItemRepository implements IItemRepository {
 
   // Non-deleted items of a collection. With no options this is the full,
   // unordered read the /items grid already relies on (unchanged). The workspace
-  // preview opts into a bounded slice: { limit: 12, orderBy: "number" } — number
-  // ASC is index-backed (items_collection_number_unique) and unique, so a LIMIT
-  // is deterministic without a tiebreaker.
+  // preview opts into a bounded slice: { limit: 12, orderBy: "number" }. number
+  // is nullable in schema (determinism rests on the app invariant that create
+  // always assigns one, not a DB constraint), so id ASC is the belt-and-suspenders
+  // tiebreaker — matching the pool read — that keeps a LIMIT cut deterministic.
   async findByCollection(
     collectionId: string,
     options?: FindByCollectionOptions,
@@ -97,7 +98,9 @@ export class ItemRepository implements IItemRepository {
       .from(itemsTable)
       .where(and(eq(itemsTable.collectionId, collectionId), isNull(itemsTable.deletedAt)));
     const ordered =
-      options?.orderBy === "number" ? base.orderBy(asc(itemsTable.number)) : base;
+      options?.orderBy === "number"
+        ? base.orderBy(asc(itemsTable.number), asc(itemsTable.id))
+        : base;
     const items =
       options?.limit === undefined ? await ordered : await ordered.limit(options.limit);
     return items.map((i) => this.mapToItem(i));

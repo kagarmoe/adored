@@ -176,7 +176,68 @@ describe("adaptive workspace states", () => {
     expect(addPhotos).toHaveAttribute("href", "/collections/summer-bags/pool");
     expect(screen.queryByRole("heading", { name: "Photo pool" })).not.toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "Items" })).not.toBeInTheDocument();
+    // B2 (spec §11): empty uses ONE clear action — the Continue/sorting chrome
+    // (which would only lead to empty pages) must not compete with it.
+    expect(screen.queryByRole("heading", { name: "Continue" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Start sorting" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Results" })).not.toBeInTheDocument();
     expect(container.querySelectorAll(".bg-primary")).toHaveLength(1);
+  });
+});
+
+describe("one dominant action when a session is active (A1)", () => {
+  // Net invariant: at most ONE bg-primary action renders on the workspace in
+  // every state × session combo. When a session exists, Resume is that one
+  // dominant action and the adaptive lead action is demoted to a non-primary.
+  it("pool-first + active session: the only dominant action is Resume", async () => {
+    photoRepo.findPoolByCollection.mockResolvedValue([makePoolPhoto("ph_1")]);
+    sessionRepo.findByCollectionAndCurator.mockResolvedValue([makeSession(5)]);
+    const { container } = await renderPage();
+
+    const resume = screen.getByRole("button", { name: "Resume" });
+    expect(resume.className).toContain("bg-primary");
+    // the adaptive lead action ("Make items") is demoted — no longer a primary
+    expect(screen.getByRole("link", { name: "Make items" }).className).not.toContain("bg-primary");
+    // exactly one dominant action, and it is the Resume control
+    const dominant = container.querySelectorAll(".bg-primary");
+    expect(dominant).toHaveLength(1);
+    expect(dominant[0]).toBe(resume);
+  });
+
+  it("items-first + active session: the only dominant action is Resume", async () => {
+    itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
+    sessionRepo.findByCollectionAndCurator.mockResolvedValue([makeSession(5)]);
+    const { container } = await renderPage();
+
+    const resume = screen.getByRole("button", { name: "Resume" });
+    expect(resume.className).toContain("bg-primary");
+    // the adaptive lead action ("Add photos") is demoted — no longer a primary
+    expect(screen.getByRole("link", { name: "Add photos" }).className).not.toContain("bg-primary");
+    const dominant = container.querySelectorAll(".bg-primary");
+    expect(dominant).toHaveLength(1);
+    expect(dominant[0]).toBe(resume);
+  });
+
+  it("pool-first WITHOUT a session: the lead action stays primary", async () => {
+    photoRepo.findPoolByCollection.mockResolvedValue([makePoolPhoto("ph_1")]);
+    const { container } = await renderPage();
+
+    expect(screen.getByRole("link", { name: "Make items" }).className).toContain("bg-primary");
+    expect(container.querySelectorAll(".bg-primary")).toHaveLength(1);
+  });
+});
+
+describe("bounded preview reads pinned at the page seam (A2)", () => {
+  it("passes the pool bound (6) and the item preview options to the controllers", async () => {
+    photoRepo.findPoolByCollection.mockResolvedValue([makePoolPhoto("ph_1")]);
+    itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
+    await renderPage();
+
+    expect(photoRepo.findPoolByCollection).toHaveBeenCalledWith(COLLECTION_ID, 6);
+    expect(itemRepo.findByCollection).toHaveBeenCalledWith(COLLECTION_ID, {
+      limit: 12,
+      orderBy: "number",
+    });
   });
 });
 

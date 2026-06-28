@@ -252,6 +252,26 @@ describeDb("workspace item preview (repo -> DB)", () => {
     expect(result.map((i) => i.number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
   });
 
+  it("breaks number ties by id ascending (number is nullable, so it can't order alone)", async () => {
+    const { db } = getTestDb();
+    // Two items with NULL number — the UNIQUE(collection_id, number) index permits
+    // multiple NULLs in Postgres, so ONLY the id tiebreaker can order them. This is
+    // the case create()'s assign-a-number invariant doesn't cover at the DB level.
+    await db.execute(sql`
+      INSERT INTO items (id, collection_id, number, created_at, updated_at)
+      VALUES
+        ('item_zzz', ${collectionId}, NULL, now(), now()),
+        ('item_aaa', ${collectionId}, NULL, now(), now())
+    `);
+
+    const result = await itemRepo().findByCollection(collectionId, {
+      limit: 12,
+      orderBy: "number",
+    });
+
+    expect(result.map((i) => i.id)).toEqual(["item_aaa", "item_zzz"]);
+  });
+
   it("resolves covers only for the displayed item ids via findCoverPhotosByItemIds", async () => {
     const items = [];
     for (let n = 1; n <= 14; n++) items.push(await seedItemWithPhoto(n));

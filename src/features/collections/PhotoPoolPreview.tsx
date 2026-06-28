@@ -1,6 +1,6 @@
-import type { Photo } from "@/types";
 import { Card, CardImage, buttonVariants } from "@/components/ui";
 import { getPoolPhotoAssetUrl, PHOTO_WIDTH } from "@/lib/photos";
+import { quietLink } from "@/lib/design/quiet-link";
 import Link from "next/link";
 
 interface PhotoPoolPreviewProps {
@@ -8,15 +8,25 @@ interface PhotoPoolPreviewProps {
   collectionId: string;
   /** Slug-or-id path segment for the /pool route. */
   poolHref: string;
-  /** Bounded preview rows (≤6) from findPoolByCollection(collectionId, 6). */
-  photos: Photo[];
+  /**
+   * Bounded preview rows (≤6) from findPoolByCollection(collectionId, 6).
+   * Only `id` is consumed — passing the minimal shape keeps blobKey/uploadedBy
+   * off any future client serialization boundary (defensive, Security LOW).
+   */
+  photos: { id: string }[];
+  /**
+   * Variant for the lead "Make items" action. Demoted to a non-primary when the
+   * workspace already has a single dominant action (an active/paused session's
+   * Resume), so at most one bg-primary renders at a time (A1).
+   */
+  actionVariant?: "primary" | "secondary";
 }
 
 // Read-only pool preview: thumbnails plus the section-level route action to /pool.
 // No selection, grouping, mutation, or local pool state — /pool owns all of that.
 // The thumbnails are decorative (alt=""): the "Make items" link carries the
 // section's accessible meaning, so AT isn't read 4–6 filenames (spec §11).
-export function PhotoPoolPreview({ collectionId, poolHref, photos }: PhotoPoolPreviewProps) {
+export function PhotoPoolPreview({ collectionId, poolHref, photos, actionVariant = "primary" }: PhotoPoolPreviewProps) {
   return (
     <section aria-labelledby="photo-pool-heading">
       <Card padding="lg" className="space-y-4">
@@ -44,13 +54,10 @@ export function PhotoPoolPreview({ collectionId, poolHref, photos }: PhotoPoolPr
         </ul>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Link href={poolHref} className={buttonVariants({ variant: "primary" })}>
+          <Link href={poolHref} className={buttonVariants({ variant: actionVariant })}>
             Make items
           </Link>
-          <Link
-            href={poolHref}
-            className="inline-flex min-h-11 items-center rounded-control px-1 text-primary underline underline-offset-2 hover:text-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
-          >
+          <Link href={poolHref} className={quietLink}>
             Add more photos
           </Link>
         </div>

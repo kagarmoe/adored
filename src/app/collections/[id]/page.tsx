@@ -11,16 +11,12 @@ import { ActiveSessionPanel } from "@/features/sessions/ActiveSessionPanel";
 import { PhotoPoolPreview } from "@/features/collections/PhotoPoolPreview";
 import { ItemPreviewGrid } from "@/features/collections/ItemPreviewGrid";
 import { resolveWorkspaceState } from "@/features/collections/workspaceState";
+import { quietLink } from "@/lib/design/quiet-link";
 import Link from "next/link";
 
 interface CollectionPageProps {
   params: { id: string };
 }
-
-// Quiet, visibly-secondary text link. Touch target ≥44px (min-h-11). text-primary
-// on bg-ground/bg-surface is an AA pairing already proven in contrast.test.ts.
-const quietLink =
-  "inline-flex min-h-11 items-center rounded-control px-1 text-primary underline underline-offset-2 hover:text-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary";
 
 export default async function CollectionPage({ params }: CollectionPageProps) {
   const session = await getSession();
@@ -62,6 +58,12 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   );
   const resumeHref = `${base}/sort/${currentSession?.number}`;
 
+  // A1: at most one dominant (bg-primary) action on the workspace. When a
+  // session exists, its Resume IS that one action, so the adaptive section's
+  // lead action ("Make items" / "Add photos") is demoted to a non-primary.
+  // With no session, the lead action stays primary.
+  const leadActionVariant = currentSession ? "secondary" : "primary";
+
   const itemsPreview = (
     <ItemPreviewGrid
       items={itemPreview}
@@ -89,7 +91,12 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
 
         {state.kind === "pool-first" && (
           <>
-            <PhotoPoolPreview collectionId={collection.id} poolHref={poolHref} photos={poolPreview} />
+            <PhotoPoolPreview
+              collectionId={collection.id}
+              poolHref={poolHref}
+              photos={poolPreview.map((p) => ({ id: p.id }))}
+              actionVariant={leadActionVariant}
+            />
             {itemPreview.length > 0 && (
               <section aria-labelledby="items-heading" className="space-y-4">
                 <div className="flex items-start justify-between gap-3">
@@ -119,7 +126,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
                 <p className="mt-1 text-ink-soft">Things gathered here</p>
               </div>
               <div className="flex flex-col items-start gap-2 sm:items-end">
-                <Link href={poolHref} className={buttonVariants({ variant: "primary" })}>
+                <Link href={poolHref} className={buttonVariants({ variant: leadActionVariant })}>
                   Add photos
                 </Link>
                 <div className="flex flex-wrap gap-3">
@@ -144,38 +151,43 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
           />
         )}
 
-        <section aria-labelledby="continue-heading" className="space-y-4">
-          <h2 id="continue-heading" className="text-xl text-ink">
-            Continue
-          </h2>
-          {/* Mounted UNCONDITIONALLY (not inside `{currentSession && …}`) so the
-              persistent set-aside Undo survives the refresh that flips
-              currentSession to null — it renders nothing when there's neither a
-              session nor a pending undo. */}
-          <ActiveSessionPanel
-            session={
-              currentSession
-                ? {
-                    id: currentSession.id,
-                    number: currentSession.number,
-                    goal: currentSession.goal,
-                    status: currentSession.status as "active" | "paused",
-                  }
-                : null
-            }
-            resumeHref={resumeHref}
-          />
-          <nav aria-label="Sorting and results" className="flex flex-wrap gap-3">
-            {!currentSession && (
-              <Link href={`${base}/sort`} className={quietLink}>
-                Start sorting
+        {/* B2 (spec §11): the empty state offers ONE clear action (add photos);
+            Continue/sorting chrome would only lead to empty pages, so it is
+            withheld until there is something to continue. */}
+        {state.kind !== "empty" && (
+          <section aria-labelledby="continue-heading" className="space-y-4">
+            <h2 id="continue-heading" className="text-xl text-ink">
+              Continue
+            </h2>
+            {/* Mounted UNCONDITIONALLY (not inside `{currentSession && …}`) so the
+                persistent set-aside Undo survives the refresh that flips
+                currentSession to null — it renders nothing when there's neither a
+                session nor a pending undo. */}
+            <ActiveSessionPanel
+              session={
+                currentSession
+                  ? {
+                      id: currentSession.id,
+                      number: currentSession.number,
+                      goal: currentSession.goal,
+                      status: currentSession.status as "active" | "paused",
+                    }
+                  : null
+              }
+              resumeHref={resumeHref}
+            />
+            <nav aria-label="Sorting and results" className="flex flex-wrap gap-3">
+              {!currentSession && (
+                <Link href={`${base}/sort`} className={quietLink}>
+                  Start sorting
+                </Link>
+              )}
+              <Link href={`${base}/results`} className={quietLink}>
+                Results
               </Link>
-            )}
-            <Link href={`${base}/results`} className={quietLink}>
-              Results
-            </Link>
-          </nav>
-        </section>
+            </nav>
+          </section>
+        )}
 
         {isOwner && (
           <nav aria-label="Owner utilities" className="flex flex-wrap gap-3 border-t border-hairline pt-6">
