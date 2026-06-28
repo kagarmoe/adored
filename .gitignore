@@ -85,6 +85,10 @@ next-env.d.ts
 !/.claude/skills/close-out/
 !/.claude/skills/pr-screenshots/
 
+# Per-machine Claude Code overrides (e.g. worktree.bgIsolation for a background
+# session). Never committed — committed config is in .claude/settings.json.
+/.claude/settings.local.json
+
 # PR screenshots (live on GitHub releases, never committed — see docs/cookbook/add-images-to-pr.md)
 # Anchored to repo root so it doesn't also swallow .claude/skills/pr-screenshots/.
 /pr-screenshots/
