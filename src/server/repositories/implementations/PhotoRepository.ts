@@ -140,8 +140,21 @@ export class PhotoRepository implements IPhotoRepository {
     return map;
   }
 
-  async findPoolByCollection(collectionId: string): Promise<Photo[]> {
-    const photos = await this.db
+  // Loose (un-grouped) photos of a collection, oldest first. `limit` bounds the
+  // read at the SQL layer for the workspace preview (findPoolByCollection(id, 6));
+  // existing callers omit it and get the full pool. Order is created_at ASC, id ASC:
+  // `created_at` matches /pool's oldest-first order; `id` breaks created_at ties so a
+  // LIMIT cut is deterministic. Never order by updated_at — rotation bumps it.
+  //
+  // Index/EXPLAIN decision (verified on the test DB, 5000-row photos): NO new
+  // index is needed. For a selective collection the planner uses the existing
+  // photos_collection_id_idx (Index Scan, cost ~8). Worst case — one collection
+  // holding the whole table — it Seq Scans, but the LIMIT turns the sort into a
+  // bounded top-N heapsort (~26kB, cost ~223) that is roughly half the cost of
+  // today's *accepted* unbounded pool read (full quicksort, ~732kB, cost ~440).
+  // So the bounded preview is strictly cheaper than the read it slices.
+  async findPoolByCollection(collectionId: string, limit?: number): Promise<Photo[]> {
+    const base = this.db
       .select()
       .from(photosTable)
       .where(
@@ -151,7 +164,8 @@ export class PhotoRepository implements IPhotoRepository {
           isNull(photosTable.deletedAt),
         ),
       )
-      .orderBy(asc(photosTable.createdAt));
+      .orderBy(asc(photosTable.createdAt), asc(photosTable.id));
+    const photos = limit === undefined ? await base : await base.limit(limit);
     return photos.map((p) => this.mapToPhoto(p));
   }
 

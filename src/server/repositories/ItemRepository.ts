@@ -1,5 +1,14 @@
 import type { Item } from "@/types";
 
+// Optional bounds for the workspace item preview. Omit both and findByCollection
+// keeps today's behavior (full, unordered collection read for the /items grid).
+// `orderBy: "number"` is index-backed (items_collection_number_unique) and unique,
+// so it needs no tiebreaker; `number` is the only supported order key for now.
+export interface FindByCollectionOptions {
+  limit?: number;
+  orderBy?: "number";
+}
+
 export interface IItemRepository {
   create(data: {
     collectionId: string;
@@ -17,7 +26,10 @@ export interface IItemRepository {
   // Resolve an item WITHOUT the deletedAt filter — purge must find soft-deleted
   // items too (findById can't, so it can't be reused on the purge path).
   findByIdIncludingDeleted(id: string): Promise<Item | null>;
-  findByCollection(collectionId: string): Promise<Item[]>;
+  findByCollection(
+    collectionId: string,
+    options?: FindByCollectionOptions,
+  ): Promise<Item[]>;
   findByCollectionAndNumber(collectionId: string, number: number): Promise<Item | null>;
   getNextCatalogNumber(collectionId: string): Promise<number>;
   update(id: string, data: Partial<Omit<Item, "id" | "createdAt">>): Promise<Item>;

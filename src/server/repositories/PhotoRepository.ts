@@ -11,7 +11,10 @@ export interface IPhotoRepository {
   findByItem(itemId: string): Promise<Photo[]>;
   findCoverPhotosByItemIds(itemIds: string[]): Promise<Map<string, Photo>>;
   findCoverPhotosByCollectionIds(collectionIds: string[]): Promise<Map<string, Photo>>;
-  findPoolByCollection(collectionId: string): Promise<Photo[]>;
+  // Loose photos of a collection, oldest first (created_at ASC, id ASC). Optional
+  // `limit` bounds the read at the SQL layer for the bounded workspace preview;
+  // omit it for the full pool.
+  findPoolByCollection(collectionId: string, limit?: number): Promise<Photo[]>;
   update(id: string, data: Partial<Omit<Photo, "id" | "createdAt">>): Promise<Photo>;
   softDelete(id: string): Promise<Photo>;
   clearHeroPhotos(itemId: string): Promise<void>;

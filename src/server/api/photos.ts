@@ -20,8 +20,9 @@ export class PhotoController {
     return this.photoRepo.findById(photoId);
   }
 
-  async findPoolByCollection(collectionId: string): Promise<Photo[]> {
-    return this.photoRepo.findPoolByCollection(collectionId);
+  // `limit` opts into the bounded workspace preview (e.g. 6); omit for the full pool.
+  async findPoolByCollection(collectionId: string, limit?: number): Promise<Photo[]> {
+    return this.photoRepo.findPoolByCollection(collectionId, limit);
   }
 
   async findByItem(itemId: string): Promise<Photo[]> {
