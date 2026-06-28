@@ -14,6 +14,7 @@ import {
   seedSortScenario,
   seedMembersScenario,
   seedJourneyScenario,
+  seedWorkspaceStates,
 } from "../fixtures/seed";
 import { getTestDb } from "../fixtures/db";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
@@ -32,6 +33,8 @@ let waitingSlug = "";
 let waitingSessionNumber = 0;
 let setAsideSlug = "";
 let pausedSlug = "";
+let workspacePoolFirstSlug = "";
+let workspaceItemsFirstSlug = "";
 
 test.beforeAll(async () => {
   const ownerId = await seedBaseline();
@@ -93,6 +96,13 @@ test.beforeAll(async () => {
   );
   if (!pausedSession) throw new Error("capture: paused seed had no active session to pause");
   await new SessionRepository(db).update(pausedSession.id, { status: "paused" });
+
+  // Task 6 (adaptive workspace): the two adaptive shapes reviewers compare —
+  // pool-first (loose pool photos drive the page) and items-first (no pool, items
+  // only). Placeholder blobKeys ride the same /file intercept as every other shot.
+  const workspace = await seedWorkspaceStates(ownerId);
+  workspacePoolFirstSlug = workspace.poolOnly.slug;
+  workspaceItemsFirstSlug = workspace.itemsOnly.slug;
 });
 
 for (const theme of ["light", "dark"] as const) {
@@ -142,6 +152,11 @@ for (const theme of ["light", "dark"] as const) {
       // status-aware paused card ("Your sort is paused" / "Your sort is safe") with
       // a real un-pause Resume. Reuses the pausedSlug seed above.
       ["collection-paused", `/collections/${pausedSlug}`],
+      // Task 6: the adaptive workspace's two image-bearing shapes. pool-first
+      // leads with the Photo pool preview (+ Make items); items-first leads with
+      // the Items grid (+ the dominant Add photos action).
+      ["workspace-pool-first", `/collections/${workspacePoolFirstSlug}`],
+      ["workspace-items-first", `/collections/${workspaceItemsFirstSlug}`],
     ];
     for (const [name, url] of surfaces) {
       await page.goto(url);

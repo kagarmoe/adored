@@ -162,6 +162,93 @@ export async function seedJourneyScenario(
   return { collectionId, slug, sessionNumber: session.number, itemIds };
 }
 
+/** A seeded collection the workspace spec navigates to, keyed by slug. */
+export interface SeededCollectionRef {
+  collectionId: string;
+  slug: string;
+}
+
+/**
+ * Seed the four adaptive-workspace shapes the `/collections/[id]` page renders
+ * (Task 4): the page derives its state from the two bounded preview row counts,
+ * so each fixture differs only in whether loose pool photos and/or items exist.
+ *
+ *   - poolOnly  → loose pool photos, no items        → "pool-first"
+ *   - itemsOnly → no pool photos, one item w/ hero   → "items-first"
+ *   - both      → loose pool photos AND one item     → "pool-first" (pool then items)
+ *   - empty     → neither                            → "empty"
+ *
+ * Pool photos are loose (`itemId: null`) so findPoolByCollection picks them up;
+ * item photos are heroes so the ItemCard cover resolves. Placeholder blobKeys
+ * ("e2e-placeholder") rely on the same `/file` intercept every image spec uses.
+ * Uniquely-ided per call, so it is safe to seed per-test without resetDb()
+ * (which would wipe the baseline user the shared storageState depends on).
+ */
+export async function seedWorkspaceStates(ownerId: string): Promise<{
+  poolOnly: SeededCollectionRef;
+  itemsOnly: SeededCollectionRef;
+  both: SeededCollectionRef;
+  empty: SeededCollectionRef;
+}> {
+  const { db } = getTestDb();
+  const itemRepo = new ItemRepository(db);
+  const photoRepo = new PhotoRepository(db);
+
+  async function makeCollection(label: string): Promise<SeededCollectionRef> {
+    const collectionId = generateId("col");
+    const slug = `e2e-workspace-${label}-${collectionId}`;
+    await db.insert(collectionsTable).values({
+      id: collectionId,
+      ownerId,
+      name: `E2E Workspace ${label}`,
+      slug,
+    });
+    return { collectionId, slug };
+  }
+
+  async function addPoolPhoto(collectionId: string, n: number): Promise<void> {
+    await photoRepo.create({
+      itemId: null, // loose in the pool — the workspace's pool-first signal
+      collectionId,
+      blobKey: "e2e-placeholder",
+      filename: `pool-${n}.jpg`,
+      mimeType: "image/jpeg",
+      fileSize: 1,
+      uploadedBy: ownerId,
+      isHero: false,
+    });
+  }
+
+  async function addItemWithHero(collectionId: string, name: string): Promise<void> {
+    const item = await itemRepo.create({ collectionId, name });
+    await photoRepo.create({
+      itemId: item.id,
+      collectionId,
+      blobKey: "e2e-placeholder",
+      filename: `${name}.jpg`,
+      mimeType: "image/jpeg",
+      fileSize: 1,
+      uploadedBy: ownerId,
+      isHero: true,
+    });
+  }
+
+  const poolOnly = await makeCollection("pool-only");
+  await addPoolPhoto(poolOnly.collectionId, 1);
+  await addPoolPhoto(poolOnly.collectionId, 2);
+
+  const itemsOnly = await makeCollection("items-only");
+  await addItemWithHero(itemsOnly.collectionId, "E2E Workspace Tote");
+
+  const both = await makeCollection("both");
+  await addPoolPhoto(both.collectionId, 1);
+  await addItemWithHero(both.collectionId, "E2E Workspace Clutch");
+
+  const empty = await makeCollection("empty");
+
+  return { poolOnly, itemsOnly, both, empty };
+}
+
 /**
  * Seed a fully-populated sort *result* scenario owned by `ownerId`: a collection
  * (with slug), three items each with a hero photo, an active session, the owner's
