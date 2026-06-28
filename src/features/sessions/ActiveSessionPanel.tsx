@@ -173,10 +173,11 @@ export function ActiveSessionPanel({
                   sessionId={session.id}
                   sortHref={resumeHref}
                   onBusyChange={setResumeBusy}
+                  label="Resume sorting"
                 />
               ) : (
                 <Link href={resumeHref}>
-                  <Button>Resume</Button>
+                  <Button>Resume sorting</Button>
                 </Link>
               )}
               {/* Disabled while a resume PATCH is in flight so a curator can't

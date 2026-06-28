@@ -12,6 +12,7 @@ export function ResumeControl({
   sessionId,
   sortHref,
   onBusyChange,
+  label = "Resume",
 }: {
   sessionId: string;
   sortHref: string;
@@ -19,6 +20,9 @@ export function ResumeControl({
   // while a resume PATCH is in flight, so the two can't fire concurrently on the
   // same session. Standalone callers (the sort landing) simply omit it.
   onBusyChange?: (busy: boolean) => void;
+  // Idle button text. Defaults to "Resume" (the sort landing). The governed
+  // workspace surface (spec §9) passes "Resume sorting".
+  label?: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -50,7 +54,7 @@ export function ResumeControl({
   return (
     <div className="flex flex-col items-start gap-1">
       <Button type="button" onClick={resume} disabled={busy}>
-        {busy ? "Just a moment…" : "Resume"}
+        {busy ? "Just a moment…" : label}
       </Button>
       {error && (
         <span role="status" className="text-sm text-ink-soft">

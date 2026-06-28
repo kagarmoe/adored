@@ -28,7 +28,7 @@ export default async function AddItemPage({ params }: AddItemPageProps) {
       ]}
     >
       <div className="max-w-2xl">
-        <h1 className="text-3xl text-ink mb-8">Add Item</h1>
+        <h1 className="text-3xl text-ink mb-8">Add item</h1>
         <ItemForm collectionId={collection.id} mode="create" />
       </div>
     </AppLayout>

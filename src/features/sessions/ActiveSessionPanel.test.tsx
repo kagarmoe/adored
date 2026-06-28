@@ -23,13 +23,14 @@ describe("ActiveSessionPanel", () => {
     render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
     expect(screen.getByRole("heading", { name: "Active Session" })).toBeInTheDocument();
     expect(screen.getByText(/find my favorites/i)).toBeInTheDocument();
-    const resume = screen.getByRole("link", { name: /resume/i });
+    // Governed label (spec §9): the resume affordance reads "Resume sorting".
+    const resume = screen.getByRole("link", { name: "Resume sorting" });
     expect(resume).toHaveAttribute("href", resumeHref);
   });
 
   it("for an active session, Resume is a link and issues no PATCH", () => {
     render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
-    const resume = screen.getByRole("link", { name: /resume/i });
+    const resume = screen.getByRole("link", { name: "Resume sorting" });
     expect(resume).toHaveAttribute("href", resumeHref);
     fireEvent.click(resume);
     expect(global.fetch).not.toHaveBeenCalled();
@@ -56,7 +57,7 @@ describe("ActiveSessionPanel", () => {
     render(<ActiveSessionPanel session={pausedSession} resumeHref={resumeHref} />);
     expect(screen.getByRole("button", { name: /^set aside$/i })).toBeEnabled();
 
-    fireEvent.click(screen.getByRole("button", { name: /resume/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Resume sorting" }));
     // While the PATCH is in flight, the sibling Set aside is disabled so the two
     // can't race on the same row.
     await waitFor(() =>
@@ -69,8 +70,9 @@ describe("ActiveSessionPanel", () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
     render(<ActiveSessionPanel session={pausedSession} resumeHref={resumeHref} />);
     // ResumeControl renders a <button>, not an <a> — there is no Resume link.
-    expect(screen.queryByRole("link", { name: /resume/i })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /resume/i }));
+    // Governed label (spec §9): the paused affordance also reads "Resume sorting".
+    expect(screen.queryByRole("link", { name: "Resume sorting" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Resume sorting" }));
     await waitFor(() =>
       expect(global.fetch).toHaveBeenCalledWith("/api/sessions/sess_1", {
         method: "PATCH",

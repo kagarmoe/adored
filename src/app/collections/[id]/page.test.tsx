@@ -194,7 +194,7 @@ describe("one dominant action when a session is active (A1)", () => {
     sessionRepo.findByCollectionAndCurator.mockResolvedValue([makeSession(5)]);
     const { container } = await renderPage();
 
-    const resume = screen.getByRole("button", { name: "Resume" });
+    const resume = screen.getByRole("button", { name: "Resume sorting" });
     expect(resume.className).toContain("bg-primary");
     // the adaptive lead action ("Make items") is demoted — no longer a primary
     expect(screen.getByRole("link", { name: "Make items" }).className).not.toContain("bg-primary");
@@ -209,7 +209,7 @@ describe("one dominant action when a session is active (A1)", () => {
     sessionRepo.findByCollectionAndCurator.mockResolvedValue([makeSession(5)]);
     const { container } = await renderPage();
 
-    const resume = screen.getByRole("button", { name: "Resume" });
+    const resume = screen.getByRole("button", { name: "Resume sorting" });
     expect(resume.className).toContain("bg-primary");
     // the adaptive lead action ("Add photos") is demoted — no longer a primary
     expect(screen.getByRole("link", { name: "Add photos" }).className).not.toContain("bg-primary");
@@ -302,6 +302,9 @@ describe("accessibility and governed labels", () => {
     for (const name of ["Make items", "Add more photos", "View all items", "Results", "Collection settings", "Members"]) {
       expect(screen.getByRole("link", { name })).toBeInTheDocument();
     }
+    // The resume affordance carries the governed label (spec §9), not bare "Resume".
+    expect(screen.getByRole("button", { name: "Resume sorting" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Resume" })).not.toBeInTheDocument();
     // legacy dashboard copy is gone
     expect(screen.queryByText("Finalized")).not.toBeInTheDocument();
     expect(screen.queryByText(/Manage/)).not.toBeInTheDocument();
