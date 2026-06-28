@@ -11,6 +11,10 @@ export interface IPhotoRepository {
   findByItem(itemId: string): Promise<Photo[]>;
   findCoverPhotosByItemIds(itemIds: string[]): Promise<Map<string, Photo>>;
   findCoverPhotosByCollectionIds(collectionIds: string[]): Promise<Map<string, Photo>>;
+  // Which of the GIVEN collections hold >=1 pooled photo (item_id IS NULL, not
+  // deleted). Bounded aggregate cue for /collections; NOT an access boundary —
+  // callers must pass only already-access-filtered ids (see implementation note).
+  findCollectionIdsWithPooledPhotos(collectionIds: string[]): Promise<Set<string>>;
   // Loose photos of a collection, oldest first (created_at ASC, id ASC). Optional
   // `limit` bounds the read at the SQL layer for the bounded workspace preview;
   // omit it for the full pool.

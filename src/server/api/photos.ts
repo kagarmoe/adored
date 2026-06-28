@@ -37,6 +37,13 @@ export class PhotoController {
     return this.photoRepo.findCoverPhotosByCollectionIds(collectionIds);
   }
 
+  // Access-scoped pool cue for /collections: callers MUST pass the authenticated
+  // user's already-access-filtered collection ids (from listCollections), never
+  // raw/client ids — the repo method is bounded but not an access boundary.
+  async findCollectionIdsWithPooledPhotos(collectionIds: string[]): Promise<Set<string>> {
+    return this.photoRepo.findCollectionIdsWithPooledPhotos(collectionIds);
+  }
+
   async update(photoId: string, data: Partial<Photo>): Promise<Photo> {
     return this.photoRepo.update(photoId, data);
   }

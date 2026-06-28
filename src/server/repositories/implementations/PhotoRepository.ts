@@ -140,6 +140,33 @@ export class PhotoRepository implements IPhotoRepository {
     return map;
   }
 
+  // Which of the GIVEN collections hold at least one pooled photo (item_id IS
+  // NULL, deleted_at IS NULL). Powers the /collections "Photos waiting" cue.
+  //
+  // BOUNDED by construction: SELECT DISTINCT collection_id returns at most one row
+  // per input id — never photo rows, no global pool, no unbounded scan. The
+  // existing photos_collection_id_idx backs the inArray filter.
+  //
+  // NOT an access boundary. Like findCoverPhotosByCollectionIds, the bare
+  // inArray trusts its input: callers MUST pass ONLY the authenticated user's
+  // already-access-filtered collection ids (the /collections page derives them
+  // from CollectionController.listCollections(userId)). Never hand it raw/client
+  // ids or it would expose other users' pool state.
+  async findCollectionIdsWithPooledPhotos(collectionIds: string[]): Promise<Set<string>> {
+    if (collectionIds.length === 0) return new Set();
+    const rows = await this.db
+      .selectDistinct({ collectionId: photosTable.collectionId })
+      .from(photosTable)
+      .where(
+        and(
+          inArray(photosTable.collectionId, collectionIds),
+          isNull(photosTable.itemId),
+          isNull(photosTable.deletedAt),
+        ),
+      );
+    return new Set(rows.map((r) => r.collectionId));
+  }
+
   // Loose (un-grouped) photos of a collection, oldest first. `limit` bounds the
   // read at the SQL layer for the workspace preview (findPoolByCollection(id, 6));
   // existing callers omit it and get the full pool. Order is created_at ASC, id ASC:

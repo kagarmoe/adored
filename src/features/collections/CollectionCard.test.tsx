@@ -48,3 +48,29 @@ describe("CollectionCard images", () => {
     expect(screen.queryByRole("button", { name: /view photo/i })).not.toBeInTheDocument();
   });
 });
+
+describe("CollectionCard pool cue", () => {
+  it("shows a sentence-case 'Photos waiting' cue when hasPooledPhotos is true", () => {
+    render(<CollectionCard collection={collection as any} hasPooledPhotos />);
+    // perceivable to AT as text (not color-only): the literal label is in the DOM
+    expect(screen.getByText("Photos waiting")).toBeInTheDocument();
+  });
+
+  it("does not show the cue when hasPooledPhotos is false or omitted", () => {
+    const { rerender } = render(
+      <CollectionCard collection={collection as any} hasPooledPhotos={false} />,
+    );
+    expect(screen.queryByText(/photos waiting/i)).not.toBeInTheDocument();
+
+    rerender(<CollectionCard collection={collection as any} />);
+    expect(screen.queryByText(/photos waiting/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps the card's single navigating link — the cue is informational, not a competing action", () => {
+    render(<CollectionCard collection={collection as any} hasPooledPhotos />);
+    expect(screen.getByRole("link", { name: "Favorites" })).toBeInTheDocument();
+    // the cue must not introduce a second link/button competing with navigation
+    expect(screen.getAllByRole("link")).toHaveLength(1);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+});
