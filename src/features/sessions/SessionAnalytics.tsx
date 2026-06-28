@@ -46,23 +46,23 @@ export function SessionAnalytics({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-ink">Session Analytics</h3>
+      <h3 className="text-ink">Session analytics</h3>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Card padding="md" className="bg-surface border-hairline">
-          <p className="text-xs font-medium text-ink-soft">Decisions Made</p>
+          <p className="text-xs font-medium text-ink-soft">Decisions made</p>
           <p className="text-2xl font-bold text-ink mt-2">{totalDecisions}</p>
           <p className="text-xs text-ink-soft mt-1">{triageCount} triage, {pairwiseCount} compare</p>
         </Card>
 
         <Card padding="md" className="bg-surface border-hairline">
-          <p className="text-xs font-medium text-ink-soft">Items Triaged</p>
+          <p className="text-xs font-medium text-ink-soft">Items triaged</p>
           <p className="text-2xl font-bold text-ink mt-2">{triaged}</p>
           <p className="text-xs text-ink-soft mt-1">of {totalItems} items</p>
         </Card>
 
         <Card padding="md" className="bg-surface border-hairline">
-          <p className="text-xs font-medium text-ink-soft">Avg Confidence</p>
+          <p className="text-xs font-medium text-ink-soft">Avg confidence</p>
           <p className="text-2xl font-bold text-ink mt-2">
             {(avgConfidence * 100).toFixed(0)}%
           </p>
@@ -70,7 +70,7 @@ export function SessionAnalytics({
         </Card>
 
         <Card padding="md" className="bg-surface border-hairline">
-          <p className="text-xs font-medium text-ink-soft">Time Spent</p>
+          <p className="text-xs font-medium text-ink-soft">Time spent</p>
           <p className="text-2xl font-bold text-ink mt-2">{timeSpent}m</p>
           <p className="text-xs text-ink-soft mt-1">in session</p>
         </Card>
@@ -108,13 +108,13 @@ export function SessionAnalytics({
           <h4 className="text-ink mb-4">Insights</h4>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between items-start">
-              <span className="text-ink-soft">Avg Comparisons per Item</span>
+              <span className="text-ink-soft">Avg comparisons per item</span>
               <span className="font-semibold text-ink">
                 {avgComparisonCount.toFixed(1)}
               </span>
             </div>
             <div className="flex justify-between items-start">
-              <span className="text-ink-soft">Decision Rate</span>
+              <span className="text-ink-soft">Decision rate</span>
               <span className="font-semibold text-ink">
                 {timeSpent > 0 ? (totalDecisions / (timeSpent || 1)).toFixed(1) : 0} per min
               </span>
@@ -126,7 +126,7 @@ export function SessionAnalytics({
               </span>
             </div>
             <div className="flex justify-between items-start">
-              <span className="text-ink-soft">Confidence Level</span>
+              <span className="text-ink-soft">Confidence level</span>
               <span className="font-semibold text-ink">
                 {avgConfidence > 0.8 ? "High" : avgConfidence > 0.6 ? "Medium" : "Low"}
               </span>

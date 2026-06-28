@@ -32,7 +32,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     >
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl text-ink">Sorting Results</h1>
+          <h1 className="text-3xl text-ink">Sorting results</h1>
           <p className="text-ink-soft mt-2">{results.length} result(s)</p>
         </div>
 

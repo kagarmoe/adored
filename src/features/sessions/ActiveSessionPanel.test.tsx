@@ -21,7 +21,7 @@ beforeEach(() => {
 describe("ActiveSessionPanel", () => {
   it("renders the session card with goal and a Resume link when an active session is present", () => {
     render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
-    expect(screen.getByRole("heading", { name: "Active Session" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Active session" })).toBeInTheDocument();
     expect(screen.getByText(/find my favorites/i)).toBeInTheDocument();
     // Governed label (spec §9): the resume affordance reads "Resume sorting".
     const resume = screen.getByRole("link", { name: "Resume sorting" });
@@ -44,7 +44,7 @@ describe("ActiveSessionPanel", () => {
       screen.getByText(/your sort is safe — pick up where you left off\./i),
     ).toBeInTheDocument();
     // The active heading must NOT appear for a paused session.
-    expect(screen.queryByRole("heading", { name: "Active Session" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Active session" })).not.toBeInTheDocument();
   });
 
   it("disables Set aside while a paused Resume PATCH is in flight (no concurrent set-aside)", async () => {

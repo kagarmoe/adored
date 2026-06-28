@@ -134,7 +134,7 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
             )}
             <div className="flex gap-2 justify-center">
               <Button onClick={handleUpload} disabled={loading || preparing}>
-                {loading ? "Uploading..." : "Upload Photo"}
+                {loading ? "Uploading..." : "Upload photo"}
               </Button>
               <Button
                 variant="secondary"
@@ -174,7 +174,7 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
               onClick={() => inputRef.current?.click()}
               variant="secondary"
             >
-              {preparing ? "Preparing..." : "Select File"}
+              {preparing ? "Preparing..." : "Select file"}
             </Button>
           </div>
         )}

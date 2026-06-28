@@ -119,7 +119,7 @@ describe("ItemForm", () => {
     render(<ItemForm item={item} collectionId="coll_01ULID" mode="edit" />);
 
     type("Item name", "New Name");
-    fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() =>
       expect(push).toHaveBeenCalledWith("/collections/coll_01ULID/items/7"),

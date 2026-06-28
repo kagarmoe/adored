@@ -41,12 +41,12 @@ export default async function SortPage({ params }: SortPageProps) {
     >
       <div className="space-y-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl text-ink">Sorting Sessions</h1>
+          <h1 className="text-3xl text-ink">Sorting sessions</h1>
           {/* purses-4bhh: only invite a new session when none is open — starting a
               second while one is active/paused violates sessions_active_unique. */}
           {!currentSession && (
             <Link href={`${collectionHref}/sort/new`}>
-              <Button>New Session</Button>
+              <Button>New session</Button>
             </Link>
           )}
         </div>
@@ -57,7 +57,7 @@ export default async function SortPage({ params }: SortPageProps) {
               <div>
                 <div className="mb-2 flex items-center gap-2">
                   <h2 className="text-lg text-ink">
-                    {currentSession.status === "paused" ? "Your sort is paused" : "Active Session"}
+                    {currentSession.status === "paused" ? "Your sort is paused" : "Active session"}
                   </h2>
                   <Badge variant={currentSession.status}>{currentSession.status}</Badge>
                 </div>
@@ -91,7 +91,7 @@ export default async function SortPage({ params }: SortPageProps) {
             heading="No sorting sessions yet"
             message="Create a session to start organizing items"
             action={{
-              label: "Create Session",
+              label: "Create session",
               href: `${collectionHref}/sort/new`,
             }}
           />

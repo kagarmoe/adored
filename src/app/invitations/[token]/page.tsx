@@ -91,7 +91,7 @@ export default function InvitationPage({ params }: InvitationPageProps) {
 
         <div className="flex gap-3">
           <Button fullWidth onClick={handleAccept} disabled={accepting}>
-            {accepting ? "Accepting..." : "Accept Invitation"}
+            {accepting ? "Accepting..." : "Accept invitation"}
           </Button>
           <Button variant="secondary" fullWidth onClick={() => router.push("/")}>
             Decline

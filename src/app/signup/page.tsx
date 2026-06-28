@@ -101,7 +101,7 @@ export default function SignupPage() {
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}
             disabled={loading}
-            label="Confirm Password"
+            label="Confirm password"
           />
           <Button type="submit" disabled={loading} fullWidth>
             {loading ? "Creating account..." : "Create account"}

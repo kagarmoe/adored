@@ -77,21 +77,21 @@ describe("SessionAnalytics", () => {
     );
 
     // Decisions Made: 5 total, broken down 3 triage / 2 compare.
-    const decisionsCard = screen.getByText("Decisions Made").closest("div")!;
+    const decisionsCard = screen.getByText("Decisions made").closest("div")!;
     expect(within(decisionsCard).getByText("5")).toBeInTheDocument();
     expect(within(decisionsCard).getByText("3 triage, 2 compare")).toBeInTheDocument();
 
     // Items Triaged: 4 of 8.
-    const triagedCard = screen.getByText("Items Triaged").closest("div")!;
+    const triagedCard = screen.getByText("Items triaged").closest("div")!;
     expect(within(triagedCard).getByText("4")).toBeInTheDocument();
     expect(within(triagedCard).getByText("of 8 items")).toBeInTheDocument();
 
     // Avg Confidence: (0.9+0.9+0.6+0.6)/4 = 0.75 → "75%".
-    const confidenceCard = screen.getByText("Avg Confidence").closest("div")!;
+    const confidenceCard = screen.getByText("Avg confidence").closest("div")!;
     expect(within(confidenceCard).getByText("75%")).toBeInTheDocument();
 
     // Time Spent: now − created = 10 minutes → "10m".
-    const timeCard = screen.getByText("Time Spent").closest("div")!;
+    const timeCard = screen.getByText("Time spent").closest("div")!;
     expect(within(timeCard).getByText("10m")).toBeInTheDocument();
 
     // Distribution buckets: one item per bucket label.
@@ -120,12 +120,12 @@ describe("SessionAnalytics", () => {
     );
 
     // No decisions, no triaged items.
-    const decisionsCard = screen.getByText("Decisions Made").closest("div")!;
+    const decisionsCard = screen.getByText("Decisions made").closest("div")!;
     expect(within(decisionsCard).getByText("0")).toBeInTheDocument();
     expect(within(decisionsCard).getByText("0 triage, 0 compare")).toBeInTheDocument();
 
     // Avg Confidence guards against /0 → "0%".
-    const confidenceCard = screen.getByText("Avg Confidence").closest("div")!;
+    const confidenceCard = screen.getByText("Avg confidence").closest("div")!;
     expect(within(confidenceCard).getByText("0%")).toBeInTheDocument();
 
     // Coverage guards against totalItems === 0 → "0%".

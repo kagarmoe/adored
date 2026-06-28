@@ -151,7 +151,7 @@ export function ActiveSessionPanel({
         <div>
           <div className="mb-2 flex items-center gap-2">
             <h2 className="text-lg text-ink">
-              {paused ? "Your sort is paused" : "Active Session"}
+              {paused ? "Your sort is paused" : "Active session"}
             </h2>
             <Badge variant={session.status}>{session.status}</Badge>
           </div>

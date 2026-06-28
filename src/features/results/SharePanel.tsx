@@ -79,7 +79,7 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
               </p>
             </div>
             <Button onClick={handleCreateShare} disabled={loading}>
-              {loading ? "Creating..." : "Create Link"}
+              {loading ? "Creating..." : "Create link"}
             </Button>
           </div>
 
@@ -88,7 +88,7 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
               {shares.map((share) => (
                 <div key={share.id} className="flex flex-col gap-3 p-3 bg-ground rounded-lg">
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-ink-soft">Share Link:</p>
+                    <p className="text-xs font-medium text-ink-soft">Share link:</p>
                     <Input
                       type="text"
                       readOnly
