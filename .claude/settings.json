@@ -1,8 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Write(.git/sdd/**)",
-      "Edit(.git/sdd/**)"
+      "Write(.git/sdd/**/**)",
+      "Edit(.git/sdd/**/**)"
     ]
   },
   "hooks": {
