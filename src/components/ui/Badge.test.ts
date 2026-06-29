@@ -26,9 +26,9 @@ describe("Badge status variants", () => {
   // DESIGN.md: brand never speaks Danger — pause is a calm, reversible, non-error
   // state, so its badge must use the cool-blue benign token, never the amber
   // safety palette. Locks the wb3 re-map against regression.
-  it("paused uses the calm cornflower benign token (+ ink), not the warning safety palette", () => {
+  it("paused uses the calm cool-blue benign token (+ ink), not the warning safety palette", () => {
     const paused = badgeVariants({ variant: "paused" });
-    expect(paused).toContain("bg-accent-cornflower");
+    expect(paused).toContain("bg-accent-sky");
     expect(paused).toContain("text-ink");
     expect(paused).not.toMatch(/warning/);
   });
