@@ -93,6 +93,10 @@ async function setTheme(page: Page, theme: string): Promise<void> {
 for (const theme of THEMES) {
   test(`a11y: core authed screens — no serious/critical violations (${theme})`, async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "tablet", "a11y is viewport-independent; scanned once on tablet");
+    // Scans 8 screens × an axe pass each. CI is slower than local (the Google
+    // Fonts CDN is unreachable in the e2e box, so page loads drag) — give generous
+    // headroom rather than risk the 30s default timeout.
+    test.setTimeout(120_000);
     await setTheme(page, theme);
     // Real photo bytes so image-bearing screens render (no blob emulator locally).
     await page.route("**/photos/**/file*", (route) =>
@@ -112,9 +116,12 @@ for (const theme of THEMES) {
 
     const findings: Finding[] = [];
     for (const [name, url] of screens) {
-      await page.goto(url);
-      await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
-      await page.waitForTimeout(300); // brief settle for theme + fonts
+      // axe needs the rendered DOM, not painted images — so don't wait on an
+      // <img> (imageless screens like /profile would burn a 10s timeout each,
+      // which is what pushed this past 30s in CI). domcontentloaded + a short
+      // settle for hydration/theme is enough.
+      await page.goto(url, { waitUntil: "domcontentloaded" });
+      await page.waitForTimeout(400);
       findings.push(...(await scan(page, theme, name)));
     }
     const fail = blocking(findings);
