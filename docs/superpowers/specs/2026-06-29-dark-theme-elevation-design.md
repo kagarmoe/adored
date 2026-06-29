@@ -68,6 +68,13 @@ existing and aligns the variant with how the theme already toggles.
    **verify** with before/after dark screenshots; if cards still read flat we
    revisit (out of this spec's default scope).
 
+4. **Secondary button rim (AA 1.4.11)** — `Button.tsx` `secondary` variant: add
+   `dark:border dark:border-hairline`. Lifting the panel to `surface-raised`
+   leaves the borderless `secondary` "Set aside" button at **1.07:1** against it
+   (fails the 3:1 non-text-contrast floor — it dissolves into the very panel we
+   lift). A dark hairline rim defines it — and every `secondary` button in dark,
+   a pre-existing weak edge. Light unchanged.
+
 ### Explicitly NOT doing (and why)
 
 - No new hex tokens (`#8FA8AF`, `#4F9FB0`, `#7FD4E2`): the current tokens already
@@ -79,24 +86,57 @@ existing and aligns the variant with how the theme already toggles.
 
 ## Testing & verification
 
-- **Contrast (TDD):** add one pairing to `src/lib/design/contrast.test.ts` —
-  `ink-soft on surface-raised` (the panel's secondary text in dark; light too) —
-  asserting ≥4.5 in both themes. (`ink-soft on ground` for the footer already
-  exists.) No other new pairings: no new colors are introduced.
-- **Component intent locks** (matching the existing Badge-test className style):
-  - `AppLayout` footer contains `dark:bg-ground` + `border-t border-hairline`.
-  - The active panel className contains `dark:bg-surface-raised dark:shadow-raised`.
+- **Contrast (TDD):** add two pairings to `src/lib/design/contrast.test.ts`,
+  each ≥4.5 in **both** themes — `ink-soft on surface-raised` (the panel's error
+  span in dark) and `ink-soft on accent-aqua` (the same span in light, where the
+  panel keeps the aqua fill). Verified: surface-raised 8.42 (light) / 6.77 (dark);
+  accent-aqua to compute (expected pass). `ink-soft on ground` (footer) already
+  exists. No new colors introduced.
+- **Non-text contrast (1.4.11):** compute the dark `secondary` hairline rim vs
+  `surface-raised` and vs `surface` — must clear 3:1 — to confirm the Set-aside
+  fix actually defines the control (else pick a stronger rim).
+- **Deletion tripwires, not behavior locks** (honest framing — the Badge tests
+  pin CVA *branch logic*; a static className is a string): render `AppLayout` /
+  the active panel and assert the `dark:bg-ground` / `dark:bg-surface-raised
+  dark:shadow-raised` classes land on the actual `<footer>` / panel DOM node.
+  These catch misattachment/deletion; they do **NOT** prove the cascade override
+  wins — only the screenshot does (see Risks).
 - **Build:** `next build` proves Tailwind emits the new `dark:` utilities.
 - **Gates:** `npm run test:ci`, `npm run lint`, `npm run build`.
-- **Visual:** `npm run screenshots`; confirm in **dark** the footer reads as a
-  quiet divider and the active panel lifts/glows, and in **light** the surfaces
-  are pixel-unchanged. Embed light+dark in the PR.
+- **Visual:** `npm run screenshots`; in **dark** confirm the footer recedes, the
+  active panel lifts/glows *gently* (a paused state must not read as emphasized),
+  and the Set-aside button is distinguishable; in **light** surfaces are
+  pixel-unchanged. Embed light+dark in the PR.
 
 ## Risks
 
 - *Enabling `darkMode: selector` has side effects* → mitigated: no existing
   `dark:` usage; dark is attribute-only. Build + full screenshot pass confirm.
 - *Tailwind same-property conflict* (`dark:shadow-raised` vs base `shadow-card`;
-  `dark:bg-surface-raised` vs `bg-accent-aqua`) → the `dark:` variant carries the
-  `[data-theme="dark"]` attribute selector (higher specificity than the bare
-  utility), so it wins in dark and is inert in light. Verified by screenshots.
+  `dark:bg-surface-raised` vs `bg-accent-aqua`). **Mechanism corrected after
+  review:** Tailwind 3.4.1 `selector` mode emits
+  `.dark\:x:where([data-theme="dark"], …)`, and `:where()` has **zero**
+  specificity — so the dark utility is **equal** specificity (0,1,0) to the base,
+  not higher. It wins by **source order** (Tailwind emits variant utilities after
+  their base counterparts) — stable, but not the specificity guarantee the first
+  draft claimed. This override-wins behavior has **no unit coverage** (jsdom runs
+  no PostCSS and resolves no real cascade); it is proven only by the dark
+  screenshot pass — accepted as proportionate for a visual-only change. (A raw
+  `[data-theme="dark"] footer{…}` rule would be unambiguous at (0,1,1), but we
+  keep one idiomatic mechanism and let the screenshot be the gate.)
+
+## Adversarial review — folded in (2026-06-29)
+
+4-persona review (Graphic Design **CLEAN**; UX, Craftsman, QA **CONCERNS**, none blocking):
+
+- **Craftsman:** corrected the specificity rationale → source-order at equal
+  specificity (Tailwind `:where()` codegen, `corePlugins.js:319-321`); documented
+  that the override-wins behavior has no unit coverage.
+- **UX:** added the `secondary` button dark rim — "Set aside" failed 1.4.11 at
+  1.07:1 on the lifted panel. All text pairings pass AA; tone / reduced-motion
+  (static `box-shadow`) / focus (5.08:1 ring) clean.
+- **QA + Graphic Design:** relabeled className tests as DOM-node tripwires, fixed
+  the contrast-pairing justification, added the light-panel `accent-aqua` pairing.
+  Signed off the intentional per-theme elevation asymmetry (in dark the aqua tint
+  would itself be the muddy mid-tone §4 forbids, so elevation is the right
+  substitute) — to be confirmed "gentle, not emphasized" in the dark screenshot.
