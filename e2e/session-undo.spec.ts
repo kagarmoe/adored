@@ -55,7 +55,7 @@ test.describe("collection — set a session aside (two-step) → persistent Undo
   }) => {
     await page.goto(`/collections/${slug}`);
 
-    // ── The active-session card is present: its "Active Session"
+    // ── The active-session card is present: its "Active session"
     // heading and a primary "Resume" alongside the "Set aside" reveal.
     const card = page.getByRole("heading", { name: "Active session" });
     await expect(card).toBeVisible();

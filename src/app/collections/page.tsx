@@ -27,9 +27,10 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
   const collections = await CollectionController.fromDb(db).listCollections(session.user.id);
   const collectionIds = collections.map((c) => c.id);
   const photoController = PhotoController.fromDb(db);
-  const covers = await photoController.findCoverPhotosByCollectionIds(collectionIds);
-  const collectionsWithPooledPhotos =
-    await photoController.findCollectionIdsWithPooledPhotos(collectionIds);
+  const [covers, collectionsWithPooledPhotos] = await Promise.all([
+    photoController.findCoverPhotosByCollectionIds(collectionIds),
+    photoController.findCollectionIdsWithPooledPhotos(collectionIds),
+  ]);
   const activeFilter = searchParams?.status === "active" || searchParams?.status === "archived"
     ? searchParams.status
     : "all";
