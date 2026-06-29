@@ -323,7 +323,57 @@
 <a name='L258'></a><a href='#L258'>258</a>
 <a name='L259'></a><a href='#L259'>259</a>
 <a name='L260'></a><a href='#L260'>260</a>
-<a name='L261'></a><a href='#L261'>261</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L261'></a><a href='#L261'>261</a>
+<a name='L262'></a><a href='#L262'>262</a>
+<a name='L263'></a><a href='#L263'>263</a>
+<a name='L264'></a><a href='#L264'>264</a>
+<a name='L265'></a><a href='#L265'>265</a>
+<a name='L266'></a><a href='#L266'>266</a>
+<a name='L267'></a><a href='#L267'>267</a>
+<a name='L268'></a><a href='#L268'>268</a>
+<a name='L269'></a><a href='#L269'>269</a>
+<a name='L270'></a><a href='#L270'>270</a>
+<a name='L271'></a><a href='#L271'>271</a>
+<a name='L272'></a><a href='#L272'>272</a>
+<a name='L273'></a><a href='#L273'>273</a>
+<a name='L274'></a><a href='#L274'>274</a>
+<a name='L275'></a><a href='#L275'>275</a>
+<a name='L276'></a><a href='#L276'>276</a>
+<a name='L277'></a><a href='#L277'>277</a>
+<a name='L278'></a><a href='#L278'>278</a>
+<a name='L279'></a><a href='#L279'>279</a>
+<a name='L280'></a><a href='#L280'>280</a>
+<a name='L281'></a><a href='#L281'>281</a>
+<a name='L282'></a><a href='#L282'>282</a>
+<a name='L283'></a><a href='#L283'>283</a>
+<a name='L284'></a><a href='#L284'>284</a>
+<a name='L285'></a><a href='#L285'>285</a>
+<a name='L286'></a><a href='#L286'>286</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -589,126 +639,150 @@
 &nbsp;
 /*
  * Luminous design system tokens (see DESIGN.md).
- * A gallery-cool, colour-forward system on neutral white (light) / deep cool
- * near-black (dark). Role-based token names; the deck palette (teal anchor, cool
- * blues, lone citron spark, soft mauve) carries identity; safety colours are
- * reserved (see "Brand never speaks Danger"). Values are AA-verified in
- * src/lib/design/contrast.test.ts. Fonts come from next/font in layout.tsx.
+ * "Adored — The Luminous Gallery." One family, anchored on a single deep teal
+ * (#004A67 / #005667). Light is Sea Glass (greener #005667 tints rising to white
+ * cards); dark is Sea Glass at Night — the same spine inverted toward black, the
+ * raised plane pivoted teal→blue and lifted by a luminous rim + glow (elevation
+ * by light, never by a muddy mid-tone). Role-based token names; the expressive
+ * palette (teal anchor, cool blues, lone marigold spark, soft violet) carries
+ * identity; safety colours are reserved (see "Brand never speaks Danger").
+ * Fonts come from next/font in layout.tsx.
  */
 :root {
   color-scheme: light;
 &nbsp;
-  --color-ground: #ffffff;
-  --color-surface: #ffffff;
+  /* Surfaces — Sea Glass: cool ground recedes, cards rise to white */
+  --color-ground: #d3e2e5;
+  --color-surface: #e5eef0;
   --color-surface-raised: #ffffff;
-  --color-hairline: #eceff1;
+  --color-hairline: #c7dade;
   --color-ink: #16242b;
-  --color-ink-soft: #5b6b73;
+  --color-ink-soft: #434f57;
 &nbsp;
   --color-primary: #004a67;
   --color-primary-ink: #ffffff;
-  --color-primary-hover: #013a51;
+  --color-primary-hover: #003e5b;
 &nbsp;
-  --color-accent-aqua: #cae4e1;
-  --color-accent-sky: #98cedd;
-  --color-accent-cornflower: #79afe0;
-  --color-accent-periwinkle: #b3bfd8;
+  /* Cool content — teal tint ramp + indigo analogous.
+   * accent-aqua = content soft, accent-sky = content mid,
+   * accent-cornflower = the benign "Not yet" tone, accent-periwinkle = indigo. */
+  --color-accent-aqua: #d7dee4;
+  --color-accent-sky: #b0beca;
+  --color-accent-cornflower: #4f7da0;
+  --color-accent-periwinkle: #4a5878;
+  --color-content-deep: #638297;
 &nbsp;
-  --color-spark: #c9bf29;
-  --color-spark-ink: #2a2705;
-  --color-decor: #d9c7d1;
+  /* Accents — spend rarely. Spark = marigold (the lone most-loved affirmation);
+   * decor = soft violet, now used freely (fills, backgrounds, framing). */
+  --color-spark: #efcb77;
+  --color-spark-ink: #1b1605;
+  --color-spark-soft: #f6e1b1;
+  --color-decor: #b5aacc;
+  --color-decor-soft: #cec6dd;
 &nbsp;
-  --color-error: #b0463c;
-  --color-error-soft: #f4dad6;
-  --color-error-deep: #8a3128;
-  --color-warning: #c58a2e;
-  --color-warning-soft: #f6e6cc;
-  --color-warning-deep: #7e5616;
-  --color-success: #5c7c57;
+  --color-error: #9b4036;
+  --color-error-soft: #f3deda;
+  --color-error-deep: #7e2c24;
+  --color-warning: #9c6b22;
+  --color-warning-soft: #f4e6cc;
+  --color-warning-deep: #6e4b16;
+  --color-success: #3f5a34;
   --color-success-soft: #dce7d9;
-  --color-success-deep: #3c5238;
-  --color-info: #3c7e96;
-  --color-info-soft: #d6e8ee;
-  --color-info-deep: #27576a;
+  --color-success-deep: #2c3f26;
+  --color-info: #2e4769;
+  --color-info-soft: #d9e4ee;
+  --color-info-deep: #1f3350;
 &nbsp;
+  /* Tiers — a single cool value-ramp: deeper/brighter teal is more loved. */
   --color-tier-love: #004a67;
-  --color-tier-like: #79afe0;
-  --color-tier-maybe: #98cedd;
-  --color-tier-onward: #cae4e1;
+  --color-tier-like: #2f6e8c;
+  --color-tier-maybe: #6fa0b8;
+  --color-tier-onward: #b8d4dc;
   --color-tier-love-ink: #ffffff;
-  --color-tier-like-ink: #16242b;
-  --color-tier-maybe-ink: #16242b;
+  --color-tier-like-ink: #ffffff;
+  --color-tier-maybe-ink: #08222b;
   --color-tier-onward-ink: #16242b;
 &nbsp;
   /* Type — resolve to next/font variables, with graceful fallbacks */
   --font-display: var(--font-playfair), Georgia, "Times New Roman", serif;
   --font-body: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
 &nbsp;
-  /* Elevation — light: soft, cool shadow; surfaces lift off white */
-  --shadow-lift: 0 1px 2px oklch(0.4 0.05 230 / 0.05),
-    0 6px 18px oklch(0.4 0.05 230 / 0.08);
-  --shadow-raised: 0 10px 28px oklch(0.4 0.05 230 / 0.12),
+  /* Elevation — light: soft, cool shadow; surfaces lift off the sea-glass ground */
+  --shadow-lift: 0 1px 2px oklch(0.4 0.05 230 / 0.06),
+    0 8px 20px oklch(0.4 0.05 230 / 0.10);
+  --shadow-raised: 0 14px 32px oklch(0.4 0.05 230 / 0.16),
     0 20px 48px oklch(0.4 0.05 230 / 0.12);
-  --shadow-float: 0 16px 40px oklch(0.4 0.05 230 / 0.16);
+  --shadow-float: 0 16px 40px oklch(0.4 0.05 230 / 0.18);
   --highlight-top: none;
   --shadow-card: var(--shadow-lift);
   --shadow-card-hover: var(--shadow-raised);
 &nbsp;
-  /* Motion — gentle ease-out, 150–250ms */
+  /* Motion — gentle ease-out, 150–280ms */
   --ease-gentle: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-state: 180ms;
-  --duration-reveal: 240ms;
+  --duration-reveal: 280ms;
 }
 &nbsp;
 [data-theme="dark"] {
   color-scheme: dark;
 &nbsp;
-  --color-ground: #081016;
-  --color-surface: #14202a;
-  --color-surface-raised: #1b2a35;
-  --color-hairline: #243640;
+  /* Surfaces — Sea Glass at Night: #005667 spine inverted toward black.
+   * Raised pivots teal→blue; hairline doubles as the luminous rim. */
+  --color-ground: #001b21;
+  --color-surface: #103f4a;
+  --color-surface-raised: #123a4e;
+  --color-hairline: #3f7fa0;
   --color-ink: #ecf2f4;
-  --color-ink-soft: #9fb3bc;
+  --color-ink-soft: #b0c6cb;
 &nbsp;
-  --color-primary: #79afe0;
-  --color-primary-ink: #081016;
-  --color-primary-hover: #9ac2e8;
+  --color-primary: #4fb6c7;
+  --color-primary-ink: #042026;
+  --color-primary-hover: #6bc8d6;
 &nbsp;
-  --color-accent-aqua: #16323b;
-  --color-accent-sky: #1c4154;
+  /* Cool content — ascending teal steps on the night spine; indigo stays distinct */
+  --color-accent-aqua: #173f4d;
+  --color-accent-sky: #2d6377;
   --color-accent-cornflower: #234d66;
-  --color-accent-periwinkle: #3a4a5e;
+  --color-accent-periwinkle: #4a5c84;
+  --color-content-deep: #4f8ba3;
 &nbsp;
-  --color-spark: #d7cd3a;
-  --color-spark-ink: #081016;
-  --color-decor: #5e4a55;
+  --color-spark: #efcb77;
+  --color-spark-ink: #1b1605;
+  --color-spark-soft: #b89f55;
+  --color-decor: #6d5c9b;
+  --color-decor-soft: #8a79b3;
 &nbsp;
-  --color-error: #e08a80;
-  --color-error-soft: #2a1714;
-  --color-error-deep: #f4dad6;
-  --color-warning: #e0b266;
-  --color-warning-soft: #241b0e;
-  --color-warning-deep: #f6e6cc;
-  --color-success: #8fb089;
-  --color-success-soft: #152017;
+  /* Semantic — softs lifted clear of the dark surface so chips stay visible */
+  --color-error: #c98a82;
+  --color-error-soft: #4a241e;
+  --color-error-deep: #f3deda;
+  --color-warning: #d4a24e;
+  --color-warning-soft: #463411;
+  --color-warning-deep: #f4e6cc;
+  --color-success: #6e9e72;
+  --color-success-soft: #25492f;
   --color-success-deep: #dce7d9;
-  --color-info: #79b6cc;
-  --color-info-soft: #101f25;
-  --color-info-deep: #d6e8ee;
+  --color-info: #7e97b8;
+  --color-info-soft: #21425a;
+  --color-info-deep: #d9e4ee;
 &nbsp;
   --color-tier-love: #bfe6ee;
   --color-tier-like: #79afe0;
   --color-tier-maybe: #5e83a0;
   --color-tier-onward: #334654;
-  --color-tier-love-ink: #081016;
-  --color-tier-like-ink: #081016;
-  --color-tier-maybe-ink: #081016;
-  --color-tier-onward-ink: #ecf2f4;
+  --color-tier-love-ink: #08222b;
+  --color-tier-like-ink: #08222b;
+  --color-tier-maybe-ink: #0a1622;
+  --color-tier-onward-ink: #d6e2e6;
 &nbsp;
-  /* Elevation — dark: a hairline + a soft glow, not warm shadow */
-  --shadow-lift: 0 0 0 1px var(--color-hairline);
-  --shadow-raised: 0 0 0 1px var(--color-hairline),
-    0 10px 30px oklch(0 0 0 / 0.45);
+  /* Elevation — dark: inset highlight + hairline rim + cool glow, not warm shadow */
+  --shadow-lift: inset 0 1px 0 oklch(1 0 0 / 0.06),
+    0 0 0 1px var(--color-hairline),
+    0 8px 22px oklch(0 0 0 / 0.5);
+  --shadow-raised: inset 0 1px 0 oklch(1 0 0 / 0.08),
+    0 0 0 1px var(--color-hairline),
+    0 0 22px oklch(0.62 0.08 235 / 0.35),
+    0 14px 30px oklch(0 0 0 / 0.55);
   --shadow-float: 0 16px 44px oklch(0 0 0 / 0.6);
   --highlight-top: none;
   --shadow-card: var(--shadow-lift);
@@ -728,6 +802,7 @@ body {
 &nbsp;
 body {
   font-family: var(--font-body);
+  font-size: 1.0625rem; /* 17px — unhurried, 40+-friendly reading */
   background: var(--color-ground);
   color: var(--color-ink);
   line-height: 1.55;
@@ -753,7 +828,7 @@ h4 {
 &nbsp;
 h1 {
   font-size: 2.25rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.01em;
 }
@@ -774,7 +849,7 @@ h3 {
 /* Functional title role uses the body sans, not the serif */
 h4 {
   font-family: var(--font-body);
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
   font-weight: 600;
   line-height: 1.35;
 }
@@ -850,7 +925,7 @@ select:-webkit-autofill {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-29T00:34:49.758Z
+                at 2026-06-29T05:01:03.563Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
