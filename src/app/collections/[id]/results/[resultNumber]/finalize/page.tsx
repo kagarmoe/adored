@@ -47,7 +47,7 @@ export default async function FinalizePage({ params }: FinalizePageProps) {
     >
       <div className="max-w-2xl space-y-6">
         <div>
-          <h1 className="text-3xl text-ink">Finalize Results</h1>
+          <h1 className="text-3xl text-ink">Finalize results</h1>
           <p className="mt-2 text-ink-soft">Lock the current order and make this result ready to share.</p>
         </div>
         <FinalizeResultForm

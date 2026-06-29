@@ -1,6 +1,9 @@
 import { z } from "zod";
 import type { Item } from "@/types";
-import type { IItemRepository } from "@/server/repositories/ItemRepository";
+import type {
+  FindByCollectionOptions,
+  IItemRepository,
+} from "@/server/repositories/ItemRepository";
 import type { Database } from "@/lib/db";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 
@@ -36,8 +39,13 @@ export class ItemController {
     return new ItemController(new ItemRepository(db));
   }
 
-  async listItems(collectionId: string): Promise<Item[]> {
-    return this.itemRepo.findByCollection(collectionId);
+  // `options` opts into the bounded workspace preview ({ limit: 12, orderBy:
+  // "number" }); omit it for the full /items grid read.
+  async listItems(
+    collectionId: string,
+    options?: FindByCollectionOptions,
+  ): Promise<Item[]> {
+    return this.itemRepo.findByCollection(collectionId, options);
   }
 
   async createItem(collectionId: string, data: unknown): Promise<Item> {

@@ -71,7 +71,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
     >
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl text-ink">Sorting Session</h1>
+          <h1 className="text-3xl text-ink">Sorting session</h1>
           <p className="text-ink-soft mt-2">Goal: {sortSession.goal}</p>
           <div className="mt-3">
             <Badge variant={sortSession.status}>{sortSession.status}</Badge>

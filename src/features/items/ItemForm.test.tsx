@@ -48,7 +48,9 @@ describe("ItemForm", () => {
     type("Item name", "Hobo Bag");
     type("Brand", "Coach");
     type("Color", "Tan");
-    fireEvent.click(screen.getByRole("button", { name: "Add Item" }));
+    // Governed label (spec §9): sentence-case "Add item", not Title-Case "Add Item".
+    expect(screen.queryByRole("button", { name: "Add Item" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Add item" }));
 
     await waitFor(() =>
       expect(push).toHaveBeenCalledWith("/collections/coll_01ULID/items/42"),
@@ -75,7 +77,7 @@ describe("ItemForm", () => {
 
     render(<ItemForm collectionId="coll_01ULID" mode="create" />);
     // Leave Item name empty; submit.
-    fireEvent.click(screen.getByRole("button", { name: "Add Item" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add item" }));
 
     // The required field reports invalid and nothing is sent.
     expect((controlFor("Item name") as HTMLInputElement).validity.valueMissing).toBe(true);
@@ -92,7 +94,7 @@ describe("ItemForm", () => {
 
     render(<ItemForm collectionId="coll_01ULID" mode="create" />);
     type("Item name", "Hobo Bag");
-    fireEvent.click(screen.getByRole("button", { name: "Add Item" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add item" }));
 
     await waitFor(() =>
       expect(screen.getByText("Item already exists")).toBeInTheDocument(),
@@ -117,7 +119,7 @@ describe("ItemForm", () => {
     render(<ItemForm item={item} collectionId="coll_01ULID" mode="edit" />);
 
     type("Item name", "New Name");
-    fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() =>
       expect(push).toHaveBeenCalledWith("/collections/coll_01ULID/items/7"),

@@ -1,7 +1,7 @@
-import { eq, isNull, and, sql } from "drizzle-orm";
+import { eq, isNull, and, sql, asc } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { itemsTable } from "@/lib/db/schema";
-import type { IItemRepository } from "../ItemRepository";
+import type { FindByCollectionOptions, IItemRepository } from "../ItemRepository";
 import type { Item } from "@/types";
 import { generateId } from "@/lib/id";
 
@@ -83,11 +83,26 @@ export class ItemRepository implements IItemRepository {
     return item ? this.mapToItem(item) : null;
   }
 
-  async findByCollection(collectionId: string): Promise<Item[]> {
-    const items = await this.db
+  // Non-deleted items of a collection. With no options this is the full,
+  // unordered read the /items grid already relies on (unchanged). The workspace
+  // preview opts into a bounded slice: { limit: 12, orderBy: "number" }. number
+  // is nullable in schema (determinism rests on the app invariant that create
+  // always assigns one, not a DB constraint), so id ASC is the belt-and-suspenders
+  // tiebreaker — matching the pool read — that keeps a LIMIT cut deterministic.
+  async findByCollection(
+    collectionId: string,
+    options?: FindByCollectionOptions,
+  ): Promise<Item[]> {
+    const base = this.db
       .select()
       .from(itemsTable)
       .where(and(eq(itemsTable.collectionId, collectionId), isNull(itemsTable.deletedAt)));
+    const ordered =
+      options?.orderBy === "number"
+        ? base.orderBy(asc(itemsTable.number), asc(itemsTable.id))
+        : base;
+    const items =
+      options?.limit === undefined ? await ordered : await ordered.limit(options.limit);
     return items.map((i) => this.mapToItem(i));
   }
 

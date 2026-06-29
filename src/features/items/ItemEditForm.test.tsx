@@ -48,7 +48,7 @@ describe("ItemEditForm", () => {
 
     fireEvent.change(field("name"), { target: { value: "New Name", name: "name" } });
     fireEvent.change(field("color"), { target: { value: "Red", name: "color" } });
-    fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() =>
       expect(push).toHaveBeenCalledWith("/collections/coll_01ULID/items/7"),
@@ -70,7 +70,7 @@ describe("ItemEditForm", () => {
     (fetch as any).mockResolvedValue({ ok: false, status: 500 });
 
     render(<ItemEditForm item={baseItem()} collectionId="coll_01ULID" />);
-    fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() =>
       expect(screen.getByText("Failed to update item")).toBeInTheDocument(),
@@ -87,7 +87,7 @@ describe("ItemEditForm", () => {
 
     render(<ItemEditForm item={baseItem()} collectionId="coll_01ULID" />);
     fireEvent.change(field("name"), { target: { value: "", name: "name" } });
-    fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
     expect((field("name") as HTMLInputElement).validity.valueMissing).toBe(true);
     await waitFor(() => expect(fetch).not.toHaveBeenCalled());

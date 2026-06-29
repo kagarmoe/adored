@@ -74,7 +74,7 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
         <Card padding="lg" className="space-y-4">
           <Input
             name="name"
-            label="Item Name"
+            label="Item name"
             value={formData.name}
             onChange={handleChange}
             required
@@ -131,7 +131,7 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
 
         <div className="flex gap-3">
           <Button type="submit" disabled={loading}>
-            {loading ? "Saving..." : "Save Changes"}
+            {loading ? "Saving..." : "Save changes"}
           </Button>
           <Button
             type="button"

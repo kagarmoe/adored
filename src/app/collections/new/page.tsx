@@ -17,7 +17,7 @@ export default async function CreateCollectionPage() {
       ]}
     >
       <div className="max-w-2xl">
-        <h1 className="text-3xl text-ink mb-8">Create Collection</h1>
+        <h1 className="text-3xl text-ink mb-8">Create collection</h1>
         <CollectionForm mode="create" />
       </div>
     </AppLayout>

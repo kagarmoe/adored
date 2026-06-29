@@ -54,7 +54,7 @@ No P0 or P1 issues remain on this surface. Remaining items:
 
 **Riley (Stress Tester):** The "0 items" trust-breaker is gone. Remaining edge: a very long collection name still `line-clamp-2` truncates silently (minor).
 
-**Maya (project persona):** "Take all the time you need" in the footer and "whenever you're ready — there's no rush" in the empty state now speak directly to her. The surface invites rather than assigns.
+**Maya (project persona):** "Find the things you love" in the footer and "whenever you're ready — there's no rush" in the empty state now speak directly to her. The surface invites rather than assigns.
 
 ## Minor Observations
 

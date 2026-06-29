@@ -76,7 +76,7 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
       />
 
       <Button type="submit" disabled={loading}>
-        {loading ? "Sending..." : "Send Invitation"}
+        {loading ? "Sending..." : "Send invitation"}
       </Button>
     </form>
   );

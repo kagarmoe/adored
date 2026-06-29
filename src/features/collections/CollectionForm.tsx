@@ -75,7 +75,7 @@ export function CollectionForm({ collection, mode }: CollectionFormProps) {
 
       <div className="flex gap-3">
         <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : mode === "create" ? "Create Collection" : "Save Changes"}
+          {loading ? "Saving..." : mode === "create" ? "Create collection" : "Save changes"}
         </Button>
         <Button
           variant="secondary"

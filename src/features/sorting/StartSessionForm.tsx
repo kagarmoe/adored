@@ -82,7 +82,7 @@ export function StartSessionForm({ collectionId, collectionSlug }: StartSessionF
 
       <div className="flex gap-3">
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Starting..." : "Start Session"}
+          {isSubmitting ? "Starting..." : "Start session"}
         </Button>
       </div>
     </form>

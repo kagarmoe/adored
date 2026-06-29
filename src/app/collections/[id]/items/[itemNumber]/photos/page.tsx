@@ -58,7 +58,7 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
 
         {/* Upload Section */}
         <Card padding="lg">
-          <h2 className="text-lg text-ink mb-4">Add Photos</h2>
+          <h2 className="text-lg text-ink mb-4">Add photos</h2>
           <PhotoUpload itemId={item.id} collectionId={collection.id} />
         </Card>
 

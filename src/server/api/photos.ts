@@ -20,8 +20,9 @@ export class PhotoController {
     return this.photoRepo.findById(photoId);
   }
 
-  async findPoolByCollection(collectionId: string): Promise<Photo[]> {
-    return this.photoRepo.findPoolByCollection(collectionId);
+  // `limit` opts into the bounded workspace preview (e.g. 6); omit for the full pool.
+  async findPoolByCollection(collectionId: string, limit?: number): Promise<Photo[]> {
+    return this.photoRepo.findPoolByCollection(collectionId, limit);
   }
 
   async findByItem(itemId: string): Promise<Photo[]> {
@@ -34,6 +35,13 @@ export class PhotoController {
 
   async findCoverPhotosByCollectionIds(collectionIds: string[]): Promise<Map<string, Photo>> {
     return this.photoRepo.findCoverPhotosByCollectionIds(collectionIds);
+  }
+
+  // Access-scoped pool cue for /collections: callers MUST pass the authenticated
+  // user's already-access-filtered collection ids (from listCollections), never
+  // raw/client ids — the repo method is bounded but not an access boundary.
+  async findCollectionIdsWithPooledPhotos(collectionIds: string[]): Promise<Set<string>> {
+    return this.photoRepo.findCollectionIdsWithPooledPhotos(collectionIds);
   }
 
   async update(photoId: string, data: Partial<Photo>): Promise<Photo> {

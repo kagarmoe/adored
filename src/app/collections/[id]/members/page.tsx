@@ -41,7 +41,7 @@ export default async function MembersPage({ params }: MembersPageProps) {
 
         {/* Invite Section */}
         <div>
-          <SectionHeader title="Invite New Member" description="Add a new curator to this collection" />
+          <SectionHeader title="Invite new member" description="Add a new curator to this collection" />
           <InviteForm collectionId={collection.id} />
         </div>
       </div>

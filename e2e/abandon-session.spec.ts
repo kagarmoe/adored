@@ -14,15 +14,15 @@ test.describe("abandon sorting session", () => {
 
   test("Abandon removes the active sorting session from the dashboard", async ({ page }) => {
     await page.goto(`/collections/${slug}`);
-    await expect(page.getByText("Active Session")).toBeVisible();
+    await expect(page.getByText("Active session")).toBeVisible();
 
     // First click reveals the confirm; it must NOT delete on its own.
     await page.getByRole("button", { name: /^set aside$/i }).click();
     await expect(page.getByText(/set this session aside\?/i)).toBeVisible();
-    await expect(page.getByText("Active Session")).toBeVisible();
+    await expect(page.getByText("Active session")).toBeVisible();
 
     // Confirm → the card is gone after the server refresh.
     await page.getByRole("button", { name: /^set aside$/i }).click();
-    await expect(page.getByText("Active Session")).toHaveCount(0);
+    await expect(page.getByText("Active session")).toHaveCount(0);
   });
 });

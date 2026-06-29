@@ -21,10 +21,16 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
   }
 
   const db = getDb();
+  // Access boundary: listCollections scopes to the authenticated user; every
+  // downstream batch read is keyed off THESE ids, so pool state for a collection
+  // the user can't see is never queried or exposed.
   const collections = await CollectionController.fromDb(db).listCollections(session.user.id);
-  const covers = await PhotoController.fromDb(db).findCoverPhotosByCollectionIds(
-    collections.map((c) => c.id),
-  );
+  const collectionIds = collections.map((c) => c.id);
+  const photoController = PhotoController.fromDb(db);
+  const [covers, collectionsWithPooledPhotos] = await Promise.all([
+    photoController.findCoverPhotosByCollectionIds(collectionIds),
+    photoController.findCollectionIdsWithPooledPhotos(collectionIds),
+  ]);
   const activeFilter = searchParams?.status === "active" || searchParams?.status === "archived"
     ? searchParams.status
     : "all";
@@ -71,6 +77,7 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
                 <CollectionCard
                   key={collection.id}
                   collection={collection}
+                  hasPooledPhotos={collectionsWithPooledPhotos.has(collection.id)}
                   coverPhotoUrl={cover ? getPhotoAssetUrlForPhoto(cover, collection.id, { w: PHOTO_WIDTH.card }) : undefined}
                   viewerPhoto={
                     cover && cover.itemId

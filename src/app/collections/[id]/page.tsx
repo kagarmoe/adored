@@ -2,12 +2,16 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
+import { PhotoController } from "@/server/api/photos";
 import { ItemController } from "@/server/api/items";
 import { SessionController } from "@/server/api/sessions";
-import { ResultController } from "@/server/api/results";
 import { AppLayout } from "@/components/layout";
-import { Card } from "@/components/ui";
+import { EmptyState, buttonVariants } from "@/components/ui";
 import { ActiveSessionPanel } from "@/features/sessions/ActiveSessionPanel";
+import { PhotoPoolPreview } from "@/features/collections/PhotoPoolPreview";
+import { ItemPreviewGrid } from "@/features/collections/ItemPreviewGrid";
+import { resolveWorkspaceState } from "@/features/collections/workspaceState";
+import { quietLink } from "@/lib/design/quiet-link";
 import Link from "next/link";
 
 interface CollectionPageProps {
@@ -21,60 +25,53 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   }
 
   const db = getDb();
+  // Access is enforced BEFORE any preview query — a thrown redirect here means the
+  // Promise.all below never runs, so pool/item data is unreachable without access.
   const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const [items, sessions, results] = await Promise.all([
-    ItemController.fromDb(db).listItems(collection.id),
-    // purses-t9l: each user sorts independently — the active-session card + count
-    // reflect only this user's own sessions, never another curator's.
+
+  // The two bounded previews (and this user's own sessions for the Continue
+  // affordance) in one round-trip. Adaptive state derives from preview row
+  // counts — no separate count/existence query. A failed preview query
+  // PROPAGATES (it is never caught into [] and rendered as the empty state).
+  const [poolPreview, itemPreview, sessions] = await Promise.all([
+    PhotoController.fromDb(db).findPoolByCollection(collection.id, 6),
+    ItemController.fromDb(db).listItems(collection.id, { limit: 12, orderBy: "number" }),
     SessionController.fromDb(db).listByCollectionAndCurator(collection.id, session.user.id),
-    ResultController.fromDb(db).listResults(collection.id),
   ]);
 
-  // purses-4bhh / purses-ydeu: at most one open session at a time, and a paused
-  // sort is still the *current* one — surface it here (with a real un-pause) just
-  // like the sort landing does, not only active sessions.
-  const currentSession = sessions.find(
-    (sortSession) => sortSession.status === "active" || sortSession.status === "paused",
-  );
-  const finalizedResults = results.filter((result) => result.status === "finalized");
-  const stats = [
-    { label: "Items", value: items.length },
-    { label: "Sessions", value: sessions.length },
-    { label: "Finalized", value: finalizedResults.length },
-  ];
+  const covers =
+    itemPreview.length > 0
+      ? await PhotoController.fromDb(db).findCoverPhotosByItemIds(itemPreview.map((i) => i.id))
+      : new Map();
 
-  const dashboardLinks = [
-    {
-      label: "Items",
-      href: `/collections/${collection.slug ?? collection.id}/items`,
-      description: "Manage items in this collection",
-      icon: "📦",
-    },
-    {
-      label: "Sort",
-      href: `/collections/${collection.slug ?? collection.id}/sort`,
-      description: "Start a sorting session",
-      icon: "📊",
-    },
-    {
-      label: "Results",
-      href: `/collections/${collection.slug ?? collection.id}/results`,
-      description: "View sorting results",
-      icon: "🎯",
-    },
-    {
-      label: "Members",
-      href: `/collections/${collection.slug ?? collection.id}/members`,
-      description: "Manage collaborators",
-      icon: "👥",
-    },
-    {
-      label: "Settings",
-      href: `/collections/${collection.slug ?? collection.id}/edit`,
-      description: "Edit collection details",
-      icon: "⚙️",
-    },
-  ];
+  const state = resolveWorkspaceState(poolPreview.length, itemPreview.length);
+  const isOwner = collection.ownerId === session.user.id;
+
+  const base = `/collections/${collection.slug ?? collection.id}`;
+  const poolHref = `${base}/pool`;
+  const itemsHref = `${base}/items`;
+
+  // purses-t9l: each user sorts independently — this reflects only the current
+  // user's sessions. A paused sort is still the current one (resume, not start).
+  const currentSession = sessions.find(
+    (s) => s.status === "active" || s.status === "paused",
+  );
+  const resumeHref = `${base}/sort/${currentSession?.number}`;
+
+  // A1: at most one dominant (bg-primary) action on the workspace. When a
+  // session exists, its Resume IS that one action, so the adaptive section's
+  // lead action ("Make items" / "Add photos") is demoted to a non-primary.
+  // With no session, the lead action stays primary.
+  const leadActionVariant = currentSession ? "secondary" : "primary";
+
+  const itemsPreview = (
+    <ItemPreviewGrid
+      items={itemPreview}
+      covers={covers}
+      collectionId={collection.id}
+      collectionSlugOrId={collection.slug ?? collection.id}
+    />
+  );
 
   return (
     <AppLayout
@@ -83,61 +80,125 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
         { label: collection.name },
       ]}
     >
-      <div className="space-y-8">
-        {/* Collection Header */}
-        <div>
+      <div className="space-y-10">
+        <header>
           <h1 className="text-3xl text-ink">{collection.name}</h1>
-          {collection.description && (
-            <p className="text-ink-soft mt-2">{collection.description}</p>
-          )}
-          <p className="text-sm text-ink-soft mt-4">
+          {collection.description && <p className="mt-2 text-ink-soft">{collection.description}</p>}
+          <p className="mt-4 text-sm text-ink-soft">
             Created {new Date(collection.createdAt).toLocaleDateString()}
           </p>
-        </div>
+        </header>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {stats.map((stat) => (
-            <Card key={stat.label} padding="md">
-              <p className="text-sm font-medium text-ink-soft">{stat.label}</p>
-              <p className="mt-2 text-3xl font-bold text-ink">{stat.value}</p>
-            </Card>
-          ))}
-        </div>
-
-        {/* Mounted UNCONDITIONALLY (not inside `{currentSession && …}`) so the
-            persistent set-aside Undo survives the refresh that flips
-            currentSession to null — the island shows nothing when there's no
-            session and no pending undo. */}
-        <ActiveSessionPanel
-          session={
-            currentSession
-              ? {
-                  id: currentSession.id,
-                  number: currentSession.number,
-                  goal: currentSession.goal,
-                  // The find() predicate above guarantees active|paused; narrow
-                  // the broader SessionStatus to the panel's strict prop.
-                  status: currentSession.status as "active" | "paused",
-                }
-              : null
-          }
-          resumeHref={`/collections/${collection.slug ?? collection.id}/sort/${currentSession?.number}`}
-        />
-
-        {/* Dashboard Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {dashboardLinks.map((link) => (
-            <Link key={link.href} href={link.href}>
-              <Card interactive padding="lg">
-                <div className="text-center">
-                  <div className="text-4xl mb-3">{link.icon}</div>
-                  <h3 className="text-lg text-ink mb-2">{link.label}</h3>
-                  <p className="text-sm text-ink-soft">{link.description}</p>
+        {state.kind === "pool-first" && (
+          <>
+            <PhotoPoolPreview
+              collectionId={collection.id}
+              poolHref={poolHref}
+              photos={poolPreview.map((p) => ({ id: p.id }))}
+              actionVariant={leadActionVariant}
+            />
+            {itemPreview.length > 0 && (
+              <section aria-labelledby="items-heading" className="space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 id="items-heading" className="text-xl text-ink">
+                      Items
+                    </h2>
+                    <p className="mt-1 text-ink-soft">Things gathered here</p>
+                  </div>
+                  <Link href={itemsHref} className={quietLink}>
+                    View all items
+                  </Link>
                 </div>
-              </Card>
+                {itemsPreview}
+              </section>
+            )}
+          </>
+        )}
+
+        {state.kind === "items-first" && (
+          <section aria-labelledby="items-heading" className="space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 id="items-heading" className="text-xl text-ink">
+                  Items
+                </h2>
+                <p className="mt-1 text-ink-soft">Things gathered here</p>
+              </div>
+              <div className="flex flex-col items-start gap-2 sm:items-end">
+                <Link href={poolHref} className={buttonVariants({ variant: leadActionVariant })}>
+                  Add photos
+                </Link>
+                <div className="flex flex-wrap gap-3">
+                  <Link href={`${base}/items/new`} className={quietLink}>
+                    Add item
+                  </Link>
+                  <Link href={itemsHref} className={quietLink}>
+                    View all items
+                  </Link>
+                </div>
+              </div>
+            </div>
+            {itemsPreview}
+          </section>
+        )}
+
+        {state.kind === "empty" && (
+          <EmptyState
+            heading="Add photos when you're ready"
+            message="Photos can wait here until you are ready to name or group them."
+            action={{ label: "Add photos", href: poolHref }}
+          />
+        )}
+
+        {/* B2 (spec §11): the empty state offers ONE clear action (add photos);
+            Continue/sorting chrome would only lead to empty pages, so it is
+            withheld until there is something to continue. */}
+        {state.kind !== "empty" && (
+          <section aria-labelledby="continue-heading" className="space-y-4">
+            <h2 id="continue-heading" className="text-xl text-ink">
+              Continue
+            </h2>
+            {/* Mounted UNCONDITIONALLY (not inside `{currentSession && …}`) so the
+                persistent set-aside Undo survives the refresh that flips
+                currentSession to null — it renders nothing when there's neither a
+                session nor a pending undo. */}
+            <ActiveSessionPanel
+              session={
+                currentSession
+                  ? {
+                      id: currentSession.id,
+                      number: currentSession.number,
+                      goal: currentSession.goal,
+                      status: currentSession.status as "active" | "paused",
+                    }
+                  : null
+              }
+              resumeHref={resumeHref}
+            />
+            <nav aria-label="Sorting and results" className="flex flex-wrap gap-3">
+              {!currentSession && (
+                <Link href={`${base}/sort`} className={quietLink}>
+                  Start sorting
+                </Link>
+              )}
+              <Link href={`${base}/results`} className={quietLink}>
+                Results
+              </Link>
+            </nav>
+          </section>
+        )}
+
+        {isOwner && (
+          <nav aria-label="Owner utilities" className="flex flex-wrap gap-3 border-t border-hairline pt-6">
+            <Link href={`${base}/edit`} className={quietLink}>
+              Collection settings
             </Link>
-          ))}
-        </div>
+            <Link href={`${base}/members`} className={quietLink}>
+              Members
+            </Link>
+          </nav>
+        )}
       </div>
     </AppLayout>
   );

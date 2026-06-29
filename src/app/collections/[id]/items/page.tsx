@@ -62,7 +62,7 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
               <Button variant="secondary">Add photos</Button>
             </Link>
             <Link href={`/collections/${collection.slug ?? collection.id}/items/new`}>
-              <Button>Add Item</Button>
+              <Button>Add item</Button>
             </Link>
           </div>
         </div>
@@ -75,7 +75,7 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
             message={empty.message}
             action={
               items.length === 0
-                ? { label: "Add Item", href: `/collections/${collection.slug ?? collection.id}/items/new` }
+                ? { label: "Add item", href: `/collections/${collection.slug ?? collection.id}/items/new` }
                 : undefined
             }
           />

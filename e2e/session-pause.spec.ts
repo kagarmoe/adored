@@ -103,7 +103,7 @@ test.describe("sort — 'Take a break' pause → calm landing → Resume", () =>
       new RegExp(`/collections/${slug}/sort/${sessionNumber}$`),
     );
     await expect(
-      page.getByRole("heading", { name: "Sorting Session" }),
+      page.getByRole("heading", { name: "Sorting session" }),
     ).toBeVisible();
 
     // The session is active again — the paused calm-card copy is gone, and the
@@ -119,10 +119,10 @@ test.describe("sort — 'Take a break' pause → calm landing → Resume", () =>
     await expect(
       page.getByRole("heading", { name: "Your sort is paused" }),
     ).toHaveCount(0);
-    // The current session is now active; "Active Session" headline shows and the
+    // The current session is now active; "Active session" headline shows and the
     // New-Session gate still holds (one current session, just no longer paused).
     await expect(
-      page.getByRole("heading", { name: "Active Session" }),
+      page.getByRole("heading", { name: "Active session" }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: /New Session/i }),

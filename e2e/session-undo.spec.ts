@@ -55,9 +55,9 @@ test.describe("collection — set a session aside (two-step) → persistent Undo
   }) => {
     await page.goto(`/collections/${slug}`);
 
-    // ── The active-session card is present: its "Active Session"
+    // ── The active-session card is present: its "Active session"
     // heading and a primary "Resume" alongside the "Set aside" reveal.
-    const card = page.getByRole("heading", { name: "Active Session" });
+    const card = page.getByRole("heading", { name: "Active session" });
     await expect(card).toBeVisible();
     const setAsideReveal = page.getByRole("button", { name: "Set aside" });
     await expect(setAsideReveal).toBeVisible();
@@ -90,7 +90,7 @@ test.describe("collection — set a session aside (two-step) → persistent Undo
     await expect(notice).toBeVisible();
     await expect(notice).toContainText(/bring it back/i);
     await expect(
-      page.getByRole("heading", { name: "Active Session" }),
+      page.getByRole("heading", { name: "Active session" }),
     ).toHaveCount(0);
     // And the reveal/confirm "Set aside" buttons are gone with the card — only
     // the notice's "Undo" remains as the reversal path.
@@ -104,7 +104,7 @@ test.describe("collection — set a session aside (two-step) → persistent Undo
     // The active-session card is back (the restore reappeared it), and the Undo
     // notice cleared — the round-trip is whole.
     await expect(
-      page.getByRole("heading", { name: "Active Session" }),
+      page.getByRole("heading", { name: "Active session" }),
     ).toBeVisible();
     await expect(
       page.getByRole("status").filter({ hasText: "Set aside" }),

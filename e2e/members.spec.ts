@@ -44,7 +44,7 @@ test("owner sees both RoleBadges and the email-only InviteForm", async ({ page }
   // The email-only InviteForm: an email field + a submit button, nothing else.
   await expect(page.getByLabel("Email address")).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Send Invitation" }),
+    page.getByRole("button", { name: "Send invitation" }),
   ).toBeVisible();
 });
 
@@ -80,7 +80,7 @@ test("submitting a valid email shows the announced success", async ({ page }) =>
         r.url().includes(`/api/collections/${collectionId}/invitations`) &&
         r.request().method() === "POST",
     ),
-    page.getByRole("button", { name: "Send Invitation" }).click(),
+    page.getByRole("button", { name: "Send invitation" }).click(),
   ]);
 
   // The success view replaces the form and is announced to AT via role="status".

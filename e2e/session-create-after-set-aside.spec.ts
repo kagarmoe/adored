@@ -71,7 +71,7 @@ test.describe("session uniqueness — create after set-aside; paused collection 
     // "Set aside" (reveal → confirm), matching session-undo.spec.ts.
     await page.goto(`/collections/${slug}`);
     await expect(
-      page.getByRole("heading", { name: "Active Session" }),
+      page.getByRole("heading", { name: "Active session" }),
     ).toBeVisible();
 
     // Step 1: reveal the confirm group. The reveal alone does NOT delete.
@@ -97,7 +97,7 @@ test.describe("session uniqueness — create after set-aside; paused collection 
       page.getByRole("status").filter({ hasText: "Set aside" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Active Session" }),
+      page.getByRole("heading", { name: "Active session" }),
     ).toHaveCount(0);
 
     // ── Now start a NEW sort. Navigate to the sort landing via the in-page "Sort"
@@ -107,7 +107,7 @@ test.describe("session uniqueness — create after set-aside; paused collection 
     // affordance the redesign re-enabled.
     await page.getByRole("link", { name: "Sort" }).first().click();
     await page.waitForURL(new RegExp(`/collections/${slug}/sort$`));
-    const newSession = page.getByRole("link", { name: "New Session" });
+    const newSession = page.getByRole("link", { name: "New session" });
     await expect(newSession).toBeVisible();
     await newSession.click();
 
@@ -115,11 +115,11 @@ test.describe("session uniqueness — create after set-aside; paused collection 
     // the partial-index fix this POST 409'd/500'd because the soft-deleted row
     // held the unique slot; now the slot is free, so it returns 201.
     await expect(
-      page.getByRole("heading", { name: "New Sorting Session" }),
+      page.getByRole("heading", { name: "New sorting session" }),
     ).toBeVisible();
     const [createResponse] = await Promise.all([
       page.waitForResponse(isSessionCreate),
-      page.getByRole("button", { name: "Start Session" }).click(),
+      page.getByRole("button", { name: "Start session" }).click(),
     ]);
 
     // THE 4bhh ASSERTION: the create SUCCEEDED. 201 Created, not the 409 the held
@@ -184,14 +184,14 @@ test.describe("session uniqueness — create after set-aside; paused collection 
     await expect(page.getByText(/Your sort is safe/)).toBeVisible();
     // It is NOT the active-session headline — the card is genuinely status-aware.
     await expect(
-      page.getByRole("heading", { name: "Active Session" }),
+      page.getByRole("heading", { name: "Active session" }),
     ).toHaveCount(0);
 
     // ── Resume. The paused card's Resume is the ResumeControl island — PATCH
     // status:active THEN navigate, so the DB row and the URL agree (a bare Link
     // would strand the curator mid-sort with the row still paused). Await the real
     // PATCH so we don't race the router.push().
-    const resume = page.getByRole("button", { name: /^Resume$/ });
+    const resume = page.getByRole("button", { name: "Resume sorting", exact: true });
     await expect(resume).toBeVisible();
     await Promise.all([page.waitForResponse(isSessionPatch), resume.click()]);
 
@@ -201,7 +201,7 @@ test.describe("session uniqueness — create after set-aside; paused collection 
       new RegExp(`/collections/${slug}/sort/${sessionNumber}$`),
     );
     await expect(
-      page.getByRole("heading", { name: "Sorting Session" }),
+      page.getByRole("heading", { name: "Sorting session" }),
     ).toBeVisible();
 
     // The un-pause persisted, not just the UI: re-loading the collection page no
@@ -211,7 +211,7 @@ test.describe("session uniqueness — create after set-aside; paused collection 
       page.getByRole("heading", { name: "Your sort is paused" }),
     ).toHaveCount(0);
     await expect(
-      page.getByRole("heading", { name: "Active Session" }),
+      page.getByRole("heading", { name: "Active session" }),
     ).toBeVisible();
   });
 });

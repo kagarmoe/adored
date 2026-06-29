@@ -148,6 +148,11 @@ Generic review rubber-stamps; scale the persona set to what changed (lens→engi
   → `bd remember` (chat-first), delete this branch's `.git/sdd` scratch.
 - **Hard rule:** never close a bead or delete `.git/sdd` scratch before the merge is confirmed. The
   bead is the "is it done?" truth; the scratch is the review loop's working context.
+- **Epic completion = all beads closed. Full stop.** An epic/project is complete only when every one
+  of its beads is closed — the plan bead, each task bead, and every follow-up bead filed during the
+  work. A merged PR closes that PR's bead; it does **not** finish the epic while any follow-up bead
+  remains open. Follow-ups are not optional and not owner-deferrable: file them and complete them
+  within the epic. Before declaring an epic complete, list its beads and confirm none are open.
 - **Multiple problems per session:** write each problem's ledger to
   `.git/sdd/$(git branch --show-current | tr '/' '-')/progress.md`, so a second problem never clobbers
   an in-flight one's scratch. `/close-out` deletes exactly that per-branch path.

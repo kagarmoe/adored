@@ -122,7 +122,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
 
       <div className="flex gap-3">
         <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : mode === "create" ? "Add Item" : "Save Changes"}
+          {loading ? "Saving..." : mode === "create" ? "Add item" : "Save changes"}
         </Button>
         <Button
           variant="secondary"

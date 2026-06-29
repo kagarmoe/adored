@@ -89,10 +89,10 @@ test.describe("sort session → triage", () => {
   }) => {
     await page.goto(`/collections/${freshCollectionId}/sort/new`);
     await expect(
-      page.getByRole("heading", { name: "New Sorting Session" }),
+      page.getByRole("heading", { name: "New sorting session" }),
     ).toBeVisible();
 
-    const start = page.getByRole("button", { name: "Start Session" });
+    const start = page.getByRole("button", { name: "Start session" });
     await expect(start).toBeVisible();
 
     await Promise.all([
@@ -164,7 +164,7 @@ test.describe("session detail → See what you love most → results", () => {
 
     // 3. Return to the session detail (the breadcrumb's "Session" target).
     await page.getByRole("link", { name: "Session" }).first().click();
-    await expect(page.getByRole("heading", { name: "Sorting Session" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Sorting session" })).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`/collections/${slug}/sort/${sessionNumber}$`));
 
     // 4. The inert "View Results" card is gone; the reachable trigger is present.
@@ -191,7 +191,7 @@ test.describe("session detail → See what you love most → results", () => {
     page,
   }) => {
     await page.goto(`/collections/${slug}/sort/${sessionNumber}`);
-    await expect(page.getByRole("heading", { name: "Sorting Session" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Sorting session" })).toBeVisible();
 
     // Force the create to fail at the network edge (real UI, no unit mock).
     await page.route("**/api/sort-results", (route) =>
