@@ -10,21 +10,21 @@ const badgeVariants = cva("inline-flex items-center justify-center font-semibold
       medium: "bg-tier-maybe text-tier-maybe-ink",
       low: "bg-tier-onward text-tier-onward-ink",
       // Status — semantic where it carries meaning, neutral otherwise.
-      draft: "bg-accent-aqua text-ink",
+      draft: "bg-content-soft text-ink",
       finalized: "bg-success-soft text-success-deep",
-      active: "bg-accent-aqua text-ink",
+      active: "bg-content-soft text-ink",
       // Pause is calm, reversible, and not an error — it must NOT speak Danger
       // (DESIGN.md: brand never poaches safety hues). Cool-blue benign, matching
-      // the "Patient waiting / Not yet" treatment (accent-sky + ink — the Sea Glass
-      // accent-cornflower is too dark to carry AA-legible text).
-      paused: "bg-accent-sky text-ink",
+      // the "Patient waiting / Not yet" treatment (content-mid + ink — the Sea Glass
+      // content-deep is too dark to carry AA-legible text).
+      paused: "bg-content-mid text-ink",
       completed: "bg-success-soft text-success-deep",
       abandoned: "bg-hairline text-ink",
       archived: "bg-hairline text-ink",
       deleted: "bg-error-soft text-error-deep",
       pending: "bg-hairline text-ink",
-      owner: "bg-accent-periwinkle text-white",
-      curator: "bg-accent-aqua text-ink",
+      owner: "bg-content-deeper text-white",
+      curator: "bg-content-soft text-ink",
     },
   },
   defaultVariants: {

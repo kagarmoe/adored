@@ -78,7 +78,7 @@ export function PhotoMoveBar({
                     type="button"
                     disabled={busy}
                     onClick={() => choose({ type: "new" })}
-                    className="flex min-h-11 w-full items-center px-4 py-2 text-left text-ink hover:bg-accent-aqua disabled:opacity-50"
+                    className="flex min-h-11 w-full items-center px-4 py-2 text-left text-ink hover:bg-content-soft disabled:opacity-50"
                   >
                     New item
                   </button>
@@ -88,7 +88,7 @@ export function PhotoMoveBar({
                     type="button"
                     disabled={busy}
                     onClick={() => choose({ type: "pool" })}
-                    className="flex min-h-11 w-full items-center px-4 py-2 text-left text-ink hover:bg-accent-aqua disabled:opacity-50"
+                    className="flex min-h-11 w-full items-center px-4 py-2 text-left text-ink hover:bg-content-soft disabled:opacity-50"
                   >
                     Back to the pool
                   </button>
@@ -99,7 +99,7 @@ export function PhotoMoveBar({
                       type="button"
                       disabled={busy}
                       onClick={() => choose({ type: "item", itemId: target.id })}
-                      className="flex min-h-11 w-full items-center px-4 py-2 text-left text-ink hover:bg-accent-aqua disabled:opacity-50"
+                      className="flex min-h-11 w-full items-center px-4 py-2 text-left text-ink hover:bg-content-soft disabled:opacity-50"
                     >
                       {targetLabel(target)}
                     </button>

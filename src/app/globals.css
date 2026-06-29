@@ -28,14 +28,15 @@
   --color-primary-ink: #ffffff;
   --color-primary-hover: #003e5b;
 
-  /* Cool content — teal tint ramp + indigo analogous.
-   * accent-aqua = content soft, accent-sky = content mid,
-   * accent-cornflower = the benign "Not yet" tone, accent-periwinkle = indigo. */
-  --color-accent-aqua: #d7dee4;
-  --color-accent-sky: #b0beca;
-  --color-accent-cornflower: #4f7da0;
-  --color-accent-periwinkle: #4a5878;
-  --color-content-deep: #638297;
+  /* Cool content — teal tint ramp + indigo analogous. Named by ROLE (soft→deeper),
+   * never by hue, so a palette retune can't make the name lie:
+   * content-soft = softest fill (curator badge); content-mid = the benign "Not yet"
+   * tone (paused chip); content-deep = deep cool; content-deeper = deepest cool /
+   * indigo (owner badge). */
+  --color-content-soft: #d7dee4;
+  --color-content-mid: #b0beca;
+  --color-content-deep: #4f7da0;
+  --color-content-deeper: #4a5878;
 
   /* Accents — spend rarely. Spark = marigold (the lone most-loved affirmation);
    * decor = soft violet, now used freely (fills, backgrounds, framing). */
@@ -105,11 +106,10 @@
   --color-primary-hover: #6bc8d6;
 
   /* Cool content — ascending teal steps on the night spine; indigo stays distinct */
-  --color-accent-aqua: #173f4d;
-  --color-accent-sky: #2d6377;
-  --color-accent-cornflower: #234d66;
-  --color-accent-periwinkle: #4a5c84;
-  --color-content-deep: #4f8ba3;
+  --color-content-soft: #173f4d;
+  --color-content-mid: #2d6377;
+  --color-content-deep: #234d66;
+  --color-content-deeper: #4a5c84;
 
   --color-spark: #efcb77;
   --color-spark-ink: #1b1605;

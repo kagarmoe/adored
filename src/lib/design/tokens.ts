@@ -14,10 +14,10 @@ export interface ThemeTokens {
   primary: Hex;
   primaryInk: Hex;
   primaryHover: Hex;
-  accentAqua: Hex;
-  accentSky: Hex;
-  accentCornflower: Hex;
-  accentPeriwinkle: Hex;
+  contentSoft: Hex;
+  contentMid: Hex;
+  contentDeep: Hex;
+  contentDeeper: Hex;
   spark: Hex;
   sparkInk: Hex;
   decor: Hex;
@@ -55,10 +55,10 @@ export const light: ThemeTokens = {
   primary: "#004A67",
   primaryInk: "#FFFFFF",
   primaryHover: "#003E5B",
-  accentAqua: "#D7DEE4",
-  accentSky: "#B0BECA",
-  accentCornflower: "#4F7DA0",
-  accentPeriwinkle: "#4A5878",
+  contentSoft: "#D7DEE4",
+  contentMid: "#B0BECA",
+  contentDeep: "#4F7DA0",
+  contentDeeper: "#4A5878",
   spark: "#EFCB77",
   sparkInk: "#1B1605",
   decor: "#B5AACC",
@@ -94,10 +94,10 @@ export const dark: ThemeTokens = {
   primary: "#4FB6C7",
   primaryInk: "#042026",
   primaryHover: "#6BC8D6",
-  accentAqua: "#173F4D",
-  accentSky: "#2D6377",
-  accentCornflower: "#234D66",
-  accentPeriwinkle: "#4A5C84",
+  contentSoft: "#173F4D",
+  contentMid: "#2D6377",
+  contentDeep: "#234D66",
+  contentDeeper: "#4A5C84",
   spark: "#EFCB77",
   sparkInk: "#1B1605",
   decor: "#6D5C9B",

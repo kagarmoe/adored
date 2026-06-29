@@ -42,7 +42,7 @@ export function PhotoPoolPreview({ collectionId, poolHref, photos, actionVariant
           {photos.map((photo) => (
             <li
               key={photo.id}
-              className="relative flex aspect-square items-center justify-center overflow-hidden rounded-control bg-accent-aqua"
+              className="relative flex aspect-square items-center justify-center overflow-hidden rounded-control bg-content-soft"
             >
               <CardImage
                 src={getPoolPhotoAssetUrl(collectionId, photo.id, { w: PHOTO_WIDTH.poolTile })}

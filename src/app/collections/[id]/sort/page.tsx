@@ -52,7 +52,7 @@ export default async function SortPage({ params }: SortPageProps) {
         </div>
 
         {currentSession && (
-          <Card padding="lg" className="border-hairline bg-accent-aqua">
+          <Card padding="lg" className="border-hairline bg-content-soft">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="mb-2 flex items-center gap-2">

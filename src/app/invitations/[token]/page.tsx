@@ -81,7 +81,7 @@ export default function InvitationPage({ params }: InvitationPageProps) {
           You&apos;ve been invited to collaborate on a collection.
         </p>
 
-        <div className="bg-accent-aqua border border-hairline rounded-lg p-4 mb-6">
+        <div className="bg-content-soft border border-hairline rounded-lg p-4 mb-6">
           <p className="text-sm font-medium text-ink">Collection</p>
           <p className="text-lg font-bold text-primary">{collection?.name || "Loading..."}</p>
           {collection?.description && (

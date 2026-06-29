@@ -110,7 +110,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
           ) : (
             <>
               {showingDeferred && (
-                <div className="flex items-center gap-2 rounded-control bg-accent-sky px-4 py-3 text-ink transition-opacity duration-300 ease-gentle motion-reduce:transition-none">
+                <div className="flex items-center gap-2 rounded-control bg-content-mid px-4 py-3 text-ink transition-opacity duration-300 ease-gentle motion-reduce:transition-none">
                   <span aria-hidden className="text-lg leading-none">☾</span>
                   <p className="text-sm">
                     <span className="font-medium">Ready when you are.</span>{" "}

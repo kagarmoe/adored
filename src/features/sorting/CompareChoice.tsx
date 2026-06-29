@@ -62,7 +62,7 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
             onClick={() => choose(result, key)}
             className="group flex flex-col overflow-hidden rounded-card border border-hairline bg-surface text-left transition-shadow duration-200 ease-gentle hover:shadow-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-accent-aqua">
+            <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-content-soft">
               <CardImage
                 src={hero}
                 alt={itemDisplayName(item)}

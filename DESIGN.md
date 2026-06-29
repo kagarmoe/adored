@@ -11,11 +11,10 @@ colors:
   primary: "#004a67"
   primary-hover: "#003e5b"
   primary-ink: "#ffffff"
-  accent-aqua: "#d7dee4"
-  accent-sky: "#b0beca"
-  accent-cornflower: "#4f7da0"
-  accent-periwinkle: "#4a5878"
-  content-deep: "#638297"
+  content-soft: "#d7dee4"
+  content-mid: "#b0beca"
+  content-deep: "#4f7da0"
+  content-deeper: "#4a5878"
   spark: "#efcb77"
   decor: "#b5aacc"
   error: "#9b4036"
@@ -89,7 +88,7 @@ Two **separate** colour systems that never trade places (see the named rule belo
 
 - **Primary — deep teal** (`#004A67`): the one anchor. Action, links, progress, focus, selection. In dark it brightens to a luminous teal (`#4FB6C7`) so it still leads. **Action only — never a heading colour.**
   - *Quiet inline links (exception).* A low-pressure inline invitation — e.g. a gentle "Add a name" on a not-yet-named item — may use `ink-soft` instead of teal where drawing the eye would read as pressure. The underline carries the affordance and contrast stays ≥ AA. A deliberate, tone-driven exception (`TONE.md` is first-order): naming follows from affection, never a nag.
-- **Cool blues** — Aqua `#D7DEE4`, Sky `#B0BECA`, Cornflower `#4F7DA0`, Periwinkle `#4A5878`, Content-deep `#638297`: content, soft fills, photo areas, and benign-state chips ("Not yet").
+- **Cool content** — `content-soft` `#D7DEE4`, `content-mid` `#B0BECA`, `content-deep` `#4F7DA0`, `content-deeper` `#4A5878` (named by **role**, soft→deeper, never by hue): content, soft fills, photo areas, identity badges (curator = `content-soft`, owner = `content-deeper`), and the benign "Not yet" chip (`content-mid`).
 - **Spark — marigold** (`#EFCB77`): the lone affirmation spark. Sparing; dark text on it; never in a caution context.
 - **Decor — soft violet** (`#B5AACC`): non-state decoration, now used freely (fills, backgrounds, framing) — never a state, tier, or action colour.
 - **Ink** (`#16242B` light / `#ECF2F4` dark) and **Ink-soft**: text. Headings are ink, never teal.
@@ -141,9 +140,9 @@ Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by 
 - **Quiet links:** a secondary, non-dominant text link (shared `quiet-link` token, `src/lib/design/quiet-link.ts`): `primary`-token text, underlined, ≥44px tap height (`min-h-11`), visible focus ring. Used for the quieter actions beside a single dominant button (e.g. "View all items", "Add more photos") so each surface keeps exactly **one** dominant action.
 - **Cards:** 16px radius, surface fill, soft shadow + hairline (light) / hairline + glow (dark); the selected card uses a teal border + a check, never colour alone.
 - **Inputs:** surface fill, hairline border, 10px radius, 44px height; focus → teal ring; error → error border + a message, never colour alone.
-- **Badges / buckets:** tier badges use the value-ramp tokens + label + icon. Status badges are semantic where meaningful, neutral (hairline) otherwise. A **benign, in-progress** status (e.g. a paused sort) is **not** a warning — it uses a cool-blue benign chip (`accent-sky` fill + `ink` text, AA-gated), never a safety/amber hue ("Brand never speaks Danger"). (`accent-cornflower` is the deeper sibling on the ramp — a non-text fill in Sea Glass, too dark to carry AA-legible label text.)
+- **Badges / buckets:** tier badges use the value-ramp tokens + label + icon. Status badges are semantic where meaningful, neutral (hairline) otherwise. A **benign, in-progress** status (e.g. a paused sort) is **not** a warning — it uses a cool-blue benign chip (`content-mid` fill + `ink` text, AA-gated), never a safety/amber hue ("Brand never speaks Danger"). (`content-deep` is the deeper sibling on the ramp — a non-text fill in Sea Glass, too dark to carry AA-legible label text.)
 - **Theme toggle:** top-right of the shell; 44px tap target; honours reduced-motion.
-- **Patient waiting (Not yet):** when a deferred ("Not yet") item resurfaces, a calm banner — a cool-blue benign chip (`accent-sky`) with `ink` text (not `ink-soft`: ink-soft on sky fails light-theme AA) plus a non-state moon glyph so hue is never the sole signal. Crossfade in with `--ease-gentle`; instant under reduced-motion. Gentle, never urgent: no remaining count, no inbox or "resting place" framing — the item simply comes back when the person is ready.
+- **Patient waiting (Not yet):** when a deferred ("Not yet") item resurfaces, a calm banner — a cool-blue benign chip (`content-mid`) with `ink` text (not `ink-soft`: ink-soft on sky fails light-theme AA) plus a non-state moon glyph so hue is never the sole signal. Crossfade in with `--ease-gentle`; instant under reduced-motion. Gentle, never urgent: no remaining count, no inbox or "resting place" framing — the item simply comes back when the person is ready.
 
 ## 6. Do's and Don'ts
 

@@ -8,6 +8,10 @@ const config: Config = {
   // silently dropped feature-only classes (e.g. the results hero layout, the
   // mauve spark halo).
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
+  // Key the `dark:` variant off the app's [data-theme="dark"] attribute (set by
+  // theme-script.tsx), the same signal that flips the CSS-var tokens — so dark:
+  // utilities and tokens can never disagree. Additive: no existing dark: usage.
+  darkMode: ["selector", '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {
@@ -18,11 +22,11 @@ const config: Config = {
           raised: "var(--color-surface-raised)",
         },
         hairline: "var(--color-hairline)",
-        accent: {
-          aqua: "var(--color-accent-aqua)",
-          sky: "var(--color-accent-sky)",
-          cornflower: "var(--color-accent-cornflower)",
-          periwinkle: "var(--color-accent-periwinkle)",
+        content: {
+          soft: "var(--color-content-soft)",
+          mid: "var(--color-content-mid)",
+          deep: "var(--color-content-deep)",
+          deeper: "var(--color-content-deeper)",
         },
         spark: {
           DEFAULT: "var(--color-spark)",
@@ -53,7 +57,7 @@ const config: Config = {
           ink: "var(--color-primary-ink)",
           hover: "var(--color-primary-hover)",
           deep: "var(--color-primary-hover)",
-          soft: "var(--color-accent-aqua)",
+          soft: "var(--color-content-soft)",
         },
         success: {
           DEFAULT: "var(--color-success)",

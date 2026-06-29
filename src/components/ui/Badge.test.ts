@@ -28,7 +28,7 @@ describe("Badge status variants", () => {
   // safety palette. Locks the wb3 re-map against regression.
   it("paused uses the calm cool-blue benign token (+ ink), not the warning safety palette", () => {
     const paused = badgeVariants({ variant: "paused" });
-    expect(paused).toContain("bg-accent-sky");
+    expect(paused).toContain("bg-content-mid");
     expect(paused).toContain("text-ink");
     expect(paused).not.toMatch(/warning/);
   });
