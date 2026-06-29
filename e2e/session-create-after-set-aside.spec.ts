@@ -191,7 +191,7 @@ test.describe("session uniqueness — create after set-aside; paused collection 
     // status:active THEN navigate, so the DB row and the URL agree (a bare Link
     // would strand the curator mid-sort with the row still paused). Await the real
     // PATCH so we don't race the router.push().
-    const resume = page.getByRole("button", { name: /^Resume$/ });
+    const resume = page.getByRole("button", { name: "Resume sorting", exact: true });
     await expect(resume).toBeVisible();
     await Promise.all([page.waitForResponse(isSessionPatch), resume.click()]);
 
