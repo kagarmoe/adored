@@ -87,7 +87,7 @@ export default async function SetAsidePage({ params }: SetAsidePageProps) {
                           fallback={
                             <div
                               aria-hidden
-                              className="flex h-full w-full items-center justify-center bg-accent-aqua text-2xl text-ink-soft"
+                              className="flex h-full w-full items-center justify-center bg-content-soft text-2xl text-ink-soft"
                             >
                               ☾
                             </div>

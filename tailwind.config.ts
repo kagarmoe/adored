@@ -18,11 +18,11 @@ const config: Config = {
           raised: "var(--color-surface-raised)",
         },
         hairline: "var(--color-hairline)",
-        accent: {
-          aqua: "var(--color-accent-aqua)",
-          sky: "var(--color-accent-sky)",
-          cornflower: "var(--color-accent-cornflower)",
-          periwinkle: "var(--color-accent-periwinkle)",
+        content: {
+          soft: "var(--color-content-soft)",
+          mid: "var(--color-content-mid)",
+          deep: "var(--color-content-deep)",
+          deeper: "var(--color-content-deeper)",
         },
         spark: {
           DEFAULT: "var(--color-spark)",
@@ -53,7 +53,7 @@ const config: Config = {
           ink: "var(--color-primary-ink)",
           hover: "var(--color-primary-hover)",
           deep: "var(--color-primary-hover)",
-          soft: "var(--color-accent-aqua)",
+          soft: "var(--color-content-soft)",
         },
         success: {
           DEFAULT: "var(--color-success)",

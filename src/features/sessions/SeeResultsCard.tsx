@@ -44,7 +44,7 @@ export function SeeResultsCard({ collectionId, collectionSlug }: SeeResultsCardP
   }
 
   return (
-    <Card padding="lg" className="border-hairline bg-accent-aqua">
+    <Card padding="lg" className="border-hairline bg-content-soft">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg text-ink">See what you love most</h2>

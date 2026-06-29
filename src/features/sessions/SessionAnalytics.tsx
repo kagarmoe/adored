@@ -91,7 +91,7 @@ export function SessionAnalytics({
                   <p className="text-sm font-medium text-ink">{bucket.label}</p>
                   <p className="text-sm text-ink-soft">{bucket.count}</p>
                 </div>
-                <div className="h-2 bg-accent-aqua rounded-full overflow-hidden">
+                <div className="h-2 bg-content-soft rounded-full overflow-hidden">
                   <div
                     className={`${bucket.color} h-full`}
                     style={{

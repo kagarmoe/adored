@@ -41,7 +41,7 @@ export function ItemCard({
   // control is valid DOM. `isolate` keeps the control (z-20) above the link (z-10).
   return (
     <Card interactive padding="none" className="relative isolate flex h-full flex-col overflow-hidden">
-      <div className={`bg-accent-aqua ${imageClassName} relative flex items-center justify-center overflow-hidden`}>
+      <div className={`bg-content-soft ${imageClassName} relative flex items-center justify-center overflow-hidden`}>
         <CardImage
           src={heroPhotoUrl}
           alt={itemDisplayName(item)}
