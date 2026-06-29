@@ -130,6 +130,7 @@ Each entry is **Decision / Rationale / Status**. Where design and shipped code d
 - *Decision:* **Playwright over Cypress** (first-class multi-device emulation — iPad-landscape / iPhone-13 / desktop, WebKit ≈ iOS Safari). Test the **production build** (`next build && next start`), not `next dev`. Use an **ephemeral Docker Postgres on `:5433`** with a **hard guard that refuses any non-local host** (so it can never hit a Neon branch). **Mock the `@vercel/blob` boundary**; drive **only the Credentials provider** in the gate (magic-link needs an inbox).
 - *Rationale:* The TRUNCATE in `resetDb()` must never touch a real DB — so the guard is a **fail-closed allowlist** (host ∈ {localhost, 127.0.0.1, ::1}), correct-by-construction rather than a denylist of three known Neon hosts.
 - *Status:* **Shipped.** Guard at `e2e/fixtures/db.ts:14-39`; port `:5433` at `db.ts:12`; Credentials-only login in `e2e/auth.spec.ts`; blob stubbed in `e2e/sort-images.spec.ts`. Middleware public paths (`api/auth|login|signup|shared`) at `src/middleware.ts:8`.
+- *Accessibility gate (`purses-sea`):* `@axe-core/playwright` scans the core screens in **both themes** for WCAG 2.x A/AA (`e2e/a11y.spec.ts`, tablet project — a11y is viewport-independent). Fails on **serious/critical**, reports moderate/minor; each scan logs its passing-check count so the gate can't silently no-op. This is the **rendered-DOM** backstop the token-pairing `src/lib/design/contrast.test.ts` can't be (a bad pair can't pass by omission). Limit: axe doesn't reliably automate **1.4.11 non-text** contrast — `contrast.test.ts` + the screenshot pass still own that.
 
 **12. Deferred-metadata TONE guardrails (NON-NEGOTIABLE).**
 - *Decision:* When surfacing items that "could use details": **no counts of incompleteness, no completion %/progress bar, no warning styling**; **person-side copy** ("Add a name" / "Tell its story", never "Incomplete"/"Missing"); **"could use details" = `name IS NULL` only** (a name turns a row into a story; brand/material/dimensions are optional extras, not deficiencies).
@@ -208,7 +209,7 @@ The current direction (live status is tracked in **beads** — those are the sou
 - **Finish the authorization overhaul** — the single DAL chokepoint and the Owner/Curator role collapse replacing the 9 boolean flags, with import-boundary + route-enumeration enforcement (epic **`purses-pv9`**).
 - **Complete the gentle sort experience** per PRODUCT/TONE — a "letting go" / Onward results section, pause/defer affordances, and a zero-engagement set-aside bucket (redesign tracked in **`purses-o93`**).
 - **Lean into the affirmation/story frame** — capture an item's sentimental story, a "who would love this?" rehome flow, reusable voice-capture input.
-- **Quality / automation** — finish the **E2E phases** (make e2e a required check on `main`), automated a11y scanning, and visual-regression capture for UI PRs.
+- **Quality / automation** — finish the **E2E phases** (make e2e a required check on `main`); **automated a11y scanning is shipped** (axe-core, both themes — decision 11 / `purses-sea`); visual-regression capture for UI PRs is **deferred until the frontend settles** (Playwright `toHaveScreenshot`).
 
 For anything specific, check beads (`bd ready`, `bd show <id>`) rather than trusting a doc — the detailed task list drifts.
 
