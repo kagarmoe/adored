@@ -8,6 +8,10 @@ const config: Config = {
   // silently dropped feature-only classes (e.g. the results hero layout, the
   // mauve spark halo).
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
+  // Key the `dark:` variant off the app's [data-theme="dark"] attribute (set by
+  // theme-script.tsx), the same signal that flips the CSS-var tokens — so dark:
+  // utilities and tokens can never disagree. Additive: no existing dark: usage.
+  darkMode: ["selector", '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {

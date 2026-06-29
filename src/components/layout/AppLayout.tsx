@@ -37,7 +37,7 @@ export function AppLayout({ breadcrumbs, actions, children }: AppLayoutProps) {
         </PageContainer>
       </main>
 
-      <footer className="border-t border-hairline bg-surface py-4 text-center text-sm text-ink-soft">
+      <footer className="border-t border-hairline bg-surface dark:bg-ground py-4 text-center text-sm text-ink-soft">
         <p>Adored &middot; Find the things you love</p>
       </footer>
     </div>

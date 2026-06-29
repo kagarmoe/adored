@@ -16,6 +16,8 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     [t.ink, t.contentSoft, 4.5, "ink on content-soft (chips/cards)"],
     [t.ink, t.contentMid, 4.5, "ink on content-mid (Not yet banner + paused badge)"],
     ["#FFFFFF", t.contentDeeper, 4.5, "white on content-deeper (owner badge)"],
+    [t.inkSoft, t.surfaceRaised, 4.5, "ink-soft on surface-raised (active panel error span, dark)"],
+    [t.inkSoft, t.contentSoft, 4.5, "ink-soft on content-soft (active panel error span, light)"],
     [t.tierLoveInk, t.tierLove, 4.5, "text on Love chip"],
     [t.tierLikeInk, t.tierLike, 4.5, "text on Like chip"],
     [t.tierMaybeInk, t.tierMaybe, 4.5, "text on Maybe chip"],

@@ -146,7 +146,7 @@ export function ActiveSessionPanel({
   const paused = session.status === "paused";
 
   return (
-    <Card padding="lg" className="border-hairline bg-content-soft">
+    <Card padding="lg" className="border-hairline bg-content-soft dark:bg-surface-raised dark:shadow-raised">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="mb-2 flex items-center gap-2">

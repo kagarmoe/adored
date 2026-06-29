@@ -47,6 +47,20 @@ describe("ActiveSessionPanel", () => {
     expect(screen.queryByRole("heading", { name: "Active session" })).not.toBeInTheDocument();
   });
 
+  it("lifts the panel by light in dark (surface-raised + glow), not a muddy tint", () => {
+    // DOM-node tripwire: the dark elevation classes must land on the real panel
+    // node. This proves attachment, NOT that the cascade override wins — the dark
+    // screenshot is the proof of that (see the spec's Risks section).
+    const { container } = render(
+      <ActiveSessionPanel session={pausedSession} resumeHref={resumeHref} />,
+    );
+    const panel = container.querySelector('[class*="dark:bg-surface-raised"]');
+    expect(panel).not.toBeNull();
+    expect(panel?.className).toContain("dark:shadow-raised");
+    // Light keeps the soft tint untouched.
+    expect(panel?.className).toContain("bg-content-soft");
+  });
+
   it("disables Set aside while a paused Resume PATCH is in flight (no concurrent set-aside)", async () => {
     let resolve!: (v: unknown) => void;
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(
