@@ -3,9 +3,12 @@ import { sql } from "drizzle-orm";
 import { getTestDb, resetDb, closeDb } from "@/../e2e/fixtures/db";
 import { seedBaseline, seedBareCollection, seedFullCollection } from "@/../e2e/fixtures/seed";
 import { generateId } from "@/lib/id";
+import type { Database } from "@/lib/db";
+import type { PairwiseResult, TriageResult } from "@/types";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
+import { PreferenceController } from "@/server/api/preferences";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -180,5 +183,75 @@ describeDb("preference orderRank persistence", () => {
     await repo.clearOrderRanks(collectionId, curatorId);
     const cleared = await repo.findByItem(itemAId, curatorId);
     expect(cleared?.orderRank).toBeNull();
+  });
+});
+
+// Task 7: recalculatePreferences runs the pure binary-insertion engine over the
+// curator's pairwise comparisons and assigns a dense order_rank (0 = most loved)
+// to the top/high (Love+Like) items. Real seam, no mocks beyond the DB boundary:
+// two items triaged into the SAME tier, one pairwise deciding the order, then the
+// materialized preference rows are re-read and their order_rank asserted.
+//
+// Local recordTriage/recordPairwise INSERT real decision_events rows (id via
+// generateId, type + decision jsonb matching TriageDecision / PairwiseDecision).
+async function recordTriage(
+  db: Database,
+  sessionId: string,
+  itemId: string,
+  result: TriageResult,
+): Promise<void> {
+  await db.execute(sql`
+    INSERT INTO decision_events (id, session_id, type, decision, created_at)
+    VALUES (
+      ${generateId("evt")}, ${sessionId}, 'triage',
+      ${JSON.stringify({ itemId, result })}::jsonb, now()
+    )`);
+}
+
+async function recordPairwise(
+  db: Database,
+  sessionId: string,
+  itemAId: string,
+  itemBId: string,
+  result: PairwiseResult,
+): Promise<void> {
+  await db.execute(sql`
+    INSERT INTO decision_events (id, session_id, type, decision, created_at)
+    VALUES (
+      ${generateId("evt")}, ${sessionId}, 'pairwise_compare',
+      ${JSON.stringify({ itemAId, itemBId, result })}::jsonb, now()
+    )`);
+}
+
+describeDb("recalculate assigns orderRank to top+high via insertion", () => {
+  beforeAll(async () => { await resetDb(); });
+  afterAll(async () => { await closeDb(); });
+
+  it("orders two loved items by their pairwise comparison", async () => {
+    const { db } = getTestDb();
+    const ownerId = await seedBaseline();
+    const collectionId = await seedBareCollection(ownerId);
+
+    const itemRepo = new ItemRepository(db);
+    const a = await itemRepo.create({ collectionId });
+    const b = await itemRepo.create({ collectionId });
+    const session = await new SessionRepository(db).create({ collectionId, curatorId: ownerId });
+
+    // Both triaged "top" (co-bucketed, same score); one pairwise: B more loved than A.
+    await recordTriage(db, session.id, a.id, "top");
+    await recordTriage(db, session.id, b.id, "top");
+    await recordPairwise(db, session.id, a.id, b.id, "item_b"); // B > A
+
+    await PreferenceController.fromDb(db).recalculatePreferences(collectionId, ownerId);
+
+    const prefs = await new CollectionPreferenceItemRepository(db).findByCollection(
+      collectionId,
+      ownerId,
+    );
+    const rankOf = (id: string) => prefs.find((p) => p.itemId === id)!.orderRank;
+
+    // B is more loved => slot 0; A => slot 1.
+    expect(rankOf(b.id)).toBe(0);
+    expect(rankOf(a.id)).toBe(1);
   });
 });
