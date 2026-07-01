@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Input, Select } from "@/components/ui";
+import { setRoundBox, type RoundBox } from "@/lib/round-preference";
 
 interface StartSessionFormProps {
   collectionId: string;
@@ -14,9 +15,17 @@ export function StartSessionForm({ collectionId, collectionSlug }: StartSessionF
   const router = useRouter();
   const [goal, setGoal] = useState("Discover favorites");
   const [scope, setScope] = useState("all");
-  const [timebox, setTimebox] = useState("15");
+  // Default to a gentle 10-minute round box so the timer is actually experienced;
+  // "No timer" is one tap away (a11y 2.2.1). Persisted device-locally, never to the DB.
+  const [timebox, setTimebox] = useState("10");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function chooseTimebox(value: string) {
+    setTimebox(value);
+    const box: RoundBox = value === "none" ? "none" : (Number(value) as RoundBox);
+    setRoundBox(box);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -63,14 +72,16 @@ export function StartSessionForm({ collectionId, collectionSlug }: StartSessionF
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-ink">Timebox</label>
+              <label className="mb-2 block text-sm font-medium text-ink">Round length</label>
               <Select
+                aria-label="Round length"
                 value={timebox}
-                onChange={(event) => setTimebox(event.target.value)}
+                onChange={(event) => chooseTimebox(event.target.value)}
                 options={[
+                  { value: "5", label: "5 minutes" },
                   { value: "10", label: "10 minutes" },
-                  { value: "15", label: "15 minutes" },
-                  { value: "30", label: "30 minutes" },
+                  { value: "20", label: "20 minutes" },
+                  { value: "none", label: "No timer" },
                 ]}
               />
             </div>

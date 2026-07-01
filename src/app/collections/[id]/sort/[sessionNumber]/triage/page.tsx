@@ -5,6 +5,7 @@ import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemController } from "@/server/api/items";
 import { SessionController } from "@/server/api/sessions";
 import { PreferenceController } from "@/server/api/preferences";
+import { DecisionController } from "@/server/api/decisions";
 import { DispositionController } from "@/server/api/dispositions";
 import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
@@ -18,6 +19,7 @@ import { TriageUndoNotice } from "@/features/sorting/TriageUndoNotice";
 import { SetAsideButton } from "@/features/sorting/SetAsideButton";
 import { TakeABreakControl } from "@/features/sorting/TakeABreakControl";
 import { ItemCard } from "@/features/items/ItemCard";
+import { RoundSurface } from "@/features/sorting/RoundSurface";
 import { selectTriageItem } from "@/lib/triage-selection";
 
 interface TriagePageProps {
@@ -56,6 +58,10 @@ export default async function TriagePage({ params }: TriagePageProps) {
   const dispositionByItemId = new Map(dispositions.map((d) => [d.itemId, d.disposition]));
   const { item, showingDeferred } = selectTriageItem(items, preferenceItemIds, dispositionByItemId);
 
+  // Round recap data: this session's decisions (server-time createdAt). The client
+  // round wrapper filters them to the round window; here we just hand over the log.
+  const decisions = await DecisionController.fromDb(db).listBySession(sortSession.id);
+
   const covers = item ? await PhotoController.fromDb(db).findCoverPhotosByItemIds([item.id]) : new Map();
   const cover = item ? covers.get(item.id) : undefined;
   const heroPhotoUrl = cover ? getPhotoAssetUrlForPhoto(cover, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
@@ -81,6 +87,14 @@ export default async function TriagePage({ params }: TriagePageProps) {
       }
     >
       <TriageUndoProvider collectionId={collection.id}>
+        <RoundSurface
+          step={1}
+          totalSteps={3}
+          roundLabel="This round"
+          decisions={decisions}
+          hubHref={`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}`}
+          queueEmpty={!item}
+        >
         <div className="mx-auto max-w-xl space-y-6">
           <div>
             <h1 className="text-3xl text-ink">How do you feel about this one?</h1>
@@ -147,6 +161,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
             </>
           )}
         </div>
+        </RoundSurface>
       </TriageUndoProvider>
     </AppLayout>
   );

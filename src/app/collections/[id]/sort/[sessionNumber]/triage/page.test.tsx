@@ -3,12 +3,13 @@ import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-const { mockGetSession, mockRequireAccess, itemRepo, sessionRepo, prefRepo, photoRepo, dispRepo } = vi.hoisted(() => ({
+const { mockGetSession, mockRequireAccess, itemRepo, sessionRepo, prefRepo, decisionRepo, photoRepo, dispRepo } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockRequireAccess: vi.fn(),
   itemRepo: { findByCollection: vi.fn() },
   sessionRepo: { findByCollectionAndNumber: vi.fn() },
   prefRepo: { findByCollection: vi.fn(), findByItem: vi.fn() },
+  decisionRepo: { findBySession: vi.fn() },
   photoRepo: { findCoverPhotosByItemIds: vi.fn() },
   dispRepo: { findByCollectionAndCurator: vi.fn() },
 }));
@@ -21,6 +22,7 @@ vi.mock("@/lib/collection-access", () => ({ requireCollectionAccess: mockRequire
 vi.mock("@/server/repositories/implementations/ItemRepository", () => ({ ItemRepository: vi.fn(function () { return itemRepo; }) }));
 vi.mock("@/server/repositories/implementations/SessionRepository", () => ({ SessionRepository: vi.fn(function () { return sessionRepo; }) }));
 vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({ CollectionPreferenceItemRepository: vi.fn(function () { return prefRepo; }) }));
+vi.mock("@/server/repositories/implementations/DecisionEventRepository", () => ({ DecisionEventRepository: vi.fn(function () { return decisionRepo; }) }));
 vi.mock("@/server/repositories/implementations/PhotoRepository", () => ({ PhotoRepository: vi.fn(function () { return photoRepo; }) }));
 vi.mock("@/server/repositories/implementations/ItemDispositionRepository", () => ({ ItemDispositionRepository: vi.fn(function () { return dispRepo; }) }));
 
@@ -36,6 +38,7 @@ beforeEach(() => {
   itemRepo.findByCollection.mockResolvedValue([ITEM]);
   sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_1", collectionId: "coll_01ABCDEF", number: 1, status: "active", curatorId: "u1" });
   prefRepo.findByCollection.mockResolvedValue([]);
+  decisionRepo.findBySession.mockResolvedValue([]);
   photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map([["item_1", { id: "photo_1", itemId: "item_1" }]]));
   dispRepo.findByCollectionAndCurator.mockResolvedValue([]);
 });
@@ -106,7 +109,13 @@ describe("TriagePage ceiling-free progress (TONE 1 & 4)", () => {
     const { container } = render(ui);
     // Counts what was decided, never what's left — and never "X of Y".
     expect(screen.getByText(/1 decided so far/i)).toBeInTheDocument();
-    expect(screen.queryByText(/\bof\s+\d+\b/i)).not.toBeInTheDocument();
+    // The item-count cue must not use a "of N" ceiling. The round shell's a11y step
+    // announcement ("Step 1 of 3") is round progress, not an item ceiling, and is
+    // sr-only — exclude it so this guards the visible decision cue, its true target.
+    const ofNMatches = screen
+      .queryAllByText(/\bof\s+\d+\b/i)
+      .filter((el) => !el.className.includes("sr-only"));
+    expect(ofNMatches).toHaveLength(0);
     expect(screen.queryByText(/\d+\s+(left|remaining|to go|undecided)/i)).not.toBeInTheDocument();
     // No filling progress bar (an inline width style is the tell of the old bar).
     expect(container.querySelector('[style*="width"]')).toBeNull();
@@ -116,6 +125,18 @@ describe("TriagePage ceiling-free progress (TONE 1 & 4)", () => {
     const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
     render(ui);
     expect(screen.queryByText(/decided so far/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("TriagePage round chrome (Epic 4c)", () => {
+  it("wraps the triage content in the round shell (step 1 of 3) while keeping the decision UI", async () => {
+    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    render(ui);
+    // The round shell's step indicator is present and on step 1.
+    expect(screen.getByRole("list", { name: /round progress: step 1 of 3/i })).toBeInTheDocument();
+    // The existing decision controls still render inside the shell.
+    expect(screen.getByRole("button", { name: /^love$/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /how do you feel about this one\?/i })).toBeInTheDocument();
   });
 });
 
