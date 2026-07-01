@@ -131,7 +131,9 @@ describe("Decide Standing — empty", () => {
     itemController.listItems.mockResolvedValue([]);
     const ui = await ResultsPage({ params: { id: "summer-bags" } });
     const { container } = render(ui);
-    expect(screen.getByText(/that('s| is) fine|nothing to see yet/i)).toBeInTheDocument();
+    // Match the ACTUAL rendered copy, which uses a curly apostrophe (&rsquo;) — a
+    // straight-apostrophe alternative silently never matches (purses-z7ea).
+    expect(screen.getByText("Nothing to see yet — and that’s fine.")).toBeInTheDocument();
     expect(container.textContent ?? "").not.toMatch(/\b0\b|none|no results/i);
     expect(screen.queryByText("What you love most")).toBeNull();
   });

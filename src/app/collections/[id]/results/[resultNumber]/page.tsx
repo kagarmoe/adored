@@ -79,7 +79,12 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
           <div>
             <h1 className="text-3xl text-ink">{result.name}</h1>
             <div className="mt-3">
-              <Badge variant={result.status}>{result.status}</Badge>
+              {/* Person-side status, not machine words (TONE #1): a finalized
+                  snapshot is one you've "Saved"; a draft is one you're "Still
+                  deciding". The variant keeps the semantic styling. */}
+              <Badge variant={result.status}>
+                {result.status === "finalized" ? "Saved" : "Still deciding"}
+              </Badge>
             </div>
           </div>
           {result.status === "draft" && (

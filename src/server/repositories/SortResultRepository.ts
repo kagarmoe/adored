@@ -19,6 +19,9 @@ export interface ISortResultRepository {
   findByCollection(collectionId: string): Promise<SortResult[]>;
   findByCollectionAndNumber(collectionId: string, number: number): Promise<SortResult | null>;
   findDraft(collectionId: string, curatorId: string): Promise<SortResult | null>;
+  // Every UNFINALIZED draft for (collection, curator). Used to supersede orphan
+  // drafts on a new draft-create (purses-p2rj) — never matches finalized rows.
+  findDrafts(collectionId: string, curatorId: string): Promise<SortResult[]>;
   update(id: string, data: Partial<SortResult>): Promise<SortResult>;
   delete(id: string): Promise<void>;
   // Delete every result of the collection (direct collection_id). Purge-only.

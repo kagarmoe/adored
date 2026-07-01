@@ -77,6 +77,28 @@ describe("ResultDetailPage hero images (nkp) + resolution", () => {
   });
 });
 
+describe("ResultDetailPage status badge — person-side wording (qrsr)", () => {
+  it("labels a draft 'Still deciding', never the machine word 'draft'", async () => {
+    resultRepo.findByCollectionAndNumber.mockResolvedValue({
+      id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "draft", curatorId: "u1",
+    });
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.getByText("Still deciding")).toBeInTheDocument();
+    expect(screen.queryByText("draft")).toBeNull();
+  });
+
+  it("labels a finalized result 'Saved', never the machine word 'finalized'", async () => {
+    resultRepo.findByCollectionAndNumber.mockResolvedValue({
+      id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "finalized", curatorId: "u1",
+    });
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.getByText("Saved")).toBeInTheDocument();
+    expect(screen.queryByText("finalized")).toBeNull();
+  });
+});
+
 describe("ResultDetailPage SharePanel curator gate (axn)", () => {
   it("shows SharePanel for the result's curator viewing a finalized result", async () => {
     resultRepo.findByCollectionAndNumber.mockResolvedValue({
