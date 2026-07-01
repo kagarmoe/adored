@@ -167,6 +167,8 @@ for (const theme of ["light", "dark"] as const) {
       // the Items grid (+ the dominant Add photos action).
       ["workspace-pool-first", `/collections/${workspacePoolFirstSlug}`],
       ["workspace-items-first", `/collections/${workspaceItemsFirstSlug}`],
+      // Epic 3: the pool "Photos" screen (grid + copy). poolOnly has loose photos.
+      ["pool", `/collections/${workspacePoolFirstSlug}/pool`],
     ];
     for (const [name, url] of surfaces) {
       await page.goto(url);
