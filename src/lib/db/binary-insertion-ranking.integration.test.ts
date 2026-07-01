@@ -51,13 +51,35 @@ describeDb("binary-insertion ranking — schema", () => {
       where tablename = 'decision_events' and indexname = 'decision_events_client_key_unique'`);
     expect(rows.length).toBe(1);
   });
+
+  // The ONLY honest proof that these indexes are PARTIAL (not unconditional uniques)
+  // is the predicate in pg_indexes.indexdef. Behavioral insert/reject tests cannot
+  // distinguish partial from unconditional under Postgres' default NULLS DISTINCT.
+  it("decision_events_client_key_unique is PARTIAL on client_key IS NOT NULL", async () => {
+    const { db } = getTestDb();
+    const rows = await db.execute(sql`
+      select indexdef from pg_indexes where indexname = 'decision_events_client_key_unique'`);
+    expect(rows.length).toBe(1);
+    expect((rows[0] as { indexdef: string }).indexdef).toContain("client_key IS NOT NULL");
+  });
+
+  it("preferences_order_rank_unique is PARTIAL on order_rank IS NOT NULL", async () => {
+    const { db } = getTestDb();
+    const rows = await db.execute(sql`
+      select indexdef from pg_indexes where indexname = 'preferences_order_rank_unique'`);
+    expect(rows.length).toBe(1);
+    expect((rows[0] as { indexdef: string }).indexdef).toContain("order_rank IS NOT NULL");
+  });
 });
 
-// The whole point of these two indexes is the PARTIAL PREDICATE (WHERE ... IS NOT
-// NULL). The name-existence checks above would pass against an UNCONDITIONAL unique
-// index too. These behavioral cases would FAIL against an unconditional index (it
-// would reject the duplicate NULLs) and PASS only against the correct partial one.
-// Rejection is asserted on the Postgres error code 23505, not message text.
+// These behavioral cases prove that *a* unique constraint enforces uniqueness on the
+// non-null tuples and permits NULLs. They do NOT, on their own, prove the index is
+// PARTIAL: under Postgres' default NULLS DISTINCT, an UNCONDITIONAL unique on these
+// columns is behaviorally identical here — it also permits duplicate NULLs — so
+// insert/reject alone cannot distinguish partial from unconditional. The indexdef
+// assertions above (pg_indexes.indexdef contains `WHERE (... IS NOT NULL)`) are what
+// prove the predicate is partial. Rejection is asserted on the Postgres error code
+// 23505, not message text.
 describeDb("decision_events partial unique — (session_id, client_key) WHERE client_key IS NOT NULL", () => {
   let sessionId: string;
 
