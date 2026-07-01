@@ -95,3 +95,4 @@ next-env.d.ts
 
 # vitest blob reports (per-tier coverage, merged in CI)
 /.vitest-reports/
+.env.local

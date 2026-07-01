@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import { SessionProviderWrapper } from "@/components/layout/SessionProviderWrapper";
+import { PostHogProvider } from "@/components/PostHogProvider";
 import { ThemeScript } from "@/components/theme/theme-script";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
@@ -35,7 +36,9 @@ export default function RootLayout({
     <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
       <body className="min-h-screen">
         <ThemeScript />
-        <SessionProviderWrapper>{children}</SessionProviderWrapper>
+        <SessionProviderWrapper>
+          <PostHogProvider>{children}</PostHogProvider>
+        </SessionProviderWrapper>
         <SpeedInsights />
         <Analytics />
       </body>

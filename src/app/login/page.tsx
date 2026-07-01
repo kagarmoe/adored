@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Input, ErrorMessage } from "@/components/ui";
+import posthog from "posthog-js";
 
 function LoginContent() {
   const router = useRouter();
@@ -32,6 +33,7 @@ function LoginContent() {
       if (result?.error) {
         setError(result.error);
       } else if (result?.ok) {
+        posthog.capture('user_logged_in', { method: 'password' });
         router.push(callbackUrl);
       }
     } catch (err) {

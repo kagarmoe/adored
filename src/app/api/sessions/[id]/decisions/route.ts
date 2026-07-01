@@ -9,6 +9,7 @@ import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { SessionController } from "@/server/api/sessions";
 import { PreferenceController } from "@/server/api/preferences";
 import { DispositionController } from "@/server/api/dispositions";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 interface DecisionRequest {
   type: "triage" | "pairwise_compare" | "bucket_assign";
@@ -114,6 +115,21 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return { event: inserted, isNew: true };
     });
 
+    // Emit analytics only for a genuinely NEW decision — an idempotent replay
+    // (isNew === false) must not double-count the event.
+    if (isNew) {
+      const phClient = getPostHogClient();
+      phClient.capture({
+        distinctId: userId,
+        event: "sort_decision_recorded",
+        properties: {
+          decision_type: body.type,
+          session_id: params.id,
+          collection_id: sortSession.collectionId,
+        },
+      });
+      await phClient.shutdown();
+    }
     return NextResponse.json(event, { status: isNew ? 201 : 200 });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to record decision" }, { status: 500 });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { InvitationAcceptService, InvitationAcceptError } from "@/server/services/InvitationAcceptService";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function GET(request: NextRequest) {
   try {
@@ -53,6 +54,13 @@ export async function POST(request: NextRequest) {
     const db = getDb();
     try {
       await InvitationAcceptService.fromDb(db).accept(token, userId);
+      const phClient = getPostHogClient();
+      phClient.capture({
+        distinctId: userId,
+        event: 'invitation_accepted',
+        properties: { token },
+      });
+      await phClient.shutdown();
       return NextResponse.json({ message: "Invitation accepted successfully" });
     } catch (error) {
       if (error instanceof InvitationAcceptError) {
