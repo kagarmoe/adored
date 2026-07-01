@@ -26,6 +26,7 @@ import { POST as postDecision } from "@/app/api/sessions/[id]/decisions/route";
 import { ItemController } from "@/server/api/items";
 import { PreferenceController } from "@/server/api/preferences";
 import { DispositionController } from "@/server/api/dispositions";
+import { DecisionController } from "@/server/api/decisions";
 import { selectNextPair } from "@/lib/pairwise-selection";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
@@ -79,9 +80,10 @@ describeDb("disposed item is excluded from the REAL compare path and preferences
     }
 
     // Build the selector inputs from the EXACT fetches the compare page uses.
-    const [items, preferences, dispositions] = await Promise.all([
+    const [items, preferences, decisions, dispositions] = await Promise.all([
       ItemController.fromDb(db).listItems(collectionId),
       PreferenceController.fromDb(db).listItemPreferences(collectionId, curatorId),
+      DecisionController.fromDb(db).listBySession(sortSession.id),
       DispositionController.fromDb(db).listDispositions(collectionId, curatorId),
     ]);
     const dispositionByItemId = new Map(dispositions.map((d) => [d.itemId, d.disposition]));
@@ -95,7 +97,7 @@ describeDb("disposed item is excluded from the REAL compare path and preferences
     const pair = selectNextPair({
       preferences,
       items,
-      decidedPairs: new Set(),
+      decisions,
       dispositionByItemId,
     });
 

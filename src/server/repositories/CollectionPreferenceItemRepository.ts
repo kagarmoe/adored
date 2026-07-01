@@ -9,6 +9,7 @@ export interface ICollectionPreferenceItemRepository {
     confidence: number;
     rankBucket: "top" | "high" | "medium" | "low";
     comparisonCount: number;
+    orderRank?: number | null;
   }): Promise<CollectionPreferenceItem>;
   findById(id: string): Promise<CollectionPreferenceItem | null>;
   findByItem(itemId: string, curatorId: string): Promise<CollectionPreferenceItem | null>;
@@ -21,6 +22,9 @@ export interface ICollectionPreferenceItemRepository {
     data: Partial<CollectionPreferenceItem>,
   ): Promise<CollectionPreferenceItem>;
   clear(collectionId: string, curatorId: string): Promise<void>;
+  // Set order_rank = NULL for every preference of the curator in this collection,
+  // in one statement. Used to reset the binary-insertion ordering before a re-rank.
+  clearOrderRanks(collectionId: string, curatorId: string): Promise<void>;
   // Permanently DELETE every preference row for an item, across ALL curators.
   // Distinct from clear (which is collection+curator-scoped) — purge removes the
   // item's derived preference state for everyone. Returns the affected count

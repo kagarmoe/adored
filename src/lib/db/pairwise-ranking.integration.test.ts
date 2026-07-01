@@ -1,23 +1,23 @@
 // src/lib/db/pairwise-ranking.integration.test.ts
 //
 // Regression guard (spec §6.4 / purses-o93, guarding purses-h02): a pairwise
-// choice must actually change the MATERIALIZED ranking order. purses-h02 fixed
-// the bug where pairwise results were discarded; this test pins that fix so a
-// regression — pairwise dropped on the floor again — fails CI.
+// compare must be recorded and flow through the REAL decisions seam into the
+// materialized preference rows — never dropped on the floor (the purses-h02 bug).
+//
+// end-to-end ranking order is now via orderRank + finalize (Epic 0 Tasks 7/10),
+// covered in binary-insertion-ranking.integration.test.ts. Under binary-insertion
+// ranking (Epic 0), a pairwise compare no longer moves `score`: two items triaged
+// to the SAME tier share the same score and bucket, and the eventual ORDER between
+// them is decided by `orderRank` (Task 7) read by finalize (Task 10) — not by an
+// Elo delta on score. So this guard now pins the invariant that still holds today:
+// the pairwise compare is DURABLY RECORDED as evidence on both items' preference
+// rows (comparisonCount incremented), and same-tier triage leaves them co-bucketed.
 //
 // Real seam, two decision types, no mocks beyond the two true boundaries (auth
-// + db): triage seeds A and B into the SAME tier (so triage alone leaves them
-// tied), then a single decisive pairwise compare where B beats A. Both decisions
-// go through the REAL decisions route (route -> ScoringService ->
-// PreferenceStateService -> preference rows). The live POST /api/sort-results
-// then materializes sort_result_items, which we RE-READ from the DB and assert
-// B outranks A. computedRank is 0-based (0 = best).
-//
-// Why one pairwise win is "strong enough": triage seeds both at the "high" tier
-// center 0.625 (ScoringService.TIER_SEED.high). One "B beats A" applies +0.1 to
-// the winner and -0.05 to the loser, so B -> 0.725 and A -> 0.575: a 0.15 gap
-// that unambiguously orders B above A within the tier. No boundary crossing is
-// needed to prove pairwise drove the order.
+// + db): triage seeds A and B into the SAME tier, then one pairwise compare
+// (B beats A). Both decisions go through the REAL decisions route (route ->
+// ScoringService -> PreferenceStateService -> preference rows), which we RE-READ
+// from the DB.
 //
 // Mirrors sort-pipeline.integration.test.ts: describeDb / resetDb / seedBaseline,
 // real repos across the seam, mocking only auth + db.
@@ -26,9 +26,9 @@ import { sql } from "drizzle-orm";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline } from "../../../e2e/fixtures/seed";
 import { generateId } from "@/lib/id";
+import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
-import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 
 const { mockGetSession, UnauthorizedError } = vi.hoisted(() => {
   class UnauthorizedError extends Error {
@@ -49,7 +49,6 @@ vi.mock("@/lib/auth", () => ({
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
 import { POST as recordDecision } from "@/app/api/sessions/[id]/decisions/route";
-import { POST as createResult } from "@/app/api/sort-results/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -61,7 +60,7 @@ function decisionReq(body: unknown): Request {
   });
 }
 
-describeDb("pairwise drives the materialized ranking (route/service -> DB)", () => {
+describeDb("pairwise is recorded as evidence through the real seam (route/service -> DB)", () => {
   let ownerId: string;
 
   beforeEach(async () => {
@@ -73,7 +72,7 @@ describeDb("pairwise drives the materialized ranking (route/service -> DB)", () 
     await closeDb();
   });
 
-  it("a pairwise choice (B beats A) places B before A in the materialized result", async () => {
+  it("a pairwise compare (B beats A) is durably counted on both preference rows without moving score", async () => {
     const { db } = getTestDb();
     const collectionId = generateId("col");
     await db.execute(sql`
@@ -87,8 +86,8 @@ describeDb("pairwise drives the materialized ranking (route/service -> DB)", () 
 
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-    // Triage both into the SAME tier ("high") — tied on triage alone, so any
-    // order difference downstream can only have come from the pairwise compare.
+    // Triage both into the SAME tier ("high") — same seed, so they are
+    // co-bucketed; the pairwise below no longer separates them on score.
     for (const itemId of [itemA.id, itemB.id]) {
       const triageRes = await recordDecision(
         decisionReq({ type: "triage", decision: { itemId, result: "high" } }) as any,
@@ -97,7 +96,8 @@ describeDb("pairwise drives the materialized ranking (route/service -> DB)", () 
       expect(triageRes.status).toBe(201);
     }
 
-    // The decisive pairwise compare: B beats A.
+    // The pairwise compare: B beats A. It must NOT be dropped (purses-h02) — it
+    // is recorded as evidence on both rows — but it does NOT move score anymore.
     const compareRes = await recordDecision(
       decisionReq({
         type: "pairwise_compare",
@@ -107,28 +107,24 @@ describeDb("pairwise drives the materialized ranking (route/service -> DB)", () 
     );
     expect(compareRes.status).toBe(201);
 
-    // Materialize through the live POST /api/sort-results route (the purses-h02
-    // seam — preferences -> sort_result_items).
-    const res = await createResult(
-      new Request("http://localhost/api/sort-results", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ collectionId, name: "Pairwise ranking guard" }),
-      }) as any,
-    );
-    expect(res.status).toBe(201);
-    const resultId = (await res.json()).id as string;
+    // RE-READ the real materialized preference rows (not a mock). New truth:
+    // same-tier triage leaves A and B sharing the same score and bucket, and the
+    // pairwise is counted as evidence on both (triage + compare => comparisonCount 2).
+    // The eventual ORDER between them is decided by orderRank + finalize (Epic 0
+    // Tasks 7/10), covered in binary-insertion-ranking.integration.test.ts.
+    const prefRepo = new CollectionPreferenceItemRepository(db);
+    const prefA = await prefRepo.findByItem(itemA.id, ownerId);
+    const prefB = await prefRepo.findByItem(itemB.id, ownerId);
+    expect(prefA).not.toBeNull();
+    expect(prefB).not.toBeNull();
 
-    // RE-READ the real materialized rows (not the route's response body, not a
-    // mock) and assert pairwise drove the order: B (the winner) before A.
-    const items = await new SortResultItemRepository(db).findByResult(resultId);
-    expect(items).toHaveLength(2);
-    const winnerB = items.find((i) => i.itemId === itemB.id)!;
-    const loserA = items.find((i) => i.itemId === itemA.id)!;
-    expect(winnerB).toBeDefined();
-    expect(loserA).toBeDefined();
+    // Co-bucketed and equal on score (pairwise no longer pulls the winner ahead).
+    expect(prefA!.rankBucket).toBe("high");
+    expect(prefB!.rankBucket).toBe("high");
+    expect(prefA!.score).toBeCloseTo(prefB!.score, 6);
 
-    // Lower computedRank = better; B beat A, so B ranks ahead of A.
-    expect(winnerB.computedRank).toBeLessThan(loserA.computedRank);
+    // The compare was NOT dropped: both items counted the triage + the pairwise.
+    expect(prefA!.comparisonCount).toBe(2);
+    expect(prefB!.comparisonCount).toBe(2);
   });
 });

@@ -19,6 +19,7 @@ export class CollectionPreferenceItemRepository
     confidence: number;
     rankBucket: "top" | "high" | "medium" | "low";
     comparisonCount: number;
+    orderRank?: number | null;
   }): Promise<CollectionPreferenceItem> {
     const id = data.id || generateId("pref");
     const [pref] = await this.db
@@ -32,6 +33,7 @@ export class CollectionPreferenceItemRepository
         confidence: data.confidence.toString(),
         rankBucket: data.rankBucket,
         comparisonCount: data.comparisonCount,
+        orderRank: data.orderRank ?? null,
         lastSeen: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -101,6 +103,18 @@ export class CollectionPreferenceItemRepository
       );
   }
 
+  async clearOrderRanks(collectionId: string, curatorId: string): Promise<void> {
+    await this.db
+      .update(preferencesTable)
+      .set({ orderRank: null, updatedAt: new Date() })
+      .where(
+        and(
+          eq(preferencesTable.collectionId, collectionId),
+          eq(preferencesTable.curatorId, curatorId),
+        ),
+      );
+  }
+
   // Permanently DELETE every preference row for an item, across ALL curators
   // (distinct from clear, which is collection+curator-scoped). Returns the
   // affected count via RETURNING (postgres-js exposes delete rowCount
@@ -138,6 +152,7 @@ export class CollectionPreferenceItemRepository
       confidence: parseFloat(row.confidence),
       rankBucket: row.rankBucket as "top" | "high" | "medium" | "low",
       comparisonCount: row.comparisonCount,
+      orderRank: row.orderRank ?? null,
       lastSeen: row.lastSeen,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
