@@ -39,12 +39,19 @@ export function ItemMetadata({ item, editHref }: ItemMetadataProps) {
 
   return (
     <div className="space-y-4">
-      {filledFields.map((field) => (
-        <div key={field.label}>
-          <p className="text-xs font-medium text-ink-soft uppercase">{field.label}</p>
-          <p className="mt-1 text-sm text-ink">{field.value}</p>
-        </div>
-      ))}
+      {filledFields.length > 0 && (
+        <ul className="flex flex-wrap gap-2">
+          {filledFields.map((field) => (
+            <li
+              key={field.label}
+              className="rounded-full bg-surface-raised px-3 py-1 text-sm text-ink"
+            >
+              <span className="text-ink-soft">{field.label}: </span>
+              {field.value}
+            </li>
+          ))}
+        </ul>
+      )}
       {item.notes && (
         <div>
           <p className="text-xs font-medium text-ink-soft uppercase">Notes</p>

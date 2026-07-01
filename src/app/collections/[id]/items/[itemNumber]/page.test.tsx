@@ -41,6 +41,7 @@ const ITEM = {
   material: null,
   category: null,
   notes: null,
+  story: null,
   status: "active",
 };
 const photo = (id: string, isHero = false) => ({
@@ -91,6 +92,37 @@ describe("ItemDetailPage redesign (carousel + info card)", () => {
   it("shows the per-photo delete control to the owner", async () => {
     await renderPage();
     expect(screen.getAllByRole("button", { name: /delete this photo/i }).length).toBeGreaterThan(0);
+  });
+
+  it("leads with the keepsake card when a story is present, escaping HTML as literal text (Epic 2)", async () => {
+    // XSS guard: a story containing an <img onerror> must render as TEXT, never as
+    // an injected element — React auto-escapes the child, no dangerouslySetInnerHTML.
+    const payload = '<img src=x onerror=alert(1)>';
+    itemRepo.findByCollectionAndNumber.mockResolvedValue({ ...ITEM, story: payload });
+    const { container } = await renderPage();
+
+    expect(screen.getByRole("heading", { name: /where will it go next\?/i })).toBeInTheDocument();
+    expect(screen.getByText(/a keepsake, kept after the choice/i)).toBeInTheDocument();
+    // The payload appears verbatim as text…
+    expect(screen.getByText(payload)).toBeInTheDocument();
+    // …and NO img[onerror] / script was injected from it.
+    expect(container.querySelector("img[onerror]")).toBeNull();
+    expect(container.querySelector("script")).toBeNull();
+  });
+
+  it("shows no keepsake card and no forward-framed heading when the story is empty (Epic 2)", async () => {
+    itemRepo.findByCollectionAndNumber.mockResolvedValue({ ...ITEM, story: "   " });
+    await renderPage();
+    expect(screen.queryByText(/where will it go next\?/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/a keepsake, kept after the choice/i)).not.toBeInTheDocument();
+  });
+
+  it("invites naming a nameless item — no 'Incomplete'/percentage framing (Epic 2 tone)", async () => {
+    itemRepo.findByCollectionAndNumber.mockResolvedValue({ ...ITEM, name: null });
+    await renderPage();
+    expect(screen.getByRole("link", { name: /add a name/i })).toBeInTheDocument();
+    expect(screen.queryByText(/incomplete/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/%/)).not.toBeInTheDocument();
   });
 
   it("shows the delete control to a curator member (any member may delete — role model, not flags)", async () => {

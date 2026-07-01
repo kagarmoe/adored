@@ -22,9 +22,10 @@ describe("ItemMetadata", () => {
     expect(cta).toHaveAttribute("href", "/collections/c/items/1/edit");
   });
 
-  it("renders the fields when metadata is present", () => {
+  it("renders the fields as chips when metadata is present", () => {
     render(<ItemMetadata item={{ ...empty, brand: "Acme", notes: "loved" } as any} editHref="/x" />);
-    expect(screen.getByText("Acme")).toBeInTheDocument();
+    // Brand renders as a chip: "Brand: Acme".
+    expect(screen.getByText(/Acme/)).toBeInTheDocument();
     expect(screen.getByText("loved")).toBeInTheDocument();
     expect(screen.queryByText(/no details added yet/i)).not.toBeInTheDocument();
   });

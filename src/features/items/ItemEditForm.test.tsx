@@ -32,6 +32,7 @@ function baseItem(): Item {
     material: "",
     category: "",
     notes: "",
+    story: "",
   } as Item;
 }
 
@@ -64,6 +65,26 @@ describe("ItemEditForm", () => {
     expect(body.name).toBe("New Name");
     expect(body.color).toBe("Red");
     expect(body.brand).toBe("Coach"); // unchanged prefilled field still sent
+  });
+
+  it("renders the forward-framed Story textarea and includes an edited story in the PATCH body (Epic 2)", async () => {
+    (fetch as any).mockResolvedValue({ ok: true, status: 200 });
+
+    render(<ItemEditForm item={baseItem()} collectionId="coll_01ULID" />);
+
+    const story = field("story");
+    expect(story.tagName).toBe("TEXTAREA");
+    // Forward-framed label — asked before, kept after (see keepsake card on detail).
+    expect(screen.getByText(/where will it go next\?/i)).toBeInTheDocument();
+
+    fireEvent.change(story, {
+      target: { value: "To my niece, who borrowed it.", name: "story" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    const body = JSON.parse((fetch as any).mock.calls[0][1].body);
+    expect(body.story).toBe("To my niece, who borrowed it.");
   });
 
   it("a failing PATCH surfaces the error message and does NOT navigate", async () => {

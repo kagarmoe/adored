@@ -285,6 +285,40 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       expect((await new ItemRepository(db).findById(item.id))!.name).toBe("Owner's");
     });
 
+    it("200s and persists an optional story (kept after the choice, Epic 2)", async () => {
+      const { db } = getTestDb();
+      const collectionId = await seedBareCollection(ownerId);
+      const item = await new ItemRepository(db).create({ collectionId, name: "Tote" });
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      // Present-before guard: no story yet.
+      expect((await new ItemRepository(db).findById(item.id))!.story).toBeNull();
+
+      const story = "To my niece, who always borrowed it.";
+      const res = await patchItem(jsonReq("PATCH", { story }) as any, {
+        params: { id: item.id },
+      } as any);
+      expect(res.status).toBe(200);
+
+      const after = await new ItemRepository(db).findById(item.id);
+      expect(after!.story).toBe(story);
+    });
+
+    it("400s a story over the 2000-char cap via errorResponse — and does NOT mutate (Epic 2)", async () => {
+      const { db } = getTestDb();
+      const collectionId = await seedBareCollection(ownerId);
+      const item = await new ItemRepository(db).create({ collectionId, name: "Tote" });
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      // Present-before guard: no story yet.
+      expect((await new ItemRepository(db).findById(item.id))!.story).toBeNull();
+
+      const res = await patchItem(jsonReq("PATCH", { story: "x".repeat(2001) }) as any, {
+        params: { id: item.id },
+      } as any);
+      expect(res.status).toBe(400);
+      // Unchanged — validation fired before any write.
+      expect((await new ItemRepository(db).findById(item.id))!.story).toBeNull();
+    });
+
     it("400s an invalid body (empty name) via errorResponse — and does NOT mutate (purses-pv9)", async () => {
       // items/[id] PATCH calls ItemController.updateItem which UpdateItemSchema.parse()es
       // the body; an empty name is a ZodError, now mapped to 400 by errorResponse (was 500).

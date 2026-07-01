@@ -128,6 +128,7 @@ export const itemsTable = pgTable(
     unit: text("unit").default("imperial").notNull(),
     status: text("status"),
     notes: text("notes"),
+    story: text("story"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
     deletedAt: timestamp("deleted_at"),
