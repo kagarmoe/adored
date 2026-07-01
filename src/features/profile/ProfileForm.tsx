@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { Button, Card, Input, ErrorMessage } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { DeleteAccountSection } from "./DeleteAccountSection";
 import { apiPatch } from "@/lib/api-client";
 
 interface ProfileFormProps {
@@ -101,6 +102,8 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
         </div>
         <ThemeToggle />
       </div>
+
+      <DeleteAccountSection email={email} />
     </div>
   );
 }
