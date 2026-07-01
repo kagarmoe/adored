@@ -81,19 +81,10 @@ export default async function ComparePage({ params }: ComparePageProps) {
     );
   }
 
-  const decidedPairs = new Set(
-    decisions
-      .filter((d) => d.type === "pairwise_compare")
-      .map((d) => {
-        const decision = d.decision as any;
-        return `${decision.itemAId}-${decision.itemBId}`;
-      })
-  );
-
   const pair = selectNextPair({
     preferences,
     items,
-    decidedPairs,
+    decisions,
     dispositionByItemId,
   });
 

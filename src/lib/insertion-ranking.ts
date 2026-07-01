@@ -61,6 +61,46 @@ export interface RankItem {
   createdAt: Date;
 }
 
+// A pairwise decision's payload. The event's `decision` may be this or a triage
+// payload; only pairwise events (type === "pairwise_compare") carry this shape.
+interface PairwisePayload {
+  itemAId: string;
+  itemBId: string;
+  result: "item_a" | "item_b" | "tie" | "skip";
+}
+
+// Shape of a persisted decision event, as both the live selector and the recompute
+// path see it. Kept structural (not tied to @/types) so this pure module has no domain
+// dependency. `decision` is unknown here because the event union carries triage OR
+// pairwise payloads; toComparisonEvents narrows to pairwise after filtering by type.
+export interface DecisionEventLike {
+  id: string;
+  type: string;
+  createdAt: Date;
+  decision: unknown;
+}
+
+/**
+ * Map persisted decision events to the engine's ComparisonEvent[]. This is the ONE
+ * mapping both the live "next pair" selector and PreferenceStateService.recompute use,
+ * so both entry points ask the same next question. Non-pairwise events are dropped;
+ * the surviving events' `decision` is a pairwise payload by construction.
+ */
+export function toComparisonEvents(events: DecisionEventLike[]): ComparisonEvent[] {
+  return events
+    .filter((e) => e.type === "pairwise_compare")
+    .map((e) => {
+      const d = e.decision as PairwisePayload;
+      return {
+        aId: d.itemAId,
+        bId: d.itemBId,
+        result: d.result,
+        createdAt: e.createdAt,
+        id: e.id,
+      };
+    });
+}
+
 export interface DerivedOrder {
   order: string[];
   unplaced: string[];

@@ -1,4 +1,4 @@
-import type { CollectionPreferenceItem, DecisionEvent, PairwiseDecision } from "@/types";
+import type { CollectionPreferenceItem, DecisionEvent } from "@/types";
 import type { ICollectionPreferenceItemRepository } from "@/server/repositories/CollectionPreferenceItemRepository";
 import type { IDecisionEventRepository } from "@/server/repositories/DecisionEventRepository";
 import type { ISessionRepository } from "@/server/repositories/SessionRepository";
@@ -6,6 +6,7 @@ import type { IItemRepository } from "@/server/repositories/ItemRepository";
 import type { ScoringService } from "@/server/services/ScoringService";
 import {
   deriveOrder,
+  toComparisonEvents,
   type ComparisonEvent,
   type RankItem,
 } from "@/lib/insertion-ranking";
@@ -112,18 +113,9 @@ export class PreferenceStateService {
     for (const session of sessions) {
       events.push(...(await this.decisionRepo.findBySession(session.id)));
     }
-    return events
-      .filter((e) => e.type === "pairwise_compare")
-      .map((e) => {
-        const d = e.decision as PairwiseDecision;
-        return {
-          aId: d.itemAId,
-          bId: d.itemBId,
-          result: d.result,
-          createdAt: e.createdAt,
-          id: e.id,
-        };
-      });
+    // Shared mapping with the live selector (selectNextPair) — both entry points
+    // build ComparisonEvent[] identically, so they ask the same next question.
+    return toComparisonEvents(events);
   }
 
   async getItemPreferences(

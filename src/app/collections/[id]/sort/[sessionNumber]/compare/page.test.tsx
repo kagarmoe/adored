@@ -29,8 +29,8 @@ vi.mock("@/server/repositories/implementations/ItemDispositionRepository", () =>
 import ComparePage from "./page";
 
 const COLLECTION = { id: "coll_01ABCDEF", slug: "summer-bags", name: "Summer Bags" };
-const A = { id: "item_a", collectionId: "coll_01ABCDEF", number: 1, name: "Bag A", brand: null, status: "active" };
-const B = { id: "item_b", collectionId: "coll_01ABCDEF", number: 2, name: "Bag B", brand: null, status: "active" };
+const A = { id: "item_a", collectionId: "coll_01ABCDEF", number: 1, name: "Bag A", brand: null, status: "active", createdAt: new Date(1) };
+const B = { id: "item_b", collectionId: "coll_01ABCDEF", number: 2, name: "Bag B", brand: null, status: "active", createdAt: new Date(2) };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -38,7 +38,12 @@ beforeEach(() => {
   mockRequireAccess.mockResolvedValue(COLLECTION);
   itemRepo.findByCollection.mockResolvedValue([A, B]);
   sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_1", collectionId: "coll_01ABCDEF", number: 1, status: "active", curatorId: "u1" });
-  prefRepo.findByCollection.mockResolvedValue([]);
+  // Both items are Love/Like so they're in the engine's rankable set; with no
+  // comparison recorded yet, selectNextPair asks about exactly this pair.
+  prefRepo.findByCollection.mockResolvedValue([
+    { itemId: "item_a", rankBucket: "top" },
+    { itemId: "item_b", rankBucket: "high" },
+  ]);
   decisionRepo.findBySession.mockResolvedValue([]);
   dispRepo.findByCollectionAndCurator.mockResolvedValue([]);
   photoRepo.findCoverPhotosByItemIds.mockResolvedValue(
@@ -65,8 +70,9 @@ describe("ComparePage hero images", () => {
 
 describe("ComparePage disposition exclusion (Epic C PR1)", () => {
   it("excludes a disposed item from the pair — only one eligible item leaves no comparison", async () => {
-    // B is deferred; with A and B the only items, just A is eligible → no pair →
-    // the "all comparisons complete" empty state, and B's hero never renders.
+    // A and B are both rankable (top/high), but B is deferred → only A remains in
+    // the rankable set → no pair → the "all comparisons complete" empty state, and
+    // neither hero renders.
     dispRepo.findByCollectionAndCurator.mockResolvedValue([
       { itemId: "item_b", disposition: "deferred", collectionId: "coll_01ABCDEF", curatorId: "u1" },
     ]);
