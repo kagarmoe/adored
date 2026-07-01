@@ -35,6 +35,9 @@ import { SortResultRepository } from "@/server/repositories/implementations/Sort
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { SortResultService } from "@/server/services/SortResultService";
+import { deriveStanding } from "@/features/results/standing";
+import { partitionRanked } from "@/lib/results-buckets";
+import type { Item } from "@/types";
 
 const { mockGetSession, UnauthorizedError } = vi.hoisted(() => {
   class UnauthorizedError extends Error {
@@ -530,6 +533,213 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       expect(source!.status).toBe("finalized");
       expect(source!.finalizedAt).not.toBeNull();
       expect(await itemRepo.findByResult(resultId)).toHaveLength(sourceItemsBefore.length);
+    });
+  });
+
+  // ── Finalize snapshot semantics (Epic 5b) ─────────────────────────────────
+  // The unified Decide surface renders LIVE preferences directly (Standing); the
+  // spec's canonical order is the live one, and Finalize SNAPSHOTS it. These
+  // pin three facts the Decide flow depends on:
+  //   1. FROZEN — a finalized result's sort_result_items never move when live
+  //      preferences change afterward (add an item / rewrite orderRank).
+  //   2. FRESH-AT-FINALIZE — the Finalize entry POSTs a NEW draft materialized
+  //      from CURRENT live prefs, so it reflects the current Standing, never a
+  //      stale earlier draft.
+  //   3. SHARED DERIVATION — the live Standing (deriveStanding) and the finalize
+  //      snapshot come from the SAME rankPreferencesToItems derivation: the
+  //      most-loved item is identical in both.
+  describe("Finalize snapshot semantics: live-canonical, snapshot-frozen", () => {
+    /**
+     * Seed a collection with two "top" items (highItem orderRank 0, lowItem
+     * orderRank 1) but DO NOT materialize a draft — the live preferences are the
+     * source of truth the Decide surface reads. Returns the ids + a live-prefs
+     * reader so cases can mutate prefs and re-read Standing.
+     */
+    async function seedLivePrefs() {
+      const { db } = getTestDb();
+      const collectionId = await seedCollection();
+      const itemRepo = new ItemRepository(db);
+      const highItem = await itemRepo.create({ collectionId });
+      const lowItem = await itemRepo.create({ collectionId });
+      const prefRepo = new CollectionPreferenceItemRepository(db);
+      await prefRepo.create({
+        collectionId, curatorId: ownerId, itemId: highItem.id,
+        score: 0.9, confidence: 1, rankBucket: "top", comparisonCount: 0, orderRank: 0,
+      });
+      await prefRepo.create({
+        collectionId, curatorId: ownerId, itemId: lowItem.id,
+        score: 0.8, confidence: 1, rankBucket: "top", comparisonCount: 0, orderRank: 1,
+      });
+      return { collectionId, highItemId: highItem.id, lowItemId: lowItem.id };
+    }
+
+    it("freezes the snapshot: finalized items are UNCHANGED after later live-pref changes (insert + orderRank rewrite)", async () => {
+      const { db } = getTestDb();
+      const { collectionId, highItemId, lowItemId } = await seedLivePrefs();
+      const itemRepo = new ItemRepository(db);
+      const prefRepo = new CollectionPreferenceItemRepository(db);
+      const sortItemRepo = new SortResultItemRepository(db);
+
+      // Materialize the current live order into a draft (what the Finalize entry's
+      // POST does), then finalize it.
+      login(ownerId);
+      const created = await createResult(
+        jsonReq("POST", { collectionId, name: "Frozen" }) as any,
+      );
+      expect(created.status).toBe(201);
+      const resultId = (await created.json()).id as string;
+      const finalized = await finalizeResult(
+        jsonReq("POST") as any, { params: { id: resultId } } as any,
+      );
+      expect(finalized.status).toBe(200);
+
+      // BEFORE: snapshot is [highItem@0, lowItem@1].
+      const before = [...(await sortItemRepo.findByResult(resultId))]
+        .sort((a, b) => a.computedRank - b.computedRank);
+      expect(before.map((i) => i.itemId)).toEqual([highItemId, lowItemId]);
+
+      // Now MUTATE the live preferences, all AFTER finalize. orderRank is UNIQUE
+      // per (collection, curator), so move the originals out of the way (0,1 ->
+      // 10,11) BEFORE inserting the new item at 0 — no transient collision.
+      const highPref = await prefRepo.findByItem(highItemId, ownerId);
+      const lowPref = await prefRepo.findByItem(lowItemId, ownerId);
+      await prefRepo.update(highPref!.id, { orderRank: 10 });
+      await prefRepo.update(lowPref!.id, { orderRank: 11 });
+      //  insert a brand-new loved item at the top (orderRank 0),
+      const inserted = await itemRepo.create({ collectionId });
+      await prefRepo.create({
+        collectionId, curatorId: ownerId, itemId: inserted.id,
+        score: 0.99, confidence: 1, rankBucket: "top", comparisonCount: 0, orderRank: 0,
+      });
+
+      // The LIVE Standing now reflects the changes (proves the mutation took).
+      const items = [
+        { id: highItemId } as Item, { id: lowItemId } as Item, { id: inserted.id } as Item,
+      ];
+      const itemById = new Map(items.map((i) => [i.id, i]));
+      const livePrefs = await prefRepo.findByCollection(collectionId, ownerId);
+      const standing = deriveStanding(livePrefs, itemById);
+      expect(standing.loved).toHaveLength(3);
+      expect(standing.loved[0].item.id).toBe(inserted.id); // new item is most-loved live
+
+      // AFTER: the finalized snapshot is byte-for-byte the SAME — no insertion, no
+      // reorder leaked in. Frozen.
+      const after = [...(await sortItemRepo.findByResult(resultId))]
+        .sort((a, b) => a.computedRank - b.computedRank);
+      expect(after.map((i) => i.itemId)).toEqual([highItemId, lowItemId]);
+      expect(after.map((i) => i.computedRank)).toEqual(before.map((i) => i.computedRank));
+      expect(after.map((i) => i.computedBucket)).toEqual(before.map((i) => i.computedBucket));
+    });
+
+    it("preserves a manual overlay on the frozen snapshot across later live-pref changes", async () => {
+      const { db } = getTestDb();
+      const { collectionId, highItemId, lowItemId } = await seedLivePrefs();
+      const prefRepo = new CollectionPreferenceItemRepository(db);
+      const sortItemRepo = new SortResultItemRepository(db);
+
+      login(ownerId);
+      const created = await createResult(
+        jsonReq("POST", { collectionId, name: "Overlay" }) as any,
+      );
+      const resultId = (await created.json()).id as string;
+
+      // Manual tweak on the SNAPSHOT (the overlay lives only here, never on live
+      // Standing): push the top item down to "low", then finalize.
+      const topRow = [...(await sortItemRepo.findByResult(resultId))]
+        .sort((a, b) => a.computedRank - b.computedRank)[0];
+      expect(topRow.itemId).toBe(highItemId);
+      await sortItemRepo.update(topRow.id, { manualBucket: "low", manualRank: 3 });
+      await finalizeResult(jsonReq("POST") as any, { params: { id: resultId } } as any);
+
+      // Mutate live prefs afterward.
+      const lowPref = await prefRepo.findByItem(lowItemId, ownerId);
+      await prefRepo.update(lowPref!.id, { orderRank: 99 });
+
+      // The manual overlay on the finalized snapshot SURVIVES — not silently
+      // dropped, not overwritten by any live-pref refresh.
+      const persisted = await sortItemRepo.findById(topRow.id);
+      expect(persisted!.manualBucket).toBe("low");
+      expect(persisted!.manualRank).toBe(3);
+    });
+
+    it("Finalize snapshots CURRENT Standing, not a stale earlier draft", async () => {
+      const { db } = getTestDb();
+      const { collectionId, highItemId, lowItemId } = await seedLivePrefs();
+      const prefRepo = new CollectionPreferenceItemRepository(db);
+      const sortItemRepo = new SortResultItemRepository(db);
+
+      // An EARLIER draft exists (e.g. an abandoned Finalize attempt): order is
+      // [highItem, lowItem].
+      login(ownerId);
+      const staleRes = await createResult(
+        jsonReq("POST", { collectionId, name: "Stale" }) as any,
+      );
+      const staleId = (await staleRes.json()).id as string;
+      const staleSnap = [...(await sortItemRepo.findByResult(staleId))]
+        .sort((a, b) => a.computedRank - b.computedRank);
+      expect(staleSnap.map((i) => i.itemId)).toEqual([highItemId, lowItemId]);
+
+      // Standing changes: flip the live order so lowItem is now most-loved.
+      // orderRank is UNIQUE per (collection, curator): move high 0 -> 2 first (2
+      // is free), then low 1 -> 0 (now free) — no transient collision.
+      const highPref = await prefRepo.findByItem(highItemId, ownerId);
+      const lowPref = await prefRepo.findByItem(lowItemId, ownerId);
+      await prefRepo.update(highPref!.id, { orderRank: 2 });
+      await prefRepo.update(lowPref!.id, { orderRank: 0 });
+
+      // Clicking Finalize again POSTs a FRESH draft. It must reflect the CURRENT
+      // Standing (lowItem first), NOT reuse the stale draft's order.
+      const freshRes = await createResult(
+        jsonReq("POST", { collectionId, name: "Fresh" }) as any,
+      );
+      const freshId = (await freshRes.json()).id as string;
+      expect(freshId).not.toBe(staleId); // a new draft, not the stale one
+      const freshSnap = [...(await sortItemRepo.findByResult(freshId))]
+        .sort((a, b) => a.computedRank - b.computedRank);
+      expect(freshSnap.map((i) => i.itemId)).toEqual([lowItemId, highItemId]);
+
+      // Finalize the fresh one; its frozen order is the current Standing.
+      const finalized = await finalizeResult(
+        jsonReq("POST") as any, { params: { id: freshId } } as any,
+      );
+      expect(finalized.status).toBe(200);
+      const frozen = [...(await sortItemRepo.findByResult(freshId))]
+        .sort((a, b) => a.computedRank - b.computedRank);
+      expect(frozen[0].itemId).toBe(lowItemId);
+    });
+
+    it("live Standing and the finalize snapshot share ONE derivation (same most-loved item)", async () => {
+      const { db } = getTestDb();
+      const { collectionId, highItemId, lowItemId } = await seedLivePrefs();
+      const prefRepo = new CollectionPreferenceItemRepository(db);
+      const sortItemRepo = new SortResultItemRepository(db);
+
+      // The LIVE Standing's most-loved item (what the Decide surface renders).
+      const items = [{ id: highItemId } as Item, { id: lowItemId } as Item];
+      const itemById = new Map(items.map((i) => [i.id, i]));
+      const livePrefs = await prefRepo.findByCollection(collectionId, ownerId);
+      const standing = deriveStanding(livePrefs, itemById);
+      const standingMostLoved = standing.loved[0].item.id;
+
+      // The finalize snapshot's most-loved item (computedRank 0 of the loved
+      // partition, mirroring how the snapshot viewer derives it).
+      login(ownerId);
+      const created = await createResult(
+        jsonReq("POST", { collectionId, name: "Shared" }) as any,
+      );
+      const resultId = (await created.json()).id as string;
+      const snapRows = (await sortItemRepo.findByResult(resultId)).map((r) => ({
+        itemId: r.itemId, computedRank: r.computedRank,
+        computedBucket: r.computedBucket, manualBucket: r.manualBucket,
+      }));
+      const { loved } = partitionRanked(snapRows);
+      const snapshotMostLoved = [...loved]
+        .sort((a, b) => a.computedRank - b.computedRank)[0].itemId;
+
+      // Same derivation → same most-loved item, no divergence between the two
+      // Put-in-order entry points.
+      expect(snapshotMostLoved).toBe(standingMostLoved);
+      expect(standingMostLoved).toBe(highItemId);
     });
   });
 });
