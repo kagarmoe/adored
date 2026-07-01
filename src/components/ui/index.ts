@@ -4,6 +4,9 @@ export type { ButtonProps } from "./Button";
 export { Badge } from "./Badge";
 export type { BadgeProps } from "./Badge";
 
+export { TierBadge } from "./TierBadge";
+export type { TierBadgeProps } from "./TierBadge";
+
 export { Card } from "./Card";
 export type { CardProps } from "./Card";
 

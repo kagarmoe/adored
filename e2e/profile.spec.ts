@@ -29,7 +29,8 @@ test("saving a new display name reflects in the header without a reload", async 
 
   // The form is a client component; wait for the labelled field to be ready so
   // we don't fill before hydration attaches the controlled onChange handler.
-  const nameField = page.getByLabel("Display name");
+  // Epic 1 renamed this label "Display name" → "Name".
+  const nameField = page.getByLabel("Name", { exact: true });
   await expect(nameField).toBeVisible();
 
   await nameField.fill(uniqueName);
@@ -43,7 +44,7 @@ test("saving a new display name reflects in the header without a reload", async 
         r.request().method() === "PATCH" &&
         r.ok(),
     ),
-    page.getByRole("button", { name: "Save" }).click(),
+    page.getByRole("button", { name: "Save changes" }).click(),
   ]);
 
   // The substantive invariant: the header (banner landmark) shows the new name,

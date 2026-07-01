@@ -41,7 +41,7 @@ export function CollectionCard({ collection, coverPhotoUrl, viewerPhoto, hasPool
       {/* Name leads; description is a quiet second line. No counts, no dates. */}
       <div className="flex flex-1 flex-col gap-2 p-5">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-lg text-ink line-clamp-2">{collection.name}</h3>
+          <h3 className="font-display text-lg text-ink line-clamp-2">{collection.name}</h3>
           {collection.status !== "active" && (
             <Badge variant={collection.status} className="shrink-0">{collection.status}</Badge>
           )}

@@ -112,7 +112,7 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     fireEvent.change(emailField(), { target: { value: " Me@Example.com " } });
-    fireEvent.click(screen.getByRole("button", { name: /magic link/i }));
+    fireEvent.click(screen.getByRole("button", { name: /sign-in link/i }));
 
     await waitFor(() =>
       expect(screen.getByText("Check your email")).toBeInTheDocument(),

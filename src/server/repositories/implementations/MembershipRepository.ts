@@ -1,6 +1,6 @@
 import { eq, and } from "drizzle-orm";
 import type { Database } from "@/lib/db";
-import { membershipsTable } from "@/lib/db/schema";
+import { membershipsTable, user } from "@/lib/db/schema";
 import type { IMembershipRepository } from "../MembershipRepository";
 import type { CollectionMembership } from "@/types";
 import { generateId } from "@/lib/id";
@@ -79,11 +79,25 @@ export class MembershipRepository implements IMembershipRepository {
   }
 
   async findByCollection(collectionId: string): Promise<CollectionMembership[]> {
-    const mems = await this.db
-      .select()
+    // LEFT JOIN the user table so each accepted member carries the person-side
+    // name + email the Members screen renders (avatar initial + email line).
+    // The base memberships table holds only user_id; without this join those
+    // optional fields stay undefined. LEFT (not INNER) so a membership whose
+    // user row somehow went missing still lists, just without name/email.
+    const rows = await this.db
+      .select({
+        membership: membershipsTable,
+        name: user.name,
+        email: user.email,
+      })
       .from(membershipsTable)
+      .leftJoin(user, eq(membershipsTable.userId, user.id))
       .where(eq(membershipsTable.collectionId, collectionId));
-    return mems.map((m) => this.mapToMembership(m));
+    return rows.map((r) => ({
+      ...this.mapToMembership(r.membership),
+      name: r.name ?? undefined,
+      email: r.email ?? undefined,
+    }));
   }
 
   async update(id: string, _data: Partial<CollectionMembership>): Promise<CollectionMembership> {

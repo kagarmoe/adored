@@ -20,6 +20,18 @@ beforeEach(() => {
 });
 
 describe("ProfileForm", () => {
+  it("renders the Name input, a disabled Email input bound to the user's email, and a Save changes button", () => {
+    render(<ProfileForm initialName="Tessa" email="tessa@example.com" />);
+
+    expect(screen.getByLabelText(/name/i)).toBeEnabled();
+
+    const emailField = screen.getByLabelText(/email/i);
+    expect(emailField).toBeDisabled();
+    expect(emailField).toHaveValue("tessa@example.com");
+
+    expect(screen.getByRole("button", { name: /save changes/i })).toBeInTheDocument();
+  });
+
   it("submits the trimmed name, refreshes the session, and confirms", async () => {
     render(<ProfileForm initialName={null} email="a@b.c" />);
 
