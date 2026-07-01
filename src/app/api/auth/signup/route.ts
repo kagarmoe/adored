@@ -4,6 +4,7 @@ import { user } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { generateId } from "@/lib/id";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -58,13 +59,21 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user
+    const newUserId = generateId("user");
     await db.insert(user).values({
-      id: generateId("user"),
+      id: newUserId,
       email: normalizedEmail,
       name: normalizedEmail.split("@")[0],
       password: hashedPassword,
       emailVerified: new Date(),
     });
+
+    const phClient = getPostHogClient();
+    phClient.capture({
+      distinctId: newUserId,
+      event: 'user_signed_up',
+    });
+    await phClient.shutdown();
 
     return NextResponse.json(
       { message: "Account created successfully" },

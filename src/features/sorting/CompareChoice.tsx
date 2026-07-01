@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
 import { itemDisplayName, itemInitial } from "@/lib/items";
 import { Button, CardImage } from "@/components/ui";
+import posthog from "posthog-js";
 
 interface CompareChoiceProps {
   sessionId: string;
@@ -36,6 +37,13 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
         }),
       });
       if (!res.ok) throw new Error("That didn't save. Try again.");
+      posthog.capture('pairwise_decision_made', {
+        result,
+        session_id: sessionId,
+        item_a_id: itemA.id,
+        item_b_id: itemB.id,
+        comparisons_made: comparisonsMade + 1,
+      });
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "That didn't save. Try again.");

@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { SessionController } from "@/server/api/sessions";
 import { errorResponse } from "@/server/api/http-errors";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -17,6 +18,13 @@ export async function POST(req: NextRequest) {
 
   try {
     const newSession = await SessionController.fromDb(db).createSession(collectionId, session.user.id, { goal });
+    const phClient = getPostHogClient();
+    phClient.capture({
+      distinctId: session.user.id,
+      event: 'sort_session_created',
+      properties: { session_id: newSession.id, collection_id: collectionId },
+    });
+    await phClient.shutdown();
     return NextResponse.json(newSession, { status: 201 });
   } catch (error) {
     // CurrentSessionExistsError -> gentle 409 (existing sort in this slot:
