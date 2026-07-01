@@ -216,10 +216,14 @@ export const decisionEventsTable = pgTable(
       .references(() => sessionsTable.id),
     type: text("type").notNull(),
     decision: jsonb("decision").notNull(),
+    clientKey: text("client_key"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
     sessionIdx: index("decision_events_session_id_idx").on(table.sessionId),
+    clientKeyUnique: uniqueIndex("decision_events_client_key_unique")
+      .on(table.sessionId, table.clientKey)
+      .where(sql`${table.clientKey} is not null`),
   }),
 );
 
@@ -267,6 +271,7 @@ export const preferencesTable = pgTable(
     confidence: numeric("confidence", { precision: 10, scale: 4 }).notNull(),
     rankBucket: text("rank_bucket").notNull(),
     comparisonCount: integer("comparison_count").notNull(),
+    orderRank: integer("order_rank"),
     lastSeen: timestamp("last_seen").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -280,6 +285,9 @@ export const preferencesTable = pgTable(
       table.itemId,
       table.curatorId,
     ),
+    orderRankUnique: uniqueIndex("preferences_order_rank_unique")
+      .on(table.collectionId, table.curatorId, table.orderRank)
+      .where(sql`${table.orderRank} is not null`),
   }),
 );
 
