@@ -173,6 +173,7 @@ export interface CollectionPreferenceItem {
   confidence: number;
   rankBucket: RankBucket;
   comparisonCount: number;
+  orderRank: number | null;
   lastSeen: Date;
   createdAt: Date;
   updatedAt: Date;

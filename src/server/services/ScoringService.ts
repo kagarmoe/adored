@@ -125,6 +125,7 @@ export class ScoringService {
         confidence: this.calculateConfidence(data.count),
         rankBucket: this.getBucket(data.score),
         comparisonCount: data.count,
+        orderRank: null,
         lastSeen: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),

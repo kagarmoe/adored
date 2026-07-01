@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { sql } from "drizzle-orm";
 import { getTestDb, resetDb, closeDb } from "@/../e2e/fixtures/db";
-import { seedBaseline, seedBareCollection } from "@/../e2e/fixtures/seed";
+import { seedBaseline, seedBareCollection, seedFullCollection } from "@/../e2e/fixtures/seed";
 import { generateId } from "@/lib/id";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
+import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -145,5 +146,39 @@ describeDb("preferences partial unique — (collection_id, curator_id, order_ran
   it("REJECTS two rows (different items) with the SAME non-null order_rank = 0 on 23505", async () => {
     await insertPreference(0);
     expect(await pgErrorCode(() => insertPreference(0))).toBe("23505");
+  });
+});
+
+// The repository is the seam that persists/reads order_rank as a plain integer
+// (no numeric-string coercion) and clears it in bulk for a curator's collection.
+describeDb("preference orderRank persistence", () => {
+  beforeAll(async () => { await resetDb(); });
+  afterAll(async () => { await closeDb(); });
+
+  it("round-trips orderRank and clears it in bulk", async () => {
+    const { db } = getTestDb();
+    // seedFullCollection(ownerId) returns FullSeedIds { collectionId, itemAId, itemBId, ... };
+    // the owner (curatorId) has NO preference row seeded (the fixture's only pref is
+    // the 2nd member's on itemB), so we create the owner's own row here.
+    const curatorId = await seedBaseline();
+    const { collectionId, itemAId } = await seedFullCollection(curatorId);
+    const repo = new CollectionPreferenceItemRepository(db);
+
+    await repo.create({
+      collectionId,
+      curatorId,
+      itemId: itemAId,
+      score: 0.9,
+      confidence: 0.5,
+      rankBucket: "top",
+      comparisonCount: 1,
+      orderRank: 0,
+    });
+    const one = await repo.findByItem(itemAId, curatorId);
+    expect(one?.orderRank).toBe(0);
+
+    await repo.clearOrderRanks(collectionId, curatorId);
+    const cleared = await repo.findByItem(itemAId, curatorId);
+    expect(cleared?.orderRank).toBeNull();
   });
 });
