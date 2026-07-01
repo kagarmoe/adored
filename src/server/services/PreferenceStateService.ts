@@ -6,14 +6,11 @@ import type { IItemRepository } from "@/server/repositories/ItemRepository";
 import type { ScoringService } from "@/server/services/ScoringService";
 import {
   deriveOrder,
+  RANKABLE_BUCKETS,
   toComparisonEvents,
   type ComparisonEvent,
   type RankItem,
 } from "@/lib/insertion-ranking";
-
-// Only Love + Like carry an insertion order — medium/low and any unplaced
-// top/high stay orderRank = null.
-const RANKABLE_BUCKETS = new Set<CollectionPreferenceItem["rankBucket"]>(["top", "high"]);
 
 export class PreferenceStateService {
   constructor(

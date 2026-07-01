@@ -1,5 +1,13 @@
 export type Bucket = "top" | "high" | "medium" | "low";
 
+// The single source of truth for which buckets carry an insertion order: only
+// Love (top) + Like (high). Both entry points — the live selector
+// (pairwise-selection) and the recompute path (PreferenceStateService) — import
+// THIS set, so "both agree on the ranked scope" is structurally guaranteed rather
+// than two copies that could drift. medium/low and any unplaced top/high stay
+// orderRank = null.
+export const RANKABLE_BUCKETS: ReadonlySet<Bucket> = new Set<Bucket>(["top", "high"]);
+
 export interface ComparisonEvent {
   aId: string;
   bId: string;

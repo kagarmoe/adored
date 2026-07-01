@@ -56,7 +56,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const { event, isNew } = await withTransaction(db, async (tx) => {
       // Serialize a curator's concurrent decisions: the row-lock makes two
       // in-flight POSTs for this session queue behind each other, so the
-      // idempotency read/insert below can't race the recompute.
+      // idempotency read/insert below can't race the recompute. The per-session
+      // lock is sufficient (not a per-curator lock) because of the single-active-
+      // session-per-(collection,curator) invariant: a curator has at most one
+      // active session per collection, so concurrent recomputes for the same
+      // (collection, curator) can't arise from two different sessions.
       await tx.execute(sql`select id from sessions where id = ${params.id} for update`);
 
       // Idempotency: if this clientKey already recorded an event, return it
@@ -78,7 +82,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       const existing = await findByClientKey();
       if (existing.length > 0) return { event: existing[0], isNew: false };
 
-      let inserted;
+      let inserted: typeof decisionEventsTable.$inferSelect | undefined;
       try {
         [inserted] = await tx.insert(decisionEventsTable).values({
           id: generateId("event"),

@@ -1,4 +1,6 @@
 // @vitest-environment node
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import { sql } from "drizzle-orm";
 import { getTestDb, resetDb, closeDb } from "@/../e2e/fixtures/db";
@@ -340,13 +342,32 @@ describeDb("decisions route — idempotency on clientKey (route -> repo -> DB)",
   });
 });
 
+// Read the ACTUAL shipped migration and return its executable statements: split on
+// drizzle's `--> statement-breakpoint` marker, drop `--` comment lines, and keep the
+// non-empty remainder. The reset test runs THESE (not a hand-copied duplicate), so it
+// verifies the real migration content — if someone edits the DELETEs, this test moves
+// with them.
+function shippedMigrationStatements(file: string): string[] {
+  const raw = readFileSync(join(process.cwd(), "drizzle", file), "utf8");
+  return raw
+    .split("--> statement-breakpoint")
+    .map((stmt) =>
+      stmt
+        .split("\n")
+        .filter((line) => !line.trimStart().startsWith("--"))
+        .join("\n")
+        .trim(),
+    )
+    .filter((stmt) => stmt.length > 0);
+}
+
 // Task 11: the forward-only clean reset (drizzle/0012_reset_elo_drafts.sql) discards
 // Elo-era DRAFT sort results (whose computedRank derives from the retired scoring) and
 // their items, while leaving FINALIZED results — immutable self-contained snapshots —
 // untouched. A count on a freshly-migrated (empty) DB would be trivially 0 and prove
 // nothing; this seeds BOTH a draft and a finalized result (each with an item row),
-// executes the migration's two DELETE statements verbatim, and asserts the draft +
-// its item are gone while the finalized result + its item remain.
+// executes the SHIPPED migration's statements (read from the .sql file), and asserts
+// the draft + its item are gone while the finalized result + its item remain.
 describeDb("clean reset — discards Elo-era drafts, preserves finalized snapshots", () => {
   beforeAll(async () => { await resetDb(); });
   afterAll(async () => { await closeDb(); });
@@ -389,11 +410,13 @@ describeDb("clean reset — discards Elo-era drafts, preserves finalized snapsho
     expect(await countById(db, "sort_results", draft.resultId)).toBe(1);
     expect(await countById(db, "sort_results", finalized.resultId)).toBe(1);
 
-    // The migration's two DELETE statements, verbatim (items first — FK to results).
-    await db.execute(sql`
-      DELETE FROM sort_result_items
-      WHERE sort_result_id IN (SELECT id FROM sort_results WHERE status = 'draft')`);
-    await db.execute(sql`DELETE FROM sort_results WHERE status = 'draft'`);
+    // Run the ACTUAL shipped migration's statements (read from the .sql file, not a
+    // hand-copied duplicate) so this test verifies the real reset content.
+    const statements = shippedMigrationStatements("0012_reset_elo_drafts.sql");
+    expect(statements.length).toBe(2); // items DELETE, then results DELETE
+    for (const stmt of statements) {
+      await db.execute(sql.raw(stmt));
+    }
 
     // Draft result + its item are gone.
     expect(await countById(db, "sort_results", draft.resultId)).toBe(0);

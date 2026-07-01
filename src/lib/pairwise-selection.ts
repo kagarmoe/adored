@@ -1,13 +1,10 @@
 import type { CollectionPreferenceItem, DecisionEvent, Disposition, Item } from "@/types";
 import {
   deriveOrder,
+  RANKABLE_BUCKETS,
   toComparisonEvents,
   type RankItem,
 } from "@/lib/insertion-ranking";
-
-// Only Love + Like carry an insertion order — the same rankable set the recompute
-// path (PreferenceStateService) uses, so both entry points ask the same question.
-const RANKABLE_BUCKETS = new Set<CollectionPreferenceItem["rankBucket"]>(["top", "high"]);
 
 interface SelectionOptions {
   preferences: CollectionPreferenceItem[];

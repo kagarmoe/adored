@@ -49,6 +49,19 @@ describe("placeItem", () => {
   it("skip on the needed pivot leaves the item skipped", () => {
     expect(placeItem("A", ["B"], [cmp("A", "B", "skip", 1)])).toEqual({ status: "skipped" });
   });
+  it("skip at a MID-DEPTH pivot (not the first probe) still leaves the item skipped", () => {
+    // ordered [i0,i1,i2,i3]: first probe is mid index 2 (i2). X<i2 => search [3,4),
+    // whose probe is i3 — the SECOND, deeper pivot. That deeper comparison is skip.
+    const ordered = ["i0", "i1", "i2", "i3"];
+    const comps = [cmp("X", "i2", "item_b", 1), cmp("X", "i3", "skip", 2)];
+    expect(placeItem("X", ordered, comps)).toEqual({ status: "skipped" });
+  });
+  it("unknown at a MID-DEPTH pivot returns pending on that deeper pivot", () => {
+    // Same shape: i2 known (X<i2), i3 never compared => pending on i3, the deep pivot.
+    const ordered = ["i0", "i1", "i2", "i3"];
+    const comps = [cmp("X", "i2", "item_b", 1)];
+    expect(placeItem("X", ordered, comps)).toEqual({ status: "pending", pivotId: "i3" });
+  });
   it("respects the ceil(log2(n+1)) comparison bound (n=7 => 3)", () => {
     const ordered = ["i0", "i1", "i2", "i3", "i4", "i5", "i6"]; // most→least loved
     // X belongs at the very end: every comparison says pivot is more loved.
@@ -122,5 +135,34 @@ describe("deriveOrder", () => {
     expect(d.order).toEqual(["A"]);
     expect(d.unplaced).toEqual(["B"]);
     expect(d.nextPair).toBeNull();
+  });
+
+  // Comparisons that establish the total order [A,B,C,D] (A most loved) among the
+  // first four canonically-inserted items. E then inserts into [A,B,C,D]: its first
+  // probe is C (mid), E<C, so the search narrows to [3,4) whose probe is D — the
+  // SECOND, DEEPER pivot on E's path.
+  const buildABCD = () => [
+    cmp("A", "B", "item_a", 10), // A > B
+    cmp("C", "B", "item_b", 11), // C < B
+    cmp("D", "B", "item_b", 12), // D < B
+    cmp("D", "C", "item_b", 13), // D < C
+    cmp("E", "C", "item_b", 14), // E < C  (first probe on E's path)
+  ];
+  const abcde = [item("A", 1), item("B", 2), item("C", 3), item("D", 4), item("E", 5)];
+
+  it("skip at a DEEPER pivot (E vs D) leaves E unplaced, order intact, no next pair", () => {
+    const comps = [...buildABCD(), cmp("E", "D", "skip", 15)]; // deep pivot skipped
+    const d = deriveOrder(abcde, comps);
+    expect(d.order).toEqual(["A", "B", "C", "D"]);
+    expect(d.unplaced).toEqual(["E"]);
+    expect(d.nextPair).toBeNull();
+  });
+
+  it("unknown at a DEEPER pivot (E vs D missing) asks E vs D as the next pair", () => {
+    const comps = buildABCD(); // E vs D never recorded => pending on the deep pivot D
+    const d = deriveOrder(abcde, comps);
+    expect(d.order).toEqual(["A", "B", "C", "D"]);
+    expect(d.unplaced).toEqual(["E"]);
+    expect(d.nextPair).toEqual(["E", "D"]);
   });
 });
