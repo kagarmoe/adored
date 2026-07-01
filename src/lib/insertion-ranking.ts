@@ -31,3 +31,27 @@ export function latestOutcome(comparisons: ComparisonEvent[], x: string, y: stri
   const winnerId = latest.result === "item_a" ? latest.aId : latest.bId;
   return winnerId === x ? "x_more" : "y_more";
 }
+
+export type Placement =
+  | { status: "placed"; index: number }
+  | { status: "pending"; pivotId: string }
+  | { status: "skipped" };
+
+export function placeItem(x: string, ordered: string[], comparisons: ComparisonEvent[]): Placement {
+  let lo = 0;
+  let hi = ordered.length;
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    const pivot = ordered[mid];
+    const o = latestOutcome(comparisons, x, pivot);
+    if (o === "unknown") return { status: "pending", pivotId: pivot };
+    if (o === "skip") return { status: "skipped" };
+    if (o === "x_more") {
+      hi = mid; // x is more loved => earlier slot
+    } else {
+      // y_more or tie => x sits at/after the pivot
+      lo = mid + 1;
+    }
+  }
+  return { status: "placed", index: lo };
+}
