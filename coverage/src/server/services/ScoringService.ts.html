@@ -30,16 +30,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.44% </span>
+                <span class="strong">95% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>17/18</span>
+                <span class='fraction'>19/20</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>8/8</span>
+                <span class='fraction'>10/10</span>
             </div>
         
             
@@ -188,7 +188,21 @@
 <a name='L123'></a><a href='#L123'>123</a>
 <a name='L124'></a><a href='#L124'>124</a>
 <a name='L125'></a><a href='#L125'>125</a>
-<a name='L126'></a><a href='#L126'>126</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -241,17 +255,31 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">33x</span>
-<span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">33x</span>
-<span class="cline-any cline-yes">33x</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-yes">32x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">33x</span>
-<span class="cline-any cline-yes">33x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">70x</span>
 <span class="cline-any cline-yes">70x</span>
 <span class="cline-any cline-yes">51x</span>
@@ -262,13 +290,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">33x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">45x</span>
 <span class="cline-any cline-yes">45x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">33x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">62x</span>
 <span class="cline-any cline-yes">50x</span>
 <span class="cline-any cline-yes">50x</span>
@@ -362,18 +390,32 @@ export class ScoringService {
     return "low";
   }
 &nbsp;
+  // The curator's non-deleted sessions across the collection, each session's
+  // decision events flattened. Fetched in parallel (one query per session, all
+  // in flight at once). recalculatePreferences reads this ONCE and shares the
+  // same list with the comparison mapping, so the decision log isn't read twice.
+  async loadCuratorDecisionEvents(
+    collectionId: string,
+    curatorId: string,
+  ): Promise&lt;DecisionEvent[]&gt; {
+    const sessions = await this.sessionRepo.findByCollection(collectionId);
+    const curatorSessions = sessions.filter((s) =&gt; s.curatorId === curatorId);
+    const perSession = await Promise.all(
+      curatorSessions.map((s) =&gt; this.decisionRepo.findBySession(s.id)),
+    );
+    return perSession.flat();
+  }
+&nbsp;
+  // `events` lets the caller supply an already-fetched decision log (see
+  // loadCuratorDecisionEvents), avoiding a second read of the same events. When
+  // omitted, they're fetched here — the standalone contract is unchanged.
   async computePreferences(
     collectionId: string,
     curatorId: string,
+    events?: DecisionEvent[],
   ): Promise&lt;CollectionPreferenceItem[]&gt; {
-    const sessions = await this.sessionRepo.findByCollection(collectionId);
-    const curatorSessions = sessions.filter((s) =&gt; s.curatorId === curatorId);
-&nbsp;
-    const allDecisions: DecisionEvent[] = [];
-    for (const session of curatorSessions) {
-      const decisions = await this.decisionRepo.findBySession(session.id);
-      allDecisions.push(...decisions);
-    }
+    const allDecisions =
+      events ?? (await this.loadCuratorDecisionEvents(collectionId, curatorId));
 &nbsp;
     const itemState = new Map&lt;string, ItemState&gt;();
     const ensure = (itemId: string): ItemState =&gt; {
@@ -445,7 +487,7 @@ export class ScoringService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-01T18:15:01.935Z
+                at 2026-07-01T19:09:00.660Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

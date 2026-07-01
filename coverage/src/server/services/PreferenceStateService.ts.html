@@ -39,7 +39,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>11/11</span>
+                <span class='fraction'>12/12</span>
             </div>
         
             
@@ -187,7 +187,15 @@
 <a name='L122'></a><a href='#L122'>122</a>
 <a name='L123'></a><a href='#L123'>123</a>
 <a name='L124'></a><a href='#L124'>124</a>
-<a name='L125'></a><a href='#L125'>125</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -208,6 +216,9 @@
 <span class="cline-any cline-yes">48x</span>
 <span class="cline-any cline-yes">48x</span>
 <span class="cline-any cline-yes">48x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -215,6 +226,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -285,6 +299,8 @@
 <span class="cline-any cline-yes">38x</span>
 <span class="cline-any cline-yes">29x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">25x</span>
 <span class="cline-any cline-yes">25x</span>
 <span class="cline-any cline-yes">26x</span>
@@ -294,14 +310,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">25x</span>
-<span class="cline-any cline-yes">25x</span>
-<span class="cline-any cline-yes">25x</span>
-<span class="cline-any cline-yes">22x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">25x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">27x</span>
+<span class="cline-any cline-yes">23x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">27x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -338,15 +354,21 @@ export class PreferenceStateService {
     collectionId: string,
     curatorId: string,
   ): Promise&lt;CollectionPreferenceItem[]&gt; {
+    // Read the curator's decision log ONCE and share it between bucket scoring
+    // and the pairwise-comparison mapping — both consumers derive from the same
+    // event set, so a single read is behavior-identical to the old double read.
+    const events = await this.loadDecisionEvents(collectionId, curatorId);
+&nbsp;
     const preferences = await this.scoringService.computePreferences(
       collectionId,
       curatorId,
+      events,
     );
 &nbsp;
     const orderRankByItem = await this.deriveOrderRanks(
       collectionId,
-      curatorId,
       preferences,
+      events,
     );
 &nbsp;
     // Batch fetch: get all existing preferences once, not per item
@@ -394,8 +416,8 @@ export class PreferenceStateService {
   // loved). Items the engine leaves unplaced are absent from the map (=&gt; null).
   private async deriveOrderRanks(
     collectionId: string,
-    curatorId: string,
     preferences: CollectionPreferenceItem[],
+    events: DecisionEvent[],
   ): Promise&lt;Map&lt;string, number&gt;&gt; {
     const rankableIds = new Set(
       preferences.filter((p) =&gt; RANKABLE_BUCKETS.has(p.rankBucket)).map((p) =&gt; p.itemId),
@@ -409,23 +431,25 @@ export class PreferenceStateService {
       .filter((i) =&gt; rankableIds.has(i.id))
       .map((i) =&gt; ({ id: i.id, createdAt: i.createdAt }));
 &nbsp;
-    const comparisons = await this.loadPairwiseComparisons(collectionId, curatorId);
+    // Shared mapping with the live selector (selectNextPair) — both entry points
+    // build ComparisonEvent[] identically, so they ask the same next question.
+    const comparisons: ComparisonEvent[] = toComparisonEvents(events);
     const { order } = deriveOrder(rankItems, comparisons);
     return new Map(order.map((id, i) =&gt; [id, i]));
   }
 &nbsp;
-  private async loadPairwiseComparisons(
+  // The curator's non-deleted sessions' decision events, fetched once and in
+  // parallel (findByCollectionAndCurator yields the same session set the scorer
+  // scopes to). Shared by bucket scoring and the pairwise mapping.
+  private async loadDecisionEvents(
     collectionId: string,
     curatorId: string,
-  ): Promise&lt;ComparisonEvent[]&gt; {
+  ): Promise&lt;DecisionEvent[]&gt; {
     const sessions = await this.sessionRepo.findByCollectionAndCurator(collectionId, curatorId);
-    const events: DecisionEvent[] = [];
-    for (const session of sessions) {
-      events.push(...(await this.decisionRepo.findBySession(session.id)));
-    }
-    // Shared mapping with the live selector (selectNextPair) — both entry points
-    // build ComparisonEvent[] identically, so they ask the same next question.
-    return toComparisonEvents(events);
+    const perSession = await Promise.all(
+      sessions.map((s) =&gt; this.decisionRepo.findBySession(s.id)),
+    );
+    return perSession.flat();
   }
 &nbsp;
   async getItemPreferences(
@@ -442,7 +466,7 @@ export class PreferenceStateService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-01T18:15:01.935Z
+                at 2026-07-01T19:09:00.660Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
