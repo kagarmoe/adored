@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { Button, Input, ErrorMessage } from "@/components/ui";
+import { Button, Card, Input, ErrorMessage } from "@/components/ui";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { apiPatch } from "@/lib/api-client";
 
 interface ProfileFormProps {
@@ -53,40 +54,53 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-      {error && <ErrorMessage message={error} />}
+    <div className="space-y-6 max-w-2xl">
+      <Card padding="lg" className="!p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && <ErrorMessage message={error} />}
 
-      <Input
-        label="Display name"
-        type="text"
-        autoComplete="name"
-        placeholder="The name you go by"
-        value={name}
-        onChange={(e) => {
-          setName(e.target.value);
-          setSaved(false);
-        }}
-        disabled={saving}
-      />
+          <Input
+            label="Name"
+            type="text"
+            autoComplete="name"
+            placeholder="The name you go by"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setSaved(false);
+            }}
+            disabled={saving}
+          />
 
-      <p className="text-sm text-ink-soft">
-        This is the name shown across Adored. You can leave it blank — we&rsquo;ll just use{" "}
-        {email}.
-      </p>
+          <Input label="Email" type="email" value={email} disabled readOnly />
 
-      <Button type="submit" disabled={saving}>
-        {saving ? "Saving…" : "Save"}
-      </Button>
+          <p className="text-sm text-ink-soft">
+            Your name is shown across Adored. You can leave it blank — we&rsquo;ll just use your email.
+          </p>
 
-      {saved && (
-        <p
-          role="status"
-          aria-live="polite"
-          className="bg-success-soft text-success-deep rounded-control px-3 py-2 text-sm"
-        >
-          Saved — your name is set.
-        </p>
-      )}
-    </form>
+          <Button type="submit" disabled={saving}>
+            {saving ? "Saving…" : "Save changes"}
+          </Button>
+
+          {saved && (
+            <p
+              role="status"
+              aria-live="polite"
+              className="bg-success-soft text-success-deep rounded-control px-3 py-2 text-sm"
+            >
+              Saved — your name is set.
+            </p>
+          )}
+        </form>
+      </Card>
+
+      <div className="flex items-center justify-between gap-4 rounded-control border border-hairline bg-surface px-4 py-3">
+        <div>
+          <p className="text-sm font-medium text-ink">Theme</p>
+          <p className="text-sm text-ink-soft">Switch between light and dark.</p>
+        </div>
+        <ThemeToggle />
+      </div>
+    </div>
   );
 }
