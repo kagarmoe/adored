@@ -142,6 +142,8 @@ for (const theme of ["light", "dark"] as const) {
       // these go next"), no per-tier count grid. seedSortScenario buckets one
       // item to `low`, so the Onward section actually renders here.
       ["results", `/collections/${slug}/results/${resultNumber}`],
+      // Epic 5: the unified Decide "Standing" surface (live ranking, not a snapshot).
+      ["decide", `/collections/${slug}/results`],
       // pv9 PR8 + PR1b (purses-c0w): members page renders MemberList (RoleBadge —
       // Owner/Curator on the existing Badge variants) + email-only InviteForm.
       // Points at the seedMembersScenario collection so real role rows render.
