@@ -156,6 +156,24 @@ describe("ComparePage gentle progress text (Epic 0 Task 8 regression)", () => {
   });
 });
 
+describe("ComparePage round chrome + copy (Epic 4c)", () => {
+  it("wraps the compare content in the round shell (step 2 of 3)", async () => {
+    const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    render(ui);
+    expect(screen.getByRole("list", { name: /round progress: step 2 of 3/i })).toBeInTheDocument();
+    // The live pair still renders inside the shell.
+    expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
+  });
+
+  it("uses the wireframe 'reach for more' / 'the one you'd keep' copy", async () => {
+    const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    render(ui);
+    expect(screen.getByRole("heading", { name: /which do you reach for more\?/i })).toBeInTheDocument();
+    expect(screen.getByText(/tap the one you'd keep/i)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /which do you love more\?/i })).not.toBeInTheDocument();
+  });
+});
+
 describe("ComparePage integrity guard", () => {
   it("redirects (and halts) when the resolved session belongs to a different collection", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_x", collectionId: "coll_OTHER", number: 1, status: "active", curatorId: "u1" });

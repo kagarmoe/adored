@@ -5,6 +5,7 @@ import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemController } from "@/server/api/items";
 import { SessionController } from "@/server/api/sessions";
 import { PreferenceController } from "@/server/api/preferences";
+import { DecisionController } from "@/server/api/decisions";
 import { DispositionController } from "@/server/api/dispositions";
 import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
@@ -18,6 +19,7 @@ import { TriageUndoNotice } from "@/features/sorting/TriageUndoNotice";
 import { SetAsideButton } from "@/features/sorting/SetAsideButton";
 import { TakeABreakControl } from "@/features/sorting/TakeABreakControl";
 import { ItemCard } from "@/features/items/ItemCard";
+import { RoundSurface } from "@/features/sorting/RoundSurface";
 import { selectTriageItem } from "@/lib/triage-selection";
 
 interface TriagePageProps {
@@ -56,6 +58,10 @@ export default async function TriagePage({ params }: TriagePageProps) {
   const dispositionByItemId = new Map(dispositions.map((d) => [d.itemId, d.disposition]));
   const { item, showingDeferred } = selectTriageItem(items, preferenceItemIds, dispositionByItemId);
 
+  // Round recap data: this session's decisions (server-time createdAt). The client
+  // round wrapper filters them to the round window; here we just hand over the log.
+  const decisions = await DecisionController.fromDb(db).listBySession(sortSession.id);
+
   const covers = item ? await PhotoController.fromDb(db).findCoverPhotosByItemIds([item.id]) : new Map();
   const cover = item ? covers.get(item.id) : undefined;
   const heroPhotoUrl = cover ? getPhotoAssetUrlForPhoto(cover, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
@@ -81,6 +87,23 @@ export default async function TriagePage({ params }: TriagePageProps) {
       }
     >
       <TriageUndoProvider collectionId={collection.id}>
+        {/* The set-aside undo notice lives OUTSIDE RoundSurface so it survives BOTH
+            item === null AND the queue-empty "what moved" recap that RoundSurface
+            swaps in when the queue empties. Setting aside the LAST untriaged item
+            ends the round (recap replaces the round content), but the "Bring back"
+            escape must still be reachable — hoisting it here keeps that reversible
+            (spec §11; TONE: nothing lost, always undoable). */}
+        <div className="mx-auto max-w-xl">
+          <TriageUndoNotice />
+        </div>
+        <RoundSurface
+          step={1}
+          totalSteps={3}
+          roundLabel="This round"
+          decisions={decisions}
+          hubHref={`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}`}
+          queueEmpty={!item}
+        >
         <div className="mx-auto max-w-xl space-y-6">
           <div>
             <h1 className="text-3xl text-ink">How do you feel about this one?</h1>
@@ -98,12 +121,6 @@ export default async function TriagePage({ params }: TriagePageProps) {
               </Link>
             </p>
           </div>
-
-          {/* The inline set-aside undo notice lives OUTSIDE the item ternary so it
-              survives item === null: setting aside the LAST untriaged item empties
-              the queue and unmounts the item branch, but the "Bring back" escape
-              must still be reachable (spec §11). */}
-          <TriageUndoNotice />
 
           {!item ? (
             <EmptyState heading="You&apos;ve looked at everything for now" message="You&apos;ve thought through each one. View results to see what you love most." />
@@ -147,6 +164,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
             </>
           )}
         </div>
+        </RoundSurface>
       </TriageUndoProvider>
     </AppLayout>
   );

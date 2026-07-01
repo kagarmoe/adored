@@ -119,6 +119,9 @@ for (const theme of ["light", "dark"] as const) {
     await page.addInitScript((t) => {
       try {
         localStorage.setItem("pi-theme", t);
+        // Epic 4: a 10-min round box so the round surfaces show the violet timer
+        // (round-preference defaults to "none" / no timer when unset).
+        localStorage.setItem("pi-round-box", "10");
       } catch {
         /* storage blocked — falls back to light, fine */
       }

@@ -102,14 +102,17 @@ test.describe("sort session → triage", () => {
     await expect(page).toHaveURL(/\/sort\/\d+\/triage$/);
 
     // The numbered session resolves and the triage screen renders for the freshly
-    // created session (this fresh collection has no items, so it shows the empty
-    // state — the point here is the route landed and resolved, not item
-    // rendering, which the first test pins).
+    // created session. This fresh collection has no items, so the queue is empty
+    // from the start — the round chrome treats an empty queue as a round that has
+    // ended and shows the calm "what moved" recap (queue-empty and timer-expiry
+    // both terminate a round, by design). The point here is the route landed and
+    // resolved on the freshly created session, not item rendering (the first test
+    // pins the populated triage h1).
     expect(
       page.url().match(/\/sort\/(\d+)\/triage$/),
       "expected a numeric session in the triage landing URL",
     ).not.toBeNull();
-    await expect(page.getByRole("heading", { name: "How do you feel about this one?", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Here.?s what moved/ })).toBeVisible();
   });
 });
 
@@ -150,15 +153,26 @@ test.describe("session detail → See what you love most → results", () => {
     await expect(page.getByRole("button", { name: "Love" })).toBeEnabled();
     await expect(page.getByRole("button", { name: "Onward" })).toBeEnabled();
 
-    // Item 2: a second tap must succeed on the re-enabled control and complete
-    // triage (2 decided) — the proof a user can actually sort past the first item.
-    await page.getByRole("button", { name: "Like" }).click();
-    await expect(page.getByText("2 decided so far")).toBeVisible();
+    // Item 2: a second tap must succeed on the re-enabled control (regression U2 —
+    // a user can actually sort past item 1). With two items, deciding the second
+    // empties the queue, which ENDS the round: the round chrome swaps in the calm
+    // "what moved" recap in place of the (now item-less) triage content. Seeing the
+    // recap is the proof the second decision committed and both items are triaged.
+    await Promise.all([
+      page.waitForResponse(
+        (r) =>
+          /\/api\/sessions\/[^/]+\/decisions$/.test(r.url()) &&
+          r.request().method() === "POST" &&
+          r.status() < 400,
+      ),
+      page.getByRole("button", { name: "Like" }).click(),
+    ]);
+    await expect(page.getByRole("heading", { name: /Here.?s what moved/ })).toBeVisible();
 
     // 2. Move to compare and choose one card (tapping a card IS the choice).
     await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
     await expect(
-      page.getByRole("heading", { name: "Which do you love more?" }),
+      page.getByRole("heading", { name: "Which do you reach for more?" }),
     ).toBeVisible();
     await page.getByRole("button", { name: /^Choose / }).first().click();
 
@@ -168,7 +182,9 @@ test.describe("session detail → See what you love most → results", () => {
     await expect(page).toHaveURL(new RegExp(`/collections/${slug}/sort/${sessionNumber}$`));
 
     // 4. The inert "View Results" card is gone; the reachable trigger is present.
-    await expect(page.getByText("See what you love most")).toBeVisible();
+    // ("See what you love most" now appears twice — as the SeeResultsCard heading
+    // AND as the Epic-4 next-step recommendation — so target the unique, load-bearing
+    // trigger button, which lives only on the SeeResultsCard, not the ambiguous text.)
     const trigger = page.getByRole("button", { name: "Show me what I love" });
     await expect(trigger).toBeVisible();
 

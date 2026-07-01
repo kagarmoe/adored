@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/react";
 
 import { SessionAnalytics } from "./SessionAnalytics";
 import type { CollectionPreferenceItem, DecisionEvent } from "@/types";
 
-// Minimal render-only coverage. bead purses-gjr proposes reframing this
-// component (KPI-dashboard-vs-tone), so these tests assert ONLY the current
-// computed render and are expected to change when that reframe lands.
+// TONE reframe (Epic 4d, bead purses-gjr): this component is a gentle reflection,
+// NOT a metrics panel. These tests assert the affirming render AND guard against
+// the retired denominator/percentage/rate framings ever coming back.
 
 function pref(over: Partial<CollectionPreferenceItem>): CollectionPreferenceItem {
   return {
@@ -20,6 +20,7 @@ function pref(over: Partial<CollectionPreferenceItem>): CollectionPreferenceItem
     confidence: 0,
     rankBucket: "low",
     comparisonCount: 0,
+    orderRank: null,
     lastSeen: new Date(),
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -41,31 +42,12 @@ function decision(type: DecisionEvent["type"]): DecisionEvent {
 }
 
 describe("SessionAnalytics", () => {
-  beforeEach(() => {
-    // Pin "now" so the Time Spent / Decision Rate figures are deterministic.
-    // Session created 10 minutes before now → timeSpent = 10m.
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-06-22T12:10:00Z"));
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it("renders the key computed figures from representative props", () => {
+  it("affirms the tiers the curator has discovered, without a metrics panel", () => {
     const preferences: CollectionPreferenceItem[] = [
-      pref({ id: "a", rankBucket: "top", confidence: 0.9, comparisonCount: 4 }),
-      pref({ id: "b", rankBucket: "high", confidence: 0.9, comparisonCount: 2 }),
-      pref({ id: "c", rankBucket: "medium", confidence: 0.6, comparisonCount: 2 }),
-      pref({ id: "d", rankBucket: "low", confidence: 0.6, comparisonCount: 0 }),
+      pref({ id: "a", rankBucket: "top" }),
+      pref({ id: "b", rankBucket: "high" }),
     ];
-    const decisions: DecisionEvent[] = [
-      decision("triage"),
-      decision("triage"),
-      decision("triage"),
-      decision("pairwise_compare"),
-      decision("pairwise_compare"),
-    ];
+    const decisions: DecisionEvent[] = [decision("triage"), decision("pairwise_compare")];
 
     render(
       <SessionAnalytics
@@ -76,40 +58,13 @@ describe("SessionAnalytics", () => {
       />
     );
 
-    // Decisions Made: 5 total, broken down 3 triage / 2 compare.
-    const decisionsCard = screen.getByText("Decisions made").closest("div")!;
-    expect(within(decisionsCard).getByText("5")).toBeInTheDocument();
-    expect(within(decisionsCard).getByText("3 triage, 2 compare")).toBeInTheDocument();
-
-    // Items Triaged: 4 of 8.
-    const triagedCard = screen.getByText("Items triaged").closest("div")!;
-    expect(within(triagedCard).getByText("4")).toBeInTheDocument();
-    expect(within(triagedCard).getByText("of 8 items")).toBeInTheDocument();
-
-    // Avg Confidence: (0.9+0.9+0.6+0.6)/4 = 0.75 → "75%".
-    const confidenceCard = screen.getByText("Avg confidence").closest("div")!;
-    expect(within(confidenceCard).getByText("75%")).toBeInTheDocument();
-
-    // Time Spent: now − created = 10 minutes → "10m".
-    const timeCard = screen.getByText("Time spent").closest("div")!;
-    expect(within(timeCard).getByText("10m")).toBeInTheDocument();
-
-    // Distribution buckets: one item per bucket label.
-    const distribution = screen.getByText("Distribution").closest("div")!;
-    expect(within(distribution).getByText("Love")).toBeInTheDocument();
-    expect(within(distribution).getByText("Like")).toBeInTheDocument();
-    expect(within(distribution).getByText("Maybe")).toBeInTheDocument();
-    expect(within(distribution).getByText("Onward")).toBeInTheDocument();
-
-    // Insights: avg comparisons (4+2+2+0)/4 = 2.0; coverage 4/8 = 50%;
-    // confidence 0.75 → "Medium".
-    const insights = screen.getByText("Insights").closest("div")!;
-    expect(within(insights).getByText("2.0")).toBeInTheDocument();
-    expect(within(insights).getByText("50%")).toBeInTheDocument();
-    expect(within(insights).getByText("Medium")).toBeInTheDocument();
+    expect(screen.getByText("Where things stand")).toBeInTheDocument();
+    // Discovered tiers surface as calm labels, not counts.
+    expect(screen.getByText("Love")).toBeInTheDocument();
+    expect(screen.getByText("Like")).toBeInTheDocument();
   });
 
-  it("renders the empty / zero-data case without crashing or dividing by zero", () => {
+  it("renders a gentle empty state when nothing is sorted yet", () => {
     render(
       <SessionAnalytics
         preferences={[]}
@@ -119,18 +74,31 @@ describe("SessionAnalytics", () => {
       />
     );
 
-    // No decisions, no triaged items.
-    const decisionsCard = screen.getByText("Decisions made").closest("div")!;
-    expect(within(decisionsCard).getByText("0")).toBeInTheDocument();
-    expect(within(decisionsCard).getByText("0 triage, 0 compare")).toBeInTheDocument();
+    expect(screen.getByText(/nothing sorted just yet/i)).toBeInTheDocument();
+  });
 
-    // Avg Confidence guards against /0 → "0%".
-    const confidenceCard = screen.getByText("Avg confidence").closest("div")!;
-    expect(within(confidenceCard).getByText("0%")).toBeInTheDocument();
+  it("renders NO denominator, percentage, rate, or coverage framing (TONE guard)", () => {
+    const preferences: CollectionPreferenceItem[] = [
+      pref({ id: "a", rankBucket: "top", confidence: 0.9, comparisonCount: 4 }),
+      pref({ id: "b", rankBucket: "high", confidence: 0.6, comparisonCount: 2 }),
+    ];
+    const decisions: DecisionEvent[] = [decision("triage"), decision("pairwise_compare")];
 
-    // Coverage guards against totalItems === 0 → "0%".
-    const insights = screen.getByText("Insights").closest("div")!;
-    expect(within(insights).getByText("0.0")).toBeInTheDocument(); // avg comparisons
-    expect(within(insights).getByText("Low")).toBeInTheDocument(); // confidence 0 → Low
+    const { container } = render(
+      <SessionAnalytics
+        preferences={preferences}
+        decisions={decisions}
+        totalItems={8}
+        sessionCreatedAt={new Date("2026-06-22T12:00:00Z")}
+      />
+    );
+
+    const text = container.textContent ?? "";
+    expect(text).not.toMatch(/%/);
+    expect(text).not.toMatch(/\bof\s+\d/i); // "of 8 items"
+    expect(text).not.toMatch(/per min/i);
+    expect(text).not.toMatch(/coverage/i);
+    expect(text).not.toMatch(/decision rate/i);
+    expect(text).not.toMatch(/\bcoverage\b/i);
   });
 });
