@@ -114,6 +114,20 @@ export class SortResultRepository implements ISortResultRepository {
     return result ? this.mapToResult(result) : null;
   }
 
+  async findDrafts(collectionId: string, curatorId: string): Promise<SortResult[]> {
+    const rows = await this.db
+      .select()
+      .from(sortResultsTable)
+      .where(
+        and(
+          eq(sortResultsTable.collectionId, collectionId),
+          eq(sortResultsTable.curatorId, curatorId),
+          eq(sortResultsTable.status, "draft"),
+        ),
+      );
+    return rows.map((r) => this.mapToResult(r));
+  }
+
   async update(id: string, data: Partial<SortResult>): Promise<SortResult> {
     const [result] = await this.db
       .update(sortResultsTable)

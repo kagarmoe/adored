@@ -662,6 +662,97 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       expect(persisted!.manualRank).toBe(3);
     });
 
+    // purses-p2rj: every abandoned Finalize click POSTs a new draft. Without a
+    // supersede step those orphan "Draft result" rows accumulate. createDraftResult
+    // must leave AT MOST ONE unfinalized draft per (collection, curator) — the
+    // NEWEST, reflecting current live prefs — while NEVER touching finalized snapshots.
+    it("supersedes the curator's prior UNFINALIZED draft: at most one draft survives (the newest)", async () => {
+      const { db } = getTestDb();
+      const { collectionId, highItemId, lowItemId } = await seedLivePrefs();
+      const prefRepo = new CollectionPreferenceItemRepository(db);
+      const resultRepo = new SortResultRepository(db);
+      const sortItemRepo = new SortResultItemRepository(db);
+
+      // First Finalize click → draft #1, order [highItem, lowItem].
+      login(ownerId);
+      const first = await createResult(jsonReq("POST", { collectionId, name: "Draft one" }) as any);
+      const firstId = (await first.json()).id as string;
+      expect(
+        [...(await sortItemRepo.findByResult(firstId))]
+          .sort((a, b) => a.computedRank - b.computedRank)
+          .map((i) => i.itemId),
+      ).toEqual([highItemId, lowItemId]);
+      // BEFORE the second create: exactly one draft exists.
+      expect(await resultRepo.findByCollection(collectionId)).toHaveLength(1);
+
+      // Standing changes, then a SECOND Finalize click → draft #2. Move high 0->2
+      // (free) then low 1->0 (now free): no transient unique-orderRank collision.
+      const highPref = await prefRepo.findByItem(highItemId, ownerId);
+      const lowPref = await prefRepo.findByItem(lowItemId, ownerId);
+      await prefRepo.update(highPref!.id, { orderRank: 2 });
+      await prefRepo.update(lowPref!.id, { orderRank: 0 });
+      const second = await createResult(jsonReq("POST", { collectionId, name: "Draft two" }) as any);
+      const secondId = (await second.json()).id as string;
+      expect(secondId).not.toBe(firstId);
+
+      // AFTER: the prior draft is superseded — exactly ONE draft remains, and it is
+      // the NEWER one, reflecting CURRENT prefs (lowItem now first). Fresh-at-finalize
+      // is preserved: this is supersede-and-recreate, not reuse-stale.
+      const remaining = await resultRepo.findByCollection(collectionId);
+      expect(remaining).toHaveLength(1);
+      expect(remaining[0].id).toBe(secondId);
+      expect(await resultRepo.findById(firstId)).toBeNull();
+      // The old draft's items are gone too (no orphaned sort_result_items).
+      expect(await sortItemRepo.findByResult(firstId)).toEqual([]);
+      expect(
+        [...(await sortItemRepo.findByResult(secondId))]
+          .sort((a, b) => a.computedRank - b.computedRank)
+          .map((i) => i.itemId),
+      ).toEqual([lowItemId, highItemId]);
+    });
+
+    // purses-p2rj guard: supersede must ONLY reap unfinalized drafts. A FINALIZED
+    // snapshot coexists with a later draft-create — it is never superseded, stays
+    // frozen. This protects the Epic 5b frozen invariant.
+    it("does NOT supersede a FINALIZED result when a later draft is created (both coexist; finalized frozen)", async () => {
+      const { db } = getTestDb();
+      const { collectionId, highItemId, lowItemId } = await seedLivePrefs();
+      const resultRepo = new SortResultRepository(db);
+      const sortItemRepo = new SortResultItemRepository(db);
+
+      // Create a draft and FINALIZE it (a saved snapshot).
+      login(ownerId);
+      const savedRes = await createResult(jsonReq("POST", { collectionId, name: "Saved snapshot" }) as any);
+      const savedId = (await savedRes.json()).id as string;
+      await finalizeResult(jsonReq("POST") as any, { params: { id: savedId } } as any);
+      const savedItemsBefore = [...(await sortItemRepo.findByResult(savedId))]
+        .sort((a, b) => a.computedRank - b.computedRank)
+        .map((i) => i.itemId);
+      expect(savedItemsBefore).toEqual([highItemId, lowItemId]);
+
+      // A later Finalize click creates a fresh DRAFT. The finalized snapshot must
+      // survive untouched alongside it.
+      const draftRes = await createResult(jsonReq("POST", { collectionId, name: "Later draft" }) as any);
+      const draftId = (await draftRes.json()).id as string;
+
+      const all = await resultRepo.findByCollection(collectionId);
+      expect(all).toHaveLength(2); // finalized + the new draft coexist
+      const saved = await resultRepo.findById(savedId);
+      expect(saved).not.toBeNull();
+      expect(saved!.status).toBe("finalized");
+      expect(saved!.finalizedAt).not.toBeNull();
+      // The finalized snapshot's items are frozen — byte-for-byte unchanged.
+      expect(
+        [...(await sortItemRepo.findByResult(savedId))]
+          .sort((a, b) => a.computedRank - b.computedRank)
+          .map((i) => i.itemId),
+      ).toEqual(savedItemsBefore);
+      // And the new draft is a distinct, live row.
+      const draft = await resultRepo.findById(draftId);
+      expect(draft!.status).toBe("draft");
+      expect(draftId).not.toBe(savedId);
+    });
+
     it("Finalize snapshots CURRENT Standing, not a stale earlier draft", async () => {
       const { db } = getTestDb();
       const { collectionId, highItemId, lowItemId } = await seedLivePrefs();

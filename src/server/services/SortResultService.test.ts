@@ -121,14 +121,20 @@ describe("SortResultService.createDraftResult", () => {
       ],
     } as unknown as ICollectionPreferenceItemRepository;
 
+    // findDrafts returns ONLY the just-created draft, so the supersede reap
+    // (purses-p2rj) finds no PRIOR draft and deletes nothing.
+    const findDrafts = vi.fn(async () => [created]);
     const result = await new SortResultService(
-      {} as unknown as ISortResultRepository,
+      { findDrafts } as unknown as ISortResultRepository,
       {} as unknown as ISortResultItemRepository,
       preferenceRepo,
       txDb,
     ).createDraftResult(COLLECTION, CURATOR, "Spring sort");
 
     expect(result).toBe(created);
+    // The reap ran but had no prior draft to delete (the only draft is the new one).
+    expect(findDrafts).toHaveBeenCalledWith(COLLECTION, CURATOR);
+    expect(txResultRepo.delete).not.toHaveBeenCalled();
     expect(txResultRepo.insertWithNumber).toHaveBeenCalledWith(
       expect.objectContaining({
         collectionId: COLLECTION,
@@ -188,7 +194,7 @@ describe("SortResultService.createDraftResult", () => {
     } as unknown as ICollectionPreferenceItemRepository;
 
     const result = await new SortResultService(
-      {} as unknown as ISortResultRepository,
+      { findDrafts: async () => [created] } as unknown as ISortResultRepository,
       {} as unknown as ISortResultItemRepository,
       preferenceRepo,
       txDb,
