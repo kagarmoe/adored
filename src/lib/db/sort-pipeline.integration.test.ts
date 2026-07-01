@@ -161,7 +161,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     expect(winner.computedRank).toBeLessThan(loser.computedRank);
   });
 
-  it("createDraftResult materializes one item per preference, ranked by score", async () => {
+  it("createDraftResult materializes one item per preference, ranked by orderRank within a bucket", async () => {
     // Characterizes the INTENDED-but-unwired service path: SortResultService is
     // orphaned (the live POST /api/sort-results route never calls it — see the
     // RED seam tripwire in sort-results-authz.integration.test.ts). This is the
@@ -177,15 +177,20 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     const lowItem = await itemRepo.create({ collectionId });
     const highItem = await itemRepo.create({ collectionId });
 
-    // Two preferences with distinct scores; highItem outranks lowItem.
+    // Two co-bucketed "top" preferences sharing a score, ordered ONLY by
+    // orderRank: highItem (0) outranks lowItem (1). Same bucket + same score, so
+    // the finalize order is decided purely by orderRank (Epic 0 Task 10), not by
+    // the retired score sort.
     const prefRepo = new CollectionPreferenceItemRepository(db);
     await prefRepo.create({
       collectionId, curatorId: ownerId, itemId: lowItem.id,
-      score: 0.375, confidence: 1, rankBucket: "medium", comparisonCount: 0,
+      score: 0.875, confidence: 1, rankBucket: "top", comparisonCount: 0,
+      orderRank: 1,
     });
     await prefRepo.create({
       collectionId, curatorId: ownerId, itemId: highItem.id,
       score: 0.875, confidence: 1, rankBucket: "top", comparisonCount: 0,
+      orderRank: 0,
     });
 
     const service = new SortResultService(
@@ -200,7 +205,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     const items = await new SortResultItemRepository(db).findByResult(result.id);
     expect(items).toHaveLength(2);
 
-    // ...ranked by score: highest score is computedRank 0.
+    // ...ranked by orderRank: orderRank 0 is computedRank 0.
     const byRank = [...items].sort((a, b) => a.computedRank - b.computedRank);
     expect(byRank[0].itemId).toBe(highItem.id);
     expect(byRank[0].computedRank).toBe(0);

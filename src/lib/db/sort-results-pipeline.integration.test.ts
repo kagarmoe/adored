@@ -117,14 +117,18 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
     const lowItem = await itemRepo.create({ collectionId });
     const highItem = await itemRepo.create({ collectionId });
 
+    // Co-bucketed "top" prefs sharing a score; the finalize order is decided
+    // purely by orderRank (Epic 0 Task 10): highItem (0) before lowItem (1).
     const prefRepo = new CollectionPreferenceItemRepository(db);
     await prefRepo.create({
       collectionId, curatorId: ownerId, itemId: lowItem.id,
-      score: 0.375, confidence: 1, rankBucket: "medium", comparisonCount: 0,
+      score: 0.875, confidence: 1, rankBucket: "top", comparisonCount: 0,
+      orderRank: 1,
     });
     await prefRepo.create({
       collectionId, curatorId: ownerId, itemId: highItem.id,
       score: 0.875, confidence: 1, rankBucket: "top", comparisonCount: 0,
+      orderRank: 0,
     });
 
     const service = new SortResultService(
@@ -225,7 +229,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       expect(res.status).toBe(200);
       const items = (await res.json()) as Array<{ itemId: string; computedRank: number }>;
       expect(items).toHaveLength(2);
-      // Highest score is computedRank 0 (best); ordering proves it is the result's items.
+      // orderRank 0 is computedRank 0 (best); ordering proves it is the result's items.
       const byRank = [...items].sort((a, b) => a.computedRank - b.computedRank);
       expect(byRank[0].itemId).toBe(highItemId);
       expect(byRank[1].itemId).toBe(lowItemId);

@@ -16,6 +16,7 @@ function preference(
     score: 0.5,
     confidence: 0.5,
     rankBucket: "medium",
+    orderRank: null,
     comparisonCount: 1,
     lastSeen: new Date(),
     createdAt: new Date(),
@@ -42,11 +43,11 @@ function sortResultItem(
 }
 
 describe("rankPreferencesToItems", () => {
-  it("sorts by score desc, assigns 0-based computedRank, maps rankBucket", () => {
+  it("sorts by bucket priority, assigns 0-based computedRank, maps rankBucket", () => {
     const items = rankPreferencesToItems([
-      preference({ itemId: "mid", score: 0.6, rankBucket: "high" }),
-      preference({ itemId: "top", score: 0.9, rankBucket: "top" }),
-      preference({ itemId: "low", score: 0.3, rankBucket: "low" }),
+      preference({ itemId: "mid", rankBucket: "high" }),
+      preference({ itemId: "top", rankBucket: "top" }),
+      preference({ itemId: "low", rankBucket: "low" }),
     ]);
 
     expect(items).toEqual([
@@ -54,6 +55,31 @@ describe("rankPreferencesToItems", () => {
       { itemId: "mid", computedRank: 1, computedBucket: "high" },
       { itemId: "low", computedRank: 2, computedBucket: "low" },
     ]);
+  });
+
+  it("orders by bucket then orderRank asc (NULLS LAST); keeps an unranked loved item", () => {
+    // Four loved-or-not prefs sharing scores so the OLD score sort can't order
+    // them; only bucket priority + orderRank produces a deterministic sequence.
+    const out = rankPreferencesToItems([
+      preference({ itemId: "L1", rankBucket: "top", orderRank: 1, score: 0.875 }),
+      preference({ itemId: "L0", rankBucket: "top", orderRank: 0, score: 0.875 }),
+      preference({ itemId: "Lx", rankBucket: "top", orderRank: null, score: 0.875 }), // loved, never ranked
+      preference({ itemId: "M", rankBucket: "medium", orderRank: null, score: 0.375 }),
+    ]);
+
+    // top bucket first, ranked 0 then 1, then the unranked loved item (NULLS
+    // LAST) still present, then the medium bucket.
+    expect(out.map((o) => o.itemId)).toEqual(["L0", "L1", "Lx", "M"]);
+    expect(out.map((o) => o.computedRank)).toEqual([0, 1, 2, 3]);
+    expect(out.map((o) => o.computedBucket)).toEqual(["top", "top", "top", "medium"]);
+  });
+
+  it("breaks ties on itemId when bucket and orderRank match", () => {
+    const out = rankPreferencesToItems([
+      preference({ itemId: "b", rankBucket: "high", orderRank: null }),
+      preference({ itemId: "a", rankBucket: "high", orderRank: null }),
+    ]);
+    expect(out.map((o) => o.itemId)).toEqual(["a", "b"]);
   });
 
   it("returns [] for no preferences", () => {
