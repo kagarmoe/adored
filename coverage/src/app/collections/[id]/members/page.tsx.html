@@ -25,28 +25,28 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>0/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>0/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>0/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>0/9</span>
             </div>
         
             
@@ -113,7 +113,12 @@
 <a name='L48'></a><a href='#L48'>48</a>
 <a name='L49'></a><a href='#L49'>49</a>
 <a name='L50'></a><a href='#L50'>50</a>
-<a name='L51'></a><a href='#L51'>51</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -127,19 +132,24 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -168,8 +178,9 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionOwnerPage } from "@/lib/collection-access";
 import { MemberController } from "@/server/api/members";
+import { InvitationController } from "@/server/api/invitations";
 import { AppLayout } from "@/components/layout";
-import { SectionHeader } from "@/components/layout/SectionHeader";
+import { Card } from "@/components/ui";
 import { MemberList } from "@/features/collections/MemberList";
 import { InviteForm } from "@/features/collections/InviteForm";
 &nbsp;
@@ -184,31 +195,35 @@ export default async function <span class="fstat-no" title="function not covered
   }
 &nbsp;
   const <span class="cstat-no" title="statement not covered" >db = getDb();</span>
-  // Owner-only page: members:manage = owner by role (purses-yqw).
+  // Owner-only page: members:manage = owner by role (purses-yqw). The owner gate
+  // also covers the invitee-email PII surfaced by the pending rows below.
   const collection = <span class="cstat-no" title="statement not covered" >await requireCollectionOwnerPage(db, params.id, session.user.id);</span>
 &nbsp;
   const members = <span class="cstat-no" title="statement not covered" >await MemberController.fromDb(db).listMembers(collection.id);</span>
+  const invitations = <span class="cstat-no" title="statement not covered" >await InvitationController.fromDb(db).listByCollection(collection.id);</span>
+  const pending = <span class="cstat-no" title="statement not covered" >invitations.filter(<span class="fstat-no" title="function not covered" >(i</span>) =&gt; <span class="cstat-no" title="statement not covered" >i.status === "pending")</span>;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
     &lt;AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
         { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Members" },
+        { label: "People" },
       ]}
     &gt;
       &lt;div className="space-y-8"&gt;
-        {/* Members Section */}
-        &lt;div&gt;
-          &lt;SectionHeader title="Members" description={`${members.length} member${members.length !== 1 ? "s" : ""}`} /&gt;
-          &lt;MemberList members={members} canManage={true} /&gt;
+        &lt;div className="space-y-2"&gt;
+          &lt;h1 className="text-3xl text-ink"&gt;People&lt;/h1&gt;
+          &lt;p className="max-w-2xl text-ink-soft"&gt;
+            Sharing is an after-the-fact step — invite someone once your list feels ready.
+          &lt;/p&gt;
         &lt;/div&gt;
 &nbsp;
-        {/* Invite Section */}
-        &lt;div&gt;
-          &lt;SectionHeader title="Invite new member" description="Add a new curator to this collection" /&gt;
+        &lt;Card padding="lg"&gt;
           &lt;InviteForm collectionId={collection.id} /&gt;
-        &lt;/div&gt;
+        &lt;/Card&gt;
+&nbsp;
+        &lt;MemberList members={members} pending={pending} canManage /&gt;
       &lt;/div&gt;
     &lt;/AppLayout&gt;
   );
@@ -220,7 +235,7 @@ export default async function <span class="fstat-no" title="function not covered
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-01T04:59:43.630Z
+                at 2026-07-01T17:20:47.315Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

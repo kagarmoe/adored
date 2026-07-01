@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">45.45% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/11</span>
+                <span class='fraction'>5/11</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>5/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">66.66% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/3</span>
+                <span class='fraction'>2/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>5/10</span>
             </div>
         
             
@@ -106,25 +106,25 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">25x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">25x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">25x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -141,12 +141,12 @@ import { useEffect, useState } from "react";
 &nbsp;
 // Flips data-theme on &lt;html&gt; and persists the choice. Reads the current value
 // set by ThemeScript so it stays in sync on first paint.
-export function <span class="fstat-no" title="function not covered" >ThemeToggle() {</span>
-  const [theme, setTheme<span class="cstat-no" title="statement not covered" >] = useState&lt;"light" | "dark"&gt;("light");</span>
+export function ThemeToggle() {
+  const [theme, setTheme] = useState&lt;"light" | "dark"&gt;("light");
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  useEffect(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
-    const current = <span class="cstat-no" title="statement not covered" >document.documentElement.getAttribute("data-theme");</span>
-<span class="cstat-no" title="statement not covered" >    if (current === "dark" || current === "light") <span class="cstat-no" title="statement not covered" >setTheme(current);</span></span>
+  useEffect(() =&gt; {
+    const current = document.documentElement.getAttribute("data-theme");
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (current === "dark" || current === "light") <span class="cstat-no" title="statement not covered" >setTheme(current);</span>
   }, []);
 &nbsp;
   function <span class="fstat-no" title="function not covered" >flip() {</span>
@@ -160,14 +160,14 @@ export function <span class="fstat-no" title="function not covered" >ThemeToggle
 <span class="cstat-no" title="statement not covered" >    setTheme(next);</span>
   }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return (</span>
+  return (
     &lt;button
       type="button"
       onClick={flip}
-      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+      aria-label={`Switch to ${theme === "dark" ? <span class="branch-0 cbranch-no" title="branch not covered" >"light" : "</span>dark"} theme`}
       className="inline-flex h-11 min-w-11 items-center justify-center rounded-control px-3 text-ink transition-colors hover:bg-content-soft/40"
     &gt;
-      &lt;span aria-hidden="true"&gt;{theme === "dark" ? "☾" : "☀"}&lt;/span&gt;
+      &lt;span aria-hidden="true"&gt;{theme === "dark" ? <span class="branch-0 cbranch-no" title="branch not covered" >"☾" : "</span>☀"}&lt;/span&gt;
     &lt;/button&gt;
   );
 }
@@ -178,7 +178,7 @@ export function <span class="fstat-no" title="function not covered" >ThemeToggle
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-01T04:59:43.630Z
+                at 2026-07-01T17:20:47.315Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
