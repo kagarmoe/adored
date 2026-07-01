@@ -299,15 +299,53 @@ describe("accessibility and governed labels", () => {
     for (const name of ["Photo pool", "Items", "Continue"]) {
       expect(screen.getByRole("heading", { name })).toBeInTheDocument();
     }
-    for (const name of ["Make items", "Add more photos", "View all items", "Results", "Collection settings", "Members"]) {
+    for (const name of ["Make items", "Add more photos", "View all items", "Collection settings", "Members"]) {
       expect(screen.getByRole("link", { name })).toBeInTheDocument();
     }
+    // The old quiet "Results"/"Start sorting" links are gone — the workspace
+    // mode chips (Build/Sort/Decide) now own those routes.
+    expect(screen.queryByRole("link", { name: "Start sorting" })).not.toBeInTheDocument();
     // The resume affordance carries the governed label (spec §9), not bare "Resume".
     expect(screen.getByRole("button", { name: "Resume sorting" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Resume" })).not.toBeInTheDocument();
     // legacy dashboard copy is gone
     expect(screen.queryByText("Finalized")).not.toBeInTheDocument();
     expect(screen.queryByText(/Manage/)).not.toBeInTheDocument();
+  });
+});
+
+describe("workspace mode chips", () => {
+  it("renders Build/Sort/Decide as links pointing at the mode surfaces, Build active", async () => {
+    photoRepo.findPoolByCollection.mockResolvedValue([makePoolPhoto("ph_1")]);
+    await renderPage();
+
+    const nav = screen.getByRole("navigation", { name: "Workspace mode" });
+    const build = within(nav).getByRole("link", { name: "Build" });
+    const sort = within(nav).getByRole("link", { name: "Sort" });
+    const decide = within(nav).getByRole("link", { name: "Decide" });
+
+    expect(build).toHaveAttribute("href", "/collections/summer-bags");
+    expect(sort).toHaveAttribute("href", "/collections/summer-bags/sort");
+    expect(decide).toHaveAttribute("href", "/collections/summer-bags/results");
+
+    // The workspace root is the active mode on this page.
+    expect(build).toHaveAttribute("aria-current", "page");
+    expect(sort).not.toHaveAttribute("aria-current");
+    expect(decide).not.toHaveAttribute("aria-current");
+  });
+
+  it("renders the chips in the empty state too", async () => {
+    await renderPage(); // no pool, no items -> empty
+    const nav = screen.getByRole("navigation", { name: "Workspace mode" });
+    for (const name of ["Build", "Sort", "Decide"]) {
+      expect(within(nav).getByRole("link", { name })).toBeInTheDocument();
+    }
+  });
+
+  it("the active chip spends no bg-primary (chips are navigation, not the dominant action)", async () => {
+    await renderPage();
+    const nav = screen.getByRole("navigation", { name: "Workspace mode" });
+    expect(nav.querySelectorAll(".bg-primary")).toHaveLength(0);
   });
 });
 

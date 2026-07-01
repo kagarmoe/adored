@@ -30,7 +30,7 @@ export function ItemMetadata({ item, editHref }: ItemMetadataProps) {
             href={editHref}
             className="inline-block text-sm text-primary underline underline-offset-2"
           >
-            Tell its story
+            Add details
           </Link>
         )}
       </div>

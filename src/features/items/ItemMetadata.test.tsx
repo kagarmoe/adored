@@ -15,11 +15,15 @@ const empty = {
 };
 
 describe("ItemMetadata", () => {
-  it("shows an affirming add-prompt + CTA when empty (not 'No details added yet')", () => {
+  it("shows an affirming add-prompt + an 'Add details' CTA when empty (not 'No details added yet', not 'Tell its story')", () => {
     render(<ItemMetadata item={empty as any} editHref="/collections/c/items/1/edit" />);
     expect(screen.queryByText(/no details added yet/i)).not.toBeInTheDocument();
-    const cta = screen.getByRole("link", { name: /tell its story|add (its|the) (details|story)/i });
+    // The CTA invites adding metadata — it is NOT the distinct Story feature.
+    expect(screen.queryByRole("link", { name: /tell its story/i })).not.toBeInTheDocument();
+    const cta = screen.getByRole("link", { name: "Add details" });
     expect(cta).toHaveAttribute("href", "/collections/c/items/1/edit");
+    // Affirming framing line stays.
+    expect(screen.getByText(/every piece has a story/i)).toBeInTheDocument();
   });
 
   it("renders the fields as chips when metadata is present", () => {
