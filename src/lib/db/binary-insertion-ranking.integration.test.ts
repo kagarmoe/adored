@@ -339,3 +339,77 @@ describeDb("decisions route — idempotency on clientKey (route -> repo -> DB)",
     expect((rows[0] as { n: number }).n).toBe(2);
   });
 });
+
+// Task 11: the forward-only clean reset (drizzle/0012_reset_elo_drafts.sql) discards
+// Elo-era DRAFT sort results (whose computedRank derives from the retired scoring) and
+// their items, while leaving FINALIZED results — immutable self-contained snapshots —
+// untouched. A count on a freshly-migrated (empty) DB would be trivially 0 and prove
+// nothing; this seeds BOTH a draft and a finalized result (each with an item row),
+// executes the migration's two DELETE statements verbatim, and asserts the draft +
+// its item are gone while the finalized result + its item remain.
+describeDb("clean reset — discards Elo-era drafts, preserves finalized snapshots", () => {
+  beforeAll(async () => { await resetDb(); });
+  afterAll(async () => { await closeDb(); });
+
+  async function seedResult(
+    db: Database,
+    collectionId: string,
+    curatorId: string,
+    itemId: string,
+    status: "draft" | "finalized",
+  ): Promise<{ resultId: string; resultItemId: string }> {
+    const resultId = generateId("sr");
+    const resultItemId = generateId("sri");
+    await db.execute(sql`
+      INSERT INTO sort_results (id, collection_id, curator_id, status, name, created_at, updated_at)
+      VALUES (${resultId}, ${collectionId}, ${curatorId}, ${status}, ${status + " result"}, now(), now())`);
+    await db.execute(sql`
+      INSERT INTO sort_result_items (id, sort_result_id, item_id, computed_rank, computed_bucket, created_at, updated_at)
+      VALUES (${resultItemId}, ${resultId}, ${itemId}, 0, 'top', now(), now())`);
+    return { resultId, resultItemId };
+  }
+
+  async function countById(db: Database, table: "sort_results" | "sort_result_items", id: string): Promise<number> {
+    const rows = await db.execute(
+      sql`select count(*)::int as n from ${sql.raw(table)} where id = ${id}`,
+    );
+    return (rows[0] as { n: number }).n;
+  }
+
+  it("removes draft results + their items, keeps finalized results + their items", async () => {
+    const { db } = getTestDb();
+    const ownerId = await seedBaseline();
+    const collectionId = await seedBareCollection(ownerId);
+    const item = await new ItemRepository(db).create({ collectionId });
+
+    const draft = await seedResult(db, collectionId, ownerId, item.id, "draft");
+    const finalized = await seedResult(db, collectionId, ownerId, item.id, "finalized");
+
+    // Sanity: both present before the reset (otherwise the assertions below are vacuous).
+    expect(await countById(db, "sort_results", draft.resultId)).toBe(1);
+    expect(await countById(db, "sort_results", finalized.resultId)).toBe(1);
+
+    // The migration's two DELETE statements, verbatim (items first — FK to results).
+    await db.execute(sql`
+      DELETE FROM sort_result_items
+      WHERE sort_result_id IN (SELECT id FROM sort_results WHERE status = 'draft')`);
+    await db.execute(sql`DELETE FROM sort_results WHERE status = 'draft'`);
+
+    // Draft result + its item are gone.
+    expect(await countById(db, "sort_results", draft.resultId)).toBe(0);
+    expect(await countById(db, "sort_result_items", draft.resultItemId)).toBe(0);
+
+    // Finalized result + its item remain.
+    expect(await countById(db, "sort_results", finalized.resultId)).toBe(1);
+    expect(await countById(db, "sort_result_items", finalized.resultItemId)).toBe(1);
+  });
+});
+
+// Task 11: the dead PairingService (a class-method selector superseded by the live
+// free function in src/lib/pairwise-selection.ts) is deleted. This guard fails if the
+// module is ever reintroduced — importing a nonexistent module rejects.
+describe("PairingService is deleted (no importers)", () => {
+  it("cannot be imported", async () => {
+    await expect(import("@/server/services/PairingService")).rejects.toBeTruthy();
+  });
+});
