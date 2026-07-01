@@ -70,7 +70,7 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
             message="Try a different view above."
           />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-6">
             {filteredCollections.map((collection) => {
               const cover = covers.get(collection.id);
               return (
