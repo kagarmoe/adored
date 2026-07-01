@@ -25,15 +25,21 @@ export class PreferenceStateService {
     collectionId: string,
     curatorId: string,
   ): Promise<CollectionPreferenceItem[]> {
+    // Read the curator's decision log ONCE and share it between bucket scoring
+    // and the pairwise-comparison mapping — both consumers derive from the same
+    // event set, so a single read is behavior-identical to the old double read.
+    const events = await this.loadDecisionEvents(collectionId, curatorId);
+
     const preferences = await this.scoringService.computePreferences(
       collectionId,
       curatorId,
+      events,
     );
 
     const orderRankByItem = await this.deriveOrderRanks(
       collectionId,
-      curatorId,
       preferences,
+      events,
     );
 
     // Batch fetch: get all existing preferences once, not per item
@@ -81,8 +87,8 @@ export class PreferenceStateService {
   // loved). Items the engine leaves unplaced are absent from the map (=> null).
   private async deriveOrderRanks(
     collectionId: string,
-    curatorId: string,
     preferences: CollectionPreferenceItem[],
+    events: DecisionEvent[],
   ): Promise<Map<string, number>> {
     const rankableIds = new Set(
       preferences.filter((p) => RANKABLE_BUCKETS.has(p.rankBucket)).map((p) => p.itemId),
@@ -96,23 +102,25 @@ export class PreferenceStateService {
       .filter((i) => rankableIds.has(i.id))
       .map((i) => ({ id: i.id, createdAt: i.createdAt }));
 
-    const comparisons = await this.loadPairwiseComparisons(collectionId, curatorId);
+    // Shared mapping with the live selector (selectNextPair) — both entry points
+    // build ComparisonEvent[] identically, so they ask the same next question.
+    const comparisons: ComparisonEvent[] = toComparisonEvents(events);
     const { order } = deriveOrder(rankItems, comparisons);
     return new Map(order.map((id, i) => [id, i]));
   }
 
-  private async loadPairwiseComparisons(
+  // The curator's non-deleted sessions' decision events, fetched once and in
+  // parallel (findByCollectionAndCurator yields the same session set the scorer
+  // scopes to). Shared by bucket scoring and the pairwise mapping.
+  private async loadDecisionEvents(
     collectionId: string,
     curatorId: string,
-  ): Promise<ComparisonEvent[]> {
+  ): Promise<DecisionEvent[]> {
     const sessions = await this.sessionRepo.findByCollectionAndCurator(collectionId, curatorId);
-    const events: DecisionEvent[] = [];
-    for (const session of sessions) {
-      events.push(...(await this.decisionRepo.findBySession(session.id)));
-    }
-    // Shared mapping with the live selector (selectNextPair) — both entry points
-    // build ComparisonEvent[] identically, so they ask the same next question.
-    return toComparisonEvents(events);
+    const perSession = await Promise.all(
+      sessions.map((s) => this.decisionRepo.findBySession(s.id)),
+    );
+    return perSession.flat();
   }
 
   async getItemPreferences(

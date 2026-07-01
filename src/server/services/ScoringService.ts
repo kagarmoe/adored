@@ -47,18 +47,32 @@ export class ScoringService {
     return "low";
   }
 
+  // The curator's non-deleted sessions across the collection, each session's
+  // decision events flattened. Fetched in parallel (one query per session, all
+  // in flight at once). recalculatePreferences reads this ONCE and shares the
+  // same list with the comparison mapping, so the decision log isn't read twice.
+  async loadCuratorDecisionEvents(
+    collectionId: string,
+    curatorId: string,
+  ): Promise<DecisionEvent[]> {
+    const sessions = await this.sessionRepo.findByCollection(collectionId);
+    const curatorSessions = sessions.filter((s) => s.curatorId === curatorId);
+    const perSession = await Promise.all(
+      curatorSessions.map((s) => this.decisionRepo.findBySession(s.id)),
+    );
+    return perSession.flat();
+  }
+
+  // `events` lets the caller supply an already-fetched decision log (see
+  // loadCuratorDecisionEvents), avoiding a second read of the same events. When
+  // omitted, they're fetched here — the standalone contract is unchanged.
   async computePreferences(
     collectionId: string,
     curatorId: string,
+    events?: DecisionEvent[],
   ): Promise<CollectionPreferenceItem[]> {
-    const sessions = await this.sessionRepo.findByCollection(collectionId);
-    const curatorSessions = sessions.filter((s) => s.curatorId === curatorId);
-
-    const allDecisions: DecisionEvent[] = [];
-    for (const session of curatorSessions) {
-      const decisions = await this.decisionRepo.findBySession(session.id);
-      allDecisions.push(...decisions);
-    }
+    const allDecisions =
+      events ?? (await this.loadCuratorDecisionEvents(collectionId, curatorId));
 
     const itemState = new Map<string, ItemState>();
     const ensure = (itemId: string): ItemState => {
