@@ -81,6 +81,11 @@ export default async function ComparePage({ params }: ComparePageProps) {
     );
   }
 
+  // Gentle, non-gamified count of comparisons MADE (never a remaining/total ceiling).
+  // Computed before the branch so it survives into the completion state — the "all
+  // comparisons complete" screen still affirms the work done, not just an empty end.
+  const comparisonsMade = decisions.filter((d) => d.type === "pairwise_compare").length;
+
   const pair = selectNextPair({
     preferences,
     items,
@@ -103,6 +108,11 @@ export default async function ComparePage({ params }: ComparePageProps) {
           heading="All comparisons complete"
           message="You&apos;ve compared all meaningful pairs. Check your results!"
         />
+        {comparisonsMade > 0 && (
+          <p className="mt-4 text-center text-sm text-ink-soft">
+            {comparisonsMade} {comparisonsMade === 1 ? "comparison" : "comparisons"} made so far
+          </p>
+        )}
       </AppLayout>
     );
   }
@@ -113,7 +123,6 @@ export default async function ComparePage({ params }: ComparePageProps) {
   const coverB = covers.get(itemB.id);
   const heroA = coverA ? getPhotoAssetUrlForPhoto(coverA, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
   const heroB = coverB ? getPhotoAssetUrlForPhoto(coverB, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
-  const comparisonsMade = decisions.filter((d) => d.type === "pairwise_compare").length;
 
   return (
     <AppLayout

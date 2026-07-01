@@ -31,6 +31,7 @@ import ComparePage from "./page";
 const COLLECTION = { id: "coll_01ABCDEF", slug: "summer-bags", name: "Summer Bags" };
 const A = { id: "item_a", collectionId: "coll_01ABCDEF", number: 1, name: "Bag A", brand: null, status: "active", createdAt: new Date(1) };
 const B = { id: "item_b", collectionId: "coll_01ABCDEF", number: 2, name: "Bag B", brand: null, status: "active", createdAt: new Date(2) };
+const C = { id: "item_c", collectionId: "coll_01ABCDEF", number: 3, name: "Bag C", brand: null, status: "active", createdAt: new Date(3) };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -83,6 +84,75 @@ describe("ComparePage disposition exclusion (Epic C PR1)", () => {
     expect(screen.getByText("All comparisons complete")).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Bag B" })).not.toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Bag A" })).not.toBeInTheDocument();
+  });
+});
+
+describe("ComparePage gentle progress text (Epic 0 Task 8 regression)", () => {
+  it("renders 'N comparisons made so far' once at least one pairwise decision exists", async () => {
+    // Three rankable items so a pair still remains after one recorded comparison —
+    // the page reaches CompareChoice (not the "all complete" state) and must show
+    // the gentle, non-gamified count derived from the session's pairwise decisions.
+    itemRepo.findByCollection.mockResolvedValue([A, B, C]);
+    prefRepo.findByCollection.mockResolvedValue([
+      { itemId: "item_a", rankBucket: "top" },
+      { itemId: "item_b", rankBucket: "high" },
+      { itemId: "item_c", rankBucket: "high" },
+    ]);
+    photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map());
+    decisionRepo.findBySession.mockResolvedValue([
+      {
+        id: "dec_1",
+        type: "pairwise_compare",
+        createdAt: new Date(10),
+        decision: { itemAId: "item_a", itemBId: "item_b", result: "item_a" },
+      },
+    ]);
+
+    const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    render(ui);
+
+    expect(screen.getByText(/comparison(s)? made so far/)).toBeInTheDocument();
+    expect(screen.getByText(/1 comparison made so far/)).toBeInTheDocument();
+  });
+
+  it("keeps the progress text in the 'all comparisons complete' state (E2E seed: top/high/low, one decision)", async () => {
+    // Mirrors seedSortScenario exactly: three items bucketed top/high/low, so only
+    // TWO are rankable. After one recorded comparison the 2-item set is fully
+    // ordered → selectNextPair returns null → the "all complete" empty state. The
+    // gentle count must survive that transition (the Task 8 regression hid it,
+    // because the text lived only inside CompareChoice which no longer renders).
+    itemRepo.findByCollection.mockResolvedValue([A, B, C]);
+    prefRepo.findByCollection.mockResolvedValue([
+      { itemId: "item_a", rankBucket: "top" },
+      { itemId: "item_b", rankBucket: "high" },
+      { itemId: "item_c", rankBucket: "low" },
+    ]);
+    photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map());
+    decisionRepo.findBySession.mockResolvedValue([
+      {
+        id: "dec_1",
+        type: "pairwise_compare",
+        createdAt: new Date(10),
+        decision: { itemAId: "item_a", itemBId: "item_b", result: "item_a" },
+      },
+    ]);
+
+    const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    render(ui);
+
+    expect(screen.getByText("All comparisons complete")).toBeInTheDocument();
+    expect(screen.getByText(/comparison(s)? made so far/)).toBeInTheDocument();
+    expect(screen.getByText(/1 comparison made so far/)).toBeInTheDocument();
+  });
+
+  it("omits the progress text at the zero state (no comparisons yet)", async () => {
+    // Default beforeEach: two items, no decisions. A pair is offered, but with
+    // zero comparisons made the gentle count must not appear.
+    const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    render(ui);
+
+    expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
+    expect(screen.queryByText(/comparison(s)? made so far/)).not.toBeInTheDocument();
   });
 });
 
