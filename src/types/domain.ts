@@ -71,6 +71,7 @@ export interface Item {
   unit: string;
   status: string | null;
   notes: string | null;
+  story: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

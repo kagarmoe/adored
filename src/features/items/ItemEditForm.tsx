@@ -22,6 +22,7 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
     material: item.material || "",
     category: item.category || "",
     notes: item.notes || "",
+    story: item.story ?? "",
   });
 
   const handleChange = (
@@ -126,6 +127,15 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
             value={formData.notes}
             onChange={handleChange}
             placeholder="Add any additional notes about this item"
+          />
+
+          <Textarea
+            name="story"
+            label="Where will it go next?"
+            value={formData.story}
+            onChange={handleChange}
+            placeholder="To my niece, who always borrowed it…"
+            maxLength={2000}
           />
         </Card>
 

@@ -22,6 +22,7 @@ export interface IItemRepository {
     category?: string;
     status?: string;
     notes?: string;
+    story?: string | null;
   }): Promise<Item>;
   findById(id: string): Promise<Item | null>;
   // Resolve an item WITHOUT the deletedAt filter — purge must find soft-deleted

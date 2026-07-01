@@ -16,6 +16,7 @@ const CreateItemSchema = z.object({
   category: z.string().optional(),
   status: z.string().optional(),
   notes: z.string().optional(),
+  story: z.string().max(2000, "Story is too long").optional(),
 });
 
 const UpdateItemSchema = z.object({
@@ -27,6 +28,7 @@ const UpdateItemSchema = z.object({
   category: z.string().optional(),
   status: z.string().optional(),
   notes: z.string().optional(),
+  story: z.string().max(2000, "Story is too long").optional(),
 });
 
 export type CreateItemInput = z.infer<typeof CreateItemSchema>;
@@ -60,6 +62,7 @@ export class ItemController {
       category: parsed.category,
       status: parsed.status,
       notes: parsed.notes,
+      story: parsed.story,
     });
   }
 
