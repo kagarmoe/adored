@@ -55,3 +55,44 @@ export function placeItem(x: string, ordered: string[], comparisons: ComparisonE
   }
   return { status: "placed", index: lo };
 }
+
+export interface RankItem {
+  id: string;
+  createdAt: Date;
+}
+
+export interface DerivedOrder {
+  order: string[];
+  unplaced: string[];
+  nextPair: [string, string] | null;
+}
+
+function canonicalSequence(rankable: RankItem[]): RankItem[] {
+  return [...rankable].sort((a, b) => {
+    const ta = a.createdAt.getTime();
+    const tb = b.createdAt.getTime();
+    if (ta !== tb) return ta - tb;
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+  });
+}
+
+export function deriveOrder(rankable: RankItem[], comparisons: ComparisonEvent[]): DerivedOrder {
+  const order: string[] = [];
+  const unplaced: string[] = [];
+  let nextPair: [string, string] | null = null;
+
+  for (const item of canonicalSequence(rankable)) {
+    const p = placeItem(item.id, order, comparisons);
+    if (p.status === "placed") {
+      order.splice(p.index, 0, item.id);
+    } else if (p.status === "skipped") {
+      unplaced.push(item.id);
+    } else {
+      // pending: this is the first unanswered question; record it and stop placing further
+      // items (their positions depend on this one). They resurface on the next recompute.
+      unplaced.push(item.id);
+      if (nextPair === null) nextPair = [item.id, p.pivotId];
+    }
+  }
+  return { order, unplaced, nextPair };
+}

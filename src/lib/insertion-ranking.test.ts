@@ -76,3 +76,51 @@ function distinctPivotsConsulted(x: string, ordered: string[], comps: Comparison
   }
   return n;
 }
+
+import { deriveOrder, type RankItem } from "./insertion-ranking";
+
+const item = (id: string, s: number): RankItem => ({ id, createdAt: at(s) });
+
+describe("deriveOrder", () => {
+  it("n=0 => empty order, no next pair", () => {
+    expect(deriveOrder([], [])).toEqual({ order: [], unplaced: [], nextPair: null });
+  });
+  it("n=1 => placed with zero comparisons", () => {
+    expect(deriveOrder([item("A", 1)], [])).toEqual({ order: ["A"], unplaced: [], nextPair: null });
+  });
+  it("asks the next pair when a comparison is missing", () => {
+    // A inserted first (index 0); B needs A vs B => pending
+    const d = deriveOrder([item("A", 1), item("B", 2)], []);
+    expect(d.order).toEqual(["A"]);
+    expect(d.nextPair).toEqual(["B", "A"]);
+  });
+  it("produces a total order once all path comparisons exist", () => {
+    // Canonical insert order A,B,C. A@0. B vs A: B>A => [B,A].
+    // C inserts into [B,A]: binary search probes mid index 1 (A) first, then index 0 (B),
+    // so C's path needs C>A and C>B => C lands at index 0 => [C,B,A].
+    const comps = [cmp("B", "A", "item_a", 10), cmp("C", "A", "item_a", 11), cmp("C", "B", "item_a", 12)];
+    const d = deriveOrder([item("A", 1), item("B", 2), item("C", 3)], comps);
+    expect(d.order).toEqual(["C", "B", "A"]);
+    expect(d.nextPair).toBeNull();
+  });
+  it("a later contradicting comparison flips the order deterministically", () => {
+    // Same as above but a newer event says A>B.
+    const comps = [
+      cmp("B", "A", "item_a", 10),
+      cmp("C", "A", "item_a", 11),
+      cmp("C", "B", "item_a", 12),
+      cmp("A", "B", "item_a", 20), // newer: A>B
+    ];
+    const d = deriveOrder([item("A", 1), item("B", 2), item("C", 3)], comps);
+    // Newer A>B flips B vs A => A more loved. Insert order A@0; B: A>B => [A,B].
+    // C inserts into [A,B]: probes index 1 (B) then index 0 (A); C>B and C>A => [C,A,B].
+    expect(d.order).toEqual(["C", "A", "B"]);
+  });
+  it("a skipped pivot leaves that item unplaced and moves on", () => {
+    const comps = [cmp("B", "A", "skip", 10)];
+    const d = deriveOrder([item("A", 1), item("B", 2)], comps);
+    expect(d.order).toEqual(["A"]);
+    expect(d.unplaced).toEqual(["B"]);
+    expect(d.nextPair).toBeNull();
+  });
+});
