@@ -58,7 +58,6 @@ export async function POST(request: NextRequest) {
       phClient.capture({
         distinctId: userId,
         event: 'invitation_accepted',
-        properties: { token },
       });
       await phClient.shutdown();
       return NextResponse.json({ message: "Invitation accepted successfully" });

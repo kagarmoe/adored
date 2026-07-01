@@ -72,7 +72,6 @@ export async function POST(req: NextRequest) {
     phClient.capture({
       distinctId: newUserId,
       event: 'user_signed_up',
-      properties: { email: normalizedEmail },
     });
     await phClient.shutdown();
 

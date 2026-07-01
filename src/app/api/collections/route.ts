@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     phClient.capture({
       distinctId: user.id,
       event: 'collection_created',
-      properties: { collection_id: collection.id, name: collection.name },
+      properties: { collection_id: collection.id },
     });
     await phClient.shutdown();
     return NextResponse.json(collection, { status: 201 });

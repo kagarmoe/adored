@@ -2,7 +2,7 @@
 
 import posthog from 'posthog-js';
 import { PostHogProvider as PHProvider } from 'posthog-js/react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useEffect, useRef, Suspense } from 'react';
 
@@ -17,19 +17,33 @@ if (typeof window !== 'undefined') {
   });
 }
 
+// Routes whose first dynamic segment is a secret token (invitation / share
+// credential). We mask that segment so it never reaches PostHog.
+const TOKEN_ROUTE_PREFIXES = ['/invitations/', '/shared-results/'];
+
+function redactPathname(pathname: string): string {
+  for (const prefix of TOKEN_ROUTE_PREFIXES) {
+    if (pathname.startsWith(prefix)) {
+      const rest = pathname.slice(prefix.length);
+      const trailing = rest.slice(rest.indexOf('/') === -1 ? rest.length : rest.indexOf('/'));
+      return `${prefix}[redacted]${trailing}`;
+    }
+  }
+  return pathname;
+}
+
 function PostHogPageView() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (pathname) {
-      let url = window.origin + pathname;
-      if (searchParams.toString()) {
-        url += `?${searchParams.toString()}`;
-      }
-      posthog.capture('$pageview', { $current_url: url });
+      // Send pathname only (dynamic secrets masked); never the query string,
+      // which can also carry tokens.
+      posthog.capture('$pageview', {
+        $current_url: window.origin + redactPathname(pathname),
+      });
     }
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   return null;
 }
@@ -40,10 +54,8 @@ function PostHogAuthSync() {
 
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.id) {
-      posthog.identify(session.user.id, {
-        email: session.user.email ?? undefined,
-        name: session.user.name ?? undefined,
-      });
+      // Identify by opaque user id only — no email/name traits reach PostHog.
+      posthog.identify(session.user.id);
     } else if (status === 'unauthenticated' && prevStatus.current === 'authenticated') {
       posthog.reset();
     }
