@@ -20,6 +20,7 @@ import { getTestDb } from "../fixtures/db";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { ItemDispositionRepository } from "@/server/repositories/implementations/ItemDispositionRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
+import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 
 // A real photo so the shots show a real rendered image, not a placeholder.
 const FIXTURE = "e2e/fixtures/photos/IMG_0428.jpeg";
@@ -70,6 +71,13 @@ test.beforeAll(async () => {
     curatorId: ownerId,
     itemId: waiting.itemIds[1],
     disposition: "deferred",
+  });
+
+  // Epic 2: a story on the waiting collection's item 1 so the item-detail shot
+  // shows the soft-violet keepsake card ("Where will it go next?").
+  await new ItemRepository(db).update(waiting.itemIds[0], {
+    story:
+      "To my niece, who always borrowed it for weekend trips — I hope it carries her somewhere good.",
   });
 
   // Epic C PR2: the count-free "Set aside" list. A 2-item journey where one item
@@ -124,6 +132,8 @@ for (const theme of ["light", "dark"] as const) {
       ["collections", "/collections"],
       ["items-grid", `/collections/${slug}/items`],
       ["item-detail", `/collections/${slug}/items/1`],
+      // Epic 2: item detail LEADING with the keepsake story card.
+      ["item-detail-story", `/collections/${waitingSlug}/items/1`],
       // pv9 PR2 (purses-o93): the redesigned results page — most-loved hero +
       // "The full ranking" + the SEPARATE forward-framed Onward section ("Where
       // these go next"), no per-tier count grid. seedSortScenario buckets one
