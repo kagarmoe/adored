@@ -24,12 +24,18 @@ describe("RankedResults — shared hero + ranking + Onward", () => {
     expect(within(ranking).getByText("c")).toBeInTheDocument();
   });
 
-  it("labels ranked rows with the Love/Like/Maybe tier badge", () => {
+  it("marks ranked rows with a tier badge but never a visible Love/Like/Maybe label", () => {
     const loved = [row("a", "top"), row("b", "high"), row("c", "medium")];
     render(<RankedResults loved={loved} onward={[]} collectionId="c" coverUrl={noCover} />);
-    // The tail (b=high→Like, c=medium→Maybe) carries a TierBadge with visible label.
-    expect(screen.getByText("Like")).toBeInTheDocument();
-    expect(screen.getByText("Maybe")).toBeInTheDocument();
+    // The redesign (purses-o93, TONE #1) drops the visible tier labels from the
+    // loved ranking: the tail carries a glyph-only TierBadge (showLabel={false}),
+    // so "Love"/"Like"/"Maybe" never appear as visible text. The tier is still
+    // conveyed per-card by ItemCard's Badge via a non-visible title= attribute.
+    for (const label of ["Love", "Like", "Maybe"]) {
+      expect(screen.queryByText(label)).not.toBeInTheDocument();
+    }
+    // The glyph pill still renders as a visual ramp cue (aria-hidden glyph).
+    expect(document.querySelectorAll(".bg-tier-like, .bg-tier-maybe").length).toBeGreaterThan(0);
   });
 
   it("puts low-bucket rows in the forward-framed Onward section, never a count", () => {

@@ -59,7 +59,7 @@ export function RankedResults({ loved, onward, collectionId, coverUrl }: RankedR
               return (
                 <div key={ri.id} className="space-y-2">
                   {bucket !== "low" && (
-                    <TierBadge tier={BUCKET_TO_TIER[bucket]} />
+                    <TierBadge tier={BUCKET_TO_TIER[bucket]} showLabel={false} />
                   )}
                   <ItemCard
                     item={item}
