@@ -17,9 +17,6 @@ const TIER_SEED = {
   low: 0.125,
 } as const;
 
-const WIN_DELTA = 0.1;
-const LOSS_DELTA = 0.05;
-
 // Defensive only: an item compared without ever being triaged cannot happen in
 // the real flow (the whole collection is triaged before comparison). Seed such
 // an item at the neutral Maybe center.
@@ -37,10 +34,6 @@ export class ScoringService {
     result: "top" | "high" | "medium" | "low",
   ): number {
     return TIER_SEED[result];
-  }
-
-  private clamp01(value: number): number {
-    return Math.min(1, Math.max(0, value));
   }
 
   private calculateConfidence(comparisonCount: number): number {
@@ -77,8 +70,15 @@ export class ScoringService {
       return state;
     };
 
-    // Pass 1: triage seeds the base score at its tier center.
-    for (const decision of allDecisions) {
+    // Chronological order so the LAST triage per item wins its bucket. Ties on
+    // createdAt fall back to id for a stable, deterministic order.
+    const ordered = [...allDecisions].sort((a, b) => {
+      const byTime = a.createdAt.getTime() - b.createdAt.getTime();
+      return byTime !== 0 ? byTime : a.id.localeCompare(b.id);
+    });
+
+    // Pass 1: triage seeds the score at its tier center — latest triage wins.
+    for (const decision of ordered) {
       if (decision.type !== "triage") continue;
       const { itemId, result } = decision.decision as TriageDecision;
       const state = ensure(itemId);
@@ -86,31 +86,19 @@ export class ScoringService {
       state.count++;
     }
 
-    // Pass 2: pairwise refines the seeded score. Skip is a no-op; tie counts as
-    // evidence with no net swing; win/loss move the score and may cross a tier
-    // boundary once accumulated deltas exceed the 0.125 headroom.
-    for (const decision of allDecisions) {
+    // Pass 2: pairwise no longer moves score — end-to-end ranking order is now
+    // via orderRank + finalize (Epic 0 Tasks 7/10). We keep counting comparisons
+    // as evidence for confidence: win/loss/tie increment both items; skip is a
+    // no-op.
+    for (const decision of ordered) {
       if (decision.type !== "pairwise_compare") continue;
       const { itemAId, itemBId, result } =
         decision.decision as PairwiseDecision;
 
       if (result === "skip") continue;
 
-      const aState = ensure(itemAId);
-      const bState = ensure(itemBId);
-
-      if (result === "tie") {
-        aState.count++;
-        bState.count++;
-        continue;
-      }
-
-      const [winner, loser] =
-        result === "item_a" ? [aState, bState] : [bState, aState];
-      winner.score = this.clamp01(winner.score + WIN_DELTA);
-      loser.score = this.clamp01(loser.score - LOSS_DELTA);
-      aState.count++;
-      bState.count++;
+      ensure(itemAId).count++;
+      ensure(itemBId).count++;
     }
 
     const preferences: CollectionPreferenceItem[] = [];
