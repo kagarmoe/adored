@@ -120,8 +120,8 @@ test("keyboard traversal reaches header → primary section → secondary action
   page,
 }) => {
   // Pool-first, owned by the baseline user, so all four zones are present:
-  // the top breadcrumb (header), Make items (primary), Results (secondary, in the
-  // "Sorting and results" nav), and Collection settings (owner utilities).
+  // the top breadcrumb + Build/Sort/Decide chips (header/nav), Make items (primary),
+  // Add more photos (secondary), and Collection settings (owner utilities).
   await page.goto(`/collections/${poolOnly.slug}`);
   await expect(page.getByRole("heading", { name: "Photo pool", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Collection settings", exact: true })).toBeVisible();
@@ -132,7 +132,9 @@ test("keyboard traversal reaches header → primary section → secondary action
 
   // Each zone's representative focusable is reached, and strictly after the prior.
   expect(idx("Collections"), seen).toBeGreaterThanOrEqual(0); // header: breadcrumb back-nav
-  expect(idx("Make items"), seen).toBeGreaterThan(idx("Collections")); // primary section
-  expect(idx("Results"), seen).toBeGreaterThan(idx("Make items")); // secondary actions
-  expect(idx("Collection settings"), seen).toBeGreaterThan(idx("Results")); // owner utilities
+  // Build/Sort/Decide mode chips are navigation — after the breadcrumb, before the primary action.
+  expect(idx("Decide"), seen).toBeGreaterThan(idx("Collections"));
+  expect(idx("Make items"), seen).toBeGreaterThan(idx("Decide")); // primary section
+  expect(idx("Add more photos"), seen).toBeGreaterThan(idx("Make items")); // secondary actions
+  expect(idx("Collection settings"), seen).toBeGreaterThan(idx("Add more photos")); // owner utilities
 });
