@@ -3,8 +3,9 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionOwnerPage } from "@/lib/collection-access";
 import { MemberController } from "@/server/api/members";
+import { InvitationController } from "@/server/api/invitations";
 import { AppLayout } from "@/components/layout";
-import { SectionHeader } from "@/components/layout/SectionHeader";
+import { Card } from "@/components/ui";
 import { MemberList } from "@/features/collections/MemberList";
 import { InviteForm } from "@/features/collections/InviteForm";
 
@@ -19,31 +20,35 @@ export default async function MembersPage({ params }: MembersPageProps) {
   }
 
   const db = getDb();
-  // Owner-only page: members:manage = owner by role (purses-yqw).
+  // Owner-only page: members:manage = owner by role (purses-yqw). The owner gate
+  // also covers the invitee-email PII surfaced by the pending rows below.
   const collection = await requireCollectionOwnerPage(db, params.id, session.user.id);
 
   const members = await MemberController.fromDb(db).listMembers(collection.id);
+  const invitations = await InvitationController.fromDb(db).listByCollection(collection.id);
+  const pending = invitations.filter((i) => i.status === "pending");
 
   return (
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
         { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Members" },
+        { label: "People" },
       ]}
     >
       <div className="space-y-8">
-        {/* Members Section */}
-        <div>
-          <SectionHeader title="Members" description={`${members.length} member${members.length !== 1 ? "s" : ""}`} />
-          <MemberList members={members} canManage={true} />
+        <div className="space-y-2">
+          <h1 className="text-3xl text-ink">People</h1>
+          <p className="max-w-2xl text-ink-soft">
+            Sharing is an after-the-fact step — invite someone once your list feels ready.
+          </p>
         </div>
 
-        {/* Invite Section */}
-        <div>
-          <SectionHeader title="Invite new member" description="Add a new curator to this collection" />
+        <Card padding="lg">
           <InviteForm collectionId={collection.id} />
-        </div>
+        </Card>
+
+        <MemberList members={members} pending={pending} canManage />
       </div>
     </AppLayout>
   );

@@ -30,7 +30,10 @@ export interface CollectionMembership {
   id: string;
   collectionId: string;
   userId: string;
+  // Populated only by the joined read path (findByCollection); the base-table
+  // reads (findById/findByUser) leave these undefined.
   name?: string;
+  email?: string;
   role: MembershipRole;
   createdAt: Date;
   updatedAt: Date;
