@@ -1,7 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+// @vitest-environment node
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import { sql } from "drizzle-orm";
 import { getTestDb, resetDb, closeDb } from "@/../e2e/fixtures/db";
 import { seedBaseline, seedBareCollection, seedFullCollection } from "@/../e2e/fixtures/seed";
+import { mockAuth } from "@/../e2e/fixtures/mock-auth";
 import { generateId } from "@/lib/id";
 import type { Database } from "@/lib/db";
 import type { PairwiseResult, TriageResult } from "@/types";
@@ -10,7 +12,28 @@ import { SessionRepository } from "@/server/repositories/implementations/Session
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { PreferenceController } from "@/server/api/preferences";
 
+const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
+vi.mock("@/lib/auth", () => mockAuth(mockGetSession));
+vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
+
+import { POST as postDecisionRoute } from "@/app/api/sessions/[id]/decisions/route";
+
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
+
+function decisionReq(sessionId: string, body: unknown): Request {
+  return new Request(`http://localhost/api/sessions/${sessionId}/decisions`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+async function postDecision(sessionId: string, body: unknown): Promise<Response> {
+  return (await postDecisionRoute(
+    decisionReq(sessionId, body) as never,
+    { params: { id: sessionId } } as never,
+  )) as unknown as Response;
+}
 
 /** Run `fn` and return the Postgres error `code` it throws (e.g. "23505"), or
  *  null if it didn't throw. Asserting on the code — not message text — is the
@@ -253,5 +276,66 @@ describeDb("recalculate assigns orderRank to top+high via insertion", () => {
     // B is more loved => slot 0; A => slot 1.
     expect(rankOf(b.id)).toBe(0);
     expect(rankOf(a.id)).toBe(1);
+  });
+});
+
+// Task 9: the decisions route is idempotent on a repeated clientKey. Retrying the
+// SAME (sessionId, clientKey) must return the ORIGINAL event (200), not insert a
+// second row or 500 on the partial unique violation. Real seam: route -> repos ->
+// pg; only auth + getDb are mocked (curator drives the session).
+describeDb("decisions route — idempotency on clientKey (route -> repo -> DB)", () => {
+  let ownerId: string;
+  let sessionId: string;
+  let itemId: string;
+
+  beforeEach(async () => {
+    await resetDb();
+    vi.clearAllMocks();
+    ownerId = await seedBaseline();
+    const collectionId = await seedBareCollection(ownerId);
+    itemId = (await new ItemRepository(getTestDb().db).create({ collectionId, name: "Bag" })).id;
+    sessionId = (await new SessionRepository(getTestDb().db).create({ collectionId, curatorId: ownerId })).id;
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+  });
+
+  afterAll(async () => { await closeDb(); });
+
+  it("is idempotent on a repeated clientKey (retry → same event, one row, <300)", async () => {
+    const first = await postDecision(sessionId, {
+      type: "triage",
+      decision: { itemId, result: "top" },
+      clientKey: "k1",
+    });
+    const second = await postDecision(sessionId, {
+      type: "triage",
+      decision: { itemId, result: "top" },
+      clientKey: "k1",
+    });
+
+    expect(first.status).toBe(201);
+    expect(second.status).toBeLessThan(300);
+
+    const body1 = (await first.json()) as { id: string };
+    const body2 = (await second.json()) as { id: string };
+    expect(body2.id).toBe(body1.id); // same event, not a new one
+
+    const { db } = getTestDb();
+    const rows = await db.execute(
+      sql`select count(*)::int as n from decision_events where session_id = ${sessionId}`,
+    );
+    expect((rows[0] as { n: number }).n).toBe(1);
+  });
+
+  it("a decision WITHOUT a clientKey still inserts normally (NULL exempt from the unique index)", async () => {
+    const a = await postDecision(sessionId, { type: "triage", decision: { itemId, result: "top" } });
+    const b = await postDecision(sessionId, { type: "triage", decision: { itemId, result: "top" } });
+    expect(a.status).toBe(201);
+    expect(b.status).toBe(201);
+
+    const { db } = getTestDb();
+    const rows = await db.execute(
+      sql`select count(*)::int as n from decision_events where session_id = ${sessionId}`,
+    );
+    expect((rows[0] as { n: number }).n).toBe(2);
   });
 });
