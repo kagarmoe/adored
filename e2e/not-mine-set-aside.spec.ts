@@ -193,17 +193,19 @@ test.describe("triage — 'Not mine' set-aside flow", () => {
       }).toPass({ timeout: 10_000 });
     }
 
-    // The queue is now empty: the item branch unmounted, so the empty state shows
-    // and the "Not mine" button is gone. This is the exact moment the OLD code
-    // dropped the undo (the notice lived inside the item branch).
+    // The queue is now empty: the item branch unmounted and the round ends, so the
+    // round chrome swaps in the "what moved" recap and the "Not mine" button is gone.
+    // This is the exact moment the OLD code dropped the undo — and, with the round
+    // chrome, the moment the recap could ALSO swallow it (the notice must survive both
+    // item === null AND the recap swap, which is why it's hoisted OUTSIDE RoundSurface).
     await expect(notMine()).toHaveCount(0);
     await expect(
-      page.getByRole("heading", { name: /You.?ve looked at everything/ }),
+      page.getByRole("heading", { name: /Here.?s what moved/ }),
     ).toBeVisible();
 
     // THE FIX: the inline undo notice for the LAST item set aside is STILL here,
-    // hoisted outside the empty-state branch — visible AND its "Bring back" is
-    // clickable on the now-empty triage screen.
+    // hoisted outside BOTH the empty-state branch AND the round recap — visible AND
+    // its "Bring back" is clickable on the now-empty, round-ended triage screen.
     const notice = page.getByRole("status").filter({ hasText: "Set aside" });
     await expect(notice).toBeVisible();
     const inlineBringBack = notice.getByRole("button", { name: /Bring back/ });
@@ -239,7 +241,13 @@ test.describe("triage — 'Not mine' set-aside flow", () => {
     await expect(
       page.getByRole("heading", { name: "How do you feel about this one?" }),
     ).toBeVisible();
-    const triageBody = await page.locator("body").innerText();
+    // Strip the round-chrome step indicator's sr-only "Step 1 of 3" wayfinding
+    // (where you are in the 3-step round arc — not an item pile) so the guard
+    // still catches a real "of N" backlog total. See not-yet-defer.spec.ts.
+    const triageBody = (await page.locator("body").innerText()).replace(
+      /Step\s+\d+\s+of\s+\d+/gi,
+      "",
+    );
     expect(triageBody).not.toMatch(/\bof\s+\d+\b/); // "of 3", "of 2" backlog framing
     expect(triageBody).not.toMatch(/\bremaining\b/i);
     expect(triageBody).not.toMatch(/\b\d+\s+items?\b/i); // "3 items" inventory framing

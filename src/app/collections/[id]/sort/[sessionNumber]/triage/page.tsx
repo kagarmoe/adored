@@ -87,6 +87,15 @@ export default async function TriagePage({ params }: TriagePageProps) {
       }
     >
       <TriageUndoProvider collectionId={collection.id}>
+        {/* The set-aside undo notice lives OUTSIDE RoundSurface so it survives BOTH
+            item === null AND the queue-empty "what moved" recap that RoundSurface
+            swaps in when the queue empties. Setting aside the LAST untriaged item
+            ends the round (recap replaces the round content), but the "Bring back"
+            escape must still be reachable — hoisting it here keeps that reversible
+            (spec §11; TONE: nothing lost, always undoable). */}
+        <div className="mx-auto max-w-xl">
+          <TriageUndoNotice />
+        </div>
         <RoundSurface
           step={1}
           totalSteps={3}
@@ -112,12 +121,6 @@ export default async function TriagePage({ params }: TriagePageProps) {
               </Link>
             </p>
           </div>
-
-          {/* The inline set-aside undo notice lives OUTSIDE the item ternary so it
-              survives item === null: setting aside the LAST untriaged item empties
-              the queue and unmounts the item branch, but the "Bring back" escape
-              must still be reachable (spec §11). */}
-          <TriageUndoNotice />
 
           {!item ? (
             <EmptyState heading="You&apos;ve looked at everything for now" message="You&apos;ve thought through each one. View results to see what you love most." />
