@@ -1,0 +1,101 @@
+// @vitest-environment jsdom
+import "@testing-library/jest-dom";
+import { describe, expect, it } from "vitest";
+import { render } from "@testing-library/react";
+import { WelcomePurpose } from "./WelcomePurpose";
+import { WelcomeTriage } from "./WelcomeTriage";
+import { WelcomeCompare } from "./WelcomeCompare";
+import { WelcomeStanding } from "./WelcomeStanding";
+import { WelcomeHandoff } from "./WelcomeHandoff";
+import { COMPARE_PAIR } from "./sampleData";
+
+// Render every beat and collect its visible text into one blob.
+function allBeatText(): string {
+  const parts: string[] = [];
+  for (const el of [
+    render(<WelcomePurpose onNext={() => {}} />).container,
+    render(<WelcomeTriage index={0} onChoose={() => {}} />).container,
+    render(<WelcomeCompare onChoose={() => {}} />).container,
+    render(
+      <WelcomeStanding compareWinnerId={COMPARE_PAIR[0].id} triageChoices={{}} onNext={() => {}} />
+    ).container,
+    render(<WelcomeHandoff onExplore={() => {}} />).container,
+  ]) {
+    parts.push(el.textContent ?? "");
+  }
+  return parts.join(" \n ");
+}
+
+describe("copy guard", () => {
+  it("the purpose screen contains the 'isn't a store' contrast", () => {
+    const { container } = render(<WelcomePurpose onNext={() => {}} />);
+    // Apostrophe may be a curly ’ — match either.
+    expect(container.textContent).toMatch(/isn.?t a store/);
+  });
+
+  it("uses no marketplace / price / buy / cart / shop language anywhere", () => {
+    const text = allBeatText().toLowerCase();
+    const forbidden = [
+      "marketplace",
+      "price",
+      "buy",
+      "purchase",
+      "cart",
+      "shop",
+      "store", // allowed ONLY inside "isn't a store"; checked separately below
+      "checkout",
+      "sale",
+      "deal",
+      "brand",
+    ];
+    for (const word of forbidden) {
+      if (word === "store") continue; // handled below
+      expect(text, `forbidden word "${word}" appeared in beat copy`).not.toContain(word);
+    }
+    // "store" may appear only in the anti-marketplace contrast.
+    const storeHits = text.match(/store/g) ?? [];
+    expect(storeHits.length).toBe(1);
+    expect(text).toContain("isn");
+  });
+});
+
+describe("a11y: touch targets >= 44px", () => {
+  it("every interactive control carries an h-11 / h-14 / min-h-11 sizing class", () => {
+    const controls: HTMLElement[] = [];
+    for (const c of [
+      render(<WelcomePurpose onNext={() => {}} />).container,
+      render(<WelcomeTriage index={0} onChoose={() => {}} />).container,
+      render(<WelcomeCompare onChoose={() => {}} />).container,
+      render(
+        <WelcomeStanding compareWinnerId={COMPARE_PAIR[0].id} triageChoices={{}} onNext={() => {}} />
+      ).container,
+      render(<WelcomeHandoff onExplore={() => {}} />).container,
+    ]) {
+      controls.push(...Array.from(c.querySelectorAll<HTMLElement>("button, a")));
+    }
+    expect(controls.length).toBeGreaterThan(0);
+    for (const el of controls) {
+      const cls = el.className;
+      const ok = /\bh-11\b/.test(cls) || /\bh-14\b/.test(cls) || /\bmin-h-11\b/.test(cls);
+      expect(ok, `control "${el.textContent?.trim()}" lacks a >=44px height class: ${cls}`).toBe(
+        true
+      );
+    }
+  });
+});
+
+describe("a11y: no essential motion", () => {
+  it("beat containers declare no transition/animation on their root", () => {
+    // Reduced-motion users must get a static experience: the walkthrough's
+    // advancement is state-swap, not an animated transition. Assert no beat
+    // root element opts into transition/animate utilities.
+    for (const c of [
+      render(<WelcomePurpose onNext={() => {}} />).container,
+      render(<WelcomeStanding compareWinnerId={COMPARE_PAIR[0].id} triageChoices={{}} onNext={() => {}} />)
+        .container,
+    ]) {
+      const section = c.querySelector("section");
+      expect(section?.className ?? "").not.toMatch(/\b(transition|animate)-/);
+    }
+  });
+});
