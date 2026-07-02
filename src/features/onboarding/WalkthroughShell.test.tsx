@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
@@ -11,13 +11,11 @@ vi.mock("next/navigation", () => ({
 
 import { WalkthroughShell } from "./WalkthroughShell";
 import { TRIAGE_ITEMS, COMPARE_PAIR } from "./sampleData";
-import { isWelcomeDismissed } from "./dismissal";
-import { installStorage } from "./testStorage";
+import { DISMISS_KEY, dismissWelcome, isWelcomeDismissed } from "./dismissal";
 
-beforeEach(() => installStorage());
 afterEach(() => {
   push.mockClear();
-  localStorage.clear();
+  document.cookie = `${DISMISS_KEY}=; path=/; max-age=0`;
 });
 
 describe("WalkthroughShell", () => {
@@ -76,6 +74,14 @@ describe("WalkthroughShell", () => {
     // Reaching the hand-off means the walkthrough was completed.
     expect(screen.getByRole("heading", { name: "Now, your turn." })).toBeInTheDocument();
     await user.click(screen.getByText(/I.?ll explore on my own\./));
+    expect(isWelcomeDismissed()).toBe(true);
+  });
+
+  it("re-open (manual visit) does not clear an existing dismissal cookie", async () => {
+    dismissWelcome();
+    expect(isWelcomeDismissed()).toBe(true);
+    render(<WalkthroughShell />);
+    // Mounting the shell (e.g. /profile -> /welcome) must not touch the cookie.
     expect(isWelcomeDismissed()).toBe(true);
   });
 

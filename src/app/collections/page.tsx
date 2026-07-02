@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getDb } from "@/lib/db";
 import { CollectionController } from "@/server/api/collections";
 import { PhotoController } from "@/server/api/photos";
@@ -8,7 +9,8 @@ import { AppLayout } from "@/components/layout";
 import { buttonVariants, EmptyState } from "@/components/ui";
 import { CollectionCard } from "@/features/collections/CollectionCard";
 import { CollectionFilters } from "@/features/collections/CollectionFilters";
-import { WelcomeGate } from "@/features/onboarding/WelcomeGate";
+import { DISMISS_KEY } from "@/features/onboarding/dismissal";
+import { shouldShowWelcome } from "@/features/onboarding/gate";
 import Link from "next/link";
 
 interface CollectionsPageProps {
@@ -26,6 +28,16 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
   // downstream batch read is keyed off THESE ids, so pool state for a collection
   // the user can't see is never queried or exposed.
   const collections = await CollectionController.fromDb(db).listCollections(session.user.id);
+
+  // First-run gate (the ONE place it lives): zero collections AND the walkthrough
+  // not dismissed -> redirect to /welcome BEFORE rendering, so a first-run user
+  // never sees the collections chrome flash. Dismissal is a cookie so the server
+  // can read it here; no DB, no client cover needed.
+  const dismissed = cookies().get(DISMISS_KEY)?.value === "1";
+  if (shouldShowWelcome(collections.length, dismissed)) {
+    redirect("/welcome");
+  }
+
   const collectionIds = collections.map((c) => c.id);
   const photoController = PhotoController.fromDb(db);
   const [covers, collectionsWithPooledPhotos] = await Promise.all([
@@ -41,8 +53,6 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
 
   return (
     <AppLayout breadcrumbs={[{ label: "Collections" }]}>
-      {/* First-run gate (one place): zero collections + not dismissed -> /welcome. */}
-      <WelcomeGate hasCollections={collections.length > 0} />
       <div className="space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
