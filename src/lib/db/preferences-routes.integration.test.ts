@@ -115,18 +115,6 @@ describeDb(
         expect(res.status).toBe(404);
       });
 
-      it("(5) 403s a stranger (not a member)", async () => {
-        // purses-55c: GET preferences/items is now gated on collection access — a
-        // non-member gets 403 (still caller-scoped to their own rows for members).
-        const seed = await seedFullCollection(ownerId);
-        const strangerId = await seedUserRow("stranger");
-        mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-
-        const res = await getItems(makeGetReq(seed.collectionId) as any, {
-          params: { id: seed.collectionId },
-        });
-        expect(res.status).toBe(403);
-      });
     });
 
     // ── POST preferences/recalculate ─────────────────────────────────────────

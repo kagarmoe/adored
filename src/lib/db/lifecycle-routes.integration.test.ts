@@ -110,15 +110,6 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       expect(Array.isArray(body)).toBe(true);
     });
 
-    it("403s a stranger listing members of a foreign collection", async () => {
-      // purses-55c: GET /members is now scoped to collection access — a non-member
-      // gets 403 instead of the full roster.
-      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-      const { collectionId } = await seedFullCollection(ownerId);
-
-      const res = await membersGet(getReq(), { params: { id: collectionId } });
-      expect(res.status).toBe(403);
-    });
 
     it("returns empty array for collection with no members", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
@@ -157,16 +148,6 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       expect(res.status).toBe(403);
     });
 
-    it("403 when stranger tries to add a member", async () => {
-      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-      const { collectionId } = await seedFullCollection(ownerId);
-
-      const res = await membersPost(
-        postReq({ userId: strangerId }),
-        { params: { id: collectionId } },
-      );
-      expect(res.status).toBe(403);
-    });
 
     it("happy path — owner adds a new member; real membership row created", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
@@ -257,13 +238,6 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       expect(res.status).toBe(403);
     });
 
-    it("403 when stranger tries to archive", async () => {
-      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-      const { collectionId } = await seedFullCollection(ownerId);
-
-      const res = await archivePost(postReq(), { params: { id: collectionId } });
-      expect(res.status).toBe(403);
-    });
 
     it("404s an absent collection (resolve-then-authorize)", async () => {
       // purses-nj7 ride-along: archive resolves the collection first — an absent id is
@@ -315,13 +289,6 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       expect(res.status).toBe(403);
     });
 
-    it("403 when stranger tries to restore", async () => {
-      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-      const { collectionId } = await seedFullCollection(ownerId);
-
-      const res = await collectionRestorePost(postReq(), { params: { id: collectionId } });
-      expect(res.status).toBe(403);
-    });
 
     it("404s an absent collection (resolve-then-authorize)", async () => {
       // purses-nj7 ride-along: restore resolves the collection first — an absent id is

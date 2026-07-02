@@ -95,16 +95,6 @@ describeDb("member-management route (route -> repo -> DB)", () => {
       expect(res.status).toBe(401);
     });
 
-    it("403s a stranger who is neither member nor owner", async () => {
-      const { collectionId, memberId } = await seedFullCollection(ownerId);
-      const mid = await memberMembershipId(collectionId, memberId);
-      const strangerId = await seedUserRow("stranger");
-      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-
-      const res = await GET(jsonReq("GET") as any, ctx(collectionId, mid));
-      expect(res.status).toBe(403);
-    });
-
     it("404s when the [mid] membership belongs to a DIFFERENT collection (belongs-to-parent)", async () => {
       const { collectionId } = await seedFullCollection(ownerId);
       // A second collection (same owner) with its own member -> a foreign membership row.

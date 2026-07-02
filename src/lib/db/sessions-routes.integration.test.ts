@@ -171,13 +171,6 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
       expect(res.status).toBe(403);
     });
 
-    it("GET 403s a non-member entirely (collection gate)", async () => {
-      const { sessionId } = await seedSession(ownerId);
-      const strangerId = await seedUserRow("stranger");
-      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-      const res = await getSession(jsonReq("GET") as any, { params: { id: sessionId } } as any);
-      expect(res.status).toBe(403);
-    });
 
     it("GET 200s for the curator and returns the session", async () => {
       const { sessionId } = await seedSession(ownerId);

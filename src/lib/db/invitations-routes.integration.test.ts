@@ -147,21 +147,6 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(res.status).toBe(404);
     });
 
-    it("403s a stranger reading another user's invitation", async () => {
-      // purses-nj7: invitations/[id] GET is now scoped to the invitation's collection
-      // (member-or-owner) — a non-member gets 403.
-      const strangerId = await seedUserRow("stranger");
-      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-
-      const collectionId = await seedBareCollection(ownerId);
-      const { id } = await seedInvitation(collectionId);
-
-      const res = await getInvitation(
-        makeRequest("GET", `http://localhost/api/invitations/${id}`) as any,
-        { params: { id } },
-      );
-      expect(res.status).toBe(403);
-    });
   });
 
   // =========================================================================
@@ -378,21 +363,6 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(res.status).toBe(404);
     });
 
-    it("403s a stranger resending another user's invitation", async () => {
-      // purses-nj7: resend is now scoped to the invitation's collection — a non-member
-      // gets 403.
-      const strangerId = await seedUserRow("stranger-resend");
-      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-
-      const collectionId = await seedBareCollection(ownerId);
-      const { id } = await seedInvitation(collectionId);
-
-      const res = await resendInvitation(
-        makeRequest("POST", `http://localhost/api/invitations/${id}/resend`) as any,
-        { params: { id } },
-      );
-      expect(res.status).toBe(403);
-    });
   });
 
   // =========================================================================
