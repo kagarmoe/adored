@@ -39,7 +39,9 @@ export function PoolPhotoGrid({
 
   const clear = () => setSelected([]);
 
-  const makeItem = async () => {
+  // `mode: "each"` splits the selection into one item per photo; the default
+  // groups them all into a single item (whose number the success note surfaces).
+  const groupPool = async (mode?: "each") => {
     if (selected.length === 0 || busy) return;
     setBusy(true);
     setError(null);
@@ -48,7 +50,7 @@ export function PoolPhotoGrid({
       const res = await fetch(`/api/collections/${collectionId}/pool/group`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photoIds: selected }),
+        body: JSON.stringify(mode ? { photoIds: selected, mode } : { photoIds: selected }),
       });
       if (!res.ok) {
         throw new Error("group failed");
@@ -57,39 +59,24 @@ export function PoolPhotoGrid({
       const grouped = new Set(selected);
       setPool((prev) => prev.filter((p) => !grouped.has(p.id)));
       setSelected([]);
-      setNotice(`Your photos are grouped — find item #${data.number} in your items.`);
+      setNotice(
+        mode === "each"
+          ? "Your photos are now their own items — find them in your items."
+          : `Your photos are grouped — find item #${data.number} in your items.`,
+      );
     } catch {
-      setError("We couldn’t make that item just now — your photos are safe; try again.");
+      setError(
+        mode === "each"
+          ? "We couldn’t make those items just now — your photos are safe; try again."
+          : "We couldn’t make that item just now — your photos are safe; try again.",
+      );
     } finally {
       setBusy(false);
     }
   };
 
-  const makeEach = async () => {
-    if (selected.length === 0 || busy) return;
-    setBusy(true);
-    setError(null);
-    setNotice(null);
-    try {
-      const res = await fetch(`/api/collections/${collectionId}/pool/group`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photoIds: selected, mode: "each" }),
-      });
-      if (!res.ok) {
-        throw new Error("group failed");
-      }
-      await res.json();
-      const grouped = new Set(selected);
-      setPool((prev) => prev.filter((p) => !grouped.has(p.id)));
-      setSelected([]);
-      setNotice("Your photos are now their own items — find them in your items.");
-    } catch {
-      setError("We couldn’t make those items just now — your photos are safe; try again.");
-    } finally {
-      setBusy(false);
-    }
-  };
+  const makeItem = () => groupPool();
+  const makeEach = () => groupPool("each");
 
   const moveTo = async (dest: MoveDestination) => {
     if (selected.length === 0 || busy) return;

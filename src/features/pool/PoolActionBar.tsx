@@ -2,16 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui";
-import type { MoveDestination, MoveTarget } from "@/features/items/PhotoMoveBar";
+import { targetLabel, type MoveDestination, type MoveTarget } from "@/features/items/PhotoMoveBar";
 
 export type { MoveDestination, MoveTarget } from "@/features/items/PhotoMoveBar";
-
-/** Label for a move target, mirroring PhotoMoveBar's fallback: name, else #N. */
-function targetLabel(target: MoveTarget): string {
-  const name = target.name?.trim();
-  if (name) return name;
-  return target.number != null ? `#${target.number}` : "Untitled";
-}
 
 export function PoolActionBar({
   count,

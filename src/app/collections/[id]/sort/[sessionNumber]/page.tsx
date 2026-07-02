@@ -114,7 +114,6 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
           <SeeResultsCard
             collectionId={collection.id}
             collectionSlug={collection.slug ?? collection.id}
-            bucketed={bucketed}
           />
         )}
 
