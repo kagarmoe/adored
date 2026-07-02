@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "node:fs";
+import { basename, join } from "node:path";
 import { NextResponse } from "next/server";
 import { get, put } from "@vercel/blob";
 import sharp from "sharp";
@@ -58,6 +60,51 @@ export async function readStreamCapped(
   return Buffer.concat(chunks);
 }
 
+/** Seed placeholder key prefix (see scripts/seed-load.ts). A photo carrying this
+ *  key has no real Blob object — its bytes live in the committed demo-image
+ *  fixtures — so it is the explicit marker that gates the dev-only fallback. */
+const DEMO_SEED_PREFIX = "demo-seed-placeholder/";
+const DEMO_IMAGES_DIR = join(process.cwd(), "e2e", "fixtures", "demo-images");
+
+/** A `get()`-shaped success result over a Buffer, so the fallback slots into the
+ *  same code paths as a real Blob hit. */
+function bufferResult(buf: Buffer, contentType: string) {
+  return {
+    statusCode: 200 as const,
+    stream: new Response(new Uint8Array(buf)).body!,
+    blob: { contentType, size: buf.byteLength },
+  };
+}
+
+/**
+ * ponytail: DEV-ONLY read fallback — the ceiling is `NODE_ENV !== "production"`
+ * AND the demo-seed marker key, so it can never serve local bytes for a real
+ * photo or in prod. Seeded demo collections carry a `demo-seed-placeholder/<file>`
+ * blobKey with no Blob object; in dev (no Blob token) map that key to the committed
+ * fixture so seeded/demo photos render. Returns null when it doesn't apply.
+ */
+function devDemoFallback(blobKey: string): ReturnType<typeof bufferResult> | null {
+  if (process.env.NODE_ENV === "production" || !blobKey.startsWith(DEMO_SEED_PREFIX)) {
+    return null;
+  }
+  const file = join(DEMO_IMAGES_DIR, basename(blobKey)); // basename: no path traversal
+  if (!existsSync(file)) return null;
+  return bufferResult(readFileSync(file), "image/webp");
+}
+
+/** Fetch the original bytes from Blob, degrading to the dev-only demo fallback on
+ *  a miss/failure. Callers treat a null return as a 404. */
+async function fetchOriginal(blobKey: string): Promise<ReturnType<typeof bufferResult> | Awaited<ReturnType<typeof get>>> {
+  try {
+    const result = await get(blobKey, { access: getBlobAccess(blobKey) });
+    if (result && result.statusCode === 200) return result;
+  } catch (error) {
+    if (process.env.NODE_ENV === "production") throw error;
+    // dev: a Blob error (e.g. rejected token) falls through to the demo fallback.
+  }
+  return devDemoFallback(blobKey);
+}
+
 /**
  * Serve a photo's bytes with caching + optional on-demand resize. Owns the
  * variant ETag end-to-end (does NOT forward the client's If-None-Match into the
@@ -94,7 +141,7 @@ export async function servePhotoFile(
     // Original passthrough (no ?w=): stream verbatim, or re-encode/orient when a
     // user rotation is stored so /file is orientation-correct without a variant.
     if (width === null) {
-      const result = await get(blobKey, { access: getBlobAccess(blobKey) });
+      const result = await fetchOriginal(blobKey);
       if (!result || result.statusCode !== 200) {
         return NextResponse.json({ error: "Not found" }, { status: 404 });
       }
@@ -135,7 +182,7 @@ export async function servePhotoFile(
     }
 
     // MISS: fetch the original, resize, persist (best-effort), stream.
-    const result = await get(blobKey, { access: getBlobAccess(blobKey) });
+    const result = await fetchOriginal(blobKey);
     if (!result || result.statusCode !== 200) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
