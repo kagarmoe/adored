@@ -223,8 +223,8 @@ for (const theme of ["light", "dark"] as const) {
     await page.waitForTimeout(400);
     await shot("welcome-3-compare");
 
-    // Beat 4 — Standing. Tap the left compare item ("The tan leather tote").
-    await page.getByRole("button", { name: "The tan leather tote" }).click();
+    // Beat 4 — Standing. Tap the left compare item ("The slipcovered armchair").
+    await page.getByRole("button", { name: "The slipcovered armchair" }).click();
     await page.getByRole("heading", { name: "What you love most" }).waitFor();
     await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
     await page.waitForTimeout(400);

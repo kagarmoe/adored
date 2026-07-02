@@ -12,11 +12,11 @@ export interface SampleItem {
 // Five things a person might own — evocative, never shop-like. The names carry
 // a story ("the" + the object), not a catalog SKU.
 export const SAMPLE_ITEMS: readonly SampleItem[] = [
-  { id: "tote", name: "The tan leather tote", imageSrc: "/onboarding/tan-leather-tote.webp" },
-  { id: "watch", name: "The gold wristwatch", imageSrc: "/onboarding/gold-wristwatch.webp" },
-  { id: "sunglasses", name: "The tortoiseshell sunglasses", imageSrc: "/onboarding/tortoiseshell-sunglasses.webp" },
-  { id: "wallet", name: "The worn leather wallet", imageSrc: "/onboarding/leather-wallet.webp" },
-  { id: "scarf", name: "The silk scarf", imageSrc: "/onboarding/silk-scarf.webp" },
+  { id: "armchair", name: "The slipcovered armchair", imageSrc: "/onboarding/slipcovered-armchair.webp" },
+  { id: "clock", name: "The little red wall clock", imageSrc: "/onboarding/red-wall-clock.webp" },
+  { id: "vase", name: "The glass flower vase", imageSrc: "/onboarding/glass-flower-vase.webp" },
+  { id: "cushion", name: "The microphone throw cushion", imageSrc: "/onboarding/microphone-cushion.webp" },
+  { id: "books", name: "The shelf of well-read books", imageSrc: "/onboarding/bookshelf.webp" },
 ] as const;
 
 // The two items the compare beat pits against each other.
