@@ -1,11 +1,10 @@
 import { eq, and } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { itemDispositionsTable } from "@/lib/db/schema";
-import type { IItemDispositionRepository } from "../ItemDispositionRepository";
 import type { ItemDisposition, Disposition } from "@/types";
 import { generateId } from "@/lib/id";
 
-export class ItemDispositionRepository implements IItemDispositionRepository {
+export class ItemDispositionRepository {
   constructor(private db: Database) {}
 
   async upsert(data: {

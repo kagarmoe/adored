@@ -1,11 +1,10 @@
 import { eq, and, sql } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { sortResultsTable } from "@/lib/db/schema";
-import type { ISortResultRepository } from "../SortResultRepository";
 import type { SortResult } from "@/types";
 import { generateId } from "@/lib/id";
 
-export class SortResultRepository implements ISortResultRepository {
+export class SortResultRepository {
   constructor(private db: Database) {}
 
   // Single INSERT with a caller-supplied number; NO recompute, NO retry. The

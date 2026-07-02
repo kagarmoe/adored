@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { Collection } from "@/types";
-import type { ICollectionRepository } from "@/server/repositories/CollectionRepository";
 import { generateId } from "@/lib/id";
 import type { Database } from "@/lib/db";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
@@ -18,7 +17,7 @@ const UpdateCollectionSchema = z.object({
 
 
 export class CollectionController {
-  constructor(private collectionRepo: ICollectionRepository) {}
+  constructor(private collectionRepo: CollectionRepository) {}
 
   static fromDb(db: Database): CollectionController {
     return new CollectionController(new CollectionRepository(db));

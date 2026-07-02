@@ -3,9 +3,8 @@ import type { Photo } from "@/types";
 import { photosTable } from "@/lib/db/schema";
 import { eq, and, isNull, isNotNull, asc, inArray, sql } from "drizzle-orm";
 import { generateId } from "@/lib/id";
-import type { IPhotoRepository } from "@/server/repositories/PhotoRepository";
 
-export class PhotoRepository implements IPhotoRepository {
+export class PhotoRepository {
   constructor(private db: Database) {}
 
   async create(

@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { SortResult } from "@/types";
-import type { ISortResultRepository } from "@/server/repositories/SortResultRepository";
 import { FinalizeStateError } from "@/server/services/SortResultService";
 import type { Database } from "@/lib/db";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
@@ -10,7 +9,7 @@ const UpdateResultSchema = z.object({
 });
 
 export class ResultController {
-  constructor(private resultRepo: ISortResultRepository) {}
+  constructor(private resultRepo: SortResultRepository) {}
 
   static fromDb(db: Database): ResultController {
     return new ResultController(new SortResultRepository(db));

@@ -1,26 +1,26 @@
 import { describe, expect, it, vi } from "vitest";
 import { PreferenceStateService } from "./PreferenceStateService";
 import type { ScoringService } from "./ScoringService";
-import type { ICollectionPreferenceItemRepository } from "@/server/repositories/CollectionPreferenceItemRepository";
-import type { IItemRepository } from "@/server/repositories/ItemRepository";
-import type { ISessionRepository } from "@/server/repositories/SessionRepository";
-import type { IDecisionEventRepository } from "@/server/repositories/DecisionEventRepository";
+import type { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
+import type { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import type { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
+import type { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import type { CollectionPreferenceItem, Item, Session } from "@/types";
 
 // Rankable-order dependencies. Default stubs yield NO comparisons and NO items,
 // so deriveOrder produces no order_rank — these unit tests assert the score/upsert
 // bookkeeping; order_rank derivation is covered end-to-end in the DB integration
 // test (binary-insertion-ranking.integration.test.ts).
-function makeItemRepo(items: Item[] = []): IItemRepository {
-  return { findByCollection: vi.fn().mockResolvedValue(items) } as unknown as IItemRepository;
+function makeItemRepo(items: Item[] = []): ItemRepository {
+  return { findByCollection: vi.fn().mockResolvedValue(items) } as unknown as ItemRepository;
 }
-function makeSessionRepo(sessions: Session[] = []): ISessionRepository {
+function makeSessionRepo(sessions: Session[] = []): SessionRepository {
   return {
     findByCollectionAndCurator: vi.fn().mockResolvedValue(sessions),
-  } as unknown as ISessionRepository;
+  } as unknown as SessionRepository;
 }
-function makeDecisionRepo(): IDecisionEventRepository {
-  return { findBySession: vi.fn().mockResolvedValue([]) } as unknown as IDecisionEventRepository;
+function makeDecisionRepo(): DecisionEventRepository {
+  return { findBySession: vi.fn().mockResolvedValue([]) } as unknown as DecisionEventRepository;
 }
 
 const COLLECTION = "col-1";
@@ -53,7 +53,7 @@ function persisted(
   return scored(overrides);
 }
 
-type BulkUpsertRow = Parameters<ICollectionPreferenceItemRepository["bulkUpsert"]>[0][number];
+type BulkUpsertRow = Parameters<CollectionPreferenceItemRepository["bulkUpsert"]>[0][number];
 
 function buildService(parts: {
   computed: CollectionPreferenceItem[];
@@ -66,20 +66,20 @@ function buildService(parts: {
   // per-item "existing" read is gone; the bulk upsert insert-or-updates by the
   // (item_id, curator_id) unique index without needing to know prior ids.
   const findByCollection = vi
-    .fn<ICollectionPreferenceItemRepository["findByCollection"]>()
+    .fn<CollectionPreferenceItemRepository["findByCollection"]>()
     .mockResolvedValue(parts.final);
   const bulkUpsert = vi
-    .fn<ICollectionPreferenceItemRepository["bulkUpsert"]>()
+    .fn<CollectionPreferenceItemRepository["bulkUpsert"]>()
     .mockResolvedValue(undefined);
   const clearOrderRanks = vi
-    .fn<ICollectionPreferenceItemRepository["clearOrderRanks"]>()
+    .fn<CollectionPreferenceItemRepository["clearOrderRanks"]>()
     .mockResolvedValue(undefined);
 
   const preferenceRepo = {
     findByCollection,
     bulkUpsert,
     clearOrderRanks,
-  } as unknown as ICollectionPreferenceItemRepository;
+  } as unknown as CollectionPreferenceItemRepository;
 
   const service = new PreferenceStateService(
     preferenceRepo,
@@ -156,16 +156,16 @@ describe("PreferenceStateService.recalculatePreferences", () => {
 
     let captured: BulkUpsertRow[] = [];
     const bulkUpsert = vi
-      .fn<ICollectionPreferenceItemRepository["bulkUpsert"]>()
+      .fn<CollectionPreferenceItemRepository["bulkUpsert"]>()
       .mockImplementation(async (rows) => { captured = rows; });
     const clearOrderRanks = vi
-      .fn<ICollectionPreferenceItemRepository["clearOrderRanks"]>()
+      .fn<CollectionPreferenceItemRepository["clearOrderRanks"]>()
       .mockResolvedValue(undefined);
     const preferenceRepo = {
       findByCollection: vi.fn().mockResolvedValue([]),
       bulkUpsert,
       clearOrderRanks,
-    } as unknown as ICollectionPreferenceItemRepository;
+    } as unknown as CollectionPreferenceItemRepository;
 
     const items: Item[] = [
       { id: "a", createdAt: t0 } as Item,
@@ -182,7 +182,7 @@ describe("PreferenceStateService.recalculatePreferences", () => {
           createdAt: t1,
         },
       ]),
-    } as unknown as IDecisionEventRepository;
+    } as unknown as DecisionEventRepository;
 
     const service = new PreferenceStateService(
       preferenceRepo,
@@ -225,11 +225,11 @@ describe("PreferenceStateService.getItemPreferences", () => {
   it("getItemPreferences passes through to the repo", async () => {
     const stored = [persisted({ id: "pref-a", itemId: "a", rankBucket: "top" })];
     const findByCollection = vi
-      .fn<ICollectionPreferenceItemRepository["findByCollection"]>()
+      .fn<CollectionPreferenceItemRepository["findByCollection"]>()
       .mockResolvedValue(stored);
     const preferenceRepo = {
       findByCollection,
-    } as unknown as ICollectionPreferenceItemRepository;
+    } as unknown as CollectionPreferenceItemRepository;
     const service = new PreferenceStateService(
       preferenceRepo,
       {} as unknown as ScoringService,

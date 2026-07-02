@@ -30,11 +30,9 @@ import type {
   SortResult,
   SortResultItem,
 } from "@/types";
-import type {
-  ISortResultRepository,
-  ISortResultItemRepository,
-} from "@/server/repositories/SortResultRepository";
-import type { ICollectionPreferenceItemRepository } from "@/server/repositories/CollectionPreferenceItemRepository";
+import type { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
+import type { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
+import type { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import type { Database } from "@/lib/db";
 
 const txDb = fakeTxDb() as unknown as Database;
@@ -119,14 +117,14 @@ describe("SortResultService.createDraftResult", () => {
         preference({ itemId: "b", score: 0.4, rankBucket: "medium" }),
         preference({ itemId: "a", score: 0.9, rankBucket: "top" }),
       ],
-    } as unknown as ICollectionPreferenceItemRepository;
+    } as unknown as CollectionPreferenceItemRepository;
 
     // findDrafts returns ONLY the just-created draft, so the supersede reap
     // (purses-p2rj) finds no PRIOR draft and deletes nothing.
     const findDrafts = vi.fn(async () => [created]);
     const result = await new SortResultService(
-      { findDrafts } as unknown as ISortResultRepository,
-      {} as unknown as ISortResultItemRepository,
+      { findDrafts } as unknown as SortResultRepository,
+      {} as unknown as SortResultItemRepository,
       preferenceRepo,
       txDb,
     ).createDraftResult(COLLECTION, CURATOR, "Spring sort");
@@ -172,12 +170,12 @@ describe("SortResultService.createDraftResult", () => {
     txResultRepo.insertWithNumber.mockRejectedValue(conflict);
     const preferenceRepo = {
       findByCollection: async () => [],
-    } as unknown as ICollectionPreferenceItemRepository;
+    } as unknown as CollectionPreferenceItemRepository;
 
     await expect(
       new SortResultService(
-        {} as unknown as ISortResultRepository,
-        {} as unknown as ISortResultItemRepository,
+        {} as unknown as SortResultRepository,
+        {} as unknown as SortResultItemRepository,
         preferenceRepo,
         txDb,
       ).createDraftResult(COLLECTION, CURATOR, "Spring sort"),
@@ -191,11 +189,11 @@ describe("SortResultService.createDraftResult", () => {
     txResultRepo.insertWithNumber.mockResolvedValue(created);
     const preferenceRepo = {
       findByCollection: async () => [],
-    } as unknown as ICollectionPreferenceItemRepository;
+    } as unknown as CollectionPreferenceItemRepository;
 
     const result = await new SortResultService(
-      { findDrafts: async () => [created] } as unknown as ISortResultRepository,
-      {} as unknown as ISortResultItemRepository,
+      { findDrafts: async () => [created] } as unknown as SortResultRepository,
+      {} as unknown as SortResultItemRepository,
       preferenceRepo,
       txDb,
     ).createDraftResult(COLLECTION, CURATOR, "Empty sort");
@@ -208,12 +206,12 @@ describe("SortResultService.createDraftResult", () => {
 describe("SortResultService.finalizeResult", () => {
   it("finalizeResult sets status finalized + finalizedAt", async () => {
     const update = vi.fn(async () => sortResult({ status: "finalized" }));
-    const sortResultRepo = { update } as unknown as ISortResultRepository;
+    const sortResultRepo = { update } as unknown as SortResultRepository;
 
     await new SortResultService(
       sortResultRepo,
-      {} as unknown as ISortResultItemRepository,
-      {} as unknown as ICollectionPreferenceItemRepository,
+      {} as unknown as SortResultItemRepository,
+      {} as unknown as CollectionPreferenceItemRepository,
       txDb,
     ).finalizeResult("res-1");
 
@@ -239,15 +237,15 @@ describe("SortResultService.supersedeResult", () => {
     // findById + findByResult are pre-tx reads on the INJECTED repos.
     const sortResultRepo = {
       findById: async () => oldResult,
-    } as unknown as ISortResultRepository;
+    } as unknown as SortResultRepository;
     const sortResultItemRepo = {
       findByResult: async () => oldItems,
-    } as unknown as ISortResultItemRepository;
+    } as unknown as SortResultItemRepository;
 
     const result = await new SortResultService(
       sortResultRepo,
       sortResultItemRepo,
-      {} as unknown as ICollectionPreferenceItemRepository,
+      {} as unknown as CollectionPreferenceItemRepository,
       txDb,
     ).supersedeResult("res-1");
 
@@ -278,12 +276,12 @@ describe("SortResultService.supersedeResult", () => {
   it("guard: returns null when the source is absent (never opens a tx)", async () => {
     const sortResultRepo = {
       findById: async () => null,
-    } as unknown as ISortResultRepository;
+    } as unknown as SortResultRepository;
 
     const result = await new SortResultService(
       sortResultRepo,
-      {} as unknown as ISortResultItemRepository,
-      {} as unknown as ICollectionPreferenceItemRepository,
+      {} as unknown as SortResultItemRepository,
+      {} as unknown as CollectionPreferenceItemRepository,
       txDb,
     ).supersedeResult("missing");
 
@@ -294,13 +292,13 @@ describe("SortResultService.supersedeResult", () => {
   it("guard: throws SupersedeStateError when the source is not finalized (never opens a tx)", async () => {
     const sortResultRepo = {
       findById: async () => sortResult({ status: "draft" }),
-    } as unknown as ISortResultRepository;
+    } as unknown as SortResultRepository;
 
     await expect(
       new SortResultService(
         sortResultRepo,
-        {} as unknown as ISortResultItemRepository,
-        {} as unknown as ICollectionPreferenceItemRepository,
+        {} as unknown as SortResultItemRepository,
+        {} as unknown as CollectionPreferenceItemRepository,
         txDb,
       ).supersedeResult("res-1"),
     ).rejects.toBeInstanceOf(SupersedeStateError);
@@ -316,12 +314,12 @@ describe("SortResultService deleteResult", () => {
   it("returns false when the result is absent (no tx deletes attempted)", async () => {
     const sortResultRepo = {
       findById: async () => null,
-    } as unknown as ISortResultRepository;
+    } as unknown as SortResultRepository;
 
     const deleted = await new SortResultService(
       sortResultRepo,
-      {} as unknown as ISortResultItemRepository,
-      {} as unknown as ICollectionPreferenceItemRepository,
+      {} as unknown as SortResultItemRepository,
+      {} as unknown as CollectionPreferenceItemRepository,
       txDb,
     ).deleteResult("missing");
 
@@ -333,13 +331,13 @@ describe("SortResultService deleteResult", () => {
   it("throws DeleteResultStateError when the result is finalized (no tx deletes attempted)", async () => {
     const sortResultRepo = {
       findById: async () => sortResult({ status: "finalized" }),
-    } as unknown as ISortResultRepository;
+    } as unknown as SortResultRepository;
 
     await expect(
       new SortResultService(
         sortResultRepo,
-        {} as unknown as ISortResultItemRepository,
-        {} as unknown as ICollectionPreferenceItemRepository,
+        {} as unknown as SortResultItemRepository,
+        {} as unknown as CollectionPreferenceItemRepository,
         txDb,
       ).deleteResult("res-1"),
     ).rejects.toBeInstanceOf(DeleteResultStateError);
@@ -357,12 +355,12 @@ describe("SortResultService deleteResult", () => {
     });
     const sortResultRepo = {
       findById: async () => sortResult({ status: "draft" }),
-    } as unknown as ISortResultRepository;
+    } as unknown as SortResultRepository;
 
     const deleted = await new SortResultService(
       sortResultRepo,
-      {} as unknown as ISortResultItemRepository,
-      {} as unknown as ICollectionPreferenceItemRepository,
+      {} as unknown as SortResultItemRepository,
+      {} as unknown as CollectionPreferenceItemRepository,
       txDb,
     ).deleteResult("res-1");
 
@@ -382,12 +380,12 @@ describe("SortResultService manual override", () => {
     );
     const setRepo = {
       update: setUpdate,
-    } as unknown as ISortResultItemRepository;
+    } as unknown as SortResultItemRepository;
 
     await new SortResultService(
-      {} as unknown as ISortResultRepository,
+      {} as unknown as SortResultRepository,
       setRepo,
-      {} as unknown as ICollectionPreferenceItemRepository,
+      {} as unknown as CollectionPreferenceItemRepository,
       txDb,
     ).setManualOverride("item-a", 3, "top");
 
@@ -399,12 +397,12 @@ describe("SortResultService manual override", () => {
     const resetUpdate = vi.fn(async () => sortResultItem());
     const resetRepo = {
       update: resetUpdate,
-    } as unknown as ISortResultItemRepository;
+    } as unknown as SortResultItemRepository;
 
     await new SortResultService(
-      {} as unknown as ISortResultRepository,
+      {} as unknown as SortResultRepository,
       resetRepo,
-      {} as unknown as ICollectionPreferenceItemRepository,
+      {} as unknown as CollectionPreferenceItemRepository,
       txDb,
     ).resetManualOverride("item-a");
 

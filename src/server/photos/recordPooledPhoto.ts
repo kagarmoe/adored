@@ -1,5 +1,5 @@
 import type { Photo } from "@/types";
-import type { IPhotoRepository } from "@/server/repositories/PhotoRepository";
+import type { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 
 export interface PooledPhotoInput {
   collectionId: string;
@@ -12,7 +12,7 @@ export interface PooledPhotoInput {
 }
 
 export function recordPooledPhoto(
-  photoRepo: IPhotoRepository,
+  photoRepo: PhotoRepository,
   input: PooledPhotoInput,
 ): Promise<Photo> {
   return photoRepo.create({

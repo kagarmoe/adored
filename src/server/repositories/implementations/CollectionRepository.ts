@@ -1,11 +1,10 @@
 import { eq, isNull, and, or, ne, exists } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { collectionsTable, membershipsTable } from "@/lib/db/schema";
-import type { ICollectionRepository } from "../CollectionRepository";
 import type { Collection } from "@/types";
 import { slugifyName, RESERVED_COLLECTION_SLUGS } from "@/lib/collections/slug";
 
-export class CollectionRepository implements ICollectionRepository {
+export class CollectionRepository {
   constructor(private db: Database) {}
 
   async create(data: {

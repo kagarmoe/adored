@@ -1,11 +1,10 @@
 import { z } from "zod";
 import type { Item } from "@/types";
-import type {
-  FindByCollectionOptions,
-  IItemRepository,
-} from "@/server/repositories/ItemRepository";
 import type { Database } from "@/lib/db";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import {
+  ItemRepository,
+  type FindByCollectionOptions,
+} from "@/server/repositories/implementations/ItemRepository";
 
 const CreateItemSchema = z.object({
   name: z.string().min(1),
@@ -33,7 +32,7 @@ const UpdateItemSchema = z.object({
 
 
 export class ItemController {
-  constructor(private itemRepo: IItemRepository) {}
+  constructor(private itemRepo: ItemRepository) {}
 
   static fromDb(db: Database): ItemController {
     return new ItemController(new ItemRepository(db));

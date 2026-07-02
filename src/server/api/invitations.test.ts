@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Invitation } from "@/types";
-import type { IInvitationRepository } from "@/server/repositories/InvitationRepository";
+import type { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 
 // The email module is mocked so we assert the wiring (createInvitation /
 // resendInvitation call sendInvitation with the invited address + the token)
@@ -12,7 +12,7 @@ vi.mock("@/lib/email", () => ({
 }));
 
 // Minimal in-memory repo — enough to drive create/find without a DB.
-function makeRepo(seed: Invitation[] = []): IInvitationRepository {
+function makeRepo(seed: Invitation[] = []): InvitationRepository {
   const store = new Map<string, Invitation>(seed.map((i) => [i.id, i]));
   let n = 0;
   return {

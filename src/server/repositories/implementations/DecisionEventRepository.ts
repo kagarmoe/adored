@@ -1,11 +1,10 @@
 import { eq, inArray } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { decisionEventsTable, sessionsTable } from "@/lib/db/schema";
-import type { IDecisionEventRepository } from "../DecisionEventRepository";
 import type { DecisionEvent, TriageDecision, PairwiseDecision } from "@/types";
 import { generateId } from "@/lib/id";
 
-export class DecisionEventRepository implements IDecisionEventRepository {
+export class DecisionEventRepository {
   constructor(private db: Database) {}
 
   async create(data: {
