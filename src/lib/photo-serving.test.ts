@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
@@ -180,6 +180,62 @@ describe("servePhotoFile", () => {
     expect(out.byteLength).toBe(cc0.byteLength);
   });
 
+});
+
+describe("servePhotoFile — dev-only demo-seed local fallback", () => {
+  beforeEach(() => {
+    mockGet.mockReset();
+    mockPut.mockReset();
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  const demoArgs = { ...baseArgs, blobKey: "demo-seed-placeholder/accessories-01.webp" };
+  const localBytes = () =>
+    fs.readFileSync(path.join(process.cwd(), "e2e/fixtures/demo-images/accessories-01.webp"));
+
+  it("serves a demo-seed key from the local fixture when Blob misses (dev, no ?w=)", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    mockGet.mockResolvedValue(null); // Blob 404 / miss
+    const res = await servePhotoFile(demoArgs, req());
+    expect(res.status).toBe(200);
+    const out = Buffer.from(await res.arrayBuffer());
+    expect(out.byteLength).toBe(localBytes().byteLength);
+  });
+
+  it("resizes a demo-seed key from the local fixture when Blob misses (dev, ?w=)", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    mockGet.mockResolvedValue(null);
+    const res = await servePhotoFile(demoArgs, req("?w=320"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toBe("image/webp");
+    const meta = await sharp(Buffer.from(await res.arrayBuffer())).metadata();
+    expect(meta.width).toBeLessThanOrEqual(320);
+  });
+
+  it("PROD: a demo-seed key that Blob-misses still 404s — no local fallback", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    mockGet.mockResolvedValue(null);
+    const res = await servePhotoFile(demoArgs, req());
+    expect(res.status).toBe(404);
+  });
+
+  it("dev: a NON-demo key that Blob-misses still 404s (fallback is demo-key-scoped)", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    mockGet.mockResolvedValue(null);
+    const res = await servePhotoFile(baseArgs, req()); // baseArgs.blobKey = "store/abc.jpg"
+    expect(res.status).toBe(404);
+  });
+
+  it("dev: prefers Blob when it HITS — local fallback only on miss", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    mockBlob(cc0, { contentType: "image/jpeg" }); // Blob returns 200
+    const res = await servePhotoFile(demoArgs, req());
+    expect(res.status).toBe(200);
+    const out = Buffer.from(await res.arrayBuffer());
+    expect(out.byteLength).toBe(cc0.byteLength); // Blob bytes, not the local fixture
+  });
 });
 
 describe("readStreamCapped", () => {
