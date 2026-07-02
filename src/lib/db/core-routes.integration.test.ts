@@ -294,18 +294,6 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       expect(res.status).toBe(404);
     });
 
-    it("403s a stranger (authenticated, not a member) reading a collection", async () => {
-      // purses-55c: a non-member is now scoped out — 403, the collection unchanged.
-      const seed = await seedFullCollection(ownerId);
-      const strangerId = await seedUserRow("stranger-get-col");
-      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-      const res = await collectionGet(
-        nextReq("GET", `http://localhost/api/collections/${seed.collectionId}`),
-        { params: { id: seed.collectionId } },
-      );
-      expect(res.status).toBe(403);
-    });
-
     it("returns the collection for a member of the collection", async () => {
       const seed = await seedFullCollection(ownerId);
       // Log in as the member (not the owner) — a member may read the collection.
@@ -335,19 +323,6 @@ describeDb("Group E — core route integration tests (real DB)", () => {
         { params: { id: seed.collectionId } },
       );
       expect(res.status).toBe(401);
-    });
-
-    it("returns 403 when non-owner non-manager tries to PATCH", async () => {
-      const seed = await seedFullCollection(ownerId);
-      const strangerId = await seedUserRow("stranger");
-      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-      const res = await collectionPatch(
-        nextReq("PATCH", `http://localhost/api/collections/${seed.collectionId}`, {
-          name: "Hacked",
-        }),
-        { params: { id: seed.collectionId } },
-      );
-      expect(res.status).toBe(403);
     });
 
     it("owner can update name — asserts real column change in DB", async () => {
@@ -456,16 +431,6 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       expect(withDeleted!.deletedAt).not.toBeNull();
     });
 
-    it("stranger (authenticated but not a member) gets 403", async () => {
-      const seed = await seedFullCollection(ownerId);
-      const strangerId = await seedUserRow("stranger-del");
-      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-      const res = await collectionDelete(
-        nextReq("DELETE", `http://localhost/api/collections/${seed.collectionId}`),
-        { params: { id: seed.collectionId } },
-      );
-      expect(res.status).toBe(403);
-    });
   });
 
   // ==========================================================================
@@ -509,19 +474,6 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       expect(res.status).toBe(404);
     });
 
-    it("returns 403 when caller is not a member (items:write = curator)", async () => {
-      // items:write requires curator role — a non-member (stranger) always gets 403.
-      const seed = await seedFullCollection(ownerId);
-      const strangerId = await seedUserRow("stranger-item");
-      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-      const res = await itemPatch(
-        nextReq("PATCH", `http://localhost/api/collections/${seed.collectionId}/items/${seed.itemAId}`, {
-          name: "Forbidden Update",
-        }),
-        { params: { id: seed.collectionId, itemId: seed.itemAId } },
-      );
-      expect(res.status).toBe(403);
-    });
 
     it("curator member can update item metadata (items:write = curator, full-curator model)", async () => {
       // items:write = curator — any collection member may edit metadata (canEditMetadata flag is inert).

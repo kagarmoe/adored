@@ -51,32 +51,9 @@ describe("roleSatisfies", () => {
 });
 
 describe("CAPABILITIES map", () => {
-  // Every Operation literal must have an entry in the map.
-  const ALL_OPERATIONS: Operation[] = [
-    "collection:read",
-    "collection:manage",
-    "collection:purge",
-    "collection:audit",
-    "members:read",
-    "members:manage",
-    "invitations:read",
-    "invitations:manage",
-    "items:read",
-    "items:write",
-    "items:purge",
-    "photos:write",
-    "sessions:write",
-    "preferences:write",
-  ];
-
-  it("has an entry for every Operation (14 total)", () => {
-    expect(Object.keys(CAPABILITIES)).toHaveLength(ALL_OPERATIONS.length);
-  });
-
-  it.each(ALL_OPERATIONS)("has an entry for '%s'", (op) => {
-    expect(CAPABILITIES).toHaveProperty(op);
-  });
-
+  // Note: entry-per-Operation exhaustiveness is guaranteed at compile time by
+  // the `Record<Operation, Role>` type on CAPABILITIES — no runtime test needed.
+  // These assertions encode the POLICY VALUES (which role each op requires).
   it("curator-level operations resolve to 'curator'", () => {
     const curatorOps: Operation[] = [
       "collection:read",

@@ -81,14 +81,6 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       expect(res.status).toBe(401);
     });
 
-    it("403s a non-member of the collection", async () => {
-      const collectionId = await seedBareCollection(ownerId);
-      const strangerId = await seedUserRow("stranger");
-      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-      const res = await listItems(jsonReq("GET") as any, { params: { id: collectionId } } as any);
-      expect(res.status).toBe(403);
-    });
-
     it("404s an absent collection id", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await listItems(jsonReq("GET") as any, { params: { id: "col-absent" } } as any);

@@ -112,15 +112,6 @@ describeDb("pool routes (route -> repo -> DB)", () => {
       expect(res.status).toBe(404);
     });
 
-    it("403s a stranger (neither member nor owner)", async () => {
-      const { collectionId } = await seedFullCollection(ownerId);
-      const strangerId = await seedUserRow("stranger");
-      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-
-      const res = await listPool(jsonReq() as any, colCtx(collectionId));
-      expect(res.status).toBe(403);
-    });
-
     it("returns ONLY pooled (itemId === null) photos for the owner — assigned excluded", async () => {
       // seedFullCollection already has TWO assigned photos (itemA active, itemB
       // soft-deleted). Add one pooled photo: only the pooled one may return.

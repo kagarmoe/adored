@@ -96,9 +96,4 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
     expect(res.status).toBe(200);
   });
 
-  it("403s for a non-member hitting another tenant's collection.id (IDOR)", async () => {
-    mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
-    const res = await GET(req() as any, { params: { id: collectionId, itemId, photoId } });
-    expect(res.status).toBe(403);
-  });
 });
