@@ -77,11 +77,11 @@ Both systems use the table *names* `user`/`account`/`session`/`verification`, bu
 - **Cannot be validated without you:** the Google login round-trip (your OAuth client), a real magic-link email end-to-end (prod Resend), and reset-vs-migrate (prod DB). Every path forces **all users to re-login** — schedule accordingly.
 - **Recommendation: DO IT, phased**, gated on: (1) the reset-vs-migrate decision, (2) the façade preserving the exact session shape *with tests*, (3) the DB-integration tests re-pointed at the new `getSession`, (4) manual Google + magic-link validation with your creds. **Do not merge the cutover unreviewed.**
 
-## 9. Open decisions for you (morning)
-1. **Reset vs migrate** — are there real prod users? (I can't tell from the repo.)
-2. **Password strategy if migrating** — accept bcrypt via custom verify, or force reset-on-next-login?
-3. **Keep email+password at all, or go passwordless** (magic-link + Google only)? Passwordless deletes the most code and fits the app's calm ethos; email+password is more familiar to some users.
-4. **Timing** — the cutover logs everyone out once; pick a low-traffic window.
+## 9. Decisions (settled 2026-07-02)
+1. **Reset vs migrate → RESET.** No real prod users. Drop the NextAuth auth tables and any user-FK'd app data, generate better-auth's fresh schema. This removes §5's entire migrate path: no data-mapping SQL, no bcrypt→scrypt hazard, no FK-preservation. The user re-creates their account post-cutover.
+2. **Password strategy → moot (reset).** No hashes to carry, so the bcrypt/scrypt question disappears.
+3. **Keep email+password → YES.** Three methods: email+password **and** Google **and** magic-link.
+4. **One-time logout → accepted** (effectively free — no users to log out).
 
 ## Testing (when we build)
 Façade shape tests (exact `{user:{id,email,name}}`, **including post-profile-edit name freshness** — the behavior the shape-only framing omits); the DB-integration suite re-pointed at the new `getSession`; middleware redirect + `SESSIONLESS_POST_ROUTES` still pass; magic-link + Google flows behind manual validation with real creds; a migration test on a seeded copy if we take the migrate path.
