@@ -28,6 +28,11 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
   // retried after a failure — so a timed-out-then-retried save returns the same
   // event server-side instead of inserting a duplicate comparison. Cleared on
   // success so a subsequent tap on the same card gets a fresh key.
+  //
+  // Keying by choice slot (not by pair) is safe ONLY because failure does not
+  // router.refresh() — the pair never advances on error, so a given slot key can
+  // only ever recur as the same-comparison retry, never as a new pair reusing a
+  // stale key. Success clears the key AND refreshes to the next pair together.
   const clientKeys = useRef<Record<string, string>>({});
 
   async function choose(result: Result, key: string) {
