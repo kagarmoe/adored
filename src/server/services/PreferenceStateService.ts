@@ -42,42 +42,26 @@ export class PreferenceStateService {
       events,
     );
 
-    // Batch fetch: get all existing preferences once, not per item
-    const existing = await this.preferenceRepo.findByCollection(collectionId, curatorId);
-    const existingByItemId = new Map(existing.map((p) => [p.itemId, p]));
-
-    // Clear FIRST so every order_rank is NULL before any new one is written —
-    // avoids a transient collision on the (collection, curator, order_rank)
-    // partial unique index while the per-row upserts assign distinct ranks.
+    // TWO statements instead of ~2N: clear FIRST so every order_rank is NULL, then
+    // upsert the whole recomputed set in ONE statement. Clearing first is REQUIRED —
+    // the partial unique index on (collection, curator, order_rank) is checked per
+    // row within the upsert (not deferred), so permuting ranks in place could
+    // transiently collide; nulling all then assigning DISTINCT ranks avoids it.
+    // (This replaced a per-row awaited loop — P round-trips per decision — that
+    // could blow the function timeout and roll back the whole tap.)
     await this.preferenceRepo.clearOrderRanks(collectionId, curatorId);
-
-    // Process all preferences in batches
-    for (const pref of preferences) {
-      const orderRank = orderRankByItem.get(pref.itemId) ?? null;
-      const existingPref = existingByItemId.get(pref.itemId);
-      if (existingPref) {
-        await this.preferenceRepo.update(existingPref.id, {
-          score: pref.score,
-          confidence: pref.confidence,
-          rankBucket: pref.rankBucket,
-          comparisonCount: pref.comparisonCount,
-          orderRank,
-          lastSeen: new Date(),
-          updatedAt: new Date(),
-        });
-      } else {
-        await this.preferenceRepo.create({
-          collectionId,
-          curatorId,
-          itemId: pref.itemId,
-          score: pref.score,
-          confidence: pref.confidence,
-          rankBucket: pref.rankBucket,
-          comparisonCount: pref.comparisonCount,
-          orderRank,
-        });
-      }
-    }
+    await this.preferenceRepo.bulkUpsert(
+      preferences.map((pref) => ({
+        collectionId,
+        curatorId,
+        itemId: pref.itemId,
+        score: pref.score,
+        confidence: pref.confidence,
+        rankBucket: pref.rankBucket,
+        comparisonCount: pref.comparisonCount,
+        orderRank: orderRankByItem.get(pref.itemId) ?? null,
+      })),
+    );
 
     return this.preferenceRepo.findByCollection(collectionId, curatorId);
   }

@@ -53,32 +53,31 @@ function persisted(
   return scored(overrides);
 }
 
+type BulkUpsertRow = Parameters<ICollectionPreferenceItemRepository["bulkUpsert"]>[0][number];
+
 function buildService(parts: {
   computed: CollectionPreferenceItem[];
-  existing: CollectionPreferenceItem[];
   final: CollectionPreferenceItem[];
 }) {
   const computePreferences = vi.fn().mockResolvedValue(parts.computed);
   const scoringService = { computePreferences } as unknown as ScoringService;
 
+  // The service now reads preferences ONCE (the final read it returns) — the old
+  // per-item "existing" read is gone; the bulk upsert insert-or-updates by the
+  // (item_id, curator_id) unique index without needing to know prior ids.
   const findByCollection = vi
     .fn<ICollectionPreferenceItemRepository["findByCollection"]>()
-    .mockResolvedValueOnce(parts.existing) // existing read inside recalculate
-    .mockResolvedValueOnce(parts.final); // final read that is returned
-  const create = vi
-    .fn<ICollectionPreferenceItemRepository["create"]>()
-    .mockImplementation(async () => persisted({ id: "created", itemId: "x" }));
-  const update = vi
-    .fn<ICollectionPreferenceItemRepository["update"]>()
-    .mockImplementation(async () => persisted({ id: "updated", itemId: "x" }));
+    .mockResolvedValue(parts.final);
+  const bulkUpsert = vi
+    .fn<ICollectionPreferenceItemRepository["bulkUpsert"]>()
+    .mockResolvedValue(undefined);
   const clearOrderRanks = vi
     .fn<ICollectionPreferenceItemRepository["clearOrderRanks"]>()
     .mockResolvedValue(undefined);
 
   const preferenceRepo = {
     findByCollection,
-    create,
-    update,
+    bulkUpsert,
     clearOrderRanks,
   } as unknown as ICollectionPreferenceItemRepository;
 
@@ -89,11 +88,11 @@ function buildService(parts: {
     makeSessionRepo(),
     makeDecisionRepo(),
   );
-  return { service, computePreferences, findByCollection, create, update, clearOrderRanks };
+  return { service, computePreferences, findByCollection, bulkUpsert, clearOrderRanks };
 }
 
 describe("PreferenceStateService.recalculatePreferences", () => {
-  it("creates a row for a newly-scored item", async () => {
+  it("bulk-upserts the whole scored set in ONE call (no per-row loop)", async () => {
     const computed = [
       scored({
         itemId: "a",
@@ -103,58 +102,45 @@ describe("PreferenceStateService.recalculatePreferences", () => {
         comparisonCount: 3,
       }),
     ];
-    const { service, create, update } = buildService({
+    const { service, bulkUpsert, clearOrderRanks } = buildService({
       computed,
-      existing: [], // nothing persisted yet for this item
       final: [persisted({ id: "pref-a", itemId: "a", rankBucket: "top" })],
     });
 
     await service.recalculatePreferences(COLLECTION, CURATOR);
 
-    expect(create).toHaveBeenCalledTimes(1);
-    expect(create).toHaveBeenCalledWith({
-      collectionId: COLLECTION,
-      curatorId: CURATOR,
-      itemId: "a",
-      score: 0.875,
-      confidence: 0.4,
-      rankBucket: "top",
-      comparisonCount: 3,
-      // No comparisons/items supplied to the stubs, so the engine places nothing.
-      orderRank: null,
-    });
-    expect(update).not.toHaveBeenCalled();
+    // Two statements total: clear-ranks then ONE bulk upsert.
+    expect(clearOrderRanks).toHaveBeenCalledTimes(1);
+    expect(bulkUpsert).toHaveBeenCalledTimes(1);
+    const rows = bulkUpsert.mock.calls[0][0];
+    expect(rows).toEqual([
+      {
+        collectionId: COLLECTION,
+        curatorId: CURATOR,
+        itemId: "a",
+        score: 0.875,
+        confidence: 0.4,
+        rankBucket: "top",
+        comparisonCount: 3,
+        // No comparisons/items supplied to the stubs, so the engine places nothing.
+        orderRank: null,
+      },
+    ]);
   });
 
-  it("updates the existing row instead of creating", async () => {
-    const computed = [
-      scored({
-        itemId: "a",
-        score: 0.875,
-        confidence: 0.4,
-        rankBucket: "top",
-        comparisonCount: 3,
-      }),
-    ];
-    const { service, create, update } = buildService({
+  it("clears order_ranks BEFORE the bulk upsert (the transient-collision guard)", async () => {
+    const callOrder: string[] = [];
+    const computed = [scored({ itemId: "a", rankBucket: "top" })];
+    const { service, bulkUpsert, clearOrderRanks } = buildService({
       computed,
-      existing: [persisted({ id: "pref-a", itemId: "a" })],
       final: [persisted({ id: "pref-a", itemId: "a", rankBucket: "top" })],
     });
+    clearOrderRanks.mockImplementation(async () => { callOrder.push("clear"); });
+    bulkUpsert.mockImplementation(async () => { callOrder.push("upsert"); });
 
     await service.recalculatePreferences(COLLECTION, CURATOR);
 
-    expect(update).toHaveBeenCalledTimes(1);
-    expect(update).toHaveBeenCalledWith(
-      "pref-a",
-      expect.objectContaining({
-        score: 0.875,
-        confidence: 0.4,
-        rankBucket: "top",
-        comparisonCount: 3,
-      }),
-    );
-    expect(create).not.toHaveBeenCalled();
+    expect(callOrder).toEqual(["clear", "upsert"]);
   });
 
   it("clears order_ranks before upserting, and assigns dense ranks from the engine", async () => {
@@ -168,20 +154,16 @@ describe("PreferenceStateService.recalculatePreferences", () => {
     const computePreferences = vi.fn().mockResolvedValue(computed);
     const scoringService = { computePreferences } as unknown as ScoringService;
 
-    const captured: Array<{ itemId: string; orderRank: number | null }> = [];
-    const create = vi
-      .fn<ICollectionPreferenceItemRepository["create"]>()
-      .mockImplementation(async (data) => {
-        captured.push({ itemId: data.itemId, orderRank: data.orderRank ?? null });
-        return persisted({ id: `pref-${data.itemId}`, itemId: data.itemId });
-      });
+    let captured: BulkUpsertRow[] = [];
+    const bulkUpsert = vi
+      .fn<ICollectionPreferenceItemRepository["bulkUpsert"]>()
+      .mockImplementation(async (rows) => { captured = rows; });
     const clearOrderRanks = vi
       .fn<ICollectionPreferenceItemRepository["clearOrderRanks"]>()
       .mockResolvedValue(undefined);
     const preferenceRepo = {
       findByCollection: vi.fn().mockResolvedValue([]),
-      create,
-      update: vi.fn(),
+      bulkUpsert,
       clearOrderRanks,
     } as unknown as ICollectionPreferenceItemRepository;
 
@@ -214,6 +196,7 @@ describe("PreferenceStateService.recalculatePreferences", () => {
 
     expect(clearOrderRanks).toHaveBeenCalledWith(COLLECTION, CURATOR);
     const rankOf = (id: string) => captured.find((c) => c.itemId === id)!.orderRank;
+    // Every ranked slot is distinct + dense — the invariant the bulk SQL protects.
     expect(rankOf("b")).toBe(0);
     expect(rankOf("a")).toBe(1);
   });
@@ -229,7 +212,6 @@ describe("PreferenceStateService.recalculatePreferences", () => {
     ];
     const { service } = buildService({
       computed: [scored({ itemId: "a", rankBucket: "top" })],
-      existing: [],
       final,
     });
 
