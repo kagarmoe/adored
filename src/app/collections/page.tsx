@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/layout";
 import { buttonVariants, EmptyState } from "@/components/ui";
 import { CollectionCard } from "@/features/collections/CollectionCard";
 import { CollectionFilters } from "@/features/collections/CollectionFilters";
+import { WelcomeGate } from "@/features/onboarding/WelcomeGate";
 import Link from "next/link";
 
 interface CollectionsPageProps {
@@ -40,6 +41,8 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
 
   return (
     <AppLayout breadcrumbs={[{ label: "Collections" }]}>
+      {/* First-run gate (one place): zero collections + not dismissed -> /welcome. */}
+      <WelcomeGate hasCollections={collections.length > 0} />
       <div className="space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between gap-4">

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { dismissWelcome } from "./dismissal";
 import { TRIAGE_ITEMS, type Tier } from "./sampleData";
 import { WelcomePurpose } from "./WelcomePurpose";
 import { WelcomeTriage } from "./WelcomeTriage";
@@ -22,7 +23,13 @@ export function WalkthroughShell() {
   const [triageChoices, setTriageChoices] = useState<Record<string, Tier>>({});
   const [compareWinnerId, setCompareWinnerId] = useState<string>("");
 
-  const goTo = (next: Beat) => setBeat(next);
+  const goTo = (next: Beat) => {
+    // Reaching the hand-off = the walkthrough was completed. Remember it so the
+    // auto-trigger doesn't re-arm on the next zero-collection login. (Skip sets
+    // it too, below.)
+    if (next === "handoff") dismissWelcome();
+    setBeat(next);
+  };
 
   const handleTriageChoice = (itemId: string, tier: Tier) => {
     setTriageChoices((prev) => ({ ...prev, [itemId]: tier }));
@@ -38,7 +45,10 @@ export function WalkthroughShell() {
     goTo("standing");
   };
 
-  const exit = () => router.push("/collections");
+  const exit = () => {
+    dismissWelcome();
+    router.push("/collections");
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-10 px-6 py-12">

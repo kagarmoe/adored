@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
@@ -11,8 +11,14 @@ vi.mock("next/navigation", () => ({
 
 import { WalkthroughShell } from "./WalkthroughShell";
 import { TRIAGE_ITEMS, COMPARE_PAIR } from "./sampleData";
+import { isWelcomeDismissed } from "./dismissal";
+import { installStorage } from "./testStorage";
 
-afterEach(() => push.mockClear());
+beforeEach(() => installStorage());
+afterEach(() => {
+  push.mockClear();
+  localStorage.clear();
+});
 
 describe("WalkthroughShell", () => {
   it("advances Purpose -> Triage -> Compare -> Standing -> Handoff by tapping", async () => {
@@ -48,6 +54,29 @@ describe("WalkthroughShell", () => {
     render(<WalkthroughShell />);
     await user.click(screen.getByRole("button", { name: "Skip for now" }));
     expect(push).toHaveBeenCalledWith("/collections");
+  });
+
+  it("dismisses the walkthrough when 'Skip for now' is tapped", async () => {
+    const user = userEvent.setup();
+    render(<WalkthroughShell />);
+    expect(isWelcomeDismissed()).toBe(false);
+    await user.click(screen.getByRole("button", { name: "Skip for now" }));
+    expect(isWelcomeDismissed()).toBe(true);
+  });
+
+  it("dismisses the walkthrough on hand-off completion (explore on my own)", async () => {
+    const user = userEvent.setup();
+    render(<WalkthroughShell />);
+    await user.click(screen.getByRole("button", { name: "Show me how" }));
+    for (let i = 0; i < TRIAGE_ITEMS.length; i++) {
+      await user.click(screen.getByText("Love"));
+    }
+    await user.click(screen.getByText(COMPARE_PAIR[0].name));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    // Reaching the hand-off means the walkthrough was completed.
+    expect(screen.getByRole("heading", { name: "Now, your turn." })).toBeInTheDocument();
+    await user.click(screen.getByText(/I.?ll explore on my own\./));
+    expect(isWelcomeDismissed()).toBe(true);
   });
 
   it("keeps 'Skip for now' on every beat before the hand-off", async () => {
