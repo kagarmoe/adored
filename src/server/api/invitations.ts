@@ -5,6 +5,14 @@ import { randomBytes } from "crypto";
 import { normalizeEmail } from "@/lib/normalize-email";
 import type { Database } from "@/lib/db";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
+import { sendInvitation } from "@/lib/email";
+import { env } from "@/lib/env";
+
+// The invitation accept page lives at /invitations/[token]; the token is a
+// bearer secret, so this URL goes only to the invited address.
+function invitationUrl(token: string): string {
+  return `${env.AUTH_URL}/invitations/${token}`;
+}
 
 const CreateInvitationSchema = z.object({
   email: z.string().email(),
@@ -46,6 +54,7 @@ export class InvitationController {
       email,
       token,
     });
+    await sendInvitation({ to: email, url: invitationUrl(token) });
     return { ...invitation, token };
   }
 
@@ -78,7 +87,7 @@ export class InvitationController {
     if (!invitation) {
       throw new Error("Invitation not found");
     }
-    // TODO: Send invitation email with token
+    await sendInvitation({ to: invitation.email, url: invitationUrl(invitation.token) });
     return { message: "Invitation resent" };
   }
 

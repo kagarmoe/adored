@@ -19,6 +19,9 @@ const envSchema = z.object({
   EMAIL_SERVER_PORT: z.coerce.number().default(1025),
   EMAIL_SERVER_USER: z.string().optional(),
   EMAIL_SERVER_PASSWORD: z.string().optional(),
+  // Resend API key — optional so a missing key is valid (email.ts no-ops the
+  // send rather than throwing). Set in the deploy env for real sends.
+  RESEND_API_KEY: z.string().optional(),
 
   // Vercel Blob (optional, auto-configured in Vercel)
   BLOB_READ_WRITE_TOKEN: z.string().optional(),
@@ -51,6 +54,7 @@ function validateEnv(): EnvConfig {
       EMAIL_SERVER_PORT: env.EMAIL_SERVER_PORT,
       EMAIL_SERVER_USER: env.EMAIL_SERVER_USER,
       EMAIL_SERVER_PASSWORD: env.EMAIL_SERVER_PASSWORD,
+      RESEND_API_KEY: env.RESEND_API_KEY,
       BLOB_READ_WRITE_TOKEN: env.BLOB_READ_WRITE_TOKEN,
     });
 
