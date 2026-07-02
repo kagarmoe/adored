@@ -340,6 +340,54 @@ describeDb("decisions route — idempotency on clientKey (route -> repo -> DB)",
     );
     expect((rows[0] as { n: number }).n).toBe(2);
   });
+
+  // Fix 3: a pairwise_compare retried with the SAME clientKey returns the ORIGINAL
+  // event, inserts NO duplicate comparison, and does not double-count the pair's
+  // comparisonCount (a duplicate comparison would corrupt the ranking).
+  it("is idempotent on a repeated clientKey for pairwise_compare (no double-counted comparison)", async () => {
+    const { db } = getTestDb();
+    // A second item to compare against — the seeded `itemId` is item A.
+    const collRow = await db.execute(
+      sql`select collection_id from sessions where id = ${sessionId}`,
+    );
+    const collectionId = (collRow[0] as { collection_id: string }).collection_id;
+    const itemB = (await new ItemRepository(db).create({ collectionId, name: "Bag B" })).id;
+
+    // Both loved so the pairwise counts toward their comparisonCount.
+    await postDecision(sessionId, { type: "triage", decision: { itemId, result: "top" }, clientKey: "t-a" });
+    await postDecision(sessionId, { type: "triage", decision: { itemId: itemB, result: "top" }, clientKey: "t-b" });
+
+    const first = await postDecision(sessionId, {
+      type: "pairwise_compare",
+      decision: { itemAId: itemId, itemBId: itemB, result: "item_a" },
+      clientKey: "cmp1",
+    });
+    const retry = await postDecision(sessionId, {
+      type: "pairwise_compare",
+      decision: { itemAId: itemId, itemBId: itemB, result: "item_a" },
+      clientKey: "cmp1",
+    });
+
+    expect(first.status).toBe(201);
+    expect(retry.status).toBeLessThan(300);
+    const b1 = (await first.json()) as { id: string };
+    const b2 = (await retry.json()) as { id: string };
+    expect(b2.id).toBe(b1.id); // same event, not a second comparison
+
+    // Exactly ONE pairwise_compare event persisted for this session.
+    const evtRows = await db.execute(
+      sql`select count(*)::int as n from decision_events
+          where session_id = ${sessionId} and type = 'pairwise_compare'`,
+    );
+    expect((evtRows[0] as { n: number }).n).toBe(1);
+
+    // comparisonCount counts evidence per item = 1 triage + 1 compare = 2. The
+    // idempotent retry must NOT push it to 3 (a duplicate compare would corrupt
+    // confidence/ordering). Two is the correct un-double-counted value here.
+    const prefs = await new CollectionPreferenceItemRepository(db).findByCollection(collectionId, ownerId);
+    expect(prefs.find((p) => p.itemId === itemId)!.comparisonCount).toBe(2);
+    expect(prefs.find((p) => p.itemId === itemB)!.comparisonCount).toBe(2);
+  });
 });
 
 // Read the ACTUAL shipped migration and return its executable statements: split on

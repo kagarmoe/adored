@@ -77,10 +77,9 @@ describe("CompareChoice tap chooses an item", () => {
     const [url, init] = (fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(url).toBe("/api/sessions/s/decisions");
     expect(init.method).toBe("POST");
-    expect(decisionBody()).toEqual({
-      type: "pairwise_compare",
-      decision: { itemAId: "a", itemBId: "b", result: "item_a" },
-    });
+    const body = decisionBody();
+    expect(body.type).toBe("pairwise_compare");
+    expect(body.decision).toEqual({ itemAId: "a", itemBId: "b", result: "item_a" });
   });
 
   it("tapping item B's card chooses item_b — proving the card, not a fixed slot, drives the result", async () => {
@@ -120,6 +119,72 @@ describe("CompareChoice tap chooses an item", () => {
 
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
     expect(decisionBody().decision.result).toBe("skip");
+  });
+
+  // Fix 3: the POST carries a clientKey so the server idempotency path is live —
+  // a timed-out-then-retried compare returns the same event instead of inserting
+  // a duplicate that would corrupt comparison counts / ordering.
+  it("includes a non-empty clientKey in the pairwise POST body", async () => {
+    const user = userEvent.setup();
+    renderChoice();
+
+    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
+
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    expect(typeof decisionBody().clientKey).toBe("string");
+    expect(decisionBody().clientKey.length).toBeGreaterThan(0);
+  });
+
+  it("reuses the SAME clientKey when the SAME tap is retried after a failure", async () => {
+    // First attempt fails (res.ok === false) — the client surfaces the error and
+    // does NOT advance, so re-tapping the same card is a RETRY of that decision.
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false })
+      .mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    renderChoice();
+
+    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
+    expect(await screen.findByText("That didn't save. Try again.")).toBeInTheDocument();
+
+    // Retry the same card.
+    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
+    expect(decisionBody(1).clientKey).toBe(decisionBody(0).clientKey);
+  });
+
+  it("uses a DIFFERENT clientKey for a genuinely new tap (a fresh comparison)", async () => {
+    // A new comparison arrives as a fresh mount (router.refresh re-renders the
+    // server tree with the next pair). A new tap must carry its own fresh key —
+    // never a stale one — so distinct decisions never collide on idempotency.
+    const user = userEvent.setup();
+    const { unmount } = render(
+      <CompareChoice
+        sessionId="s"
+        itemA={item("a", "Bag A") as any}
+        itemB={item("b", "Bag B") as any}
+        comparisonsMade={0}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    unmount();
+
+    render(
+      <CompareChoice
+        sessionId="s"
+        itemA={item("a", "Bag A") as any}
+        itemB={item("b", "Bag B") as any}
+        comparisonsMade={1}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+
+    expect(decisionBody(1).clientKey).not.toBe(decisionBody(0).clientKey);
   });
 
   it("surfaces a gentle error (no refresh) and re-enables the choices when the save fails", async () => {
