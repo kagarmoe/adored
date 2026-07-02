@@ -1,6 +1,6 @@
-import { eq, isNull, and, ne } from "drizzle-orm";
+import { eq, isNull, and, or, ne, exists } from "drizzle-orm";
 import type { Database } from "@/lib/db";
-import { collectionsTable } from "@/lib/db/schema";
+import { collectionsTable, membershipsTable } from "@/lib/db/schema";
 import type { ICollectionRepository } from "../CollectionRepository";
 import type { Collection } from "@/types";
 import { slugifyName, RESERVED_COLLECTION_SLUGS } from "@/lib/collections/slug";
@@ -62,6 +62,44 @@ export class CollectionRepository implements ICollectionRepository {
       .from(collectionsTable)
       .where(and(eq(collectionsTable.ownerId, ownerId), isNull(collectionsTable.deletedAt)));
     return collections.map((c) => this.mapToCollection(c));
+  }
+
+  // Collections the user can see in their list: owned ∪ those where a membership
+  // row exists for the user (a row is created ONLY on invitation-accept, so
+  // "row exists" == "accepted member"). Deliberately does NOT read invitations:
+  // a PENDING invite must not surface a collection the user never joined
+  // (IDOR-by-list). One query via an EXISTS-membership OR ownerId predicate;
+  // the (collection_id, user_id) unique index means each collection matches at
+  // most once, but the caller may still own AND have a row for the same id, so
+  // dedupe by id. Excludes soft-deleted, matching findByOwner.
+  async findByOwnerOrMember(userId: string): Promise<Collection[]> {
+    const rows = await this.db
+      .select()
+      .from(collectionsTable)
+      .where(
+        and(
+          isNull(collectionsTable.deletedAt),
+          or(
+            eq(collectionsTable.ownerId, userId),
+            exists(
+              this.db
+                .select({ one: membershipsTable.id })
+                .from(membershipsTable)
+                .where(
+                  and(
+                    eq(membershipsTable.collectionId, collectionsTable.id),
+                    eq(membershipsTable.userId, userId),
+                  ),
+                ),
+            ),
+          ),
+        ),
+      );
+    const byId = new Map<string, Collection>();
+    for (const row of rows) {
+      if (!byId.has(row.id)) byId.set(row.id, this.mapToCollection(row));
+    }
+    return [...byId.values()];
   }
 
   // Resolve EVERY collection owned by the user WITHOUT the deletedAt filter —

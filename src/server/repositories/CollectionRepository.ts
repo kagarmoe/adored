@@ -10,6 +10,9 @@ export interface ICollectionRepository {
   findById(id: string): Promise<Collection | null>;
   findBySlug(slug: string): Promise<Collection | null>;
   findByOwner(ownerId: string): Promise<Collection[]>;
+  // Owned ∪ collections with a membership row for the user (accepted members),
+  // deduped, soft-deleted excluded. Never reads invitations (no pending-invite leak).
+  findByOwnerOrMember(userId: string): Promise<Collection[]>;
   // Every owned collection incl. soft-deleted — account deletion must purge archived ones too.
   findByOwnerIncludingDeleted(ownerId: string): Promise<Collection[]>;
   update(id: string, data: Partial<Omit<Collection, "id" | "createdAt" | "slug">>): Promise<Collection>;

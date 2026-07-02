@@ -29,9 +29,11 @@ export class CollectionController {
   }
 
   async listCollections(userId: string): Promise<Collection[]> {
-    // TODO: Fetch collections where user is a member, including owned collections
-    // For now, fetch all collections owned by user
-    return this.collectionRepo.findByOwner(userId);
+    // Owned ∪ collections where a membership row exists for the user (accepted
+    // members — a row is created only on invitation-accept). Pending invitations
+    // are deliberately NOT read, so an unaccepted invite never surfaces a
+    // collection the user hasn't joined (IDOR-by-list).
+    return this.collectionRepo.findByOwnerOrMember(userId);
   }
 
   async createCollection(
