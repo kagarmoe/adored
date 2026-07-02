@@ -23,7 +23,8 @@
     "db:migrate": "node -r esbuild-register scripts/migrate.ts",
     "db:backfill-slugs": "node -r esbuild-register scripts/backfill-collection-slugs.ts",
     "db:backfill-numbers": "node -r esbuild-register scripts/backfill-session-result-numbers.ts",
-    "auth:verify": "node -r ./scripts/load-env.js scripts/verify-auth.ts"
+    "auth:verify": "node -r ./scripts/load-env.js scripts/verify-auth.ts",
+    "seed:load": "node -r esbuild-register scripts/seed-load.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.2.0",
