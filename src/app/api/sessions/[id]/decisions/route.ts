@@ -10,6 +10,7 @@ import { SessionController } from "@/server/api/sessions";
 import { PreferenceController } from "@/server/api/preferences";
 import { DispositionController } from "@/server/api/dispositions";
 import { getPostHogClient } from "@/lib/posthog-server";
+import { logDbError } from "@/lib/db-error-log";
 
 // The recompute-under-lock write path uses node-postgres — pin the Node runtime
 // (not Edge) and give the platform an explicit, generous function cap so a slow
@@ -138,6 +139,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
     return NextResponse.json(event, { status: isNew ? 201 : 200 });
   } catch (error) {
+    // Observe the failure BEFORE the 500 — the compare-save bug rolled back on
+    // timeout and returned 500 with no breadcrumb. Ids only; logDbError never
+    // throws, so this can't mask the error below. Idempotent replays return
+    // inside the try above and never reach here, so they're not logged.
+    logDbError(
+      "record_decision",
+      { collectionId: sortSession.collectionId, curatorId: userId, sessionId: params.id },
+      error,
+    );
     return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to record decision" }, { status: 500 });
   }
 }

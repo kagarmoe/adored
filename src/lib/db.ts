@@ -8,7 +8,12 @@ if (!connectionString) {
 }
 
 const client = postgres(connectionString);
-const db = drizzle(client, { schema });
+// Drizzle's built-in query logger logs every query's SQL AND its param VALUES
+// (emails, tokens, PII) and is noisy — Vercel caps runtime logs at 256 lines
+// per request. So it is OFF by default and MUST NEVER be enabled in production;
+// it's a local "see the SQL" aid only. Opt in per shell via DB_QUERY_LOG=1
+// (an optional env var read directly, not routed through the validated proxy).
+const db = drizzle(client, { schema, logger: process.env.DB_QUERY_LOG === "1" });
 
 export type Database = typeof db;
 
