@@ -14,4 +14,3 @@ const PageContainer = React.forwardRef<HTMLDivElement, PageContainerProps>(
 PageContainer.displayName = "PageContainer";
 
 export { PageContainer };
-export type { PageContainerProps };

@@ -47,5 +47,4 @@ const TierBadge = React.forwardRef<HTMLSpanElement, TierBadgeProps>(
 );
 TierBadge.displayName = "TierBadge";
 
-export { TierBadge, tierBadgeVariants };
-export type { TierBadgeProps };
+export { TierBadge };

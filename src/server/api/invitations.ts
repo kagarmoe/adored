@@ -16,8 +16,6 @@ const CreateInvitationSchema = z.object({
 // a 400. (Flag columns/fields are dropped in the deferred contract migration.)
 const UpdateInvitationSchema = z.object({});
 
-export type CreateInvitationInput = z.infer<typeof CreateInvitationSchema>;
-export type UpdateInvitationInput = z.infer<typeof UpdateInvitationSchema>;
 
 export class InvitationController {
   constructor(private invitationRepo: IInvitationRepository) {}

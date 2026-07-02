@@ -31,4 +31,3 @@ const ErrorMessage = React.forwardRef<HTMLDivElement, ErrorMessageProps>(
 ErrorMessage.displayName = "ErrorMessage";
 
 export { ErrorMessage };
-export type { ErrorMessageProps };

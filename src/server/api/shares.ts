@@ -14,8 +14,6 @@ const UpdateShareSchema = z.object({
   expiresAt: z.string().datetime().optional(),
 });
 
-export type CreateShareInput = z.infer<typeof CreateShareSchema>;
-export type UpdateShareInput = z.infer<typeof UpdateShareSchema>;
 
 export class ShareController {
   constructor(private shareRepo: ISortResultShareRepository) {}

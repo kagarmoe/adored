@@ -475,12 +475,3 @@ describeDb("clean reset — discards Elo-era drafts, preserves finalized snapsho
     expect(await countById(db, "sort_result_items", finalized.resultItemId)).toBe(1);
   });
 });
-
-// Task 11: the dead PairingService (a class-method selector superseded by the live
-// free function in src/lib/pairwise-selection.ts) is deleted. This guard fails if the
-// module is ever reintroduced — importing a nonexistent module rejects.
-describe("PairingService is deleted (no importers)", () => {
-  it("cannot be imported", async () => {
-    await expect(import("@/server/services/PairingService")).rejects.toBeTruthy();
-  });
-});
