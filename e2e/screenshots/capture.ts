@@ -189,5 +189,51 @@ for (const theme of ["light", "dark"] as const) {
         fullPage: true,
       });
     }
+
+    // purses-ka23: the /welcome onboarding walkthrough. Unlike the goto+shoot
+    // surfaces above, this is ONE client-only route with five beats advanced by
+    // taps — Purpose → Triage (×3) → Compare → Standing → Hand-off. We drive it
+    // by role/accessible-name (never CSS) and shoot at each beat. The three
+    // triage items reuse the same four tier buttons, so we tap "Love" (the
+    // TierBadge's visible label; its glyph is aria-hidden) each time.
+    const shot = (n: string) =>
+      page.screenshot({ path: `pr-screenshots/${n}-${theme}-${proj}.png`, fullPage: true });
+
+    await page.goto("/welcome");
+
+    // Beat 1 — Purpose.
+    await page.getByRole("heading", { name: "Rediscover what you love." }).waitFor();
+    await page.waitForTimeout(400);
+    await shot("welcome-1-purpose");
+
+    // Beat 2 — Triage. Three items, one at a time; shoot the first, tap through.
+    await page.getByRole("button", { name: "Show me how" }).click();
+    await page.getByRole("heading", { name: "How do you feel about this one?" }).waitFor();
+    await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+    await page.waitForTimeout(400);
+    await shot("welcome-2-triage");
+    // Tap "Love" for all three triage items (advances item→item, then to Compare).
+    await page.getByRole("button", { name: "Love" }).click();
+    await page.getByRole("button", { name: "Love" }).click();
+    await page.getByRole("button", { name: "Love" }).click();
+
+    // Beat 3 — Compare.
+    await page.getByRole("heading", { name: "Which do you reach for more?" }).waitFor();
+    await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+    await page.waitForTimeout(400);
+    await shot("welcome-3-compare");
+
+    // Beat 4 — Standing. Tap the left compare item ("The slipcovered armchair").
+    await page.getByRole("button", { name: "The slipcovered armchair" }).click();
+    await page.getByRole("heading", { name: "What you love most" }).waitFor();
+    await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+    await page.waitForTimeout(400);
+    await shot("welcome-4-standing");
+
+    // Beat 5 — Hand-off.
+    await page.getByRole("button", { name: "Continue" }).click();
+    await page.getByRole("heading", { name: "Now, your turn." }).waitFor();
+    await page.waitForTimeout(400);
+    await shot("welcome-5-handoff");
   });
 }
