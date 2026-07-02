@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Button, Card, Input, ErrorMessage } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -101,6 +102,20 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
           <p className="text-sm text-ink-soft">Switch between light and dark.</p>
         </div>
         <ThemeToggle />
+      </div>
+
+      <div className="flex items-center justify-between gap-4 rounded-control border border-hairline bg-surface px-4 py-3">
+        <div>
+          <p className="text-sm font-medium text-ink">New to Adored?</p>
+          <p className="text-sm text-ink-soft">Revisit the quick walkthrough anytime.</p>
+        </div>
+        {/* Re-open the walkthrough (manual visit — does NOT clear the dismissal flag). */}
+        <Link
+          href="/welcome"
+          className="inline-flex h-11 items-center rounded-control px-4 text-sm text-primary underline focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+        >
+          How Adored works
+        </Link>
       </div>
 
       <DeleteAccountSection email={email} />
