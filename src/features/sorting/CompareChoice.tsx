@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
 import { itemDisplayName, itemInitial } from "@/lib/items";
@@ -23,10 +23,17 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Idempotency key per in-flight decision, keyed by the choice ("a"/"b"/"tie"/
+  // "skip"). Generated ONCE when a tap starts and reused if that same tap is
+  // retried after a failure — so a timed-out-then-retried save returns the same
+  // event server-side instead of inserting a duplicate comparison. Cleared on
+  // success so a subsequent tap on the same card gets a fresh key.
+  const clientKeys = useRef<Record<string, string>>({});
 
   async function choose(result: Result, key: string) {
     setPending(key);
     setError(null);
+    const clientKey = (clientKeys.current[key] ??= crypto.randomUUID());
     try {
       const res = await fetch(`/api/sessions/${sessionId}/decisions`, {
         method: "POST",
@@ -34,9 +41,12 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
         body: JSON.stringify({
           type: "pairwise_compare",
           decision: { itemAId: itemA.id, itemBId: itemB.id, result },
+          clientKey,
         }),
       });
       if (!res.ok) throw new Error("That didn't save. Try again.");
+      // Success — retire this tap's key so re-tapping the card is a NEW decision.
+      delete clientKeys.current[key];
       posthog.capture('pairwise_decision_made', {
         result,
         session_id: sessionId,

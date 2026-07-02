@@ -21,6 +21,22 @@ export interface ICollectionPreferenceItemRepository {
     id: string,
     data: Partial<CollectionPreferenceItem>,
   ): Promise<CollectionPreferenceItem>;
+  // Persist a whole recomputed preference set in ONE upsert statement, keyed on the
+  // (item_id, curator_id) unique index. Callers MUST clearOrderRanks first so no two
+  // rows share a non-null order_rank mid-statement (the partial unique index checks
+  // per-row, not deferred) — see PreferenceStateService.recalculatePreferences.
+  bulkUpsert(
+    rows: Array<{
+      collectionId: string;
+      curatorId: string;
+      itemId: string;
+      score: number;
+      confidence: number;
+      rankBucket: "top" | "high" | "medium" | "low";
+      comparisonCount: number;
+      orderRank: number | null;
+    }>,
+  ): Promise<void>;
   clear(collectionId: string, curatorId: string): Promise<void>;
   // Set order_rank = NULL for every preference of the curator in this collection,
   // in one statement. Used to reset the binary-insertion ordering before a re-rank.

@@ -11,6 +11,12 @@ import { PreferenceController } from "@/server/api/preferences";
 import { DispositionController } from "@/server/api/dispositions";
 import { getPostHogClient } from "@/lib/posthog-server";
 
+// The recompute-under-lock write path uses node-postgres — pin the Node runtime
+// (not Edge) and give the platform an explicit, generous function cap so a slow
+// recompute can't be aborted mid-transaction and roll back (and lose) the tap.
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
 interface DecisionRequest {
   type: "triage" | "pairwise_compare" | "bucket_assign";
   decision: Record<string, unknown>;
