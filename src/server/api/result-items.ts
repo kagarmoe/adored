@@ -9,7 +9,6 @@ const UpdateResultItemSchema = z.object({
   manualBucket: z.enum(["top", "high", "medium", "low"]).optional(),
 });
 
-export type UpdateResultItemInput = z.infer<typeof UpdateResultItemSchema>;
 
 export class ResultItemController {
   constructor(private resultItemRepo: ISortResultItemRepository) {}

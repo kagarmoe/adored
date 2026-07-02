@@ -16,8 +16,6 @@ const UpdateCollectionSchema = z.object({
   status: z.enum(["active", "archived", "deleted"]).optional(),
 });
 
-export type CreateCollectionInput = z.infer<typeof CreateCollectionSchema>;
-export type UpdateCollectionInput = z.infer<typeof UpdateCollectionSchema>;
 
 export class CollectionController {
   constructor(private collectionRepo: ICollectionRepository) {}

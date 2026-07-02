@@ -10,7 +10,6 @@ const UpdateUserSchema = z.object({
   name: z.string().trim().max(80).optional(),
 });
 
-export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 
 export class UserController {
   constructor(

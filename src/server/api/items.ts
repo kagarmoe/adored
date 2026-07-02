@@ -31,8 +31,6 @@ const UpdateItemSchema = z.object({
   story: z.string().max(2000, "Story is too long").optional(),
 });
 
-export type CreateItemInput = z.infer<typeof CreateItemSchema>;
-export type UpdateItemInput = z.infer<typeof UpdateItemSchema>;
 
 export class ItemController {
   constructor(private itemRepo: IItemRepository) {}

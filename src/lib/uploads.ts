@@ -1,5 +1,5 @@
 export const MAX_UPLOAD_BYTES = 4_500_000;
-export const MAX_UPLOAD_LABEL = "4.5 MB";
+const MAX_UPLOAD_LABEL = "4.5 MB";
 export const MAX_UPLOAD_ERROR = `Image must be ${MAX_UPLOAD_LABEL} or smaller`;
 
 /** Pool bulk-upload limits — the durable client-upload path (separate from the
@@ -11,7 +11,7 @@ export const POOL_ALLOWED_CONTENT_TYPES = [
   "image/webp",
 ] as const;
 export const POOL_MAX_BYTES = 50_000_000;
-export const POOL_MAX_LABEL = "50 MB";
+const POOL_MAX_LABEL = "50 MB";
 
 const HEIF_EXTENSIONS = /\.(heic|heif)$/i;
 const HEIF_MIME_TYPES = new Set(["image/heic", "image/heif"]);
