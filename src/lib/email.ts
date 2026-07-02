@@ -12,6 +12,7 @@ import { env } from "@/lib/env";
 // only, we console.log the link so a dev can click it locally.
 
 type SendArgs = { to: string; url: string };
+type InvitationArgs = { to: string; token: string };
 
 // Cache the client so we build it once. `null` = key unset (fallback mode).
 let client: Resend | null = null;
@@ -25,12 +26,16 @@ function getClient(): Resend | null {
   return client;
 }
 
+// `buildUrl` is a thunk so the caller can defer any env access (e.g. AUTH_URL)
+// until AFTER the no-op guard below — the no-key path must never touch env vars
+// that the send doesn't need. `html` is built from the resolved url, so it too
+// is deferred past the guard.
 async function send(args: {
   to: string;
   subject: string;
-  html: string;
   devLabel: string;
-  url: string;
+  buildUrl: () => string;
+  html: (url: string) => string;
 }): Promise<void> {
   const resend = getClient();
 
@@ -38,10 +43,12 @@ async function send(args: {
     // No key: no-op. Surface the link only for local dev clicking — never in
     // test/production, so the bearer token never lands in shared logs.
     if (process.env.NODE_ENV === "development") {
-      console.log(`[DEV ${args.devLabel}] ${args.to}\n${args.url}`);
+      console.log(`[DEV ${args.devLabel}] ${args.to}\n${args.buildUrl()}`);
     }
     return;
   }
+
+  const url = args.buildUrl();
 
   // Recipient scoped to `to` only — no cc/bcc, so the token-bearing link never
   // reaches a second address.
@@ -49,7 +56,7 @@ async function send(args: {
     from: env.EMAIL_FROM,
     to: args.to,
     subject: args.subject,
-    html: args.html,
+    html: args.html(url),
   });
 
   if (error) {
@@ -59,22 +66,25 @@ async function send(args: {
 }
 
 export async function sendMagicLink({ to, url }: SendArgs): Promise<void> {
+  // NextAuth supplies the url — no env.AUTH_URL access here.
   await send({
     to,
-    url,
     devLabel: "MAGIC LINK",
     subject: "Your sign-in link for Adored",
-    html: magicLinkHtml(url),
+    buildUrl: () => url,
+    html: magicLinkHtml,
   });
 }
 
-export async function sendInvitation({ to, url }: SendArgs): Promise<void> {
+export async function sendInvitation({ to, token }: InvitationArgs): Promise<void> {
+  // Build the invite URL INSIDE the send, after the no-op guard, so a missing
+  // RESEND_API_KEY (which no-ops) never forces env.AUTH_URL to be present.
   await send({
     to,
-    url,
     devLabel: "INVITATION",
     subject: "You've been invited to a collection on Adored",
-    html: invitationHtml(url),
+    buildUrl: () => `${env.AUTH_URL}/invitations/${token}`,
+    html: invitationHtml,
   });
 }
 

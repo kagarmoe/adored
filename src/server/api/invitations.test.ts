@@ -3,16 +3,12 @@ import type { Invitation } from "@/types";
 import type { IInvitationRepository } from "@/server/repositories/InvitationRepository";
 
 // The email module is mocked so we assert the wiring (createInvitation /
-// resendInvitation call sendInvitation with the right token-scoped URL) without
-// any network I/O. AUTH_URL comes from the env fixture below.
+// resendInvitation call sendInvitation with the invited address + the token)
+// without any network I/O. The controller no longer builds the URL or touches
+// env.AUTH_URL — sendInvitation owns the URL build — so no env mock is needed.
 const sendInvitation = vi.fn(async () => {});
 vi.mock("@/lib/email", () => ({
-  sendInvitation: (args: { to: string; url: string }) => sendInvitation(args),
-}));
-
-const AUTH_URL = "https://adored.example.com";
-vi.mock("@/lib/env", () => ({
-  env: { AUTH_URL: "https://adored.example.com" },
+  sendInvitation: (args: { to: string; token: string }) => sendInvitation(args),
 }));
 
 // Minimal in-memory repo — enough to drive create/find without a DB.
@@ -69,7 +65,7 @@ beforeEach(async () => {
 });
 
 describe("createInvitation — sends the invitation email", () => {
-  it("emails the invited address with ${AUTH_URL}/invitations/${token}", async () => {
+  it("emails the invited address with the created token", async () => {
     const repo = makeRepo();
     const controller = new InvitationController(repo);
 
@@ -79,22 +75,22 @@ describe("createInvitation — sends the invitation email", () => {
     const arg = sendInvitation.mock.calls[0][0];
     // Sent ONLY to the invited (normalized) email — no other recipient.
     expect(arg.to).toBe("invitee@example.com");
-    expect(arg.url).toBe(`${AUTH_URL}/invitations/${result.token}`);
+    expect(arg.token).toBe(result.token);
     // Existing behavior preserved: token returned to the API caller.
     expect(result.token).toEqual(expect.any(String));
     expect(result.token.length).toBeGreaterThan(0);
   });
 
-  it("does not pass the token anywhere but the recipient-scoped URL", async () => {
+  it("passes only the recipient + token — no stray fields", async () => {
     const repo = makeRepo();
     const controller = new InvitationController(repo);
 
     const result = await controller.createInvitation("col_1", { email: "invitee@example.com" });
 
     const arg = sendInvitation.mock.calls[0][0];
-    // Only two keys: to + url. No stray recipient / token field.
-    expect(Object.keys(arg).sort()).toEqual(["to", "url"]);
-    expect(arg.url).toContain(result.token);
+    // Only two keys: to + token. The controller no longer builds a URL.
+    expect(Object.keys(arg).sort()).toEqual(["to", "token"]);
+    expect(arg.token).toBe(result.token);
   });
 });
 
@@ -118,7 +114,7 @@ describe("resendInvitation — re-sends the existing invitation link", () => {
     expect(sendInvitation).toHaveBeenCalledTimes(1);
     const arg = sendInvitation.mock.calls[0][0];
     expect(arg.to).toBe("invitee@example.com");
-    expect(arg.url).toBe(`${AUTH_URL}/invitations/EXISTING_TOKEN`);
+    expect(arg.token).toBe("EXISTING_TOKEN");
     // Still returns a confirmation message (no longer a bare stub) and does NOT
     // leak the token back to the client.
     expect(result.message).toEqual(expect.any(String));

@@ -61,18 +61,18 @@ describe("sendMagicLink — with RESEND_API_KEY set", () => {
 });
 
 describe("sendInvitation — with RESEND_API_KEY set", () => {
-  it("sends via resend.emails.send with from=EMAIL_FROM, to=email, url in html", async () => {
+  it("builds ${AUTH_URL}/invitations/${token} and sends it in the html", async () => {
     process.env.RESEND_API_KEY = "re_test_key";
     const { sendInvitation } = await import("./email");
 
-    const url = "https://adored.example.com/invitations/INVITE_TOKEN";
-    await sendInvitation({ to: "invitee@example.com", url });
+    await sendInvitation({ to: "invitee@example.com", token: "INVITE_TOKEN" });
 
     expect(sendMock).toHaveBeenCalledTimes(1);
     const arg = sendMock.mock.calls[0][0];
     expect(arg.from).toBe("noreply@kimberlygarmoe.com");
     expect(arg.to).toBe("invitee@example.com");
-    expect(arg.html).toContain(url);
+    // The URL is built inside sendInvitation from AUTH_URL + the token.
+    expect(arg.html).toContain("https://adored.example.com/invitations/INVITE_TOKEN");
     expect(arg.cc).toBeUndefined();
     expect(arg.bcc).toBeUndefined();
   });
@@ -88,10 +88,25 @@ describe("graceful fallback — RESEND_API_KEY unset", () => {
       sendMagicLink({ to: "user@example.com", url: "https://adored.example.com/x?token=t" }),
     ).resolves.toBeUndefined();
     await expect(
-      sendInvitation({ to: "invitee@example.com", url: "https://adored.example.com/invitations/t" }),
+      sendInvitation({ to: "invitee@example.com", token: "t" }),
     ).resolves.toBeUndefined();
 
     expect(Resend).not.toHaveBeenCalled();
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
+  it("sendInvitation no-ops WITHOUT touching AUTH_URL when the key is unset", async () => {
+    // Regression for the CI failure: the no-key path must not build the invite
+    // URL, so a missing AUTH_URL cannot throw. Deleting AUTH_URL makes any
+    // env.AUTH_URL access throw (Environment validation failed); the no-op must
+    // still resolve cleanly.
+    delete process.env.RESEND_API_KEY;
+    delete process.env.AUTH_URL;
+    const { sendInvitation } = await import("./email");
+
+    await expect(
+      sendInvitation({ to: "invitee@example.com", token: "t" }),
+    ).resolves.toBeUndefined();
     expect(sendMock).not.toHaveBeenCalled();
   });
 
