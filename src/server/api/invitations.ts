@@ -5,6 +5,7 @@ import { randomBytes } from "crypto";
 import { normalizeEmail } from "@/lib/normalize-email";
 import type { Database } from "@/lib/db";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
+import { sendInvitation } from "@/lib/email";
 
 const CreateInvitationSchema = z.object({
   email: z.string().email(),
@@ -46,6 +47,7 @@ export class InvitationController {
       email,
       token,
     });
+    await sendInvitation({ to: email, token });
     return { ...invitation, token };
   }
 
@@ -78,7 +80,7 @@ export class InvitationController {
     if (!invitation) {
       throw new Error("Invitation not found");
     }
-    // TODO: Send invitation email with token
+    await sendInvitation({ to: invitation.email, token: invitation.token });
     return { message: "Invitation resent" };
   }
 
