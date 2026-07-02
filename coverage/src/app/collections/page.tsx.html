@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/15</span>
+                <span class='fraction'>0/18</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/20</span>
+                <span class='fraction'>0/22</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/14</span>
+                <span class='fraction'>0/17</span>
             </div>
         
             
@@ -165,7 +165,23 @@
 <a name='L100'></a><a href='#L100'>100</a>
 <a name='L101'></a><a href='#L101'>101</a>
 <a name='L102'></a><a href='#L102'>102</a>
-<a name='L103'></a><a href='#L103'>103</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -192,6 +208,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -269,6 +295,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getDb } from "@/lib/db";
 import { CollectionController } from "@/server/api/collections";
 import { PhotoController } from "@/server/api/photos";
@@ -277,6 +304,8 @@ import { AppLayout } from "@/components/layout";
 import { buttonVariants, EmptyState } from "@/components/ui";
 import { CollectionCard } from "@/features/collections/CollectionCard";
 import { CollectionFilters } from "@/features/collections/CollectionFilters";
+import { DISMISS_KEY } from "@/features/onboarding/dismissal";
+import { shouldShowWelcome } from "@/features/onboarding/gate";
 import Link from "next/link";
 &nbsp;
 interface CollectionsPageProps {
@@ -294,6 +323,16 @@ export default async function <span class="fstat-no" title="function not covered
   // downstream batch read is keyed off THESE ids, so pool state for a collection
   // the user can't see is never queried or exposed.
   const collections = <span class="cstat-no" title="statement not covered" >await CollectionController.fromDb(db).listCollections(session.user.id);</span>
+&nbsp;
+  // First-run gate (the ONE place it lives): zero collections AND the walkthrough
+  // not dismissed -&gt; redirect to /welcome BEFORE rendering, so a first-run user
+  // never sees the collections chrome flash. Dismissal is a cookie so the server
+  // can read it here; no DB, no client cover needed.
+  const <span class="cstat-no" title="statement not covered" >dismissed = cookies().get(DISMISS_KEY)?.value === "1";</span>
+<span class="cstat-no" title="statement not covered" >  if (shouldShowWelcome(collections.length, dismissed)) {</span>
+<span class="cstat-no" title="statement not covered" >    redirect("/welcome");</span>
+  }
+&nbsp;
   const collectionIds = <span class="cstat-no" title="statement not covered" >collections.map(<span class="fstat-no" title="function not covered" >(c</span>) =&gt; <span class="cstat-no" title="statement not covered" >c.id)</span>;</span>
   const photoController = <span class="cstat-no" title="statement not covered" >PhotoController.fromDb(db);</span>
   const [covers, collectionsWithPooledPhotos] = <span class="cstat-no" title="statement not covered" >await Promise.all([</span>
@@ -376,7 +415,7 @@ export default async function <span class="fstat-no" title="function not covered
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-02T04:56:57.697Z
+                at 2026-07-02T06:30:05.626Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
