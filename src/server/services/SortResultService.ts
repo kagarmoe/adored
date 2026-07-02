@@ -1,6 +1,4 @@
 import type { SortResult, SortResultItem } from "@/types";
-import type { ISortResultRepository, ISortResultItemRepository } from "@/server/repositories/SortResultRepository";
-import type { ICollectionPreferenceItemRepository } from "@/server/repositories/CollectionPreferenceItemRepository";
 import type { Database } from "@/lib/db";
 import { withTransaction } from "@/lib/transactions";
 import {
@@ -53,9 +51,9 @@ export class ResultNumberExhaustedError extends Error {
 
 export class SortResultService {
   constructor(
-    private sortResultRepo: ISortResultRepository,
-    private sortResultItemRepo: ISortResultItemRepository,
-    private preferenceRepo: ICollectionPreferenceItemRepository,
+    private sortResultRepo: SortResultRepository,
+    private sortResultItemRepo: SortResultItemRepository,
+    private preferenceRepo: CollectionPreferenceItemRepository,
     private db: Database,
   ) {}
 

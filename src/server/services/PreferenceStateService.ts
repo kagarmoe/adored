@@ -1,8 +1,8 @@
 import type { CollectionPreferenceItem, DecisionEvent } from "@/types";
-import type { ICollectionPreferenceItemRepository } from "@/server/repositories/CollectionPreferenceItemRepository";
-import type { IDecisionEventRepository } from "@/server/repositories/DecisionEventRepository";
-import type { ISessionRepository } from "@/server/repositories/SessionRepository";
-import type { IItemRepository } from "@/server/repositories/ItemRepository";
+import type { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
+import type { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
+import type { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
+import type { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import type { ScoringService } from "@/server/services/ScoringService";
 import {
   deriveOrder,
@@ -14,11 +14,11 @@ import {
 
 export class PreferenceStateService {
   constructor(
-    private preferenceRepo: ICollectionPreferenceItemRepository,
+    private preferenceRepo: CollectionPreferenceItemRepository,
     private scoringService: ScoringService,
-    private itemRepo: IItemRepository,
-    private sessionRepo: ISessionRepository,
-    private decisionRepo: IDecisionEventRepository,
+    private itemRepo: ItemRepository,
+    private sessionRepo: SessionRepository,
+    private decisionRepo: DecisionEventRepository,
   ) {}
 
   async recalculatePreferences(

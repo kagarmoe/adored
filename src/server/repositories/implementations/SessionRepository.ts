@@ -1,7 +1,6 @@
 import { eq, and, isNull, inArray, sql } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { sessionsTable } from "@/lib/db/schema";
-import type { ISessionRepository } from "../SessionRepository";
 import type { Session } from "@/types";
 import { generateId } from "@/lib/id";
 
@@ -22,7 +21,7 @@ export class CurrentSessionExistsError extends Error {
   }
 }
 
-export class SessionRepository implements ISessionRepository {
+export class SessionRepository {
   constructor(private db: Database) {}
 
   async create(data: {

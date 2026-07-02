@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { Invitation } from "@/types";
-import type { IInvitationRepository } from "@/server/repositories/InvitationRepository";
 import { randomBytes } from "crypto";
 import { normalizeEmail } from "@/lib/normalize-email";
 import type { Database } from "@/lib/db";
@@ -19,7 +18,7 @@ const UpdateInvitationSchema = z.object({});
 
 
 export class InvitationController {
-  constructor(private invitationRepo: IInvitationRepository) {}
+  constructor(private invitationRepo: InvitationRepository) {}
 
   static fromDb(db: Database): InvitationController {
     return new InvitationController(new InvitationRepository(db));

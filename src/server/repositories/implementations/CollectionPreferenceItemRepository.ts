@@ -1,13 +1,10 @@
 import { eq, and, sql } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { preferencesTable } from "@/lib/db/schema";
-import type { ICollectionPreferenceItemRepository } from "../CollectionPreferenceItemRepository";
 import type { CollectionPreferenceItem } from "@/types";
 import { generateId } from "@/lib/id";
 
-export class CollectionPreferenceItemRepository
-  implements ICollectionPreferenceItemRepository
-{
+export class CollectionPreferenceItemRepository {
   constructor(private db: Database) {}
 
   async create(data: {

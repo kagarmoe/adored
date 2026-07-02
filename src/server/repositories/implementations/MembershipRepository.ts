@@ -1,11 +1,10 @@
 import { eq, and } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { membershipsTable, user } from "@/lib/db/schema";
-import type { IMembershipRepository } from "../MembershipRepository";
 import type { CollectionMembership } from "@/types";
 import { generateId } from "@/lib/id";
 
-export class MembershipRepository implements IMembershipRepository {
+export class MembershipRepository {
   constructor(private db: Database) {}
 
   async create(data: {

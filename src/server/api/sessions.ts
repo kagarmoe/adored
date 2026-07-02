@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { Session } from "@/types";
-import type { ISessionRepository } from "@/server/repositories/SessionRepository";
 import type { Database } from "@/lib/db";
 import {
   SessionRepository,
@@ -23,7 +22,7 @@ const UpdateSessionSchema = z.object({
 export { CurrentSessionExistsError };
 
 export class SessionController {
-  constructor(private sessionRepo: ISessionRepository) {}
+  constructor(private sessionRepo: SessionRepository) {}
 
   static fromDb(db: Database): SessionController {
     return new SessionController(new SessionRepository(db));

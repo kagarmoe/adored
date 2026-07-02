@@ -6,8 +6,8 @@ import type {
   Session,
   TriageResult,
 } from "@/types";
-import type { IDecisionEventRepository } from "@/server/repositories/DecisionEventRepository";
-import type { ISessionRepository } from "@/server/repositories/SessionRepository";
+import type { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
+import type { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 
 const COLLECTION = "col-1";
 const CURATOR = "cur-1";
@@ -54,14 +54,14 @@ function pairwise(
 }
 
 function buildService(decisions: DecisionEvent[]): ScoringService {
-  const sessionRepo: ISessionRepository = {
+  const sessionRepo: SessionRepository = {
     findByCollection: async () =>
       [{ id: SESSION, curatorId: CURATOR }] as unknown as Session[],
-  } as unknown as ISessionRepository;
+  } as unknown as SessionRepository;
 
-  const decisionRepo: IDecisionEventRepository = {
+  const decisionRepo: DecisionEventRepository = {
     findBySession: async () => decisions,
-  } as unknown as IDecisionEventRepository;
+  } as unknown as DecisionEventRepository;
 
   return new ScoringService(decisionRepo, sessionRepo);
 }

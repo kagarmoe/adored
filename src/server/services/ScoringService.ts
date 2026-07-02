@@ -4,8 +4,8 @@ import type {
   PairwiseDecision,
   TriageDecision,
 } from "@/types";
-import type { IDecisionEventRepository } from "@/server/repositories/DecisionEventRepository";
-import type { ISessionRepository } from "@/server/repositories/SessionRepository";
+import type { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
+import type { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 
 // Triage seeds each item at the CENTER of its tier band, so triage -> getBucket
 // is an identity round-trip and every item has +/-0.125 of headroom for pairwise
@@ -26,8 +26,8 @@ type ItemState = { score: number; count: number };
 
 export class ScoringService {
   constructor(
-    private decisionRepo: IDecisionEventRepository,
-    private sessionRepo: ISessionRepository,
+    private decisionRepo: DecisionEventRepository,
+    private sessionRepo: SessionRepository,
   ) {}
 
   private scoreFromTriageEvent(

@@ -1,11 +1,10 @@
 import { eq, and, inArray, count } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { sortResultItemsTable, sortResultsTable } from "@/lib/db/schema";
-import type { ISortResultItemRepository } from "../SortResultRepository";
 import type { SortResultItem } from "@/types";
 import { generateId } from "@/lib/id";
 
-export class SortResultItemRepository implements ISortResultItemRepository {
+export class SortResultItemRepository {
   constructor(private db: Database) {}
 
   async create(data: {

@@ -1,11 +1,20 @@
 import { eq, isNull, and, sql, asc } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { itemsTable } from "@/lib/db/schema";
-import type { FindByCollectionOptions, IItemRepository } from "../ItemRepository";
 import type { Item } from "@/types";
 import { generateId } from "@/lib/id";
 
-export class ItemRepository implements IItemRepository {
+// Optional bounds for the workspace item preview. Omit both and findByCollection
+// keeps today's behavior (full, unordered collection read for the /items grid).
+// `orderBy: "number"` sorts number ASC with an id ASC tiebreaker (number is
+// nullable, so determinism can't rest on it alone); `number` is the only
+// supported order key for now.
+export interface FindByCollectionOptions {
+  limit?: number;
+  orderBy?: "number";
+}
+
+export class ItemRepository {
   constructor(private db: Database) {}
 
   async create(data: {

@@ -1,6 +1,4 @@
 import type { Item } from "@/types";
-import type { IItemRepository } from "@/server/repositories/ItemRepository";
-import type { IPhotoRepository } from "@/server/repositories/PhotoRepository";
 import type { Database } from "@/lib/db";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
@@ -26,8 +24,8 @@ export class PoolGroupError extends Error {
 
 export class ItemService {
   constructor(
-    private repo: IItemRepository,
-    private photoRepo: IPhotoRepository,
+    private repo: ItemRepository,
+    private photoRepo: PhotoRepository,
   ) {}
 
   static fromDb(db: Database): ItemService {

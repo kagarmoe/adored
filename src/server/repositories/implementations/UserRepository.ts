@@ -1,12 +1,11 @@
 import { eq } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { user, account, session, verificationToken } from "@/lib/db/schema";
-import type { IUserRepository } from "../UserRepository";
 import type { User } from "@/types";
 import { withTransaction } from "@/lib/transactions";
 import { accountTombstone } from "@/server/services/account-tombstone";
 
-export class UserRepository implements IUserRepository {
+export class UserRepository {
   constructor(private db: Database) {}
 
   async create(data: { id: string; email: string; name?: string }): Promise<User> {
