@@ -56,6 +56,14 @@ describe("ProfileForm", () => {
     );
   });
 
+  it("offers a quiet 'How Adored works' link to the walkthrough (real ≥44px tap target)", () => {
+    render(<ProfileForm initialName="Tessa" email="tessa@example.com" />);
+    const link = screen.getByRole("link", { name: /how adored works/i });
+    expect(link).toHaveAttribute("href", "/welcome");
+    // Tap target: h-11 (44px). Assert the utility class is present.
+    expect(link.className).toMatch(/\bh-11\b/);
+  });
+
   it("announces a failing save in an assertive live region and shows no confirmation", async () => {
     apiPatch.mockRejectedValueOnce(new Error("Something went wrong"));
     render(<ProfileForm initialName={null} email="a@b.c" />);
