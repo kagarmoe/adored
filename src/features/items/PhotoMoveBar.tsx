@@ -15,7 +15,7 @@ export type MoveDestination =
   | { type: "pool" };
 
 /** Label for a move target, mirroring itemDisplayName's fallback: name, else #N. */
-function targetLabel(target: MoveTarget): string {
+export function targetLabel(target: MoveTarget): string {
   const name = target.name?.trim();
   if (name) return name;
   return target.number != null ? `#${target.number}` : "Untitled";
