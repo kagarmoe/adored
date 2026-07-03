@@ -29,7 +29,7 @@
  *
  * USAGE:
  *   DATABASE_URL_TEST=postgresql://postgres:test@localhost:5433/app_test \
- *     node -r esbuild-register scripts/bench-recompute.ts [--items=100] [--update-baseline]
+ *     tsx scripts/bench-recompute.ts [--items=100] [--update-baseline]
  */
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
