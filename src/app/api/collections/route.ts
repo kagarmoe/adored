@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       event: 'collection_created',
       properties: { collection_id: collection.id },
     });
-    await phClient.shutdown();
+    await phClient.flush();
     return NextResponse.json(collection, { status: 201 });
   } catch (error) {
     return errorResponse(error);

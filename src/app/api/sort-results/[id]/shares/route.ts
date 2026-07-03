@@ -41,7 +41,7 @@ export async function POST(
       event: 'sort_result_shared',
       properties: { result_id: params.id, share_id: share.id },
     });
-    await phClient.shutdown();
+    await phClient.flush();
     return NextResponse.json(share, { status: 201 });
   } catch (error) {
     return errorResponse(error);
