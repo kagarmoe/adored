@@ -62,6 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // would otherwise leave an item BOTH ranked and disposed, breaking the
     // disposed <=> untriaged invariant. Every write uses the tx-bound handle.
     const { event, isNew } = await withTransaction(db, async (tx) => {
+      // (op/ctx passed below label the slow-op + error telemetry at the seam.)
       // Serialize a curator's concurrent decisions: the row-lock makes two
       // in-flight POSTs for this session queue behind each other, so the
       // idempotency read/insert below can't race the recompute. The per-session
@@ -120,6 +121,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       }
 
       return { event: inserted, isNew: true };
+    }, {
+      op: "record_decision",
+      ctx: { collectionId: sortSession.collectionId, curatorId: userId, sessionId: params.id },
     });
 
     // Emit analytics only for a genuinely NEW decision — an idempotent replay
