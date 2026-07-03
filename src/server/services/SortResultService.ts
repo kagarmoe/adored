@@ -145,7 +145,7 @@ export class SortResultService {
             await itemRepo.create({ sortResultId: result.id, ...item });
           }
           return result;
-        });
+        }, { op: "materialize_result", ctx: { collectionId, curatorId } });
       } catch (error) {
         if (isResultNumberConflict(error)) {
           if (attempt < 4) continue;
