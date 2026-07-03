@@ -2,7 +2,11 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize, ready_for_review, reopened]
+    # Cost control: review on open/ready, NOT on every push. `synchronize` fires
+    # on every push to a PR, so keeping it would run a full (expensive) Claude
+    # review per push; at our PR volume that adds up. Re-request a fresh review
+    # by reopening the PR or opening a new one.
+    types: [opened, ready_for_review, reopened]
     # Optional: Only run on specific file changes
     # paths:
     #   - "src/**/*.ts"
