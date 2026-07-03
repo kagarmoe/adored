@@ -97,6 +97,21 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
           </Link>
         </div>
 
+        {/* Keepsake — the story is kept AFTER the choice, never asked before it.
+            Leads the page when present; auto-escaped React child (no HTML injection). */}
+        {item.story?.trim() && (
+          <Card padding="lg" className="bg-decor/10">
+            <div className="flex items-center gap-2">
+              <span aria-hidden className="h-2 w-2 rounded-full bg-decor" />
+              <h2 className="text-lg text-ink">Where will it go next?</h2>
+            </div>
+            <p className="mt-1 text-sm text-ink-soft">
+              A keepsake, kept after the choice — never asked before it.
+            </p>
+            <p className="mt-4 text-ink whitespace-pre-wrap">{item.story}</p>
+          </Card>
+        )}
+
         <div className="grid gap-8 lg:grid-cols-[3fr_2fr]">
           {/* Photos lead — flip through them all (tap-first, no swipe). */}
           <ItemPhotoCarousel

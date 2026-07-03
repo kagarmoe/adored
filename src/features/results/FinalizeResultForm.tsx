@@ -56,22 +56,6 @@ export function FinalizeResultForm({ collectionId, resultId, resultNumber, defau
             <label className="mb-2 block text-sm font-medium text-ink">Name this result</label>
             <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Spring edit 2026" />
           </div>
-
-          <div>
-            <p className="mb-3 block text-sm font-medium text-ink">Visibility</p>
-            <div className="space-y-3">
-              <label className="block rounded-lg border border-hairline bg-content-soft p-4">
-                <input type="radio" name="visibility" value="private" defaultChecked />
-                <span className="ml-2 font-medium text-ink">Private</span>
-                <span className="mt-1 block text-sm text-ink-soft">Only you can see it.</span>
-              </label>
-              <label className="block rounded-lg border border-hairline p-4">
-                <input type="radio" name="visibility" value="shareable" />
-                <span className="ml-2 font-medium text-ink">Shareable by link</span>
-                <span className="mt-1 block text-sm text-ink-soft">Create links after finalizing.</span>
-              </label>
-            </div>
-          </div>
         </div>
       </Card>
 

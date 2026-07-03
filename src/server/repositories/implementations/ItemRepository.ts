@@ -1,11 +1,20 @@
 import { eq, isNull, and, sql, asc } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { itemsTable } from "@/lib/db/schema";
-import type { FindByCollectionOptions, IItemRepository } from "../ItemRepository";
 import type { Item } from "@/types";
 import { generateId } from "@/lib/id";
 
-export class ItemRepository implements IItemRepository {
+// Optional bounds for the workspace item preview. Omit both and findByCollection
+// keeps today's behavior (full, unordered collection read for the /items grid).
+// `orderBy: "number"` sorts number ASC with an id ASC tiebreaker (number is
+// nullable, so determinism can't rest on it alone); `number` is the only
+// supported order key for now.
+export interface FindByCollectionOptions {
+  limit?: number;
+  orderBy?: "number";
+}
+
+export class ItemRepository {
   constructor(private db: Database) {}
 
   async create(data: {
@@ -20,6 +29,7 @@ export class ItemRepository implements IItemRepository {
     category?: string;
     status?: string;
     notes?: string;
+    story?: string | null;
   }): Promise<Item> {
     const id = data.id || generateId("item");
     const base = {
@@ -33,6 +43,7 @@ export class ItemRepository implements IItemRepository {
       category: data.category || null,
       status: data.status || null,
       notes: data.notes || null,
+      story: data.story || null,
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: null,
@@ -191,6 +202,7 @@ export class ItemRepository implements IItemRepository {
       unit: row.unit,
       status: row.status,
       notes: row.notes,
+      story: row.story,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       deletedAt: row.deletedAt,

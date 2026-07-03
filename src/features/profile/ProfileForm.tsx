@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Button, Input, ErrorMessage } from "@/components/ui";
+import { Button, Card, Input, ErrorMessage } from "@/components/ui";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { DeleteAccountSection } from "./DeleteAccountSection";
 import { apiPatch } from "@/lib/api-client";
 
 interface ProfileFormProps {
@@ -53,40 +56,69 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-      {error && <ErrorMessage message={error} />}
+    <div className="space-y-6 max-w-2xl">
+      <Card padding="lg" className="!p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && <ErrorMessage message={error} />}
 
-      <Input
-        label="Display name"
-        type="text"
-        autoComplete="name"
-        placeholder="The name you go by"
-        value={name}
-        onChange={(e) => {
-          setName(e.target.value);
-          setSaved(false);
-        }}
-        disabled={saving}
-      />
+          <Input
+            label="Name"
+            type="text"
+            autoComplete="name"
+            placeholder="The name you go by"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setSaved(false);
+            }}
+            disabled={saving}
+          />
 
-      <p className="text-sm text-ink-soft">
-        This is the name shown across Adored. You can leave it blank — we&rsquo;ll just use{" "}
-        {email}.
-      </p>
+          <Input label="Email" type="email" value={email} disabled readOnly />
 
-      <Button type="submit" disabled={saving}>
-        {saving ? "Saving…" : "Save"}
-      </Button>
+          <p className="text-sm text-ink-soft">
+            Your name is shown across Adored. You can leave it blank — we&rsquo;ll just use your email.
+          </p>
 
-      {saved && (
-        <p
-          role="status"
-          aria-live="polite"
-          className="bg-success-soft text-success-deep rounded-control px-3 py-2 text-sm"
+          <Button type="submit" disabled={saving}>
+            {saving ? "Saving…" : "Save changes"}
+          </Button>
+
+          {saved && (
+            <p
+              role="status"
+              aria-live="polite"
+              className="bg-success-soft text-success-deep rounded-control px-3 py-2 text-sm"
+            >
+              Saved — your name is set.
+            </p>
+          )}
+        </form>
+      </Card>
+
+      <div className="flex items-center justify-between gap-4 rounded-control border border-hairline bg-surface px-4 py-3">
+        <div>
+          <p className="text-sm font-medium text-ink">Theme</p>
+          <p className="text-sm text-ink-soft">Switch between light and dark.</p>
+        </div>
+        <ThemeToggle />
+      </div>
+
+      <div className="flex items-center justify-between gap-4 rounded-control border border-hairline bg-surface px-4 py-3">
+        <div>
+          <p className="text-sm font-medium text-ink">New to Adored?</p>
+          <p className="text-sm text-ink-soft">Revisit the quick walkthrough anytime.</p>
+        </div>
+        {/* Re-open the walkthrough (manual visit — does NOT clear the dismissal flag). */}
+        <Link
+          href="/welcome"
+          className="inline-flex h-11 items-center rounded-control px-4 text-sm text-primary underline focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
         >
-          Saved — your name is set.
-        </p>
-      )}
-    </form>
+          How Adored works
+        </Link>
+      </div>
+
+      <DeleteAccountSection email={email} />
+    </div>
   );
 }

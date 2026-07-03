@@ -50,60 +50,51 @@ describe("roleSatisfies", () => {
   });
 });
 
-describe("CAPABILITIES map", () => {
-  // Every Operation literal must have an entry in the map.
-  const ALL_OPERATIONS: Operation[] = [
-    "collection:read",
-    "collection:manage",
-    "collection:purge",
-    "collection:audit",
-    "members:read",
-    "members:manage",
-    "invitations:read",
-    "invitations:manage",
-    "items:read",
-    "items:write",
-    "items:purge",
-    "photos:write",
-    "sessions:write",
-    "preferences:write",
-  ];
+describe("CAPABILITIES map — policy VALUES pinned per operation (purses-j9qf Task 2)", () => {
+  // `Record<Operation, Role>` guarantees an entry EXISTS for every op at compile
+  // time — but not that it is CORRECT. A typo mapping `items:purge` → "curator"
+  // compiles and passes the route-enumeration test (a curator legitimately 200s;
+  // the stranger still 403s). This table pins the exact required role for every
+  // operation so a wrong VALUE reddens CI.
+  //
+  // The table is the single source of expected values. The exhaustiveness guard
+  // below asserts its key set equals Object.keys(CAPABILITIES) (which is exactly
+  // the Operation union), so a newly-added Operation with no row here FAILS —
+  // the new op forces a deliberate policy decision, not a silent default.
+  const EXPECTED: Record<Operation, Role> = {
+    // Owner-only: destructive / governance / invitee-visibility operations.
+    "invitations:read": "owner",
+    "collection:manage": "owner",
+    "collection:purge": "owner",
+    "collection:audit": "owner",
+    "members:manage": "owner",
+    "invitations:manage": "owner",
+    "items:purge": "owner",
+    // Curator-level: the day-to-day sorting/editing surface a member may use.
+    "collection:read": "curator",
+    "members:read": "curator",
+    "items:read": "curator",
+    "items:write": "curator",
+    "photos:write": "curator",
+    "sessions:write": "curator",
+    "preferences:write": "curator",
+  };
 
-  it("has an entry for every Operation (14 total)", () => {
-    expect(Object.keys(CAPABILITIES)).toHaveLength(ALL_OPERATIONS.length);
+  it("EXPECTED covers EVERY operation and only real operations (drives newly-added ops to fail)", () => {
+    // Object.keys(CAPABILITIES) is the runtime image of the Operation union.
+    const actualOps = Object.keys(CAPABILITIES).sort();
+    const assertedOps = Object.keys(EXPECTED).sort();
+    // A new Operation added to the union (and thus to CAPABILITIES) but not to
+    // EXPECTED → these sets diverge → FAIL, naming the gap.
+    expect(assertedOps).toEqual(actualOps);
+    // Guard against the count silently shrinking: 14 operations today.
+    expect(actualOps).toHaveLength(14);
   });
 
-  it.each(ALL_OPERATIONS)("has an entry for '%s'", (op) => {
-    expect(CAPABILITIES).toHaveProperty(op);
-  });
-
-  it("curator-level operations resolve to 'curator'", () => {
-    const curatorOps: Operation[] = [
-      "collection:read",
-      "members:read",
-      "items:read",
-      "items:write",
-      "photos:write",
-      "sessions:write",
-      "preferences:write",
-    ];
-    for (const op of curatorOps) {
-      expect(CAPABILITIES[op]).toBe("curator");
-    }
-  });
-
-  it("owner-level operations resolve to 'owner'", () => {
-    const ownerOps: Operation[] = [
-      "invitations:read",
-      "collection:manage",
-      "collection:purge",
-      "collection:audit",
-      "members:manage",
-      "invitations:manage",
-      "items:purge",
-    ];
-    for (const op of ownerOps) {
-      expect(CAPABILITIES[op]).toBe("owner");
-    }
-  });
+  it.each(Object.keys(CAPABILITIES) as Operation[])(
+    "CAPABILITIES[%s] equals the pinned required role",
+    (op) => {
+      expect(CAPABILITIES[op]).toBe(EXPECTED[op]);
+    },
+  );
 });

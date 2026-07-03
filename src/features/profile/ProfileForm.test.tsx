@@ -20,6 +20,18 @@ beforeEach(() => {
 });
 
 describe("ProfileForm", () => {
+  it("renders the Name input, a disabled Email input bound to the user's email, and a Save changes button", () => {
+    render(<ProfileForm initialName="Tessa" email="tessa@example.com" />);
+
+    expect(screen.getByLabelText(/name/i)).toBeEnabled();
+
+    const emailField = screen.getByLabelText(/email/i);
+    expect(emailField).toBeDisabled();
+    expect(emailField).toHaveValue("tessa@example.com");
+
+    expect(screen.getByRole("button", { name: /save changes/i })).toBeInTheDocument();
+  });
+
   it("submits the trimmed name, refreshes the session, and confirms", async () => {
     render(<ProfileForm initialName={null} email="a@b.c" />);
 
@@ -42,6 +54,14 @@ describe("ProfileForm", () => {
     await waitFor(() =>
       expect(apiPatch).toHaveBeenCalledWith("/api/users/me", { name: "" }),
     );
+  });
+
+  it("offers a quiet 'How Adored works' link to the walkthrough (real ≥44px tap target)", () => {
+    render(<ProfileForm initialName="Tessa" email="tessa@example.com" />);
+    const link = screen.getByRole("link", { name: /how adored works/i });
+    expect(link).toHaveAttribute("href", "/welcome");
+    // Tap target: h-11 (44px). Assert the utility class is present.
+    expect(link.className).toMatch(/\bh-11\b/);
   });
 
   it("announces a failing save in an assertive live region and shows no confirmation", async () => {

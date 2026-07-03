@@ -66,7 +66,7 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
       </div>
 
       <Input
-        label="Email address"
+        label="Invite by email"
         type="email"
         required
         placeholder="curator@example.com"
@@ -76,7 +76,7 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
       />
 
       <Button type="submit" disabled={loading}>
-        {loading ? "Sending..." : "Send invitation"}
+        {loading ? "Sending..." : "Send invite"}
       </Button>
     </form>
   );

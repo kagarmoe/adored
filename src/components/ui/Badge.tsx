@@ -22,7 +22,10 @@ const badgeVariants = cva("inline-flex items-center justify-center font-semibold
       abandoned: "bg-hairline text-ink",
       archived: "bg-hairline text-ink",
       deleted: "bg-error-soft text-error-deep",
-      pending: "bg-hairline text-ink",
+      // Pending is a benign "not yet" state, not a warning — cool content-mid + ink
+      // (same calm chip as paused). bg-hairline failed AA in dark (~3.9:1); content-mid
+      // is AA in both themes (light 8.37:1, dark 5.87:1).
+      pending: "bg-content-mid text-ink",
       owner: "bg-content-deeper text-white",
       curator: "bg-content-soft text-ink",
     },
@@ -44,4 +47,3 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(({ className, variant
 Badge.displayName = "Badge";
 
 export { Badge, badgeVariants };
-export type { BadgeProps };

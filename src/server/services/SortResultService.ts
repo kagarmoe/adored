@@ -1,6 +1,4 @@
 import type { SortResult, SortResultItem } from "@/types";
-import type { ISortResultRepository, ISortResultItemRepository } from "@/server/repositories/SortResultRepository";
-import type { ICollectionPreferenceItemRepository } from "@/server/repositories/CollectionPreferenceItemRepository";
 import type { Database } from "@/lib/db";
 import { withTransaction } from "@/lib/transactions";
 import {
@@ -53,9 +51,9 @@ export class ResultNumberExhaustedError extends Error {
 
 export class SortResultService {
   constructor(
-    private sortResultRepo: ISortResultRepository,
-    private sortResultItemRepo: ISortResultItemRepository,
-    private preferenceRepo: ICollectionPreferenceItemRepository,
+    private sortResultRepo: SortResultRepository,
+    private sortResultItemRepo: SortResultItemRepository,
+    private preferenceRepo: CollectionPreferenceItemRepository,
     private db: Database,
   ) {}
 
@@ -78,7 +76,35 @@ export class SortResultService {
       curatorId,
     );
     const items = rankPreferencesToItems(preferences);
-    return this.createResultWithItems(collectionId, curatorId, name, items);
+    // Materialize the NEW draft from CURRENT live prefs FIRST (fresh-at-finalize:
+    // supersede-and-recreate, never reuse-stale), then reap the curator's PRIOR
+    // unfinalized drafts so at most one draft exists per (collection, curator).
+    const result = await this.createResultWithItems(collectionId, curatorId, name, items);
+    await this.supersedePriorDrafts(collectionId, curatorId, result.id);
+    return result;
+  }
+
+  /**
+   * Delete every UNFINALIZED draft for (collection, curator) EXCEPT the one just
+   * created (purses-p2rj): each abandoned Finalize click POSTs a new draft, so
+   * without this reap orphan "Draft result" rows accumulate. FINALIZED snapshots
+   * are never matched (findDrafts filters status='draft'), keeping the Epic 5b
+   * frozen invariant intact. Each old draft's items are deleted first (the FK has
+   * no ON DELETE CASCADE), row + items atomically per draft.
+   */
+  private async supersedePriorDrafts(
+    collectionId: string,
+    curatorId: string,
+    keepId: string,
+  ): Promise<void> {
+    const drafts = await this.sortResultRepo.findDrafts(collectionId, curatorId);
+    const stale = drafts.filter((d) => d.id !== keepId);
+    for (const draft of stale) {
+      await withTransaction(this.db, async (tx) => {
+        await new SortResultItemRepository(tx).deleteByResult(draft.id);
+        await new SortResultRepository(tx).delete(draft.id);
+      });
+    }
   }
 
   /**
@@ -119,7 +145,7 @@ export class SortResultService {
             await itemRepo.create({ sortResultId: result.id, ...item });
           }
           return result;
-        });
+        }, { op: "materialize_result", ctx: { collectionId, curatorId } });
       } catch (error) {
         if (isResultNumberConflict(error)) {
           if (attempt < 4) continue;

@@ -1,7 +1,8 @@
 import { randomBytes } from "crypto";
 import type { SortResultShare } from "@/types";
-import type { ISortResultShareRepository } from "@/server/repositories/SortResultShareRepository";
-import type { ISortResultRepository, ISortResultItemRepository } from "@/server/repositories/SortResultRepository";
+import type { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
+import type { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
+import type { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 
 export interface SharedResultView {
   resultName: string;
@@ -16,9 +17,9 @@ export interface SharedResultView {
 
 export class SortResultShareService {
   constructor(
-    private shareRepo: ISortResultShareRepository,
-    private resultRepo: ISortResultRepository,
-    private resultItemRepo: ISortResultItemRepository,
+    private shareRepo: SortResultShareRepository,
+    private resultRepo: SortResultRepository,
+    private resultItemRepo: SortResultItemRepository,
   ) {}
 
   private generateShareToken(): string {

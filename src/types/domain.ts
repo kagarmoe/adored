@@ -30,7 +30,10 @@ export interface CollectionMembership {
   id: string;
   collectionId: string;
   userId: string;
+  // Populated only by the joined read path (findByCollection); the base-table
+  // reads (findById/findByUser) leave these undefined.
   name?: string;
+  email?: string;
   role: MembershipRole;
   createdAt: Date;
   updatedAt: Date;
@@ -68,6 +71,7 @@ export interface Item {
   unit: string;
   status: string | null;
   notes: string | null;
+  story: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -173,6 +177,7 @@ export interface CollectionPreferenceItem {
   confidence: number;
   rankBucket: RankBucket;
   comparisonCount: number;
+  orderRank: number | null;
   lastSeen: Date;
   createdAt: Date;
   updatedAt: Date;

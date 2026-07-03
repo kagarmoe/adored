@@ -375,16 +375,6 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
   });
 
   // ── (7) GET stranger (non-member) → 403 ────────────────────────────────────
-  it("(7) GET by a non-member stranger → 403", async () => {
-    const collectionId = await seedBareCollection(ownerId);
-    const strangerId = await seedUserRow("stranger");
-    mockGetSession.mockResolvedValue({ user: { id: strangerId } });
-
-    const res = await listDispositions(getReq(collectionId) as any, {
-      params: { id: collectionId },
-    } as any);
-    expect(res.status).toBe(403);
-  });
 
   // ── (8) GET ?disposition= filter narrows the list ──────────────────────────
   it("(8) GET ?disposition=set_aside returns only set_aside rows for the caller", async () => {

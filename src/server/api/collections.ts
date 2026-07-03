@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { Collection } from "@/types";
-import type { ICollectionRepository } from "@/server/repositories/CollectionRepository";
 import { generateId } from "@/lib/id";
 import type { Database } from "@/lib/db";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
@@ -16,11 +15,9 @@ const UpdateCollectionSchema = z.object({
   status: z.enum(["active", "archived", "deleted"]).optional(),
 });
 
-export type CreateCollectionInput = z.infer<typeof CreateCollectionSchema>;
-export type UpdateCollectionInput = z.infer<typeof UpdateCollectionSchema>;
 
 export class CollectionController {
-  constructor(private collectionRepo: ICollectionRepository) {}
+  constructor(private collectionRepo: CollectionRepository) {}
 
   static fromDb(db: Database): CollectionController {
     return new CollectionController(new CollectionRepository(db));
@@ -31,9 +28,11 @@ export class CollectionController {
   }
 
   async listCollections(userId: string): Promise<Collection[]> {
-    // TODO: Fetch collections where user is a member, including owned collections
-    // For now, fetch all collections owned by user
-    return this.collectionRepo.findByOwner(userId);
+    // Owned ∪ collections where a membership row exists for the user (accepted
+    // members — a row is created only on invitation-accept). Pending invitations
+    // are deliberately NOT read, so an unaccepted invite never surfaces a
+    // collection the user hasn't joined (IDOR-by-list).
+    return this.collectionRepo.findByOwnerOrMember(userId);
   }
 
   async createCollection(

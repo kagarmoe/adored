@@ -1,11 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { SortResultShareService } from "./SortResultShareService";
 import type { SortResult, SortResultItem, SortResultShare } from "@/types";
-import type { ISortResultShareRepository } from "@/server/repositories/SortResultShareRepository";
-import type {
-  ISortResultRepository,
-  ISortResultItemRepository,
-} from "@/server/repositories/SortResultRepository";
+import type { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
+import type { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
+import type { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 
 const RESULT_ID = "res-1";
 
@@ -57,12 +55,12 @@ function sortResultItem(
 describe("SortResultShareService.createShare", () => {
   it("createShare without expiry stores a hex token and no expiresAt", async () => {
     const create = vi.fn(async () => share());
-    const shareRepo = { create } as unknown as ISortResultShareRepository;
+    const shareRepo = { create } as unknown as SortResultShareRepository;
 
     await new SortResultShareService(
       shareRepo,
-      {} as unknown as ISortResultRepository,
-      {} as unknown as ISortResultItemRepository,
+      {} as unknown as SortResultRepository,
+      {} as unknown as SortResultItemRepository,
     ).createShare(RESULT_ID);
 
     const arg = create.mock.calls[0][0];
@@ -73,12 +71,12 @@ describe("SortResultShareService.createShare", () => {
 
   it("createShare with expiryDays sets expiresAt in the future", async () => {
     const create = vi.fn(async () => share());
-    const shareRepo = { create } as unknown as ISortResultShareRepository;
+    const shareRepo = { create } as unknown as SortResultShareRepository;
 
     await new SortResultShareService(
       shareRepo,
-      {} as unknown as ISortResultRepository,
-      {} as unknown as ISortResultItemRepository,
+      {} as unknown as SortResultRepository,
+      {} as unknown as SortResultItemRepository,
     ).createShare(RESULT_ID, 7);
 
     const arg = create.mock.calls[0][0];
@@ -92,12 +90,12 @@ describe("SortResultShareService.viewSharedResult", () => {
   it("viewSharedResult returns null for an unknown token", async () => {
     const shareRepo = {
       findByToken: async () => null,
-    } as unknown as ISortResultShareRepository;
+    } as unknown as SortResultShareRepository;
 
     const view = await new SortResultShareService(
       shareRepo,
-      {} as unknown as ISortResultRepository,
-      {} as unknown as ISortResultItemRepository,
+      {} as unknown as SortResultRepository,
+      {} as unknown as SortResultItemRepository,
     ).viewSharedResult("nope");
 
     expect(view).toBeNull();
@@ -106,12 +104,12 @@ describe("SortResultShareService.viewSharedResult", () => {
   it("viewSharedResult returns null for a revoked token", async () => {
     const shareRepo = {
       findByToken: async () => share({ status: "revoked" }),
-    } as unknown as ISortResultShareRepository;
+    } as unknown as SortResultShareRepository;
 
     const view = await new SortResultShareService(
       shareRepo,
-      {} as unknown as ISortResultRepository,
-      {} as unknown as ISortResultItemRepository,
+      {} as unknown as SortResultRepository,
+      {} as unknown as SortResultItemRepository,
     ).viewSharedResult("revoked-token");
 
     expect(view).toBeNull();
@@ -121,12 +119,12 @@ describe("SortResultShareService.viewSharedResult", () => {
     const shareRepo = {
       findByToken: async () =>
         share({ expiresAt: new Date(Date.now() - 1000) }),
-    } as unknown as ISortResultShareRepository;
+    } as unknown as SortResultShareRepository;
 
     const view = await new SortResultShareService(
       shareRepo,
-      {} as unknown as ISortResultRepository,
-      {} as unknown as ISortResultItemRepository,
+      {} as unknown as SortResultRepository,
+      {} as unknown as SortResultItemRepository,
     ).viewSharedResult("expired-token");
 
     expect(view).toBeNull();
@@ -135,10 +133,10 @@ describe("SortResultShareService.viewSharedResult", () => {
   it("viewSharedResult maps items to the public shape", async () => {
     const shareRepo = {
       findByToken: async () => share(),
-    } as unknown as ISortResultShareRepository;
+    } as unknown as SortResultShareRepository;
     const resultRepo = {
       findById: async () => sortResult({ name: "Spring sort" }),
-    } as unknown as ISortResultRepository;
+    } as unknown as SortResultRepository;
     const itemRepo = {
       findByResult: async () => [
         sortResultItem({
@@ -149,7 +147,7 @@ describe("SortResultShareService.viewSharedResult", () => {
           manualBucket: "high",
         }),
       ],
-    } as unknown as ISortResultItemRepository;
+    } as unknown as SortResultItemRepository;
 
     const view = await new SortResultShareService(
       shareRepo,
@@ -176,17 +174,17 @@ describe("SortResultShareService.isShareValid", () => {
   it("isShareValid false for revoked/expired, true otherwise", async () => {
     const validRepo = {
       findByToken: async () => share(),
-    } as unknown as ISortResultShareRepository;
+    } as unknown as SortResultShareRepository;
     const revokedRepo = {
       findByToken: async () => share({ status: "revoked" }),
-    } as unknown as ISortResultShareRepository;
+    } as unknown as SortResultShareRepository;
     const expiredRepo = {
       findByToken: async () =>
         share({ expiresAt: new Date(Date.now() - 1000) }),
-    } as unknown as ISortResultShareRepository;
+    } as unknown as SortResultShareRepository;
 
-    const noResult = {} as unknown as ISortResultRepository;
-    const noItem = {} as unknown as ISortResultItemRepository;
+    const noResult = {} as unknown as SortResultRepository;
+    const noItem = {} as unknown as SortResultItemRepository;
 
     expect(
       await new SortResultShareService(validRepo, noResult, noItem).isShareValid(

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Button, Input, ErrorMessage } from "@/components/ui";
+import posthog from "posthog-js";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -57,6 +58,7 @@ export default function SignupPage() {
       if (result?.error) {
         setError(result.error);
       } else if (result?.ok) {
+        posthog.capture('user_signed_up');
         router.push("/collections");
       }
     } catch (err) {

@@ -1,11 +1,10 @@
 import { eq, and } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { invitationsTable } from "@/lib/db/schema";
-import type { IInvitationRepository } from "../InvitationRepository";
 import type { Invitation } from "@/types";
 import { generateId } from "@/lib/id";
 
-export class InvitationRepository implements IInvitationRepository {
+export class InvitationRepository {
   constructor(private db: Database) {}
 
   async create(data: {

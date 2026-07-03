@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { SortResultItem } from "@/types";
-import type { ISortResultItemRepository } from "@/server/repositories/SortResultRepository";
 import type { Database } from "@/lib/db";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 
@@ -9,10 +8,9 @@ const UpdateResultItemSchema = z.object({
   manualBucket: z.enum(["top", "high", "medium", "low"]).optional(),
 });
 
-export type UpdateResultItemInput = z.infer<typeof UpdateResultItemSchema>;
 
 export class ResultItemController {
-  constructor(private resultItemRepo: ISortResultItemRepository) {}
+  constructor(private resultItemRepo: SortResultItemRepository) {}
 
   static fromDb(db: Database): ResultItemController {
     return new ResultItemController(new SortResultItemRepository(db));

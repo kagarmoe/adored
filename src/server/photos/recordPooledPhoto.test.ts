@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { recordPooledPhoto } from "./recordPooledPhoto";
-import type { IPhotoRepository } from "@/server/repositories/PhotoRepository";
+import type { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import type { Photo } from "@/types";
 
-function fakeRepo(): IPhotoRepository {
+function fakeRepo(): PhotoRepository {
   return {
     create: vi.fn(async (data): Promise<Photo> => ({
       id: "photo_x",
@@ -18,7 +18,7 @@ function fakeRepo(): IPhotoRepository {
     update: vi.fn(),
     softDelete: vi.fn(),
     clearHeroPhotos: vi.fn(),
-  } as unknown as IPhotoRepository;
+  } as unknown as PhotoRepository;
 }
 
 describe("recordPooledPhoto", () => {

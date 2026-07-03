@@ -5,6 +5,7 @@ import { MemberController } from "@/server/api/members";
 import { getDb } from "@/lib/db";
 import { errorResponse } from "@/server/api/http-errors";
 import { withTransaction } from "@/lib/transactions";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function GET() {
   try {
@@ -28,6 +29,13 @@ export async function POST(request: NextRequest) {
       await MemberController.fromDb(tx).addOwner(col.id, user.id);
       return col;
     });
+    const phClient = getPostHogClient();
+    phClient.capture({
+      distinctId: user.id,
+      event: 'collection_created',
+      properties: { collection_id: collection.id },
+    });
+    await phClient.flush();
     return NextResponse.json(collection, { status: 201 });
   } catch (error) {
     return errorResponse(error);

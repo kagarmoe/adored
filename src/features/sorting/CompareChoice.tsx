@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
 import { itemDisplayName, itemInitial } from "@/lib/items";
 import { Button, CardImage } from "@/components/ui";
+import posthog from "posthog-js";
 
 interface CompareChoiceProps {
   sessionId: string;
@@ -22,10 +23,22 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Idempotency key per in-flight decision, keyed by the choice ("a"/"b"/"tie"/
+  // "skip"). Generated ONCE when a tap starts and reused if that same tap is
+  // retried after a failure — so a timed-out-then-retried save returns the same
+  // event server-side instead of inserting a duplicate comparison. Cleared on
+  // success so a subsequent tap on the same card gets a fresh key.
+  //
+  // Keying by choice slot (not by pair) is safe ONLY because failure does not
+  // router.refresh() — the pair never advances on error, so a given slot key can
+  // only ever recur as the same-comparison retry, never as a new pair reusing a
+  // stale key. Success clears the key AND refreshes to the next pair together.
+  const clientKeys = useRef<Record<string, string>>({});
 
   async function choose(result: Result, key: string) {
     setPending(key);
     setError(null);
+    const clientKey = (clientKeys.current[key] ??= crypto.randomUUID());
     try {
       const res = await fetch(`/api/sessions/${sessionId}/decisions`, {
         method: "POST",
@@ -33,9 +46,19 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
         body: JSON.stringify({
           type: "pairwise_compare",
           decision: { itemAId: itemA.id, itemBId: itemB.id, result },
+          clientKey,
         }),
       });
       if (!res.ok) throw new Error("That didn't save. Try again.");
+      // Success — retire this tap's key so re-tapping the card is a NEW decision.
+      delete clientKeys.current[key];
+      posthog.capture('pairwise_decision_made', {
+        result,
+        session_id: sessionId,
+        item_a_id: itemA.id,
+        item_b_id: itemB.id,
+        comparisons_made: comparisonsMade + 1,
+      });
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "That didn't save. Try again.");

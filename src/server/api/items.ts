@@ -1,11 +1,10 @@
 import { z } from "zod";
 import type { Item } from "@/types";
-import type {
-  FindByCollectionOptions,
-  IItemRepository,
-} from "@/server/repositories/ItemRepository";
 import type { Database } from "@/lib/db";
-import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import {
+  ItemRepository,
+  type FindByCollectionOptions,
+} from "@/server/repositories/implementations/ItemRepository";
 
 const CreateItemSchema = z.object({
   name: z.string().min(1),
@@ -16,6 +15,7 @@ const CreateItemSchema = z.object({
   category: z.string().optional(),
   status: z.string().optional(),
   notes: z.string().optional(),
+  story: z.string().max(2000, "Story is too long").optional(),
 });
 
 const UpdateItemSchema = z.object({
@@ -27,13 +27,12 @@ const UpdateItemSchema = z.object({
   category: z.string().optional(),
   status: z.string().optional(),
   notes: z.string().optional(),
+  story: z.string().max(2000, "Story is too long").optional(),
 });
 
-export type CreateItemInput = z.infer<typeof CreateItemSchema>;
-export type UpdateItemInput = z.infer<typeof UpdateItemSchema>;
 
 export class ItemController {
-  constructor(private itemRepo: IItemRepository) {}
+  constructor(private itemRepo: ItemRepository) {}
 
   static fromDb(db: Database): ItemController {
     return new ItemController(new ItemRepository(db));
@@ -60,6 +59,7 @@ export class ItemController {
       category: parsed.category,
       status: parsed.status,
       notes: parsed.notes,
+      story: parsed.story,
     });
   }
 

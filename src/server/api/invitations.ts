@@ -1,10 +1,10 @@
 import { z } from "zod";
 import type { Invitation } from "@/types";
-import type { IInvitationRepository } from "@/server/repositories/InvitationRepository";
 import { randomBytes } from "crypto";
 import { normalizeEmail } from "@/lib/normalize-email";
 import type { Database } from "@/lib/db";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
+import { sendInvitation } from "@/lib/email";
 
 const CreateInvitationSchema = z.object({
   email: z.string().email(),
@@ -16,11 +16,9 @@ const CreateInvitationSchema = z.object({
 // a 400. (Flag columns/fields are dropped in the deferred contract migration.)
 const UpdateInvitationSchema = z.object({});
 
-export type CreateInvitationInput = z.infer<typeof CreateInvitationSchema>;
-export type UpdateInvitationInput = z.infer<typeof UpdateInvitationSchema>;
 
 export class InvitationController {
-  constructor(private invitationRepo: IInvitationRepository) {}
+  constructor(private invitationRepo: InvitationRepository) {}
 
   static fromDb(db: Database): InvitationController {
     return new InvitationController(new InvitationRepository(db));
@@ -48,6 +46,7 @@ export class InvitationController {
       email,
       token,
     });
+    await sendInvitation({ to: email, token });
     return { ...invitation, token };
   }
 
@@ -80,7 +79,7 @@ export class InvitationController {
     if (!invitation) {
       throw new Error("Invitation not found");
     }
-    // TODO: Send invitation email with token
+    await sendInvitation({ to: invitation.email, token: invitation.token });
     return { message: "Invitation resent" };
   }
 

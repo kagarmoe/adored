@@ -7,10 +7,6 @@ import { Button, Card } from "@/components/ui";
 interface SeeResultsCardProps {
   collectionId: string;
   collectionSlug: string;
-  // How many items the person has placed so far. Part of the trigger's contract
-  // (the parent only mounts the card when this is > 0); the copy stays
-  // count-free on purpose — affirming, never a tally — so it isn't surfaced.
-  bucketed: number;
 }
 
 // The reachable affordance that gathers what the person has chosen into one

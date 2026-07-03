@@ -10,6 +10,7 @@ import { EmptyState, buttonVariants } from "@/components/ui";
 import { ActiveSessionPanel } from "@/features/sessions/ActiveSessionPanel";
 import { PhotoPoolPreview } from "@/features/collections/PhotoPoolPreview";
 import { ItemPreviewGrid } from "@/features/collections/ItemPreviewGrid";
+import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { resolveWorkspaceState } from "@/features/collections/workspaceState";
 import { quietLink } from "@/lib/design/quiet-link";
 import Link from "next/link";
@@ -88,6 +89,8 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
             Created {new Date(collection.createdAt).toLocaleDateString()}
           </p>
         </header>
+
+        <WorkspaceModeChips base={base} activeMode="build" />
 
         {state.kind === "pool-first" && (
           <>
@@ -176,16 +179,6 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
               }
               resumeHref={resumeHref}
             />
-            <nav aria-label="Sorting and results" className="flex flex-wrap gap-3">
-              {!currentSession && (
-                <Link href={`${base}/sort`} className={quietLink}>
-                  Start sorting
-                </Link>
-              )}
-              <Link href={`${base}/results`} className={quietLink}>
-                Results
-              </Link>
-            </nav>
           </section>
         )}
 

@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { SortResultShare } from "@/types";
-import type { ISortResultShareRepository } from "@/server/repositories/SortResultShareRepository";
 import { randomBytes } from "crypto";
 import type { Database } from "@/lib/db";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
@@ -14,11 +13,9 @@ const UpdateShareSchema = z.object({
   expiresAt: z.string().datetime().optional(),
 });
 
-export type CreateShareInput = z.infer<typeof CreateShareSchema>;
-export type UpdateShareInput = z.infer<typeof UpdateShareSchema>;
 
 export class ShareController {
-  constructor(private shareRepo: ISortResultShareRepository) {}
+  constructor(private shareRepo: SortResultShareRepository) {}
 
   static fromDb(db: Database): ShareController {
     return new ShareController(new SortResultShareRepository(db));

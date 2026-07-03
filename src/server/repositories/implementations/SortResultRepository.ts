@@ -1,11 +1,10 @@
 import { eq, and, sql } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { sortResultsTable } from "@/lib/db/schema";
-import type { ISortResultRepository } from "../SortResultRepository";
 import type { SortResult } from "@/types";
 import { generateId } from "@/lib/id";
 
-export class SortResultRepository implements ISortResultRepository {
+export class SortResultRepository {
   constructor(private db: Database) {}
 
   // Single INSERT with a caller-supplied number; NO recompute, NO retry. The
@@ -112,6 +111,20 @@ export class SortResultRepository implements ISortResultRepository {
         ),
       );
     return result ? this.mapToResult(result) : null;
+  }
+
+  async findDrafts(collectionId: string, curatorId: string): Promise<SortResult[]> {
+    const rows = await this.db
+      .select()
+      .from(sortResultsTable)
+      .where(
+        and(
+          eq(sortResultsTable.collectionId, collectionId),
+          eq(sortResultsTable.curatorId, curatorId),
+          eq(sortResultsTable.status, "draft"),
+        ),
+      );
+    return rows.map((r) => this.mapToResult(r));
   }
 
   async update(id: string, data: Partial<SortResult>): Promise<SortResult> {

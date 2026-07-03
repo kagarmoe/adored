@@ -6,10 +6,13 @@ import { PreferenceController } from "@/server/api/preferences";
 import { ItemController } from "@/server/api/items";
 import { SessionController } from "@/server/api/sessions";
 import { DecisionController } from "@/server/api/decisions";
+import { DispositionController } from "@/server/api/dispositions";
 import { AppLayout } from "@/components/layout";
 import { Badge, Button, Card } from "@/components/ui";
 import { SessionAnalytics } from "@/features/sessions/SessionAnalytics";
 import { SeeResultsCard } from "@/features/sessions/SeeResultsCard";
+import { RecommendedRoundCard } from "@/features/sessions/RecommendedRoundCard";
+import { recommendNextRound } from "@/lib/next-round";
 import Link from "next/link";
 
 interface SessionPageProps {
@@ -44,21 +47,27 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
-  const [preferences, decisions] = await Promise.all([
+  const [preferences, decisions, dispositions] = await Promise.all([
     PreferenceController.fromDb(db).listItemPreferences(collection.id, sortSession.curatorId),
     DecisionController.fromDb(db).listBySession(sortSession.id),
+    DispositionController.fromDb(db).listDispositions(collection.id, sortSession.curatorId),
   ]);
 
-  const bucketCounts = {
-    top: preferences.filter((p) => p.rankBucket === "top").length,
-    high: preferences.filter((p) => p.rankBucket === "high").length,
-    medium: preferences.filter((p) => p.rankBucket === "medium").length,
-    low: preferences.filter((p) => p.rankBucket === "low").length,
-  };
+  // Gates the "See results" card: at least one item has been given a feeling.
+  const bucketed = preferences.length;
 
-  const bucketed = bucketCounts.top + bucketCounts.high + bucketCounts.medium + bucketCounts.low;
-  const remaining = items.length - bucketed;
-  const progress = items.length === 0 ? 0 : Math.round((bucketed / items.length) * 100);
+  // Derived, no schema: which round is a good next step. Reuses the same
+  // selectTriageItem / selectNextPair the rounds themselves use, so it can never
+  // disagree with what a round would actually show (TONE: a suggestion, not a tally).
+  const dispositionByItemId = new Map(dispositions.map((d) => [d.itemId, d.disposition]));
+  const nextRound = recommendNextRound({ items, preferences, decisions, dispositionByItemId });
+  const collectionHref = `/collections/${collection.slug ?? collection.id}`;
+  const nextRoundHref =
+    nextRound.kind === "triage"
+      ? `${collectionHref}/sort/${sortSession.number}/triage`
+      : nextRound.kind === "compare"
+        ? `${collectionHref}/sort/${sortSession.number}/compare`
+        : `${collectionHref}/results`;
 
   return (
     <AppLayout
@@ -78,41 +87,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
           </div>
         </div>
 
-        <Card padding="lg">
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-ink-soft mb-3">Progress</p>
-              <div className="h-3 overflow-hidden rounded-full bg-ground">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${progress}%` }} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <p className="text-ink-soft">Love</p>
-                <p className="text-lg font-bold text-ink">{bucketCounts.top}</p>
-              </div>
-              <div>
-                <p className="text-ink-soft">Like</p>
-                <p className="text-lg font-bold text-ink">{bucketCounts.high}</p>
-              </div>
-              <div>
-                <p className="text-ink-soft">Maybe</p>
-                <p className="text-lg font-bold text-ink">{bucketCounts.medium}</p>
-              </div>
-              <div>
-                <p className="text-ink-soft">Onward</p>
-                <p className="text-lg font-bold text-ink">{bucketCounts.low}</p>
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-hairline">
-              <p className="text-sm text-ink-soft">
-                {remaining} of {items.length} items left to triage
-              </p>
-            </div>
-          </div>
-        </Card>
+        <RecommendedRoundCard round={nextRound} href={nextRoundHref} />
 
         <div className="grid gap-4 md:grid-cols-2">
           <Link href={`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}/triage`}>
@@ -139,7 +114,6 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
           <SeeResultsCard
             collectionId={collection.id}
             collectionSlug={collection.slug ?? collection.id}
-            bucketed={bucketed}
           />
         )}
 

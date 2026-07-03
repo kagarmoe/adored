@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { CollectionMembership } from "@/types";
-import type { IMembershipRepository } from "@/server/repositories/MembershipRepository";
 import type { Database } from "@/lib/db";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 
@@ -8,10 +7,9 @@ const CreateMemberSchema = z.object({
   userId: z.string(),
 });
 
-export type CreateMemberInput = z.infer<typeof CreateMemberSchema>;
 
 export class MemberController {
-  constructor(private membershipRepo: IMembershipRepository) {}
+  constructor(private membershipRepo: MembershipRepository) {}
 
   static fromDb(db: Database): MemberController {
     return new MemberController(new MembershipRepository(db));

@@ -31,7 +31,7 @@ describe("InviteForm", () => {
     render(<InviteForm collectionId="coll_01ULID" onSuccess={onSuccess} />);
 
     fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
-    fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
 
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
@@ -51,7 +51,7 @@ describe("InviteForm", () => {
 
     // The form stays mounted alongside the success status, so the user can invite
     // again immediately — and the email field was cleared.
-    expect(screen.getByRole("button", { name: "Send invitation" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Send invite" })).toBeInTheDocument();
     expect(emailField()).toBeInTheDocument();
     expect(emailField().value).toBe("");
   });
@@ -64,7 +64,7 @@ describe("InviteForm", () => {
 
     render(<InviteForm collectionId="coll_01ULID" />);
     fireEvent.change(emailField(), { target: { value: "not-an-email" } });
-    fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
 
     expect(emailField().validity.typeMismatch).toBe(true);
     await waitFor(() => expect(fetch).not.toHaveBeenCalled());
@@ -76,7 +76,7 @@ describe("InviteForm", () => {
 
     render(<InviteForm collectionId="coll_01ULID" />);
     fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
-    fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
 
     // The live status region pre-exists (always mounted) so its text change is
     // announced reliably; on success it carries the confirmation text.
@@ -91,7 +91,7 @@ describe("InviteForm", () => {
 
       const { unmount } = render(<InviteForm collectionId="coll_01ULID" />);
       fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
-      fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
+      fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
 
       // Flush the awaited apiPost so success state — and its 3s auto-reset timer — is set.
       await act(async () => {
@@ -120,7 +120,7 @@ describe("InviteForm", () => {
 
     render(<InviteForm collectionId="coll_01ULID" />);
     fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
-    fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
 
     await waitFor(() =>
       expect(screen.getByText("You cannot invite members")).toBeInTheDocument(),

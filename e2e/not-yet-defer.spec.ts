@@ -138,7 +138,15 @@ test.describe("triage — 'Not yet' defer flow", () => {
     // total, a remaining count, or an "of N" backlog framing anywhere on the
     // page (TONE.md: no completion pressure, no pile). Assert the prohibited
     // shapes are absent in the page's text.
-    const body = await page.locator("body").innerText();
+    //
+    // The round-chrome step indicator's sr-only "Step 1 of 3" wayfinding (a
+    // three-step round arc, not a pile) is the one sanctioned "of N" — it names
+    // where you are in the round, never how many items remain. Strip it before
+    // the backlog-framing check so the guard still catches a real "of 3" total.
+    const body = (await page.locator("body").innerText()).replace(
+      /Step\s+\d+\s+of\s+\d+/gi,
+      "",
+    );
     expect(body).not.toMatch(/\bof\s+\d+\b/); // "of 3", "of 2" backlog framing
     expect(body).not.toMatch(/\bleft to triage\b/);
     expect(body).not.toMatch(/\bremaining\b/i);

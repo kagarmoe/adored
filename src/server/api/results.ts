@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { SortResult } from "@/types";
-import type { ISortResultRepository } from "@/server/repositories/SortResultRepository";
 import { FinalizeStateError } from "@/server/services/SortResultService";
 import type { Database } from "@/lib/db";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
@@ -9,17 +8,11 @@ const UpdateResultSchema = z.object({
   name: z.string().min(1).optional(),
 });
 
-export type UpdateResultInput = z.infer<typeof UpdateResultSchema>;
-
 export class ResultController {
-  constructor(private resultRepo: ISortResultRepository) {}
+  constructor(private resultRepo: SortResultRepository) {}
 
   static fromDb(db: Database): ResultController {
     return new ResultController(new SortResultRepository(db));
-  }
-
-  async listResults(collectionId: string): Promise<SortResult[]> {
-    return this.resultRepo.findByCollection(collectionId);
   }
 
   async getResult(resultId: string): Promise<SortResult> {

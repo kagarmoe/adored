@@ -10,6 +10,7 @@ import bcrypt from "bcryptjs";
 import { generateId } from "@/lib/id";
 import { env } from "@/lib/env";
 import { jwtCallback, sessionCallback } from "@/lib/auth-callbacks";
+import { sendMagicLink } from "@/lib/email";
 
 export const authOptions: NextAuthOptions = {
   secret: env.AUTH_SECRET,
@@ -75,10 +76,10 @@ export const authOptions: NextAuthOptions = {
           : undefined,
       },
       from: env.EMAIL_FROM,
+      // Delegate to the Resend helper, which handles the no-key dev-log
+      // fallback internally (and never logs the link outside development).
       sendVerificationRequest: async ({ identifier, url }) => {
-        if (env.NODE_ENV === "development") {
-          console.log(`[DEV MAGIC LINK] ${identifier}\n${url}`);
-        }
+        await sendMagicLink({ to: identifier, url });
       },
     }),
   ],

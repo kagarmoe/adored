@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { getPoolPhotoAssetUrl, PHOTO_WIDTH } from "@/lib/photos";
 import type { Photo } from "@/types";
-import { PoolActionBar } from "./PoolActionBar";
+import { PoolActionBar, type MoveDestination, type MoveTarget } from "./PoolActionBar";
 
 type PoolPhoto = Pick<Photo, "id" | "filename">;
 
@@ -14,9 +14,11 @@ function alt(filename: string): string {
 export function PoolPhotoGrid({
   collectionId,
   photos,
+  targets = [],
 }: {
   collectionId: string;
   photos: PoolPhoto[];
+  targets?: MoveTarget[];
 }) {
   const [pool, setPool] = useState<PoolPhoto[]>(photos);
   const [selected, setSelected] = useState<string[]>([]); // selection order: [0] becomes hero
@@ -37,7 +39,9 @@ export function PoolPhotoGrid({
 
   const clear = () => setSelected([]);
 
-  const makeItem = async () => {
+  // `mode: "each"` splits the selection into one item per photo; the default
+  // groups them all into a single item (whose number the success note surfaces).
+  const groupPool = async (mode?: "each") => {
     if (selected.length === 0 || busy) return;
     setBusy(true);
     setError(null);
@@ -46,7 +50,7 @@ export function PoolPhotoGrid({
       const res = await fetch(`/api/collections/${collectionId}/pool/group`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photoIds: selected }),
+        body: JSON.stringify(mode ? { photoIds: selected, mode } : { photoIds: selected }),
       });
       if (!res.ok) {
         throw new Error("group failed");
@@ -55,35 +59,50 @@ export function PoolPhotoGrid({
       const grouped = new Set(selected);
       setPool((prev) => prev.filter((p) => !grouped.has(p.id)));
       setSelected([]);
-      setNotice(`Your photos are grouped — find item #${data.number} in your items.`);
+      setNotice(
+        mode === "each"
+          ? "Your photos are now their own items — find them in your items."
+          : `Your photos are grouped — find item #${data.number} in your items.`,
+      );
     } catch {
-      setError("We couldn’t make that item just now — your photos are safe; try again.");
+      setError(
+        mode === "each"
+          ? "We couldn’t make those items just now — your photos are safe; try again."
+          : "We couldn’t make that item just now — your photos are safe; try again.",
+      );
     } finally {
       setBusy(false);
     }
   };
 
-  const makeEach = async () => {
+  const makeItem = () => groupPool();
+  const makeEach = () => groupPool("each");
+
+  const moveTo = async (dest: MoveDestination) => {
     if (selected.length === 0 || busy) return;
     setBusy(true);
     setError(null);
     setNotice(null);
     try {
-      const res = await fetch(`/api/collections/${collectionId}/pool/group`, {
+      const res = await fetch(`/api/collections/${collectionId}/photos/reassign`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photoIds: selected, mode: "each" }),
+        body: JSON.stringify({ photoIds: selected, destination: dest }),
       });
       if (!res.ok) {
-        throw new Error("group failed");
+        throw new Error("reassign failed");
       }
       await res.json();
-      const grouped = new Set(selected);
-      setPool((prev) => prev.filter((p) => !grouped.has(p.id)));
+      const moved = new Set(selected);
+      setPool((prev) => prev.filter((p) => !moved.has(p.id)));
       setSelected([]);
-      setNotice("Your photos are now their own items — find them in your items.");
+      setNotice(
+        dest.type === "new"
+          ? "Now their own item — find it in your items."
+          : "Moved — find them on that item.",
+      );
     } catch {
-      setError("We couldn’t make those items just now — your photos are safe; try again.");
+      setError("We couldn’t move those just now — your photos are safe; try again.");
     } finally {
       setBusy(false);
     }
@@ -102,7 +121,7 @@ export function PoolPhotoGrid({
         </p>
       )}
 
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+      <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
         {pool.map((p) => {
           const isSelected = selected.includes(p.id);
           return (
@@ -111,8 +130,8 @@ export function PoolPhotoGrid({
               type="button"
               aria-pressed={isSelected}
               onClick={() => toggle(p.id)}
-              className={`relative aspect-square min-h-11 overflow-hidden rounded-lg bg-surface-raised outline-none transition focus-visible:ring-2 focus-visible:ring-primary ${
-                isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-surface" : ""
+              className={`relative aspect-square min-h-11 overflow-hidden rounded-lg border-2 bg-surface-raised outline-none transition focus-visible:ring-2 focus-visible:ring-primary ${
+                isSelected ? "border-primary" : "border-transparent"
               }`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -125,7 +144,7 @@ export function PoolPhotoGrid({
               {isSelected && (
                 <span
                   aria-hidden
-                  className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-sm text-primary-ink shadow"
+                  className="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-sm text-primary-ink shadow"
                 >
                   ✓
                 </span>
@@ -140,8 +159,10 @@ export function PoolPhotoGrid({
       <PoolActionBar
         count={selected.length}
         busy={busy}
+        targets={targets}
         onMakeItem={makeItem}
         onMakeEach={makeEach}
+        onMove={moveTo}
         onClear={clear}
       />
     </div>

@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { User } from "@/types";
-import type { IUserRepository } from "@/server/repositories/UserRepository";
 import type { Database } from "@/lib/db";
 import { AccountDeletionService } from "@/server/services/AccountDeletionService";
 import { UserRepository } from "@/server/repositories/implementations/UserRepository";
@@ -10,11 +9,10 @@ const UpdateUserSchema = z.object({
   name: z.string().trim().max(80).optional(),
 });
 
-export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 
 export class UserController {
   constructor(
-    private userRepo: IUserRepository,
+    private userRepo: UserRepository,
     private db: Database,
   ) {}
 

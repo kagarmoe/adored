@@ -10,6 +10,7 @@ import { DispositionController } from "@/server/api/dispositions";
 import { AppLayout } from "@/components/layout";
 import { EmptyState } from "@/components/ui";
 import { CompareChoice } from "@/features/sorting/CompareChoice";
+import { RoundSurface } from "@/features/sorting/RoundSurface";
 import { TakeABreakControl } from "@/features/sorting/TakeABreakControl";
 import { selectNextPair } from "@/lib/pairwise-selection";
 import { PhotoController } from "@/server/api/photos";
@@ -81,19 +82,15 @@ export default async function ComparePage({ params }: ComparePageProps) {
     );
   }
 
-  const decidedPairs = new Set(
-    decisions
-      .filter((d) => d.type === "pairwise_compare")
-      .map((d) => {
-        const decision = d.decision as any;
-        return `${decision.itemAId}-${decision.itemBId}`;
-      })
-  );
+  // Gentle, non-gamified count of comparisons MADE (never a remaining/total ceiling).
+  // Computed before the branch so it survives into the completion state — the "all
+  // comparisons complete" screen still affirms the work done, not just an empty end.
+  const comparisonsMade = decisions.filter((d) => d.type === "pairwise_compare").length;
 
   const pair = selectNextPair({
     preferences,
     items,
-    decidedPairs,
+    decisions,
     dispositionByItemId,
   });
 
@@ -112,6 +109,11 @@ export default async function ComparePage({ params }: ComparePageProps) {
           heading="All comparisons complete"
           message="You&apos;ve compared all meaningful pairs. Check your results!"
         />
+        {comparisonsMade > 0 && (
+          <p className="mt-4 text-center text-sm text-ink-soft">
+            {comparisonsMade} {comparisonsMade === 1 ? "comparison" : "comparisons"} made so far
+          </p>
+        )}
       </AppLayout>
     );
   }
@@ -122,7 +124,6 @@ export default async function ComparePage({ params }: ComparePageProps) {
   const coverB = covers.get(itemB.id);
   const heroA = coverA ? getPhotoAssetUrlForPhoto(coverA, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
   const heroB = coverB ? getPhotoAssetUrlForPhoto(coverB, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
-  const comparisonsMade = decisions.filter((d) => d.type === "pairwise_compare").length;
 
   return (
     <AppLayout
@@ -134,25 +135,33 @@ export default async function ComparePage({ params }: ComparePageProps) {
       ]}
       actions={breakAction}
     >
-      <div className="mx-auto max-w-2xl space-y-6">
-        <div>
-          <h1 className="text-3xl text-ink">Which do you love more?</h1>
-          <p className="mt-2 text-ink-soft">Tap the one you love more. Tie or skip whenever you like.</p>
-        </div>
+      <RoundSurface
+        step={2}
+        totalSteps={3}
+        roundLabel="Comparing"
+        decisions={decisions}
+        hubHref={`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}`}
+      >
+        <div className="mx-auto max-w-2xl space-y-6">
+          <div>
+            <h1 className="text-3xl text-ink">Which do you reach for more?</h1>
+            <p className="mt-2 text-ink-soft">Tap the one you&apos;d keep. Tie or skip whenever you like.</p>
+          </div>
 
-        {!itemA || !itemB ? (
-          <EmptyState heading="Need at least two items" message="Add more items to use pairwise comparison" />
-        ) : (
-          <CompareChoice
-            sessionId={sortSession.id}
-            itemA={itemA}
-            itemB={itemB}
-            heroA={heroA}
-            heroB={heroB}
-            comparisonsMade={comparisonsMade}
-          />
-        )}
-      </div>
+          {!itemA || !itemB ? (
+            <EmptyState heading="Need at least two items" message="Add more items to use pairwise comparison" />
+          ) : (
+            <CompareChoice
+              sessionId={sortSession.id}
+              itemA={itemA}
+              itemB={itemB}
+              heroA={heroA}
+              heroB={heroB}
+              comparisonsMade={comparisonsMade}
+            />
+          )}
+        </div>
+      </RoundSurface>
     </AppLayout>
   );
 }

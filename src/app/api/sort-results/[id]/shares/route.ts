@@ -4,6 +4,7 @@ import { ShareController } from "@/server/api/shares";
 import { getDb } from "@/lib/db";
 import { requireApiResultAccess } from "@/server/dal/collection-access";
 import { errorResponse } from "@/server/api/http-errors";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function GET(
   _request: NextRequest,
@@ -34,6 +35,13 @@ export async function POST(
     if (access instanceof NextResponse) return access;
     const body = await request.json();
     const share = await ShareController.fromDb(db).createShare(params.id, body);
+    const phClient = getPostHogClient();
+    phClient.capture({
+      distinctId: user.id,
+      event: 'sort_result_shared',
+      properties: { result_id: params.id, share_id: share.id },
+    });
+    await phClient.flush();
     return NextResponse.json(share, { status: 201 });
   } catch (error) {
     return errorResponse(error);

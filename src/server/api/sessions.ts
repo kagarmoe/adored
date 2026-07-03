@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { Session } from "@/types";
-import type { ISessionRepository } from "@/server/repositories/SessionRepository";
 import type { Database } from "@/lib/db";
 import {
   SessionRepository,
@@ -16,8 +15,6 @@ const UpdateSessionSchema = z.object({
   goal: z.string().optional(),
 });
 
-export type CreateSessionInput = z.infer<typeof CreateSessionSchema>;
-export type UpdateSessionInput = z.infer<typeof UpdateSessionSchema>;
 
 // Defined in the repository (where the unique-violation is caught) to keep the
 // api -> repo dependency direction clean; re-exported here for route callers
@@ -25,7 +22,7 @@ export type UpdateSessionInput = z.infer<typeof UpdateSessionSchema>;
 export { CurrentSessionExistsError };
 
 export class SessionController {
-  constructor(private sessionRepo: ISessionRepository) {}
+  constructor(private sessionRepo: SessionRepository) {}
 
   static fromDb(db: Database): SessionController {
     return new SessionController(new SessionRepository(db));

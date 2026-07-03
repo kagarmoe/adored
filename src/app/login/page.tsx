@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Input, ErrorMessage } from "@/components/ui";
+import posthog from "posthog-js";
 
 function LoginContent() {
   const router = useRouter();
@@ -32,6 +33,7 @@ function LoginContent() {
       if (result?.error) {
         setError(result.error);
       } else if (result?.ok) {
+        posthog.capture('user_logged_in', { method: 'password' });
         router.push(callbackUrl);
       }
     } catch (err) {
@@ -93,12 +95,12 @@ function LoginContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-ground p-4">
-      <div className="max-w-sm w-full bg-surface rounded-card shadow-raised p-8">
-        <h1 className="text-3xl font-medium tracking-tight text-center text-ink mb-2">
+      <div className="w-full max-w-[420px] bg-surface rounded-card shadow-card p-8">
+        <h1 className="font-display font-bold text-[2rem] tracking-tight text-center text-ink mb-2">
           Adored
         </h1>
         <p className="text-center text-ink-soft mb-8">
-          for the things you love
+          Find the things you love.
         </p>
 
         {error && <ErrorMessage message={error} />}
@@ -141,7 +143,7 @@ function LoginContent() {
           onClick={handleMagicLink}
           disabled={loading || !email}
         >
-          Email me a magic link
+          Email me a sign-in link
         </Button>
 
         <p className="text-center text-sm text-ink-soft mt-6">
