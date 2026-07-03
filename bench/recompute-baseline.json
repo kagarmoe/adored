@@ -1,0 +1,21 @@
+{
+  "description": "ADVISORY sort-recompute baseline. Local Docker Postgres p95 ≠ Neon prod p95; this gate flags an ALGORITHMIC shape regression (compare p95 doubling at fixed items), not absolute prod latency. Re-baseline only on a deliberate algorithm change.",
+  "items": 100,
+  "generatedAt": "2026-07-03T03:04:32.348Z",
+  "compare": {
+    "n": 480,
+    "total": 9681.530048000015,
+    "mean": 20.169854266666697,
+    "p50": 19.8370419999992,
+    "p95": 25.43366700000115,
+    "max": 42.46887500000048
+  },
+  "triage": {
+    "n": 100,
+    "total": 1243.4005769999994,
+    "mean": 12.434005769999994,
+    "p50": 12.137874999999894,
+    "p95": 17.472457999999733,
+    "max": 25.530625000000327
+  }
+}

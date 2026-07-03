@@ -24,7 +24,8 @@
     "db:backfill-slugs": "node -r esbuild-register scripts/backfill-collection-slugs.ts",
     "db:backfill-numbers": "node -r esbuild-register scripts/backfill-session-result-numbers.ts",
     "auth:verify": "node -r ./scripts/load-env.js scripts/verify-auth.ts",
-    "seed:load": "node -r esbuild-register scripts/seed-load.ts"
+    "seed:load": "node -r esbuild-register scripts/seed-load.ts",
+    "bench:recompute": "node -r esbuild-register scripts/bench-recompute.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.2.0",
