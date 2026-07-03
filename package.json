@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "dev:tutorial": "(sleep 3 && (open http://localhost:3000/tutorial || xdg-open http://localhost:3000/tutorial || true) &) ; next dev",
     "build": "next build",
     "vercel-build": "npm run db:migrate && npm run db:backfill-numbers && next build",
     "start": "next start",
