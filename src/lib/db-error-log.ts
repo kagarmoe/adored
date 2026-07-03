@@ -1,4 +1,5 @@
 import { getPostHogClient } from "@/lib/posthog-server";
+import { scheduleWaitUntil } from "@/lib/wait-until";
 
 // Production DB failure sink. Motivated by the compare-save bug: a transaction
 // rolled back on timeout, the route returned 500, but nothing logged WHY — no
@@ -78,6 +79,9 @@ export function logDbError(op: string, ctx: DbErrorContext, error: unknown): voi
       event: "db_action_failed",
       properties: { op, code, class: errClass },
     });
+    // Guarantee delivery across a serverless freeze: flush AFTER the response
+    // via waitUntil (no hot-path latency). flush() keeps the singleton alive.
+    scheduleWaitUntil(phClient.flush());
   } catch {
     // Swallow: the logging path is best-effort observation. The caller's error
     // handling (throw / 500) is unaffected.
