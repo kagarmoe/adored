@@ -188,6 +188,11 @@ jobs:
               - 'next.config.mjs'
               - 'e2e/**'
               - 'playwright.config.ts'
+              # A framework/dep bump (e.g. `next`) changes only these files but
+              # can affect what ships to the browser (Next/React/middleware), so
+              # it must still get e2e validation (purses-966p).
+              - 'package.json'
+              - 'package-lock.json'
             # The sort-recompute hot path — the ONLY thing the advisory bench
             # cares about. Keep in sync with scripts/bench-recompute.ts.
             hot:

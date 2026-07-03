@@ -7,7 +7,7 @@ A full-featured web application for managing collections and sorting items throu
 ## Features
 
 - **Collections Management** — Create and manage curated collections with team members
-- **Permission-Based Authorization** — Fine-grained, boolean-flag permissions (not roles)
+- **Role-Based Authorization** — Two derived roles (owner + curator) enforced at a single DAL capability chokepoint
 - **Photo Management** — Upload and manage item photos with hero photo support
 - **Preference Sorting** — Multi-phase sorting sessions (triage → pairwise → results)
 - **Decision Tracking** — Append-only decision events as source of truth
@@ -19,7 +19,7 @@ A full-featured web application for managing collections and sorting items throu
 
 ### Prerequisites
 
-- **Node.js 20+**
+- **Node.js 22+** (`engines` requires `>=22.12`)
 - **PostgreSQL 14+** (local or Docker)
 
 ### Setup
@@ -44,9 +44,12 @@ A full-featured web application for managing collections and sorting items throu
    AUTH_URL=http://localhost:3000
    AUTH_SECRET=$(openssl rand -base64 32)
    EMAIL_FROM=noreply@localhost
+   # Optional locally — each degrades gracefully when unset:
+   RESEND_API_KEY=            # transactional email (magic-link + invites); unset → dev logs the link
+   NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=  # analytics + DB observability; unset → capture is skipped
    ```
 
-   > Auth uses the Vercel-style `AUTH_URL`/`AUTH_SECRET` names; `src/lib/env.ts` validates these and bridges them to NextAuth v4's internal `NEXTAUTH_URL`/`NEXTAUTH_SECRET` at runtime. Do **not** put Vercel system vars (`VERCEL`, `VERCEL_ENV`, …) in `.env.local` — see the `__Secure-` cookie note in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+   > Auth uses the Vercel-style `AUTH_URL`/`AUTH_SECRET` names; `src/lib/env.ts` validates these and bridges them to NextAuth v4's internal `NEXTAUTH_URL`/`NEXTAUTH_SECRET` at runtime. Do **not** put Vercel system vars (`VERCEL`, `VERCEL_ENV`, …) in `.env.local` — see the `__Secure-` cookie note in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). For the full operator variable list, see [docs/runbooks/setup-checklist.md](docs/runbooks/setup-checklist.md).
 
 3. **Set up PostgreSQL database:**
    ```bash
@@ -80,26 +83,45 @@ A full-featured web application for managing collections and sorting items throu
 
 ### Development Commands
 
-- `npm run dev` — Start Next.js dev server with hot reload
-- `npm run build` — Build for production
-- `npm start` — Run production build
-- `npm run lint` — Run ESLint
-- `npm test` — Run Vitest unit tests
-- `npm run test:ui` — Run Vitest with UI
-- `npm run db:generate` — Generate database migrations from schema
+**App**
+- `npm run dev` — Start the Next.js dev server with hot reload
+- `npm run dev:tutorial` — Open the onboarding walkthrough at `/tutorial` for local preview/iteration (dev-only)
+- `npm run build` — Build for production (`next build`)
+- `npm start` — Run the production build (`next start`)
+- `npm run lint` — Run ESLint over `.ts`/`.tsx`
+
+**Testing**
+- `npm test` — Run Vitest unit tests (watch mode)
+- `npm run test:ci` — Run Vitest once, non-interactive (`vitest run --passWithNoTests`)
+- `npm run test:db` — Run the DB-backed integration tests (Docker Postgres; `RUN_DB_TESTS=1`)
+- `npm run test:ui` — Run Vitest with the browser UI
+- `npm run test:e2e` — Run the Playwright end-to-end suite
+- `npm run test:e2e:ui` — Run Playwright with the interactive UI runner
+- `npm run test:e2e:report` — Open the last Playwright HTML report
+- `npm run screenshots` — Capture UI screenshots via the Playwright screenshots config
+
+**Database**
+- `npm run db:generate` — Generate Drizzle migrations from the schema
 - `npm run db:migrate` — Apply pending migrations
+- `npm run db:backfill-slugs` — Backfill collection slugs on existing rows
+- `npm run db:backfill-numbers` — Backfill sequential session/result numbers
+
+**Utilities**
+- `npm run auth:verify` — Verify the auth env/config wiring
+- `npm run seed:load` — Load demo/seed data into the database
+- `npm run bench:recompute` — Benchmark the preference-recompute path
 
 ### Testing Features Locally
 
 **Sign In:**
-- Click "Sign In" → enter any email
-- In development, the email provider uses your EMAIL_FROM setting
-- For real email, configure SMTP via environment variables (Resend recommended)
+- Email + password is the primary sign-in; a passwordless magic-link is also available
+- Transactional email is sent via Resend (`src/lib/email.ts`) — set `RESEND_API_KEY` to send for real
+- With no key in development, the magic-link / invite URL is logged to the server console so you can click it locally
 
 **Photos:**
-- Blob storage configured for Vercel but disabled in local dev
-- Photos upload to `public/uploads/` directory locally
-- Set `BLOB_READ_WRITE_TOKEN` to enable Vercel Blob in production
+- Storage is Vercel Blob — set `BLOB_READ_WRITE_TOKEN` to enable uploads
+- With no Blob token in dev, a fallback serves the committed seed/demo images from `e2e/fixtures/demo-images/` (see `src/lib/photo-serving.ts`); real uploads require the token
+- Images are resized on demand and re-encoded to WebP via `sharp`
 
 **Invitations:**
 - Create collection → Members tab → Invite by email
@@ -147,9 +169,10 @@ src/
 - Domain types in `src/types/domain.ts`
 
 **Authentication:**
-- NextAuth v4 — **email + password (Credentials)** is the primary sign-in; an email magic-link provider also exists (the production magic-link send is not yet wired — dev logs the link to the console)
+- NextAuth v4 — **email + password (Credentials)** is the primary sign-in; an email **magic-link** provider is also wired, sending via Resend (`src/lib/email.ts`; set `RESEND_API_KEY`)
 - JWT session strategy (not database sessions)
-- Permission checks via `usePermissions()` hook
+- Authorization is enforced at the **DAL capability chokepoint** (`requireApiCapability`), not a client hook — see the Permissions section below
+- A migration to [better-auth](https://www.better-auth.com/) (email + Google + magic-link) is planned (bead `purses-74tx`) but not yet done
 
 **UI:**
 - Tailwind CSS for styling
@@ -159,11 +182,11 @@ src/
 
 ## Database Schema
 
-The Drizzle schema (`src/lib/db/schema.ts`) defines 16 tables. The core domain tables:
+The Drizzle schema (`src/lib/db/schema.ts`) defines 17 tables. The core domain tables:
 - **collections** — Curated collections with metadata
 - **items** — Collection items (handbags, shoes, etc.)
 - **photos** — Item photos with hero photo support
-- **memberships** — Collection team members with 9 permission flags
+- **memberships** — Collection team members; a `role` label column (owner/curator is derived, not stored as flags — see Permissions)
 - **sessions** — Sorting sessions with decision tracking
 - **decision_events** — Append-only decision events (triage, pairwise)
 - **item_dispositions** — per-curator triage shelving (`set_aside` / `deferred`); parks an untriaged item out of the sort queue
@@ -176,16 +199,14 @@ All tables include soft-delete support (`deletedAt` column) for data safety.
 
 ## Permissions
 
-9 granular boolean flags (not roles), on the `memberships` table:
-- `canManageCollection` — Full collection management
-- `canInviteMembers` — Invite new members
-- `canAddItems` — Add items to collection
-- `canEditMetadata` — Edit item metadata
-- `canAddPhotos` — Upload item photos
-- `canDeletePhotos` — Delete photos
-- `canSort` — Participate in sort sessions
-- `canViewOutputs` — View final results
-- `canDeleteItems` — Delete items from collection
+**Two roles, owner + curator, both derived (never stored as authorization state):**
+
+- **owner** — the caller iff `collection.ownerId === userId`
+- **curator** — the caller has a membership row for the collection (`membership.role` is a display label only; it is never read for authorization)
+
+Authorization is a compile-exhaustive `CAPABILITIES: Record<Operation, Role>` map (`src/server/dal/capabilities.ts`) enforced at a **single chokepoint**, `requireApiCapability` (`src/server/dal/collection-access.ts`): resolve the collection → derive the effective role → look up the operation's required role → allow or return a 403/404. `owner` satisfies every operation; `curator` satisfies only curator-level ones.
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (decision 17) and [docs/teaching/authorization.md](docs/teaching/authorization.md) for the full model.
 
 ## Deployment
 
@@ -200,7 +221,11 @@ The app is optimized for Vercel with native integrations:
    AUTH_URL=https://yourdomain.vercel.app
    AUTH_SECRET=<generated-secret>
    BLOB_READ_WRITE_TOKEN=<vercel-blob-token>
+   RESEND_API_KEY=<resend-api-key>                     # transactional email
+   NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=<posthog-token>   # analytics + DB observability
    ```
+
+   See [docs/runbooks/setup-checklist.md](docs/runbooks/setup-checklist.md) for the full operator variable list.
 3. **Deploy** — Vercel auto-detects Next.js and builds
 
 ### Self-Hosted
@@ -211,9 +236,8 @@ The app is optimized for Vercel with native integrations:
 
 ## Known Limitations
 
-- **Email Provider:** Configure via environment variables or use Resend
-- **Photo Storage:** Vercel Blob in production; local file system in dev
-- **Blob Token:** Leave empty in local dev to skip photo uploads
+- **Email Provider:** Sends via Resend (`RESEND_API_KEY`); with no key, dev logs the link to the console
+- **Photo Storage:** Vercel Blob (`BLOB_READ_WRITE_TOKEN`); with no token, dev serves the seed/demo fixtures from `e2e/fixtures/demo-images/` — real uploads require the token
 
 ## Contributing
 
@@ -230,8 +254,11 @@ The app is optimized for Vercel with native integrations:
 - **Auth:** NextAuth v4
 - **Styling:** Tailwind CSS + CVA
 - **Validation:** Zod
-- **Testing:** Vitest
+- **Testing:** Vitest (unit + DB integration) + Playwright (e2e, with axe-core a11y)
 - **Blob Storage:** Vercel Blob
+- **Image Processing:** sharp (on-demand resize → WebP)
+- **Email:** Resend (transactional)
+- **Analytics & Observability:** PostHog (product analytics + DB observability), Vercel Analytics + Speed Insights
 - **ID Generation:** ULID
 
 ## License
