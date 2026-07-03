@@ -38,7 +38,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       event: 'invitation_sent',
       properties: { collection_id: params.id, invitation_id: invitation.id },
     });
-    await phClient.shutdown();
+    await phClient.flush();
     return NextResponse.json(invitation, { status: 201 });
   } catch (error) {
     return errorResponse(error);
