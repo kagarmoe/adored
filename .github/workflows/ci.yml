@@ -169,6 +169,7 @@ jobs:
       pull-requests: read
     outputs:
       ui: ${{ steps.filter.outputs.ui }}
+      hot: ${{ steps.filter.outputs.hot }}
     steps:
       - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v4
@@ -187,6 +188,15 @@ jobs:
               - 'next.config.mjs'
               - 'e2e/**'
               - 'playwright.config.ts'
+            # The sort-recompute hot path — the ONLY thing the advisory bench
+            # cares about. Keep in sync with scripts/bench-recompute.ts.
+            hot:
+              - 'src/server/services/**'
+              - 'src/lib/insertion-ranking.ts'
+              - 'src/lib/db/**'
+              - 'scripts/seed-load.ts'
+              - 'scripts/seed-load-core.ts'
+              - 'scripts/bench-recompute.ts'
 
   # E2E only runs when `changes` says the UI moved. When it doesn't, this job is
   # skipped — which GitHub reports as success, so it can be a REQUIRED check
@@ -251,6 +261,54 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # ADVISORY sort-recompute benchmark. Runs ONLY when the hot path moves (the
+  # `changes` filter `hot`), against the same postgres:16 service the db-tests
+  # job uses. It is NEVER a merge blocker:
+  #   * the script ALWAYS exits 0 (advisory-by-design), AND
+  #   * continue-on-error keeps a red step from failing the job.
+  # It catches an ALGORITHMIC shape regression (compare-phase p95 doubling at a
+  # fixed item count) — NOT absolute prod latency (local Docker p95 ≠ Neon p95).
+  # DO NOT add this job to main's required status checks / branch protection.
+  bench:
+    name: Recompute bench (advisory)
+    needs: changes
+    if: needs.changes.outputs.hot == 'true'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: app_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d app_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply schema
+        run: npm run db:migrate
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/app_test
+
+      - name: Run advisory recompute benchmark (check mode)
+        run: npm run bench:recompute -- --items=100
+        env:
+          DATABASE_URL_TEST: postgresql://postgres:test@localhost:5432/app_test
 
   # Publish the reports dashboard to the gh-pages branch (main only). Plain git
   # push with the built-in GITHUB_TOKEN — no third-party Pages action. Coverage
