@@ -15,7 +15,7 @@
  * USAGE (run against the LOCAL test DB — see the guard below):
  *
  *   DATABASE_URL_TEST=postgresql://postgres:test@localhost:5433/app_test \
- *     node -r esbuild-register scripts/seed-load.ts [flags]
+ *     tsx scripts/seed-load.ts [flags]
  *
  *   npm run seed:load -- [flags]              # wires the same, default local URL
  *
@@ -108,7 +108,7 @@ function printHelpAndExit(): never {
   // eslint-disable-next-line no-console
   console.log(
     `seed-load — demo data + sort-recompute timing (LOCAL DB ONLY)\n\n` +
-      `  node -r esbuild-register scripts/seed-load.ts [--collections=2] [--items=15]\n` +
+      `  tsx scripts/seed-load.ts [--collections=2] [--items=15]\n` +
       `    [--owner-email=demo-seed@adored.test] [--sort] [--reset]\n\n` +
       `  npm run seed:load -- --items=100 --sort\n`,
   );
