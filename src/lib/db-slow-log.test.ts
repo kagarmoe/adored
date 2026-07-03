@@ -6,13 +6,18 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 // a BUCKETED ms only (never the raw ms — high cardinality), and (3) NEVER
 // throw — a telemetry failure can't be allowed to break or slow the request.
 
-const { mockCapture, mockShutdown } = vi.hoisted(() => ({
+const { mockCapture, mockFlush, mockSchedule } = vi.hoisted(() => ({
   mockCapture: vi.fn(),
-  mockShutdown: vi.fn().mockResolvedValue(undefined),
+  mockFlush: vi.fn().mockResolvedValue(undefined),
+  mockSchedule: vi.fn(),
 }));
 
 vi.mock("@/lib/posthog-server", () => ({
-  getPostHogClient: () => ({ capture: mockCapture, shutdown: mockShutdown }),
+  getPostHogClient: () => ({ capture: mockCapture, flush: mockFlush }),
+}));
+
+vi.mock("@/lib/wait-until", () => ({
+  scheduleWaitUntil: mockSchedule,
 }));
 
 import { logDbSlow, bucketMs, SLOW_OP_THRESHOLD_MS } from "./db-slow-log";
@@ -120,6 +125,37 @@ describe("logDbSlow — PostHog db_action_slow event (op + ms_bucket ONLY)", () 
   it("falls back to distinctId 'system' when there is no curatorId", () => {
     logDbSlow("materialize_result", 1200, {});
     expect(mockCapture.mock.calls[0][0].distinctId).toBe("system");
+  });
+});
+
+describe("logDbSlow — schedules a post-response flush (serverless freeze safety)", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  it("schedules flush() via scheduleWaitUntil so the event survives a freeze", () => {
+    const flushPromise = Promise.resolve();
+    mockFlush.mockReturnValueOnce(flushPromise);
+
+    logDbSlow("record_decision", 1500, { curatorId: "usr_1" });
+
+    expect(mockFlush).toHaveBeenCalledTimes(1);
+    expect(mockSchedule).toHaveBeenCalledTimes(1);
+    expect(mockSchedule).toHaveBeenCalledWith(flushPromise);
+  });
+
+  it("never throws even if scheduleWaitUntil throws", () => {
+    mockSchedule.mockImplementationOnce(() => {
+      throw new Error("waitUntil exploded");
+    });
+    expect(() => logDbSlow("record_decision", 1500, { curatorId: "usr_1" })).not.toThrow();
+  });
+
+  it("never throws even if flush() throws synchronously", () => {
+    mockFlush.mockImplementationOnce(() => {
+      throw new Error("flush exploded");
+    });
+    expect(() => logDbSlow("record_decision", 1500, { curatorId: "usr_1" })).not.toThrow();
   });
 });
 

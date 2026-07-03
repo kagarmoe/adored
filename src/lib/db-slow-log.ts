@@ -1,4 +1,5 @@
 import { getPostHogClient } from "@/lib/posthog-server";
+import { scheduleWaitUntil } from "@/lib/wait-until";
 import type { DbErrorContext } from "@/lib/db-error-log";
 
 // Production DB LATENCY sink — the success-path mirror of logDbError. Where
@@ -42,6 +43,9 @@ export function logDbSlow(op: string, ms: number, ctx: DbErrorContext): void {
       event: "db_action_slow",
       properties: { op, ms_bucket: bucketMs(ms) },
     });
+    // Guarantee delivery across a serverless freeze: flush AFTER the response
+    // via waitUntil (no hot-path latency). flush() keeps the singleton alive.
+    scheduleWaitUntil(phClient.flush());
   } catch {
     // Swallow: the telemetry path is best-effort observation.
   }

@@ -5,13 +5,18 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 // (3) capture a PostHog db_action_failed event with no PII, and (4) NEVER
 // throw — a logging failure can't be allowed to mask the caller's real error.
 
-const { mockCapture, mockShutdown } = vi.hoisted(() => ({
+const { mockCapture, mockFlush, mockSchedule } = vi.hoisted(() => ({
   mockCapture: vi.fn(),
-  mockShutdown: vi.fn().mockResolvedValue(undefined),
+  mockFlush: vi.fn().mockResolvedValue(undefined),
+  mockSchedule: vi.fn(),
 }));
 
 vi.mock("@/lib/posthog-server", () => ({
-  getPostHogClient: () => ({ capture: mockCapture, shutdown: mockShutdown }),
+  getPostHogClient: () => ({ capture: mockCapture, flush: mockFlush }),
+}));
+
+vi.mock("@/lib/wait-until", () => ({
+  scheduleWaitUntil: mockSchedule,
 }));
 
 import { logDbError, classifyDbError } from "./db-error-log";
@@ -131,6 +136,44 @@ describe("logDbError — PostHog db_action_failed event", () => {
   it("falls back to distinctId 'system' when there is no curatorId", () => {
     logDbError("transaction", {}, pgError("08006"));
     expect(mockCapture.mock.calls[0][0].distinctId).toBe("system");
+  });
+});
+
+describe("logDbError — schedules a post-response flush (serverless freeze safety)", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  it("schedules flush() via scheduleWaitUntil so the event survives a freeze", () => {
+    const flushPromise = Promise.resolve();
+    mockFlush.mockReturnValueOnce(flushPromise);
+
+    logDbError("record_decision", { curatorId: "usr_1" }, pgError("23505"));
+
+    // capture then flush — flush is what guarantees delivery after the response.
+    expect(mockFlush).toHaveBeenCalledTimes(1);
+    // The flush promise is handed to the waitUntil wrapper, NOT awaited inline
+    // (no added latency on the hot path).
+    expect(mockSchedule).toHaveBeenCalledTimes(1);
+    expect(mockSchedule).toHaveBeenCalledWith(flushPromise);
+  });
+
+  it("never throws even if scheduleWaitUntil throws", () => {
+    mockSchedule.mockImplementationOnce(() => {
+      throw new Error("waitUntil exploded");
+    });
+    expect(() =>
+      logDbError("record_decision", { curatorId: "usr_1" }, pgError("23505")),
+    ).not.toThrow();
+  });
+
+  it("never throws even if flush() throws synchronously", () => {
+    mockFlush.mockImplementationOnce(() => {
+      throw new Error("flush exploded");
+    });
+    expect(() =>
+      logDbError("record_decision", { curatorId: "usr_1" }, pgError("23505")),
+    ).not.toThrow();
   });
 });
 
