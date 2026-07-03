@@ -1,0 +1,74 @@
+import { FlatCompat } from '@eslint/eslintrc';
+
+// Flat config (ESLint 9). eslint-config-next still ships a legacy (eslintrc)
+// shareable config, so we bridge it through FlatCompat — the standard adapter.
+// This replaces the former .eslintrc.js (extends: ['next'] + the src/app
+// repository import-boundary override, purses-25ca).
+const compat = new FlatCompat({
+  baseDirectory: import.meta.dirname,
+});
+
+// Match the former `eslint . --ext .ts,.tsx`: only TypeScript sources are
+// linted. `--ext` is gone in flat config, so we scope every config object to
+// these globs instead (otherwise flat config would also lint .mjs/.js and
+// surface warnings that ESLint 8 never checked).
+const TS_FILES = ['**/*.ts', '**/*.tsx'];
+
+const eslintConfig = [
+  // Build output / generated files. Flat config only auto-ignores node_modules
+  // and .git.
+  {
+    ignores: ['.next/**', 'out/**', 'build/**', 'coverage/**', 'next-env.d.ts'],
+  },
+
+  // ESLint 9 defaults reportUnusedDisableDirectives to "warn"; eslintrc (and
+  // thus the prior config) defaulted it to "off". Preserve the prior behavior
+  // so the pre-existing eslint-disable comments don't become new warnings.
+  {
+    linterOptions: {
+      reportUnusedDisableDirectives: 'off',
+    },
+  },
+
+  // eslint-config-next's `next` shareable config (react, react-hooks,
+  // @next/next, jsx-a11y, import, TS parser, resolvers) via the legacy bridge,
+  // scoped to TS/TSX to match the former --ext.
+  ...compat.extends('next').map((config) => ({ ...config, files: TS_FILES })),
+
+  // Project rule override (formerly the top-level `rules` block).
+  {
+    files: TS_FILES,
+    rules: {
+      '@next/next/no-html-link-for-pages': 'off',
+    },
+  },
+
+  // Repository import-boundary (purses-25ca). Nothing under src/app (routes AND
+  // Server Component pages) may import a repository implementation directly.
+  // Use a controller (XController.fromDb(db)), a service, or the DAL/page access
+  // guards. Repos are import-private to the server layer — they live only behind
+  // src/server/{api,services,dal}. Test files are excluded via `ignores`.
+  {
+    files: ['src/app/**/*.ts', 'src/app/**/*.tsx'],
+    ignores: ['src/app/**/*.test.ts', 'src/app/**/*.test.tsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '@/server/repositories/implementations/*',
+                '**/server/repositories/implementations/*',
+              ],
+              message:
+                'src/app must not import repositories directly — use a controller (XController.fromDb(db)), a service, or the DAL/page access guards. Repos are import-private to the server layer (purses-25ca).',
+            },
+          ],
+        },
+      ],
+    },
+  },
+];
+
+export default eslintConfig;
