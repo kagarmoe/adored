@@ -12,24 +12,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9c2c0c0faa08822bdb732cc78ef9d92f7806713c",
-        "commitHash": "9c2c0c0faa08822bdb732cc78ef9d92f7806713c",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28580316396"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2d33d8775ad1f5c678b8702fc79d3d2361c590ae",
+        "commitHash": "2d33d8775ad1f5c678b8702fc79d3d2361c590ae",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28636037121"
       },
       "gitCommit": {
-        "shortHash": "9c2c0c0",
-        "hash": "9c2c0c0faa08822bdb732cc78ef9d92f7806713c",
-        "subject": "fix(demo): re-curate seed-load demo images to objects-only (purses-nasj) (#283)",
-        "body": "fix(demo): re-curate seed-load demo images to objects-only (purses-nasj) (#283)\n\nThe seed-load demo set (e2e/fixtures/demo-images, 40 webp) contained\npeople, animals, landscapes, and body parts — object-keyword searches had\nreturned people wearing/using the objects (sunglasses = shirtless man,\nscarf = portrait, sneaker = feet, picture frame = a face, etc.). This\nviolates the hard constraint: common objects / furniture / clothing /\naccessories ONLY.\n\nViewed all 40 images and replaced the 15 polluted ones with clean,\nobject-only studio/catalog shots (Wikimedia Commons CC0 museum catalog +\na few CC-BY-SA studio shots; each visually verified). Rewrote\nfetch-demo-images.mjs from live keyword search to an explicit, audited\nper-image source list so the set regenerates byte-for-byte to the clean\nversion, and updated manifest.json with per-image license + attribution +\nsource. Filenames are stable; seed-load.ts (readdir glob) and\ncapture.ts (own fixture) keep working.\n\n\nClaude-Session: https://claude.ai/code/session_01UGfELtYtZF1RffHyzJiuyC\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "2d33d87",
+        "hash": "2d33d8775ad1f5c678b8702fc79d3d2361c590ae",
+        "subject": "feat(db): slow-op telemetry sink (db_action_slow) at withTransaction seam (#288)",
+        "body": "feat(db): slow-op telemetry sink (db_action_slow) at withTransaction seam (#288)\n\nMirror logDbError's success-path twin: time db.transaction() with\nperformance.now() at the single withTransaction seam and, when elapsed\nexceeds SLOW_OP_THRESHOLD_MS (1000ms), emit a structured [db_slow]\nconsole.error (ids-only) plus a PostHog db_action_slow event whose\nproperties are op + a bucketed ms only (1s|2s|5s|10s|20s|30s+) —\nlow-cardinality, no PII. logDbSlow never throws; the transaction's\nresult and any thrown error propagate unchanged, and the error path\nstill owns logDbError (no double slow-emit on failure).\n\nwithTransaction gains an optional trailing opts { op?, ctx? } — fully\nbackward-compatible; existing 2-arg callers still compile and are timed\nunder the default \"transaction\" op. Real op labels threaded into the two\nhot-path callers: the decisions route (record_decision + collection/\ncurator/session ids) and results materialization (materialize_result).\n\n\nClaude-Session: https://claude.ai/code/session_01UGfELtYtZF1RffHyzJiuyC\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1782985010000
+          "time": 1783048568000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1782985010000
+          "time": 1783048568000
         },
         "branch": "main"
       },
@@ -43,24 +43,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9c2c0c0faa08822bdb732cc78ef9d92f7806713c",
-            "commitHash": "9c2c0c0faa08822bdb732cc78ef9d92f7806713c",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28580316396"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2d33d8775ad1f5c678b8702fc79d3d2361c590ae",
+            "commitHash": "2d33d8775ad1f5c678b8702fc79d3d2361c590ae",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28636037121"
           },
           "gitCommit": {
-            "shortHash": "9c2c0c0",
-            "hash": "9c2c0c0faa08822bdb732cc78ef9d92f7806713c",
-            "subject": "fix(demo): re-curate seed-load demo images to objects-only (purses-nasj) (#283)",
-            "body": "fix(demo): re-curate seed-load demo images to objects-only (purses-nasj) (#283)\n\nThe seed-load demo set (e2e/fixtures/demo-images, 40 webp) contained\npeople, animals, landscapes, and body parts — object-keyword searches had\nreturned people wearing/using the objects (sunglasses = shirtless man,\nscarf = portrait, sneaker = feet, picture frame = a face, etc.). This\nviolates the hard constraint: common objects / furniture / clothing /\naccessories ONLY.\n\nViewed all 40 images and replaced the 15 polluted ones with clean,\nobject-only studio/catalog shots (Wikimedia Commons CC0 museum catalog +\na few CC-BY-SA studio shots; each visually verified). Rewrote\nfetch-demo-images.mjs from live keyword search to an explicit, audited\nper-image source list so the set regenerates byte-for-byte to the clean\nversion, and updated manifest.json with per-image license + attribution +\nsource. Filenames are stable; seed-load.ts (readdir glob) and\ncapture.ts (own fixture) keep working.\n\n\nClaude-Session: https://claude.ai/code/session_01UGfELtYtZF1RffHyzJiuyC\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "2d33d87",
+            "hash": "2d33d8775ad1f5c678b8702fc79d3d2361c590ae",
+            "subject": "feat(db): slow-op telemetry sink (db_action_slow) at withTransaction seam (#288)",
+            "body": "feat(db): slow-op telemetry sink (db_action_slow) at withTransaction seam (#288)\n\nMirror logDbError's success-path twin: time db.transaction() with\nperformance.now() at the single withTransaction seam and, when elapsed\nexceeds SLOW_OP_THRESHOLD_MS (1000ms), emit a structured [db_slow]\nconsole.error (ids-only) plus a PostHog db_action_slow event whose\nproperties are op + a bucketed ms only (1s|2s|5s|10s|20s|30s+) —\nlow-cardinality, no PII. logDbSlow never throws; the transaction's\nresult and any thrown error propagate unchanged, and the error path\nstill owns logDbError (no double slow-emit on failure).\n\nwithTransaction gains an optional trailing opts { op?, ctx? } — fully\nbackward-compatible; existing 2-arg callers still compile and are timed\nunder the default \"transaction\" op. Real op labels threaded into the two\nhot-path callers: the decisions route (record_decision + collection/\ncurator/session ids) and results materialization (materialize_result).\n\n\nClaude-Session: https://claude.ai/code/session_01UGfELtYtZF1RffHyzJiuyC\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782985010000
+              "time": 1783048568000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782985010000
+              "time": 1783048568000
             },
             "branch": "main"
           },
@@ -81,24 +81,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9c2c0c0faa08822bdb732cc78ef9d92f7806713c",
-            "commitHash": "9c2c0c0faa08822bdb732cc78ef9d92f7806713c",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28580316396"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2d33d8775ad1f5c678b8702fc79d3d2361c590ae",
+            "commitHash": "2d33d8775ad1f5c678b8702fc79d3d2361c590ae",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28636037121"
           },
           "gitCommit": {
-            "shortHash": "9c2c0c0",
-            "hash": "9c2c0c0faa08822bdb732cc78ef9d92f7806713c",
-            "subject": "fix(demo): re-curate seed-load demo images to objects-only (purses-nasj) (#283)",
-            "body": "fix(demo): re-curate seed-load demo images to objects-only (purses-nasj) (#283)\n\nThe seed-load demo set (e2e/fixtures/demo-images, 40 webp) contained\npeople, animals, landscapes, and body parts — object-keyword searches had\nreturned people wearing/using the objects (sunglasses = shirtless man,\nscarf = portrait, sneaker = feet, picture frame = a face, etc.). This\nviolates the hard constraint: common objects / furniture / clothing /\naccessories ONLY.\n\nViewed all 40 images and replaced the 15 polluted ones with clean,\nobject-only studio/catalog shots (Wikimedia Commons CC0 museum catalog +\na few CC-BY-SA studio shots; each visually verified). Rewrote\nfetch-demo-images.mjs from live keyword search to an explicit, audited\nper-image source list so the set regenerates byte-for-byte to the clean\nversion, and updated manifest.json with per-image license + attribution +\nsource. Filenames are stable; seed-load.ts (readdir glob) and\ncapture.ts (own fixture) keep working.\n\n\nClaude-Session: https://claude.ai/code/session_01UGfELtYtZF1RffHyzJiuyC\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "2d33d87",
+            "hash": "2d33d8775ad1f5c678b8702fc79d3d2361c590ae",
+            "subject": "feat(db): slow-op telemetry sink (db_action_slow) at withTransaction seam (#288)",
+            "body": "feat(db): slow-op telemetry sink (db_action_slow) at withTransaction seam (#288)\n\nMirror logDbError's success-path twin: time db.transaction() with\nperformance.now() at the single withTransaction seam and, when elapsed\nexceeds SLOW_OP_THRESHOLD_MS (1000ms), emit a structured [db_slow]\nconsole.error (ids-only) plus a PostHog db_action_slow event whose\nproperties are op + a bucketed ms only (1s|2s|5s|10s|20s|30s+) —\nlow-cardinality, no PII. logDbSlow never throws; the transaction's\nresult and any thrown error propagate unchanged, and the error path\nstill owns logDbError (no double slow-emit on failure).\n\nwithTransaction gains an optional trailing opts { op?, ctx? } — fully\nbackward-compatible; existing 2-arg callers still compile and are timed\nunder the default \"transaction\" op. Real op labels threaded into the two\nhot-path callers: the decisions route (record_decision + collection/\ncurator/session ids) and results materialization (materialize_result).\n\n\nClaude-Session: https://claude.ai/code/session_01UGfELtYtZF1RffHyzJiuyC\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782985010000
+              "time": 1783048568000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782985010000
+              "time": 1783048568000
             },
             "branch": "main"
           },
@@ -121,24 +121,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9c2c0c0faa08822bdb732cc78ef9d92f7806713c",
-            "commitHash": "9c2c0c0faa08822bdb732cc78ef9d92f7806713c",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28580316396"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2d33d8775ad1f5c678b8702fc79d3d2361c590ae",
+            "commitHash": "2d33d8775ad1f5c678b8702fc79d3d2361c590ae",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28636037121"
           },
           "gitCommit": {
-            "shortHash": "9c2c0c0",
-            "hash": "9c2c0c0faa08822bdb732cc78ef9d92f7806713c",
-            "subject": "fix(demo): re-curate seed-load demo images to objects-only (purses-nasj) (#283)",
-            "body": "fix(demo): re-curate seed-load demo images to objects-only (purses-nasj) (#283)\n\nThe seed-load demo set (e2e/fixtures/demo-images, 40 webp) contained\npeople, animals, landscapes, and body parts — object-keyword searches had\nreturned people wearing/using the objects (sunglasses = shirtless man,\nscarf = portrait, sneaker = feet, picture frame = a face, etc.). This\nviolates the hard constraint: common objects / furniture / clothing /\naccessories ONLY.\n\nViewed all 40 images and replaced the 15 polluted ones with clean,\nobject-only studio/catalog shots (Wikimedia Commons CC0 museum catalog +\na few CC-BY-SA studio shots; each visually verified). Rewrote\nfetch-demo-images.mjs from live keyword search to an explicit, audited\nper-image source list so the set regenerates byte-for-byte to the clean\nversion, and updated manifest.json with per-image license + attribution +\nsource. Filenames are stable; seed-load.ts (readdir glob) and\ncapture.ts (own fixture) keep working.\n\n\nClaude-Session: https://claude.ai/code/session_01UGfELtYtZF1RffHyzJiuyC\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "2d33d87",
+            "hash": "2d33d8775ad1f5c678b8702fc79d3d2361c590ae",
+            "subject": "feat(db): slow-op telemetry sink (db_action_slow) at withTransaction seam (#288)",
+            "body": "feat(db): slow-op telemetry sink (db_action_slow) at withTransaction seam (#288)\n\nMirror logDbError's success-path twin: time db.transaction() with\nperformance.now() at the single withTransaction seam and, when elapsed\nexceeds SLOW_OP_THRESHOLD_MS (1000ms), emit a structured [db_slow]\nconsole.error (ids-only) plus a PostHog db_action_slow event whose\nproperties are op + a bucketed ms only (1s|2s|5s|10s|20s|30s+) —\nlow-cardinality, no PII. logDbSlow never throws; the transaction's\nresult and any thrown error propagate unchanged, and the error path\nstill owns logDbError (no double slow-emit on failure).\n\nwithTransaction gains an optional trailing opts { op?, ctx? } — fully\nbackward-compatible; existing 2-arg callers still compile and are timed\nunder the default \"transaction\" op. Real op labels threaded into the two\nhot-path callers: the decisions route (record_decision + collection/\ncurator/session ids) and results materialization (materialize_result).\n\n\nClaude-Session: https://claude.ai/code/session_01UGfELtYtZF1RffHyzJiuyC\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782985010000
+              "time": 1783048568000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782985010000
+              "time": 1783048568000
             },
             "branch": "main"
           },
@@ -161,24 +161,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9c2c0c0faa08822bdb732cc78ef9d92f7806713c",
-            "commitHash": "9c2c0c0faa08822bdb732cc78ef9d92f7806713c",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28580316396"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2d33d8775ad1f5c678b8702fc79d3d2361c590ae",
+            "commitHash": "2d33d8775ad1f5c678b8702fc79d3d2361c590ae",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28636037121"
           },
           "gitCommit": {
-            "shortHash": "9c2c0c0",
-            "hash": "9c2c0c0faa08822bdb732cc78ef9d92f7806713c",
-            "subject": "fix(demo): re-curate seed-load demo images to objects-only (purses-nasj) (#283)",
-            "body": "fix(demo): re-curate seed-load demo images to objects-only (purses-nasj) (#283)\n\nThe seed-load demo set (e2e/fixtures/demo-images, 40 webp) contained\npeople, animals, landscapes, and body parts — object-keyword searches had\nreturned people wearing/using the objects (sunglasses = shirtless man,\nscarf = portrait, sneaker = feet, picture frame = a face, etc.). This\nviolates the hard constraint: common objects / furniture / clothing /\naccessories ONLY.\n\nViewed all 40 images and replaced the 15 polluted ones with clean,\nobject-only studio/catalog shots (Wikimedia Commons CC0 museum catalog +\na few CC-BY-SA studio shots; each visually verified). Rewrote\nfetch-demo-images.mjs from live keyword search to an explicit, audited\nper-image source list so the set regenerates byte-for-byte to the clean\nversion, and updated manifest.json with per-image license + attribution +\nsource. Filenames are stable; seed-load.ts (readdir glob) and\ncapture.ts (own fixture) keep working.\n\n\nClaude-Session: https://claude.ai/code/session_01UGfELtYtZF1RffHyzJiuyC\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "2d33d87",
+            "hash": "2d33d8775ad1f5c678b8702fc79d3d2361c590ae",
+            "subject": "feat(db): slow-op telemetry sink (db_action_slow) at withTransaction seam (#288)",
+            "body": "feat(db): slow-op telemetry sink (db_action_slow) at withTransaction seam (#288)\n\nMirror logDbError's success-path twin: time db.transaction() with\nperformance.now() at the single withTransaction seam and, when elapsed\nexceeds SLOW_OP_THRESHOLD_MS (1000ms), emit a structured [db_slow]\nconsole.error (ids-only) plus a PostHog db_action_slow event whose\nproperties are op + a bucketed ms only (1s|2s|5s|10s|20s|30s+) —\nlow-cardinality, no PII. logDbSlow never throws; the transaction's\nresult and any thrown error propagate unchanged, and the error path\nstill owns logDbError (no double slow-emit on failure).\n\nwithTransaction gains an optional trailing opts { op?, ctx? } — fully\nbackward-compatible; existing 2-arg callers still compile and are timed\nunder the default \"transaction\" op. Real op labels threaded into the two\nhot-path callers: the decisions route (record_decision + collection/\ncurator/session ids) and results materialization (materialize_result).\n\n\nClaude-Session: https://claude.ai/code/session_01UGfELtYtZF1RffHyzJiuyC\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1782985010000
+              "time": 1783048568000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1782985010000
+              "time": 1783048568000
             },
             "branch": "main"
           },
@@ -261,12 +261,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1019,
+                  "duration": 937,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:39:20.374Z",
+                  "startTime": "2026-07-03T03:19:09.360Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -303,7 +303,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 24605,
+                  "duration": 20600,
                   "errors": [],
                   "stdout": [
                     {
@@ -333,7 +333,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:39:22.221Z",
+                  "startTime": "2026-07-03T03:19:11.119Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -362,7 +362,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 31765,
+                  "duration": 15846,
                   "errors": [],
                   "stdout": [
                     {
@@ -392,7 +392,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:39:48.289Z",
+                  "startTime": "2026-07-03T03:19:32.584Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -421,7 +421,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4886,
+                  "duration": 3086,
                   "errors": [],
                   "stdout": [
                     {
@@ -433,7 +433,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:40:20.086Z",
+                  "startTime": "2026-07-03T03:19:48.457Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -462,7 +462,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4057,
+                  "duration": 2809,
                   "errors": [],
                   "stdout": [
                     {
@@ -474,7 +474,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:40:24.999Z",
+                  "startTime": "2026-07-03T03:19:51.566Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -513,12 +513,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 599,
+                  "duration": 608,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:33.831Z",
+                  "startTime": "2026-07-03T03:21:32.024Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -567,12 +567,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 512,
+                  "duration": 541,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:34.691Z",
+                  "startTime": "2026-07-03T03:21:32.905Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -621,12 +621,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 492,
+                  "duration": 499,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:35.239Z",
+                  "startTime": "2026-07-03T03:21:33.483Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -675,12 +675,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 492,
+                  "duration": 500,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:35.779Z",
+                  "startTime": "2026-07-03T03:21:34.025Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -726,15 +726,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 214,
+                  "duration": 170,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:31.319Z",
+                  "startTime": "2026-07-03T03:23:46.197Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -780,15 +780,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 106,
+                  "duration": 136,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:34.413Z",
+                  "startTime": "2026-07-03T03:23:46.814Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -834,15 +834,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 109,
+                  "duration": 119,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:34.542Z",
+                  "startTime": "2026-07-03T03:23:46.980Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -888,15 +888,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 108,
+                  "duration": 91,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:34.674Z",
+                  "startTime": "2026-07-03T03:23:47.127Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -943,12 +943,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 10882,
+                  "duration": 2090,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:40:29.100Z",
+                  "startTime": "2026-07-03T03:19:54.410Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -977,12 +977,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1621,
+                  "duration": 1444,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:40:40.187Z",
+                  "startTime": "2026-07-03T03:19:56.584Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1011,12 +1011,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2512,
+                  "duration": 1505,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:40:41.832Z",
+                  "startTime": "2026-07-03T03:19:58.043Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1045,12 +1045,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1236,
+                  "duration": 1081,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:40:44.369Z",
+                  "startTime": "2026-07-03T03:19:59.578Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1079,12 +1079,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1668,
+                  "duration": 1177,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:40:45.634Z",
+                  "startTime": "2026-07-03T03:20:00.683Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1113,12 +1113,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2100,
+                  "duration": 2254,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:36.330Z",
+                  "startTime": "2026-07-03T03:21:34.571Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1147,12 +1147,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1249,
+                  "duration": 1430,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:38.483Z",
+                  "startTime": "2026-07-03T03:21:36.907Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1181,12 +1181,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3314,
+                  "duration": 3011,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:39.749Z",
+                  "startTime": "2026-07-03T03:21:38.367Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1215,12 +1215,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1862,
+                  "duration": 963,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:43.096Z",
+                  "startTime": "2026-07-03T03:21:41.412Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1249,12 +1249,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1380,
+                  "duration": 1117,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:44.980Z",
+                  "startTime": "2026-07-03T03:21:42.399Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1280,15 +1280,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 590,
+                  "duration": 603,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:34.816Z",
+                  "startTime": "2026-07-03T03:23:47.252Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1314,15 +1314,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 455,
+                  "duration": 474,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:35.451Z",
+                  "startTime": "2026-07-03T03:23:47.905Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1348,15 +1348,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 509,
+                  "duration": 541,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:35.928Z",
+                  "startTime": "2026-07-03T03:23:48.396Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1382,15 +1382,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 360,
+                  "duration": 390,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:36.451Z",
+                  "startTime": "2026-07-03T03:23:48.956Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1416,15 +1416,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 425,
+                  "duration": 426,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:36.827Z",
+                  "startTime": "2026-07-03T03:23:49.361Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1461,12 +1461,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2616,
+                  "duration": 2079,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:40:48.035Z",
+                  "startTime": "2026-07-03T03:20:01.920Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1495,12 +1495,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6591,
+                  "duration": 2385,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:40:50.902Z",
+                  "startTime": "2026-07-03T03:20:04.071Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1529,12 +1529,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2668,
+                  "duration": 2328,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:46.422Z",
+                  "startTime": "2026-07-03T03:21:43.593Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1563,12 +1563,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3216,
+                  "duration": 2510,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:49.163Z",
+                  "startTime": "2026-07-03T03:21:45.996Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1594,15 +1594,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1084,
+                  "duration": 1232,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:37.298Z",
+                  "startTime": "2026-07-03T03:23:49.829Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1628,15 +1628,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1372,
+                  "duration": 1353,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:38.437Z",
+                  "startTime": "2026-07-03T03:23:51.123Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1673,12 +1673,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1980,
+                  "duration": 1988,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:40:57.650Z",
+                  "startTime": "2026-07-03T03:20:06.504Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1707,12 +1707,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2194,
+                  "duration": 1951,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:40:59.669Z",
+                  "startTime": "2026-07-03T03:20:08.560Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1741,12 +1741,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2585,
+                  "duration": 1973,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:41:01.881Z",
+                  "startTime": "2026-07-03T03:20:10.573Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1775,12 +1775,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2577,
+                  "duration": 1974,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:52.420Z",
+                  "startTime": "2026-07-03T03:21:48.573Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1809,12 +1809,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2720,
+                  "duration": 2021,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:55.055Z",
+                  "startTime": "2026-07-03T03:21:50.600Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1842,18 +1842,64 @@
                 {
                   "workerIndex": 2,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 4988,
-                  "errors": [],
+                  "status": "timedOut",
+                  "duration": 30216,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/auth.spec.ts",
+                        "column": 10,
+                        "line": 71
+                      },
+                      "message": "Error: page.waitForResponse: Test timeout of 30000ms exceeded.\n\n  69 |   // the sign-in callback to avoid the hydration race.\n  70 |   await Promise.all([\n> 71 |     page.waitForResponse((r) =>\n     |          ^\n  72 |       r.url().includes(\"/api/auth/callback/credentials\"),\n  73 |     ),\n  74 |     submit.click(),\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/auth.spec.ts:71:10"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:57.809Z",
+                  "startTime": "2026-07-03T03:21:52.638Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/auth-signup-creates-a-fres-ebdfa-t-and-signs-in-as-that-user-phone/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/auth-signup-creates-a-fres-ebdfa-t-and-signs-in-as-that-user-phone/error-context.md"
+                    }
+                  ]
+                },
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2353,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 1,
+                  "startTime": "2026-07-03T03:22:23.856Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/auth-signup-creates-a-fres-ebdfa-t-and-signs-in-as-that-user-phone-retry1/trace.zip"
+                    }
+                  ]
                 }
               ],
-              "status": "expected"
+              "status": "flaky"
             }
           ],
           "id": "d748ac400d08b85935ef-3cbaf6843510b925ce7a",
@@ -1874,15 +1920,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 759,
+                  "duration": 820,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:39.838Z",
+                  "startTime": "2026-07-03T03:23:52.515Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1908,15 +1954,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 848,
+                  "duration": 808,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:40.627Z",
+                  "startTime": "2026-07-03T03:23:53.366Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1942,15 +1988,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1154,
+                  "duration": 1133,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:41.492Z",
+                  "startTime": "2026-07-03T03:23:54.192Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1994,12 +2040,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1418,
+                      "duration": 1153,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:04.500Z",
+                      "startTime": "2026-07-03T03:20:12.584Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2028,12 +2074,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1962,
+                      "duration": 1477,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:06.122Z",
+                      "startTime": "2026-07-03T03:20:13.832Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2062,12 +2108,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1777,
+                      "duration": 1333,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:08.126Z",
+                      "startTime": "2026-07-03T03:20:15.332Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2093,15 +2139,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1361,
+                      "duration": 1189,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:02.837Z",
+                      "startTime": "2026-07-03T03:22:26.473Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2127,15 +2173,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1543,
+                      "duration": 1372,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:09.784Z",
+                      "startTime": "2026-07-03T03:22:27.760Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2161,15 +2207,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1340,
+                      "duration": 893,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:11.350Z",
+                      "startTime": "2026-07-03T03:22:29.160Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2195,15 +2241,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 557,
+                      "duration": 576,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:42.671Z",
+                      "startTime": "2026-07-03T03:23:55.342Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2229,15 +2275,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 688,
+                      "duration": 770,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:43.281Z",
+                      "startTime": "2026-07-03T03:23:55.979Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2263,15 +2309,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 359,
+                      "duration": 411,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:43.990Z",
+                      "startTime": "2026-07-03T03:23:56.766Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2317,12 +2363,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2677,
+                      "duration": 2875,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:09.945Z",
+                      "startTime": "2026-07-03T03:20:16.705Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2348,15 +2394,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2132,
+                      "duration": 1881,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:12.726Z",
+                      "startTime": "2026-07-03T03:22:30.095Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2382,15 +2428,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 790,
+                      "duration": 928,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:44.370Z",
+                      "startTime": "2026-07-03T03:23:57.201Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2436,12 +2482,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2886,
+                      "duration": 2052,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:12.805Z",
+                      "startTime": "2026-07-03T03:20:19.678Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2467,15 +2513,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2540,
+                      "duration": 2507,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:14.958Z",
+                      "startTime": "2026-07-03T03:22:32.066Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2501,15 +2547,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 756,
+                      "duration": 834,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:45.199Z",
+                      "startTime": "2026-07-03T03:23:58.186Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2555,12 +2601,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1336,
+                      "duration": 1075,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:15.833Z",
+                      "startTime": "2026-07-03T03:20:21.857Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2589,12 +2635,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1598,
+                      "duration": 1357,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:17.308Z",
+                      "startTime": "2026-07-03T03:20:22.999Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2620,15 +2666,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1354,
+                      "duration": 1023,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:17.635Z",
+                      "startTime": "2026-07-03T03:22:34.658Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2654,15 +2700,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1282,
+                      "duration": 1305,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:19.128Z",
+                      "startTime": "2026-07-03T03:22:35.746Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2688,15 +2734,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 456,
+                      "duration": 499,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:46.008Z",
+                      "startTime": "2026-07-03T03:23:59.060Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2722,15 +2768,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 463,
+                      "duration": 462,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:46.498Z",
+                      "startTime": "2026-07-03T03:23:59.606Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2776,12 +2822,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3985,
+                      "duration": 3417,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:18.987Z",
+                      "startTime": "2026-07-03T03:20:24.385Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2810,12 +2856,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4247,
+                      "duration": 4117,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:23.106Z",
+                      "startTime": "2026-07-03T03:20:27.855Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2841,15 +2887,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3489,
+                      "duration": 3020,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:20.459Z",
+                      "startTime": "2026-07-03T03:22:37.084Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2875,15 +2921,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3834,
+                      "duration": 3355,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:24.022Z",
+                      "startTime": "2026-07-03T03:22:40.163Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2909,15 +2955,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1054,
+                      "duration": 1081,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:46.978Z",
+                      "startTime": "2026-07-03T03:24:00.086Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2943,15 +2989,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 834,
+                      "duration": 892,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:48.076Z",
+                      "startTime": "2026-07-03T03:24:01.224Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2997,12 +3043,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1794,
+                      "duration": 2362,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:27.447Z",
+                      "startTime": "2026-07-03T03:20:32.009Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3031,12 +3077,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3732,
+                      "duration": 2324,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:29.371Z",
+                      "startTime": "2026-07-03T03:20:34.435Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3062,15 +3108,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2272,
+                      "duration": 1712,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:27.909Z",
+                      "startTime": "2026-07-03T03:22:43.559Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3096,15 +3142,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2177,
+                      "duration": 2003,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:30.315Z",
+                      "startTime": "2026-07-03T03:22:45.351Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3130,15 +3176,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 553,
+                      "duration": 575,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:48.950Z",
+                      "startTime": "2026-07-03T03:24:02.165Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3164,15 +3210,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 618,
+                      "duration": 688,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:49.542Z",
+                      "startTime": "2026-07-03T03:24:02.791Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3218,12 +3264,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1942,
+                      "duration": 1168,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:33.188Z",
+                      "startTime": "2026-07-03T03:20:36.796Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3252,12 +3298,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1504,
+                      "duration": 1041,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:35.211Z",
+                      "startTime": "2026-07-03T03:20:37.978Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3286,12 +3332,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1429,
+                      "duration": 1032,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:36.724Z",
+                      "startTime": "2026-07-03T03:20:39.026Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3317,15 +3363,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1751,
+                      "duration": 1255,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:32.535Z",
+                      "startTime": "2026-07-03T03:22:47.391Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3351,15 +3397,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1304,
+                      "duration": 1050,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:34.298Z",
+                      "startTime": "2026-07-03T03:22:48.659Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3385,15 +3431,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1340,
+                      "duration": 1022,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:35.610Z",
+                      "startTime": "2026-07-03T03:22:49.717Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3419,15 +3465,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1189,
+                      "duration": 1090,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:50.184Z",
+                      "startTime": "2026-07-03T03:24:03.505Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3453,15 +3499,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1150,
+                      "duration": 1040,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:51.383Z",
+                      "startTime": "2026-07-03T03:24:04.603Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3487,15 +3533,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1148,
+                      "duration": 1058,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:52.541Z",
+                      "startTime": "2026-07-03T03:24:05.652Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3534,12 +3580,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1549,
+                  "duration": 979,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:41:38.186Z",
+                  "startTime": "2026-07-03T03:20:40.080Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3568,12 +3614,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1716,
+                  "duration": 1240,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:41:39.830Z",
+                  "startTime": "2026-07-03T03:20:41.100Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3599,15 +3645,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1347,
+                  "duration": 928,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:43:36.969Z",
+                  "startTime": "2026-07-03T03:22:50.760Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3633,15 +3679,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1165,
+                  "duration": 1229,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:43:38.368Z",
+                  "startTime": "2026-07-03T03:22:51.725Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3667,15 +3713,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 315,
+                  "duration": 344,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:53.708Z",
+                  "startTime": "2026-07-03T03:24:06.731Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3701,15 +3747,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 726,
+                  "duration": 780,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:54.057Z",
+                  "startTime": "2026-07-03T03:24:07.113Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3746,12 +3792,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1342,
+                  "duration": 1086,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:41:41.604Z",
+                  "startTime": "2026-07-03T03:20:42.374Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3780,12 +3826,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1518,
+                  "duration": 1130,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:41:43.060Z",
+                  "startTime": "2026-07-03T03:20:43.518Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3814,12 +3860,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1878,
+                  "duration": 1428,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:41:44.610Z",
+                  "startTime": "2026-07-03T03:20:44.667Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3845,15 +3891,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1009,
+                  "duration": 1014,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:43:39.568Z",
+                  "startTime": "2026-07-03T03:22:52.976Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3879,15 +3925,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 981,
+                  "duration": 1124,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:43:40.618Z",
+                  "startTime": "2026-07-03T03:22:54.074Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3913,15 +3959,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1304,
+                  "duration": 1311,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:43:41.618Z",
+                  "startTime": "2026-07-03T03:22:55.227Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3947,15 +3993,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 365,
+                  "duration": 404,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:54.804Z",
+                  "startTime": "2026-07-03T03:24:07.923Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3981,15 +4027,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 388,
+                  "duration": 413,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:55.200Z",
+                  "startTime": "2026-07-03T03:24:08.364Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -4015,15 +4061,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 456,
+                  "duration": 501,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:55.602Z",
+                  "startTime": "2026-07-03T03:24:08.791Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -4067,12 +4113,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3904,
+                      "duration": 3411,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:46.590Z",
+                      "startTime": "2026-07-03T03:20:46.170Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4101,12 +4147,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3576,
+                      "duration": 2921,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:50.772Z",
+                      "startTime": "2026-07-03T03:20:49.691Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4135,12 +4181,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1562,
+                      "duration": 1433,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:54.414Z",
+                      "startTime": "2026-07-03T03:20:52.632Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4166,15 +4212,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3964,
+                      "duration": 3912,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:42.968Z",
+                      "startTime": "2026-07-03T03:22:56.602Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4200,15 +4246,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3388,
+                      "duration": 3519,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:47.015Z",
+                      "startTime": "2026-07-03T03:23:00.598Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4234,15 +4280,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1453,
+                      "duration": 1580,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:50.418Z",
+                      "startTime": "2026-07-03T03:23:04.143Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4268,15 +4314,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1214,
+                      "duration": 1196,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:56.094Z",
+                      "startTime": "2026-07-03T03:24:09.330Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4302,15 +4348,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1129,
+                      "duration": 1148,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:57.363Z",
+                      "startTime": "2026-07-03T03:24:10.580Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4336,15 +4382,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 752,
+                      "duration": 778,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:58.518Z",
+                      "startTime": "2026-07-03T03:24:11.754Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4390,12 +4436,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3462,
+                      "duration": 2910,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:56.039Z",
+                      "startTime": "2026-07-03T03:20:54.102Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4424,12 +4470,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1779,
+                      "duration": 1536,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:41:59.609Z",
+                      "startTime": "2026-07-03T03:20:57.063Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4455,15 +4501,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3276,
+                      "duration": 3261,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:51.907Z",
+                      "startTime": "2026-07-03T03:23:05.764Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4489,15 +4535,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1609,
+                      "duration": 992,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:55.244Z",
+                      "startTime": "2026-07-03T03:23:09.080Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4523,15 +4569,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 939,
+                      "duration": 972,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:59.290Z",
+                      "startTime": "2026-07-03T03:24:12.558Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4557,15 +4603,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 473,
+                      "duration": 502,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:45:00.266Z",
+                      "startTime": "2026-07-03T03:24:13.569Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4604,12 +4650,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1838,
+                  "duration": 1798,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:01.424Z",
+                  "startTime": "2026-07-03T03:20:58.627Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -4635,15 +4681,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1828,
+                  "duration": 1815,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:43:56.885Z",
+                  "startTime": "2026-07-03T03:23:10.109Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -4669,15 +4715,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 496,
+                  "duration": 462,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:45:00.763Z",
+                  "startTime": "2026-07-03T03:24:14.096Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -4721,12 +4767,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1302,
+                      "duration": 1343,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:42:03.289Z",
+                      "startTime": "2026-07-03T03:21:00.455Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4752,15 +4798,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1775,
+                      "duration": 1751,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:43:58.750Z",
+                      "startTime": "2026-07-03T03:23:11.942Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4786,15 +4832,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 588,
+                      "duration": 597,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:45:01.275Z",
+                      "startTime": "2026-07-03T03:24:14.579Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4840,12 +4886,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1329,
+                      "duration": 1383,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:42:04.665Z",
+                      "startTime": "2026-07-03T03:21:01.903Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4871,15 +4917,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1597,
+                      "duration": 1611,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:00.639Z",
+                      "startTime": "2026-07-03T03:23:13.806Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4905,15 +4951,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 608,
+                      "duration": 597,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:45:01.916Z",
+                      "startTime": "2026-07-03T03:24:15.230Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4959,12 +5005,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3060,
+                      "duration": 3189,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:42:06.092Z",
+                      "startTime": "2026-07-03T03:21:03.405Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4993,12 +5039,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2872,
+                      "duration": 2770,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:42:09.184Z",
+                      "startTime": "2026-07-03T03:21:06.613Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5024,15 +5070,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3468,
+                      "duration": 3587,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:02.375Z",
+                      "startTime": "2026-07-03T03:23:15.562Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5058,15 +5104,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2860,
+                      "duration": 2988,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:05.865Z",
+                      "startTime": "2026-07-03T03:23:19.175Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5092,15 +5138,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1132,
+                      "duration": 1280,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:45:02.584Z",
+                      "startTime": "2026-07-03T03:24:15.890Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5126,15 +5172,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1267,
+                      "duration": 1301,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:45:03.731Z",
+                      "startTime": "2026-07-03T03:24:17.186Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5180,12 +5226,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2261,
+                      "duration": 2326,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:42:12.084Z",
+                      "startTime": "2026-07-03T03:21:09.412Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5211,15 +5257,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2356,
+                      "duration": 2459,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:08.751Z",
+                      "startTime": "2026-07-03T03:23:22.204Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5245,15 +5291,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 882,
+                      "duration": 969,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:45:05.022Z",
+                      "startTime": "2026-07-03T03:24:18.505Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5299,12 +5345,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2183,
+                      "duration": 2128,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:42:14.423Z",
+                      "startTime": "2026-07-03T03:21:11.809Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5330,15 +5376,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2247,
+                      "duration": 2298,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:11.179Z",
+                      "startTime": "2026-07-03T03:23:24.733Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5364,15 +5410,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 915,
+                      "duration": 899,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:45:05.950Z",
+                      "startTime": "2026-07-03T03:24:19.521Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5411,12 +5457,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1040,
+                  "duration": 1054,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:16.663Z",
+                  "startTime": "2026-07-03T03:21:13.999Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5445,12 +5491,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 835,
+                  "duration": 1002,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:17.728Z",
+                  "startTime": "2026-07-03T03:21:15.069Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5479,12 +5525,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1121,
+                  "duration": 1062,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:42:18.588Z",
+                  "startTime": "2026-07-03T03:21:16.093Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5510,15 +5556,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 958,
+                  "duration": 1105,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:13.487Z",
+                  "startTime": "2026-07-03T03:23:27.119Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5544,15 +5590,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1040,
+                  "duration": 1014,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:14.457Z",
+                  "startTime": "2026-07-03T03:23:28.250Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5578,15 +5624,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 944,
+                  "duration": 1221,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:44:15.524Z",
+                  "startTime": "2026-07-03T03:23:29.287Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5612,15 +5658,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 343,
+                  "duration": 303,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:45:06.905Z",
+                  "startTime": "2026-07-03T03:24:20.461Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5646,15 +5692,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 333,
+                  "duration": 287,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:45:07.261Z",
+                  "startTime": "2026-07-03T03:24:20.780Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5680,15 +5726,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 301,
+                  "duration": 316,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-02T09:45:07.609Z",
+                  "startTime": "2026-07-03T03:24:21.082Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5732,12 +5778,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1314,
+                      "duration": 1133,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:42:19.738Z",
+                      "startTime": "2026-07-03T03:21:17.188Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5763,15 +5809,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1113,
+                      "duration": 1554,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:16.501Z",
+                      "startTime": "2026-07-03T03:23:30.541Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5797,15 +5843,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 480,
+                      "duration": 491,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:45:07.926Z",
+                      "startTime": "2026-07-03T03:24:21.412Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5851,12 +5897,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1498,
+                      "duration": 1554,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:42:21.115Z",
+                      "startTime": "2026-07-03T03:21:18.392Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5885,12 +5931,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1649,
+                      "duration": 1947,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:42:22.681Z",
+                      "startTime": "2026-07-03T03:21:20.011Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5919,12 +5965,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1395,
+                      "duration": 1641,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:42:24.372Z",
+                      "startTime": "2026-07-03T03:21:21.983Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5950,15 +5996,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1510,
+                      "duration": 1637,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:17.686Z",
+                      "startTime": "2026-07-03T03:23:32.174Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5984,15 +6030,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1990,
+                      "duration": 1816,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:19.256Z",
+                      "startTime": "2026-07-03T03:23:33.926Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6018,15 +6064,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1531,
+                      "duration": 1552,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:21.284Z",
+                      "startTime": "2026-07-03T03:23:35.775Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6052,15 +6098,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 517,
+                      "duration": 509,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:45:08.443Z",
+                      "startTime": "2026-07-03T03:24:21.939Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6086,15 +6132,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 730,
+                      "duration": 809,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:45:08.991Z",
+                      "startTime": "2026-07-03T03:24:22.484Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6120,15 +6166,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 503,
+                      "duration": 491,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:45:09.733Z",
+                      "startTime": "2026-07-03T03:24:23.311Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6165,12 +6211,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3559,
+                      "duration": 3633,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:42:25.807Z",
+                      "startTime": "2026-07-03T03:21:23.646Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6199,12 +6245,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1524,
+                      "duration": 1722,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:42:29.436Z",
+                      "startTime": "2026-07-03T03:21:27.375Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6230,15 +6276,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3784,
+                      "duration": 3973,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:22.834Z",
+                      "startTime": "2026-07-03T03:23:37.354Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6264,15 +6310,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1535,
+                      "duration": 1639,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:26.678Z",
+                      "startTime": "2026-07-03T03:23:41.379Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6298,15 +6344,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1404,
+                      "duration": 1423,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:45:10.251Z",
+                      "startTime": "2026-07-03T03:24:23.821Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6332,15 +6378,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 464,
+                      "duration": 504,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:45:11.693Z",
+                      "startTime": "2026-07-03T03:24:25.298Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6377,12 +6423,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 932,
+                      "duration": 848,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:42:30.997Z",
+                      "startTime": "2026-07-03T03:21:29.126Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6411,12 +6457,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 946,
+                      "duration": 1099,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:42:31.952Z",
+                      "startTime": "2026-07-03T03:21:29.998Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6442,15 +6488,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1149,
+                      "duration": 1380,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:28.233Z",
+                      "startTime": "2026-07-03T03:23:43.037Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6476,15 +6522,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 850,
+                      "duration": 884,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:44:29.396Z",
+                      "startTime": "2026-07-03T03:23:44.449Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6510,15 +6556,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 273,
+                      "duration": 288,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:45:12.170Z",
+                      "startTime": "2026-07-03T03:24:25.826Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6544,15 +6590,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 285,
+                      "duration": 289,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-02T09:45:12.460Z",
+                      "startTime": "2026-07-03T03:24:26.127Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6572,11 +6618,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-07-02T09:38:08.995Z",
-    "duration": 424055.694,
-    "expected": 161,
+    "startTime": "2026-07-03T03:17:54.050Z",
+    "duration": 392665.093,
+    "expected": 160,
     "skipped": 8,
     "unexpected": 0,
-    "flaky": 0
+    "flaky": 1
   }
 }
