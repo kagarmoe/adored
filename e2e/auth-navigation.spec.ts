@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { seedBaseline, BASELINE_USER } from "./fixtures/seed";
 import { LOGGED_OUT, ROUTE, submitLogin } from "./fixtures/ui";
+import { DISMISS_KEY } from "@/features/onboarding/dismissal";
 
 // End-to-end auth journey: log in through the REAL form, then navigate the
 // browser to a middleware-protected page. This is the only spec that exercises
@@ -13,6 +14,20 @@ test.use({ storageState: LOGGED_OUT });
 
 test.beforeAll(async () => {
   await seedBaseline();
+});
+
+// Disarm #280's first-run onboarding gate: a zero-collection user is otherwise
+// server-redirected to /welcome, which would mask the auth-redirect path this
+// spec exists to guard. Setting the dismissal cookie keeps the assertions about
+// auth (session survives middleware), not onboarding.
+test.beforeEach(async ({ context }) => {
+  await context.addCookies([
+    {
+      name: DISMISS_KEY,
+      value: "1",
+      url: "http://127.0.0.1:3100",
+    },
+  ]);
 });
 
 test("UI login redirects to /collections and the session survives middleware", async ({
