@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">33.33% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/18</span>
+                <span class='fraction'>6/18</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">16.66% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>2/12</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">20% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/5</span>
+                <span class='fraction'>1/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">37.5% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/16</span>
+                <span class='fraction'>6/16</span>
             </div>
         
             
@@ -193,24 +193,24 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -218,9 +218,9 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -305,14 +305,14 @@ interface SetAsidePageProps {
   params: { id: string };
 }
 &nbsp;
-export default async function <span class="fstat-no" title="function not covered" >SetAsidePage({</span> params }: SetAsidePageProps) {
-  const session = <span class="cstat-no" title="statement not covered" >await getSession();</span>
-<span class="cstat-no" title="statement not covered" >  if (!session?.user) {</span>
+export default async function SetAsidePage({ params }: SetAsidePageProps) {
+  const session = await getSession();
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (!session?.user) {
 <span class="cstat-no" title="statement not covered" >    redirect("/login");</span>
   }
 &nbsp;
-  const <span class="cstat-no" title="statement not covered" >db = getDb();</span>
-  const collection = <span class="cstat-no" title="statement not covered" >await requireCollectionAccess(db, params.id, session.user.id);</span>
+  const db = getDb();
+  const collection = await requireCollectionAccess(db, params.id, session.user.id);
 &nbsp;
   // The page's data path: the curator's set-aside dispositions, the matching
   // item details, and each item's cover photo. Curator-scoped + disposition-
@@ -331,9 +331,9 @@ export default async function <span class="fstat-no" title="function not covered
       ? await PhotoController.fromDb(db).findCoverPhotosByItemIds(items.map(<span class="fstat-no" title="function not covered" >(i</span>) =&gt; <span class="cstat-no" title="statement not covered" >i.id)</span>)
       : new Map();
 &nbsp;
-  const collectionHref = <span class="cstat-no" title="statement not covered" >`/collections/${collection.slug ?? collection.id}`;</span>
+  const collectionHref = `/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}</span>`;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return (</span>
+  return (
     &lt;AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
@@ -409,7 +409,7 @@ export default async function <span class="fstat-no" title="function not covered
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-03T02:37:41.190Z
+                at 2026-07-03T03:04:30.814Z
             </div>
         <script src="../../../../../../prettify.js"></script>
         <script>

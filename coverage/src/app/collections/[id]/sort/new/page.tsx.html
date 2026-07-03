@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">66.66% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>4/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">37.5% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/8</span>
+                <span class='fraction'>3/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">66.66% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>4/6</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -114,13 +114,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -152,21 +152,21 @@ interface NewSortSessionPageProps {
   params: { id: string };
 }
 &nbsp;
-export default async function <span class="fstat-no" title="function not covered" >NewSortSessionPage({</span> params }: NewSortSessionPageProps) {
-  const session = <span class="cstat-no" title="statement not covered" >await getSession();</span>
-<span class="cstat-no" title="statement not covered" >  if (!session?.user) {</span>
+export default async function NewSortSessionPage({ params }: NewSortSessionPageProps) {
+  const session = await getSession();
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (!session?.user) {
 <span class="cstat-no" title="statement not covered" >    redirect("/login");</span>
   }
 &nbsp;
-  const <span class="cstat-no" title="statement not covered" >db = getDb();</span>
-  const collection = <span class="cstat-no" title="statement not covered" >await requireCollectionAccess(db, params.id, session.user.id);</span>
+  const db = getDb();
+  const collection = await requireCollectionAccess(db, params.id, session.user.id);
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
     &lt;AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
         { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Sorting", href: `/collections/${collection.slug ?? collection.id}/sort` },
+        { label: "Sorting", href: `/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}</span>/sort` },
         { label: "New session" },
       ]}
     &gt;
@@ -175,7 +175,7 @@ export default async function <span class="fstat-no" title="function not covered
           &lt;h1 className="text-3xl text-ink"&gt;New sorting session&lt;/h1&gt;
           &lt;p className="mt-2 text-ink-soft"&gt;Choose the goal, scope, and pace for this pass.&lt;/p&gt;
         &lt;/div&gt;
-        &lt;StartSessionForm collectionId={collection.id} collectionSlug={collection.slug ?? collection.id} /&gt;
+        &lt;StartSessionForm collectionId={collection.id} collectionSlug={collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id} /</span>&gt;
       &lt;/div&gt;
     &lt;/AppLayout&gt;
   );
@@ -187,7 +187,7 @@ export default async function <span class="fstat-no" title="function not covered
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-03T02:37:41.190Z
+                at 2026-07-03T03:04:30.814Z
             </div>
         <script src="../../../../../../prettify.js"></script>
         <script>
