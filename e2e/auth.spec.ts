@@ -65,12 +65,10 @@ test("signup creates a fresh account and signs in as that user", async ({
   const pwFields = page.getByPlaceholder(PASSWORD_PLACEHOLDER);
   await pwFields.nth(0).fill("signup-password-123");
   await pwFields.nth(1).fill("signup-password-123");
-  // Signup POSTs to /api/auth/signup then signs in via credentials — wait for
-  // the sign-in callback to avoid the hydration race.
+  // Signup goes through better-auth's sign-up/email (which also establishes the
+  // session) — wait for that POST to avoid the hydration race.
   await Promise.all([
-    page.waitForResponse((r) =>
-      r.url().includes("/api/auth/callback/credentials"),
-    ),
+    page.waitForResponse((r) => r.url().includes("/api/ba-auth/sign-up/email")),
     submit.click(),
   ]);
 

@@ -4,7 +4,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 const signOut = vi.fn();
-vi.mock("next-auth/react", () => ({ signOut: (...args: unknown[]) => signOut(...args) }));
+vi.mock("@/lib/auth-client", () => ({ signOut: (...args: unknown[]) => signOut(...args) }));
+const push = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
 import { DeleteAccountSection } from "./DeleteAccountSection";
 
@@ -51,9 +53,9 @@ describe("DeleteAccountSection", () => {
     await waitFor(() =>
       expect(global.fetch).toHaveBeenCalledWith("/api/users/me", { method: "DELETE" }),
     );
-    await waitFor(() =>
-      expect(signOut).toHaveBeenCalledWith({ redirect: true, callbackUrl: "/login" }),
-    );
+    // better-auth signOut takes no args; the page redirects to /login itself.
+    await waitFor(() => expect(signOut).toHaveBeenCalled());
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/login"));
   });
 
   it("ignores a rapid double-submit — one delete call", async () => {

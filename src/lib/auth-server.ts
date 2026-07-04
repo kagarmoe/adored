@@ -26,7 +26,25 @@ import {
 //
 // Secret/base URL prefer the better-auth-specific vars, falling back to the
 // existing NextAuth `AUTH_SECRET`/`AUTH_URL` so a single secret can serve both.
+// better-auth rate-limits auth requests per-IP and is ON in production builds.
+// The e2e suite runs a production `next start` and drives many sign-up/sign-in
+// calls from a single loopback IP (baseline + per-user authz fixtures), which
+// trips the limiter (429). Disable it only for loopback base URLs — real
+// deployments (https origin) keep the protection. Host is parsed defensively;
+// a malformed URL leaves rate limiting ON (fail-safe).
+function isLoopbackBaseUrl(): boolean {
+  const raw = process.env.BETTER_AUTH_URL ?? process.env.AUTH_URL;
+  if (!raw) return false;
+  try {
+    const host = new URL(raw).hostname;
+    return host === "localhost" || host === "127.0.0.1" || host === "::1";
+  } catch {
+    return false;
+  }
+}
+
 export const auth = betterAuth({
+  rateLimit: { enabled: !isLoopbackBaseUrl() },
   database: drizzleAdapter(getDb(), {
     provider: "pg",
     schema: {

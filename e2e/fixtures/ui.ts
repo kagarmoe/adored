@@ -18,14 +18,15 @@ export const ROUTE = {
 export const PASSWORD_PLACEHOLDER = "••••••••";
 export const EMAIL_PLACEHOLDER = "you@example.com";
 
-/** Read the current context's session user email via the NextAuth API, or null. */
+/** Read the current context's session user email via the better-auth API, or
+ *  null. better-auth's get-session returns { session, user } (or null). */
 export async function sessionEmail(page: Page): Promise<string | null> {
-  const res = await page.request.get("/api/auth/session");
+  const res = await page.request.get("/api/ba-auth/get-session");
   const session = await res.json().catch(() => ({}));
   return session?.user?.email ?? null;
 }
 
-/** Drive the real /login form. Waits for the credentials callback POST so we
+/** Drive the real /login form. Waits for the better-auth sign-in POST so we
  *  never race hydration (the client signIn handler must be attached first). */
 export async function submitLogin(
   page: Page,
@@ -38,9 +39,7 @@ export async function submitLogin(
   await page.getByPlaceholder(EMAIL_PLACEHOLDER).fill(email);
   await page.getByPlaceholder(PASSWORD_PLACEHOLDER).fill(password);
   await Promise.all([
-    page.waitForResponse((r) =>
-      r.url().includes("/api/auth/callback/credentials"),
-    ),
+    page.waitForResponse((r) => r.url().includes("/api/ba-auth/sign-in/email")),
     submit.click(),
   ]);
 }

@@ -5,16 +5,19 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ProfileForm } from "./ProfileForm";
 
-// Boundaries only: session refresh (next-auth) and the network (api-client).
+// Boundaries only: session refresh (better-auth) and the network (api-client).
 // Everything else — controlled input, trimming, the role="status" live region,
 // error routing through ErrorMessage — is the REAL component under test.
-const update = vi.fn();
-vi.mock("next-auth/react", () => ({ useSession: () => ({ data: { user: {} }, update }) }));
+const refetch = vi.fn();
+vi.mock("@/lib/auth-client", () => ({ useSession: () => ({ data: { user: {} }, refetch }) }));
+// ProfileForm renders DeleteAccountSection, which reads useRouter for its
+// post-delete redirect — mock next/navigation so the render doesn't throw.
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 const apiPatch = vi.fn();
 vi.mock("@/lib/api-client", () => ({ apiPatch: (...a: unknown[]) => apiPatch(...a) }));
 
 beforeEach(() => {
-  update.mockClear();
+  refetch.mockClear();
   apiPatch.mockClear();
   apiPatch.mockResolvedValue({ name: "Tessa" });
 });
@@ -41,7 +44,7 @@ describe("ProfileForm", () => {
     await waitFor(() =>
       expect(apiPatch).toHaveBeenCalledWith("/api/users/me", { name: "Tessa" }),
     );
-    expect(update).toHaveBeenCalledWith({ name: "Tessa" });
+    expect(refetch).toHaveBeenCalled();
     expect(screen.getByRole("status")).toHaveTextContent(/saved|your name/i);
   });
 
@@ -75,7 +78,7 @@ describe("ProfileForm", () => {
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent("Something went wrong"),
     );
-    expect(update).not.toHaveBeenCalled();
+    expect(refetch).not.toHaveBeenCalled();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 });
