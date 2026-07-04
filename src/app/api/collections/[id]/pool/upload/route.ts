@@ -72,7 +72,7 @@ export async function POST(
           event: 'photo_uploaded',
           properties: { collection_id: collectionId, mime_type: blob.contentType },
         });
-        await phClient.shutdown();
+        await phClient.flush();
       },
     });
     return NextResponse.json(jsonResponse);

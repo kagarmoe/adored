@@ -22,7 +22,7 @@ export async function POST(
       event: 'sort_result_finalized',
       properties: { result_id: params.id },
     });
-    await phClient.shutdown();
+    await phClient.flush();
     return NextResponse.json(result);
   } catch (error) {
     return errorResponse(error);

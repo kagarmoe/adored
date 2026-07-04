@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       event: 'sort_session_created',
       properties: { session_id: newSession.id, collection_id: collectionId },
     });
-    await phClient.shutdown();
+    await phClient.flush();
     return NextResponse.json(newSession, { status: 201 });
   } catch (error) {
     // CurrentSessionExistsError -> gentle 409 (existing sort in this slot:

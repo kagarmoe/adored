@@ -7,7 +7,17 @@ if (!connectionString) {
   throw new Error("DATABASE_URL environment variable is not set");
 }
 
-const client = postgres(connectionString);
+// A pathological query (an accidental O(N²) recompute, a missing index, a lock
+// wait that never resolves) should FAIL FAST rather than silently eat the whole
+// 30s Vercel function budget and surface as an opaque function timeout. Set a
+// server-side statement_timeout GENEROUS but UNDER that cap (25s): Postgres then
+// aborts the offending statement with SQLSTATE 57014 — which logDbError already
+// classifies as `statement_timeout` and flags as a rolled-back write. Normal
+// recomputes are tens of ms, nowhere near this, so the hot path never trips it.
+// postgres-js sends `connection.*` as startup parameters; the value is ms.
+const client = postgres(connectionString, {
+  connection: { statement_timeout: 25_000 },
+});
 // Drizzle's built-in query logger logs every query's SQL AND its param VALUES
 // (emails, tokens, PII) and is noisy — Vercel caps runtime logs at 256 lines
 // per request. So it is OFF by default and MUST NEVER be enabled in production;

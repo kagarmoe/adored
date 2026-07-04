@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
       distinctId: newUserId,
       event: 'user_signed_up',
     });
-    await phClient.shutdown();
+    await phClient.flush();
 
     return NextResponse.json(
       { message: "Account created successfully" },

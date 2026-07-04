@@ -1,6 +1,13 @@
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
+  eslint: {
+    // Linting runs as its own gate (`npm run lint`, a separate CI step). Next
+    // 14's build-time lint runner passes legacy ESLint options (useEslintrc,
+    // extensions) that ESLint 9's flat config rejects, so let the dedicated
+    // step own linting and keep `next build` from choking on them.
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       {

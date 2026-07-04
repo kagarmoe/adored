@@ -4,8 +4,10 @@ import { isRequestAuthorized } from "@/lib/middleware-auth";
 
 export const config = {
   matcher: [
-    // Protect all routes except these
-    "/((?!_next|api/auth|login|signup|shared).*)",
+    // Protect all routes except these. `tutorial` is the dev-only walkthrough
+    // preview; excluding it here just skips the login redirect in dev — the
+    // page itself 404s in production, which is the real boundary.
+    "/((?!_next|api/auth|login|signup|shared|tutorial).*)",
   ],
 };
 
