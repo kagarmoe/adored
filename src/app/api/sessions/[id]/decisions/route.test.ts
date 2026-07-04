@@ -34,7 +34,7 @@ vi.mock("@/server/dal/collection-access", () => ({ requireApiCollectionAccess: m
 vi.mock("@/server/api/sessions", () => ({
   SessionController: { fromDb: () => ({ getSessionOrNull: mockGetSessionOrNull }) },
 }));
-vi.mock("@/lib/transactions", () => ({ withTransaction: mockWithTransaction }));
+vi.mock("@/lib/transactions", () => ({ withTransaction: mockWithTransaction, lockCollectionCurator: vi.fn() }));
 vi.mock("@/lib/db-error-log", () => ({ logDbError: mockLogDbError }));
 // PostHog stub: the success path captures then FLUSHES (delivers the queued
 // event without closing the shared singleton). It must NOT shutdown per-emit —
@@ -60,7 +60,9 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockGetSession.mockResolvedValue({ user: { id: CURATOR } });
   mockGetDb.mockReturnValue({ db: "fake" });
-  mockGetSessionOrNull.mockResolvedValue({ collectionId: COLLECTION, curatorId: CURATOR });
+  // status: "active" — an in-progress session clears the duv4 status gate so
+  // these observability/analytics paths are reached (a terminal session 409s first).
+  mockGetSessionOrNull.mockResolvedValue({ collectionId: COLLECTION, curatorId: CURATOR, status: "active" });
   mockRequireAccess.mockResolvedValue({ ok: true }); // not a NextResponse → access granted
 });
 
@@ -75,7 +77,7 @@ describe("decisions route — DB failure observability", () => {
     (boom as { code?: string }).code = "57014";
     mockWithTransaction.mockRejectedValue(boom);
 
-    const res = await POST(req({ type: "triage", decision: { itemId: "itm_1" } }), {
+    const res = await POST(req({ type: "triage", decision: { itemId: "itm_1", result: "top" } }), {
       params: { id: SESSION },
     });
 
@@ -89,7 +91,7 @@ describe("decisions route — DB failure observability", () => {
     // route removed is fully threaded into withTransaction (the sole emitter).
     mockWithTransaction.mockResolvedValue({ event: { id: "event_1" }, isNew: false });
 
-    await POST(req({ type: "triage", decision: { itemId: "itm_1" }, clientKey: "k1" }), {
+    await POST(req({ type: "triage", decision: { itemId: "itm_1", result: "top" }, clientKey: "k1" }), {
       params: { id: SESSION },
     });
 
@@ -106,7 +108,7 @@ describe("decisions route — analytics client lifecycle (purses-icut)", () => {
     // the shared singleton and break later captures in the same warm instance.
     mockWithTransaction.mockResolvedValue({ event: { id: "event_1" }, isNew: true });
 
-    const res = await POST(req({ type: "triage", decision: { itemId: "itm_1" } }), {
+    const res = await POST(req({ type: "triage", decision: { itemId: "itm_1", result: "top" } }), {
       params: { id: SESSION },
     });
 

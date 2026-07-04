@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { z } from "zod";
 import { getDb } from "@/lib/db";
 import { decisionEventsTable } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
 import { getSession } from "@/lib/auth";
-import { withTransaction } from "@/lib/transactions";
+import { withTransaction, lockCollectionCurator } from "@/lib/transactions";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { SessionController } from "@/server/api/sessions";
 import { PreferenceController } from "@/server/api/preferences";
@@ -17,11 +18,38 @@ import { getPostHogClient } from "@/lib/posthog-server";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-interface DecisionRequest {
-  type: "triage" | "pairwise_compare" | "bucket_assign";
-  decision: Record<string, unknown>;
-  clientKey?: string;
-}
+// sxfo: validate the request body at the boundary with a discriminated union on
+// `type`, so a malformed shape (out-of-enum type, missing/typo'd decision field)
+// is rejected with 400 BEFORE the transaction — it can never flow to the scorer
+// (score.toString() on undefined) or persist a garbage decision_events row.
+// bucket_assign is reserved (no scorer consumer yet); it still gets a real shape
+// so the discriminator stays exhaustive.
+const DecisionRequestSchema = z
+  .discriminatedUnion("type", [
+    z.object({
+      type: z.literal("triage"),
+      decision: z.object({
+        itemId: z.string().min(1),
+        result: z.enum(["top", "high", "medium", "low"]),
+      }),
+    }),
+    z.object({
+      type: z.literal("pairwise_compare"),
+      decision: z.object({
+        itemAId: z.string().min(1),
+        itemBId: z.string().min(1),
+        result: z.enum(["item_a", "item_b", "tie", "skip"]),
+      }),
+    }),
+    z.object({
+      type: z.literal("bucket_assign"),
+      decision: z.object({
+        itemId: z.string().min(1),
+        bucket: z.enum(["top", "high", "medium", "low"]),
+      }),
+    }),
+  ])
+  .and(z.object({ clientKey: z.string().min(1).optional() }));
 
 // A Postgres unique-violation surfaces its code at .code or, when wrapped by the
 // driver/drizzle, at .cause.code. Check both so the idempotent retry catches it.
@@ -53,7 +81,30 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     );
   }
 
-  const body: DecisionRequest = await req.json();
+  // duv4: a decision may only be recorded on an IN-PROGRESS session (active or
+  // paused — the states the partial unique index treats as holding the slot). A
+  // completed/abandoned/soft-deleted session is terminal; reject a late tap with
+  // 409 so it can't mutate a finished session's preference set.
+  if (sortSession.status !== "active" && sortSession.status !== "paused") {
+    return NextResponse.json(
+      { error: "This sorting session is no longer in progress" },
+      { status: 409 },
+    );
+  }
+
+  // sxfo: malformed JSON and an out-of-contract shape are the client's fault →
+  // 400 (API.md's contract), parsed BEFORE the transaction so junk never persists.
+  let raw: unknown;
+  try {
+    raw = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  const parsed = DecisionRequestSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+  const body = parsed.data;
   const clientKey = body.clientKey;
   try {
     // Atomic: the event insert, preference recalc, and (for triage) the
@@ -62,14 +113,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // disposed <=> untriaged invariant. Every write uses the tx-bound handle.
     const { event, isNew } = await withTransaction(db, async (tx) => {
       // (op/ctx passed below label the slow-op + error telemetry at the seam.)
-      // Serialize a curator's concurrent decisions: the row-lock makes two
-      // in-flight POSTs for this session queue behind each other, so the
-      // idempotency read/insert below can't race the recompute. The per-session
-      // lock is sufficient (not a per-curator lock) because of the single-active-
-      // session-per-(collection,curator) invariant: a curator has at most one
-      // active session per collection, so concurrent recomputes for the same
-      // (collection, curator) can't arise from two different sessions.
-      await tx.execute(sql`select id from sessions where id = ${params.id} for update`);
+      // duv4: serialize ALL of this curator's preference recomputes for this
+      // collection. recalculatePreferences rewrites the whole (collection,curator)
+      // set from EVERY session, so a per-session FOR UPDATE was too narrow — two
+      // POSTs to DIFFERENT sessions of one curator locked different rows and could
+      // recompute concurrently, losing a tap. The shared (collection,curator)
+      // advisory lock — taken by setDisposition too — serializes all of them and
+      // still guards the idempotency read/insert below against a concurrent recompute.
+      await lockCollectionCurator(tx, sortSession.collectionId, userId);
 
       // Idempotency: if this clientKey already recorded an event, return it
       // unchanged — skip the insert, recompute, and disposition clear.
@@ -115,8 +166,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       // disposed <=> untriaged: triaging an item clears any prior disposition for
       // this curator, so a previously set_aside/deferred item can't be both at once.
       if (body.type === "triage") {
-        const itemId = (body.decision as { itemId?: string }).itemId;
-        if (itemId) await DispositionController.fromDb(tx).bringBack(itemId, userId);
+        await DispositionController.fromDb(tx).bringBack(body.decision.itemId, userId);
       }
 
       return { event: inserted, isNew: true };

@@ -1,6 +1,29 @@
+import { sql } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { logDbError, type DbErrorContext } from "@/lib/db-error-log";
 import { logDbSlow, SLOW_OP_THRESHOLD_MS } from "@/lib/db-slow-log";
+
+// Serialize every write that recomputes a curator's preference set for one
+// collection. BOTH write paths — the decisions route and setDisposition — take
+// this SAME lock inside their transaction, so a triage and a disposition for the
+// same (collection, curator) can never interleave and leave an item both ranked
+// AND disposed (the "impossible" state the disposed <=> untriaged invariant
+// forbids). A per-session row lock was NOT enough: recalculatePreferences rewrites
+// the whole (collection, curator) set from ALL the curator's sessions, and the
+// route has no single-active-session guarantee, so two sessions of one curator
+// could recompute concurrently. pg_advisory_xact_lock auto-releases at
+// commit/rollback (no manual unlock, no leak on error). hashtext() maps each text
+// id to a stable int4 in the DB, so the two-key form keys the lock on the pair
+// without us hashing in JS or colliding with a single-bigint scheme.
+export async function lockCollectionCurator(
+  tx: Database,
+  collectionId: string,
+  curatorId: string,
+): Promise<void> {
+  await tx.execute(
+    sql`select pg_advisory_xact_lock(hashtext(${collectionId}), hashtext(${curatorId}))`,
+  );
+}
 
 // Optional labeling for the telemetry emitted at this seam. Backward-compatible:
 // callers that omit it still run (timed, but the slow emit is labeled with the
