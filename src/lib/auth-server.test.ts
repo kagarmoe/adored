@@ -66,6 +66,28 @@ describe("auth-server — better-auth instance", () => {
     expect(mod.auth).toBeDefined();
   });
 
+  it("resolves baseURL from validated env's VERCEL_URL fallback when AUTH_URL is unset (preview deploy)", async () => {
+    // Preview deploys get no explicit AUTH_URL — Vercel injects VERCEL_URL
+    // (hostname only). env.ts derives AUTH_URL = https://<VERCEL_URL>. Sourcing
+    // baseURL from raw process.env.AUTH_URL would leave it undefined and break
+    // magic-link + OAuth callback URL derivation; it must come from validated env.
+    delete process.env.AUTH_URL;
+    delete process.env.BETTER_AUTH_URL;
+    process.env.VERCEL_URL = "preview-abc123.vercel.app";
+
+    const mod = await import("./auth-server");
+    expect(mod.auth.options.baseURL).toBe("https://preview-abc123.vercel.app");
+  });
+
+  it("prefers an explicit BETTER_AUTH_URL over the env-derived fallback", async () => {
+    process.env.BETTER_AUTH_URL = "https://override.example.com";
+    process.env.VERCEL_URL = "preview-abc123.vercel.app";
+    // AUTH_URL is present in BASE_ENV; BETTER_AUTH_URL must still win.
+
+    const mod = await import("./auth-server");
+    expect(mod.auth.options.baseURL).toBe("https://override.example.com");
+  });
+
   it("wires the magic-link plugin's sendMagicLink to the email helper", async () => {
     await import("./auth-server");
     const opts = magicLinkOptionsCapture.current;
