@@ -11,12 +11,10 @@
 // @vitest-environment node
 
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline, seedBareCollection, seedFullCollection, seedUserRow } from "../../../e2e/fixtures/seed";
 import { mockAuth } from "../../../e2e/fixtures/mock-auth";
-import { user as userTable } from "@/lib/db/schema";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
@@ -33,7 +31,6 @@ vi.mock("@/lib/auth", () => mockAuth(mockGetSession));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
 // ---- route imports (after mocks) -------------------------------------------
-import { POST as signupPost } from "@/app/api/auth/signup/route";
 import { GET as collectionsGet, POST as collectionsPost } from "@/app/api/collections/route";
 import {
   GET as collectionGet,
@@ -71,96 +68,6 @@ describeDb("Group E — core route integration tests (real DB)", () => {
 
   afterAll(async () => {
     await closeDb();
-  });
-
-  // ==========================================================================
-  // POST /api/auth/signup
-  // ==========================================================================
-  describe("POST /api/auth/signup", () => {
-    it("creates a user row with a bcrypt-hashed password (not plaintext)", async () => {
-      const email = "signup-test@adored.test";
-      const password = "securePass1";
-      const res = await signupPost(
-        nextReq("POST", "http://localhost/api/auth/signup", { email, password }),
-      );
-      expect(res.status).toBe(201);
-      const body = await res.json();
-      expect(body.message).toBe("Account created successfully");
-
-      // Assert real DB row exists
-      const { db } = getTestDb();
-      const [row] = await db
-        .select()
-        .from(userTable)
-        .where(eq(userTable.email, email))
-        .limit(1);
-      expect(row).toBeDefined();
-      expect(row.email).toBe(email);
-      // Password must be stored as bcrypt hash, not plaintext
-      expect(row.password).not.toBe(password);
-      expect(row.password).toMatch(/^\$2[ab]\$/);
-    });
-
-    it("returns 201 for a duplicate email (timing equalized: dup path now also hashes)", async () => {
-      // Duplicate-email returns 201; timing is equalized — the dup branch now runs
-      // bcrypt.hash(password, 12) (throwaway) before the early return, so response
-      // time is equivalent to the real signup path. No flaky wall-clock assertion.
-      // First signup creates the user
-      const email = "dup@adored.test";
-      const password = "password123";
-      await signupPost(
-        nextReq("POST", "http://localhost/api/auth/signup", { email, password }),
-      );
-      // Second signup with same email: route returns 201 but no second row is created
-      const res = await signupPost(
-        nextReq("POST", "http://localhost/api/auth/signup", { email, password }),
-      );
-      expect(res.status).toBe(201);
-      const body = await res.json();
-      expect(body.message).toBe("Account created successfully");
-
-      // Only one user row for that email
-      const { db } = getTestDb();
-      const rows = await db
-        .select()
-        .from(userTable)
-        .where(eq(userTable.email, email));
-      expect(rows).toHaveLength(1);
-    });
-
-    it("returns 400 when email is missing", async () => {
-      const res = await signupPost(
-        nextReq("POST", "http://localhost/api/auth/signup", { password: "password123" }),
-      );
-      expect(res.status).toBe(400);
-    });
-
-    it("returns 400 when password is missing", async () => {
-      const res = await signupPost(
-        nextReq("POST", "http://localhost/api/auth/signup", { email: "x@y.com" }),
-      );
-      expect(res.status).toBe(400);
-    });
-
-    it("returns 400 for invalid email format", async () => {
-      const res = await signupPost(
-        nextReq("POST", "http://localhost/api/auth/signup", {
-          email: "not-an-email",
-          password: "password123",
-        }),
-      );
-      expect(res.status).toBe(400);
-    });
-
-    it("returns 400 when password is shorter than 8 characters", async () => {
-      const res = await signupPost(
-        nextReq("POST", "http://localhost/api/auth/signup", {
-          email: "short@adored.test",
-          password: "short",
-        }),
-      );
-      expect(res.status).toBe(400);
-    });
   });
 
   // ==========================================================================

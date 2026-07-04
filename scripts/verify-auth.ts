@@ -5,9 +5,8 @@ dotenv.config({ path: ".env.local" });
 dotenv.config({ path: ".env.development.local" });
 
 import { getDb } from "@/lib/db";
-import { user, account, session, verificationToken } from "@/lib/db/schema";
+import { user, account, session, verification } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import bcrypt from "bcryptjs";
 import { generateId } from "@/lib/id";
 
 async function verifyAuthSetup() {
@@ -27,32 +26,28 @@ async function verifyAuthSetup() {
     console.log("❌ Test 1: User table not accessible:", (e as Error).message);
   }
 
-  // Test 2: NextAuth tables exist
+  // Test 2: better-auth core tables exist
   totalTests++;
   try {
     await db.select().from(account).limit(1);
     await db.select().from(session).limit(1);
-    await db.select().from(verificationToken).limit(1);
-    console.log("✅ Test 2: NextAuth tables (account, session, verificationToken) accessible");
+    await db.select().from(verification).limit(1);
+    console.log("✅ Test 2: better-auth tables (account, session, verification) accessible");
     passedTests++;
   } catch (e) {
-    console.log("❌ Test 2: NextAuth tables not accessible:", (e as Error).message);
+    console.log("❌ Test 2: better-auth tables not accessible:", (e as Error).message);
   }
 
-  // Test 3: Password hashing works
+  // Test 3: password storage lives on account (better-auth owns hashing)
   totalTests++;
   try {
-    const testPassword = "testPassword123";
-    const hashedPassword = await bcrypt.hash(testPassword, 10);
-    const isMatch = await bcrypt.compare(testPassword, hashedPassword);
-    if (isMatch) {
-      console.log("✅ Test 3: Password hashing (bcrypt) working correctly");
-      passedTests++;
-    } else {
-      console.log("❌ Test 3: Password comparison failed");
-    }
+    // The credential password column is on `account`, not `user` — assert it is
+    // selectable so a schema drift (re-adding user.password) is caught here.
+    await db.select({ password: account.password }).from(account).limit(1);
+    console.log("✅ Test 3: credential password column on account (better-auth-owned)");
+    passedTests++;
   } catch (e) {
-    console.log("❌ Test 3: Password hashing failed:", (e as Error).message);
+    console.log("❌ Test 3: account.password not accessible:", (e as Error).message);
   }
 
   // Test 4: ID generation works
@@ -69,12 +64,10 @@ async function verifyAuthSetup() {
     console.log("❌ Test 4: ID generation failed:", (e as Error).message);
   }
 
-  // Test 5: User creation simulation
+  // Test 5: User creation simulation (canonical better-auth `user` shape)
   totalTests++;
   try {
     const testEmail = `test-${Date.now()}@example.com`;
-    const testPassword = "SecurePassword123!";
-    const hashedPassword = await bcrypt.hash(testPassword, 10);
     const userId = generateId("user");
 
     const [newUser] = await db
@@ -83,8 +76,7 @@ async function verifyAuthSetup() {
         id: userId,
         email: testEmail,
         name: "Test User",
-        password: hashedPassword,
-        emailVerified: new Date(),
+        emailVerified: true,
       })
       .returning();
 

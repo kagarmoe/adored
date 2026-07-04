@@ -3,27 +3,37 @@ import "@testing-library/jest-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-// Boundary mocks only. The login page calls signIn (next-auth/react) and uses
-// next/navigation's useRouter + useSearchParams (for the callbackUrl). Nothing
-// else is mocked — the real form, validation, and error rendering run.
-// Factory-referenced vars go through vi.hoisted so they exist when vi.mock runs.
-const { signIn, push, getSearchParams, setSearchParams } = vi.hoisted(() => {
-  let current = new URLSearchParams();
-  return {
-    signIn: vi.fn(),
-    push: vi.fn(),
-    getSearchParams: () => current,
-    setSearchParams: (sp: URLSearchParams) => {
-      current = sp;
-    },
-  };
-});
+// Boundary mocks only. The login page calls the better-auth client (signIn.email
+// / signIn.magicLink / signIn.social) and uses next/navigation's useRouter +
+// useSearchParams (for the callbackUrl). Nothing else is mocked — the real form,
+// validation, and error rendering run. Factory-referenced vars go through
+// vi.hoisted so they exist when vi.mock runs.
+const { signInEmail, signInMagicLink, signInSocial, push, getSearchParams, setSearchParams } =
+  vi.hoisted(() => {
+    let current = new URLSearchParams();
+    return {
+      signInEmail: vi.fn(),
+      signInMagicLink: vi.fn(),
+      signInSocial: vi.fn(),
+      push: vi.fn(),
+      getSearchParams: () => current,
+      setSearchParams: (sp: URLSearchParams) => {
+        current = sp;
+      },
+    };
+  });
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, refresh: vi.fn() }),
   useSearchParams: () => getSearchParams(),
 }));
-vi.mock("next-auth/react", () => ({ signIn }));
+vi.mock("@/lib/auth-client", () => ({
+  signIn: {
+    email: signInEmail,
+    magicLink: signInMagicLink,
+    social: signInSocial,
+  },
+}));
 
 import LoginPage from "./page";
 
@@ -44,8 +54,8 @@ afterEach(() => {
 });
 
 describe("LoginPage", () => {
-  it("password sign-in: normalizes email, calls signIn('credentials') and redirects to the default callbackUrl on success", async () => {
-    signIn.mockResolvedValueOnce({ ok: true });
+  it("password sign-in: normalizes email, calls signIn.email and redirects to the default callbackUrl on success", async () => {
+    signInEmail.mockResolvedValueOnce({ data: {}, error: null });
     render(<LoginPage />);
 
     fireEvent.change(emailField(), { target: { value: "  Person@Example.COM  " } });
@@ -54,17 +64,15 @@ describe("LoginPage", () => {
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/collections"));
 
-    // signIn gets the normalized (lowercased + trimmed) email and redirect:false
-    // so the page controls navigation itself.
-    expect(signIn).toHaveBeenCalledWith("credentials", {
+    // better-auth signIn.email gets the normalized (lowercased + trimmed) email.
+    expect(signInEmail).toHaveBeenCalledWith({
       email: "person@example.com",
       password: "hunter2pw",
-      redirect: false,
     });
   });
 
   it("honors ?callbackUrl from the query string on successful sign-in", async () => {
-    signIn.mockResolvedValueOnce({ ok: true });
+    signInEmail.mockResolvedValueOnce({ data: {}, error: null });
     setSearchParams(new URLSearchParams("callbackUrl=/collections/abc/items"));
     render(<LoginPage />);
 
@@ -77,8 +85,11 @@ describe("LoginPage", () => {
     );
   });
 
-  it("login failure: signIn returns an error → message shown, NO redirect", async () => {
-    signIn.mockResolvedValueOnce({ error: "Invalid email or password" });
+  it("login failure: signIn.email returns an error → message shown, NO redirect", async () => {
+    signInEmail.mockResolvedValueOnce({
+      data: null,
+      error: { message: "Invalid email or password" },
+    });
     render(<LoginPage />);
 
     fireEvent.change(emailField(), { target: { value: "a@b.com" } });
@@ -91,8 +102,8 @@ describe("LoginPage", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  it("login throw: signIn rejecting surfaces the generic error and does NOT redirect", async () => {
-    signIn.mockRejectedValueOnce(new Error("network down"));
+  it("login throw: signIn.email rejecting surfaces the generic error and does NOT redirect", async () => {
+    signInEmail.mockRejectedValueOnce(new Error("network down"));
     render(<LoginPage />);
 
     fireEvent.change(emailField(), { target: { value: "a@b.com" } });
@@ -107,8 +118,8 @@ describe("LoginPage", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  it("magic link: the secondary button calls signIn('email') and shows the check-your-email screen (no redirect)", async () => {
-    signIn.mockResolvedValueOnce({ ok: true });
+  it("magic link: the secondary button calls signIn.magicLink and shows the check-your-email screen (no redirect)", async () => {
+    signInMagicLink.mockResolvedValueOnce({ data: {}, error: null });
     render(<LoginPage />);
 
     fireEvent.change(emailField(), { target: { value: " Me@Example.com " } });
@@ -117,11 +128,42 @@ describe("LoginPage", () => {
     await waitFor(() =>
       expect(screen.getByText("Check your email")).toBeInTheDocument(),
     );
-    expect(signIn).toHaveBeenCalledWith("email", {
+    expect(signInMagicLink).toHaveBeenCalledWith({
       email: "me@example.com",
-      redirect: false,
+      callbackURL: "/collections",
     });
     // Magic link swaps to the confirmation view rather than navigating.
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("google: the Continue with Google button calls signIn.social with the google provider", async () => {
+    signInSocial.mockResolvedValueOnce({ data: {}, error: null });
+    render(<LoginPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /continue with google/i }));
+
+    await waitFor(() =>
+      expect(signInSocial).toHaveBeenCalledWith({
+        provider: "google",
+        callbackURL: "/collections",
+      }),
+    );
+  });
+
+  it("google: a provider error surfaces without navigating", async () => {
+    signInSocial.mockResolvedValueOnce({
+      data: null,
+      error: { message: "Google sign-in is unavailable right now." },
+    });
+    render(<LoginPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /continue with google/i }));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText("Google sign-in is unavailable right now."),
+      ).toBeInTheDocument(),
+    );
     expect(push).not.toHaveBeenCalled();
   });
 });

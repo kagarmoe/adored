@@ -1,11 +1,13 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export function Header() {
   const { data: session } = useSession();
+  const router = useRouter();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-surface/85 backdrop-blur-md border-b border-hairline shadow-lift">
@@ -26,7 +28,10 @@ export function Header() {
               </Link>
               <button
                 type="button"
-                onClick={() => signOut({ redirect: true, callbackUrl: "/login" })}
+                onClick={async () => {
+                  await signOut();
+                  router.push("/login");
+                }}
                 className="h-11 rounded-control px-2 text-sm text-ink-soft transition-colors hover:text-ink"
               >
                 Sign out
