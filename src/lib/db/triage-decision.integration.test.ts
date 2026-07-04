@@ -207,17 +207,18 @@ describeDb("triage decision flow (route -> DB) — purses-t9l", () => {
     expect(res.status).toBe(404);
   });
 
-  it("F) 500s when the decision payload is missing (NOT NULL violation in the write) — author is curator", async () => {
+  it("F) 400s when the decision payload is missing — boundary validation, not a mid-write 500 (sxfo) — author is curator", async () => {
     const { db } = getTestDb();
-    // Curator-owned session so authz passes; the failure is purely the write.
+    // Curator-owned session so authz passes; the body is the only thing at fault.
     const { sessionId } = await seedCollectionItemSession(ownerId);
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-    // decision is a NOT NULL jsonb column; omitting it drives the route's catch -> 500.
+    // A triage decision with no `decision` object fails the boundary Zod schema →
+    // 400 BEFORE the transaction (it used to reach the NOT NULL insert and 500).
     const res = await POST(decisionReq({ type: "triage" }) as any, { params: { id: sessionId } });
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
 
-    // The failed insert left no decision_events row for the session.
+    // Nothing persisted — rejected before any write.
     expect(await new DecisionEventRepository(db).findBySession(sessionId)).toHaveLength(0);
   });
 });
