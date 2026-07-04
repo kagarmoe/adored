@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import { Button, Card, Input, ErrorMessage } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { DeleteAccountSection } from "./DeleteAccountSection";
@@ -14,7 +14,7 @@ interface ProfileFormProps {
 }
 
 export function ProfileForm({ initialName, email }: ProfileFormProps) {
-  const { update } = useSession();
+  const { refetch } = useSession();
   const [name, setName] = useState(initialName ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -48,7 +48,10 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
     setSaving(false);
 
     try {
-      await update({ name: confirmedName });
+      // Re-pull the session so the Header's display name updates immediately.
+      // The façade reads the name fresh from the DB per request (no cookie
+      // cache), so refetch reflects the save with no stale claim to clear.
+      await refetch();
     } catch {
       // Soft failure: the name is saved; only the live session lags until the
       // next natural refresh. Do not flip the UI to an error.

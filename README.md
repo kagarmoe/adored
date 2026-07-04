@@ -49,7 +49,7 @@ A full-featured web application for managing collections and sorting items throu
    NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=  # analytics + DB observability; unset → capture is skipped
    ```
 
-   > Auth uses the Vercel-style `AUTH_URL`/`AUTH_SECRET` names; `src/lib/env.ts` validates these and bridges them to NextAuth v4's internal `NEXTAUTH_URL`/`NEXTAUTH_SECRET` at runtime. Do **not** put Vercel system vars (`VERCEL`, `VERCEL_ENV`, …) in `.env.local` — see the `__Secure-` cookie note in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). For the full operator variable list, see [docs/runbooks/setup-checklist.md](docs/runbooks/setup-checklist.md).
+   > Auth uses the Vercel-style `AUTH_URL`/`AUTH_SECRET` names; `src/lib/env.ts` validates these, and better-auth reads `BETTER_AUTH_URL`/`BETTER_AUTH_SECRET` **falling back to `AUTH_URL`/`AUTH_SECRET`** — so the `BETTER_AUTH_*` vars are optional and one secret can serve both. Do **not** put Vercel system vars (`VERCEL`, `VERCEL_ENV`, …) in `.env.local` — see the `__Secure-` cookie note in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). For the full operator variable list, see [docs/runbooks/setup-checklist.md](docs/runbooks/setup-checklist.md).
 
 3. **Set up PostgreSQL database:**
    ```bash
@@ -169,10 +169,10 @@ src/
 - Domain types in `src/types/domain.ts`
 
 **Authentication:**
-- NextAuth v4 — **email + password (Credentials)** is the primary sign-in; an email **magic-link** provider is also wired, sending via Resend (`src/lib/email.ts`; set `RESEND_API_KEY`)
-- JWT session strategy (not database sessions)
+- [better-auth](https://www.better-auth.com/) with **database sessions** (not JWT) — the whole auth surface is one handler at `/api/auth` (`src/app/api/auth/[...all]`)
+- Three sign-in methods: **email + password**, **magic-link** (sending via Resend — `src/lib/email.ts`, set `RESEND_API_KEY`), and **Google** social
+- `src/lib/auth.ts` is a thin read façade returning `{ user: { id, email, name } }`, so the session shape is unchanged for callers; each read is a fresh per-request DB lookup
 - Authorization is enforced at the **DAL capability chokepoint** (`requireApiCapability`), not a client hook — see the Permissions section below
-- A migration to [better-auth](https://www.better-auth.com/) (email + Google + magic-link) is planned (bead `purses-74tx`) but not yet done
 
 **UI:**
 - Tailwind CSS for styling

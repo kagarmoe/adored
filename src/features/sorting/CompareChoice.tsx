@@ -59,6 +59,10 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
         item_b_id: itemB.id,
         comparisons_made: comparisonsMade + 1,
       });
+      // Clear pending BEFORE refresh: router.refresh() re-renders THIS same
+      // client instance with the next pair, so a still-set `pending` would
+      // soft-lock the next pair (all controls disabled, a card stuck "Saving…").
+      setPending(null);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "That didn't save. Try again.");

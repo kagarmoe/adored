@@ -44,16 +44,29 @@ describe("env validation — happy path", () => {
     expect(env.EMAIL_SERVER_PORT).toBe(1025); // z.coerce.number default
   });
 
-  it("bridges AUTH_URL/AUTH_SECRET to NEXTAUTH_URL/NEXTAUTH_SECRET for NextAuth", async () => {
-    delete process.env.NEXTAUTH_URL;
-    delete process.env.NEXTAUTH_SECRET;
+  it("parses cleanly with the better-auth optional vars absent (app boots pre-Google)", async () => {
     const { env } = await import("./env");
 
-    // Touch a property to trigger validateEnv()'s side effects.
-    void env.AUTH_URL;
+    // Touch a required prop to force validateEnv(); optional vars are undefined,
+    // not a validation error.
+    void env.DATABASE_URL;
+    expect(env.BETTER_AUTH_SECRET).toBeUndefined();
+    expect(env.BETTER_AUTH_URL).toBeUndefined();
+    expect(env.GOOGLE_CLIENT_ID).toBeUndefined();
+    expect(env.GOOGLE_CLIENT_SECRET).toBeUndefined();
+  });
 
-    expect(process.env.NEXTAUTH_URL).toBe("https://adored.example.com");
-    expect(process.env.NEXTAUTH_SECRET).toBe("x".repeat(32));
+  it("exposes the better-auth optional vars when present", async () => {
+    process.env.BETTER_AUTH_SECRET = "y".repeat(32);
+    process.env.BETTER_AUTH_URL = "https://adored.example.com";
+    process.env.GOOGLE_CLIENT_ID = "gid";
+    process.env.GOOGLE_CLIENT_SECRET = "gsecret";
+    const { env } = await import("./env");
+
+    expect(env.BETTER_AUTH_SECRET).toBe("y".repeat(32));
+    expect(env.BETTER_AUTH_URL).toBe("https://adored.example.com");
+    expect(env.GOOGLE_CLIENT_ID).toBe("gid");
+    expect(env.GOOGLE_CLIENT_SECRET).toBe("gsecret");
   });
 
   it("derives AUTH_URL from VERCEL_URL when AUTH_URL is absent", async () => {

@@ -157,11 +157,13 @@ describe("CompareChoice tap chooses an item", () => {
   });
 
   it("uses a DIFFERENT clientKey for a genuinely new tap (a fresh comparison)", async () => {
-    // A new comparison arrives as a fresh mount (router.refresh re-renders the
-    // server tree with the next pair). A new tap must carry its own fresh key —
-    // never a stale one — so distinct decisions never collide on idempotency.
+    // A new comparison arrives via router.refresh(), which re-renders the SAME
+    // client instance with the next pair's props (NOT a fresh mount). A new tap
+    // must carry its own fresh key — never a stale one — so distinct decisions
+    // never collide on idempotency. Success clears this tap's key, so the next
+    // tap generates a new one.
     const user = userEvent.setup();
-    const { unmount } = render(
+    const { rerender } = render(
       <CompareChoice
         sessionId="s"
         itemA={item("a", "Bag A") as any}
@@ -171,20 +173,56 @@ describe("CompareChoice tap chooses an item", () => {
     );
     await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
-    unmount();
 
-    render(
+    // Next pair arrives as a rerender of the same instance.
+    rerender(
+      <CompareChoice
+        sessionId="s"
+        itemA={item("c", "Bag C") as any}
+        itemB={item("d", "Bag D") as any}
+        comparisonsMade={1}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Choose Bag C" }));
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+
+    expect(decisionBody(1).clientKey).not.toBe(decisionBody(0).clientKey);
+  });
+
+  it("re-enables the choices for the NEXT pair after a successful save (router.refresh re-renders the same instance)", async () => {
+    // router.refresh() re-fetches the server tree but PRESERVES this client
+    // instance, so the next pair arrives as a rerender with new props — not a
+    // fresh mount. If choose() left `pending` set on success, the next pair
+    // would render soft-locked: all controls disabled, one card stuck on
+    // "Saving…". Guard against that.
+    const user = userEvent.setup();
+    const { rerender } = render(
       <CompareChoice
         sessionId="s"
         itemA={item("a", "Bag A") as any}
         itemB={item("b", "Bag B") as any}
+        comparisonsMade={0}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+
+    // The next pair arrives via router.refresh() — same instance, new props.
+    rerender(
+      <CompareChoice
+        sessionId="s"
+        itemA={item("c", "Bag C") as any}
+        itemB={item("d", "Bag D") as any}
         comparisonsMade={1}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
 
-    expect(decisionBody(1).clientKey).not.toBe(decisionBody(0).clientKey);
+    expect(screen.getByRole("button", { name: "Choose Bag C" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Choose Bag D" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Tie" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Skip" })).toBeEnabled();
+    expect(screen.queryByText("Saving…")).not.toBeInTheDocument();
   });
 
   it("surfaces a gentle error (no refresh) and re-enables the choices when the save fails", async () => {

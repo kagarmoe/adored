@@ -259,16 +259,18 @@ describeDb("PATCH /api/users/me", () => {
     expect(res.status).toBe(400);
   });
 
-  it("empty name clears it (200, null)", async () => {
+  it("empty name clears it to the email local-part (200)", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
     // Name-only + empty-clears contract (spec §5.1): an empty name is NOT a 400.
-    // It clears the display name, persisting null, and returns 200.
+    // better-auth's `user.name` is NOT NULL, so clearing falls back to the email
+    // local-part (keeps the session header non-empty) and returns 200.
     const res = await mePatch(makeRequest("PATCH", { name: "" }) as any);
     expect(res.status).toBe(200);
 
     const row = await rawUserRow(ownerId);
-    expect(row?.name).toBeNull();
+    // Baseline user email is e2e@adored.test → local-part "e2e".
+    expect(row?.name).toBe("e2e");
   });
 });
 
@@ -293,7 +295,7 @@ describeDb("DELETE /api/users/me", () => {
     expect(res.status).toBe(401);
   });
 
-  it("DELETE scrubs PII: email tombstoned, name/password/emailVerified null, account+session rows gone", async () => {
+  it("DELETE scrubs PII: email + name tombstoned, emailVerified reset", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
     // Confirm the row exists before DELETE.
@@ -305,13 +307,13 @@ describeDb("DELETE /api/users/me", () => {
     const body = await res.json();
     expect(body.message).toBe("User account deleted");
 
-    // User row kept as tombstone — PII scrubbed.
+    // User row kept as tombstone — PII scrubbed. name is NOT NULL (better-auth),
+    // so it is tombstoned rather than nulled.
     const after = await rawUserRow(ownerId);
     expect(after).not.toBeNull();
     expect(after?.email).toBe(`deleted+${ownerId}@deleted.invalid`);
-    expect(after?.name).toBeNull();
-    expect(after?.password).toBeNull();
-    expect(after?.emailVerified).toBeNull();
+    expect(after?.name).toBe(`deleted+${ownerId}@deleted.invalid`);
+    expect(after?.emailVerified).toBe(false);
   });
 
   it("DELETE keys off session id — a user cannot delete another user's account", async () => {
