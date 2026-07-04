@@ -10,6 +10,37 @@
 -- `account`/`session`/`verification` (better-auth defaults), no `ba_*` tables,
 -- no NextAuth `verificationToken`, all domain FKs resolving to `user`.
 
+-- 0. FULL DATA WIPE (spec §9: no rows to preserve). Dropping + recreating `user`
+--    and re-adding the six domain FKs only succeeds if every referencing table is
+--    empty; against a populated DB the FK re-adds would otherwise raise
+--    `... violates foreign key constraint ... is not present in table "user"`.
+--    So clear ALL application + auth data first. Every table is listed explicitly
+--    so the reset is auditable; `to_regclass(...) IS NOT NULL` skips any already
+--    absent, which keeps this step re-runnable (some listed tables — `ba_*`,
+--    NextAuth `verificationToken`, and the old `account`/`session`/`user` — are
+--    DROPped later in this same migration, so a second apply must not choke on
+--    them). One dynamic TRUNCATE ... CASCADE empties parents and their children.
+DO $$
+DECLARE
+	present text;
+BEGIN
+	SELECT string_agg(quote_ident(t), ', ')
+	INTO present
+	FROM unnest(ARRAY[
+		'sort_result_shares', 'sort_result_items', 'sort_results',
+		'item_dispositions', 'preferences', 'audit_log', 'decision_events',
+		'sessions', 'photos', 'items', 'memberships', 'invitations', 'collections',
+		'ba_account', 'ba_session', 'ba_verification', 'ba_user',
+		'verificationToken', 'account', 'session', 'user'
+	]) AS t
+	WHERE to_regclass(quote_ident(t)) IS NOT NULL;
+
+	IF present IS NOT NULL THEN
+		EXECUTE 'TRUNCATE TABLE ' || present || ' CASCADE';
+	END IF;
+END $$;
+--> statement-breakpoint
+
 -- 1. Drop the better-auth `ba_*` mirror tables (children first).
 DROP TABLE IF EXISTS "ba_account" CASCADE;
 --> statement-breakpoint
