@@ -7,14 +7,16 @@ const envSchema = z.object({
   // Database
   DATABASE_URL: z.string().url("DATABASE_URL must be a valid URL"),
 
-  // NextAuth — Vercel provides these as AUTH_URL / AUTH_SECRET
+  // Auth base URL + secret — Vercel provides these as AUTH_URL / AUTH_SECRET.
+  // They are the fallback source for BETTER_AUTH_URL / BETTER_AUTH_SECRET
+  // (see auth-server.ts), so a single secret can serve better-auth.
   AUTH_URL: z.string().url("AUTH_URL must be a valid URL"),
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
 
-  // better-auth (Phase 0 — runs alongside NextAuth). All optional so the app
-  // boots before these are set: BETTER_AUTH_SECRET/URL fall back to
-  // AUTH_SECRET/AUTH_URL in auth-server.ts, and Google creds default to empty
-  // (provider registered but inert until the user supplies real values).
+  // better-auth overrides. All optional so the app boots before these are set:
+  // BETTER_AUTH_SECRET/URL fall back to AUTH_SECRET/AUTH_URL in auth-server.ts,
+  // and Google creds default to empty (provider registered but inert until the
+  // user supplies real values).
   BETTER_AUTH_SECRET: z.string().optional(),
   BETTER_AUTH_URL: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
@@ -71,24 +73,18 @@ function validateEnv(): EnvConfig {
       BLOB_READ_WRITE_TOKEN: env.BLOB_READ_WRITE_TOKEN,
     });
 
-    // NextAuth v4 reads NEXTAUTH_URL / NEXTAUTH_SECRET from process.env by
-    // convention. Vercel configures these as AUTH_URL / AUTH_SECRET, so bridge
-    // them here for the internal NextAuth machinery (callback URLs, JWT signing).
-    process.env.NEXTAUTH_URL ??= envConfig.AUTH_URL;
-    process.env.NEXTAUTH_SECRET ??= envConfig.AUTH_SECRET;
-
     // Guard against the #62 footgun: VERCEL=1 (e.g. dumped into .env.local by
-    // `vercel env pull`) makes NextAuth write Secure cookies, but an http
+    // `vercel env pull`) makes better-auth write Secure cookies, but an http
     // AUTH_URL means the browser drops them — auth silently breaks (every
     // request bounces to /login). On real Vercel both are consistent (https);
     // locally they contradict. Warn loudly rather than fail, since the app
     // still starts.
     if (process.env.VERCEL && envConfig.AUTH_URL.startsWith("http://")) {
       console.warn(
-        "[env] WARNING: VERCEL is set but AUTH_URL is http:// — NextAuth will " +
-          "write Secure cookies the browser drops over http, breaking auth " +
-          "(redirects to /login). Remove VERCEL from your local env (do not " +
-          "keep Vercel system vars in .env.local).",
+        "[env] WARNING: VERCEL is set but AUTH_URL is http:// — better-auth " +
+          "will write Secure cookies the browser drops over http, breaking " +
+          "auth (redirects to /login). Remove VERCEL from your local env (do " +
+          "not keep Vercel system vars in .env.local).",
       );
     }
 

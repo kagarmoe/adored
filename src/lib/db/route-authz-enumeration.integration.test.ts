@@ -145,13 +145,12 @@ function discoverAllRoutes(repoRoot: string): RouteEntry[] {
 // ANY route not in this set and not in the stranger cases will FAIL the exhaustiveness check.
 
 const PUBLIC_OR_SELF_KEYS = new Set<string>([
-  // NextAuth catch-all: auth is delegated to NextAuth internals; no collection gate exists
-  // or is needed. Credentials/OAuth provider callbacks are designed to be public/self.
+  // better-auth catch-all (/api/auth/[...all]): the whole sign-in/up/session +
+  // OAuth-callback + magic-link surface. Auth is delegated to better-auth
+  // internals; no collection gate exists or is needed — these endpoints are
+  // public/self by design.
   "GET /api/auth/[param]",
   "POST /api/auth/[param]",
-
-  // Account signup: intentionally unauthenticated. Creates a new user; no collection scope.
-  "POST /api/auth/signup",
 
   // Invitation accept:
   //   GET — public token preview (no session required, by design).

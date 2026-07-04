@@ -69,18 +69,6 @@ describe("env validation — happy path", () => {
     expect(env.GOOGLE_CLIENT_SECRET).toBe("gsecret");
   });
 
-  it("bridges AUTH_URL/AUTH_SECRET to NEXTAUTH_URL/NEXTAUTH_SECRET for NextAuth", async () => {
-    delete process.env.NEXTAUTH_URL;
-    delete process.env.NEXTAUTH_SECRET;
-    const { env } = await import("./env");
-
-    // Touch a property to trigger validateEnv()'s side effects.
-    void env.AUTH_URL;
-
-    expect(process.env.NEXTAUTH_URL).toBe("https://adored.example.com");
-    expect(process.env.NEXTAUTH_SECRET).toBe("x".repeat(32));
-  });
-
   it("derives AUTH_URL from VERCEL_URL when AUTH_URL is absent", async () => {
     delete process.env.AUTH_URL;
     process.env.VERCEL_URL = "adored-preview.vercel.app";

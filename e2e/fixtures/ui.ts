@@ -21,7 +21,7 @@ export const EMAIL_PLACEHOLDER = "you@example.com";
 /** Read the current context's session user email via the better-auth API, or
  *  null. better-auth's get-session returns { session, user } (or null). */
 export async function sessionEmail(page: Page): Promise<string | null> {
-  const res = await page.request.get("/api/ba-auth/get-session");
+  const res = await page.request.get("/api/auth/get-session");
   const session = await res.json().catch(() => ({}));
   return session?.user?.email ?? null;
 }
@@ -39,7 +39,7 @@ export async function submitLogin(
   await page.getByPlaceholder(EMAIL_PLACEHOLDER).fill(email);
   await page.getByPlaceholder(PASSWORD_PLACEHOLDER).fill(password);
   await Promise.all([
-    page.waitForResponse((r) => r.url().includes("/api/ba-auth/sign-in/email")),
+    page.waitForResponse((r) => r.url().includes("/api/auth/sign-in/email")),
     submit.click(),
   ]);
 }

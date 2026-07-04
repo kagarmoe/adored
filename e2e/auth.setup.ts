@@ -45,7 +45,7 @@ async function step<T>(label: string, fn: () => Promise<T>): Promise<T> {
 // authenticated. The flow:
 //
 //   1. resetDb() — clean slate (truncates ba_* AND legacy tables).
-//   2. POST /api/ba-auth/sign-up/email — better-auth creates the baseline user
+//   2. POST /api/auth/sign-up/email — better-auth creates the baseline user
 //      (ba_user + ba_account with a scrypt password) and sets the
 //      `better-auth.session_token` cookie in this request context.
 //   3. Mirror a legacy `user` row with the SAME id better-auth generated, so the
@@ -63,7 +63,7 @@ setup("authenticate", async ({ request }) => {
   // better-auth sign-up: creates the user + lands the session cookie in this
   // request's jar. Returns the better-auth-generated user id.
   const signUpRes = await step("better-auth sign-up", () =>
-    request.post(`${BASE_URL}/api/ba-auth/sign-up/email`, {
+    request.post(`${BASE_URL}/api/auth/sign-up/email`, {
       data: {
         email: BASELINE_USER.email,
         password: BASELINE_USER.password,
@@ -99,7 +99,7 @@ setup("authenticate", async ({ request }) => {
   // Confirm the session is real before saving state. better-auth's get-session
   // returns { session, user } (or null); assert the user email matches.
   const sessionRes = await step("Session transport", () =>
-    request.get(`${BASE_URL}/api/ba-auth/get-session`),
+    request.get(`${BASE_URL}/api/auth/get-session`),
   );
   expect(sessionRes.ok(), "session request failed").toBeTruthy();
   const session = await sessionRes.json();

@@ -43,7 +43,7 @@ export async function apiContextFor(
     extraHTTPHeaders: { Origin: BASE_URL },
   });
 
-  const loginRes = await ctx.post(`${BASE_URL}/api/ba-auth/sign-in/email`, {
+  const loginRes = await ctx.post(`${BASE_URL}/api/auth/sign-in/email`, {
     data: { email, password },
   });
   expect(
@@ -54,7 +54,7 @@ export async function apiContextFor(
   // Prove the session is real and belongs to THIS user before handing the
   // context back — a silently-empty session would make every authz assertion
   // pass for the wrong reason.
-  const sessionRes = await ctx.get(`${BASE_URL}/api/ba-auth/get-session`);
+  const sessionRes = await ctx.get(`${BASE_URL}/api/auth/get-session`);
   expect(sessionRes.ok(), `session request failed for ${email}`).toBeTruthy();
   const session = await sessionRes.json();
   expect(

@@ -6,11 +6,11 @@ export const config = {
   matcher: [
     // Protect all routes except these. `tutorial` is the dev-only walkthrough
     // preview; excluding it here just skips the login redirect in dev — the
-    // page itself 404s in production, which is the real boundary. Both auth
-    // mounts are excluded: `api/auth` (legacy NextAuth) and `api/ba-auth`
-    // (better-auth) serve public sign-in/up/session endpoints and must NOT be
-    // 307'd to /login, or the login/signup POSTs never reach the handler.
-    "/((?!_next|api/auth|api/ba-auth|login|signup|shared|tutorial).*)",
+    // page itself 404s in production, which is the real boundary. `api/auth` is
+    // excluded because better-auth serves its public sign-in/up/session +
+    // OAuth-callback endpoints there and must NOT be 307'd to /login, or the
+    // login/signup/callback POSTs never reach the handler.
+    "/((?!_next|api/auth|login|signup|shared|tutorial).*)",
   ],
 };
 

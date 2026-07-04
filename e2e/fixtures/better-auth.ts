@@ -15,11 +15,11 @@ import { getTestDb } from "./db";
 
 const BASE_URL = process.env.AUTH_URL ?? "http://127.0.0.1:3100";
 
-/** better-auth server endpoints, relative to the /api/ba-auth mount. */
+/** better-auth server endpoints, relative to the /api/auth mount. */
 export const BA = {
-  signUp: `${BASE_URL}/api/ba-auth/sign-up/email`,
-  signIn: `${BASE_URL}/api/ba-auth/sign-in/email`,
-  session: `${BASE_URL}/api/ba-auth/get-session`,
+  signUp: `${BASE_URL}/api/auth/sign-up/email`,
+  signIn: `${BASE_URL}/api/auth/sign-in/email`,
+  session: `${BASE_URL}/api/auth/get-session`,
 } as const;
 
 interface BetterAuthUser {

@@ -12,22 +12,10 @@ vi.mock("@/lib/auth-server", () => ({
   auth: { api: { getSession: getSessionApi } },
 }));
 
-// auth.ts still builds NextAuth's authOptions (for the still-live login route)
-// at module load: DrizzleAdapter(getDb()). Neither is exercised by the façade
-// under test, so stub both to keep this a focused façade contract test.
-vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
-vi.mock("@auth/drizzle-adapter", () => ({ DrizzleAdapter: () => ({}) }));
-
 // requireAuth/getSession call `await headers()`; give them a stub Headers.
 vi.mock("next/headers", () => ({
   headers: vi.fn(async () => new Headers({ cookie: "better-auth.session_token=abc" })),
 }));
-
-// auth.ts reads env.AUTH_SECRET when building authOptions at module load.
-vi.stubEnv("AUTH_SECRET", "x".repeat(32));
-vi.stubEnv("AUTH_URL", "https://adored.example.com");
-vi.stubEnv("DATABASE_URL", "postgres://user:pass@localhost:5432/adored");
-vi.stubEnv("EMAIL_FROM", "noreply@adored.example.com");
 
 beforeEach(() => {
   getSessionApi.mockReset();

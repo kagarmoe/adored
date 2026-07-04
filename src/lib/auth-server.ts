@@ -11,11 +11,14 @@ import {
   baVerification,
 } from "@/lib/db/better-auth-schema";
 
-// better-auth `auth` instance — Phase 0 of the migration. It runs ALONGSIDE the
-// live NextAuth setup; nothing switches yet (no façade, no middleware, no UI).
+// better-auth `auth` instance — the ONLY auth backend now (NextAuth retired in
+// Cutover Pass 2b-i). Mounted at /api/auth; the façade (auth.ts), middleware,
+// and UI all read/drive it.
 //
 // - drizzleAdapter maps better-auth's four core models onto our `ba_*` Drizzle
-//   tables (distinct names → no collision with NextAuth's live tables).
+//   tables. These stay distinct from the legacy `user` table for now: the
+//   `user`↔`ba_user` same-id mirroring bridge is intentionally still in place
+//   (domain FKs resolve through it) until Pass 2b-ii collapses the two.
 // - emailAndPassword + Google + magic-link are the three sign-in methods.
 // - Google creds are optional until the user provides them (empty strings keep
 //   the provider registered but inert — the app still boots).
@@ -56,13 +59,12 @@ export const auth = betterAuth({
   }),
   secret: process.env.BETTER_AUTH_SECRET ?? process.env.AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL ?? process.env.AUTH_URL,
-  // Mounted at /api/ba-auth (not the default /api/auth): NextAuth still owns
-  // /api/auth/[...nextauth], and Next.js App Router forbids two differently-
-  // named catch-all slugs ([...all] vs [...nextauth]) under one path segment.
-  // better-auth builds all its route + callback URLs from this basePath, so it
-  // must match the [...all] mount. Phase 5 (NextAuth removed) can move both
-  // back to /api/auth.
-  basePath: "/api/ba-auth",
+  // Mounted at the default /api/auth (Cutover Pass 2b-i): NextAuth is retired,
+  // so the [...nextauth] collision is gone and better-auth owns /api/auth. It
+  // builds all its route + callback URLs from this basePath, so it must match
+  // the src/app/api/auth/[...all] mount — and the Google callback is therefore
+  // …/api/auth/callback/google (matches the setup checklist).
+  basePath: "/api/auth",
   emailAndPassword: {
     enabled: true,
   },

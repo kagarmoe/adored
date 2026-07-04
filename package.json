@@ -29,7 +29,6 @@
     "bench:recompute": "tsx scripts/bench-recompute.ts"
   },
   "dependencies": {
-    "@auth/drizzle-adapter": "^1.2.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/blob": "^2.3.0",
     "@vercel/functions": "^3.7.5",
@@ -41,7 +40,6 @@
     "drizzle-kit": "0.20.17",
     "drizzle-orm": "0.30.10",
     "next": "14.2.35",
-    "next-auth": "4.24.10",
     "postgres": "3.4.4",
     "posthog-js": "^1.396.3",
     "posthog-node": "^5.39.1",
