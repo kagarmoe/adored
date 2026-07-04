@@ -165,12 +165,14 @@ describe("ComparePage round chrome + copy (Epic 4c)", () => {
     expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
   });
 
-  it("uses the wireframe 'reach for more' / 'the one you'd keep' copy", async () => {
+  it("uses the TONE.md love-framing copy", async () => {
     const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
     render(ui);
-    expect(screen.getByRole("heading", { name: /which do you reach for more\?/i })).toBeInTheDocument();
-    expect(screen.getByText(/tap the one you'd keep/i)).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /which do you love more\?/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /which do you love more\?/i })).toBeInTheDocument();
+    expect(screen.getByText(/tap the one you love more/i)).toBeInTheDocument();
+    // Regression guard: the utility/keep framing TONE.md forbids must not return.
+    expect(screen.queryByRole("heading", { name: /reach for/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/\bkeep\b/i)).not.toBeInTheDocument();
   });
 });
 

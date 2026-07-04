@@ -58,9 +58,9 @@ describe("WelcomeTriage", () => {
 describe("WelcomeCompare", () => {
   it("renders the dominant prompt and coach copy verbatim", () => {
     render(<WelcomeCompare onChoose={() => {}} />);
-    expect(screen.getByRole("heading", { name: "Which do you reach for more?" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Which do you love more?" })).toBeInTheDocument();
     expect(
-      screen.getByText("When two feel close, this shows which you reach for.")
+      screen.getByText("When two feel close, this shows which you love more.")
     ).toBeInTheDocument();
   });
 

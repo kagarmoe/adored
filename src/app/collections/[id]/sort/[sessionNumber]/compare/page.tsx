@@ -144,8 +144,8 @@ export default async function ComparePage({ params }: ComparePageProps) {
       >
         <div className="mx-auto max-w-2xl space-y-6">
           <div>
-            <h1 className="text-3xl text-ink">Which do you reach for more?</h1>
-            <p className="mt-2 text-ink-soft">Tap the one you&apos;d keep. Tie or skip whenever you like.</p>
+            <h1 className="text-3xl text-ink">Which do you love more?</h1>
+            <p className="mt-2 text-ink-soft">Tap the one you love more. Tie or skip whenever you like.</p>
           </div>
 
           {!itemA || !itemB ? (

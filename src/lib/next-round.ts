@@ -52,7 +52,7 @@ export function recommendNextRound(input: NextRoundInput): NextRound {
     return {
       kind: "compare",
       label: "Refine the top tier",
-      description: "Compare the ones you love to see which you reach for most.",
+      description: "Compare the ones you love to see which you love most.",
       cta: "Refine",
     };
   }
