@@ -1,122 +1,5 @@
-import type { NextAuthOptions } from "next-auth";
-import { getServerSession as getNextAuthSession } from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import EmailProvider from "next-auth/providers/email";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import { getDb } from "@/lib/db";
-import { user } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import bcrypt from "bcryptjs";
-import { generateId } from "@/lib/id";
-import { env } from "@/lib/env";
-import { jwtCallback, sessionCallback } from "@/lib/auth-callbacks";
-import { sendMagicLink } from "@/lib/email";
-
-export const authOptions: NextAuthOptions = {
-  secret: env.AUTH_SECRET,
-  adapter: DrizzleAdapter(getDb()),
-  providers: [
-    Credentials({
-      id: "credentials",
-      name: "Email & Password",
-      credentials: {
-        email: {
-          label: "Email",
-          type: "email",
-          placeholder: "you@example.com",
-        },
-        password: {
-          label: "Password",
-          type: "password",
-        },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Invalid email or password");
-        }
-
-        const db = getDb();
-        const users = await db
-          .select()
-          .from(user)
-          .where(eq(user.email, credentials.email.toLowerCase()))
-          .limit(1);
-
-        if (!users.length || !users[0].password) {
-          throw new Error("Invalid email or password");
-        }
-
-        const userRecord = users[0];
-        const passwordMatch = await bcrypt.compare(
-          credentials.password,
-          userRecord.password!
-        );
-
-        if (!passwordMatch) {
-          throw new Error("Invalid email or password");
-        }
-
-        return {
-          id: userRecord.id,
-          email: userRecord.email,
-          name: userRecord.name,
-        };
-      },
-    }),
-    EmailProvider({
-      server: {
-        host: env.EMAIL_SERVER_HOST,
-        port: env.EMAIL_SERVER_PORT,
-        secure: env.NODE_ENV === "production",
-        auth: env.EMAIL_SERVER_USER
-          ? {
-              user: env.EMAIL_SERVER_USER,
-              pass: env.EMAIL_SERVER_PASSWORD,
-            }
-          : undefined,
-      },
-      from: env.EMAIL_FROM,
-      // Delegate to the Resend helper, which handles the no-key dev-log
-      // fallback internally (and never logs the link outside development).
-      sendVerificationRequest: async ({ identifier, url }) => {
-        await sendMagicLink({ to: identifier, url });
-      },
-    }),
-  ],
-  callbacks: {
-    jwt: jwtCallback,
-    session: sessionCallback,
-    async signIn({ user: authUser, account }) {
-      if (account?.provider === "email" && authUser?.email) {
-        const db = getDb();
-        const normalizedEmail = authUser.email.toLowerCase().trim();
-        const existing = await db
-          .select()
-          .from(user)
-          .where(eq(user.email, normalizedEmail))
-          .limit(1);
-
-        if (!existing.length) {
-          await db.insert(user).values({
-            id: generateId("user"),
-            email: normalizedEmail,
-            name: authUser.name || normalizedEmail.split("@")[0],
-            emailVerified: new Date(),
-          });
-        }
-      }
-      return true;
-    },
-  },
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60,
-  },
-};
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth-server";
 
 export interface Session {
   user?: {
@@ -126,8 +9,31 @@ export interface Session {
   };
 }
 
+// THE FAÇADE (Cutover Pass 1). Reads a better-auth session and returns the
+// byte-identical shape the ~249 call sites + the DAL (`userId: string`) already
+// depend on: { user: { id, email, name } }. better-auth's getSession returns
+// { session, user } | null; we project ONLY id/email/name off `user` so no
+// extra fields (image/emailVerified/…) leak into the contract. Because we have
+// NOT enabled session.cookieCache, auth.api.getSession does a fresh per-request
+// DB read — so a profile display-name edit is reflected on the very next call
+// (name-freshness) with no stale JWT claim to invalidate.
+//
+// NextAuth is fully retired (Cutover Pass 2b-i): the old authOptions +
+// Credentials/EmailProvider/DrizzleAdapter config is gone, and better-auth now
+// owns the whole sign-in/session surface at /api/auth. This module is nothing
+// but the read façade over better-auth.
 export async function getSession(): Promise<Session | null> {
-  return getNextAuthSession(authOptions);
+  const result = await auth.api.getSession({ headers: await headers() });
+  if (!result?.user) {
+    return null;
+  }
+  return {
+    user: {
+      id: result.user.id,
+      email: result.user.email,
+      name: result.user.name,
+    },
+  };
 }
 
 export class UnauthorizedError extends Error {

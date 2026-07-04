@@ -24,13 +24,13 @@ Env vars are set in **Vercel → Settings → Environment Variables** (per envir
 - [ ] **Restart local dev** (`npm run dev`) after updating `.env.local` (esp. the regenerated Blob token).
 - [ ] **Do not** keep Vercel system vars (e.g. `VERCEL=1`) in `.env.local` — the env guard warns that `VERCEL=1` + an `http://` `AUTH_URL` makes NextAuth write `Secure` cookies the browser drops, silently breaking local auth (every request bounces to `/login`).
 
-## 4. Future — better-auth migration (bead `purses-74tx`), only when you start it
+## 4. better-auth migration (bead `purses-74tx`) — landing now
 
-Parked until it's done as its own effort. When you begin:
+The cutover ships with `feat/better-auth-migration`: better-auth with **database sessions**, email+password + magic-link (Resend) + Google, one handler at `/api/auth` (`src/app/api/auth/[...all]`). Only **Google** needs operator action to light up (email+password and magic-link work with the existing `AUTH_*`/`RESEND_API_KEY` vars):
 
-- [ ] **Google Cloud OAuth 2.0 client** — create it, get the **client ID + secret**, and register the **authorized redirect URIs**: `https://adored.kimberlygarmoe.com/api/auth/callback/google` (Production + Preview) and `http://localhost:3000/api/auth/callback/google` (local).
-- [ ] **`BETTER_AUTH_SECRET`** (may reuse `AUTH_SECRET`, ≥32 chars) and **`BETTER_AUTH_URL`** set per environment (a mismatch is the classic `redirect_uri_mismatch`).
-- Decisions already settled: **reset** path (no data migration; keeps email+password + Google + magic-link); the one-time everyone-out is moot with no real users. See `docs/superpowers/specs/2026-07-01-better-auth-migration-design.md` + the plan.
+- [ ] **Google Cloud OAuth 2.0 client** — create it, get the **client ID + secret** (set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`; unset → the Google button is inert but the app still boots), and register the **authorized redirect URIs**: `https://adored.kimberlygarmoe.com/api/auth/callback/google` (Production + Preview) and `http://localhost:3000/api/auth/callback/google` (local).
+- [ ] **`BETTER_AUTH_SECRET` / `BETTER_AUTH_URL`** are **optional** — better-auth falls back to `AUTH_SECRET` / `AUTH_URL` (already set), so one secret serves both. Set the `BETTER_AUTH_*` pair only if you want a distinct secret/base URL per environment (a base-URL mismatch is the classic `redirect_uri_mismatch`).
+- Settled: **reset** path (migration `0015` wipes + recreates the canonical `user`/`account`/`session`/`verification`, no data migration); the one-time everyone-out is moot with no real users. See `docs/superpowers/specs/2026-07-01-better-auth-migration-design.md` + the plan.
 
 ## 5. Needs no action (ships with the next deploy)
 
@@ -43,9 +43,10 @@ The code from this cycle carries itself: authz hardening (CI page-guard), the DB
 | Var | Required | Purpose |
 |---|---|---|
 | `DATABASE_URL` | yes (set) | Neon Postgres connection |
-| `AUTH_URL` / `AUTH_SECRET` | yes (set) | NextAuth (bridged to `NEXTAUTH_URL`/`NEXTAUTH_SECRET`) |
+| `AUTH_URL` / `AUTH_SECRET` | yes (set) | better-auth base URL + secret (fallback source for `BETTER_AUTH_*`) |
 | `RESEND_API_KEY` | **needed** | Live email (magic-link + invitations) |
 | `BLOB_READ_WRITE_TOKEN` | **needed (regen)** | Photo uploads |
 | `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | **verify** | Analytics + DB observability |
 | `EMAIL_FROM` | default | Sender (`noreply@kimberlygarmoe.com`) |
-| `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL` | future | better-auth (`74tx`) |
+| `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL` | optional | better-auth (`74tx`); falls back to `AUTH_SECRET`/`AUTH_URL` |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | optional | Google sign-in; unset → button inert, app still boots |

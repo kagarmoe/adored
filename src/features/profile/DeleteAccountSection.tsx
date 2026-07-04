@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { signOut } from "@/lib/auth-client";
 import { Button, Card, Input } from "@/components/ui";
 
 interface DeleteAccountSectionProps {
@@ -14,6 +15,7 @@ interface DeleteAccountSectionProps {
 // the user retypes their own email (shown on this screen) before the final button
 // enables. On success the JWT session is dead, so we signOut() rather than push.
 export function DeleteAccountSection({ email }: DeleteAccountSectionProps) {
+  const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
@@ -37,8 +39,9 @@ export function DeleteAccountSection({ email }: DeleteAccountSectionProps) {
     try {
       const res = await fetch("/api/users/me", { method: "DELETE" });
       if (!res.ok) throw new Error("delete failed");
-      // The account is gone — end the (now-dead) JWT session and land on login.
-      await signOut({ redirect: true, callbackUrl: "/login" });
+      // The account is gone — end the (now-dead) session and land on login.
+      await signOut();
+      router.push("/login");
     } catch {
       setError("That didn’t go through — your account is safe; try again in a moment.");
       setBusy(false);

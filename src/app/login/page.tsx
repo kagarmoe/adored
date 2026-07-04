@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Input, ErrorMessage } from "@/components/ui";
 import posthog from "posthog-js";
@@ -24,15 +24,14 @@ function LoginContent() {
 
     try {
       const normalizedEmail = email.toLowerCase().trim();
-      const result = await signIn("credentials", {
+      const { error: signInError } = await signIn.email({
         email: normalizedEmail,
         password,
-        redirect: false,
       });
 
-      if (result?.error) {
-        setError(result.error);
-      } else if (result?.ok) {
+      if (signInError) {
+        setError(signInError.message ?? "Invalid email or password");
+      } else {
         posthog.capture('user_logged_in', { method: 'password' });
         router.push(callbackUrl);
       }
@@ -50,19 +49,40 @@ function LoginContent() {
 
     try {
       const normalizedEmail = email.toLowerCase().trim();
-      const result = await signIn("email", {
+      const { error: magicLinkError } = await signIn.magicLink({
         email: normalizedEmail,
-        redirect: false,
+        callbackURL: callbackUrl,
       });
 
-      if (result?.error) {
-        setError(result.error);
-      } else if (result?.ok) {
+      if (magicLinkError) {
+        setError(magicLinkError.message ?? "Failed to send magic link. Please try again.");
+      } else {
         setMagicLinkSent(true);
       }
     } catch (err) {
       setError("Failed to send magic link. Please try again.");
     } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setError("");
+    setLoading(true);
+    try {
+      // Redirects the browser to Google; on return, better-auth lands the
+      // session and forwards to callbackUrl. Errors (e.g. provider not yet
+      // configured) surface here without navigating away.
+      const { error: socialError } = await signIn.social({
+        provider: "google",
+        callbackURL: callbackUrl,
+      });
+      if (socialError) {
+        setError(socialError.message ?? "Google sign-in is unavailable right now.");
+        setLoading(false);
+      }
+    } catch (err) {
+      setError("Google sign-in is unavailable right now.");
       setLoading(false);
     }
   }
@@ -144,6 +164,17 @@ function LoginContent() {
           disabled={loading || !email}
         >
           Email me a sign-in link
+        </Button>
+
+        <Button
+          type="button"
+          variant="secondary"
+          fullWidth
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className="mt-3"
+        >
+          Continue with Google
         </Button>
 
         <p className="text-center text-sm text-ink-soft mt-6">

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signUp } from "@/lib/auth-client";
 import { Button, Input, ErrorMessage } from "@/components/ui";
 import posthog from "posthog-js";
 
@@ -37,27 +37,20 @@ export default function SignupPage() {
 
     try {
       const normalizedEmail = email.toLowerCase().trim();
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: normalizedEmail, password }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Signup failed. Please try again.");
-        return;
-      }
-
-      const result = await signIn("credentials", {
+      // better-auth requires a name; the form doesn't collect one, so seed it
+      // from the email local-part (the same value the Header falls back to for
+      // display). The user can edit it later on the profile screen.
+      const derivedName = normalizedEmail.split("@")[0];
+      const { error: signUpError } = await signUp.email({
         email: normalizedEmail,
         password,
-        redirect: false,
+        name: derivedName,
       });
 
-      if (result?.error) {
-        setError(result.error);
-      } else if (result?.ok) {
+      if (signUpError) {
+        setError(signUpError.message || "Signup failed. Please try again.");
+      } else {
+        // signUp.email also establishes the session, so no separate sign-in.
         posthog.capture('user_signed_up');
         router.push("/collections");
       }

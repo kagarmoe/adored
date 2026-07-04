@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 // Display-name flow (purses-wew): editing the name on /profile and saving must
 // reflect in the header WITHOUT a page reload. The form PATCHes /api/users/me
-// then calls next-auth's update() to refresh the JWT session in place; the
+// then calls better-auth's useSession().refetch() to re-pull the session; the
 // Header reads session.user.name, so the banner text changes live.
 //
 // Authenticated via the shared storageState (the baseline user) — this is NOT a
@@ -36,7 +36,7 @@ test("saving a new display name reflects in the header without a reload", async 
   await nameField.fill(uniqueName);
 
   // Save and wait for the real PATCH to land before asserting — the header only
-  // updates after the API succeeds and update() refreshes the session.
+  // updates after the API succeeds and refetch() re-pulls the session.
   await Promise.all([
     page.waitForResponse(
       (r) =>

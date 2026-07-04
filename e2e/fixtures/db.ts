@@ -40,8 +40,7 @@ function testConnectionString(): string {
 
 // Truncate every table the drizzle schema defines — derived from the schema
 // object so it never drifts when a table is added. CASCADE handles FK order;
-// identifiers are quoted to survive reserved words ("user") and mixed case
-// ("verificationToken").
+// identifiers are quoted to survive reserved words ("user").
 function schemaTableNames(): string[] {
   return (Object.values(schema) as unknown[])
     .filter((v): v is PgTable => is(v, PgTable))

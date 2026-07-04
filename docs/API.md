@@ -1,6 +1,6 @@
 # API reference (agent-first)
 
-Structured reference for an AI agent (or developer) calling the **Adored** HTTP API. Not OpenAPI — markdown optimized for reading, not codegen. Every route lives under `/api`, speaks JSON in and JSON out (except binary image streams and the NextAuth handler), and is a Next.js App Router route handler.
+Structured reference for an AI agent (or developer) calling the **Adored** HTTP API. Not OpenAPI — markdown optimized for reading, not codegen. Every route lives under `/api`, speaks JSON in and JSON out (except binary image streams and the better-auth handler), and is a Next.js App Router route handler.
 
 **How to read this:** [Authentication](#authentication), [Authorization model](#authorization-model), and [Status-code semantics](#status-code-semantics) apply to every route — read them first. Then use the [Route index](#route-index) and the per-family detail. Returned-entity field shapes (`Collection`, `Item`, `Photo`, `SortResult`, `SortResultItem`, `Membership`, `Invitation`, `Session`, `DecisionEvent`) live in `src/types` and the Drizzle schema (`src/lib/db/schema.ts`) — this doc names the entity rather than duplicating fields that would drift.
 
@@ -8,12 +8,13 @@ Structured reference for an AI agent (or developer) calling the **Adored** HTTP 
 
 ## Authentication
 
-- **Mechanism:** NextAuth v4 with a **JWT session** in the session cookie. Authenticate via the NextAuth flow (`/api/auth/[...nextauth]`) and send the session cookie on subsequent requests.
+- **Mechanism:** **better-auth** with a **database session** (not JWT). The session token lives in a cookie; the session row lives in the `session` table. Authenticate via the better-auth handler (`/api/auth/[...all]`, mounted at `/api/auth`) and send the session cookie on subsequent requests. Three sign-in methods: **email+password**, **magic-link** (Resend), and **Google** social.
 - **Two server-side checks appear in the code, both meaning "must be signed in":**
   - `requireAuth()` (`src/lib/auth.ts`) — throws `"Unauthorized"`; the handler maps it to **`401`**.
   - `getSession()` + an inline `if (!session?.user) → 401` — same effect, used by the newer routes that then call a DAL guard.
-- **Sign-up:** `POST /api/auth/signup` (public) creates a credentials account; sign-in goes through the NextAuth handler.
-- **public** routes need no session: the NextAuth handler, signup, `GET /invitations/accept` (token preview), and `shared-results/[token]`. (**`POST /invitations/accept` now requires a session** — it binds the invite to the caller's account; see its detail.)
+- **`src/lib/auth.ts` is a read façade over better-auth** — `getSession`/`requireAuth` return the byte-identical `{ user: { id, email, name } }` shape the ~249 call sites and the DAL chokepoint already depend on, so the migration left them untouched. Each call is a fresh per-request DB read (no session cookie-cache), so a display-name edit is reflected on the very next request.
+- **Sign-up / sign-in:** go through the better-auth handler — `POST /api/auth/sign-up/email` and `POST /api/auth/sign-in/email` for credentials, `POST /api/auth/sign-in/magic-link` for magic-link, and the Google social + callback flow. There is **no** standalone `/api/auth/signup` route anymore.
+- **public** routes need no session: the better-auth handler, `GET /invitations/accept` (token preview), and `shared-results/[token]`. (**`POST /invitations/accept` now requires a session** — it binds the invite to the caller's account; see its detail.)
 
 ## Authorization model
 
@@ -62,8 +63,7 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 ### auth & user
 | Method | Path | Access |
 |---|---|---|
-| GET·POST | `/api/auth/[...nextauth]` | public |
-| POST | `/api/auth/signup` | public |
+| GET·POST | `/api/auth/[...all]` | public |
 | GET·PATCH·DELETE | `/api/users/me` | self |
 
 ### collections (core)
@@ -166,14 +166,11 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 
 ## auth & user
 
-### `GET·POST /api/auth/[...nextauth]`
-NextAuth v4 handler (sign-in, callback, session, sign-out). Public. Drives the JWT session every other route depends on.
-
-### `POST /api/auth/signup`
-Public. Create a credentials account. **Body:** `{ email, password }`. Email normalized + regex-validated; password ≥ 8 chars. **Returns** `201 { message }`. To prevent email enumeration it returns the **same** `201 { message: "Account created successfully" }` whether or not the email already exists. **Errors:** `400` missing/invalid email or short password; `500`.
+### `GET·POST /api/auth/[...all]`
+better-auth catch-all handler (`toNextJsHandler`), mounted at `/api/auth`. Public. Serves the whole auth surface and drives the **database session** every other route depends on. Sub-paths include: `POST /api/auth/sign-up/email`, `POST /api/auth/sign-in/email`, `POST /api/auth/sign-in/magic-link`, `GET /api/auth/magic-link/verify`, `GET /api/auth/callback/google`, `GET /api/auth/get-session`, and `POST /api/auth/sign-out`. There is no separate `/api/auth/signup` route — sign-up is `sign-up/email` here.
 
 ### `GET·PATCH·DELETE /api/users/me`
-Authenticated; acts **only on the caller** (`session.user.id`), so no IDOR. `GET` → `User`. `PATCH` is **name-only** (`{ name }` via `UpdateUserSchema` in `src/server/api/users.ts`): trimmed, ≤80 chars; an **empty name clears** the display name (persists `null`, returns `200` — not a `400`); any other key (incl. `email`) is **stripped** — email is intentionally not mutable here (spec §5.1) — so an email-only or empty body is a `200` **no-op**. `400` only on malformed JSON; returns the updated `User`. The display name carries through the JWT session (see ARCHITECTURE decisions log, entry 2). `DELETE` → **real account deletion** via `AccountDeletionService` (pv9 PR6, `purses-hybm`): purges **every** collection the caller owns — active **and** soft-deleted — by reusing `CollectionPurgeService` (cascade + `collection.purge` audit + blob `del`); deletes the caller's curator-private rows (sessions/sort-results/+children/preferences/memberships) in collections owned by others; **scrubs** the caller's account-linking identifiers on retained shared content (`photos.uploaded_by` and accepted `invitations.email` → a per-id tombstone); scrubs the `user` row PII (`email`→`deleted+<id>@deleted.invalid`, `name`/`image`/`password`/`emailVerified`→null) and deletes `account`/`session`/`verificationToken` rows — all so login is dead and no PII survives. **Fail-loud:** if any owned-collection purge throws, the op aborts **before** the PII scrub (PII intact, retryable) and returns **`500`** — never a partial-scrub success. `200 { message }` on success; `401` if no session.
+Authenticated; acts **only on the caller** (`session.user.id`), so no IDOR. `GET` → `User`. `PATCH` is **name-only** (`{ name }` via `UpdateUserSchema` in `src/server/api/users.ts`): trimmed, ≤80 chars; an **empty name clears** the display name (persists `null`, returns `200` — not a `400`); any other key (incl. `email`) is **stripped** — email is intentionally not mutable here (spec §5.1) — so an email-only or empty body is a `200` **no-op**. `400` only on malformed JSON; returns the updated `User`. The display name is a fresh per-request DB read off the better-auth session — no JWT claim to carry or invalidate, so an edit shows on the next request (see ARCHITECTURE decisions log, entry 2). `DELETE` → **real account deletion** via `AccountDeletionService` (pv9 PR6, `purses-hybm`): purges **every** collection the caller owns — active **and** soft-deleted — by reusing `CollectionPurgeService` (cascade + `collection.purge` audit + blob `del`); deletes the caller's curator-private rows (sessions/sort-results/+children/preferences/memberships) in collections owned by others; **scrubs** the caller's account-linking identifiers on retained shared content (`photos.uploaded_by` and accepted `invitations.email` → a per-id tombstone); then `UserRepository.purgeAndScrub` (in one transaction) **hard-deletes** the caller's better-auth `account` rows (which hold the scrypt password), `session` rows (logs out everywhere), and `verification` rows for the old email (no stale magic-link), and scrubs the `user` row PII (`email`/`name` → per-id tombstone, `image`→null, `email_verified`→false) — all so login is dead and no PII survives. There is **no** `verificationToken` table and the password no longer lives on `user`. **Fail-loud:** if any owned-collection purge throws, the op aborts **before** the PII scrub (PII intact, retryable) and returns **`500`** — never a partial-scrub success. `200 { message }` on success; `401` if no session.
 
 ## collections (core)
 
