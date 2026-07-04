@@ -2,13 +2,10 @@
 // the e2e must create + authenticate users THROUGH better-auth (it owns password
 // hashing — scrypt — and the session cookie) rather than inserting bcrypt rows.
 //
-// Two-table reality during the phased migration: better-auth's user lives in
-// `ba_user` (its own generated id), while the app's domain tables (collections,
-// memberships, preferences, …) FK to the legacy `user` table. The façade
-// getSession() returns the ba_user id, so for a signed-in user to OWN seeded
-// domain data, a `user` row must exist with the SAME id. `createBetterAuthUser`
-// does both: sign up via better-auth (→ ba_user + ba_account(scrypt)) and mirror
-// a `user` row with that id.
+// Single-table reality (Cutover Pass 2b-ii): better-auth OWNS the one canonical
+// `user` table, so signing up a user creates the very row the app's domain
+// tables (collections, memberships, preferences, …) FK to. No mirroring: the id
+// better-auth generates IS the ownerId every domain fixture seeds under.
 
 import { user } from "@/lib/db/schema";
 import { getTestDb } from "./db";
@@ -29,8 +26,8 @@ interface BetterAuthUser {
 
 /**
  * Sign up a user via better-auth over HTTP (the running prod server owns the
- * test DB, so this writes ba_user + ba_account to the same Postgres the domain
- * fixtures use). Returns the better-auth-generated user id.
+ * test DB, so this writes the `user` + `account` rows to the same Postgres the
+ * domain fixtures use). Returns the better-auth-generated user id.
  */
 async function signUpViaBetterAuth(
   email: string,
@@ -60,10 +57,11 @@ async function signUpViaBetterAuth(
 }
 
 /**
- * Create a user through better-auth AND mirror a legacy `user` row with the same
- * id so domain FKs (collections.ownerId → user.id) resolve for this principal.
- * Idempotent by email: if the `user` row already exists, returns its id without
- * re-signing-up (a duplicate better-auth sign-up would 422 on the unique email).
+ * Create (or find) a user through better-auth and return its id. Idempotent by
+ * email: if the `user` row already exists, returns its id without re-signing-up
+ * (a duplicate better-auth sign-up would 422 on the unique email). The returned
+ * id is the canonical `user.id` that domain FKs (collections.ownerId → user.id)
+ * resolve to — no mirroring, since better-auth owns the one `user` table.
  */
 export async function createBetterAuthUser(
   email: string,
@@ -80,12 +78,5 @@ export async function createBetterAuthUser(
   if (existing.length) return existing[0].id;
 
   const created = await signUpViaBetterAuth(email, password, name);
-  // Mirror the legacy row with the SAME id (no password — better-auth owns auth).
-  await db.insert(user).values({
-    id: created.id,
-    email,
-    name,
-    emailVerified: new Date(),
-  });
   return created.id;
 }

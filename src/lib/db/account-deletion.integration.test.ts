@@ -10,7 +10,7 @@
 // Assert BEFORE: every table populated (non-vacuous).
 // Call DELETE /api/users/me as U.
 // Assert AFTER: CA fully gone; U's borrowed-slice in CB gone; V's own rows in CB
-// INTACT; U's user row PII scrubbed; U's account/session/verificationToken gone;
+// INTACT; U's user row PII scrubbed; U's account/session/verification gone;
 // blob del called for CA's photo keys.
 //
 // Run with:
@@ -27,7 +27,7 @@ import {
   user as userTable,
   account as accountTable,
   session as sessionTable,
-  verificationToken as verificationTokenTable,
+  verification as verificationTable,
   collectionsTable,
   itemsTable,
   photosTable,
@@ -135,34 +135,37 @@ describeDb("AccountDeletionService via DELETE /api/users/me", () => {
         id: userId,
         email: `u-${userId}@adored.test`,
         name: "User U",
-        password: "hashed",
-        emailVerified: new Date(),
+        emailVerified: true,
       },
       {
         id: otherUserId,
         email: `v-${otherUserId}@adored.test`,
         name: "User V",
-        emailVerified: new Date(),
+        emailVerified: true,
       },
     ]);
 
-    // Seed an account row + NextAuth session row for U (so purge deletes them).
+    // Seed a better-auth account row (holds the scrypt password) + session row
+    // for U so purge deletes them.
     await db.insert(accountTable).values({
+      id: generateId("acct"),
       userId,
-      type: "credentials",
-      provider: "credentials",
-      providerAccountId: userId,
+      accountId: userId,
+      providerId: "credential",
+      password: "hashed",
     });
     await db.insert(sessionTable).values({
-      sessionToken: generateId("ntok"),
+      id: generateId("sess"),
       userId,
-      expires: new Date(Date.now() + 86400_000),
+      token: generateId("ntok"),
+      expiresAt: new Date(Date.now() + 86400_000),
     });
-    // Seed a verificationToken for U's email.
-    await db.insert(verificationTokenTable).values({
+    // Seed a verification row for U's email (magic-link identifier = email).
+    await db.insert(verificationTable).values({
+      id: generateId("ver"),
       identifier: `u-${userId}@adored.test`,
-      token: generateId("vtok"),
-      expires: new Date(Date.now() + 3600_000),
+      value: generateId("vval"),
+      expiresAt: new Date(Date.now() + 3600_000),
     });
 
     // ---- Seed owned collection CA (full cascade) --------------------------
@@ -570,22 +573,22 @@ describeDb("AccountDeletionService via DELETE /api/users/me", () => {
     const userRow = await rawUserRow(userId);
     expect(userRow).not.toBeNull(); // row kept (tombstone)
     expect(userRow!.email).toBe(`deleted+${userId}@deleted.invalid`);
-    expect(userRow!.name).toBeNull();
+    // name is NOT NULL (better-auth) → scrubbed to the tombstone, not null.
+    expect(userRow!.name).toBe(`deleted+${userId}@deleted.invalid`);
     expect(userRow!.image).toBeNull();
-    expect(userRow!.password).toBeNull();
-    expect(userRow!.emailVerified).toBeNull();
+    expect(userRow!.emailVerified).toBe(false);
 
-    // ---- AFTER: account + session rows gone ------------------------------
+    // ---- AFTER: account + session rows gone (account held the password) ---
     const acctRows = await db.select().from(accountTable).where(eq(accountTable.userId, userId));
     expect(acctRows).toHaveLength(0);
     const sessRows = await db.select().from(sessionTable).where(eq(sessionTable.userId, userId));
     expect(sessRows).toHaveLength(0);
 
-    // ---- AFTER: verificationToken for old email gone ---------------------
+    // ---- AFTER: verification for old email gone --------------------------
     const vtRows = await db
       .select()
-      .from(verificationTokenTable)
-      .where(eq(verificationTokenTable.identifier, `u-${userId}@adored.test`));
+      .from(verificationTable)
+      .where(eq(verificationTable.identifier, `u-${userId}@adored.test`));
     expect(vtRows).toHaveLength(0);
 
     // ---- AFTER: blob del called with CA photo key -----------------------
@@ -891,16 +894,17 @@ describeDb("AccountDeletionService via DELETE /api/users/me", () => {
       // Route surfaces a non-2xx (errorResponse maps a generic Error → 500).
       expect(res.status).toBe(500);
 
-      // PII intact — email still U's, password still set, emailVerified set.
+      // PII intact — email still U's, emailVerified set.
       const userRow = await rawUserRow(userId);
       expect(userRow).not.toBeNull();
       expect(userRow!.email).toBe(`u-${userId}@adored.test`);
-      expect(userRow!.password).toBe("hashed");
-      expect(userRow!.emailVerified).not.toBeNull();
+      expect(userRow!.name).toBe("User U");
+      expect(userRow!.emailVerified).toBe(true);
 
-      // account/session rows still present.
+      // account/session rows still present (account still holds the password).
       const acctRows = await db.select().from(accountTable).where(eq(accountTable.userId, userId));
       expect(acctRows.length).toBeGreaterThanOrEqual(1);
+      expect(acctRows[0].password).toBe("hashed");
       const sessRows = await db.select().from(sessionTable).where(eq(sessionTable.userId, userId));
       expect(sessRows.length).toBeGreaterThanOrEqual(1);
 

@@ -1,8 +1,6 @@
 import { test as setup, expect } from "@playwright/test";
-import { resetDb, closeDb, getTestDb } from "./fixtures/db";
+import { resetDb, closeDb } from "./fixtures/db";
 import { BASELINE_USER } from "./fixtures/seed";
-import { user } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 
 const AUTH_FILE = "e2e/.auth/user.json";
 const BASE_URL = process.env.AUTH_URL ?? "http://127.0.0.1:3100";
@@ -44,15 +42,13 @@ async function step<T>(label: string, fn: () => Promise<T>): Promise<T> {
 // (Cutover Pass 2a) and saves storageState so every other spec starts
 // authenticated. The flow:
 //
-//   1. resetDb() — clean slate (truncates ba_* AND legacy tables).
+//   1. resetDb() — clean slate (truncates the canonical better-auth + domain tables).
 //   2. POST /api/auth/sign-up/email — better-auth creates the baseline user
-//      (ba_user + ba_account with a scrypt password) and sets the
-//      `better-auth.session_token` cookie in this request context.
-//   3. Mirror a legacy `user` row with the SAME id better-auth generated, so the
-//      app's domain FKs (collections.ownerId → user.id) resolve for this
-//      principal — the façade getSession() returns the ba_user id, and every
-//      seedBaseline() consumer seeds domain data under that id.
-//   4. Confirm the session via /get-session, then persist storageState.
+//      (the canonical `user` row + `account` with a scrypt password) and sets
+//      the `better-auth.session_token` cookie in this request context. That
+//      `user` row IS what the app's domain FKs (collections.ownerId → user.id)
+//      resolve to — no mirroring (Cutover Pass 2b-ii collapsed to one table).
+//   3. Confirm the session via /get-session, then persist storageState.
 //
 // We authenticate via the API rather than driving the /login UI: the login page
 // only works after hydration, which races cold-build CI. The login *UI* itself
@@ -60,8 +56,8 @@ async function step<T>(label: string, fn: () => Promise<T>): Promise<T> {
 setup("authenticate", async ({ request }) => {
   await step("resetDb", resetDb);
 
-  // better-auth sign-up: creates the user + lands the session cookie in this
-  // request's jar. Returns the better-auth-generated user id.
+  // better-auth sign-up: creates the canonical user row + lands the session
+  // cookie in this request's jar. Returns the better-auth-generated user id.
   const signUpRes = await step("better-auth sign-up", () =>
     request.post(`${BASE_URL}/api/auth/sign-up/email`, {
       data: {
@@ -75,26 +71,7 @@ setup("authenticate", async ({ request }) => {
   const signUpBody = (await signUpRes.json()) as { user?: { id?: string } };
   const userId = signUpBody.user?.id;
   expect(userId, "better-auth sign-up returned no user id").toBeTruthy();
-
-  // Mirror the legacy `user` row with the SAME id so domain data owned by the
-  // baseline user resolves. No password — better-auth owns authentication now.
-  await step("mirror legacy user row", async () => {
-    const { db } = getTestDb();
-    const existing = await db
-      .select({ id: user.id })
-      .from(user)
-      .where(eq(user.email, BASELINE_USER.email))
-      .limit(1);
-    if (!existing.length) {
-      await db.insert(user).values({
-        id: userId!,
-        email: BASELINE_USER.email,
-        name: BASELINE_USER.name,
-        emailVerified: new Date(),
-      });
-    }
-    await closeDb();
-  });
+  await closeDb();
 
   // Confirm the session is real before saving state. better-auth's get-session
   // returns { session, user } (or null); assert the user email matches.

@@ -8,83 +8,86 @@ import {
   jsonb,
   index,
   uniqueIndex,
-  bigint,
-  primaryKey,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-// better-auth's ba_* tables (Phase 0, alongside NextAuth). Re-exported here so
-// the Drizzle client (`drizzle(client, { schema })`) and drizzle-kit see them.
-export { baUser, baSession, baAccount, baVerification } from "./better-auth-schema";
+// ===== BETTER-AUTH CORE TABLES (canonical — better-auth owns them) =====
+//
+// better-auth's four core models under their DEFAULT table names (Cutover Pass
+// 2b-ii collapsed the old two-table `user`↔`ba_user` split into this single
+// canonical set — NextAuth is gone, so there is no name collision). better-auth
+// matches its model FIELDS by the Drizzle *property key* (camelCase:
+// `emailVerified`, `accountId`, …), NOT the SQL column-name string — so the
+// property keys are canonical and must not be renamed. Shape verified against
+// `npx @better-auth/cli generate` for better-auth 1.6.x.
+//
+// `user` is the ONE canonical user table: every domain FK below resolves to it.
+// The credential password lives in `account.password` (NOT on `user`).
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  image: text("image"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
 
-// ===== NEXTAUTH USERS (canonical schema per @auth/drizzle-adapter) =====
-export const user = pgTable(
-  "user",
-  {
-    id: text("id").primaryKey(),
-    name: text("name"),
-    email: text("email").unique(),
-    emailVerified: timestamp("emailVerified"),
-    image: text("image"),
-    password: text("password"),
-  },
-  (table) => ({
-    emailIdx: index("user_email_idx").on(table.email),
-  }),
-);
-
-// ===== NEXTAUTH ACCOUNTS =====
 export const account = pgTable(
   "account",
   {
-    userId: text("userId")
+    id: text("id").primaryKey(),
+    userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    type: text("type").notNull(),
-    provider: text("provider").notNull(),
-    providerAccountId: text("providerAccountId").notNull(),
-    refresh_token: text("refresh_token"),
-    access_token: text("access_token"),
-    expires_at: bigint("expires_at", { mode: "number" }),
-    token_type: text("token_type"),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at"),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
     scope: text("scope"),
-    id_token: text("id_token"),
+    idToken: text("id_token"),
+    password: text("password"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (account) => ({
-    compoundKey: primaryKey({
-      columns: [account.provider, account.providerAccountId],
-    }),
     userIdIdx: index("account_userId_idx").on(account.userId),
   }),
 );
 
-// ===== NEXTAUTH SESSIONS =====
 export const session = pgTable(
   "session",
   {
-    sessionToken: text("sessionToken").primaryKey(),
-    userId: text("userId")
+    id: text("id").primaryKey(),
+    userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    expires: timestamp("expires").notNull(),
+    token: text("token").notNull().unique(),
+    expiresAt: timestamp("expires_at").notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (session) => ({
     userIdIdx: index("session_userId_idx").on(session.userId),
   }),
 );
 
-// ===== NEXTAUTH VERIFICATION TOKENS =====
-export const verificationToken = pgTable(
-  "verificationToken",
+export const verification = pgTable(
+  "verification",
   {
+    id: text("id").primaryKey(),
     identifier: text("identifier").notNull(),
-    token: text("token").notNull(),
-    expires: timestamp("expires").notNull(),
+    value: text("value").notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (vt) => ({
-    compoundKey: primaryKey({
-      columns: [vt.identifier, vt.token],
-    }),
+  (verification) => ({
+    identifierIdx: index("verification_identifier_idx").on(verification.identifier),
   }),
 );
 

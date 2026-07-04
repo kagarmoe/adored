@@ -1,8 +1,6 @@
 import { z } from "zod";
-import { eq } from "drizzle-orm";
 import type { User } from "@/types";
 import type { Database } from "@/lib/db";
-import { baUser } from "@/lib/db/better-auth-schema";
 import { AccountDeletionService } from "@/server/services/AccountDeletionService";
 import { UserRepository } from "@/server/repositories/implementations/UserRepository";
 
@@ -35,19 +33,13 @@ export class UserController {
     // No-op when there is nothing to set (email-only or empty body). An empty
     // patch would issue an UPDATE with no SET clause → DB error; return as-is.
     if (parsed.name === undefined) return this.getCurrentUser(userId);
-    const name = parsed.name === "" ? null : parsed.name;
-    const updated = await this.userRepo.update(userId, { name });
-    // The session's display name is served from better-auth's `ba_user` (the
-    // façade getSession() and the client's useSession() both read it), so mirror
-    // the change there too — keyed by the shared id (post-cutover a real user's
-    // ba_user.id equals their user.id). `ba_user.name` is NOT NULL, so a cleared
-    // name falls back to the email local-part rather than writing null. Without
-    // this, an edit updates the domain row but the header keeps the old name.
-    await this.db
-      .update(baUser)
-      .set({ name: name ?? updated.email.split("@")[0], updatedAt: new Date() })
-      .where(eq(baUser.id, userId));
-    return updated;
+    // `user.name` is NOT NULL (better-auth's canonical schema), so a cleared
+    // name falls back to the email local-part rather than writing null. The
+    // session display name (façade getSession() + client useSession()) reads
+    // this same `user` row, so this single write updates the header too.
+    const current = await this.getCurrentUser(userId);
+    const name = parsed.name === "" ? current.email.split("@")[0] : parsed.name;
+    return this.userRepo.update(userId, { name });
   }
 
   async deleteCurrentUser(userId: string): Promise<void> {

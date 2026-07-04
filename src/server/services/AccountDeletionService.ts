@@ -40,7 +40,7 @@ import { AuditLogRepository } from "@/server/repositories/implementations/AuditL
  * borrowed-only.)
  *
  * Phase 4 — User row + auth: `purgeAndScrub` (transactional) scrubs PII and
- * deletes account / session / verificationToken rows.
+ * deletes better-auth account / session / verification rows.
  */
 export class AccountDeletionService {
   constructor(private db: Database) {}

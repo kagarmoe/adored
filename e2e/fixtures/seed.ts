@@ -53,7 +53,6 @@ export async function seedBaseline(): Promise<string> {
     id,
     email: BASELINE_USER.email,
     name: BASELINE_USER.name,
-    emailVerified: new Date(),
   });
   return id;
 }

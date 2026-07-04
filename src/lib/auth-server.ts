@@ -4,21 +4,17 @@ import { magicLink } from "better-auth/plugins/magic-link";
 import { nextCookies } from "better-auth/next-js";
 import { getDb } from "@/lib/db";
 import { sendMagicLink } from "@/lib/email";
-import {
-  baUser,
-  baSession,
-  baAccount,
-  baVerification,
-} from "@/lib/db/better-auth-schema";
+import { user, session, account, verification } from "@/lib/db/schema";
 
 // better-auth `auth` instance — the ONLY auth backend now (NextAuth retired in
 // Cutover Pass 2b-i). Mounted at /api/auth; the façade (auth.ts), middleware,
 // and UI all read/drive it.
 //
-// - drizzleAdapter maps better-auth's four core models onto our `ba_*` Drizzle
-//   tables. These stay distinct from the legacy `user` table for now: the
-//   `user`↔`ba_user` same-id mirroring bridge is intentionally still in place
-//   (domain FKs resolve through it) until Pass 2b-ii collapses the two.
+// - drizzleAdapter maps better-auth's four core models onto our canonical
+//   Drizzle tables (`user`/`session`/`account`/`verification`). Pass 2b-ii
+//   collapsed the old `user`↔`ba_user` split into this single `user` table:
+//   better-auth OWNS it and every domain FK resolves straight to it — no more
+//   mirroring bridge.
 // - emailAndPassword + Google + magic-link are the three sign-in methods.
 // - Google creds are optional until the user provides them (empty strings keep
 //   the provider registered but inert — the app still boots).
@@ -51,10 +47,10 @@ export const auth = betterAuth({
   database: drizzleAdapter(getDb(), {
     provider: "pg",
     schema: {
-      user: baUser,
-      session: baSession,
-      account: baAccount,
-      verification: baVerification,
+      user,
+      session,
+      account,
+      verification,
     },
   }),
   secret: process.env.BETTER_AUTH_SECRET ?? process.env.AUTH_SECRET,
