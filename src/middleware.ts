@@ -1,5 +1,5 @@
-import { withAuth } from "next-auth/middleware";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { getSessionCookie } from "better-auth/cookies";
 import { isRequestAuthorized } from "@/lib/middleware-auth";
 
 export const config = {
@@ -11,18 +11,19 @@ export const config = {
   ],
 };
 
-export default withAuth(
-  function middleware() {
-    // If we reach here, the user is authenticated (withAuth handled the check)
+// Optimistic auth (Cutover Pass 1, Phase 3). better-auth's getSessionCookie is a
+// PRESENCE check on the session cookie — no DB read at the edge, so it can't
+// distinguish a valid session from a forged cookie. That's fine: real
+// enforcement lives in the DAL (every route/page independently calls
+// requireAuth/requireApiCapability). Middleware is only the UX redirect. The
+// SESSIONLESS_POST_ROUTES allowlist (Vercel Blob's upload-completion callback,
+// which self-verifies its Blob-signed payload) is preserved via
+// isRequestAuthorized, exactly as under the old withAuth.
+export default function middleware(request: NextRequest) {
+  const hasCookie = getSessionCookie(request) !== null;
+  if (isRequestAuthorized(request.nextUrl.pathname, hasCookie)) {
     return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) =>
-        isRequestAuthorized(req.nextUrl.pathname, !!token),
-    },
-    pages: {
-      signIn: "/login",
-    },
   }
-);
+  const loginUrl = new URL("/login", request.url);
+  return NextResponse.redirect(loginUrl);
+}
