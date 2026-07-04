@@ -218,7 +218,7 @@ for (const theme of ["light", "dark"] as const) {
     await page.getByRole("button", { name: "Love" }).click();
 
     // Beat 3 — Compare.
-    await page.getByRole("heading", { name: "Which do you reach for more?" }).waitFor();
+    await page.getByRole("heading", { name: "Which do you love more?" }).waitFor();
     await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
     await page.waitForTimeout(400);
     await shot("welcome-3-compare");
