@@ -3,7 +3,7 @@
 import posthog from 'posthog-js';
 import { PostHogProvider as PHProvider } from 'posthog-js/react';
 import { usePathname } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/lib/auth-client';
 import { useEffect, useRef, Suspense } from 'react';
 
 if (typeof window !== 'undefined') {
@@ -49,7 +49,15 @@ function PostHogPageView() {
 }
 
 function PostHogAuthSync() {
-  const { data: session, status } = useSession();
+  const { data: session, isPending } = useSession();
+  // better-auth exposes { data, isPending } rather than a status string. Derive
+  // the same three states: pending (skip), authenticated (data.user present),
+  // unauthenticated (settled with no user).
+  const status = isPending
+    ? 'loading'
+    : session?.user
+      ? 'authenticated'
+      : 'unauthenticated';
   const prevStatus = useRef(status);
 
   useEffect(() => {

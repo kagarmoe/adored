@@ -1,8 +1,8 @@
-import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { user, collectionsTable } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
 import { getTestDb, resetDb, closeDb } from "./db";
+import { createBetterAuthUser } from "./better-auth";
 import { sql } from "drizzle-orm";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
@@ -16,7 +16,7 @@ import { MembershipRepository } from "@/server/repositories/implementations/Memb
 import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 
-// A known user every spec can log in as via the Credentials provider.
+// A known user every spec can log in as through better-auth (email+password).
 export const BASELINE_USER = {
   email: "e2e@adored.test",
   password: "e2e-password-123", // ≥ 8 chars (signup rule)
@@ -24,12 +24,23 @@ export const BASELINE_USER = {
 } as const;
 
 /**
- * Insert the baseline user (idempotent after resetDb). Returns its id.
- * Safe to call repeatedly: if the user exists, returns the existing id.
+ * Ensure a legacy `user` row for the baseline user exists and return its id
+ * (idempotent by email). This is the ownerId every domain fixture seeds under.
+ *
+ * Two callers, one invariant — the returned id must equal the id the app's
+ * getSession() reports for the baseline session:
+ *  - e2e: auth.setup.ts signs up the baseline user via better-auth FIRST and
+ *    mirrors a `user` row with the better-auth-generated id. Every later
+ *    seedBaseline() call here finds that row by email and returns that same id,
+ *    so seeded data is owned by the authenticated session.
+ *  - DB integration tests (test:db): no server runs, so no better-auth signup
+ *    happened. seedBaseline() inserts a plain `user` row itself. These tests
+ *    call the DAL directly with this id — they never authenticate — so a
+ *    self-consistent id is all that's required. No password: better-auth owns
+ *    authentication; the legacy `password` column is unused post-cutover.
  */
 export async function seedBaseline(): Promise<string> {
   const { db } = getTestDb();
-
   const existing = await db
     .select({ id: user.id })
     .from(user)
@@ -38,13 +49,10 @@ export async function seedBaseline(): Promise<string> {
   if (existing.length) return existing[0].id;
 
   const id = generateId("user");
-  const hashed = await bcrypt.hash(BASELINE_USER.password, 12);
   await db.insert(user).values({
     id,
     email: BASELINE_USER.email,
     name: BASELINE_USER.name,
-    password: hashed,
-    emailVerified: new Date(),
   });
   return id;
 }
@@ -389,19 +397,14 @@ export interface SeededUser {
 
 const REMOVAL_PASSWORD = "removal-password-123"; // ≥ 8 chars (signup rule)
 
-/** Insert a fresh user with a unique email and a known password. */
+/**
+ * Create a fresh user (unique email, known password) through better-auth so it
+ * can be signed in via apiContextFor. Mirrors a legacy `user` row with the same
+ * id (createBetterAuthUser) so domain FKs resolve.
+ */
 async function seedUser(label: string): Promise<SeededUser> {
-  const { db } = getTestDb();
-  const id = generateId("user");
-  const email = `${label}-${id}@adored.test`;
-  const hashed = await bcrypt.hash(REMOVAL_PASSWORD, 12);
-  await db.insert(user).values({
-    id,
-    email,
-    name: label,
-    password: hashed,
-    emailVerified: new Date(),
-  });
+  const email = `${label}-${generateId("user")}@adored.test`;
+  const id = await createBetterAuthUser(email, REMOVAL_PASSWORD, label);
   return { id, email, password: REMOVAL_PASSWORD };
 }
 

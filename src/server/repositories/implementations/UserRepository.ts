@@ -1,24 +1,12 @@
 import { eq } from "drizzle-orm";
 import type { Database } from "@/lib/db";
-import { user, account, session, verificationToken } from "@/lib/db/schema";
+import { user, account, session, verification } from "@/lib/db/schema";
 import type { User } from "@/types";
 import { withTransaction } from "@/lib/transactions";
 import { accountTombstone } from "@/server/services/account-tombstone";
 
 export class UserRepository {
   constructor(private db: Database) {}
-
-  async create(data: { id: string; email: string; name?: string }): Promise<User> {
-    const [result] = await this.db
-      .insert(user)
-      .values({
-        id: data.id,
-        email: data.email,
-        name: data.name || null,
-      })
-      .returning();
-    return this.mapToUser(result);
-  }
 
   async findById(id: string): Promise<User | null> {
     const [result] = await this.db
@@ -38,7 +26,9 @@ export class UserRepository {
 
   async update(
     id: string,
-    data: Partial<Omit<User, "id" | "createdAt" | "deletedAt">>,
+    // Off the drizzle table's insert shape so it tracks NOT NULL columns (e.g.
+    // `name` cannot be null under better-auth's canonical `user`).
+    data: Partial<Omit<typeof user.$inferInsert, "id" | "createdAt">>,
   ): Promise<User> {
     const [result] = await this.db
       .update(user)
@@ -48,54 +38,49 @@ export class UserRepository {
     return this.mapToUser(result);
   }
 
-  async softDelete(id: string): Promise<User> {
-    // NextAuth user table doesn't support soft deletes - use update with emailVerified=null
-    const [result] = await this.db
-      .update(user)
-      .set({
-        emailVerified: null,
-      })
-      .where(eq(user.id, id))
-      .returning();
-    return this.mapToUser(result);
-  }
-
   /**
-   * Permanently scrub PII from the user row and delete all auth tokens, in ONE
+   * Permanently scrub PII from the user row and delete all auth records, in ONE
    * transaction. Called AFTER all owned/borrowed collection data has been erased.
    *
-   * - email → tombstone (keeps unique index valid)
-   * - name / image / password / emailVerified → null
-   * - account + session rows → hard-deleted (NextAuth ON DELETE CASCADE handles
-   *   these if the user row were dropped, but we keep the row scrubbed instead)
-   * - verificationToken rows for the OLD email → hard-deleted (no stale magic-link)
+   * better-auth owns auth now, so the credential/session state lives in its
+   * canonical tables:
+   * - email → tombstone (keeps the unique index valid)
+   * - name → tombstone (user.name is NOT NULL) / image → null / emailVerified → false
+   * - account rows (incl. the scrypt password) → hard-deleted by user_id
+   * - session rows → hard-deleted by user_id (logs the user out everywhere)
+   * - verification rows for the OLD email → hard-deleted (no stale magic-link)
    *
    * Returns the captured oldEmail so the caller can scrub other rows (e.g.
    * invitations) that identify the user by that email.
    */
   async purgeAndScrub(id: string): Promise<{ oldEmail: string | null }> {
     return withTransaction(this.db, async (tx) => {
-      // Capture the old email before scrubbing so we can purge verificationTokens.
+      // Capture the old email before scrubbing so we can purge verifications.
       const [existing] = await tx.select({ email: user.email }).from(user).where(eq(user.id, id));
       const oldEmail = existing?.email ?? null;
 
-      // Delete auth child rows first (avoid any FK issues on the user row update).
+      // Delete auth records first: `account` holds the scrypt password, `session`
+      // holds live tokens. These would cascade if the user row were dropped, but
+      // we keep the row scrubbed as a tombstone instead.
       await tx.delete(account).where(eq(account.userId, id));
       await tx.delete(session).where(eq(session.userId, id));
       if (oldEmail) {
-        await tx.delete(verificationToken).where(eq(verificationToken.identifier, oldEmail));
+        await tx.delete(verification).where(eq(verification.identifier, oldEmail));
       }
 
-      // Scrub PII on the user row; keep the row so FK references (e.g. audit_log.actor_id,
-      // collections.owner_id on already-purged collections) remain resolvable as a tombstone.
+      // Scrub PII on the user row; keep the row so FK references (e.g.
+      // audit_log.actor_id, collections.owner_id on already-purged collections)
+      // remain resolvable as a tombstone. `name` is NOT NULL, so it is set to the
+      // tombstone email rather than null.
+      const tombstone = accountTombstone(id);
       await tx
         .update(user)
         .set({
-          email: accountTombstone(id),
-          name: null,
+          email: tombstone,
+          name: tombstone,
           image: null,
-          password: null,
-          emailVerified: null,
+          emailVerified: false,
+          updatedAt: new Date(),
         })
         .where(eq(user.id, id));
 
@@ -103,13 +88,13 @@ export class UserRepository {
     });
   }
 
-  private mapToUser(row: any): User {
+  private mapToUser(row: typeof user.$inferSelect): User {
     return {
       id: row.id,
       email: row.email,
       name: row.name,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
       deletedAt: null,
     };
   }

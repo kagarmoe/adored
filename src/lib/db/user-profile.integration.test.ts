@@ -35,14 +35,17 @@ describeDb("updateCurrentUser (name-only, trim/max/clear)", () => {
     expect(reread.name).toBe("Tessa");
   });
 
-  it("clears the name when empty-after-trim (stores null, does not throw)", async () => {
+  it("clears the name to the email local-part when empty-after-trim (name is NOT NULL)", async () => {
+    // better-auth's canonical `user.name` is NOT NULL, so a cleared name falls
+    // back to the email local-part rather than storing null — keeping the
+    // session header non-empty.
     const { db } = getTestDb();
     const u = await UserController.fromDb(db).updateCurrentUser(TEST_USER_ID, {
       name: "   ",
     });
-    expect(u.name).toBeNull();
+    expect(u.name).toBe("tessa");
     const reread = await UserController.fromDb(db).getCurrentUser(TEST_USER_ID);
-    expect(reread.name).toBeNull();
+    expect(reread.name).toBe("tessa");
   });
 
   it("rejects an over-length name", async () => {

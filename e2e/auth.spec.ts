@@ -9,9 +9,9 @@ import {
   submitLogin,
 } from "./fixtures/ui";
 
-// Drives the real login/signup UI (Credentials provider). Unlike auth.setup.ts
-// (which authenticates via the API for speed), these specs exercise the actual
-// forms. Logged out: clear the shared storageState.
+// Drives the real login/signup UI (better-auth email + password). Unlike
+// auth.setup.ts (which authenticates via the API for speed), these specs
+// exercise the actual forms. Logged out: clear the shared storageState.
 test.use({ storageState: LOGGED_OUT });
 
 // Ensure the baseline user exists for the login tests. We do NOT resetDb here:
@@ -28,8 +28,8 @@ test("login with bad credentials establishes no session and shows an error", asy
   await submitLogin(page, BASELINE_USER.email, "wrong-password");
 
   // The substantive invariant: no session is created, and we stay on /login.
-  // (We assert the *outcome*, not the error copy — NextAuth surfaces the code
-  // "CredentialsSignin", which a text-match would have missed.)
+  // (We assert the *outcome*, not the error copy — better-auth surfaces an
+  // INVALID_EMAIL_OR_PASSWORD error, which a brittle text-match would miss.)
   await expect(page).toHaveURL(ROUTE.login);
   expect(await sessionEmail(page)).toBeNull();
   // An error is surfaced to the user (the ErrorMessage box renders).
@@ -65,12 +65,10 @@ test("signup creates a fresh account and signs in as that user", async ({
   const pwFields = page.getByPlaceholder(PASSWORD_PLACEHOLDER);
   await pwFields.nth(0).fill("signup-password-123");
   await pwFields.nth(1).fill("signup-password-123");
-  // Signup POSTs to /api/auth/signup then signs in via credentials — wait for
-  // the sign-in callback to avoid the hydration race.
+  // Signup goes through better-auth's sign-up/email (which also establishes the
+  // session) — wait for that POST to avoid the hydration race.
   await Promise.all([
-    page.waitForResponse((r) =>
-      r.url().includes("/api/auth/callback/credentials"),
-    ),
+    page.waitForResponse((r) => r.url().includes("/api/auth/sign-up/email")),
     submit.click(),
   ]);
 

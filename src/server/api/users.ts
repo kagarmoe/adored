@@ -33,7 +33,13 @@ export class UserController {
     // No-op when there is nothing to set (email-only or empty body). An empty
     // patch would issue an UPDATE with no SET clause → DB error; return as-is.
     if (parsed.name === undefined) return this.getCurrentUser(userId);
-    return this.userRepo.update(userId, { name: parsed.name === "" ? null : parsed.name });
+    // `user.name` is NOT NULL (better-auth's canonical schema), so a cleared
+    // name falls back to the email local-part rather than writing null. The
+    // session display name (façade getSession() + client useSession()) reads
+    // this same `user` row, so this single write updates the header too.
+    const current = await this.getCurrentUser(userId);
+    const name = parsed.name === "" ? current.email.split("@")[0] : parsed.name;
+    return this.userRepo.update(userId, { name });
   }
 
   async deleteCurrentUser(userId: string): Promise<void> {

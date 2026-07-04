@@ -12,7 +12,6 @@
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { user, collectionsTable } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
@@ -164,8 +163,10 @@ export async function ensureOwner(db: Database, email: string): Promise<string> 
   const existing = await db.select({ id: user.id }).from(user).where(eq(user.email, email)).limit(1);
   if (existing.length) return existing[0].id;
   const id = generateId("user");
-  const hashed = await bcrypt.hash("demo-seed-password-123", 12);
-  await db.insert(user).values({ id, email, name: "Demo Seed Owner", password: hashed, emailVerified: new Date() });
+  // Load/bench seeders own data by id but never authenticate as this owner over
+  // HTTP, so no credential row is needed — better-auth owns the password (in the
+  // `account` table) for real sign-ins.
+  await db.insert(user).values({ id, email, name: "Demo Seed Owner" });
   return id;
 }
 
