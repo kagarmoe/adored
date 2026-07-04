@@ -172,7 +172,7 @@ test.describe("session detail → See what you love most → results", () => {
     // 2. Move to compare and choose one card (tapping a card IS the choice).
     await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
     await expect(
-      page.getByRole("heading", { name: "Which do you reach for more?" }),
+      page.getByRole("heading", { name: "Which do you love more?" }),
     ).toBeVisible();
     await page.getByRole("button", { name: /^Choose / }).first().click();
 

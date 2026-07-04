@@ -36,7 +36,7 @@ describe("WalkthroughShell", () => {
     }
 
     // Compare
-    expect(screen.getByRole("heading", { name: "Which do you reach for more?" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Which do you love more?" })).toBeInTheDocument();
     await user.click(screen.getByText(COMPARE_PAIR[0].name));
 
     // Standing

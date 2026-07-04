@@ -9,14 +9,14 @@ interface WelcomeCompareProps {
 }
 
 // Beat 3 — two of YOUR things, the prompt dominant. Each side is a tap target,
-// framed as "which do you reach for" — never two product cards to buy.
+// framed as "which do you love more" — never two product cards to buy.
 export function WelcomeCompare({ onChoose }: WelcomeCompareProps) {
   const [left, right] = COMPARE_PAIR;
 
   return (
     <section className="flex flex-col items-center text-center gap-8">
       <h2 className="font-display text-3xl sm:text-4xl text-ink">
-        Which do you reach for more?
+        Which do you love more?
       </h2>
 
       <div className="flex flex-col sm:flex-row items-stretch justify-center gap-6 w-full max-w-xl">
@@ -36,7 +36,7 @@ export function WelcomeCompare({ onChoose }: WelcomeCompareProps) {
       </div>
 
       <p className="text-sm text-ink-soft">
-        When two feel close, this shows which you reach for.
+        When two feel close, this shows which you love more.
       </p>
     </section>
   );
