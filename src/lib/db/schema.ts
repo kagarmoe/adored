@@ -13,6 +13,10 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
+// better-auth's ba_* tables (Phase 0, alongside NextAuth). Re-exported here so
+// the Drizzle client (`drizzle(client, { schema })`) and drizzle-kit see them.
+export { baUser, baSession, baAccount, baVerification } from "./better-auth-schema";
+
 // ===== NEXTAUTH USERS (canonical schema per @auth/drizzle-adapter) =====
 export const user = pgTable(
   "user",

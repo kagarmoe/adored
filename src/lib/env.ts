@@ -11,6 +11,15 @@ const envSchema = z.object({
   AUTH_URL: z.string().url("AUTH_URL must be a valid URL"),
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
 
+  // better-auth (Phase 0 — runs alongside NextAuth). All optional so the app
+  // boots before these are set: BETTER_AUTH_SECRET/URL fall back to
+  // AUTH_SECRET/AUTH_URL in auth-server.ts, and Google creds default to empty
+  // (provider registered but inert until the user supplies real values).
+  BETTER_AUTH_SECRET: z.string().optional(),
+  BETTER_AUTH_URL: z.string().optional(),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+
   // Email (optional in development)
   // Sender must be a Resend-verified domain. kimberlygarmoe.com is verified;
   // a subdomain (adored.kimberlygarmoe.com) would need its own verification.
@@ -49,6 +58,10 @@ function validateEnv(): EnvConfig {
       DATABASE_URL: env.DATABASE_URL,
       AUTH_URL: resolvedAuthUrl,
       AUTH_SECRET: env.AUTH_SECRET,
+      BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
+      BETTER_AUTH_URL: env.BETTER_AUTH_URL,
+      GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
       EMAIL_FROM: env.EMAIL_FROM,
       EMAIL_SERVER_HOST: env.EMAIL_SERVER_HOST,
       EMAIL_SERVER_PORT: env.EMAIL_SERVER_PORT,
