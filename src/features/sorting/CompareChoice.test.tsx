@@ -106,6 +106,22 @@ describe("CompareChoice tap chooses an item", () => {
     await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
   });
 
+  it("captures pairwise_decision_made with the exact args after a successful save (byte-for-byte guard)", async () => {
+    const user = userEvent.setup();
+    renderChoice();
+
+    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
+
+    await waitFor(() => expect(vi.mocked(posthog.capture)).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(posthog.capture)).toHaveBeenCalledWith("pairwise_decision_made", {
+      result: "item_a",
+      session_id: "s",
+      item_a_id: "a",
+      item_b_id: "b",
+      comparisons_made: 1,
+    });
+  });
+
   it("the Tie escape hatch sends result=tie", async () => {
     const user = userEvent.setup();
     renderChoice();
