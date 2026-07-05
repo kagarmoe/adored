@@ -4,29 +4,32 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 
+export type DecisionSubmit =
+  | { kind: "session"; sessionId: string; onDecisionMade?: () => void }
+  | { kind: "local"; onDecision: (decision: Record<string, unknown>) => void };
+
 interface DecisionControlsProps {
-  sessionId: string;
+  submit: DecisionSubmit;
   type: "triage" | "pairwise_compare";
   decisions: Array<{ label: string; decision: Record<string, unknown> }>;
-  onDecisionMade?: () => void;
 }
 
-export function DecisionControls({
-  sessionId,
-  type,
-  decisions,
-  onDecisionMade,
-}: DecisionControlsProps) {
+export function DecisionControls({ submit, type, decisions }: DecisionControlsProps) {
   const router = useRouter();
   const [pendingLabel, setPendingLabel] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function submitDecision(label: string, decision: Record<string, unknown>) {
+    if (submit.kind === "local") {
+      submit.onDecision(decision); // synchronous demo path: no fetch, no pending, no refresh
+      return;
+    }
+
     setPendingLabel(label);
     setError(null);
 
     try {
-      const response = await fetch(`/api/sessions/${sessionId}/decisions`, {
+      const response = await fetch(`/api/sessions/${submit.sessionId}/decisions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type, decision }),
@@ -41,8 +44,8 @@ export function DecisionControls({
       // would keep every tier disabled and block triaging the next item (U2).
       setPendingLabel(null);
 
-      if (onDecisionMade) {
-        onDecisionMade();
+      if (submit.onDecisionMade) {
+        submit.onDecisionMade();
       } else {
         router.refresh();
       }
