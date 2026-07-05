@@ -59,6 +59,44 @@ describe("copy guard", () => {
   });
 });
 
+describe("purpose journey line", () => {
+  it("renders the quiet three-phrase journey", () => {
+    const { container } = render(<WelcomePurpose onNext={() => {}} />);
+    const text = container.textContent ?? "";
+    expect(text).toContain("Gather a few photos of your things.");
+    expect(text).toContain("Sort in short rounds.");
+    expect(text).toContain("See where things stand.");
+  });
+
+  it("renders the journey as quiet text-ink-soft paragraphs with no icons/arrows", () => {
+    const { container } = render(<WelcomePurpose onNext={() => {}} />);
+    // Each journey phrase lives in a text-ink-soft <p>; the stack carries no svg/icon.
+    for (const phrase of [
+      "Gather a few photos of your things.",
+      "Sort in short rounds.",
+      "See where things stand.",
+    ]) {
+      const p = Array.from(container.querySelectorAll("p")).find(
+        (el) => el.textContent?.trim() === phrase
+      );
+      expect(p, `journey phrase "${phrase}" not found in its own <p>`).toBeTruthy();
+      expect(p?.className ?? "").toMatch(/\btext-ink-soft\b/);
+    }
+    expect(container.querySelector("svg")).toBeNull();
+  });
+});
+
+describe("handoff expectation lines", () => {
+  it("sets the photos + short-rounds expectations verbatim", () => {
+    const { container } = render(<WelcomeHandoff onExplore={() => {}} />);
+    const text = container.textContent ?? "";
+    expect(text).toContain("Start with a few photos of your things.");
+    expect(text).toContain(
+      "Sort whenever you like — in short rounds, pausing any time."
+    );
+  });
+});
+
 describe("a11y: touch targets >= 44px", () => {
   it("every interactive control carries an h-11 / h-14 / min-h-11 sizing class", () => {
     const controls: HTMLElement[] = [];

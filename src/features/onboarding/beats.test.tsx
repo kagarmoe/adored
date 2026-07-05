@@ -99,7 +99,10 @@ describe("WelcomeHandoff", () => {
     render(<WelcomeHandoff onExplore={() => {}} />);
     expect(screen.getByRole("heading", { name: "Now, your turn." })).toBeInTheDocument();
     expect(
-      screen.getByText("Add a few things you own to start a collection.")
+      screen.getByText("Start with a few photos of your things.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Sort whenever you like — in short rounds, pausing any time.")
     ).toBeInTheDocument();
     const cta = screen.getByRole("link", { name: "Start a collection" });
     expect(cta).toHaveAttribute("href", "/collections/new");
