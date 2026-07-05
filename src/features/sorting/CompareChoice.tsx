@@ -7,8 +7,14 @@ import { itemDisplayName, itemInitial } from "@/lib/items";
 import { Button, CardImage } from "@/components/ui";
 import posthog from "posthog-js";
 
+type Result = "item_a" | "item_b" | "tie" | "skip";
+
+export type CompareSubmit =
+  | { kind: "session"; sessionId: string }
+  | { kind: "local"; onDecision: (result: Result) => void };
+
 interface CompareChoiceProps {
-  sessionId: string;
+  submit: CompareSubmit;
   itemA: Item;
   itemB: Item;
   heroA?: string;
@@ -17,9 +23,7 @@ interface CompareChoiceProps {
   comparisonsMade: number;
 }
 
-type Result = "item_a" | "item_b" | "tie" | "skip";
-
-export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, comparisonsMade }: CompareChoiceProps) {
+export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsMade }: CompareChoiceProps) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,11 +40,16 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
   const clientKeys = useRef<Record<string, string>>({});
 
   async function choose(result: Result, key: string) {
+    if (submit.kind === "local") {
+      submit.onDecision(result); // demo path: no clientKeys, no pending, no posthog, no refresh
+      return;
+    }
+
     setPending(key);
     setError(null);
     const clientKey = (clientKeys.current[key] ??= crypto.randomUUID());
     try {
-      const res = await fetch(`/api/sessions/${sessionId}/decisions`, {
+      const res = await fetch(`/api/sessions/${submit.sessionId}/decisions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -54,7 +63,7 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
       delete clientKeys.current[key];
       posthog.capture('pairwise_decision_made', {
         result,
-        session_id: sessionId,
+        session_id: submit.sessionId,
         item_a_id: itemA.id,
         item_b_id: itemB.id,
         comparisons_made: comparisonsMade + 1,
