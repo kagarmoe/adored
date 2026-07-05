@@ -37,6 +37,13 @@ export function useTriageUndo(): TriageUndoContextValue {
   return ctx;
 }
 
+// Non-throwing read of the context: returns null when no provider is mounted.
+// The walkthrough renders SetAsideButton in synchronous "local" mode with no
+// provider, so it needs to probe the context without the throwing guard above.
+export function useOptionalTriageUndo(): TriageUndoContextValue | null {
+  return useContext(TriageUndoContext);
+}
+
 export function TriageUndoProvider({
   collectionId,
   children,

@@ -153,7 +153,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
                       hoisted out of this branch so it survives the queue emptying. */}
                   <div className="flex flex-wrap items-start gap-x-6 gap-y-3 border-t border-hairline pt-3">
                     <DeferControl submit={{ kind: "session", collectionId: collection.id }} itemId={item.id} />
-                    <SetAsideButton itemId={item.id} itemName={item.name} />
+                    <SetAsideButton submit={{ kind: "session" }} itemId={item.id} itemName={item.name} />
                   </div>
                 </div>
               </Card>
