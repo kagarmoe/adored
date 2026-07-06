@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { dismissWelcome } from "./dismissal";
 import { TRIAGE_ITEMS, type CompareOutcome, type TriageOutcome } from "./sampleData";
@@ -18,7 +17,6 @@ const BEAT_ORDER: Beat[] = ["purpose", "triage", "compare", "standing", "refine"
 // The walkthrough is client-only state: a step cursor plus the typed outcomes the
 // person taps. No API, no DB — the Standing beat reads these outcomes back.
 export function WalkthroughShell() {
-  const router = useRouter();
   const [beat, setBeat] = useState<Beat>("purpose");
   const [triageIndex, setTriageIndex] = useState(0);
   const [triageOutcomes, setTriageOutcomes] = useState<Record<string, TriageOutcome>>({});
@@ -59,7 +57,11 @@ export function WalkthroughShell() {
 
   const exit = () => {
     dismissWelcome();
-    router.push("/collections");
+    // ponytail: full-document nav, NOT router.push — leaving the onboarding SPA
+    // for the real app must let the SERVER re-run the /collections→/welcome gate
+    // with the freshly-set dismissal cookie. router.push replays a poisoned
+    // App Router cache entry and bounces back to /welcome (purses-etv0).
+    window.location.assign("/collections");
   };
 
   return (

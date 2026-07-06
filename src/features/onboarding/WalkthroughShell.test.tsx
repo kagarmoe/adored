@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
@@ -12,6 +12,20 @@ vi.mock("next/navigation", () => ({
 import { WalkthroughShell } from "./WalkthroughShell";
 import { TRIAGE_ITEMS, COMPARE_PAIR } from "./sampleData";
 import { DISMISS_KEY, dismissWelcome, isWelcomeDismissed } from "./dismissal";
+
+// The exit leaves the onboarding SPA via a full-document navigation
+// (window.location.assign) so the server re-runs the /welcome gate with the
+// fresh dismissal cookie — router.push replayed a poisoned App Router cache
+// entry and bounced back to /welcome (purses-etv0). jsdom doesn't implement
+// navigation, so we spy on assign.
+const assign = vi.fn();
+beforeEach(() => {
+  assign.mockClear();
+  Object.defineProperty(window, "location", {
+    configurable: true,
+    value: { assign, href: "http://localhost/welcome" },
+  });
+});
 
 afterEach(() => {
   push.mockClear();
@@ -170,7 +184,7 @@ describe("WalkthroughShell", () => {
     const user = userEvent.setup();
     render(<WalkthroughShell />);
     await user.click(screen.getByRole("button", { name: "Skip for now" }));
-    expect(push).toHaveBeenCalledWith("/collections");
+    expect(assign).toHaveBeenCalledWith("/collections");
   });
 
   it("dismisses the walkthrough when 'Skip for now' is tapped", async () => {
@@ -221,7 +235,7 @@ describe("WalkthroughShell", () => {
       await advance(user);
       expect(isWelcomeDismissed()).toBe(false);
       await user.click(screen.getByRole("button", { name: "Skip for now" }));
-      expect(push).toHaveBeenCalledWith("/collections");
+      expect(assign).toHaveBeenCalledWith("/collections");
       expect(isWelcomeDismissed()).toBe(true);
     }
   );
