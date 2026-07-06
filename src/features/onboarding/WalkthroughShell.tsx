@@ -12,8 +12,6 @@ import { WelcomeHandoff } from "./WelcomeHandoff";
 
 type Beat = "purpose" | "triage" | "compare" | "standing" | "refine" | "handoff";
 
-const BEAT_ORDER: Beat[] = ["purpose", "triage", "compare", "standing", "refine", "handoff"];
-
 // The walkthrough is client-only state: a step cursor plus the typed outcomes the
 // person taps. No API, no DB — the Standing beat reads these outcomes back.
 export function WalkthroughShell() {
@@ -69,7 +67,6 @@ export function WalkthroughShell() {
       <div
         ref={wrapperRef}
         tabIndex={-1}
-        aria-live="polite"
         className="w-full max-w-2xl focus:outline-none"
       >
         {beat === "purpose" && <WelcomePurpose onNext={() => goTo("triage")} />}
@@ -105,5 +102,3 @@ export function WalkthroughShell() {
     </div>
   );
 }
-
-export { BEAT_ORDER };

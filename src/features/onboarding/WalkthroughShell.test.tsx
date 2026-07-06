@@ -32,11 +32,12 @@ afterEach(() => {
   document.cookie = `${DISMISS_KEY}=; path=/; max-age=0`;
 });
 
-// The wrapper that beat content lives in — the aria-live region and focus target.
-function liveRegion(): HTMLElement {
-  const region = document.querySelector<HTMLElement>("[aria-live='polite']");
-  if (!region) throw new Error("no aria-live region found");
-  return region;
+// The wrapper that beat content lives in — the focus target we move focus to on
+// each advance so a screen reader re-announces the new beat (its own h1).
+function beatWrapper(): HTMLElement {
+  const wrapper = document.querySelector<HTMLElement>("[tabindex='-1']");
+  if (!wrapper) throw new Error("no beat wrapper found");
+  return wrapper;
 }
 
 async function tapTiers(user: ReturnType<typeof userEvent.setup>, label = "Love") {
@@ -161,7 +162,7 @@ describe("WalkthroughShell", () => {
     expect(screen.getByText(COMPARE_PAIR[0].name)).toBeInTheDocument();
   });
 
-  it("focus moves to the new beat's live region on advance", async () => {
+  it("focus moves to the new beat's wrapper on advance", async () => {
     const user = userEvent.setup();
     render(<WalkthroughShell />);
     await user.click(screen.getByRole("button", { name: "Show me how" }));
@@ -170,14 +171,21 @@ describe("WalkthroughShell", () => {
     // a screen reader re-announces the region rather than staying on the tapped
     // control.
     await user.click(screen.getByText("Love"));
-    expect(document.activeElement).toBe(liveRegion());
+    expect(document.activeElement).toBe(beatWrapper());
   });
 
-  it("wraps beat content in an aria-live=polite region", () => {
+  it("exposes an h1 on each beat — the focus-move to a fresh h1 is the SR announcement", async () => {
+    // With the beat's own h1 (not an aria-live region) as the announcement
+    // mechanism, sample the first beat and one advanced beat: both carry an h1.
+    const user = userEvent.setup();
     render(<WalkthroughShell />);
     expect(
-      screen.getByText(/rediscover what you love/i).closest("[aria-live='polite']")
-    ).not.toBeNull();
+      screen.getByRole("heading", { level: 1, name: "Rediscover what you love." })
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Show me how" }));
+    expect(
+      screen.getByRole("heading", { level: 1, name: "How do you feel about this one?" })
+    ).toBeInTheDocument();
   });
 
   it("routes to /collections when 'Skip for now' is tapped", async () => {

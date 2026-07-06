@@ -159,7 +159,7 @@ describe("WelcomeStanding", () => {
     };
     render(<WelcomeStanding compare={win} triage={triage} onNext={vi.fn()} />);
     const section = screen.getByRole("region", { name: /where things stand/i });
-    const paras = within(section).getAllByText(/./, { selector: "p, h2, h3, li" });
+    const paras = within(section).getAllByText(/./, { selector: "p, h1, h3, li" });
     expect(paras[paras.length - 1]).toHaveTextContent("What you love most is at the top.");
   });
 
@@ -171,6 +171,10 @@ describe("WelcomeStanding", () => {
       <WelcomeStanding compare={win} triage={withOnward} onNext={vi.fn()} />
     );
     expect(screen.getByText("Where these go next")).toBeInTheDocument();
+    // The onward group carries the real results page's softening line, byte-for-byte.
+    expect(
+      screen.getByText("These are ready to move on — to a new home, or simply on from here.")
+    ).toBeInTheDocument();
     unmount();
     // No onward tiers → every ranked row is loved; the onward section is absent.
     render(<WelcomeStanding compare={win} triage={{}} onNext={vi.fn()} />);

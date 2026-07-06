@@ -28,7 +28,7 @@ export function WelcomeTriage({ index, onOutcome }: WelcomeTriageProps) {
         <p className="text-sm text-ink-soft">{ROUND_COPY.triage.explainer}</p>
       </div>
 
-      <h2 className="font-display text-3xl text-ink">How do you feel about this one?</h2>
+      <h1 className="font-display text-3xl text-ink">How do you feel about this one?</h1>
 
       <div className="relative w-64 h-64 rounded-card overflow-hidden bg-content-soft shadow-card">
         <Image src={item.imageSrc} alt={item.name} fill className="object-cover" unoptimized />
@@ -41,7 +41,7 @@ export function WelcomeTriage({ index, onOutcome }: WelcomeTriageProps) {
           onDecision: (d) =>
             onOutcome(item.id, {
               kind: "tier",
-              tier: RESULT_TO_TIER[d.result as keyof typeof RESULT_TO_TIER],
+              tier: RESULT_TO_TIER[d.result],
             }),
         }}
         type="triage"

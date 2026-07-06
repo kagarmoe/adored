@@ -6,13 +6,13 @@ interface WelcomeRefineProps {
   onNext: () => void;
 }
 
-// Beat 6 — teach that the standing is living, not a verdict. It keeps updating
+// Beat 5 — teach that the standing is living, not a verdict. It keeps updating
 // as they sort ("Put things in order" names the real button they'll meet), and
 // only becomes a shareable artifact when they choose to finalize it.
 export function WelcomeRefine({ onNext }: WelcomeRefineProps) {
   return (
     <section className="flex flex-col items-center text-center gap-6">
-      <h2 className="font-display text-3xl sm:text-4xl text-ink">Refine it any time</h2>
+      <h1 className="font-display text-3xl sm:text-4xl text-ink">Refine it any time</h1>
       <div className="flex flex-col gap-3 max-w-md">
         <p className="text-lg text-ink-soft">
           The standing keeps updating as you sort &mdash; &ldquo;Put things in

@@ -7,9 +7,12 @@ import { execSync } from "node:child_process";
 // ever wires a component into local (no-fetch) mode.
 describe("local mode is walkthrough-only", () => {
   it("production routes never use local mode", () => {
-    const hits = execSync(String.raw`grep -rln 'kind: "local"' src/app/collections || true`, {
-      encoding: "utf8",
-    }).trim();
+    // Regex-tolerant of spacing/quotes so a reformat (kind:"local", single quotes,
+    // extra whitespace) can't sneak local mode into a production route past this guard.
+    const hits = execSync(
+      String.raw`grep -rlnE 'kind:[[:space:]]*["'\'']local["'\'']' src/app/collections || true`,
+      { encoding: "utf8" },
+    ).trim();
     expect(hits).toBe("");
   });
 });

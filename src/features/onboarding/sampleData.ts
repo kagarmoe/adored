@@ -35,7 +35,7 @@ export const TRIAGE_ITEMS: readonly SampleItem[] = [
   SAMPLE_ITEMS[4],
 ];
 
-export interface StandingRow {
+interface StandingRow {
   item: SampleItem;
   tier: Tier;
 }

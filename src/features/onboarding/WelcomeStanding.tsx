@@ -20,7 +20,7 @@ interface WelcomeStandingProps {
 
 const HEADING_ID = "welcome-standing-heading";
 
-// Beat 5 — the payoff, mirroring the real results page (RankedResults): the
+// Beat 4 — the payoff, mirroring the real results page (RankedResults): the
 // beat is titled "Where things stand", the most-loved item leads under the
 // "What you love most" eyebrow, then the ranking, then the onward / set-aside /
 // deferred groups in subordinate styling, closing on the affirmation. The
@@ -32,30 +32,11 @@ export function WelcomeStanding({ compare, triage, onNext }: WelcomeStandingProp
   const onward = standing.ranked.filter((row) => row.tier === "onward");
   const [hero, ...lovedRest] = loved;
 
-  // ponytail: reached through (compare, triage), buildStanding ALWAYS ranks the
-  // fixed compare pair (armchair/clock get a love|like tier from every
-  // win/tie/skip), so standing.ranked.length >= 2 here — this empty branch is
-  // unreachable in the current walkthrough. Kept as defensive render (per spec's
-  // calm all-escaped variant) in case the sample data ever loses its fixed pair.
-  if (standing.ranked.length === 0) {
-    return (
-      <section aria-labelledby={HEADING_ID} className="flex flex-col items-center text-center gap-6">
-        <h2 id={HEADING_ID} className="font-display text-3xl sm:text-4xl text-ink">
-          Where things stand
-        </h2>
-        <p className="font-display text-xl text-ink">You&rsquo;ve made your choices.</p>
-        <Button size="lg" onClick={onNext}>
-          Continue
-        </Button>
-      </section>
-    );
-  }
-
   return (
     <section aria-labelledby={HEADING_ID} className="flex flex-col items-center text-center gap-6">
-      <h2 id={HEADING_ID} className="font-display text-3xl sm:text-4xl text-ink">
+      <h1 id={HEADING_ID} className="font-display text-3xl sm:text-4xl text-ink">
         Where things stand
-      </h2>
+      </h1>
 
       {/* Most-loved hero: the winner leads under the "What you love most" eyebrow
          (the anti-marketplace reframe — from things you own). */}
@@ -79,7 +60,10 @@ export function WelcomeStanding({ compare, triage, onNext }: WelcomeStandingProp
       )}
 
       {onward.length > 0 && (
-        <StandingGroup label="Where these go next">
+        <StandingGroup
+          label="Where these go next"
+          caption="These are ready to move on — to a new home, or simply on from here."
+        >
           {onward.map((row) => (
             <StandingRowItem key={row.item.id} item={row.item} tier={row.tier} />
           ))}
@@ -94,6 +78,10 @@ export function WelcomeStanding({ compare, triage, onNext }: WelcomeStandingProp
         </StandingGroup>
       )}
 
+      {/* ponytail: deliberate demo compression — a "Not yet" item shows here as a
+         gentle deferred group because a one-pass 3-item walkthrough has no later
+         round; in the real app a deferred item resurfaces in the triage queue,
+         not on the results page. */}
       {standing.deferred.length > 0 && (
         <StandingGroup label="Ready when you are">
           {standing.deferred.map((item) => (
@@ -116,10 +104,19 @@ export function WelcomeStanding({ compare, triage, onNext }: WelcomeStandingProp
 // A quiet, subordinate group (onward / set-aside / deferred): a text-xl
 // ink-soft eyebrow heading over its rows, mirroring RankedResults' Onward
 // section, so these read as secondary to the loved ranking above.
-function StandingGroup({ label, children }: { label: string; children: ReactNode }) {
+function StandingGroup({
+  label,
+  caption,
+  children,
+}: {
+  label: string;
+  caption?: string;
+  children: ReactNode;
+}) {
   return (
     <section className="flex flex-col items-center gap-2 w-full">
       <h3 className="font-display text-xl text-ink-soft">{label}</h3>
+      {caption && <p className="text-sm text-ink-soft">{caption}</p>}
       <ol className="flex flex-col gap-2 w-full max-w-sm">{children}</ol>
     </section>
   );

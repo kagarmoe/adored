@@ -4,22 +4,30 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 
-export type DecisionSubmit =
+// Generic over the decision shape D (type-level only; runtime is unchanged) so a
+// local caller's narrowed decision type flows to onDecision instead of being
+// erased to Record<string, unknown>. Defaults to Record<string, unknown> for the
+// session path, which never reads the decision's fields.
+export type DecisionSubmit<D = Record<string, unknown>> =
   | { kind: "session"; sessionId: string; onDecisionMade?: () => void }
-  | { kind: "local"; onDecision: (decision: Record<string, unknown>) => void };
+  | { kind: "local"; onDecision: (decision: D) => void };
 
-interface DecisionControlsProps {
-  submit: DecisionSubmit;
+interface DecisionControlsProps<D extends Record<string, unknown> = Record<string, unknown>> {
+  submit: DecisionSubmit<D>;
   type: "triage" | "pairwise_compare";
-  decisions: Array<{ label: string; decision: Record<string, unknown> }>;
+  decisions: Array<{ label: string; decision: D }>;
 }
 
-export function DecisionControls({ submit, type, decisions }: DecisionControlsProps) {
+export function DecisionControls<D extends Record<string, unknown> = Record<string, unknown>>({
+  submit,
+  type,
+  decisions,
+}: DecisionControlsProps<D>) {
   const router = useRouter();
   const [pendingLabel, setPendingLabel] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function submitDecision(label: string, decision: Record<string, unknown>) {
+  async function submitDecision(label: string, decision: D) {
     if (submit.kind === "local") {
       submit.onDecision(decision); // synchronous demo path: no fetch, no pending, no refresh
       return;
