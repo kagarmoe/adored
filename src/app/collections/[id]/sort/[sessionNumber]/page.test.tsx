@@ -2,6 +2,7 @@
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { ROUND_COPY } from "@/features/sorting/roundCopy";
 
 const { mockGetSession, mockRequireAccess, redirectMock, sessionRepo, decisionRepo, itemRepo, prefRepo, dispositionRepo } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
@@ -57,6 +58,8 @@ describe("SessionDetailPage resolution + integrity guard", () => {
     const ui = await SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } });
     render(ui);
     expect(redirectMock).not.toHaveBeenCalled();
+    // Hub consumes the shared teaching copy — a hub-side fork of this string fails here.
+    expect(screen.getByText(ROUND_COPY.triage.explainer)).toBeInTheDocument();
   });
   it("redirects when the user is not the session's curator — independent sort (purses-t9l)", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "s1", collectionId: "coll_REAL", number: 1, status: "active", curatorId: "someone_else" });

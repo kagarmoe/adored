@@ -7,8 +7,14 @@ import { itemDisplayName, itemInitial } from "@/lib/items";
 import { Button, CardImage } from "@/components/ui";
 import posthog from "posthog-js";
 
+type Result = "item_a" | "item_b" | "tie" | "skip";
+
+export type CompareSubmit =
+  | { kind: "session"; sessionId: string }
+  | { kind: "local"; onDecision: (result: Result) => void };
+
 interface CompareChoiceProps {
-  sessionId: string;
+  submit: CompareSubmit;
   itemA: Item;
   itemB: Item;
   heroA?: string;
@@ -17,9 +23,7 @@ interface CompareChoiceProps {
   comparisonsMade: number;
 }
 
-type Result = "item_a" | "item_b" | "tie" | "skip";
-
-export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, comparisonsMade }: CompareChoiceProps) {
+export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsMade }: CompareChoiceProps) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,11 +40,16 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
   const clientKeys = useRef<Record<string, string>>({});
 
   async function choose(result: Result, key: string) {
+    if (submit.kind === "local") {
+      submit.onDecision(result); // demo path: no clientKeys, no pending, no posthog, no refresh
+      return;
+    }
+
     setPending(key);
     setError(null);
     const clientKey = (clientKeys.current[key] ??= crypto.randomUUID());
     try {
-      const res = await fetch(`/api/sessions/${sessionId}/decisions`, {
+      const res = await fetch(`/api/sessions/${submit.sessionId}/decisions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -54,7 +63,7 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
       delete clientKeys.current[key];
       posthog.capture('pairwise_decision_made', {
         result,
-        session_id: sessionId,
+        session_id: submit.sessionId,
         item_a_id: itemA.id,
         item_b_id: itemB.id,
         comparisons_made: comparisonsMade + 1,
@@ -87,7 +96,7 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
             disabled={busy}
             aria-label={`Choose ${itemDisplayName(item)}`}
             onClick={() => choose(result, key)}
-            className="group flex flex-col overflow-hidden rounded-card border border-hairline bg-surface text-left transition-shadow duration-200 ease-gentle hover:shadow-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+            className="group flex min-h-11 flex-col overflow-hidden rounded-card border border-hairline bg-surface text-left transition-shadow duration-200 ease-gentle hover:shadow-lift focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-content-soft">
               <CardImage
@@ -110,13 +119,13 @@ export function CompareChoice({ sessionId, itemA, itemB, heroA, heroB, compariso
 
       {/* Escape hatches, deliberately quiet. */}
       <div className="flex items-center justify-center gap-2">
-        <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => choose("tie", "tie")}>
+        <Button type="button" variant="ghost" size="sm" className="min-h-11" disabled={busy} onClick={() => choose("tie", "tie")}>
           {pending === "tie" ? "Saving…" : "Tie"}
         </Button>
         <span className="text-hairline" aria-hidden>
           &middot;
         </span>
-        <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => choose("skip", "skip")}>
+        <Button type="button" variant="ghost" size="sm" className="min-h-11" disabled={busy} onClick={() => choose("skip", "skip")}>
           {pending === "skip" ? "Saving…" : "Skip"}
         </Button>
       </div>

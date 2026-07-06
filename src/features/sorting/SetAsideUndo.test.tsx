@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
@@ -32,7 +33,7 @@ function Harness({
   return (
     <TriageUndoProvider collectionId={collectionId}>
       <TriageUndoNotice />
-      {item && <SetAsideButton itemId={itemId} itemName={itemName} />}
+      {item && <SetAsideButton submit={{ kind: "session" }} itemId={itemId} itemName={itemName} />}
     </TriageUndoProvider>
   );
 }
@@ -144,5 +145,15 @@ describe("set-aside undo (provider + button + notice)", () => {
     const sep = notice.querySelector('[aria-hidden="true"]');
     expect(sep).not.toBeNull();
     expect(sep).toHaveTextContent("·");
+  });
+
+  it("local mode renders WITHOUT a TriageUndoProvider and never touches the network", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const onDecision = vi.fn();
+    // No provider wrapper — today this throws "useTriageUndo must be used within…".
+    render(<SetAsideButton submit={{ kind: "local", onDecision }} itemId="i1" itemName="The lamp" />);
+    await userEvent.click(screen.getByRole("button", { name: /not mine/i }));
+    expect(onDecision).toHaveBeenCalledTimes(1);
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 });

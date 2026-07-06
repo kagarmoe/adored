@@ -18,6 +18,11 @@ export function WelcomePurpose({ onNext }: WelcomePurposeProps) {
         Adored isn&rsquo;t a store. It&rsquo;s a way to notice which of your
         things you love most, one gentle choice at a time.
       </p>
+      <div className="flex flex-col gap-1 max-w-md">
+        <p className="text-ink-soft">Gather a few photos of your things.</p>
+        <p className="text-ink-soft">Sort in short rounds.</p>
+        <p className="text-ink-soft">See where things stand.</p>
+      </div>
       <Button size="lg" onClick={onNext}>
         Show me how
       </Button>

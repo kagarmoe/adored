@@ -1,46 +1,67 @@
 "use client";
 
 import Image from "next/image";
-import { TierBadge } from "@/components/ui/TierBadge";
-import { TRIAGE_ITEMS, type Tier } from "./sampleData";
+import { DecisionControls } from "@/features/sorting/DecisionControls";
+import { DeferControl } from "@/features/sorting/DeferControl";
+import { SetAsideButton } from "@/features/sorting/SetAsideButton";
+import { ROUND_COPY, triageDecisions } from "@/features/sorting/roundCopy";
+import { RESULT_TO_TIER, TRIAGE_ITEMS, type TriageOutcome } from "./sampleData";
 
 interface WelcomeTriageProps {
-  /** Records the tap and advances to the next item, then the next beat. */
-  onChoose: (itemId: string, tier: Tier) => void;
   /** Which triage item is on screen. Strictly one at a time — never a grid. */
   index: number;
+  /** Reports the typed outcome for this item, then advances the walkthrough. */
+  onOutcome: (itemId: string, outcome: TriageOutcome) => void;
 }
 
-const TIERS: readonly Tier[] = ["love", "like", "maybe", "onward"];
-
-// Beat 2 — one thing at a time, four tiers. No grid of samples (that reads
-// shop-like); a single object fills the frame.
-export function WelcomeTriage({ onChoose, index }: WelcomeTriageProps) {
+// Beat 2 — one thing at a time, taught with the REAL sorting controls in their
+// synchronous local mode: no fetch, no router, no TriageUndoProvider. The kicker
+// reuses the hub's exact taught noun ("A Triage round") so the two surfaces
+// cannot fork.
+export function WelcomeTriage({ index, onOutcome }: WelcomeTriageProps) {
   const item = TRIAGE_ITEMS[index];
 
   return (
     <section className="flex flex-col items-center text-center gap-6">
-      <h2 className="font-display text-3xl text-ink">How do you feel about this one?</h2>
+      <div className="flex flex-col items-center gap-1">
+        <p className="text-sm text-ink-soft">A {ROUND_COPY.triage.name} round</p>
+        <p className="text-sm text-ink-soft">{ROUND_COPY.triage.explainer}</p>
+      </div>
+
+      <h1 className="font-display text-3xl text-ink">How do you feel about this one?</h1>
 
       <div className="relative w-64 h-64 rounded-card overflow-hidden bg-content-soft shadow-card">
         <Image src={item.imageSrc} alt={item.name} fill className="object-cover" unoptimized />
       </div>
       <p className="text-lg text-ink">{item.name}</p>
 
-      <div className="flex flex-wrap justify-center gap-3">
-        {TIERS.map((tier) => (
-          <button
-            key={tier}
-            type="button"
-            onClick={() => onChoose(item.id, tier)}
-            className="h-11 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
-          >
-            <TierBadge tier={tier} className="px-4 py-2" />
-          </button>
-        ))}
-      </div>
+      <DecisionControls
+        submit={{
+          kind: "local",
+          onDecision: (d) =>
+            onOutcome(item.id, {
+              kind: "tier",
+              tier: RESULT_TO_TIER[d.result],
+            }),
+        }}
+        type="triage"
+        decisions={triageDecisions(item.id)}
+      />
 
-      <p className="text-sm text-ink-soft">Tap how you feel. There are no wrong answers.</p>
+      <div className="w-full border-t border-hairline pt-4 flex flex-col items-center gap-3">
+        <div className="flex flex-wrap justify-center gap-3">
+          <DeferControl
+            submit={{ kind: "local", onDecision: () => onOutcome(item.id, { kind: "deferred" }) }}
+            itemId={item.id}
+          />
+          <SetAsideButton
+            submit={{ kind: "local", onDecision: () => onOutcome(item.id, { kind: "setAside" }) }}
+            itemId={item.id}
+            itemName={item.name}
+          />
+        </div>
+        <p className="text-sm text-ink-soft">Not yet keeps it for later. Not mine sets it aside.</p>
+      </div>
     </section>
   );
 }

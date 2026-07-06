@@ -10,6 +10,7 @@ import { DispositionController } from "@/server/api/dispositions";
 import { AppLayout } from "@/components/layout";
 import { EmptyState } from "@/components/ui";
 import { CompareChoice } from "@/features/sorting/CompareChoice";
+import { COMPARE_SUBLINE } from "@/features/sorting/roundCopy";
 import { RoundSurface } from "@/features/sorting/RoundSurface";
 import { TakeABreakControl } from "@/features/sorting/TakeABreakControl";
 import { selectNextPair } from "@/lib/pairwise-selection";
@@ -145,14 +146,14 @@ export default async function ComparePage({ params }: ComparePageProps) {
         <div className="mx-auto max-w-2xl space-y-6">
           <div>
             <h1 className="text-3xl text-ink">Which do you love more?</h1>
-            <p className="mt-2 text-ink-soft">Tap the one you love more. Tie or skip whenever you like.</p>
+            <p className="mt-2 text-ink-soft">{COMPARE_SUBLINE}</p>
           </div>
 
           {!itemA || !itemB ? (
             <EmptyState heading="Need at least two items" message="Add more items to use pairwise comparison" />
           ) : (
             <CompareChoice
-              sessionId={sortSession.id}
+              submit={{ kind: "session", sessionId: sortSession.id }}
               itemA={itemA}
               itemB={itemB}
               heroA={heroA}

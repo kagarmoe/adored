@@ -8,15 +8,20 @@ interface WelcomeHandoffProps {
   onExplore: () => void;
 }
 
-// Beat 5 — hand off to their world. Primary CTA into the real new-collection
+// Beat 6 — hand off to their world. Primary CTA into the real new-collection
 // flow; a quiet way to just look around.
 export function WelcomeHandoff({ onExplore }: WelcomeHandoffProps) {
   return (
     <section className="flex flex-col items-center text-center gap-6">
-      <h2 className="font-display text-4xl text-ink">Now, your turn.</h2>
-      <p className="text-lg text-ink-soft max-w-md">
-        Add a few things you own to start a collection.
-      </p>
+      <h1 className="font-display text-4xl text-ink">Now, your turn.</h1>
+      <div className="flex flex-col gap-1 max-w-md">
+        <p className="text-lg text-ink-soft">
+          Start with a few photos of your things.
+        </p>
+        <p className="text-lg text-ink-soft">
+          Sort whenever you like &mdash; in short rounds, pausing any time.
+        </p>
+      </div>
 
       <Link href="/collections/new" className={buttonVariants({ size: "lg" })}>
         Start a collection

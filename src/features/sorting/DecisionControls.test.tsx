@@ -28,7 +28,13 @@ afterEach(() => {
 
 describe("DecisionControls triage tier tap", () => {
   it("renders one button per tier with its human label", () => {
-    render(<DecisionControls sessionId="sess_1" type="triage" decisions={TRIAGE_DECISIONS} />);
+    render(
+      <DecisionControls
+        submit={{ kind: "session", sessionId: "sess_1" }}
+        type="triage"
+        decisions={TRIAGE_DECISIONS}
+      />,
+    );
     for (const label of ["Love", "Like", "Maybe", "Onward"]) {
       expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
     }
@@ -36,7 +42,13 @@ describe("DecisionControls triage tier tap", () => {
 
   it("tapping a tier POSTs that tier's decision (the right `result`) to the session decisions route", async () => {
     const user = userEvent.setup();
-    render(<DecisionControls sessionId="sess_1" type="triage" decisions={TRIAGE_DECISIONS} />);
+    render(
+      <DecisionControls
+        submit={{ kind: "session", sessionId: "sess_1" }}
+        type="triage"
+        decisions={TRIAGE_DECISIONS}
+      />,
+    );
 
     await user.click(screen.getByRole("button", { name: "Maybe" }));
 
@@ -52,7 +64,13 @@ describe("DecisionControls triage tier tap", () => {
 
   it("a different tier sends a different `result` (Love→top), proving the tap is not hardcoded", async () => {
     const user = userEvent.setup();
-    render(<DecisionControls sessionId="sess_1" type="triage" decisions={TRIAGE_DECISIONS} />);
+    render(
+      <DecisionControls
+        submit={{ kind: "session", sessionId: "sess_1" }}
+        type="triage"
+        decisions={TRIAGE_DECISIONS}
+      />,
+    );
 
     await user.click(screen.getByRole("button", { name: "Love" }));
 
@@ -65,7 +83,13 @@ describe("DecisionControls triage tier tap", () => {
 
   it("refreshes the route after a successful save (advances to the next item) when no callback is given", async () => {
     const user = userEvent.setup();
-    render(<DecisionControls sessionId="sess_1" type="triage" decisions={TRIAGE_DECISIONS} />);
+    render(
+      <DecisionControls
+        submit={{ kind: "session", sessionId: "sess_1" }}
+        type="triage"
+        decisions={TRIAGE_DECISIONS}
+      />,
+    );
 
     await user.click(screen.getByRole("button", { name: "Like" }));
 
@@ -78,7 +102,13 @@ describe("DecisionControls triage tier tap", () => {
     // across the soft refresh, every tier stayed disabled forever and a normal
     // user could not triage past the first item.
     const user = userEvent.setup();
-    render(<DecisionControls sessionId="sess_1" type="triage" decisions={TRIAGE_DECISIONS} />);
+    render(
+      <DecisionControls
+        submit={{ kind: "session", sessionId: "sess_1" }}
+        type="triage"
+        decisions={TRIAGE_DECISIONS}
+      />,
+    );
 
     await user.click(screen.getByRole("button", { name: "Love" }));
 
@@ -98,10 +128,9 @@ describe("DecisionControls triage tier tap", () => {
     const user = userEvent.setup();
     render(
       <DecisionControls
-        sessionId="sess_1"
+        submit={{ kind: "session", sessionId: "sess_1", onDecisionMade }}
         type="triage"
         decisions={TRIAGE_DECISIONS}
-        onDecisionMade={onDecisionMade}
       />,
     );
 
@@ -114,12 +143,50 @@ describe("DecisionControls triage tier tap", () => {
   it("surfaces a gentle error and re-enables the tiers when the save fails", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
     const user = userEvent.setup();
-    render(<DecisionControls sessionId="sess_1" type="triage" decisions={TRIAGE_DECISIONS} />);
+    render(
+      <DecisionControls
+        submit={{ kind: "session", sessionId: "sess_1" }}
+        type="triage"
+        decisions={TRIAGE_DECISIONS}
+      />,
+    );
 
     await user.click(screen.getByRole("button", { name: "Onward" }));
 
     expect(await screen.findByText("Failed to save decision")).toBeInTheDocument();
     // Re-enabled so the user can retry — not stuck on "Saving...".
     expect(screen.getByRole("button", { name: "Onward" })).toBeEnabled();
+  });
+});
+
+describe("local mode", () => {
+  it("calls onDecision synchronously with no fetch, no pending state", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const onDecision = vi.fn();
+    render(
+      <DecisionControls
+        submit={{ kind: "local", onDecision }}
+        type="triage"
+        decisions={[{ label: "Love", decision: { itemId: "i1", result: "top" } }]}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Love" }));
+    expect(onDecision).toHaveBeenCalledWith({ itemId: "i1", result: "top" });
+    expect(fetchSpy).not.toHaveBeenCalled();
+    // No soft-lock: the control is immediately re-enabled (no "Saving…").
+    expect(screen.getByRole("button", { name: "Love" })).toBeEnabled();
+  });
+
+  it("does not refresh the router in local mode (synchronous demo path bypasses it)", async () => {
+    const onDecision = vi.fn();
+    render(
+      <DecisionControls
+        submit={{ kind: "local", onDecision }}
+        type="triage"
+        decisions={[{ label: "Love", decision: { itemId: "i1", result: "top" } }]}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Love" }));
+    expect(refresh).not.toHaveBeenCalled();
   });
 });

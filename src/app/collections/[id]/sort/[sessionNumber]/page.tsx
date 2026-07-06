@@ -13,6 +13,7 @@ import { SessionAnalytics } from "@/features/sessions/SessionAnalytics";
 import { SeeResultsCard } from "@/features/sessions/SeeResultsCard";
 import { RecommendedRoundCard } from "@/features/sessions/RecommendedRoundCard";
 import { recommendNextRound } from "@/lib/next-round";
+import { ROUND_COPY } from "@/features/sorting/roundCopy";
 import Link from "next/link";
 
 interface SessionPageProps {
@@ -92,8 +93,8 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
         <div className="grid gap-4 md:grid-cols-2">
           <Link href={`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}/triage`}>
             <Card interactive padding="lg">
-              <h2 className="text-lg text-ink">Triage</h2>
-              <p className="mt-2 text-sm text-ink-soft">Quickly bucket one item at a time.</p>
+              <h2 className="text-lg text-ink">{ROUND_COPY.triage.name}</h2>
+              <p className="mt-2 text-sm text-ink-soft">{ROUND_COPY.triage.explainer}</p>
               <div className="mt-4">
                 <Button size="sm">Open</Button>
               </div>
@@ -101,8 +102,8 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
           </Link>
           <Link href={`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}/compare`}>
             <Card interactive padding="lg">
-              <h2 className="text-lg text-ink">Compare</h2>
-              <p className="mt-2 text-sm text-ink-soft">Pick between pairs to refine ranking.</p>
+              <h2 className="text-lg text-ink">{ROUND_COPY.compare.name}</h2>
+              <p className="mt-2 text-sm text-ink-soft">{ROUND_COPY.compare.explainer}</p>
               <div className="mt-4">
                 <Button size="sm">Open</Button>
               </div>

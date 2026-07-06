@@ -3,11 +3,16 @@ import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import posthog from "posthog-js";
 import { CompareChoice } from "./CompareChoice";
 
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh }),
+}));
+
+vi.mock("posthog-js", () => ({
+  default: { capture: vi.fn() },
 }));
 
 const item = (id: string, name: string) => ({
@@ -28,7 +33,7 @@ describe("CompareChoice images", () => {
   it("browser-loads authenticated hero image URLs directly", () => {
     render(
       <CompareChoice
-        sessionId="s"
+        submit={{ kind: "session", sessionId: "s" }}
         itemA={item("a", "Bag A") as any}
         itemB={item("b", "Bag B") as any}
         heroA="/api/collections/c/items/a/photos/pa/file"
@@ -59,7 +64,7 @@ describe("CompareChoice tap chooses an item", () => {
   function renderChoice() {
     render(
       <CompareChoice
-        sessionId="s"
+        submit={{ kind: "session", sessionId: "s" }}
         itemA={item("a", "Bag A") as any}
         itemB={item("b", "Bag B") as any}
         comparisonsMade={0}
@@ -99,6 +104,22 @@ describe("CompareChoice tap chooses an item", () => {
     await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
 
     await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("captures pairwise_decision_made with the exact args after a successful save (byte-for-byte guard)", async () => {
+    const user = userEvent.setup();
+    renderChoice();
+
+    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
+
+    await waitFor(() => expect(vi.mocked(posthog.capture)).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(posthog.capture)).toHaveBeenCalledWith("pairwise_decision_made", {
+      result: "item_a",
+      session_id: "s",
+      item_a_id: "a",
+      item_b_id: "b",
+      comparisons_made: 1,
+    });
   });
 
   it("the Tie escape hatch sends result=tie", async () => {
@@ -165,7 +186,7 @@ describe("CompareChoice tap chooses an item", () => {
     const user = userEvent.setup();
     const { rerender } = render(
       <CompareChoice
-        sessionId="s"
+        submit={{ kind: "session", sessionId: "s" }}
         itemA={item("a", "Bag A") as any}
         itemB={item("b", "Bag B") as any}
         comparisonsMade={0}
@@ -177,7 +198,7 @@ describe("CompareChoice tap chooses an item", () => {
     // Next pair arrives as a rerender of the same instance.
     rerender(
       <CompareChoice
-        sessionId="s"
+        submit={{ kind: "session", sessionId: "s" }}
         itemA={item("c", "Bag C") as any}
         itemB={item("d", "Bag D") as any}
         comparisonsMade={1}
@@ -198,7 +219,7 @@ describe("CompareChoice tap chooses an item", () => {
     const user = userEvent.setup();
     const { rerender } = render(
       <CompareChoice
-        sessionId="s"
+        submit={{ kind: "session", sessionId: "s" }}
         itemA={item("a", "Bag A") as any}
         itemB={item("b", "Bag B") as any}
         comparisonsMade={0}
@@ -211,7 +232,7 @@ describe("CompareChoice tap chooses an item", () => {
     // The next pair arrives via router.refresh() — same instance, new props.
     rerender(
       <CompareChoice
-        sessionId="s"
+        submit={{ kind: "session", sessionId: "s" }}
         itemA={item("c", "Bag C") as any}
         itemB={item("d", "Bag D") as any}
         comparisonsMade={1}
@@ -235,5 +256,40 @@ describe("CompareChoice tap chooses an item", () => {
     expect(await screen.findByText("That didn't save. Try again.")).toBeInTheDocument();
     expect(refresh).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Choose Bag B" })).toBeEnabled();
+  });
+});
+
+describe("CompareChoice local mode (walkthrough demo)", () => {
+  const itemA = item("a", "Bag A") as any;
+  const itemB = item("b", "Bag B") as any;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("local mode: tap A calls onDecision('item_a') — no fetch, no posthog.capture, cards re-enabled", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const onDecision = vi.fn();
+    render(<CompareChoice submit={{ kind: "local", onDecision }} itemA={itemA} itemB={itemB} comparisonsMade={0} />);
+    await userEvent.click(screen.getByRole("button", { name: new RegExp(itemA.name!, "i") }));
+    expect(onDecision).toHaveBeenCalledWith("item_a");
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(vi.mocked(posthog.capture)).not.toHaveBeenCalled(); // transport batches — a fetch spy alone is blind to capture
+    expect(refresh).not.toHaveBeenCalled(); // fourth negative: local never advances the route
+    expect(screen.queryByText("Saving…")).not.toBeInTheDocument(); // no pending/busy state
+    expect(screen.getByRole("button", { name: /tie/i })).toBeEnabled();
+  });
+
+  it("local mode: Tie and Skip report their results", async () => {
+    const onDecision = vi.fn();
+    render(<CompareChoice submit={{ kind: "local", onDecision }} itemA={itemA} itemB={itemB} comparisonsMade={0} />);
+    await userEvent.click(screen.getByRole("button", { name: /tie/i }));
+    expect(onDecision).toHaveBeenCalledWith("tie");
+    await userEvent.click(screen.getByRole("button", { name: /skip/i }));
+    expect(onDecision).toHaveBeenLastCalledWith("skip");
   });
 });

@@ -13,6 +13,7 @@ import Link from "next/link";
 import { AppLayout } from "@/components/layout";
 import { Card, EmptyState } from "@/components/ui";
 import { DecisionControls } from "@/features/sorting/DecisionControls";
+import { triageDecisions } from "@/features/sorting/roundCopy";
 import { DeferControl } from "@/features/sorting/DeferControl";
 import { TriageUndoProvider } from "@/features/sorting/TriageUndoProvider";
 import { TriageUndoNotice } from "@/features/sorting/TriageUndoNotice";
@@ -140,14 +141,9 @@ export default async function TriagePage({ params }: TriagePageProps) {
                 <div className="space-y-4">
                   <DecisionControls
                     key={item.id}
-                    sessionId={sortSession.id}
+                    submit={{ kind: "session", sessionId: sortSession.id }}
                     type="triage"
-                    decisions={[
-                      { label: "Love", decision: { itemId: item.id, result: "top" } },
-                      { label: "Like", decision: { itemId: item.id, result: "high" } },
-                      { label: "Maybe", decision: { itemId: item.id, result: "medium" } },
-                      { label: "Onward", decision: { itemId: item.id, result: "low" } },
-                    ]}
+                    decisions={triageDecisions(item.id)}
                   />
                   {/* Quiet, demoted escape: the four tiers stay the primary row;
                       "Not yet" and "Not mine" sit below a hairline as two distinct
@@ -156,8 +152,8 @@ export default async function TriagePage({ params }: TriagePageProps) {
                       <body>); its "Bring back" undo lives in TriageUndoNotice above,
                       hoisted out of this branch so it survives the queue emptying. */}
                   <div className="flex flex-wrap items-start gap-x-6 gap-y-3 border-t border-hairline pt-3">
-                    <DeferControl collectionId={collection.id} itemId={item.id} />
-                    <SetAsideButton itemId={item.id} itemName={item.name} />
+                    <DeferControl submit={{ kind: "session", collectionId: collection.id }} itemId={item.id} />
+                    <SetAsideButton submit={{ kind: "session" }} itemId={item.id} itemName={item.name} />
                   </div>
                 </div>
               </Card>

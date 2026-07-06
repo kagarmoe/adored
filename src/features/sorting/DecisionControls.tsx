@@ -4,29 +4,40 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 
-interface DecisionControlsProps {
-  sessionId: string;
+// Generic over the decision shape D (type-level only; runtime is unchanged) so a
+// local caller's narrowed decision type flows to onDecision instead of being
+// erased to Record<string, unknown>. Defaults to Record<string, unknown> for the
+// session path, which never reads the decision's fields.
+export type DecisionSubmit<D = Record<string, unknown>> =
+  | { kind: "session"; sessionId: string; onDecisionMade?: () => void }
+  | { kind: "local"; onDecision: (decision: D) => void };
+
+interface DecisionControlsProps<D extends Record<string, unknown> = Record<string, unknown>> {
+  submit: DecisionSubmit<D>;
   type: "triage" | "pairwise_compare";
-  decisions: Array<{ label: string; decision: Record<string, unknown> }>;
-  onDecisionMade?: () => void;
+  decisions: Array<{ label: string; decision: D }>;
 }
 
-export function DecisionControls({
-  sessionId,
+export function DecisionControls<D extends Record<string, unknown> = Record<string, unknown>>({
+  submit,
   type,
   decisions,
-  onDecisionMade,
-}: DecisionControlsProps) {
+}: DecisionControlsProps<D>) {
   const router = useRouter();
   const [pendingLabel, setPendingLabel] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function submitDecision(label: string, decision: Record<string, unknown>) {
+  async function submitDecision(label: string, decision: D) {
+    if (submit.kind === "local") {
+      submit.onDecision(decision); // synchronous demo path: no fetch, no pending, no refresh
+      return;
+    }
+
     setPendingLabel(label);
     setError(null);
 
     try {
-      const response = await fetch(`/api/sessions/${sessionId}/decisions`, {
+      const response = await fetch(`/api/sessions/${submit.sessionId}/decisions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type, decision }),
@@ -41,8 +52,8 @@ export function DecisionControls({
       // would keep every tier disabled and block triaging the next item (U2).
       setPendingLabel(null);
 
-      if (onDecisionMade) {
-        onDecisionMade();
+      if (submit.onDecisionMade) {
+        submit.onDecisionMade();
       } else {
         router.refresh();
       }
