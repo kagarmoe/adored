@@ -6,8 +6,11 @@ import { WelcomePurpose } from "./WelcomePurpose";
 import { WelcomeTriage } from "./WelcomeTriage";
 import { WelcomeCompare } from "./WelcomeCompare";
 import { WelcomeStanding } from "./WelcomeStanding";
+import { WelcomeRefine } from "./WelcomeRefine";
 import { WelcomeHandoff } from "./WelcomeHandoff";
-import { COMPARE_PAIR } from "./sampleData";
+import { COMPARE_PAIR, type CompareOutcome } from "./sampleData";
+
+const SAMPLE_WIN: CompareOutcome = { kind: "win", winnerId: COMPARE_PAIR[0].id };
 
 // The triage beat renders the real sorting controls, which call useRouter()
 // unconditionally. Local mode never touches the router, but the hook still reads
@@ -24,8 +27,9 @@ function allBeatText(): string {
     render(<WelcomeTriage index={0} onOutcome={() => {}} />).container,
     render(<WelcomeCompare onOutcome={() => {}} />).container,
     render(
-      <WelcomeStanding compareWinnerId={COMPARE_PAIR[0].id} triageChoices={{}} onNext={() => {}} />
+      <WelcomeStanding compare={SAMPLE_WIN} triage={{}} onNext={() => {}} />
     ).container,
+    render(<WelcomeRefine onNext={() => {}} />).container,
     render(<WelcomeHandoff onExplore={() => {}} />).container,
   ]) {
     parts.push(el.textContent ?? "");
@@ -112,8 +116,9 @@ describe("a11y: touch targets >= 44px", () => {
       render(<WelcomeTriage index={0} onOutcome={() => {}} />).container,
       render(<WelcomeCompare onOutcome={() => {}} />).container,
       render(
-        <WelcomeStanding compareWinnerId={COMPARE_PAIR[0].id} triageChoices={{}} onNext={() => {}} />
+        <WelcomeStanding compare={SAMPLE_WIN} triage={{}} onNext={() => {}} />
       ).container,
+      render(<WelcomeRefine onNext={() => {}} />).container,
       render(<WelcomeHandoff onExplore={() => {}} />).container,
     ]) {
       controls.push(...Array.from(c.querySelectorAll<HTMLElement>("button, a")));
@@ -136,7 +141,7 @@ describe("a11y: no essential motion", () => {
     // root element opts into transition/animate utilities.
     for (const c of [
       render(<WelcomePurpose onNext={() => {}} />).container,
-      render(<WelcomeStanding compareWinnerId={COMPARE_PAIR[0].id} triageChoices={{}} onNext={() => {}} />)
+      render(<WelcomeStanding compare={SAMPLE_WIN} triage={{}} onNext={() => {}} />)
         .container,
     ]) {
       const section = c.querySelector("section");
