@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render } from "@testing-library/react";
 import { WelcomePurpose } from "./WelcomePurpose";
 import { WelcomeTriage } from "./WelcomeTriage";
@@ -9,12 +9,19 @@ import { WelcomeStanding } from "./WelcomeStanding";
 import { WelcomeHandoff } from "./WelcomeHandoff";
 import { COMPARE_PAIR } from "./sampleData";
 
+// The triage beat renders the real sorting controls, which call useRouter()
+// unconditionally. Local mode never touches the router, but the hook still reads
+// the app-router context — stub it so render doesn't throw in jsdom.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
+}));
+
 // Render every beat and collect its visible text into one blob.
 function allBeatText(): string {
   const parts: string[] = [];
   for (const el of [
     render(<WelcomePurpose onNext={() => {}} />).container,
-    render(<WelcomeTriage index={0} onChoose={() => {}} />).container,
+    render(<WelcomeTriage index={0} onOutcome={() => {}} />).container,
     render(<WelcomeCompare onChoose={() => {}} />).container,
     render(
       <WelcomeStanding compareWinnerId={COMPARE_PAIR[0].id} triageChoices={{}} onNext={() => {}} />
@@ -102,7 +109,7 @@ describe("a11y: touch targets >= 44px", () => {
     const controls: HTMLElement[] = [];
     for (const c of [
       render(<WelcomePurpose onNext={() => {}} />).container,
-      render(<WelcomeTriage index={0} onChoose={() => {}} />).container,
+      render(<WelcomeTriage index={0} onOutcome={() => {}} />).container,
       render(<WelcomeCompare onChoose={() => {}} />).container,
       render(
         <WelcomeStanding compareWinnerId={COMPARE_PAIR[0].id} triageChoices={{}} onNext={() => {}} />
