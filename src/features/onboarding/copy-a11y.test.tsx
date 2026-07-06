@@ -97,6 +97,37 @@ describe("purpose journey line", () => {
   });
 });
 
+describe("refine beat copy", () => {
+  it("names the living standing and the finalize/share step verbatim", () => {
+    const { container } = render(<WelcomeRefine onNext={() => {}} />);
+    const text = container.textContent ?? "";
+    expect(text).toContain("Refine it any time");
+    expect(text).toContain("The standing keeps updating as you sort");
+    // Names the REAL button people meet, so the surfaces cannot fork.
+    expect(text).toContain("Put things in order");
+    expect(text).toContain("starts another round whenever you want it truer");
+    expect(text).toContain("When it feels complete, you can finalize it and share it.");
+  });
+});
+
+describe("triage + compare teaching copy", () => {
+  it("triage carries the shared kicker, explainer, and escape caption", () => {
+    const { container } = render(<WelcomeTriage index={0} onOutcome={() => {}} />);
+    const text = container.textContent ?? "";
+    expect(text).toContain("A Triage round");
+    expect(text).toContain("One at a time — how do you feel about each?");
+    expect(text).toContain("Not yet keeps it for later. Not mine sets it aside.");
+  });
+
+  it("compare carries the shared kicker, explainer, and subline", () => {
+    const { container } = render(<WelcomeCompare onOutcome={() => {}} />);
+    const text = container.textContent ?? "";
+    expect(text).toContain("A Compare round");
+    expect(text).toContain("Two side by side — which do you love more?");
+    expect(text).toContain("Tap the one you love more. Tie or skip whenever you like.");
+  });
+});
+
 describe("handoff expectation lines", () => {
   it("sets the photos + short-rounds expectations verbatim", () => {
     const { container } = render(<WelcomeHandoff onExplore={() => {}} />);
