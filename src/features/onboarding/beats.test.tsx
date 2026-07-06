@@ -9,7 +9,7 @@ import { WelcomeCompare } from "./WelcomeCompare";
 import { WelcomeStanding } from "./WelcomeStanding";
 import { WelcomeHandoff } from "./WelcomeHandoff";
 import { COMPARE_PAIR, TRIAGE_ITEMS } from "./sampleData";
-import { ROUND_COPY } from "@/features/sorting/roundCopy";
+import { COMPARE_SUBLINE, ROUND_COPY } from "@/features/sorting/roundCopy";
 
 // The triage beat now renders the real sorting controls, which call useRouter()
 // unconditionally. Local mode never touches the router, but the hook still reads
@@ -83,22 +83,53 @@ describe("WelcomeTriage", () => {
 });
 
 describe("WelcomeCompare", () => {
-  it("renders the dominant prompt and coach copy verbatim", () => {
-    render(<WelcomeCompare onChoose={() => {}} />);
+  const [left] = COMPARE_PAIR;
+
+  it("renders the kicker + shared explainer, the dominant prompt, and the compare sub-line", () => {
+    render(<WelcomeCompare onOutcome={vi.fn()} />);
+    // Kicker reuses the hub's exact taught noun, composed "A Compare round".
+    expect(screen.getByText(`A ${ROUND_COPY.compare.name} round`)).toBeInTheDocument();
+    expect(screen.getByText(ROUND_COPY.compare.explainer)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Which do you love more?" })).toBeInTheDocument();
-    expect(
-      screen.getByText("When two feel close, this shows which you love more.")
-    ).toBeInTheDocument();
+    expect(screen.getByText(COMPARE_SUBLINE)).toBeInTheDocument();
   });
 
-  it("offers both of the person's own things and records the pick", async () => {
-    const onChoose = vi.fn();
-    render(<WelcomeCompare onChoose={onChoose} />);
-    const [left, right] = COMPARE_PAIR;
-    expect(screen.getByText(left.name)).toBeInTheDocument();
-    expect(screen.getByText(right.name)).toBeInTheDocument();
-    await userEvent.click(screen.getByText(right.name));
-    expect(onChoose).toHaveBeenCalledWith(right.id);
+  it("tapping the left card reports a win for the left item", async () => {
+    const onOutcome = vi.fn();
+    render(<WelcomeCompare onOutcome={onOutcome} />);
+    await userEvent.click(screen.getByRole("button", { name: `Choose ${left.name}` }));
+    expect(onOutcome).toHaveBeenCalledWith({ kind: "win", winnerId: left.id });
+  });
+
+  it("Tie reports a tie outcome", async () => {
+    const onOutcome = vi.fn();
+    render(<WelcomeCompare onOutcome={onOutcome} />);
+    await userEvent.click(screen.getByRole("button", { name: "Tie" }));
+    expect(onOutcome).toHaveBeenCalledWith({ kind: "tie" });
+  });
+
+  it("Skip reports a skip outcome", async () => {
+    const onOutcome = vi.fn();
+    render(<WelcomeCompare onOutcome={onOutcome} />);
+    await userEvent.click(screen.getByRole("button", { name: "Skip" }));
+    expect(onOutcome).toHaveBeenCalledWith({ kind: "skip" });
+  });
+
+  it("never fetches across taps (local mode is synchronous)", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    try {
+      const onOutcome = vi.fn();
+      render(<WelcomeCompare onOutcome={onOutcome} />);
+      await userEvent.click(screen.getByRole("button", { name: `Choose ${left.name}` }));
+      await userEvent.click(screen.getByRole("button", { name: "Tie" }));
+      await userEvent.click(screen.getByRole("button", { name: "Skip" }));
+      expect(fetchSpy).not.toHaveBeenCalled();
+      // Non-vacuous: the taps really landed on the local handler.
+      expect(onOutcome).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 

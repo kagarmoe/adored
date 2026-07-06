@@ -22,7 +22,7 @@ function allBeatText(): string {
   for (const el of [
     render(<WelcomePurpose onNext={() => {}} />).container,
     render(<WelcomeTriage index={0} onOutcome={() => {}} />).container,
-    render(<WelcomeCompare onChoose={() => {}} />).container,
+    render(<WelcomeCompare onOutcome={() => {}} />).container,
     render(
       <WelcomeStanding compareWinnerId={COMPARE_PAIR[0].id} triageChoices={{}} onNext={() => {}} />
     ).container,
@@ -110,7 +110,7 @@ describe("a11y: touch targets >= 44px", () => {
     for (const c of [
       render(<WelcomePurpose onNext={() => {}} />).container,
       render(<WelcomeTriage index={0} onOutcome={() => {}} />).container,
-      render(<WelcomeCompare onChoose={() => {}} />).container,
+      render(<WelcomeCompare onOutcome={() => {}} />).container,
       render(
         <WelcomeStanding compareWinnerId={COMPARE_PAIR[0].id} triageChoices={{}} onNext={() => {}} />
       ).container,
