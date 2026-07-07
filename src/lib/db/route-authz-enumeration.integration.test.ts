@@ -180,6 +180,13 @@ const PUBLIC_OR_SELF_KEYS = new Set<string>([
   // The authz gate is exercised in pool-routes.integration.test.ts instead.
   // This is the only mock-bypass exception; see file-level comment for rationale.
   "POST /api/collections/[param]/pool/upload",
+
+  // voice extract: authN-only, NO collection/resource scope. Maps a spoken
+  // transcript → suggested fields; it reads and writes no tenant data, so there
+  // is no "stranger" victim — a signed-in caller only ever extracts their own
+  // transcript. The 401-unauthenticated guard + per-user cap are exercised in
+  // src/app/api/voice/extract/route.test.ts.
+  "POST /api/voice/extract",
 ]);
 
 // ── Stranger test case builder ────────────────────────────────────────────────
