@@ -84,6 +84,11 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 | GET·POST | `/api/collections/[id]/items` | member |
 | PATCH | `/api/collections/[id]/items/[itemId]` | curator (`items:write`) |
 
+### voice
+| Method | Path | Access |
+|---|---|---|
+| POST | `/api/voice/extract` | any signed-in user (no resource scope; per-user daily cap) |
+
 ### item photos
 | Method | Path | Access |
 |---|---|---|
@@ -204,7 +209,7 @@ Authenticated. **Body** → `createCollection`; also creates the caller's **owne
 `getSession` + `requireApiCollectionAccess` (member-or-owner). `GET` → `Item[]`. `POST` body → `201 Item`. `400` invalid JSON; `401`/`403`/`404`.
 
 ### `PATCH /api/collections/[id]/items/[itemId]`
-`getSession` + **belongs-to-parent** (`item.collectionId !== id` → `404`) + `requireApiCapability("items:write")` (**curator** — any member; the old `canEditMetadata` flag is inert). **Body:** `{ name?, brand?, style?, color?, material?, category?, notes? }` (all nullable). Returns updated `Item`. `400` invalid input; `401`/`403`/`404`.
+`getSession` + **belongs-to-parent** (`item.collectionId !== id` → `404`) + `requireApiCapability("items:write")` (**curator** — any member; the old `canEditMetadata` flag is inert). **Body:** `{ name?, brand?, style?, color?, material?, category?, notes?, story?, height?, width?, depth?, weight?, unit? }`. Dimensions are strings validated as plain positive decimals ≤ 10000 (hex/scientific rejected); on **update**, `""` clears the column to `NULL` (on create, empty/absent → `NULL`); `unit` (`imperial|metric`) is omitted-when-absent so the DB default applies. Returns updated `Item`. `400` invalid input; `401`/`403`/`404`.
 
 ## item photos
 
@@ -358,6 +363,11 @@ Curator-private results, gated by `requireApiResultAccess` (member-or-owner **an
 
 ### `GET /api/shared-results/[token]`
 **Public**, token-based — the recipient view of a shared result. Returns the shared result for `token`; any error (absent/expired) → `404`.
+
+## voice
+
+### `POST /api/voice/extract`
+`getSession` only — **no collection scope** (the route reads/writes no collection data; it maps text → suggested fields). **Body:** `{ transcript: string }` (1–1500 chars). Calls Claude (`claude-opus-4-8`, structured output, `maxRetries: 1`, `max_tokens: 1000`, route `maxDuration = 30`) via `src/server/services/voice-extract.ts` (`server-only`), then sanitizes the parsed output through a bounded schema before responding. **Returns** `200` bare `ExtractedItemDetails` (name/brand/style/color/material/category, numeric dimensions + `unit`, `otherDetails[]`). Errors: `400` invalid body; `401`; `422` extraction failed (model refusal / unparseable output / truncation — the client keeps the transcript and offers it as notes); `429` per-user daily cap exceeded (`voice_usage` upsert, `VOICE_DAILY_CALL_CAP` default 50); `503` `ANTHROPIC_API_KEY` unset; `500` fixed generic message (SDK error text is never passed through). Transcripts are not persisted or logged; the PostHog event carries outcome/latency only, and telemetry failures never alter the response.
 
 ## Known authz gaps
 

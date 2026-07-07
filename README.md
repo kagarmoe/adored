@@ -47,6 +47,8 @@ A full-featured web application for managing collections and sorting items throu
    # Optional locally — each degrades gracefully when unset:
    RESEND_API_KEY=            # transactional email (magic-link + invites); unset → dev logs the link
    NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=  # analytics + DB observability; unset → capture is skipped
+   ANTHROPIC_API_KEY=         # voice-capture field extraction; unset → /api/voice/extract 503s, typing unaffected
+   VOICE_DAILY_CALL_CAP=      # per-user daily voice-extraction cap (default 50)
    ```
 
    > Auth uses the Vercel-style `AUTH_URL`/`AUTH_SECRET` names; `src/lib/env.ts` validates these, and better-auth reads `BETTER_AUTH_URL`/`BETTER_AUTH_SECRET` **falling back to `AUTH_URL`/`AUTH_SECRET`** — so the `BETTER_AUTH_*` vars are optional and one secret can serve both. Do **not** put Vercel system vars (`VERCEL`, `VERCEL_ENV`, …) in `.env.local` — see the `__Secure-` cookie note in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). For the full operator variable list, see [docs/runbooks/setup-checklist.md](docs/runbooks/setup-checklist.md).
@@ -223,6 +225,7 @@ The app is optimized for Vercel with native integrations:
    BLOB_READ_WRITE_TOKEN=<vercel-blob-token>
    RESEND_API_KEY=<resend-api-key>                     # transactional email
    NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=<posthog-token>   # analytics + DB observability
+   ANTHROPIC_API_KEY=<anthropic-api-key>               # voice-capture extraction (optional; unset → voice extract 503s)
    ```
 
    See [docs/runbooks/setup-checklist.md](docs/runbooks/setup-checklist.md) for the full operator variable list.
