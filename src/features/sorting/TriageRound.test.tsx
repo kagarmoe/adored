@@ -262,10 +262,10 @@ describe("TriageRound per-entry deferred banner", () => {
 });
 
 describe("TriageRound set-aside stays optimistic and undoable", () => {
-  it("a 'Not mine' tap advances immediately and routes the disposition through the provider", async () => {
+  it("a 'Not mine' tap advances immediately and the provider enqueues the disposition — no fetch", async () => {
     const user = userEvent.setup();
     render(
-      <TriageUndoProvider collectionId="coll_1">
+      <TriageUndoProvider curatorId="u1" sessionId="sess_1" collectionId="coll_1">
         <TriageRound
           curatorId="u1"
           sessionId="sess_1"
@@ -282,10 +282,15 @@ describe("TriageRound set-aside stays optimistic and undoable", () => {
 
     await user.click(screen.getByRole("button", { name: /not mine/i }));
     expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
-    await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
-    const [url, init] = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
-    expect(url).toBe("/api/collections/coll_1/dispositions");
-    expect(JSON.parse((init as RequestInit).body as string)).toEqual({ itemId: "item_a", disposition: "set_aside" });
+    // Task 13: the disposition rides the queue — the tap path never fetches.
+    await waitFor(() => expect(readQueue(KEY)).toHaveLength(1));
+    expect(readQueue(KEY)[0]).toMatchObject({
+      kind: "disposition",
+      itemId: "item_a",
+      disposition: "set_aside",
+    });
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(flusher.triggerFlush).toHaveBeenCalled();
   });
 });
 

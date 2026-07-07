@@ -88,7 +88,11 @@ export default async function TriagePage({ params }: TriagePageProps) {
         <TakeABreakControl sessionId={sortSession.id} collectionHref={`/collections/${slugOrId}`} />
       }
     >
-      <TriageUndoProvider collectionId={collection.id}>
+      <TriageUndoProvider
+        curatorId={session.user.id}
+        sessionId={sortSession.id}
+        collectionId={collection.id}
+      >
         {/* The set-aside undo notice lives OUTSIDE the round so it survives BOTH
             the queue emptying AND the round-end recap — setting aside the LAST
             item ends the round, but the "Bring back" escape must still be

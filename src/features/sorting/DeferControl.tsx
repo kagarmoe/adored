@@ -1,28 +1,23 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
-import { AsyncActionButton } from "./AsyncActionButton";
+import { useOptionalTriageUndo } from "./TriageUndoProvider";
 
 // The triage "Not yet" affordance: a single quiet tap sets the current item
-// aside for later (a `deferred` disposition) and refreshes so the next item
-// comes forward. No confirm step — defer is reversible and low-stakes, so a
-// two-step gate would add friction to a gentle escape (TONE.md, commitment 4).
+// aside for later (a `deferred` disposition). No confirm step — defer is
+// reversible and low-stakes, so a two-step gate would add friction to a gentle
+// escape (TONE.md, commitment 4).
 //
 // `submit` selects how a defer commits:
-//   - session: the live app path — POST a `deferred` disposition, then refresh.
-//     collectionId MUST be the ULID collection.id, not the slug: the dispositions
-//     API authorizes the item then asserts item.collectionId === params.id, which
-//     is always a ULID — a slug there 404s.
-//   - local: the /welcome walkthrough — no fetch; call onDecision() synchronously.
-//     This deliberately bypasses AsyncActionButton, whose success path never
-//     resets `busy` (correct for a one-shot session submit, but a reused local
-//     instance would soft-lock disabled after one tap). The local button stays
-//     enabled and keeps its "Not yet" label across taps.
+//   - session: the live app path — the tap enqueues a `deferred` disposition
+//     through the TriageUndoProvider's queue seam (Epic P, spec §3.3): no fetch,
+//     no refresh on the tap path; the flusher delivers it and the item rests at
+//     the tail. Requires a mounted TriageUndoProvider (which owns collectionId).
+//   - local: the /welcome walkthrough — no queue, no network; call onDecision()
+//     synchronously. The button stays enabled and keeps its "Not yet" label
+//     across taps.
 type DeferControlProps = {
-  submit:
-    | { kind: "session"; collectionId: string }
-    | { kind: "local"; onDecision: () => void };
+  submit: { kind: "session" } | { kind: "local"; onDecision: () => void };
   itemId: string;
 };
 
@@ -31,7 +26,9 @@ const TITLE = "I'll come back to this";
 const ARIA_LABEL = "Not yet — I'll come back to this";
 
 export function DeferControl({ submit, itemId }: DeferControlProps) {
-  const router = useRouter();
+  // Non-throwing read: local mode renders with no provider mounted. Session
+  // mode still requires one — asserted below, same message as the hook's.
+  const ctx = useOptionalTriageUndo();
 
   if (submit.kind === "local") {
     return (
@@ -47,21 +44,17 @@ export function DeferControl({ submit, itemId }: DeferControlProps) {
     );
   }
 
-  const { collectionId } = submit;
+  if (!ctx) throw new Error("useTriageUndo must be used within a TriageUndoProvider");
+
   return (
-    <AsyncActionButton
-      label={LABEL}
+    <Button
+      type="button"
+      variant="ghost"
       title={TITLE}
-      ariaLabel={ARIA_LABEL}
-      action={async () => {
-        const res = await fetch(`/api/collections/${collectionId}/dispositions`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ itemId, disposition: "deferred" }),
-        });
-        if (!res.ok) throw new Error("defer failed");
-        router.refresh(); // brings the next item forward; this one resurfaces later
-      }}
-    />
+      aria-label={ARIA_LABEL}
+      onClick={() => void ctx.defer(itemId)}
+    >
+      {LABEL}
+    </Button>
   );
 }
