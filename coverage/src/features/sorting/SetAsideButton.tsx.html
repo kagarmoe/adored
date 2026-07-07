@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">88.88% </span>
+                <span class="strong">93.33% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>8/9</span>
+                <span class='fraction'>14/15</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75% </span>
+                <span class="strong">80% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>3/4</span>
+                <span class='fraction'>8/10</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>8/8</span>
+                <span class='fraction'>13/13</span>
             </div>
         
             
@@ -113,7 +113,23 @@
 <a name='L48'></a><a href='#L48'>48</a>
 <a name='L49'></a><a href='#L49'>49</a>
 <a name='L50'></a><a href='#L50'>50</a>
-<a name='L51'></a><a href='#L51'>51</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -137,20 +153,36 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">44x</span>
-<span class="cline-any cline-yes">44x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">89x</span>
+<span class="cline-any cline-yes">89x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-yes">89x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">89x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -167,7 +199,7 @@
 &nbsp;
 import { useState } from "react";
 import { Button } from "@/components/ui";
-import { useTriageUndo } from "./TriageUndoProvider";
+import { useOptionalTriageUndo } from "./TriageUndoProvider";
 &nbsp;
 // The triage "Not mine" affordance: a single quiet tap records that this item
 // isn't the person's to decide (a `set_aside` disposition) via the provider,
@@ -180,36 +212,52 @@ import { useTriageUndo } from "./TriageUndoProvider";
 // after the next item arrives, rather than dropping to &lt;body&gt;. Focus is NOT
 // auto-moved anywhere on tap — yanking focus could read as pressure (tap-first
 // charter); we only ensure it isn't lost.
+// `submit` selects the wiring without changing the affordance:
+//  - "session" — TODAY's path: records the set-aside disposition via the mounted
+//    TriageUndoProvider (which supplies collectionId) and refreshes the queue.
+//  - "local" — the /welcome walkthrough: synchronous, no network, no provider;
+//    a tap just advances the demo via onDecision().
 export function SetAsideButton({
+  submit,
   itemId,
   itemName,
 }: {
+  submit: { kind: "session" } | { kind: "local"; onDecision: () =&gt; void };
   itemId: string;
   itemName: string | null;
 }) {
-  const { setAside } = useTriageUndo();
+  // Non-throwing read: local mode renders with no provider mounted. Session mode
+  // still requires one — asserted below, same message as the old hook.
+  const ctx = useOptionalTriageUndo();
   const [busy, setBusy] = useState(false);
 &nbsp;
   async function onClick() {
+    if (submit.kind === "local") {
+      submit.onDecision();
+      return;
+    }
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (!ctx) throw new Error("useTriageUndo must be used within a TriageUndoProvider");
     <span class="missing-if-branch" title="if path not taken" >I</span>if (busy) <span class="cstat-no" title="statement not covered" >return; // the provider also guards in-flight; this is the visual gate</span>
     setBusy(true);
     try {
-      await setAside(itemId, itemName);
+      await ctx.setAside(itemId, itemName);
     } finally {
       setBusy(false);
     }
   }
+&nbsp;
+  const busyInSession = submit.kind === "session" &amp;&amp; busy;
 &nbsp;
   return (
     &lt;Button
       type="button"
       variant="ghost"
       onClick={onClick}
-      disabled={busy}
+      disabled={busyInSession}
       title="set aside — not mine to decide"
       aria-label="Not mine — set aside, not mine to decide"
     &gt;
-      {busy ? "Just a moment…" : "Not mine"}
+      {busyInSession ? "Just a moment…" : "Not mine"}
     &lt;/Button&gt;
   );
 }
@@ -220,7 +268,7 @@ export function SetAsideButton({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-05T05:36:11.511Z
+                at 2026-07-06T23:53:32.867Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
