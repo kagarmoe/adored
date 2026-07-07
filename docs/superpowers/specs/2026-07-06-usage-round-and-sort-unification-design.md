@@ -209,11 +209,13 @@ batch endpoint fix it everywhere.
   then advances from client state on tap — no awaited network, no `router.refresh()` per
   decision.
 - Each action is enqueued with a client-generated ULID `clientKey` and synchronously persisted
-  to `localStorage` **before the UI advances**. Storage key:
-  **`adored.pending.{curatorId}.{sessionId}`**, with curatorId also stored per entry (review
-  findings ARCH-7/SEC-B3: a shared browser profile must never flush one curator's decisions
-  under another's login, and recovery must be able to leave a foreign queue untouched).
-  Queue order in storage **is** the flush order; no per-entry seq (review finding A5a).
+  to `localStorage` **before the UI advances**. Storage shape refined in Epic P §3.1
+  (erratum F16): versioned, curator-keyed envelope
+  **`adored.pending.v1.{curatorId}.{sessionId}`** — envelope `curatorId` supersedes this
+  spec's earlier per-entry copy; the isolation intent stands (review findings ARCH-7/SEC-B3:
+  a shared browser profile must never flush one curator's decisions under another's login,
+  and recovery must leave a foreign queue untouched). Queue order in storage **is** the flush
+  order; no per-entry seq (review finding A5a).
 - **The queue carries all round actions:** triage, compare, and usage decisions (batch
   entries) **and dispositions** ("Not mine"/"Not yet" — user point 10). The flusher drains
   sequentially, **single-flight** (normative — review finding ARCH-5: sequential flushing is
@@ -256,12 +258,14 @@ batch endpoint fix it everywhere.
   the inherited gap with one indexed query per batch) — are **rejected per-entry** while valid
   entries proceed. Response:
   `{ results: [{ clientKey, status: "created" | "duplicate" | "rejected" }] }`.
-- **Ordering correctness (corrected per review finding DATA-4):** event `createdAt` is set in
-  JS per row today (`new Date()` in the repository), *not* by a transaction-fixed DB `now()`
-  — so Epic P pins the mechanism explicitly: **one shared timestamp for all rows in a batch +
-  ids from a monotonic ULID factory in array order** (base `ulid()` is not monotonic within a
-  millisecond). Latest-wins then resolves in-batch conflicts to the later array entry — named
-  test. Cross-batch ordering is protected by the single-flight sequential flusher.
+- **Ordering correctness (erratum via Epic P rev 2, F3):** the *production* decisions route
+  omits `createdAt`, so the column's `defaultNow()` (transaction-start-fixed) applies — the
+  repository's JS `new Date()` path is seed/test-only. Epic P therefore keeps **DB `now()` as
+  the ordering authority** (one shared timestamp per batch for free, same clock domain as all
+  historical and single-route rows) **+ ids from a monotonic ULID factory in array order**
+  (base `ulid()` is not monotonic within a millisecond). Latest-wins resolves in-batch
+  conflicts to the later array entry — named test. Cross-batch ordering is protected by the
+  single-flight sequential flusher (normative; Web-Lock across tabs, Epic P §3.2).
 - **Compare is carved out of the optimistic queue (review finding A1 — the one scope
   correction):** compare's next pair *depends on the previous answer* (binary insertion), so
   there is no prefetchable queue. Epic P scopes optimistic batching to the answer-independent
@@ -277,7 +281,8 @@ batch endpoint fix it everywhere.
 window — closed for the surfaces that matter by D7's await-pending gate; a hard device loss
 can drop at most the unflushed tail (≤5 decisions / ≤4 s); on a shared device another user of
 the same browser profile could *read* pending entries (itemIds + yes/no — low sensitivity,
-same class as any client cache; review SEC-B3 residue).
+same class as any client cache; review SEC-B3 residue), retained at most Epic P's storage GC
+TTL (30 days — erratum F18).
 
 ### D7 — Pause / crash / sudden shutdown
 
@@ -291,7 +296,10 @@ same class as any client cache; review SEC-B3 residue).
   case) → zero cost, no gate. This keeps data fetching server-side (Next.js opinion #3) while
   guaranteeing the queue lands before any round queue, recommendation, or Standing view is
   computed from stale events — and it closes the "I just answered and Standing doesn't show
-  it" gap (review finding UX-6).
+  it" gap (review finding UX-6). Mechanism pinned in Epic P §3.4 (errata F7/F8): reveal =
+  conditional mount after the refresh transition settles, time-bounded (~5 s, then
+  availability wins with a quiet catch-up line); the pause pre-flush is best-effort and
+  non-blocking — stepping away is never gated on the network.
 - **Pause** is already durable (status `paused` holds the slot; decisions accepted while
   paused). "Take a break" gains a pre-flush.
 - **Round/timer state is deliberately ephemeral** (parent spec: a round is a time-box, not a
