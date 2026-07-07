@@ -102,6 +102,23 @@ describe("createItem — dimension schema (rejects, nothing persisted)", () => {
     expect(calls.create[0].width).toBe("10000");
   });
 
+  // Postgres numeric rejects these, but `Number()` coerces them — so the boundary
+  // must reject the plain-decimal violators before they reach an insert.
+  it.each([
+    ["hex", "0x10"],
+    ["octal", "0o17"],
+    ["binary", "0b101"],
+    ["scientific notation", "1e5"],
+    ["trailing whitespace", "12 "],
+    ["leading whitespace", " 12"],
+    ["embedded whitespace", "1 2"],
+  ])("rejects a %s dimension (%s) without calling the repo", async (_label, height) => {
+    await expect(
+      controller.createItem("col_1", { name: "Coerced Bag", height }),
+    ).rejects.toThrow();
+    expect(calls.create).toHaveLength(0);
+  });
+
   it("rejects an unknown unit", async () => {
     await expect(
       controller.createItem("col_1", {
@@ -132,6 +149,38 @@ describe("updateItem — dimension schema", () => {
   it("rejects a negative dimension on update", async () => {
     await expect(
       controller.updateItem("itm_1", { height: "-3" }),
+    ).rejects.toThrow();
+    expect(calls.update).toHaveLength(0);
+  });
+
+  it("clears a dimension: an empty string becomes an explicit null so the column is nulled", async () => {
+    // On UPDATE, "" must reach the repo as null (an explicit write), not undefined
+    // (which Drizzle drops, keeping the old value). This is the blank-out fix.
+    await controller.updateItem("itm_1", { height: "", width: "" });
+
+    expect(calls.update).toHaveLength(1);
+    const { data } = calls.update[0];
+    expect(data.height).toBeNull();
+    expect(data.width).toBeNull();
+  });
+
+  it("leaves an absent dimension undefined on update so the column is untouched", async () => {
+    // An omitted key must stay undefined — Drizzle drops it, preserving the value.
+    await controller.updateItem("itm_1", { color: "Red" });
+
+    const { data } = calls.update[0];
+    expect(data.height).toBeUndefined();
+    expect(data.width).toBeUndefined();
+    expect("height" in data ? data.height : undefined).toBeUndefined();
+  });
+
+  it.each([
+    ["hex", "0x10"],
+    ["scientific notation", "1e5"],
+    ["trailing whitespace", "12 "],
+  ])("rejects a %s dimension (%s) on update", async (_label, width) => {
+    await expect(
+      controller.updateItem("itm_1", { width }),
     ).rejects.toThrow();
     expect(calls.update).toHaveLength(0);
   });

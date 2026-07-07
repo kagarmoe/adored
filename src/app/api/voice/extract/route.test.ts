@@ -187,6 +187,35 @@ describe("POST /api/voice/extract — extraction outcomes", () => {
   });
 });
 
+describe("POST /api/voice/extract — telemetry never breaks the request path", () => {
+  // A rejecting PostHog flush must be swallowed inside emit() — otherwise a paid,
+  // successful extraction (or a 429/422) would surface as a 500.
+  it("still returns 200 when the telemetry flush rejects", async () => {
+    mockFlush.mockRejectedValue(new Error("posthog down"));
+    mockParse.mockResolvedValue({
+      stop_reason: "end_turn",
+      parsed_output: { brand: "Prada" },
+    });
+    const res = await post(req({ transcript: "a Prada bag" }));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ brand: "Prada" });
+  });
+
+  it("still returns 429 when the telemetry flush rejects at the cap", async () => {
+    mockFlush.mockRejectedValue(new Error("posthog down"));
+    mockGetDb.mockReturnValue(fakeDb(51));
+    const res = await post(req({ transcript: "a Prada bag" }));
+    expect(res.status).toBe(429);
+  });
+
+  it("still returns 422 when the telemetry flush rejects on extraction failure", async () => {
+    mockFlush.mockRejectedValue(new Error("posthog down"));
+    mockParse.mockResolvedValue({ stop_reason: "refusal", parsed_output: null });
+    const res = await post(req({ transcript: "a Prada bag" }));
+    expect(res.status).toBe(422);
+  });
+});
+
 describe("POST /api/voice/extract — analytics privacy", () => {
   it("captures voice_capture_used with outcome/latency and NO transcript content", async () => {
     const marker = "SECRET_TRANSCRIPT_MARKER_9f2";

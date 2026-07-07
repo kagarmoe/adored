@@ -166,6 +166,13 @@ describe("ItemForm", () => {
     expect(screen.queryByText("Width", { selector: "label" })).not.toBeInTheDocument();
   });
 
+  it("the 'Add size' toggle meets the 44px tap-target minimum", () => {
+    render(<ItemForm collectionId="coll_01ULID" mode="create" />);
+    const toggle = screen.getByRole("button", { name: "Add size" });
+    // min-h-11 (2.75rem = 44px) keeps the quiet link a real touch target.
+    expect(toggle.className).toMatch(/\bmin-h-11\b/);
+  });
+
   it("clicking 'Add size' reveals the dimension inputs", () => {
     render(<ItemForm collectionId="coll_01ULID" mode="create" />);
 
@@ -384,6 +391,71 @@ describe("ItemForm — voice capture", () => {
     );
     const region = container.querySelector('[aria-live="polite"]');
     expect(region?.textContent).toBe(VOICE_CAP_MESSAGE);
+  });
+
+  it("clears the applied marker when the person hand-edits that field", async () => {
+    enableVoice();
+    (fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ brand: "Prada" }),
+    });
+    const make = () => <ItemForm collectionId="coll_01ULID" mode="create" />;
+    const { rerender } = render(make());
+
+    speakCapture(rerender, make, "a Prada bag");
+    await waitFor(() =>
+      expect(screen.getByRole("group", { name: REVIEW_HEADING })).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Add these" }));
+    // The marker is present on the applied field…
+    expect(screen.getByText("from what you said")).toBeInTheDocument();
+
+    // …then a hand-edit of that same field clears it (value is the person's now).
+    type("Brand", "Coach");
+    expect(screen.queryByText("from what you said")).not.toBeInTheDocument();
+  });
+
+  it("returns focus to the capture mic after applying suggestions", async () => {
+    enableVoice();
+    (fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ brand: "Prada" }),
+    });
+    const make = () => <ItemForm collectionId="coll_01ULID" mode="create" />;
+    const { rerender } = render(make());
+
+    speakCapture(rerender, make, "a Prada bag");
+    await waitFor(() =>
+      expect(screen.getByRole("group", { name: REVIEW_HEADING })).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Add these" }));
+
+    expect(
+      screen.getByRole("button", { name: "Add details by speaking" }),
+    ).toHaveFocus();
+  });
+
+  it("returns focus to the capture mic after dismissing with 'Not now'", async () => {
+    enableVoice();
+    (fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ brand: "Prada" }),
+    });
+    const make = () => <ItemForm collectionId="coll_01ULID" mode="create" />;
+    const { rerender } = render(make());
+
+    speakCapture(rerender, make, "a Prada bag");
+    await waitFor(() =>
+      expect(screen.getByRole("group", { name: REVIEW_HEADING })).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+
+    expect(
+      screen.getByRole("button", { name: "Add details by speaking" }),
+    ).toHaveFocus();
   });
 
   it("single-flight — a second utterance during an in-flight request is ignored", async () => {

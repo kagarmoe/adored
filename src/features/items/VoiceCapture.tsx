@@ -19,6 +19,11 @@ interface VoiceCaptureProps {
   message?: string;
   /** Receives the accumulated transcript when a listening session ends. */
   onFinalTranscript?: (transcript: string) => void;
+  /**
+   * Optional ref to the mic toggle button, so a caller can return focus to it
+   * (e.g. after the review panel closes). Null when the browser can't do speech.
+   */
+  buttonRef?: React.Ref<HTMLButtonElement>;
   className?: string;
 }
 
@@ -29,6 +34,7 @@ export function VoiceCapture({
   label,
   message,
   onFinalTranscript,
+  buttonRef,
   className,
 }: VoiceCaptureProps) {
   const { supported, listening, interimTranscript, finalTranscript, start, stop, error } =
@@ -58,6 +64,7 @@ export function VoiceCapture({
   return (
     <div className={`flex items-center gap-3 ${className ?? ""}`}>
       <button
+        ref={buttonRef}
         type="button"
         aria-label={label}
         aria-pressed={listening}

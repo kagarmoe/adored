@@ -125,7 +125,7 @@ const SYSTEM_PROMPT = [
 // content and exposes the result as `parsed_output`; we validate with the Zod-v3
 // ExtractionSchema and return null on malformed/invalid output (a null parse, which
 // the caller treats as an extraction failure).
-const EXTRACTION_FORMAT = {
+export const EXTRACTION_FORMAT = {
   type: "json_schema" as const,
   schema: EXTRACTION_JSON_SCHEMA,
   parse: (content: string): z.infer<typeof ExtractionSchema> | null => {

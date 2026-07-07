@@ -45,6 +45,27 @@ type FieldRowKey = (typeof FIELD_ORDER)[number];
 
 export type VoiceMergeField = FieldRowKey | "notes";
 
+export type VoiceDimensionField = "height" | "width" | "depth" | "weight";
+
+// The size fields, derived from FIELD_ORDER (single source of truth) rather than
+// restated. Both forms use this for the size-disclosure derivation and the
+// handleApply dimension check — no more inline ["height","width","depth","weight"].
+const DIMENSION_FIELD_SET = new Set<string>([
+  "height",
+  "width",
+  "depth",
+  "weight",
+]);
+export const DIMENSION_FIELDS = FIELD_ORDER.filter(
+  (f): f is VoiceDimensionField => DIMENSION_FIELD_SET.has(f),
+);
+
+// The unit <Select> options, shared by both forms so the copy stays in one place.
+export const UNIT_OPTIONS = [
+  { value: "imperial", label: "Inches / pounds" },
+  { value: "metric", label: "Centimeters / kilograms" },
+];
+
 const FIELD_LABELS: Record<FieldRowKey, string> = {
   name: "Name",
   brand: "Brand",

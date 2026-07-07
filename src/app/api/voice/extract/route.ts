@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/lib/db";
-import { voiceUsageTable } from "@/lib/db/schema";
+import { recordVoiceUsage } from "@/lib/db/voice-usage";
 import { getSession } from "@/lib/auth";
 import { env } from "@/lib/env";
 import { extractItemDetails } from "@/server/services/voice-extract";
@@ -26,36 +25,26 @@ const EXTRACT_FAILED_MESSAGE =
 const SERVER_ERROR_MESSAGE =
   "Something went wrong on our end. You can type the details instead.";
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-// Upsert-increment this user's call count for today and return the new count.
-async function recordUsage(userId: string): Promise<number> {
-  const [row] = await getDb()
-    .insert(voiceUsageTable)
-    .values({ userId, day: today(), count: 1 })
-    .onConflictDoUpdate({
-      target: [voiceUsageTable.userId, voiceUsageTable.day],
-      set: { count: sql`${voiceUsageTable.count} + 1` },
-    })
-    .returning({ count: voiceUsageTable.count });
-  return row.count;
-}
-
 // PostHog carries the outcome and latency ONLY — never transcript content.
+// Telemetry must never break the request path: a failed flush cannot turn a
+// successful paid extraction (or a 429/422) into a 500, so this swallows its own
+// errors rather than rejecting into the handler's try/catch.
 async function emit(
   userId: string,
   outcome: string,
   latencyMs: number,
 ): Promise<void> {
-  const ph = getPostHogClient();
-  ph.capture({
-    distinctId: userId,
-    event: "voice_capture_used",
-    properties: { outcome, latency_ms: latencyMs },
-  });
-  await ph.flush();
+  try {
+    const ph = getPostHogClient();
+    ph.capture({
+      distinctId: userId,
+      event: "voice_capture_used",
+      properties: { outcome, latency_ms: latencyMs },
+    });
+    await ph.flush();
+  } catch (err) {
+    console.warn("voice_capture_used telemetry failed", err);
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -87,8 +76,12 @@ export async function POST(req: NextRequest) {
   try {
     // Cost control: count this call first, then reject past the cap. A hostile
     // authenticated user gets at most VOICE_DAILY_CALL_CAP calls per day.
-    const count = await recordUsage(userId);
-    if (count > env.VOICE_DAILY_CALL_CAP) {
+    const { capExceeded } = await recordVoiceUsage(
+      getDb(),
+      userId,
+      env.VOICE_DAILY_CALL_CAP,
+    );
+    if (capExceeded) {
       await emit(userId, "cap_exceeded", Date.now() - startedAt);
       return NextResponse.json({ error: CAP_MESSAGE }, { status: 429 });
     }

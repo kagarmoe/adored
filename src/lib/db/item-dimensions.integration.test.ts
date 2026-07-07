@@ -11,6 +11,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline, seedBareCollection } from "../../../e2e/fixtures/seed";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { ItemController } from "@/server/api/items";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -63,5 +64,26 @@ describeDb("item dimensions round-trip through ItemRepository", () => {
     expect(readBack!.width).toBeNull();
     expect(readBack!.depth).toBeNull();
     expect(readBack!.weight).toBeNull();
+  });
+
+  it("clears a set dimension through the ItemController when blanked to '' on update", async () => {
+    // The blank-out regression: a value set to "12" then PATCHed with "" must read
+    // back null. Goes through the REAL UpdateItemSchema ("" → null) + Drizzle write,
+    // proving the whole stack clears the column rather than keeping the old value.
+    const { db } = getTestDb();
+    const collectionId = await seedBareCollection(curatorId);
+    const controller = ItemController.fromDb(db);
+
+    const created = await controller.createItem(collectionId, {
+      name: "Blank Me",
+      height: "12",
+    });
+    expect(created.height).toBe("12");
+
+    const updated = await controller.updateItem(created.id, { height: "" });
+    expect(updated.height).toBeNull();
+
+    const readBack = await new ItemRepository(db).findById(created.id);
+    expect(readBack!.height).toBeNull();
   });
 });

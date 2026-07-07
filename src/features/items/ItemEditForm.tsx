@@ -19,6 +19,8 @@ import {
   speechRecognitionSupported,
   summarizeSuggestions,
   voiceFailureMessage,
+  DIMENSION_FIELDS,
+  UNIT_OPTIONS,
   VOICE_ADD_TO_NOTES,
   VOICE_CAPTURE_INVITE,
   VOICE_CAPTURE_LABEL,
@@ -31,11 +33,6 @@ import {
 } from "@/lib/voice-extract-merge";
 import type { ExtractedItemDetails } from "@/server/services/voice-extract";
 import type { Item } from "@/types";
-
-const UNIT_OPTIONS = [
-  { value: "imperial", label: "Inches / pounds" },
-  { value: "metric", label: "Centimeters / kilograms" },
-];
 
 interface ItemEditFormProps {
   item: Item;
@@ -78,10 +75,7 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
   // later voice-applied) forces the disclosure open so nothing is hidden.
   const [sizeOpen, setSizeOpen] = useState(false);
   const sizeExpanded =
-    sizeOpen ||
-    Boolean(
-      formData.height || formData.width || formData.depth || formData.weight,
-    );
+    sizeOpen || DIMENSION_FIELDS.some((f) => Boolean(formData[f]));
 
   // ── Structured voice capture ────────────────────────────────────────────────
   // The invite shows only where speech is available; the mic self-hides otherwise.
@@ -96,6 +90,27 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
   const [retained, setRetained] = useState<string | null>(null);
   const [applied, setApplied] = useState<Set<VoiceMergeField>>(new Set());
   const inFlight = useRef(false);
+  // The structured-capture mic button, so focus can return to it on panel close.
+  const captureMicRef = useRef<HTMLButtonElement>(null);
+  const refocusOnPanelClose = useRef(false);
+
+  // On review-panel close (Add these / Not now), return focus to the capture mic.
+  useEffect(() => {
+    if (!pending && refocusOnPanelClose.current) {
+      refocusOnPanelClose.current = false;
+      captureMicRef.current?.focus();
+    }
+  }, [pending]);
+
+  // A hand-edit clears that field's "from what you said" marker.
+  function clearMarker(field: VoiceMergeField) {
+    setApplied((prev) => {
+      if (!prev.has(field)) return prev;
+      const next = new Set(prev);
+      next.delete(field);
+      return next;
+    });
+  }
 
   const mergeValues = (): VoiceMergeFormValues => ({
     name: formData.name,
@@ -147,14 +162,16 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
     setFormData((prev) => ({ ...prev, ...result.values }));
     setApplied(new Set(result.appliedFields));
     setCaptureMessage(describeApplied(result.changedLabels));
+    refocusOnPanelClose.current = true;
     setPending(null);
     setRetained(null);
-    if (result.appliedFields.some((f) => ["height", "width", "depth", "weight"].includes(f))) {
+    if (result.appliedFields.some((f) => (DIMENSION_FIELDS as readonly string[]).includes(f))) {
       setSizeOpen(true);
     }
   }
 
   function handleDismiss() {
+    refocusOnPanelClose.current = true;
     setRetained(pending?.transcript ?? null);
     setPending(null);
     setCaptureMessage(undefined);
@@ -178,6 +195,8 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
       ...prev,
       [name]: value,
     }));
+    // A hand-edit makes the value the person's own — drop any suggestion marker.
+    clearMarker(name as VoiceMergeField);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -228,6 +247,7 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
               label={VOICE_CAPTURE_LABEL}
               message={captureMessage}
               onFinalTranscript={handleCapture}
+              buttonRef={captureMicRef}
             />
           </div>
 
@@ -337,7 +357,7 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
               type="button"
               onClick={() => setSizeOpen((open) => !open)}
               aria-expanded={sizeExpanded}
-              className="text-sm text-primary underline underline-offset-2"
+              className="-mx-2 inline-flex min-h-11 items-center px-2 text-sm text-primary underline underline-offset-2"
             >
               {sizeExpanded ? "Size" : "Add size"}
             </button>

@@ -180,6 +180,12 @@ describe("ItemEditForm", () => {
     );
   });
 
+  it("the 'Add size' toggle meets the 44px tap-target minimum", () => {
+    render(<ItemEditForm item={baseItem()} collectionId="coll_01ULID" />);
+    const toggle = screen.getByRole("button", { name: "Add size" });
+    expect(toggle.className).toMatch(/\bmin-h-11\b/);
+  });
+
   it("auto-expands the size disclosure when the item already has dimensions", () => {
     const item = { ...baseItem(), height: "9", width: "11.5", unit: "metric" } as Item;
     render(<ItemEditForm item={item} collectionId="coll_01ULID" />);
@@ -394,6 +400,76 @@ describe("ItemEditForm — voice capture", () => {
     );
     const region = container.querySelector('[aria-live="polite"]');
     expect(region?.textContent).toBe(VOICE_CAP_MESSAGE);
+  });
+
+  it("clears the applied marker when the person hand-edits that field", async () => {
+    enableCapture();
+    (fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ color: "black" }),
+    });
+    const makeForm = () => (
+      <ItemEditForm item={baseItem()} collectionId="coll_01ULID" />
+    );
+    const { rerender } = render(makeForm());
+
+    drive(capture, rerender, makeForm, "a black bag");
+    await waitFor(() =>
+      expect(screen.getByRole("group", { name: REVIEW_HEADING })).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Add these" }));
+    expect(screen.getByText("from what you said")).toBeInTheDocument();
+
+    // Hand-edit the marked color field → its marker clears.
+    fireEvent.change(field("color"), { target: { value: "navy", name: "color" } });
+    expect(screen.queryByText("from what you said")).not.toBeInTheDocument();
+  });
+
+  it("returns focus to the capture mic after applying suggestions", async () => {
+    enableCapture();
+    (fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ color: "black" }),
+    });
+    const makeForm = () => (
+      <ItemEditForm item={baseItem()} collectionId="coll_01ULID" />
+    );
+    const { rerender } = render(makeForm());
+
+    drive(capture, rerender, makeForm, "a black bag");
+    await waitFor(() =>
+      expect(screen.getByRole("group", { name: REVIEW_HEADING })).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Add these" }));
+
+    expect(
+      screen.getByRole("button", { name: "Add details by speaking" }),
+    ).toHaveFocus();
+  });
+
+  it("returns focus to the capture mic after dismissing with 'Not now'", async () => {
+    enableCapture();
+    (fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ color: "black" }),
+    });
+    const makeForm = () => (
+      <ItemEditForm item={baseItem()} collectionId="coll_01ULID" />
+    );
+    const { rerender } = render(makeForm());
+
+    drive(capture, rerender, makeForm, "a black bag");
+    await waitFor(() =>
+      expect(screen.getByRole("group", { name: REVIEW_HEADING })).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+
+    expect(
+      screen.getByRole("button", { name: "Add details by speaking" }),
+    ).toHaveFocus();
   });
 
   it("driving the story mic never triggers the capture POST (independent mics)", () => {

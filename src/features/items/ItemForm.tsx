@@ -15,6 +15,8 @@ import {
   speechRecognitionSupported,
   summarizeSuggestions,
   voiceFailureMessage,
+  DIMENSION_FIELDS,
+  UNIT_OPTIONS,
   VOICE_ADD_TO_NOTES,
   VOICE_CAPTURE_INVITE,
   VOICE_CAPTURE_LABEL,
@@ -44,11 +46,6 @@ const itemSchema = z.object({
   weight: z.string().optional(),
   unit: z.enum(["imperial", "metric"]).optional(),
 });
-
-const UNIT_OPTIONS = [
-  { value: "imperial", label: "Inches / pounds" },
-  { value: "metric", label: "Centimeters / kilograms" },
-];
 
 interface ItemFormProps {
   item?: Item;
@@ -80,10 +77,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
   // the disclosure open so nothing is hidden.
   const [sizeOpen, setSizeOpen] = useState(false);
   const sizeExpanded =
-    sizeOpen ||
-    Boolean(
-      formData.height || formData.width || formData.depth || formData.weight,
-    );
+    sizeOpen || DIMENSION_FIELDS.some((f) => Boolean(formData[f]));
 
   // ── Voice capture ──────────────────────────────────────────────────────────
   // The mic renders only where the browser can do speech (mirrors the hook's own
@@ -99,6 +93,34 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
   const [retained, setRetained] = useState<string | null>(null);
   const [applied, setApplied] = useState<Set<VoiceMergeField>>(new Set());
   const inFlight = useRef(false);
+  // The capture mic button, so focus can return to it when the review panel closes.
+  const captureMicRef = useRef<HTMLButtonElement>(null);
+  const refocusOnPanelClose = useRef(false);
+
+  // After the review panel closes (Add these / Not now), return focus to the mic
+  // that opened it — never strand focus on the body.
+  useEffect(() => {
+    if (!pending && refocusOnPanelClose.current) {
+      refocusOnPanelClose.current = false;
+      captureMicRef.current?.focus();
+    }
+  }, [pending]);
+
+  // A hand-edit clears that field's "from what you said" marker — the value is the
+  // person's own now, not the suggestion's.
+  function clearMarker(field: VoiceMergeField) {
+    setApplied((prev) => {
+      if (!prev.has(field)) return prev;
+      const next = new Set(prev);
+      next.delete(field);
+      return next;
+    });
+  }
+
+  function updateField(field: keyof typeof formData, value: string) {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    clearMarker(field as VoiceMergeField);
+  }
 
   const mergeValues = (): VoiceMergeFormValues => ({
     name: formData.name,
@@ -152,16 +174,18 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
     setFormData((prev) => ({ ...prev, ...result.values }));
     setApplied(new Set(result.appliedFields));
     setCaptureMessage(describeApplied(result.changedLabels));
+    refocusOnPanelClose.current = true;
     setPending(null);
     setRetained(null);
     // A voice-applied dimension opens the size disclosure (sizeExpanded also
     // derives it from the value, but this keeps intent explicit).
-    if (result.appliedFields.some((f) => ["height", "width", "depth", "weight"].includes(f))) {
+    if (result.appliedFields.some((f) => (DIMENSION_FIELDS as readonly string[]).includes(f))) {
       setSizeOpen(true);
     }
   }
 
   function handleDismiss() {
+    refocusOnPanelClose.current = true;
     setRetained(pending?.transcript ?? null);
     setPending(null);
     setCaptureMessage(undefined);
@@ -214,6 +238,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
             label={VOICE_CAPTURE_LABEL}
             message={captureMessage}
             onFinalTranscript={handleCapture}
+            buttonRef={captureMicRef}
           />
         </div>
       )}
@@ -238,7 +263,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
           label="Item name"
           required
           value={formData.name}
-          onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+          onChange={(e) => updateField("name", e.target.value)}
           disabled={loading}
         />
       </VoiceApplied>
@@ -247,7 +272,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
         <Input
           label="Brand"
           value={formData.brand}
-          onChange={(e) => setFormData((prev) => ({ ...prev, brand: e.target.value }))}
+          onChange={(e) => updateField("brand", e.target.value)}
           disabled={loading}
         />
       </VoiceApplied>
@@ -256,7 +281,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
         <Input
           label="Style"
           value={formData.style}
-          onChange={(e) => setFormData((prev) => ({ ...prev, style: e.target.value }))}
+          onChange={(e) => updateField("style", e.target.value)}
           disabled={loading}
         />
       </VoiceApplied>
@@ -265,7 +290,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
         <Input
           label="Color"
           value={formData.color}
-          onChange={(e) => setFormData((prev) => ({ ...prev, color: e.target.value }))}
+          onChange={(e) => updateField("color", e.target.value)}
           disabled={loading}
         />
       </VoiceApplied>
@@ -274,7 +299,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
         <Input
           label="Material"
           value={formData.material}
-          onChange={(e) => setFormData((prev) => ({ ...prev, material: e.target.value }))}
+          onChange={(e) => updateField("material", e.target.value)}
           disabled={loading}
         />
       </VoiceApplied>
@@ -283,7 +308,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
         <Input
           label="Category"
           value={formData.category}
-          onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value }))}
+          onChange={(e) => updateField("category", e.target.value)}
           disabled={loading}
         />
       </VoiceApplied>
@@ -294,7 +319,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
           onClick={() => setSizeOpen((open) => !open)}
           aria-expanded={sizeExpanded}
           disabled={loading}
-          className="text-sm text-primary underline underline-offset-2 disabled:opacity-50"
+          className="-mx-2 inline-flex min-h-11 items-center px-2 text-sm text-primary underline underline-offset-2 disabled:opacity-50"
         >
           {sizeExpanded ? "Size" : "Add size"}
         </button>
@@ -307,7 +332,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
                   label="Height"
                   inputMode="decimal"
                   value={formData.height}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, height: e.target.value }))}
+                  onChange={(e) => updateField("height", e.target.value)}
                   disabled={loading}
                 />
               </VoiceApplied>
@@ -316,7 +341,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
                   label="Width"
                   inputMode="decimal"
                   value={formData.width}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, width: e.target.value }))}
+                  onChange={(e) => updateField("width", e.target.value)}
                   disabled={loading}
                 />
               </VoiceApplied>
@@ -325,7 +350,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
                   label="Depth"
                   inputMode="decimal"
                   value={formData.depth}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, depth: e.target.value }))}
+                  onChange={(e) => updateField("depth", e.target.value)}
                   disabled={loading}
                 />
               </VoiceApplied>
@@ -335,7 +360,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
                 label="Weight"
                 inputMode="decimal"
                 value={formData.weight}
-                onChange={(e) => setFormData((prev) => ({ ...prev, weight: e.target.value }))}
+                onChange={(e) => updateField("weight", e.target.value)}
                 disabled={loading}
               />
             </VoiceApplied>
@@ -345,7 +370,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
                 label="Units"
                 options={UNIT_OPTIONS}
                 value={formData.unit}
-                onChange={(e) => setFormData((prev) => ({ ...prev, unit: e.target.value }))}
+                onChange={(e) => updateField("unit", e.target.value)}
                 disabled={loading}
               />
             </VoiceApplied>
@@ -357,7 +382,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
         <Textarea
           label="Notes"
           value={formData.notes}
-          onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
+          onChange={(e) => updateField("notes", e.target.value)}
           disabled={loading}
           rows={4}
         />

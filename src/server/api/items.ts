@@ -7,29 +7,52 @@ import {
 } from "@/server/repositories/implementations/ItemRepository";
 
 // Dimensions arrive as text (form inputs are strings) and land in Postgres
-// `numeric` (Drizzle takes/returns strings). Postgres numeric accepts 'NaN', so
-// finiteness is validated HERE, explicitly, not trusted to the column. An empty
-// string means "not provided" → coerced to undefined so the column stays null
-// and, for unit, so the DB default applies.
-const DimensionSchema = z.preprocess(
+// `numeric` (Drizzle takes/returns strings). Validated HERE, explicitly, not
+// trusted to the column: Postgres numeric accepts 'NaN' and coercions like hex
+// ('0x10'), octal, binary, and scientific notation that `Number()` would happily
+// parse but a human never types — so a PLAIN decimal is the only accepted form.
+const PLAIN_DECIMAL = /^\d+(\.\d+)?$/;
+const DIMENSION_MESSAGE = "Enter a measurement between 0 and 10000";
+
+// A positive plain decimal in (0, 10000]. Tested against the raw string (no trim),
+// so any embedded/leading/trailing whitespace is rejected outright.
+function isValidDimension(s: string): boolean {
+  if (!PLAIN_DECIMAL.test(s)) return false;
+  const n = Number(s);
+  return n > 0 && n <= 10000;
+}
+
+// Empty string means "not provided". On CREATE it coerces to undefined so the
+// column stays null (and, for unit, the DB default applies). On UPDATE it coerces
+// to null — an explicit clear, so Drizzle writes null instead of dropping the key
+// (undefined keys are skipped, which would keep the old value).
+const CreateDimensionSchema = z.preprocess(
   (value) =>
     typeof value === "string" && value.trim() === "" ? undefined : value,
-  z
-    .string()
-    .refine((s) => {
-      const n = Number(s);
-      return Number.isFinite(n) && n > 0 && n <= 10000;
-    }, "Enter a measurement between 0 and 10000")
-    .optional(),
+  z.string().refine(isValidDimension, DIMENSION_MESSAGE).optional(),
+);
+
+const UpdateDimensionSchema = z.preprocess(
+  (value) =>
+    typeof value === "string" && value.trim() === "" ? null : value,
+  z.string().refine(isValidDimension, DIMENSION_MESSAGE).nullable().optional(),
 );
 
 const UnitSchema = z.enum(["imperial", "metric"]).optional();
 
-const DimensionFields = {
-  height: DimensionSchema,
-  width: DimensionSchema,
-  depth: DimensionSchema,
-  weight: DimensionSchema,
+const CreateDimensionFields = {
+  height: CreateDimensionSchema,
+  width: CreateDimensionSchema,
+  depth: CreateDimensionSchema,
+  weight: CreateDimensionSchema,
+  unit: UnitSchema,
+};
+
+const UpdateDimensionFields = {
+  height: UpdateDimensionSchema,
+  width: UpdateDimensionSchema,
+  depth: UpdateDimensionSchema,
+  weight: UpdateDimensionSchema,
   unit: UnitSchema,
 };
 
@@ -43,7 +66,7 @@ const CreateItemSchema = z.object({
   status: z.string().optional(),
   notes: z.string().optional(),
   story: z.string().max(2000, "Story is too long").optional(),
-  ...DimensionFields,
+  ...CreateDimensionFields,
 });
 
 const UpdateItemSchema = z.object({
@@ -56,7 +79,7 @@ const UpdateItemSchema = z.object({
   status: z.string().optional(),
   notes: z.string().optional(),
   story: z.string().max(2000, "Story is too long").optional(),
-  ...DimensionFields,
+  ...UpdateDimensionFields,
 });
 
 
