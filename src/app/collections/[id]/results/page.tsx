@@ -11,6 +11,7 @@ import { AppLayout } from "@/components/layout";
 import { Button, Card, CardImage } from "@/components/ui";
 import { RankedResults } from "@/features/results/RankedResults";
 import { FinalizeEntry } from "@/features/results/FinalizeEntry";
+import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
 import { deriveStanding } from "@/features/results/standing";
 import { itemDisplayName } from "@/lib/items";
 import Link from "next/link";
@@ -75,6 +76,9 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         { label: "Deciding" },
       ]}
     >
+      {/* Recovery gate (spec §3.4): the Standing derives from live preferences —
+          pending decisions must land before it can be trusted. */}
+      <PendingDecisionsGate curatorId={session.user.id}>
       <div className="space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -159,6 +163,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           </section>
         )}
       </div>
+      </PendingDecisionsGate>
     </AppLayout>
   );
 }

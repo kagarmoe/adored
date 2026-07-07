@@ -14,6 +14,7 @@ import { TriageUndoProvider } from "@/features/sorting/TriageUndoProvider";
 import { TriageUndoNotice } from "@/features/sorting/TriageUndoNotice";
 import { TakeABreakControl } from "@/features/sorting/TakeABreakControl";
 import { TriageRound } from "@/features/sorting/TriageRound";
+import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
 import { selectTriageQueue } from "@/lib/triage-selection";
 
 interface TriagePageProps {
@@ -88,6 +89,10 @@ export default async function TriagePage({ params }: TriagePageProps) {
         <TakeABreakControl sessionId={sortSession.id} collectionHref={`/collections/${slugOrId}`} />
       }
     >
+      {/* Recovery gate (spec §3.4): the round below snapshots the server-selected
+          queue into client state at mount — it must never mount over undrained
+          decisions (conditional mount, never CSS-hide). */}
+      <PendingDecisionsGate curatorId={session.user.id}>
       <TriageUndoProvider
         curatorId={session.user.id}
         sessionId={sortSession.id}
@@ -112,6 +117,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
           setAsideHref={`/collections/${slugOrId}/sort/set-aside`}
         />
       </TriageUndoProvider>
+      </PendingDecisionsGate>
     </AppLayout>
   );
 }

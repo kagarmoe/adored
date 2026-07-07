@@ -14,6 +14,7 @@ import { SeeResultsCard } from "@/features/sessions/SeeResultsCard";
 import { RecommendedRoundCard } from "@/features/sessions/RecommendedRoundCard";
 import { recommendNextRound } from "@/lib/next-round";
 import { ROUND_COPY } from "@/features/sorting/roundCopy";
+import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
 import Link from "next/link";
 
 interface SessionPageProps {
@@ -79,6 +80,9 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
         { label: "Session" },
       ]}
     >
+      {/* Recovery gate (spec §3.4): the analytics/recommendation below derive
+          from decision events — drain pending ones before trusting them. */}
+      <PendingDecisionsGate curatorId={session.user.id}>
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl text-ink">Sorting session</h1>
@@ -125,6 +129,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
           sessionCreatedAt={sortSession.createdAt}
         />
       </div>
+      </PendingDecisionsGate>
     </AppLayout>
   );
 }

@@ -10,6 +10,7 @@ import { DispositionController } from "@/server/api/dispositions";
 import { AppLayout } from "@/components/layout";
 import { EmptyState } from "@/components/ui";
 import { CompareChoice } from "@/features/sorting/CompareChoice";
+import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
 import { PendingNotices } from "@/features/sorting/pendingNotices";
 import { COMPARE_SUBLINE } from "@/features/sorting/roundCopy";
 import { RoundSurface } from "@/features/sorting/RoundSurface";
@@ -76,10 +77,12 @@ export default async function ComparePage({ params }: ComparePageProps) {
         ]}
         actions={breakAction}
       >
-        <EmptyState
-          heading="Not enough items"
-          message="Add more items to the collection to use pairwise comparison"
-        />
+        <PendingDecisionsGate curatorId={session.user.id}>
+          <EmptyState
+            heading="Not enough items"
+            message="Add more items to the collection to use pairwise comparison"
+          />
+        </PendingDecisionsGate>
       </AppLayout>
     );
   }
@@ -107,15 +110,19 @@ export default async function ComparePage({ params }: ComparePageProps) {
         ]}
         actions={breakAction}
       >
-        <EmptyState
-          heading="All comparisons complete"
-          message="You&apos;ve compared all meaningful pairs. Check your results!"
-        />
-        {comparisonsMade > 0 && (
-          <p className="mt-4 text-center text-sm text-ink-soft">
-            {comparisonsMade} {comparisonsMade === 1 ? "comparison" : "comparisons"} made so far
-          </p>
-        )}
+        {/* "All complete" is derived from the decision log — gate it too, or a
+            crash-reload could claim completion over undrained decisions. */}
+        <PendingDecisionsGate curatorId={session.user.id}>
+          <EmptyState
+            heading="All comparisons complete"
+            message="You&apos;ve compared all meaningful pairs. Check your results!"
+          />
+          {comparisonsMade > 0 && (
+            <p className="mt-4 text-center text-sm text-ink-soft">
+              {comparisonsMade} {comparisonsMade === 1 ? "comparison" : "comparisons"} made so far
+            </p>
+          )}
+        </PendingDecisionsGate>
       </AppLayout>
     );
   }
@@ -137,6 +144,9 @@ export default async function ComparePage({ params }: ComparePageProps) {
       ]}
       actions={breakAction}
     >
+      {/* Recovery gate (spec §3.4): the pair below was selected from the server
+          decision log — pending decisions must drain before it can be trusted. */}
+      <PendingDecisionsGate curatorId={session.user.id}>
       <RoundSurface
         step={2}
         totalSteps={3}
@@ -172,6 +182,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
           )}
         </div>
       </RoundSurface>
+      </PendingDecisionsGate>
     </AppLayout>
   );
 }
