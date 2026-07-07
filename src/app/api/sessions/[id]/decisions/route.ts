@@ -51,13 +51,6 @@ const DecisionRequestSchema = z
   ])
   .and(z.object({ clientKey: z.string().min(1).optional() }));
 
-// A Postgres unique-violation surfaces its code at .code or, when wrapped by the
-// driver/drizzle, at .cause.code. Check both so the idempotent retry catches it.
-function isUniqueViolation(error: unknown): boolean {
-  const e = error as { code?: string; cause?: { code?: string } };
-  return e?.code === "23505" || e?.cause?.code === "23505";
-}
-
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getSession();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -141,25 +134,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       const existing = await findByClientKey();
       if (existing.length > 0) return { event: existing[0], isNew: false };
 
-      let inserted: typeof decisionEventsTable.$inferSelect | undefined;
-      try {
-        [inserted] = await tx.insert(decisionEventsTable).values({
-          id: generateId("event"),
-          sessionId: params.id,
-          type: body.type,
-          decision: body.decision,
-          clientKey,
-        }).returning();
-      } catch (error) {
-        // Race: another identical request inserted the same (session, clientKey)
-        // between our SELECT and INSERT. The partial unique index rejects it;
-        // re-read and return that row idempotently instead of 500-ing.
-        if (clientKey && isUniqueViolation(error)) {
-          const raced = await findByClientKey();
-          if (raced.length > 0) return { event: raced[0], isNew: false };
-        }
-        throw error;
-      }
+      // No 23505 catch here: the advisory lock above serializes all writers for
+      // this (collection, curator), so the SELECT-first check is authoritative
+      // and the insert can never race an identical clientKey. (The old
+      // catch-and-re-read was dead AND broken — a re-read inside the aborted
+      // transaction would die with 25P02. Spec §2.5.)
+      const [inserted] = await tx.insert(decisionEventsTable).values({
+        id: generateId("event"),
+        sessionId: params.id,
+        type: body.type,
+        decision: body.decision,
+        clientKey,
+      }).returning();
 
       await PreferenceController.fromDb(tx).recalculatePreferences(sortSession.collectionId, userId);
 
