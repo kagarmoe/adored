@@ -3,7 +3,7 @@
 - **Date:** 2026-07-07
 - **Rev:** 2
 - **Status:** Adversarially reviewed (4 personas, 18 confirmed findings folded) — open items
-  in §7 await user confirmation; then writing-plans
+  in §7 user-confirmed 2026-07-07; proceeding to writing-plans
 - **Bead:** `purses-sisy` (parent epic `purses-9v1f`)
 - **Parent spec (rules fixed there, mechanisms here):**
   [`2026-07-06-usage-round-and-sort-unification-design.md`](2026-07-06-usage-round-and-sort-unification-design.md)
@@ -483,7 +483,7 @@ line; the optimistic-state staleness window and round-end reconcile are exactly 
   §4 copy inventory as TONE-review items and the §5 `roundCopy.test.ts` verbatim
   assertions; the hub PR screenshots are refreshed accordingly. *(Chosen over the
   alternative — keeping the sibling-noun register and giving usage a noun name — because
-  the arc names are the parent's own person-side vocabulary; awaiting user confirmation
+  the arc names are the parent's own person-side vocabulary; confirmed by user 2026-07-07 ("continue until all follow-ups are done")
   with the other §4 copy.)*
 - **`recommendNextRound` (`src/lib/next-round.ts`)** — ladder extension (D5):
   - `NextRoundKind` gains `"usage"`; `NextRoundInput` gains
@@ -511,7 +511,7 @@ line; the optimistic-state staleness window and round-end reconcile are exactly 
     adjudicated in adversarial review: re-recommending a twice-declined question once
     Compare exhausts is the nag D5's anti-nagging rule exists to prevent (TONE litmus:
     the quiet card waiting is the person's choice; the re-promoted slot is the machine's
-    agenda). See §7.1 — awaiting user confirmation. One caller (the hub) updates.
+    agenda). See §7.1 — confirmed by user 2026-07-07 ("continue until all follow-ups are done"). One caller (the hub) updates.
   - Usage copy for the card: label references **`ROUND_COPY.usage.name`** ("Do you use
     this?" — one home, §3.4), description *"An easy pass — just whether each piece is in
     your life right now."*, cta **"Begin"** (description and cta remain the card's own
@@ -758,14 +758,14 @@ default 2 m box, bare expiry would demote people who were actively answering.
    again, to a person who may have passed everything twice. **Recommended by review:
    the demoted ladder falls through to Decide (usage never re-promoted; the hub's quiet
    chooser card is the path back) — folded into §3.8 as a named narrowing of parent D5;
-   awaiting user confirmation.**
+   confirmed by user 2026-07-07 ("continue until all follow-ups are done").**
 2. **Where demotion applies:** the recommendation is computed server-side but the
    demotion memory is device-local (parent D5's own requirement) — the parent never says
    how they meet. Resolved here via the dual-return + client swap (§3.8) with a named
    pre-hydration wrong-card window on demoted hubs (server paint → hydration; live link
    throughout). **Recommended by review: accept the window (it only affects a device
    that already completed a usage round), constrained to a motionless, zero-layout-shift
-   same-slot swap (§3.8); awaiting user confirmation.**
+   same-slot swap (§3.8); confirmed by user 2026-07-07 ("continue until all follow-ups are done").**
 3. **Pre-existing scoping quirk surfaced:** the hub feeds *session-scoped* decisions to
    `selectNextPair` (`page.tsx:54`) while the recompute uses the curator-wide log — the
    compare recommendation could mis-predict pair availability across sessions. Pre-dates
@@ -777,7 +777,7 @@ default 2 m box, bare expiry would demote people who were actively answering.
    Pinned here as ladder order. **Recommended by review: keep as pinned — the indicator
    is a fixed positional wayfinder over round types, not a remaining-work tally, so
    commitment 4's forbidden list is not triggered; usage = 2 in ladder order is right;
-   awaiting user confirmation.**
+   confirmed by user 2026-07-07 ("continue until all follow-ups are done").**
 6. **Walkthrough staleness:** `/welcome` (#304) teaches a two-round app and shares
    `ROUND_COPY`; adding `ROUND_COPY.usage` does not add a walkthrough beat. Parent silent.
    Follow-up bead (within the epic, per house rule on follow-ups). *Partially defused by
@@ -788,13 +788,13 @@ default 2 m box, bare expiry would demote people who were actively answering.
    defers the factual usage question. Followed the parent. **Recommended by review:
    confirm as deliberate — "Not yet" means "don't re-surface this item", and a factual
    question still re-surfaces the item; nothing is orphaned (the item becomes
-   queue-eligible the moment it is brought back); awaiting user confirmation.**
+   queue-eligible the moment it is brought back); confirmed by user 2026-07-07 ("continue until all follow-ups are done").**
 8. **All §4 copy strings** are proposals pending the TONE review the parent (§7.2)
    requires; the parent-fixed candidates ("Do you use this?", "Yes, I use it",
    "Not these days", "Skip for now", the education line) are carried verbatim.
    **Recommended by review (folded as proposals, still TONE items): the selection-keyed
    length helper line (§3.1), the pass button's contract-bearing aria-label (§3.4), and
-   the triage/compare arc-name renames (§3.8); awaiting user confirmation.**
+   the triage/compare arc-name renames (§3.8); confirmed by user 2026-07-07 ("continue until all follow-ups are done").**
 9. **"Skip for now" vs triage's "Not yet":** adjacent rounds use near-synonymous labels
    with different semantics (write-nothing pass vs a `deferred` disposition).
    **Recommended by review: keep "Skip for now", and close the residual confusability
