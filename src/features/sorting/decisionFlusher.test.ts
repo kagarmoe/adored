@@ -645,3 +645,47 @@ describe("awaitAck", () => {
     await expect(engine.awaitAck(keyA, e.clientKey)).resolves.toEqual({ status: "created" });
   });
 });
+
+describe("isInFlight (undo-as-revisit introspection, F19)", () => {
+  it("reports an entry inside an active POST and clears once the ack lands", async () => {
+    const engine = await loadEngine();
+    const e = triage();
+    await enqueue(keyA, e);
+    expect(engine.isInFlight(keyA, e.clientKey)).toBe(false); // queued, not sent
+
+    let release!: () => void;
+    global.fetch = vi.fn(
+      (url: string, init: RequestInit = {}) =>
+        new Promise<Response>((resolve) => {
+          release = () => resolve(respondCreated(init));
+        }),
+    ) as unknown as typeof fetch;
+
+    const drainP = engine.drain([keyA]);
+    await vi.waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
+    expect(engine.isInFlight(keyA, e.clientKey)).toBe(true);
+
+    release();
+    await drainP;
+    expect(engine.isInFlight(keyA, e.clientKey)).toBe(false);
+    expect(readQueue(keyA)).toEqual([]);
+  });
+
+  it("a network failure returns the entry to queued (not in flight) while it awaits backoff", async () => {
+    vi.useFakeTimers();
+    const engine = await loadEngine();
+    const e = triage();
+    await enqueue(keyA, e);
+    global.fetch = vi.fn(() => Promise.reject(new Error("offline"))) as unknown as typeof fetch;
+
+    const drainP = engine.drain([keyA]);
+    await microtasks();
+    expect(engine.isInFlight(keyA, e.clientKey)).toBe(false); // preserved, awaiting retry
+    expect(readQueue(keyA)).toHaveLength(1);
+
+    installAutoFetch();
+    await vi.advanceTimersByTimeAsync(1_000); // first backoff step
+    await drainP;
+    expect(readQueue(keyA)).toEqual([]);
+  });
+});

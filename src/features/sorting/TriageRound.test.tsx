@@ -74,6 +74,8 @@ let store: Storage;
 beforeEach(() => {
   vi.clearAllMocks();
   flusher.triggerFlush.mockImplementation(() => Promise.resolve());
+  flusher.awaitAck.mockImplementation(() => new Promise(() => {}));
+  flusher.isInFlight.mockReturnValue(false);
   store = installStorage();
   global.fetch = vi.fn(async () => ({ ok: true, status: 201, json: async () => ({}) })) as unknown as typeof fetch;
 });
@@ -284,6 +286,123 @@ describe("TriageRound set-aside stays optimistic and undoable", () => {
     const [url, init] = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(url).toBe("/api/collections/coll_1/dispositions");
     expect(JSON.parse((init as RequestInit).body as string)).toEqual({ itemId: "item_a", disposition: "set_aside" });
+  });
+});
+
+describe("TriageRound undo-as-revisit (F19/F4)", () => {
+  it("revisit of a queued entry: back → item re-presents fresh, entry gone from storage, counter decremented", async () => {
+    const user = userEvent.setup();
+    renderRound();
+
+    await user.click(screen.getByRole("button", { name: "Love" }));
+    await screen.findByRole("img", { name: "Bag B" });
+    expect(screen.getByText("1 decided so far")).toBeInTheDocument();
+    expect(readQueue(KEY)).toHaveLength(1);
+
+    await user.click(screen.getByRole("button", { name: /^back$/i }));
+
+    expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
+    expect(readQueue(KEY)).toEqual([]);
+    expect(screen.queryByText(/decided so far/i)).not.toBeInTheDocument();
+    // Fresh rendering: nothing pressed, both quiet escapes available.
+    expect(screen.getByRole("button", { name: "Love" })).not.toHaveAttribute("aria-pressed");
+    expect(screen.getByRole("button", { name: /not yet/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /not mine/i })).toBeInTheDocument();
+  });
+
+  it("revisit of an acked entry: standing answer shown selected; a different tap enqueues a superseding entry with a fresh clientKey", async () => {
+    flusher.awaitAck.mockImplementation(() => Promise.resolve({ status: "created" }));
+    const user = userEvent.setup();
+    renderRound();
+
+    await user.click(screen.getByRole("button", { name: "Love" }));
+    await screen.findByRole("img", { name: "Bag B" });
+    const [first] = readQueue(KEY);
+
+    await user.click(screen.getByRole("button", { name: /^back$/i }));
+
+    expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
+    expect(screen.getByText(/you placed this with love — change it\?/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Love" })).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(screen.getByRole("button", { name: "Maybe" }));
+
+    expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
+    const queued = readQueue(KEY);
+    expect(queued).toHaveLength(2); // the old ack is untouched; latest-wins supersedes
+    expect(queued[0].clientKey).toBe(first.clientKey);
+    expect(queued[1].clientKey).not.toBe(first.clientKey);
+    expect(queued[1]).toMatchObject({ kind: "decision", decision: { itemId: "item_a", result: "medium" } });
+    // A re-answer of a counted item never double-counts (F20).
+    expect(screen.getByText("1 decided so far")).toBeInTheDocument();
+  });
+
+  it("'Keep going' walks away from a standing answer without re-answering — an honest no-op", async () => {
+    flusher.awaitAck.mockImplementation(() => Promise.resolve({ status: "created" }));
+    const user = userEvent.setup();
+    renderRound();
+
+    await user.click(screen.getByRole("button", { name: "Love" }));
+    await screen.findByRole("img", { name: "Bag B" });
+    await user.click(screen.getByRole("button", { name: /^back$/i }));
+    await screen.findByRole("img", { name: "Bag A" });
+
+    await user.click(screen.getByRole("button", { name: /keep going/i }));
+
+    expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
+    expect(readQueue(KEY)).toHaveLength(1); // queue + answer intact
+    expect(screen.getByText("1 decided so far")).toBeInTheDocument();
+  });
+
+  it("disposition affordances are HIDDEN while the revisited item's triage entry is in flight", async () => {
+    flusher.isInFlight.mockReturnValue(true);
+    const user = userEvent.setup();
+    renderRound();
+
+    await user.click(screen.getByRole("button", { name: "Love" }));
+    await screen.findByRole("img", { name: "Bag B" });
+    await user.click(screen.getByRole("button", { name: /^back$/i }));
+
+    expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Love" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("button", { name: /not yet/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /not mine/i })).not.toBeInTheDocument();
+  });
+
+  it("queued-triage + disposition tap: the queued triage is removed and localStorage holds ONLY the disposition entry", async () => {
+    const user = userEvent.setup();
+    renderRound();
+
+    await user.click(screen.getByRole("button", { name: "Love" }));
+    await screen.findByRole("img", { name: "Bag B" });
+    await user.click(screen.getByRole("button", { name: /^back$/i }));
+    await screen.findByRole("img", { name: "Bag A" });
+
+    await user.click(screen.getByRole("button", { name: /not yet/i }));
+
+    await waitFor(() => {
+      const queued = readQueue(KEY);
+      expect(queued).toHaveLength(1);
+      expect(queued[0]).toMatchObject({ kind: "disposition", itemId: "item_a", disposition: "deferred" });
+    });
+    // Never a bare fetch — the disposition rides the queue.
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
+  });
+
+  it("revisit of a rejected entry is a no-op", async () => {
+    flusher.awaitAck.mockImplementation(() => Promise.resolve({ status: "rejected", reason: "unknown_item" }));
+    const user = userEvent.setup();
+    renderRound();
+
+    await user.click(screen.getByRole("button", { name: "Love" }));
+    await screen.findByRole("img", { name: "Bag B" });
+
+    await user.click(screen.getByRole("button", { name: /^back$/i }));
+
+    // Nothing stands to revisit — the round stays where it was.
+    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Bag A" })).not.toBeInTheDocument();
   });
 });
 

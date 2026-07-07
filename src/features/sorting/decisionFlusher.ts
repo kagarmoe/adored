@@ -75,6 +75,9 @@ const noticeSubscribers = new Set<(n: FlushNotice) => void>();
 const ackWaiters = new Map<string, Array<(o: AckOutcome) => void>>();
 const ackOutcomes = new Map<string, AckOutcome>();
 const ACK_OUTCOME_BUFFER = 200;
+// Entries currently inside an active request (sent, not yet classified) — the
+// undo-as-revisit introspection seam (F19): queued = in storage AND not here.
+const inFlightEntries = new Set<string>();
 
 function lockName(key: QueueKey): string {
   return `adored.flush.v1.${key.curatorId}.${key.sessionId}`;
@@ -108,6 +111,10 @@ function resolveAck(storageKey: string, clientKey: string, outcome: AckOutcome):
     const oldest = ackOutcomes.keys().next().value;
     if (oldest !== undefined) ackOutcomes.delete(oldest);
   }
+}
+
+export function isInFlight(key: QueueKey, clientKey: string): boolean {
+  return inFlightEntries.has(ackId(pendingStorageKey(key), clientKey));
 }
 
 export function awaitAck(key: QueueKey, clientKey: string): Promise<AckOutcome> {
@@ -227,50 +234,56 @@ async function flushDecisionRun(
   if (offenders.length > 0) quarantine(key, offenders, tallies);
   if (valid.length === 0) return "continue";
 
-  let res: Response;
+  const flightIds = valid.map((e) => ackId(storageKey, e.clientKey));
+  for (const id of flightIds) inFlightEntries.add(id);
   try {
-    res = await fetch(`/api/sessions/${key.sessionId}/decisions/batch`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      keepalive: consumeKeepalive(storageKey, opts),
-      body: JSON.stringify({
-        decisions: valid.map((e) => ({ type: e.type, decision: e.decision, clientKey: e.clientKey })),
-      }),
-    });
-  } catch {
-    return "backoff"; // network — queue intact, retry on the pinned schedule
-  }
-
-  if (res.ok) {
-    attempts.set(storageKey, 0); // success resets the backoff schedule
-    let results: BatchResult[] = [];
+    let res: Response;
     try {
-      results = ((await res.json()) as { results?: BatchResult[] }).results ?? [];
+      res = await fetch(`/api/sessions/${key.sessionId}/decisions/batch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: consumeKeepalive(storageKey, opts),
+        body: JSON.stringify({
+          decisions: valid.map((e) => ({ type: e.type, decision: e.decision, clientKey: e.clientKey })),
+        }),
+      });
     } catch {
-      results = [];
+      return "backoff"; // network — queue intact (and back to merely queued), retry on the pinned schedule
     }
-    const byClientKey = new Map(results.map((r) => [r.clientKey, r]));
-    const ackedKeys: string[] = [];
-    for (const entry of valid) {
-      const result = byClientKey.get(entry.clientKey);
-      // An entry the server didn't echo is treated as duplicate: the partial
-      // unique index makes a replay harmless, while re-queueing it forever
-      // would wedge the drain.
-      let outcome: AckOutcome;
-      if (result?.status === "rejected") {
-        outcome = { status: "rejected", reason: result.reason };
-        tallies.rejected += 1;
-      } else {
-        outcome = { status: result?.status === "created" ? "created" : "duplicate" };
-      }
-      ackedKeys.push(entry.clientKey);
-      resolveAck(storageKey, entry.clientKey, outcome);
-    }
-    removeEntries(key, ackedKeys); // exactly the acked keys — re-read + filter under the lock
-    return "continue";
-  }
 
-  return handleBatchFailure(key, res.status, valid, opts, tallies);
+    if (res.ok) {
+      attempts.set(storageKey, 0); // success resets the backoff schedule
+      let results: BatchResult[] = [];
+      try {
+        results = ((await res.json()) as { results?: BatchResult[] }).results ?? [];
+      } catch {
+        results = [];
+      }
+      const byClientKey = new Map(results.map((r) => [r.clientKey, r]));
+      const ackedKeys: string[] = [];
+      for (const entry of valid) {
+        const result = byClientKey.get(entry.clientKey);
+        // An entry the server didn't echo is treated as duplicate: the partial
+        // unique index makes a replay harmless, while re-queueing it forever
+        // would wedge the drain.
+        let outcome: AckOutcome;
+        if (result?.status === "rejected") {
+          outcome = { status: "rejected", reason: result.reason };
+          tallies.rejected += 1;
+        } else {
+          outcome = { status: result?.status === "created" ? "created" : "duplicate" };
+        }
+        ackedKeys.push(entry.clientKey);
+        resolveAck(storageKey, entry.clientKey, outcome);
+      }
+      removeEntries(key, ackedKeys); // exactly the acked keys — re-read + filter under the lock
+      return "continue";
+    }
+
+    return handleBatchFailure(key, res.status, valid, opts, tallies);
+  } finally {
+    for (const id of flightIds) inFlightEntries.delete(id);
+  }
 }
 
 function handleBatchFailure(
@@ -323,6 +336,8 @@ async function flushDisposition(
     return "continue";
   }
 
+  const flightId = ackId(storageKey, entry.clientKey);
+  inFlightEntries.add(flightId);
   let res: Response;
   try {
     if (entry.disposition === "clear") {
@@ -340,6 +355,8 @@ async function flushDisposition(
     }
   } catch {
     return "backoff";
+  } finally {
+    inFlightEntries.delete(flightId);
   }
 
   if (res.ok) {
