@@ -18,6 +18,7 @@ import { RoundTimer } from "./RoundTimer";
 import { WhatMoved } from "./WhatMoved";
 import { enqueue, newClientKey, removeQueued, type QueueKey } from "./decisionQueue";
 import { awaitAck, isInFlight, triggerFlush, useDecisionFlusher, type AckOutcome } from "./decisionFlusher";
+import { PendingNotices } from "./pendingNotices";
 
 export interface TriageRoundQueueEntry {
   item: Item;
@@ -287,6 +288,12 @@ export function TriageRound({
       timer={timer}
       onPause={() => router.push(hubHref)}
     >
+      {/* The flush engine's one quiet voice — OUTSIDE the content swap so a
+          notice raised mid-round is still on screen when the recap (and the
+          round-end revert) lands (F9). */}
+      <div className="mx-auto max-w-xl">
+        <PendingNotices />
+      </div>
       {shown === undefined || expired ? (
         <WhatMoved
           decisions={frozen?.decisions ?? [...serverLogRef.current, ...roundLogRef.current.map((e) => e.moved)]}
