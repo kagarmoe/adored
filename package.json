@@ -29,6 +29,7 @@
     "bench:recompute": "tsx scripts/bench-recompute.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/blob": "^2.3.0",
     "@vercel/functions": "^3.7.5",

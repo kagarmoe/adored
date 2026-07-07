@@ -44,6 +44,25 @@ describe("env validation — happy path", () => {
     expect(env.EMAIL_SERVER_PORT).toBe(1025); // z.coerce.number default
   });
 
+  it("voice-capture vars: ANTHROPIC_API_KEY is optional and VOICE_DAILY_CALL_CAP defaults to 50", async () => {
+    const { env } = await import("./env");
+
+    // Touch a required prop to force validateEnv().
+    void env.DATABASE_URL;
+    expect(env.ANTHROPIC_API_KEY).toBeUndefined();
+    expect(env.VOICE_DAILY_CALL_CAP).toBe(50);
+  });
+
+  it("exposes ANTHROPIC_API_KEY and coerces VOICE_DAILY_CALL_CAP from the env string", async () => {
+    process.env.ANTHROPIC_API_KEY = "sk-ant-test";
+    process.env.VOICE_DAILY_CALL_CAP = "10";
+    const { env } = await import("./env");
+
+    expect(env.ANTHROPIC_API_KEY).toBe("sk-ant-test");
+    // z.coerce.number() parses the string into a number.
+    expect(env.VOICE_DAILY_CALL_CAP).toBe(10);
+  });
+
   it("parses cleanly with the better-auth optional vars absent (app boots pre-Google)", async () => {
     const { env } = await import("./env");
 

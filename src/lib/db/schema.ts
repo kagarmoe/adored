@@ -8,6 +8,8 @@ import {
   jsonb,
   index,
   uniqueIndex,
+  date,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -419,6 +421,25 @@ export const invitationsTable = pgTable(
     collectionIdx: index("invitations_collection_id_idx").on(table.collectionId),
     tokenIdx: uniqueIndex("invitations_token_unique").on(table.token),
     emailIdx: index("invitations_email_idx").on(table.email),
+  }),
+);
+
+// ===== VOICE USAGE (per-user daily cap for voice-capture extraction) =====
+// Cost control for the paid /api/voice/extract endpoint: one row per (user, day),
+// upsert-incremented per call. A hostile authenticated user gets at most
+// VOICE_DAILY_CALL_CAP calls per day. Composite PK (user_id, day) is the natural
+// key — no surrogate id. onDelete cascade so a deleted user's rows go with them.
+export const voiceUsageTable = pgTable(
+  "voice_usage",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    day: date("day").notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.userId, table.day] }),
   }),
 );
 

@@ -34,6 +34,13 @@ const envSchema = z.object({
   // send rather than throwing). Set in the deploy env for real sends.
   RESEND_API_KEY: z.string().optional(),
 
+  // Anthropic API key for voice-capture extraction — optional (RESEND pattern):
+  // the app boots without it and /api/voice/extract 503s until it is set.
+  ANTHROPIC_API_KEY: z.string().optional(),
+  // Per-user daily cap on voice extraction calls — the load-bearing cost control
+  // for the first paid endpoint. Coerced from the env string; defaults to 50.
+  VOICE_DAILY_CALL_CAP: z.coerce.number().default(50),
+
   // Vercel Blob (optional, auto-configured in Vercel)
   BLOB_READ_WRITE_TOKEN: z.string().optional(),
 });
@@ -70,6 +77,8 @@ function validateEnv(): EnvConfig {
       EMAIL_SERVER_USER: env.EMAIL_SERVER_USER,
       EMAIL_SERVER_PASSWORD: env.EMAIL_SERVER_PASSWORD,
       RESEND_API_KEY: env.RESEND_API_KEY,
+      ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY,
+      VOICE_DAILY_CALL_CAP: env.VOICE_DAILY_CALL_CAP,
       BLOB_READ_WRITE_TOKEN: env.BLOB_READ_WRITE_TOKEN,
     });
 
