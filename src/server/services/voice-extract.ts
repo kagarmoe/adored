@@ -2,10 +2,10 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 
-// Single named constant for the model, so the owner can flip it in one place. The
-// owner may flip this to 'claude-haiku-4-5' (~5x cheaper and sufficient for this
-// bounded extraction); the per-user daily cap bounds worst-case spend either way.
-export const MODEL = "claude-opus-4-8";
+// Single named constant for the model, so it can be changed in one place. Haiku
+// is ~5x cheaper than Opus and sufficient for this bounded extraction; the
+// per-user daily cap bounds worst-case spend either way.
+export const MODEL = "claude-haiku-4-5";
 
 const MAX_TOKENS = 1000;
 
