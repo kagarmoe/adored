@@ -129,6 +129,16 @@ for (const theme of ["light", "dark"] as const) {
     await page.route("**/photos/**/file*", (route) =>
       route.fulfill({ path: FIXTURE, contentType: "image/jpeg" }),
     );
+    // Voice epic (purses-w2mt): stub SpeechRecognition so the mic affordances
+    // render deterministically on every engine (WebKit has no native impl).
+    await page.addInitScript(`
+      class ShotSpeechRecognition {
+        continuous = false; interimResults = false; lang = "";
+        start() {} stop() { this.onend && this.onend(); } abort() {}
+      }
+      window.SpeechRecognition = ShotSpeechRecognition;
+      window.webkitSpeechRecognition = ShotSpeechRecognition;
+    `);
 
     const proj = testInfo.project.name;
     const surfaces: [string, string][] = [
@@ -174,6 +184,9 @@ for (const theme of ["light", "dark"] as const) {
       ["workspace-items-first", `/collections/${workspaceItemsFirstSlug}`],
       // Epic 3: the pool "Photos" screen (grid + copy). poolOnly has loose photos.
       ["pool", `/collections/${workspacePoolFirstSlug}/pool`],
+      // Voice epic (purses-w2mt): the edit form with the capture mic ("Add
+      // details by speaking"), the story mic, and the quiet "Add size" disclosure.
+      ["item-edit-voice", `/collections/${slug}/items/1/edit`],
     ];
     for (const [name, url] of surfaces) {
       await page.goto(url);
