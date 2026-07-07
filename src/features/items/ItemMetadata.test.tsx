@@ -33,4 +33,49 @@ describe("ItemMetadata", () => {
     expect(screen.getByText("loved")).toBeInTheDocument();
     expect(screen.queryByText(/no details added yet/i)).not.toBeInTheDocument();
   });
+
+  it("renders a single imperial size chip with all three dims + weight", () => {
+    render(
+      <ItemMetadata
+        item={{ ...empty, height: "9", width: "11", depth: "4", weight: "1.2", unit: "imperial" } as any}
+        editHref="/x"
+      />,
+    );
+    expect(screen.getByText("9 × 11 × 4 in · 1.2 lb")).toBeInTheDocument();
+  });
+
+  it("labels metric dimensions with cm/kg", () => {
+    render(
+      <ItemMetadata
+        item={{ ...empty, height: "20", width: "28", depth: "10", weight: "0.5", unit: "metric" } as any}
+        editHref="/x"
+      />,
+    );
+    expect(screen.getByText("20 × 28 × 10 cm · 0.5 kg")).toBeInTheDocument();
+  });
+
+  it("includes only the parts that are present", () => {
+    render(
+      <ItemMetadata
+        item={{ ...empty, height: "9", width: "11", unit: "imperial" } as any}
+        editHref="/x"
+      />,
+    );
+    // No depth, no weight — chip is just the two dims + length unit.
+    expect(screen.getByText("9 × 11 in")).toBeInTheDocument();
+  });
+
+  it("shows a size chip (not the empty state) when ONLY dimensions are present", () => {
+    render(
+      <ItemMetadata item={{ ...empty, weight: "1.2", unit: "imperial" } as any} editHref="/x" />,
+    );
+    expect(screen.getByText("1.2 lb")).toBeInTheDocument();
+    expect(screen.queryByText(/every piece has a story/i)).not.toBeInTheDocument();
+  });
+
+  it("renders no size chip when no dimensions are present", () => {
+    render(<ItemMetadata item={{ ...empty, brand: "Acme" } as any} editHref="/x" />);
+    expect(screen.queryByText(/×/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/lb$/)).not.toBeInTheDocument();
+  });
 });

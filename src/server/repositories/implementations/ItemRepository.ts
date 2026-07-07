@@ -30,6 +30,11 @@ export class ItemRepository {
     status?: string;
     notes?: string;
     story?: string | null;
+    height?: string;
+    width?: string;
+    depth?: string;
+    weight?: string;
+    unit?: "imperial" | "metric";
   }): Promise<Item> {
     const id = data.id || generateId("item");
     const base = {
@@ -44,6 +49,14 @@ export class ItemRepository {
       status: data.status || null,
       notes: data.notes || null,
       story: data.story || null,
+      height: data.height ?? null,
+      width: data.width ?? null,
+      depth: data.depth ?? null,
+      weight: data.weight ?? null,
+      // Omit `unit` when absent so the column default ('imperial') applies;
+      // setting it undefined would still let Drizzle skip it, but an explicit
+      // conditional keeps the "omitted → default" contract obvious.
+      ...(data.unit !== undefined ? { unit: data.unit } : {}),
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: null,

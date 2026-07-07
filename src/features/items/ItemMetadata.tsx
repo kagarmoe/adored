@@ -7,6 +7,22 @@ interface ItemMetadataProps {
   editHref?: string;
 }
 
+// "9 × 11 × 4 in · 1.2 lb" — length dims joined by ×, weight after a middot,
+// only the parts that are present. imperial → in/lb, metric → cm/kg.
+function formatSize(item: Item): string | null {
+  const lengthUnit = item.unit === "metric" ? "cm" : "in";
+  const weightUnit = item.unit === "metric" ? "kg" : "lb";
+  const dims = [item.height, item.width, item.depth].filter(
+    (d): d is string => Boolean(d),
+  );
+
+  const parts: string[] = [];
+  if (dims.length > 0) parts.push(`${dims.join(" × ")} ${lengthUnit}`);
+  if (item.weight) parts.push(`${item.weight} ${weightUnit}`);
+
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
 export function ItemMetadata({ item, editHref }: ItemMetadataProps) {
   const fields = [
     { label: "Brand", value: item.brand },
@@ -17,8 +33,9 @@ export function ItemMetadata({ item, editHref }: ItemMetadataProps) {
   ];
 
   const filledFields = fields.filter((f) => f.value);
+  const sizeLabel = formatSize(item);
 
-  if (filledFields.length === 0 && !item.notes) {
+  if (filledFields.length === 0 && !item.notes && !sizeLabel) {
     // Affirming, judgement-free — this is about realizing what you love, not cataloguing.
     return (
       <div className="space-y-3">
@@ -39,7 +56,7 @@ export function ItemMetadata({ item, editHref }: ItemMetadataProps) {
 
   return (
     <div className="space-y-4">
-      {filledFields.length > 0 && (
+      {(filledFields.length > 0 || sizeLabel) && (
         <ul className="flex flex-wrap gap-2">
           {filledFields.map((field) => (
             <li
@@ -50,6 +67,14 @@ export function ItemMetadata({ item, editHref }: ItemMetadataProps) {
               {field.value}
             </li>
           ))}
+          {sizeLabel && (
+            <li
+              key="size"
+              className="rounded-full bg-surface-raised px-3 py-1 text-sm text-ink"
+            >
+              {sizeLabel}
+            </li>
+          )}
         </ul>
       )}
       {item.notes && (
