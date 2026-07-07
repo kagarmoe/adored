@@ -7,7 +7,15 @@ const refresh = vi.fn();
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push }) }));
 
+// The set-aside DELETE pre-flushes through the shared engine — mock it idle so
+// the existing DELETE/restore assertions are untouched by queue state.
+vi.mock("@/features/sorting/decisionFlusher", () => ({
+  drain: vi.fn().mockResolvedValue(undefined),
+  triggerFlush: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { ActiveSessionPanel } from "./ActiveSessionPanel";
+import { triggerFlush } from "@/features/sorting/decisionFlusher";
 
 const session = { id: "sess_1", number: 3, goal: "Find my favorites", status: "active" as const };
 const pausedSession = { ...session, status: "paused" as const };
@@ -20,7 +28,7 @@ beforeEach(() => {
 
 describe("ActiveSessionPanel", () => {
   it("renders the session card with goal and a Resume link when an active session is present", () => {
-    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
     expect(screen.getByRole("heading", { name: "Active session" })).toBeInTheDocument();
     expect(screen.getByText(/find my favorites/i)).toBeInTheDocument();
     // Governed label (spec §9): the resume affordance reads "Resume sorting".
@@ -29,7 +37,7 @@ describe("ActiveSessionPanel", () => {
   });
 
   it("for an active session, Resume is a link and issues no PATCH", () => {
-    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
     const resume = screen.getByRole("link", { name: "Resume sorting" });
     expect(resume).toHaveAttribute("href", resumeHref);
     fireEvent.click(resume);
@@ -38,7 +46,7 @@ describe("ActiveSessionPanel", () => {
   });
 
   it("for a paused session, renders the person-side paused copy and a Badge", () => {
-    render(<ActiveSessionPanel session={pausedSession} resumeHref={resumeHref} />);
+    render(<ActiveSessionPanel curatorId="u1" session={pausedSession} resumeHref={resumeHref} />);
     expect(screen.getByText(/your sort is paused/i)).toBeInTheDocument();
     expect(
       screen.getByText(/your sort is safe — pick up where you left off\./i),
@@ -52,7 +60,7 @@ describe("ActiveSessionPanel", () => {
     // node. This proves attachment, NOT that the cascade override wins — the dark
     // screenshot is the proof of that (see the spec's Risks section).
     const { container } = render(
-      <ActiveSessionPanel session={pausedSession} resumeHref={resumeHref} />,
+      <ActiveSessionPanel curatorId="u1" session={pausedSession} resumeHref={resumeHref} />,
     );
     const panel = container.querySelector('[class*="dark:bg-surface-raised"]');
     expect(panel).not.toBeNull();
@@ -68,7 +76,7 @@ describe("ActiveSessionPanel", () => {
         resolve = r;
       }),
     ); // the resume PATCH hangs
-    render(<ActiveSessionPanel session={pausedSession} resumeHref={resumeHref} />);
+    render(<ActiveSessionPanel curatorId="u1" session={pausedSession} resumeHref={resumeHref} />);
     expect(screen.getByRole("button", { name: /^set aside$/i })).toBeEnabled();
 
     fireEvent.click(screen.getByRole("button", { name: "Resume sorting" }));
@@ -82,7 +90,7 @@ describe("ActiveSessionPanel", () => {
 
   it("for a paused session, Resume PATCHes status:active then navigates (ResumeControl, not a bare link)", async () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
-    render(<ActiveSessionPanel session={pausedSession} resumeHref={resumeHref} />);
+    render(<ActiveSessionPanel curatorId="u1" session={pausedSession} resumeHref={resumeHref} />);
     // ResumeControl renders a <button>, not an <a> — there is no Resume link.
     // Governed label (spec §9): the paused affordance also reads "Resume sorting".
     expect(screen.queryByRole("link", { name: "Resume sorting" })).not.toBeInTheDocument();
@@ -99,7 +107,7 @@ describe("ActiveSessionPanel", () => {
 
   it("set aside / undo works the same for a paused session", async () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
-    render(<ActiveSessionPanel session={pausedSession} resumeHref={resumeHref} />);
+    render(<ActiveSessionPanel curatorId="u1" session={pausedSession} resumeHref={resumeHref} />);
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // reveal
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // confirm
     await waitFor(() =>
@@ -109,27 +117,27 @@ describe("ActiveSessionPanel", () => {
   });
 
   it("renders nothing visible when there is no session and no undo", () => {
-    const { container } = render(<ActiveSessionPanel session={null} resumeHref={resumeHref} />);
+    const { container } = render(<ActiveSessionPanel curatorId="u1" session={null} resumeHref={resumeHref} />);
     expect(screen.queryByText(/active/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(container).toBeEmptyDOMElement();
   });
 
   it("a single tap only reveals the confirm — it does NOT DELETE", () => {
-    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     expect(global.fetch).not.toHaveBeenCalled();
     expect(screen.getByText(/set this session aside\?/i)).toBeInTheDocument();
   });
 
   it("moves focus to the safe default (Never mind) when the confirm appears", () => {
-    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     expect(screen.getByRole("button", { name: /never mind/i })).toHaveFocus();
   });
 
   it("backing out keeps the session — no API call, confirm dismissed", () => {
-    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     fireEvent.click(screen.getByRole("button", { name: /never mind/i }));
     expect(global.fetch).not.toHaveBeenCalled();
@@ -138,7 +146,7 @@ describe("ActiveSessionPanel", () => {
 
   it("only the confirm's Set aside DELETEs the session and refreshes", async () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
-    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // reveal
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // confirm
     await waitFor(() =>
@@ -147,9 +155,23 @@ describe("ActiveSessionPanel", () => {
     await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
   });
 
+  it("the set-aside DELETE pre-flushes the session's decision queue first (Epic P Task 16 — resolution #2)", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
+    render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // reveal
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // confirm
+    await waitFor(() =>
+      expect(global.fetch).toHaveBeenCalledWith("/api/sessions/sess_1", { method: "DELETE" }),
+    );
+    expect(vi.mocked(triggerFlush)).toHaveBeenCalledWith({ curatorId: "u1", sessionId: "sess_1" });
+    expect(vi.mocked(triggerFlush).mock.invocationCallOrder[0]).toBeLessThan(
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0],
+    );
+  });
+
   it("shows a persistent Undo notice after set-aside that SURVIVES the session prop going null", async () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
-    const { rerender } = render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    const { rerender } = render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // reveal
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // confirm
     const notice = await screen.findByRole("status");
@@ -160,7 +182,7 @@ describe("ActiveSessionPanel", () => {
     // parent re-renders the (unconditionally mounted) island with session={null}.
     // The undo state lives in the island, so the notice must STILL be here — this
     // is the whole point (PR2 lesson: undo inside the conditional card vanishes).
-    rerender(<ActiveSessionPanel session={null} resumeHref={resumeHref} />);
+    rerender(<ActiveSessionPanel curatorId="u1" session={null} resumeHref={resumeHref} />);
     expect(screen.queryByText(/find my favorites/i)).not.toBeInTheDocument();
     const stillThere = screen.getByRole("status");
     expect(stillThere).toHaveTextContent(/set aside/i);
@@ -169,11 +191,11 @@ describe("ActiveSessionPanel", () => {
 
   it("clicking Undo POSTs to the restore route and refreshes, clearing the notice", async () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
-    const { rerender } = render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    const { rerender } = render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     await screen.findByRole("button", { name: /undo/i });
-    rerender(<ActiveSessionPanel session={null} resumeHref={resumeHref} />);
+    rerender(<ActiveSessionPanel curatorId="u1" session={null} resumeHref={resumeHref} />);
 
     fireEvent.click(screen.getByRole("button", { name: /undo/i }));
     await waitFor(() =>
@@ -187,7 +209,7 @@ describe("ActiveSessionPanel", () => {
 
   it("ignores a rapid double-confirm — only one DELETE is sent", async () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
-    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i })); // reveal
     const confirm = screen.getByRole("button", { name: /^set aside$/i });
     fireEvent.click(confirm);
@@ -201,11 +223,11 @@ describe("ActiveSessionPanel", () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({ ok: true }) // set-aside DELETE
       .mockReturnValueOnce(new Promise((r) => { resolve = r; })); // restore POST hangs
-    const { rerender } = render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    const { rerender } = render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     await screen.findByRole("button", { name: /undo/i });
-    rerender(<ActiveSessionPanel session={null} resumeHref={resumeHref} />);
+    rerender(<ActiveSessionPanel curatorId="u1" session={null} resumeHref={resumeHref} />);
 
     const undo = screen.getByRole("button", { name: /undo/i });
     fireEvent.click(undo);
@@ -218,7 +240,7 @@ describe("ActiveSessionPanel", () => {
 
   it("a failed set-aside shows a gentle role=status message and does NOT refresh", async () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: false });
-    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     await waitFor(() => expect(screen.getByRole("status")).toBeInTheDocument());
@@ -230,7 +252,7 @@ describe("ActiveSessionPanel", () => {
 
   it("a network rejection on set-aside is caught — gentle message, no refresh", async () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("offline"));
-    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     await waitFor(() => expect(screen.getByRole("status")).toBeInTheDocument());
@@ -241,11 +263,11 @@ describe("ActiveSessionPanel", () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({ ok: true }) // set-aside ok
       .mockResolvedValueOnce({ ok: false }); // restore fails
-    const { rerender } = render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    const { rerender } = render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     await screen.findByRole("button", { name: /undo/i });
-    rerender(<ActiveSessionPanel session={null} resumeHref={resumeHref} />);
+    rerender(<ActiveSessionPanel curatorId="u1" session={null} resumeHref={resumeHref} />);
 
     fireEvent.click(screen.getByRole("button", { name: /undo/i }));
     // The error renders as a SECOND role=status alongside the persistent undo
@@ -259,11 +281,11 @@ describe("ActiveSessionPanel", () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({ ok: true }) // set-aside DELETE ok
       .mockResolvedValueOnce({ ok: false, status: 409 }); // restore 409 — slot taken
-    const { rerender } = render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    const { rerender } = render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     await screen.findByRole("button", { name: /undo/i });
-    rerender(<ActiveSessionPanel session={null} resumeHref={resumeHref} />);
+    rerender(<ActiveSessionPanel curatorId="u1" session={null} resumeHref={resumeHref} />);
 
     fireEvent.click(screen.getByRole("button", { name: /undo/i }));
 
@@ -278,7 +300,7 @@ describe("ActiveSessionPanel", () => {
 
   it("renders a decorative middot that is hidden from screen readers in the undo notice", async () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
-    render(<ActiveSessionPanel session={session} resumeHref={resumeHref} />);
+    render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
     const notice = await screen.findByRole("status");

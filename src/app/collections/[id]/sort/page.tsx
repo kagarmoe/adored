@@ -74,6 +74,7 @@ export default async function SortPage({ params }: SortPageProps) {
               <div className="flex gap-3">
                 {currentSession.status === "paused" ? (
                   <ResumeControl
+                    curatorId={session.user.id}
                     sessionId={currentSession.id}
                     sortHref={`${collectionHref}/sort/${currentSession.number}`}
                   />

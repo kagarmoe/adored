@@ -2,16 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import { AsyncActionButton } from "./AsyncActionButton";
+import { patchSessionStatus } from "./sessionStatusPatch";
 
 // Picks a paused sort back up: marks the session active again and returns the
 // person to where they left off. A primary action — resuming is the warm,
-// affirming continuation of the work.
+// affirming continuation of the work. Routed through the shared status helper
+// (Epic P Task 16); "active" never pre-flushes — there is nothing to land.
 export function ResumeControl({
+  curatorId,
   sessionId,
   sortHref,
   onBusyChange,
   label = "Resume",
 }: {
+  curatorId: string;
   sessionId: string;
   sortHref: string;
   // Optional: lets a parent (the collection card) disable its sibling "Set aside"
@@ -30,11 +34,7 @@ export function ResumeControl({
       variant="primary"
       onBusyChange={onBusyChange}
       action={async () => {
-        const res = await fetch(`/api/sessions/${sessionId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "active" }),
-        });
+        const res = await patchSessionStatus({ curatorId, sessionId }, "active");
         if (!res.ok) throw new Error("resume failed");
         router.push(sortHref); // back to where they left off (this island then unmounts)
       }}

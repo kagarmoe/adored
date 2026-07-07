@@ -167,6 +167,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
                 currentSession to null — it renders nothing when there's neither a
                 session nor a pending undo. */}
             <ActiveSessionPanel
+              curatorId={session.user.id}
               session={
                 currentSession
                   ? {

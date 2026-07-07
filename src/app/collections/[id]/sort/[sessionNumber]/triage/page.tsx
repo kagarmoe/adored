@@ -86,7 +86,11 @@ export default async function TriagePage({ params }: TriagePageProps) {
         { label: "Triage" },
       ]}
       actions={
-        <TakeABreakControl sessionId={sortSession.id} collectionHref={`/collections/${slugOrId}`} />
+        <TakeABreakControl
+          curatorId={session.user.id}
+          sessionId={sortSession.id}
+          collectionHref={`/collections/${slugOrId}`}
+        />
       }
     >
       {/* Recovery gate (spec §3.4): the round below snapshots the server-selected

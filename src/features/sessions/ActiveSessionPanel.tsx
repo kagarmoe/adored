@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Badge, Button, Card } from "@/components/ui";
 import { ResumeControl } from "@/features/sorting/ResumeControl";
+import { deleteSessionWithPreflush } from "@/features/sorting/sessionStatusPatch";
 
 // The collection landing page's active-session affordance, restructured so the
 // "set aside" undo SURVIVES the refresh that makes the session disappear.
@@ -29,9 +30,11 @@ interface SessionSummary {
 }
 
 export function ActiveSessionPanel({
+  curatorId,
   session,
   resumeHref,
 }: {
+  curatorId: string;
   session: SessionSummary | null;
   resumeHref: string;
 }) {
@@ -62,7 +65,10 @@ export function ActiveSessionPanel({
     setBusy(true);
     setError("");
     try {
-      const res = await fetch(`/api/sessions/${session.id}`, { method: "DELETE" });
+      // Abandon-with-undo rides the shared helper (Epic P Task 16): a bounded
+      // best-effort pre-flush lands any queued decisions first, so a later
+      // restore never resurrects a session missing its final taps.
+      const res = await deleteSessionWithPreflush({ curatorId, sessionId: session.id });
       if (!res.ok) throw new Error("delete failed");
       // Record the undo BEFORE refreshing: the refresh flips activeSession to
       // null upstream, re-rendering this island with session={null}. Because the
@@ -170,6 +176,7 @@ export function ActiveSessionPanel({
                   THEN navigates, so the DB and the URL agree. */}
               {paused ? (
                 <ResumeControl
+                  curatorId={curatorId}
                   sessionId={session.id}
                   sortHref={resumeHref}
                   onBusyChange={setResumeBusy}

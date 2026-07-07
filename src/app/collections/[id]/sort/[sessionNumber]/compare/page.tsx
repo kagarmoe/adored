@@ -51,6 +51,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
   // the not-enough-items / all-done branches — so stepping away is never gated.
   const breakAction = (
     <TakeABreakControl
+      curatorId={session.user.id}
       sessionId={sortSession.id}
       collectionHref={`/collections/${collection.slug ?? collection.id}`}
     />
