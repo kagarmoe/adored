@@ -26,7 +26,8 @@
     "db:backfill-numbers": "tsx scripts/backfill-session-result-numbers.ts",
     "auth:verify": "tsx -r ./scripts/load-env.js scripts/verify-auth.ts",
     "seed:load": "tsx scripts/seed-load.ts",
-    "bench:recompute": "tsx scripts/bench-recompute.ts"
+    "bench:recompute": "tsx scripts/bench-recompute.ts",
+    "bench:batch": "tsx scripts/bench-batch.ts"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
