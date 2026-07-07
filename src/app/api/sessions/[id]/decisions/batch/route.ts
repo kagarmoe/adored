@@ -1,0 +1,153 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getDb } from "@/lib/db";
+import { decisionEventsTable } from "@/lib/db/schema";
+import { generateOrderedIdFactory } from "@/lib/id";
+import { getSession } from "@/lib/auth";
+import { withTransaction, lockCollectionCurator } from "@/lib/transactions";
+import { requireApiCollectionAccess } from "@/server/dal/collection-access";
+import { SessionController } from "@/server/api/sessions";
+import { PreferenceController } from "@/server/api/preferences";
+import { DispositionController } from "@/server/api/dispositions";
+import {
+  BatchRequestSchema,
+  MAX_BATCH_BYTES,
+  type BatchEntry,
+} from "@/lib/decision-batch-schema";
+import { readJsonWithLimit, BodyTooLargeError } from "@/lib/read-json-with-limit";
+
+// The recompute-under-lock write path uses node-postgres — pin the Node runtime
+// (not Edge) and give the platform an explicit, generous function cap so a slow
+// recompute can't be aborted mid-transaction and roll back (and lose) the batch.
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
+// disposed <=> untriaged: each distinct triaged item clears its disposition
+// exactly once, regardless of how many batch entries re-answered it.
+function distinctTriagedItemIds(entries: BatchEntry[]): string[] {
+  const ids = new Set<string>();
+  for (const entry of entries) {
+    if (entry.type === "triage") ids.add(entry.decision.itemId);
+  }
+  return Array.from(ids);
+}
+
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+  const session = await getSession();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Capture once: the `session.user` narrowing above is lost inside the tx closure.
+  const userId = session.user.id;
+
+  const db = getDb();
+  // Authorize BEFORE any read of the body: the session must belong to a
+  // collection the user can access. getSessionOrNull distinguishes absent
+  // (→404) from a real DB error (→ propagates, 500).
+  const sortSession = await SessionController.fromDb(db).getSessionOrNull(params.id);
+  if (!sortSession) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const access = await requireApiCollectionAccess(db, sortSession.collectionId, userId);
+  if (access instanceof NextResponse) return access;
+
+  // purses-t9l: each user sorts independently — you may only record decisions in
+  // your OWN session. Cross-curator triage is forbidden, blocked before any write.
+  if (sortSession.curatorId !== userId) {
+    return NextResponse.json(
+      { error: "You can only record decisions in your own sorting session" },
+      { status: 403 },
+    );
+  }
+
+  // duv4: a decision may only be recorded on an IN-PROGRESS session (active or
+  // paused — the states the partial unique index treats as holding the slot). A
+  // completed/abandoned/soft-deleted session is terminal; reject a late batch
+  // with 409 so it can't mutate a finished session's preference set.
+  if (sortSession.status !== "active" && sortSession.status !== "paused") {
+    return NextResponse.json(
+      { error: "This sorting session is no longer in progress" },
+      { status: 409 },
+    );
+  }
+
+  // Body cap is STREAM-enforced (spec F17): App Router has no
+  // bodyParser.sizeLimit and Content-Length is absent under chunked transfer,
+  // so the reader budgets bytes as they arrive and cancels the stream the
+  // moment the budget is exceeded — 413. Malformed JSON under budget → 400.
+  let raw: unknown;
+  try {
+    raw = await readJsonWithLimit(req, MAX_BATCH_BYTES);
+  } catch (error) {
+    if (error instanceof BodyTooLargeError) {
+      return NextResponse.json({ error: "Request body too large" }, { status: 413 });
+    }
+    if (error instanceof SyntaxError) {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+    throw error;
+  }
+
+  // sxfo: whole-batch boundary validation with the shared client/server schema
+  // — one out-of-contract entry rejects the whole batch with 400 BEFORE the
+  // transaction, so junk never persists (the client pre-validates with the
+  // same module, so a 400 here means a stale/foreign caller).
+  const parsed = BatchRequestSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  try {
+    // Atomic: all entry inserts, the single preference recompute, and the
+    // triage disposition clears commit or roll back together — a partial batch
+    // would leave items both ranked and disposed. Every write uses the
+    // tx-bound handle.
+    const results = await withTransaction(db, async (tx) => {
+      // duv4: the SAME (collection,curator) advisory lock the single decisions
+      // route and setDisposition take — serializes every preference recompute
+      // for this curator so batches, single taps, and dispositions can never
+      // interleave.
+      await lockCollectionCurator(tx, sortSession.collectionId, userId);
+
+      // Monotonic ids: within one batch, later array entries get strictly
+      // greater ids, so at the shared transaction timestamp the (createdAt, id)
+      // comparator resolves in-batch conflicts to the later entry.
+      const nextId = generateOrderedIdFactory();
+      for (const entry of parsed.data.decisions) {
+        await tx.insert(decisionEventsTable).values({
+          id: nextId(),
+          sessionId: params.id,
+          type: entry.type,
+          decision: entry.decision,
+          clientKey: entry.clientKey,
+        }); // createdAt OMITTED — defaultNow(): one shared timestamp per batch,
+        // same clock domain as the single route (spec §2.3.5).
+      }
+
+      await PreferenceController.fromDb(tx).recalculatePreferences(
+        sortSession.collectionId,
+        userId,
+      );
+
+      // disposed <=> untriaged: triaging an item clears any prior disposition
+      // for this curator, once per distinct item.
+      for (const itemId of distinctTriagedItemIds(parsed.data.decisions)) {
+        await DispositionController.fromDb(tx).bringBack(itemId, userId);
+      }
+
+      return parsed.data.decisions.map((entry) => ({
+        clientKey: entry.clientKey,
+        status: "created" as const,
+      }));
+    }, {
+      op: "record_decision_batch",
+      ctx: { collectionId: sortSession.collectionId, curatorId: userId, sessionId: params.id },
+    });
+
+    return NextResponse.json({ results }, { status: 201 });
+  } catch (error) {
+    // The failure is already observed at the withTransaction seam (op:
+    // "record_decision_batch" + ctx), which logs [db_error] + emits
+    // db_action_failed ONCE and rethrows — this catch only maps to a 500 and
+    // never re-logs.
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to record decisions" },
+      { status: 500 },
+    );
+  }
+}
