@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>13/13</span>
+                <span class='fraction'>11/11</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>12/12</span>
+                <span class='fraction'>10/10</span>
             </div>
         
             
@@ -123,14 +123,7 @@
 <a name='L58'></a><a href='#L58'>58</a>
 <a name='L59'></a><a href='#L59'>59</a>
 <a name='L60'></a><a href='#L60'>60</a>
-<a name='L61'></a><a href='#L61'>61</a>
-<a name='L62'></a><a href='#L62'>62</a>
-<a name='L63'></a><a href='#L63'>63</a>
-<a name='L64'></a><a href='#L64'>64</a>
-<a name='L65'></a><a href='#L65'>65</a>
-<a name='L66'></a><a href='#L66'>66</a>
-<a name='L67'></a><a href='#L67'>67</a>
-<a name='L68'></a><a href='#L68'>68</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L61'></a><a href='#L61'>61</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -153,20 +146,32 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">134x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">134x</span>
+<span class="cline-any cline-yes">122x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">64x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">64x</span>
-<span class="cline-any cline-yes">46x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -174,54 +179,30 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">"use client";
 &nbsp;
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
-import { AsyncActionButton } from "./AsyncActionButton";
+import { useOptionalTriageUndo } from "./TriageUndoProvider";
 &nbsp;
 // The triage "Not yet" affordance: a single quiet tap sets the current item
-// aside for later (a `deferred` disposition) and refreshes so the next item
-// comes forward. No confirm step — defer is reversible and low-stakes, so a
-// two-step gate would add friction to a gentle escape (TONE.md, commitment 4).
+// aside for later (a `deferred` disposition). No confirm step — defer is
+// reversible and low-stakes, so a two-step gate would add friction to a gentle
+// escape (TONE.md, commitment 4).
 //
 // `submit` selects how a defer commits:
-//   - session: the live app path — POST a `deferred` disposition, then refresh.
-//     collectionId MUST be the ULID collection.id, not the slug: the dispositions
-//     API authorizes the item then asserts item.collectionId === params.id, which
-//     is always a ULID — a slug there 404s.
-//   - local: the /welcome walkthrough — no fetch; call onDecision() synchronously.
-//     This deliberately bypasses AsyncActionButton, whose success path never
-//     resets `busy` (correct for a one-shot session submit, but a reused local
-//     instance would soft-lock disabled after one tap). The local button stays
-//     enabled and keeps its "Not yet" label across taps.
+//   - session: the live app path — the tap enqueues a `deferred` disposition
+//     through the TriageUndoProvider's queue seam (Epic P, spec §3.3): no fetch,
+//     no refresh on the tap path; the flusher delivers it and the item rests at
+//     the tail. Requires a mounted TriageUndoProvider (which owns collectionId).
+//   - local: the /welcome walkthrough — no queue, no network; call onDecision()
+//     synchronously. The button stays enabled and keeps its "Not yet" label
+//     across taps.
 type DeferControlProps = {
-  submit:
-    | { kind: "session"; collectionId: string }
-    | { kind: "local"; onDecision: () =&gt; void };
+  submit: { kind: "session" } | { kind: "local"; onDecision: () =&gt; void };
   itemId: string;
 };
 &nbsp;
@@ -230,7 +211,9 @@ const TITLE = "I'll come back to this";
 const ARIA_LABEL = "Not yet — I'll come back to this";
 &nbsp;
 export function DeferControl({ submit, itemId }: DeferControlProps) {
-  const router = useRouter();
+  // Non-throwing read: local mode renders with no provider mounted. Session
+  // mode still requires one — asserted below, same message as the hook's.
+  const ctx = useOptionalTriageUndo();
 &nbsp;
   if (submit.kind === "local") {
     return (
@@ -246,22 +229,18 @@ export function DeferControl({ submit, itemId }: DeferControlProps) {
     );
   }
 &nbsp;
-  const { collectionId } = submit;
+  if (!ctx) throw new Error("useTriageUndo must be used within a TriageUndoProvider");
+&nbsp;
   return (
-    &lt;AsyncActionButton
-      label={LABEL}
+    &lt;Button
+      type="button"
+      variant="ghost"
       title={TITLE}
-      ariaLabel={ARIA_LABEL}
-      action={async () =&gt; {
-        const res = await fetch(`/api/collections/${collectionId}/dispositions`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ itemId, disposition: "deferred" }),
-        });
-        if (!res.ok) throw new Error("defer failed");
-        router.refresh(); // brings the next item forward; this one resurfaces later
-      }}
-    /&gt;
+      aria-label={ARIA_LABEL}
+      onClick={() =&gt; void ctx.defer(itemId)}
+    &gt;
+      {LABEL}
+    &lt;/Button&gt;
   );
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -271,7 +250,7 @@ export function DeferControl({ submit, itemId }: DeferControlProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-06T23:53:32.867Z
+                at 2026-07-08T23:47:39.253Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

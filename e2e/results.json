@@ -18,24 +18,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/8e8e3036862021bc41469ea14c7b31cf9f212816",
-        "commitHash": "8e8e3036862021bc41469ea14c7b31cf9f212816",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28831197338"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9607b6e972eee647bd374716c85101eedc849c80",
+        "commitHash": "9607b6e972eee647bd374716c85101eedc849c80",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28983411967"
       },
       "gitCommit": {
-        "shortHash": "8e8e303",
-        "hash": "8e8e3036862021bc41469ea14c7b31cf9f212816",
-        "subject": "feat(onboarding): rebuild /welcome to teach the real app (six-beat walkthrough) (#304)",
-        "body": "feat(onboarding): rebuild /welcome to teach the real app (six-beat walkthrough) (#304)\n\n* test(e2e): cover better-auth login page\n\n* docs: walkthrough fidelity design + plan (adversarially reviewed spec — no code)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(walkthrough): shared round teaching copy, person-side hub explainers (TONE fix)\n\n* feat(sorting): DecisionControls submit union (session | local) + shared triage decisions\n\n* feat(sorting): DeferControl submit union; synchronous local mode\n\n* feat(sorting): SetAsideButton optional undo context + local mode (no provider needed)\n\n* feat(sorting): CompareChoice submit union; shared compare sub-line; local-mode guard\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sorting): pin session-mode posthog.capture args on CompareChoice (byte-for-byte guard)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(onboarding): typed triage/compare outcomes; buildStanding handles tie/skip/defer/set-aside\n\n* feat(onboarding): purpose journey line + handoff expectations\n\n* feat(onboarding): triage beat renders real controls in local mode\n\n* feat(onboarding): compare beat renders real CompareChoice with tie/skip\n\n* feat(onboarding): standing mirrors real results; new refine beat\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(a11y): min-h-11 touch-target floor on CompareChoice cards (walkthrough exercises real card)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(onboarding): six-beat shell with typed outcomes, focus-on-advance, aria-live\n\n* fix(onboarding): exit walkthrough via full-document nav so the dismissal cookie is honored (App Router cache replayed the /collections→/welcome redirect; purses-etv0)\n\n* test(e2e): welcome walkthrough — gate redirect, full tap-through, dismissal paths\n\n* refactor(onboarding): whole-branch review — h1 per beat, drop dead empty-ranked branch + BEAT_ORDER, decouple aria-live/focus, fidelity copy + type-safety\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graph): refresh graphify graph for walkthrough-fidelity\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
+        "shortHash": "9607b6e",
+        "hash": "9607b6e972eee647bd374716c85101eedc849c80",
+        "subject": "feat(sorting): Epic P — batched decision pipeline (no tap waits on the database) (#307)",
+        "body": "feat(sorting): Epic P — batched decision pipeline (no tap waits on the database) (#307)\n\n* docs(specs): sort-unification parent spec (rev 3) + Epic P batched-decisions mechanism spec\n\nParent spec adversarially reviewed (5 personas) with findings folded; rev 3 folds\nthe user's timer-default decision (timed 2m default, 'No timer' first-class).\nEpic P spec pending its own adversarial review.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* docs(specs): fold Epic P adversarial review (34 findings → 20 edits) + timer-default decision\n\nEpic P spec rev 2: ItemId schema fix (block — bare-ULID regex would have 400'd\nevery real batch), ON CONFLICT duplicate handling (25P02 fix), DB now() as\nordering authority, disposition-409 split, What-moved recap from merged\nclient+server data, selectTriageQueue defined, gate mount/timeout contract,\nWeb-Lock cross-tab single-flight, storage GC. Parent spec rev 3 + errata.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* docs(plans): Epic P batched-decisions implementation plan (17 tasks + deferred e2e; ambiguities resolved)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(ordering): one shared (createdAt,id) comparator for both event consumers\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(id): generateOrderedIdFactory — monotonic event ids preserving prefix+lowercase\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(batch): shared Zod batch schema (repo-format ids pinned) + stream-budget body reader\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(batch): POST /api/sessions/[id]/decisions/batch — gates, stream body cap, whole-batch validation\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(batch): semantic validation, idempotency, ON CONFLICT dedupe, recompute predicate, analytics\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* refactor(decisions): drop unreachable 23505 catch-and-re-read (advisory lock serializes; re-read would 25P02)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(queue): versioned curator-keyed pending/quarantine storage with GC + quota fallback\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(flusher): single-flight Web-Lock drain engine with ordered runs, backoff, and failure taxonomy\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* fix(epicP): stage C review fixes\n\n- ackId: write the NUL separator as the \\u0000 escape instead of a raw\n  0x00 byte so git treats decisionFlusher.ts as text (diffs/blame work);\n  the runtime string is byte-identical.\n- handleBatchFailure 400: drop the dead re-validation filter (everything\n  sent passed BatchEntrySchema in the same lock iteration, so it always\n  yielded []) and quarantine the sent chunk directly — the documented,\n  tested behavior.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(triage): selectTriageQueue — whole eligible remainder; selectTriageItem = first entry\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(triage): optimistic client round — queue advance, one round-end refresh, frozen recap merge\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(triage): undo-as-revisit — standing answer shown, latest-wins supersede, disposition gating\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(notices): one quiet person-side line for rejected/quarantined answers\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(dispositions): Not mine / Not yet ride the decision queue — network leaves the tap path\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(compare): submit as idempotent batch-of-1 through the queue/flusher — never a bare fetch\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(recovery): PendingDecisionsGate — drain-then-reveal with bounded catch-up + storage GC\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(sessions): shared status-PATCH helper — non-blocking pause pre-flush, strict flush-then-complete\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* chore(graphify): refresh committed graph for tasks 14-16\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* chore(bench): 50 single POSTs vs 1x50 batch amortization benchmark + API docs\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* docs(architecture): decision 27 — batched decision pipeline (Epic P)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph post doc-sync\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* fix(screenshots): welcome beat-4 waits for the real h1 (drift from #304 walkthrough rebuild)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* fix(e2e): batch-route decision waits + bring-back un-ends an exhausted round (Epic P)\n\nEpic P moved compare and triage decisions onto the queue/flusher, so the\nPOST lands at …/decisions/batch, not …/decisions. Three e2e specs still\nawaited the superseded single-decision route and timed out at 30s:\n\n- compare.spec / sort-session.spec: point waitForResponse at the batch route.\n- not-yet-defer.spec: a tap no longer emits a per-tap POST; advance on the UI\n  (next card focuses or the deferred item resurfaces) and assert one batch\n  flush after both taps. sort-session also arms the round-end RSC-refresh\n  waiter before the tap so it doesn't race the next page.goto().\n\nAlso fixes a real product bug surfaced by the flow (TDD, 4 tests): \"Bring back\"\nafter a queue-exhausted round left the recap on screen — a dead-end escape.\nTriageRound now un-ends a queue-exhausted round on restore while leaving a\ntimer-expired round ended (the time box is the boundary).\n\nThe not-mine-set-aside failure in CI was worker-restart collateral from the\ncompare timeout; it passes once the timeout is gone.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_016Ut8X3F3dNUGeJGAjPESvb\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1783381740000
+          "time": 1783554131000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1783381740000
+          "time": 1783554131000
         },
         "branch": "main"
       },
@@ -49,24 +49,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/8e8e3036862021bc41469ea14c7b31cf9f212816",
-            "commitHash": "8e8e3036862021bc41469ea14c7b31cf9f212816",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28831197338"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9607b6e972eee647bd374716c85101eedc849c80",
+            "commitHash": "9607b6e972eee647bd374716c85101eedc849c80",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28983411967"
           },
           "gitCommit": {
-            "shortHash": "8e8e303",
-            "hash": "8e8e3036862021bc41469ea14c7b31cf9f212816",
-            "subject": "feat(onboarding): rebuild /welcome to teach the real app (six-beat walkthrough) (#304)",
-            "body": "feat(onboarding): rebuild /welcome to teach the real app (six-beat walkthrough) (#304)\n\n* test(e2e): cover better-auth login page\n\n* docs: walkthrough fidelity design + plan (adversarially reviewed spec — no code)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(walkthrough): shared round teaching copy, person-side hub explainers (TONE fix)\n\n* feat(sorting): DecisionControls submit union (session | local) + shared triage decisions\n\n* feat(sorting): DeferControl submit union; synchronous local mode\n\n* feat(sorting): SetAsideButton optional undo context + local mode (no provider needed)\n\n* feat(sorting): CompareChoice submit union; shared compare sub-line; local-mode guard\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sorting): pin session-mode posthog.capture args on CompareChoice (byte-for-byte guard)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(onboarding): typed triage/compare outcomes; buildStanding handles tie/skip/defer/set-aside\n\n* feat(onboarding): purpose journey line + handoff expectations\n\n* feat(onboarding): triage beat renders real controls in local mode\n\n* feat(onboarding): compare beat renders real CompareChoice with tie/skip\n\n* feat(onboarding): standing mirrors real results; new refine beat\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(a11y): min-h-11 touch-target floor on CompareChoice cards (walkthrough exercises real card)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(onboarding): six-beat shell with typed outcomes, focus-on-advance, aria-live\n\n* fix(onboarding): exit walkthrough via full-document nav so the dismissal cookie is honored (App Router cache replayed the /collections→/welcome redirect; purses-etv0)\n\n* test(e2e): welcome walkthrough — gate redirect, full tap-through, dismissal paths\n\n* refactor(onboarding): whole-branch review — h1 per beat, drop dead empty-ranked branch + BEAT_ORDER, decouple aria-live/focus, fidelity copy + type-safety\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graph): refresh graphify graph for walkthrough-fidelity\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
+            "shortHash": "9607b6e",
+            "hash": "9607b6e972eee647bd374716c85101eedc849c80",
+            "subject": "feat(sorting): Epic P — batched decision pipeline (no tap waits on the database) (#307)",
+            "body": "feat(sorting): Epic P — batched decision pipeline (no tap waits on the database) (#307)\n\n* docs(specs): sort-unification parent spec (rev 3) + Epic P batched-decisions mechanism spec\n\nParent spec adversarially reviewed (5 personas) with findings folded; rev 3 folds\nthe user's timer-default decision (timed 2m default, 'No timer' first-class).\nEpic P spec pending its own adversarial review.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* docs(specs): fold Epic P adversarial review (34 findings → 20 edits) + timer-default decision\n\nEpic P spec rev 2: ItemId schema fix (block — bare-ULID regex would have 400'd\nevery real batch), ON CONFLICT duplicate handling (25P02 fix), DB now() as\nordering authority, disposition-409 split, What-moved recap from merged\nclient+server data, selectTriageQueue defined, gate mount/timeout contract,\nWeb-Lock cross-tab single-flight, storage GC. Parent spec rev 3 + errata.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* docs(plans): Epic P batched-decisions implementation plan (17 tasks + deferred e2e; ambiguities resolved)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(ordering): one shared (createdAt,id) comparator for both event consumers\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(id): generateOrderedIdFactory — monotonic event ids preserving prefix+lowercase\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(batch): shared Zod batch schema (repo-format ids pinned) + stream-budget body reader\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(batch): POST /api/sessions/[id]/decisions/batch — gates, stream body cap, whole-batch validation\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(batch): semantic validation, idempotency, ON CONFLICT dedupe, recompute predicate, analytics\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* refactor(decisions): drop unreachable 23505 catch-and-re-read (advisory lock serializes; re-read would 25P02)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(queue): versioned curator-keyed pending/quarantine storage with GC + quota fallback\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(flusher): single-flight Web-Lock drain engine with ordered runs, backoff, and failure taxonomy\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* fix(epicP): stage C review fixes\n\n- ackId: write the NUL separator as the \\u0000 escape instead of a raw\n  0x00 byte so git treats decisionFlusher.ts as text (diffs/blame work);\n  the runtime string is byte-identical.\n- handleBatchFailure 400: drop the dead re-validation filter (everything\n  sent passed BatchEntrySchema in the same lock iteration, so it always\n  yielded []) and quarantine the sent chunk directly — the documented,\n  tested behavior.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(triage): selectTriageQueue — whole eligible remainder; selectTriageItem = first entry\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(triage): optimistic client round — queue advance, one round-end refresh, frozen recap merge\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(triage): undo-as-revisit — standing answer shown, latest-wins supersede, disposition gating\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(notices): one quiet person-side line for rejected/quarantined answers\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(dispositions): Not mine / Not yet ride the decision queue — network leaves the tap path\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(compare): submit as idempotent batch-of-1 through the queue/flusher — never a bare fetch\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(recovery): PendingDecisionsGate — drain-then-reveal with bounded catch-up + storage GC\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(sessions): shared status-PATCH helper — non-blocking pause pre-flush, strict flush-then-complete\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* chore(graphify): refresh committed graph for tasks 14-16\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* chore(bench): 50 single POSTs vs 1x50 batch amortization benchmark + API docs\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* docs(architecture): decision 27 — batched decision pipeline (Epic P)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph post doc-sync\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* fix(screenshots): welcome beat-4 waits for the real h1 (drift from #304 walkthrough rebuild)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* fix(e2e): batch-route decision waits + bring-back un-ends an exhausted round (Epic P)\n\nEpic P moved compare and triage decisions onto the queue/flusher, so the\nPOST lands at …/decisions/batch, not …/decisions. Three e2e specs still\nawaited the superseded single-decision route and timed out at 30s:\n\n- compare.spec / sort-session.spec: point waitForResponse at the batch route.\n- not-yet-defer.spec: a tap no longer emits a per-tap POST; advance on the UI\n  (next card focuses or the deferred item resurfaces) and assert one batch\n  flush after both taps. sort-session also arms the round-end RSC-refresh\n  waiter before the tap so it doesn't race the next page.goto().\n\nAlso fixes a real product bug surfaced by the flow (TDD, 4 tests): \"Bring back\"\nafter a queue-exhausted round left the recap on screen — a dead-end escape.\nTriageRound now un-ends a queue-exhausted round on restore while leaving a\ntimer-expired round ended (the time box is the boundary).\n\nThe not-mine-set-aside failure in CI was worker-restart collateral from the\ncompare timeout; it passes once the timeout is gone.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_016Ut8X3F3dNUGeJGAjPESvb\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783381740000
+              "time": 1783554131000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783381740000
+              "time": 1783554131000
             },
             "branch": "main"
           },
@@ -87,24 +87,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/8e8e3036862021bc41469ea14c7b31cf9f212816",
-            "commitHash": "8e8e3036862021bc41469ea14c7b31cf9f212816",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28831197338"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9607b6e972eee647bd374716c85101eedc849c80",
+            "commitHash": "9607b6e972eee647bd374716c85101eedc849c80",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28983411967"
           },
           "gitCommit": {
-            "shortHash": "8e8e303",
-            "hash": "8e8e3036862021bc41469ea14c7b31cf9f212816",
-            "subject": "feat(onboarding): rebuild /welcome to teach the real app (six-beat walkthrough) (#304)",
-            "body": "feat(onboarding): rebuild /welcome to teach the real app (six-beat walkthrough) (#304)\n\n* test(e2e): cover better-auth login page\n\n* docs: walkthrough fidelity design + plan (adversarially reviewed spec — no code)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(walkthrough): shared round teaching copy, person-side hub explainers (TONE fix)\n\n* feat(sorting): DecisionControls submit union (session | local) + shared triage decisions\n\n* feat(sorting): DeferControl submit union; synchronous local mode\n\n* feat(sorting): SetAsideButton optional undo context + local mode (no provider needed)\n\n* feat(sorting): CompareChoice submit union; shared compare sub-line; local-mode guard\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sorting): pin session-mode posthog.capture args on CompareChoice (byte-for-byte guard)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(onboarding): typed triage/compare outcomes; buildStanding handles tie/skip/defer/set-aside\n\n* feat(onboarding): purpose journey line + handoff expectations\n\n* feat(onboarding): triage beat renders real controls in local mode\n\n* feat(onboarding): compare beat renders real CompareChoice with tie/skip\n\n* feat(onboarding): standing mirrors real results; new refine beat\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(a11y): min-h-11 touch-target floor on CompareChoice cards (walkthrough exercises real card)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(onboarding): six-beat shell with typed outcomes, focus-on-advance, aria-live\n\n* fix(onboarding): exit walkthrough via full-document nav so the dismissal cookie is honored (App Router cache replayed the /collections→/welcome redirect; purses-etv0)\n\n* test(e2e): welcome walkthrough — gate redirect, full tap-through, dismissal paths\n\n* refactor(onboarding): whole-branch review — h1 per beat, drop dead empty-ranked branch + BEAT_ORDER, decouple aria-live/focus, fidelity copy + type-safety\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graph): refresh graphify graph for walkthrough-fidelity\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
+            "shortHash": "9607b6e",
+            "hash": "9607b6e972eee647bd374716c85101eedc849c80",
+            "subject": "feat(sorting): Epic P — batched decision pipeline (no tap waits on the database) (#307)",
+            "body": "feat(sorting): Epic P — batched decision pipeline (no tap waits on the database) (#307)\n\n* docs(specs): sort-unification parent spec (rev 3) + Epic P batched-decisions mechanism spec\n\nParent spec adversarially reviewed (5 personas) with findings folded; rev 3 folds\nthe user's timer-default decision (timed 2m default, 'No timer' first-class).\nEpic P spec pending its own adversarial review.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* docs(specs): fold Epic P adversarial review (34 findings → 20 edits) + timer-default decision\n\nEpic P spec rev 2: ItemId schema fix (block — bare-ULID regex would have 400'd\nevery real batch), ON CONFLICT duplicate handling (25P02 fix), DB now() as\nordering authority, disposition-409 split, What-moved recap from merged\nclient+server data, selectTriageQueue defined, gate mount/timeout contract,\nWeb-Lock cross-tab single-flight, storage GC. Parent spec rev 3 + errata.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* docs(plans): Epic P batched-decisions implementation plan (17 tasks + deferred e2e; ambiguities resolved)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(ordering): one shared (createdAt,id) comparator for both event consumers\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(id): generateOrderedIdFactory — monotonic event ids preserving prefix+lowercase\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(batch): shared Zod batch schema (repo-format ids pinned) + stream-budget body reader\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(batch): POST /api/sessions/[id]/decisions/batch — gates, stream body cap, whole-batch validation\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(batch): semantic validation, idempotency, ON CONFLICT dedupe, recompute predicate, analytics\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* refactor(decisions): drop unreachable 23505 catch-and-re-read (advisory lock serializes; re-read would 25P02)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(queue): versioned curator-keyed pending/quarantine storage with GC + quota fallback\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(flusher): single-flight Web-Lock drain engine with ordered runs, backoff, and failure taxonomy\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* fix(epicP): stage C review fixes\n\n- ackId: write the NUL separator as the \\u0000 escape instead of a raw\n  0x00 byte so git treats decisionFlusher.ts as text (diffs/blame work);\n  the runtime string is byte-identical.\n- handleBatchFailure 400: drop the dead re-validation filter (everything\n  sent passed BatchEntrySchema in the same lock iteration, so it always\n  yielded []) and quarantine the sent chunk directly — the documented,\n  tested behavior.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(triage): selectTriageQueue — whole eligible remainder; selectTriageItem = first entry\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(triage): optimistic client round — queue advance, one round-end refresh, frozen recap merge\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(triage): undo-as-revisit — standing answer shown, latest-wins supersede, disposition gating\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(notices): one quiet person-side line for rejected/quarantined answers\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(dispositions): Not mine / Not yet ride the decision queue — network leaves the tap path\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(compare): submit as idempotent batch-of-1 through the queue/flusher — never a bare fetch\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(recovery): PendingDecisionsGate — drain-then-reveal with bounded catch-up + storage GC\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(sessions): shared status-PATCH helper — non-blocking pause pre-flush, strict flush-then-complete\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* chore(graphify): refresh committed graph for tasks 14-16\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* chore(bench): 50 single POSTs vs 1x50 batch amortization benchmark + API docs\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* docs(architecture): decision 27 — batched decision pipeline (Epic P)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph post doc-sync\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* fix(screenshots): welcome beat-4 waits for the real h1 (drift from #304 walkthrough rebuild)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* fix(e2e): batch-route decision waits + bring-back un-ends an exhausted round (Epic P)\n\nEpic P moved compare and triage decisions onto the queue/flusher, so the\nPOST lands at …/decisions/batch, not …/decisions. Three e2e specs still\nawaited the superseded single-decision route and timed out at 30s:\n\n- compare.spec / sort-session.spec: point waitForResponse at the batch route.\n- not-yet-defer.spec: a tap no longer emits a per-tap POST; advance on the UI\n  (next card focuses or the deferred item resurfaces) and assert one batch\n  flush after both taps. sort-session also arms the round-end RSC-refresh\n  waiter before the tap so it doesn't race the next page.goto().\n\nAlso fixes a real product bug surfaced by the flow (TDD, 4 tests): \"Bring back\"\nafter a queue-exhausted round left the recap on screen — a dead-end escape.\nTriageRound now un-ends a queue-exhausted round on restore while leaving a\ntimer-expired round ended (the time box is the boundary).\n\nThe not-mine-set-aside failure in CI was worker-restart collateral from the\ncompare timeout; it passes once the timeout is gone.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_016Ut8X3F3dNUGeJGAjPESvb\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783381740000
+              "time": 1783554131000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783381740000
+              "time": 1783554131000
             },
             "branch": "main"
           },
@@ -127,24 +127,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/8e8e3036862021bc41469ea14c7b31cf9f212816",
-            "commitHash": "8e8e3036862021bc41469ea14c7b31cf9f212816",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28831197338"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9607b6e972eee647bd374716c85101eedc849c80",
+            "commitHash": "9607b6e972eee647bd374716c85101eedc849c80",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28983411967"
           },
           "gitCommit": {
-            "shortHash": "8e8e303",
-            "hash": "8e8e3036862021bc41469ea14c7b31cf9f212816",
-            "subject": "feat(onboarding): rebuild /welcome to teach the real app (six-beat walkthrough) (#304)",
-            "body": "feat(onboarding): rebuild /welcome to teach the real app (six-beat walkthrough) (#304)\n\n* test(e2e): cover better-auth login page\n\n* docs: walkthrough fidelity design + plan (adversarially reviewed spec — no code)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(walkthrough): shared round teaching copy, person-side hub explainers (TONE fix)\n\n* feat(sorting): DecisionControls submit union (session | local) + shared triage decisions\n\n* feat(sorting): DeferControl submit union; synchronous local mode\n\n* feat(sorting): SetAsideButton optional undo context + local mode (no provider needed)\n\n* feat(sorting): CompareChoice submit union; shared compare sub-line; local-mode guard\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sorting): pin session-mode posthog.capture args on CompareChoice (byte-for-byte guard)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(onboarding): typed triage/compare outcomes; buildStanding handles tie/skip/defer/set-aside\n\n* feat(onboarding): purpose journey line + handoff expectations\n\n* feat(onboarding): triage beat renders real controls in local mode\n\n* feat(onboarding): compare beat renders real CompareChoice with tie/skip\n\n* feat(onboarding): standing mirrors real results; new refine beat\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(a11y): min-h-11 touch-target floor on CompareChoice cards (walkthrough exercises real card)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(onboarding): six-beat shell with typed outcomes, focus-on-advance, aria-live\n\n* fix(onboarding): exit walkthrough via full-document nav so the dismissal cookie is honored (App Router cache replayed the /collections→/welcome redirect; purses-etv0)\n\n* test(e2e): welcome walkthrough — gate redirect, full tap-through, dismissal paths\n\n* refactor(onboarding): whole-branch review — h1 per beat, drop dead empty-ranked branch + BEAT_ORDER, decouple aria-live/focus, fidelity copy + type-safety\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graph): refresh graphify graph for walkthrough-fidelity\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
+            "shortHash": "9607b6e",
+            "hash": "9607b6e972eee647bd374716c85101eedc849c80",
+            "subject": "feat(sorting): Epic P — batched decision pipeline (no tap waits on the database) (#307)",
+            "body": "feat(sorting): Epic P — batched decision pipeline (no tap waits on the database) (#307)\n\n* docs(specs): sort-unification parent spec (rev 3) + Epic P batched-decisions mechanism spec\n\nParent spec adversarially reviewed (5 personas) with findings folded; rev 3 folds\nthe user's timer-default decision (timed 2m default, 'No timer' first-class).\nEpic P spec pending its own adversarial review.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* docs(specs): fold Epic P adversarial review (34 findings → 20 edits) + timer-default decision\n\nEpic P spec rev 2: ItemId schema fix (block — bare-ULID regex would have 400'd\nevery real batch), ON CONFLICT duplicate handling (25P02 fix), DB now() as\nordering authority, disposition-409 split, What-moved recap from merged\nclient+server data, selectTriageQueue defined, gate mount/timeout contract,\nWeb-Lock cross-tab single-flight, storage GC. Parent spec rev 3 + errata.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* docs(plans): Epic P batched-decisions implementation plan (17 tasks + deferred e2e; ambiguities resolved)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(ordering): one shared (createdAt,id) comparator for both event consumers\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(id): generateOrderedIdFactory — monotonic event ids preserving prefix+lowercase\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(batch): shared Zod batch schema (repo-format ids pinned) + stream-budget body reader\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(batch): POST /api/sessions/[id]/decisions/batch — gates, stream body cap, whole-batch validation\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(batch): semantic validation, idempotency, ON CONFLICT dedupe, recompute predicate, analytics\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* refactor(decisions): drop unreachable 23505 catch-and-re-read (advisory lock serializes; re-read would 25P02)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(queue): versioned curator-keyed pending/quarantine storage with GC + quota fallback\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(flusher): single-flight Web-Lock drain engine with ordered runs, backoff, and failure taxonomy\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* fix(epicP): stage C review fixes\n\n- ackId: write the NUL separator as the \\u0000 escape instead of a raw\n  0x00 byte so git treats decisionFlusher.ts as text (diffs/blame work);\n  the runtime string is byte-identical.\n- handleBatchFailure 400: drop the dead re-validation filter (everything\n  sent passed BatchEntrySchema in the same lock iteration, so it always\n  yielded []) and quarantine the sent chunk directly — the documented,\n  tested behavior.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(triage): selectTriageQueue — whole eligible remainder; selectTriageItem = first entry\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(triage): optimistic client round — queue advance, one round-end refresh, frozen recap merge\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(triage): undo-as-revisit — standing answer shown, latest-wins supersede, disposition gating\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(notices): one quiet person-side line for rejected/quarantined answers\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(dispositions): Not mine / Not yet ride the decision queue — network leaves the tap path\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(compare): submit as idempotent batch-of-1 through the queue/flusher — never a bare fetch\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(recovery): PendingDecisionsGate — drain-then-reveal with bounded catch-up + storage GC\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(sessions): shared status-PATCH helper — non-blocking pause pre-flush, strict flush-then-complete\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* chore(graphify): refresh committed graph for tasks 14-16\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* chore(bench): 50 single POSTs vs 1x50 batch amortization benchmark + API docs\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* docs(architecture): decision 27 — batched decision pipeline (Epic P)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph post doc-sync\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* fix(screenshots): welcome beat-4 waits for the real h1 (drift from #304 walkthrough rebuild)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* fix(e2e): batch-route decision waits + bring-back un-ends an exhausted round (Epic P)\n\nEpic P moved compare and triage decisions onto the queue/flusher, so the\nPOST lands at …/decisions/batch, not …/decisions. Three e2e specs still\nawaited the superseded single-decision route and timed out at 30s:\n\n- compare.spec / sort-session.spec: point waitForResponse at the batch route.\n- not-yet-defer.spec: a tap no longer emits a per-tap POST; advance on the UI\n  (next card focuses or the deferred item resurfaces) and assert one batch\n  flush after both taps. sort-session also arms the round-end RSC-refresh\n  waiter before the tap so it doesn't race the next page.goto().\n\nAlso fixes a real product bug surfaced by the flow (TDD, 4 tests): \"Bring back\"\nafter a queue-exhausted round left the recap on screen — a dead-end escape.\nTriageRound now un-ends a queue-exhausted round on restore while leaving a\ntimer-expired round ended (the time box is the boundary).\n\nThe not-mine-set-aside failure in CI was worker-restart collateral from the\ncompare timeout; it passes once the timeout is gone.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_016Ut8X3F3dNUGeJGAjPESvb\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783381740000
+              "time": 1783554131000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783381740000
+              "time": 1783554131000
             },
             "branch": "main"
           },
@@ -167,24 +167,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/8e8e3036862021bc41469ea14c7b31cf9f212816",
-            "commitHash": "8e8e3036862021bc41469ea14c7b31cf9f212816",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28831197338"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/9607b6e972eee647bd374716c85101eedc849c80",
+            "commitHash": "9607b6e972eee647bd374716c85101eedc849c80",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/28983411967"
           },
           "gitCommit": {
-            "shortHash": "8e8e303",
-            "hash": "8e8e3036862021bc41469ea14c7b31cf9f212816",
-            "subject": "feat(onboarding): rebuild /welcome to teach the real app (six-beat walkthrough) (#304)",
-            "body": "feat(onboarding): rebuild /welcome to teach the real app (six-beat walkthrough) (#304)\n\n* test(e2e): cover better-auth login page\n\n* docs: walkthrough fidelity design + plan (adversarially reviewed spec — no code)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(walkthrough): shared round teaching copy, person-side hub explainers (TONE fix)\n\n* feat(sorting): DecisionControls submit union (session | local) + shared triage decisions\n\n* feat(sorting): DeferControl submit union; synchronous local mode\n\n* feat(sorting): SetAsideButton optional undo context + local mode (no provider needed)\n\n* feat(sorting): CompareChoice submit union; shared compare sub-line; local-mode guard\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* test(sorting): pin session-mode posthog.capture args on CompareChoice (byte-for-byte guard)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(onboarding): typed triage/compare outcomes; buildStanding handles tie/skip/defer/set-aside\n\n* feat(onboarding): purpose journey line + handoff expectations\n\n* feat(onboarding): triage beat renders real controls in local mode\n\n* feat(onboarding): compare beat renders real CompareChoice with tie/skip\n\n* feat(onboarding): standing mirrors real results; new refine beat\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix(a11y): min-h-11 touch-target floor on CompareChoice cards (walkthrough exercises real card)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* feat(onboarding): six-beat shell with typed outcomes, focus-on-advance, aria-live\n\n* fix(onboarding): exit walkthrough via full-document nav so the dismissal cookie is honored (App Router cache replayed the /collections→/welcome redirect; purses-etv0)\n\n* test(e2e): welcome walkthrough — gate redirect, full tap-through, dismissal paths\n\n* refactor(onboarding): whole-branch review — h1 per beat, drop dead empty-ranked branch + BEAT_ORDER, decouple aria-live/focus, fidelity copy + type-safety\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* chore(graph): refresh graphify graph for walkthrough-fidelity\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
+            "shortHash": "9607b6e",
+            "hash": "9607b6e972eee647bd374716c85101eedc849c80",
+            "subject": "feat(sorting): Epic P — batched decision pipeline (no tap waits on the database) (#307)",
+            "body": "feat(sorting): Epic P — batched decision pipeline (no tap waits on the database) (#307)\n\n* docs(specs): sort-unification parent spec (rev 3) + Epic P batched-decisions mechanism spec\n\nParent spec adversarially reviewed (5 personas) with findings folded; rev 3 folds\nthe user's timer-default decision (timed 2m default, 'No timer' first-class).\nEpic P spec pending its own adversarial review.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* docs(specs): fold Epic P adversarial review (34 findings → 20 edits) + timer-default decision\n\nEpic P spec rev 2: ItemId schema fix (block — bare-ULID regex would have 400'd\nevery real batch), ON CONFLICT duplicate handling (25P02 fix), DB now() as\nordering authority, disposition-409 split, What-moved recap from merged\nclient+server data, selectTriageQueue defined, gate mount/timeout contract,\nWeb-Lock cross-tab single-flight, storage GC. Parent spec rev 3 + errata.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* docs(plans): Epic P batched-decisions implementation plan (17 tasks + deferred e2e; ambiguities resolved)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(ordering): one shared (createdAt,id) comparator for both event consumers\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(id): generateOrderedIdFactory — monotonic event ids preserving prefix+lowercase\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(batch): shared Zod batch schema (repo-format ids pinned) + stream-budget body reader\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(batch): POST /api/sessions/[id]/decisions/batch — gates, stream body cap, whole-batch validation\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(batch): semantic validation, idempotency, ON CONFLICT dedupe, recompute predicate, analytics\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* refactor(decisions): drop unreachable 23505 catch-and-re-read (advisory lock serializes; re-read would 25P02)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(queue): versioned curator-keyed pending/quarantine storage with GC + quota fallback\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(flusher): single-flight Web-Lock drain engine with ordered runs, backoff, and failure taxonomy\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* fix(epicP): stage C review fixes\n\n- ackId: write the NUL separator as the \\u0000 escape instead of a raw\n  0x00 byte so git treats decisionFlusher.ts as text (diffs/blame work);\n  the runtime string is byte-identical.\n- handleBatchFailure 400: drop the dead re-validation filter (everything\n  sent passed BatchEntrySchema in the same lock iteration, so it always\n  yielded []) and quarantine the sent chunk directly — the documented,\n  tested behavior.\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(triage): selectTriageQueue — whole eligible remainder; selectTriageItem = first entry\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(triage): optimistic client round — queue advance, one round-end refresh, frozen recap merge\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(triage): undo-as-revisit — standing answer shown, latest-wins supersede, disposition gating\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(notices): one quiet person-side line for rejected/quarantined answers\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(dispositions): Not mine / Not yet ride the decision queue — network leaves the tap path\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(compare): submit as idempotent batch-of-1 through the queue/flusher — never a bare fetch\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(recovery): PendingDecisionsGate — drain-then-reveal with bounded catch-up + storage GC\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* feat(sessions): shared status-PATCH helper — non-blocking pause pre-flush, strict flush-then-complete\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* chore(graphify): refresh committed graph for tasks 14-16\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* chore(bench): 50 single POSTs vs 1x50 batch amortization benchmark + API docs\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* docs(architecture): decision 27 — batched decision pipeline (Epic P)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* chore(graphify): refresh graph post doc-sync\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* fix(screenshots): welcome beat-4 waits for the real h1 (drift from #304 walkthrough rebuild)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\n\n* fix(e2e): batch-route decision waits + bring-back un-ends an exhausted round (Epic P)\n\nEpic P moved compare and triage decisions onto the queue/flusher, so the\nPOST lands at …/decisions/batch, not …/decisions. Three e2e specs still\nawaited the superseded single-decision route and timed out at 30s:\n\n- compare.spec / sort-session.spec: point waitForResponse at the batch route.\n- not-yet-defer.spec: a tap no longer emits a per-tap POST; advance on the UI\n  (next card focuses or the deferred item resurfaces) and assert one batch\n  flush after both taps. sort-session also arms the round-end RSC-refresh\n  waiter before the tap so it doesn't race the next page.goto().\n\nAlso fixes a real product bug surfaced by the flow (TDD, 4 tests): \"Bring back\"\nafter a queue-exhausted round left the recap on screen — a dead-end escape.\nTriageRound now un-ends a queue-exhausted round on restore while leaving a\ntimer-expired round ended (the time box is the boundary).\n\nThe not-mine-set-aside failure in CI was worker-restart collateral from the\ncompare timeout; it passes once the timeout is gone.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_016Ut8X3F3dNUGeJGAjPESvb\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783381740000
+              "time": 1783554131000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783381740000
+              "time": 1783554131000
             },
             "branch": "main"
           },
@@ -267,12 +267,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 461,
+                  "duration": 442,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:52:21.314Z",
+                  "startTime": "2026-07-08T23:45:06.669Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -309,7 +309,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 24316,
+                  "duration": 20665,
                   "errors": [],
                   "stdout": [
                     {
@@ -339,7 +339,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:52:22.543Z",
+                  "startTime": "2026-07-08T23:45:07.867Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -368,7 +368,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 17148,
+                  "duration": 16068,
                   "errors": [],
                   "stdout": [
                     {
@@ -398,7 +398,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:52:48.007Z",
+                  "startTime": "2026-07-08T23:45:29.451Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -427,7 +427,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2945,
+                  "duration": 2892,
                   "errors": [],
                   "stdout": [
                     {
@@ -439,7 +439,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:53:05.185Z",
+                  "startTime": "2026-07-08T23:45:45.544Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -468,7 +468,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2865,
+                  "duration": 2746,
                   "errors": [],
                   "stdout": [
                     {
@@ -480,7 +480,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:53:08.149Z",
+                  "startTime": "2026-07-08T23:45:48.458Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -516,15 +516,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 671,
+                  "duration": 623,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:56:02.439Z",
+                  "startTime": "2026-07-08T23:48:28.961Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -570,15 +570,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 543,
+                  "duration": 555,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:56:03.456Z",
+                  "startTime": "2026-07-08T23:48:29.845Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -624,15 +624,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 563,
+                  "duration": 540,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:56:04.024Z",
+                  "startTime": "2026-07-08T23:48:30.425Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -678,15 +678,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 567,
+                  "duration": 531,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:56:04.607Z",
+                  "startTime": "2026-07-08T23:48:30.991Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -732,15 +732,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 227,
+                  "duration": 240,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:51.702Z",
+                  "startTime": "2026-07-08T23:51:52.510Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -786,15 +786,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 126,
+                  "duration": 121,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:52.851Z",
+                  "startTime": "2026-07-08T23:51:56.690Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -840,15 +840,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 125,
+                  "duration": 118,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:52.996Z",
+                  "startTime": "2026-07-08T23:51:56.829Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -894,15 +894,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "skipped",
-                  "duration": 113,
+                  "duration": 115,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:53.138Z",
+                  "startTime": "2026-07-08T23:51:56.965Z",
                   "annotations": [
                     {
                       "type": "skip",
@@ -949,12 +949,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2182,
+                  "duration": 2390,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:53:11.046Z",
+                  "startTime": "2026-07-08T23:45:51.229Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -983,12 +983,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1448,
+                  "duration": 1495,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:53:13.378Z",
+                  "startTime": "2026-07-08T23:45:53.684Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1017,12 +1017,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1763,
+                  "duration": 1676,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:53:14.843Z",
+                  "startTime": "2026-07-08T23:45:55.197Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1051,12 +1051,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1015,
+                  "duration": 1007,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:53:16.657Z",
+                  "startTime": "2026-07-08T23:45:56.900Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1085,12 +1085,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1152,
+                  "duration": 1121,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:53:17.720Z",
+                  "startTime": "2026-07-08T23:45:57.932Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1116,15 +1116,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2389,
+                  "duration": 2147,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:56:05.211Z",
+                  "startTime": "2026-07-08T23:48:31.567Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1150,15 +1150,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1332,
+                  "duration": 1339,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:56:07.666Z",
+                  "startTime": "2026-07-08T23:48:33.772Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1184,15 +1184,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2796,
+                  "duration": 1943,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:56:09.024Z",
+                  "startTime": "2026-07-08T23:48:35.140Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1218,15 +1218,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1129,
+                  "duration": 925,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:56:11.846Z",
+                  "startTime": "2026-07-08T23:48:37.108Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1252,15 +1252,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1192,
+                  "duration": 1077,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:56:13.001Z",
+                  "startTime": "2026-07-08T23:48:38.056Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1286,15 +1286,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 701,
+                  "duration": 692,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:53.279Z",
+                  "startTime": "2026-07-08T23:51:57.102Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1320,15 +1320,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 569,
+                  "duration": 559,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:54.033Z",
+                  "startTime": "2026-07-08T23:51:57.846Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1354,15 +1354,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 582,
+                  "duration": 647,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:54.622Z",
+                  "startTime": "2026-07-08T23:51:58.426Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1388,15 +1388,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 411,
+                  "duration": 423,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:55.224Z",
+                  "startTime": "2026-07-08T23:51:59.089Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1422,15 +1422,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 471,
+                  "duration": 473,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:55.654Z",
+                  "startTime": "2026-07-08T23:51:59.526Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1467,12 +1467,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1971,
+                  "duration": 1784,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:53:18.961Z",
+                  "startTime": "2026-07-08T23:45:59.112Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1501,12 +1501,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2158,
+                  "duration": 2135,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:53:21.000Z",
+                  "startTime": "2026-07-08T23:46:00.956Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1532,15 +1532,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2103,
+                  "duration": 1908,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:56:14.272Z",
+                  "startTime": "2026-07-08T23:48:39.195Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1566,15 +1566,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2339,
+                  "duration": 2272,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:56:16.470Z",
+                  "startTime": "2026-07-08T23:48:41.164Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1600,15 +1600,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 811,
+                  "duration": 815,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:56.166Z",
+                  "startTime": "2026-07-08T23:52:00.047Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1634,15 +1634,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1241,
+                  "duration": 1295,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:57.032Z",
+                  "startTime": "2026-07-08T23:52:00.928Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1679,12 +1679,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1668,
+                  "duration": 1654,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:53:23.182Z",
+                  "startTime": "2026-07-08T23:46:03.127Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1713,12 +1713,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1619,
+                  "duration": 1682,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:53:24.886Z",
+                  "startTime": "2026-07-08T23:46:04.817Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1747,12 +1747,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1488,
+                  "duration": 1345,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:53:26.526Z",
+                  "startTime": "2026-07-08T23:46:06.521Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1778,15 +1778,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3011,
+                  "duration": 1753,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:56:18.848Z",
+                  "startTime": "2026-07-08T23:48:43.477Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1812,15 +1812,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3710,
+                  "duration": 1946,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:56:21.936Z",
+                  "startTime": "2026-07-08T23:48:45.293Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1846,15 +1846,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 7380,
+                  "duration": 1508,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:56:25.682Z",
+                  "startTime": "2026-07-08T23:48:47.273Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1880,15 +1880,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 518,
+                  "duration": 598,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:58.334Z",
+                  "startTime": "2026-07-08T23:52:02.274Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1914,15 +1914,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 589,
+                  "duration": 614,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:58.896Z",
+                  "startTime": "2026-07-08T23:52:02.901Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1948,15 +1948,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 610,
+                  "duration": 606,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:59.517Z",
+                  "startTime": "2026-07-08T23:52:03.531Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2005,7 +2005,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:53:28.039Z",
+                      "startTime": "2026-07-08T23:46:07.888Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2034,12 +2034,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1501,
+                      "duration": 1510,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:53:29.405Z",
+                      "startTime": "2026-07-08T23:46:09.251Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2068,12 +2068,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1320,
+                      "duration": 1272,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:53:30.925Z",
+                      "startTime": "2026-07-08T23:46:10.788Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2083,7 +2083,7 @@
               ],
               "id": "bc75bd59fd35184b0d5e-6265aa6b0518c48c1535",
               "file": "compare.spec.ts",
-              "line": 105,
+              "line": 106,
               "column": 7
             },
             {
@@ -2099,15 +2099,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1346,
+                      "duration": 1868,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:56:34.741Z",
+                      "startTime": "2026-07-08T23:48:48.805Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2133,15 +2133,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2308,
+                      "duration": 2106,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:56:41.639Z",
+                      "startTime": "2026-07-08T23:48:50.780Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2167,15 +2167,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1759,
+                      "duration": 1140,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:56:43.963Z",
+                      "startTime": "2026-07-08T23:48:52.923Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2185,7 +2185,7 @@
               ],
               "id": "bc75bd59fd35184b0d5e-2fa4de7164749ed3c698",
               "file": "compare.spec.ts",
-              "line": 105,
+              "line": 106,
               "column": 7
             },
             {
@@ -2201,15 +2201,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 576,
+                      "duration": 591,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:00.161Z",
+                      "startTime": "2026-07-08T23:52:04.158Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2235,15 +2235,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 956,
+                      "duration": 803,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:00.797Z",
+                      "startTime": "2026-07-08T23:52:04.805Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2269,15 +2269,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 415,
+                      "duration": 437,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:01.773Z",
+                      "startTime": "2026-07-08T23:52:05.623Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2287,7 +2287,7 @@
               ],
               "id": "bc75bd59fd35184b0d5e-217f7d68f330f3466238",
               "file": "compare.spec.ts",
-              "line": 105,
+              "line": 106,
               "column": 7
             }
           ]
@@ -2323,12 +2323,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2630,
+                      "duration": 2956,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:53:32.308Z",
+                      "startTime": "2026-07-08T23:46:12.088Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2354,15 +2354,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2121,
+                      "duration": 5082,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:56:46.792Z",
+                      "startTime": "2026-07-08T23:48:56.053Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2388,15 +2388,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 807,
+                      "duration": 739,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:02.212Z",
+                      "startTime": "2026-07-08T23:52:06.077Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2442,12 +2442,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2619,
+                      "duration": 2215,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:53:35.063Z",
+                      "startTime": "2026-07-08T23:46:15.125Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2473,15 +2473,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2836,
+                      "duration": 4432,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:56:49.541Z",
+                      "startTime": "2026-07-08T23:49:03.261Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2507,15 +2507,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 888,
+                      "duration": 967,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:03.082Z",
+                      "startTime": "2026-07-08T23:52:06.868Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2561,12 +2561,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1123,
+                      "duration": 1057,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:53:37.771Z",
+                      "startTime": "2026-07-08T23:46:17.427Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2595,12 +2595,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1274,
+                      "duration": 1363,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:53:38.962Z",
+                      "startTime": "2026-07-08T23:46:18.537Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2626,15 +2626,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1375,
+                      "duration": 1517,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:56:52.699Z",
+                      "startTime": "2026-07-08T23:49:09.261Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2660,15 +2660,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1702,
+                      "duration": 3708,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:56:54.127Z",
+                      "startTime": "2026-07-08T23:49:11.071Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2694,15 +2694,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 473,
+                      "duration": 493,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:04.012Z",
+                      "startTime": "2026-07-08T23:52:07.879Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2728,15 +2728,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 499,
+                      "duration": 486,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:04.520Z",
+                      "startTime": "2026-07-08T23:52:08.407Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2782,12 +2782,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4569,
+                      "duration": 3861,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:53:40.315Z",
+                      "startTime": "2026-07-08T23:46:19.925Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2816,12 +2816,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4648,
+                      "duration": 4518,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:53:44.951Z",
+                      "startTime": "2026-07-08T23:46:23.834Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2847,15 +2847,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3651,
+                      "duration": 3443,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:56:56.145Z",
+                      "startTime": "2026-07-08T23:49:15.857Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2881,15 +2881,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4054,
+                      "duration": 3664,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:56:59.883Z",
+                      "startTime": "2026-07-08T23:49:19.474Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2915,15 +2915,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1085,
+                      "duration": 1045,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:05.045Z",
+                      "startTime": "2026-07-08T23:52:08.922Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2949,15 +2949,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 876,
+                      "duration": 887,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:06.176Z",
+                      "startTime": "2026-07-08T23:52:10.000Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3003,12 +3003,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2423,
+                      "duration": 2365,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:53:49.635Z",
+                      "startTime": "2026-07-08T23:46:28.390Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3037,12 +3037,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3925,
+                      "duration": 2381,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:53:52.198Z",
+                      "startTime": "2026-07-08T23:46:30.828Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3068,15 +3068,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2563,
+                      "duration": 2420,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:57:03.998Z",
+                      "startTime": "2026-07-08T23:49:23.606Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3102,15 +3102,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2420,
+                      "duration": 3039,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:57:06.714Z",
+                      "startTime": "2026-07-08T23:49:26.270Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3136,15 +3136,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 488,
+                      "duration": 577,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:07.086Z",
+                      "startTime": "2026-07-08T23:52:10.911Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3170,15 +3170,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 681,
+                      "duration": 717,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:07.618Z",
+                      "startTime": "2026-07-08T23:52:11.539Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3224,12 +3224,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 9182,
+                      "duration": 527,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:53:56.442Z",
+                      "startTime": "2026-07-08T23:46:33.239Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3258,12 +3258,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3348,
+                      "duration": 394,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:54:05.646Z",
+                      "startTime": "2026-07-08T23:46:33.783Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3292,12 +3292,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2673,
+                      "duration": 355,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:54:09.006Z",
+                      "startTime": "2026-07-08T23:46:34.188Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3323,15 +3323,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 831,
+                      "duration": 4262,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:57:09.210Z",
+                      "startTime": "2026-07-08T23:49:29.816Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3357,15 +3357,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 552,
+                      "duration": 2562,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:57:10.061Z",
+                      "startTime": "2026-07-08T23:49:34.092Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3391,15 +3391,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 458,
+                      "duration": 4081,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:57:10.623Z",
+                      "startTime": "2026-07-08T23:49:36.665Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3425,15 +3425,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 479,
+                      "duration": 490,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:08.324Z",
+                      "startTime": "2026-07-08T23:52:12.280Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3459,15 +3459,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 358,
+                      "duration": 384,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:08.823Z",
+                      "startTime": "2026-07-08T23:52:12.784Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3493,15 +3493,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 312,
+                      "duration": 345,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:09.191Z",
+                      "startTime": "2026-07-08T23:52:13.175Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -3540,12 +3540,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 7040,
+                  "duration": 992,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:54:11.751Z",
+                  "startTime": "2026-07-08T23:46:34.565Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3574,12 +3574,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1679,
+                  "duration": 1238,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:54:19.325Z",
+                  "startTime": "2026-07-08T23:46:35.605Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3605,15 +3605,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1698,
+                  "duration": 1534,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:57:11.138Z",
+                  "startTime": "2026-07-08T23:49:40.918Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3639,15 +3639,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1613,
+                  "duration": 1462,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:57:12.915Z",
+                  "startTime": "2026-07-08T23:49:43.075Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3673,15 +3673,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 324,
+                  "duration": 335,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-07T00:00:09.526Z",
+                  "startTime": "2026-07-08T23:52:13.541Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3707,15 +3707,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 746,
+                  "duration": 729,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-07T00:00:09.895Z",
+                  "startTime": "2026-07-08T23:52:13.916Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3752,12 +3752,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1219,
+                  "duration": 1204,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:54:21.245Z",
+                  "startTime": "2026-07-08T23:46:36.881Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3786,12 +3786,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1833,
+                  "duration": 1162,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:54:22.955Z",
+                  "startTime": "2026-07-08T23:46:38.120Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3820,12 +3820,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1994,
+                  "duration": 1556,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:54:24.838Z",
+                  "startTime": "2026-07-08T23:46:39.311Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3851,15 +3851,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1598,
+                  "duration": 1256,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:57:14.607Z",
+                  "startTime": "2026-07-08T23:49:44.755Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3885,15 +3885,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1846,
+                  "duration": 1680,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:57:16.296Z",
+                  "startTime": "2026-07-08T23:49:46.240Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3919,15 +3919,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3328,
+                  "duration": 2318,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:57:18.172Z",
+                  "startTime": "2026-07-08T23:49:47.959Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3953,15 +3953,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 410,
+                  "duration": 423,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-07T00:00:10.672Z",
+                  "startTime": "2026-07-08T23:52:14.678Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3987,15 +3987,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 418,
+                  "duration": 493,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-07T00:00:11.120Z",
+                  "startTime": "2026-07-08T23:52:15.126Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -4021,15 +4021,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 520,
+                  "duration": 493,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-07T00:00:11.554Z",
+                  "startTime": "2026-07-08T23:52:15.637Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -4073,12 +4073,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4178,
+                      "duration": 3062,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:54:26.941Z",
+                      "startTime": "2026-07-08T23:46:40.937Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4107,12 +4107,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3821,
+                      "duration": 4435,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:54:31.328Z",
+                      "startTime": "2026-07-08T23:46:44.092Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4141,12 +4141,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1925,
+                      "duration": 3833,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:54:35.168Z",
+                      "startTime": "2026-07-08T23:46:48.555Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4172,15 +4172,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 11096,
+                      "duration": 4574,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:57:22.046Z",
+                      "startTime": "2026-07-08T23:49:50.610Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4206,15 +4206,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 7497,
+                      "duration": 3611,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:57:39.816Z",
+                      "startTime": "2026-07-08T23:49:55.852Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4240,15 +4240,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1975,
+                      "duration": 1968,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:57:47.347Z",
+                      "startTime": "2026-07-08T23:49:59.481Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4274,15 +4274,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1273,
+                      "duration": 1156,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:12.113Z",
+                      "startTime": "2026-07-08T23:52:16.167Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4308,15 +4308,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1226,
+                      "duration": 948,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:13.452Z",
+                      "startTime": "2026-07-08T23:52:17.386Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4342,15 +4342,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 832,
+                      "duration": 770,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:14.700Z",
+                      "startTime": "2026-07-08T23:52:18.373Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4396,12 +4396,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3617,
+                      "duration": 12705,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:54:37.201Z",
+                      "startTime": "2026-07-08T23:46:52.512Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4430,12 +4430,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1922,
+                      "duration": 7353,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:54:40.942Z",
+                      "startTime": "2026-07-08T23:47:07.739Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4445,7 +4445,7 @@
               ],
               "id": "9301536102fe8fd6f25a-f8ac60e101a02760aadd",
               "file": "not-yet-defer.spec.ts",
-              "line": 128,
+              "line": 141,
               "column": 7
             },
             {
@@ -4461,15 +4461,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4362,
+                      "duration": 10271,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:57:49.375Z",
+                      "startTime": "2026-07-08T23:50:01.524Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4495,15 +4495,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2431,
+                      "duration": 1824,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:57:53.978Z",
+                      "startTime": "2026-07-08T23:50:11.952Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4513,7 +4513,7 @@
               ],
               "id": "9301536102fe8fd6f25a-6dd015c97ea66eb34f60",
               "file": "not-yet-defer.spec.ts",
-              "line": 128,
+              "line": 141,
               "column": 7
             },
             {
@@ -4529,15 +4529,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1065,
+                      "duration": 8618,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:15.554Z",
+                      "startTime": "2026-07-08T23:52:19.166Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4563,15 +4563,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 538,
+                      "duration": 519,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:16.666Z",
+                      "startTime": "2026-07-08T23:52:27.822Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4581,7 +4581,7 @@
               ],
               "id": "9301536102fe8fd6f25a-769848714f9831d36d39",
               "file": "not-yet-defer.spec.ts",
-              "line": 128,
+              "line": 141,
               "column": 7
             }
           ]
@@ -4609,18 +4609,72 @@
                 {
                   "workerIndex": 1,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 2638,
-                  "errors": [],
+                  "status": "failed",
+                  "duration": 17053,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('banner').getByText('Adored E2E c74e6376-064d-4725-9c67-f3bf9bf9ceb0', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('banner').getByText('Adored E2E c74e6376-064d-4725-9c67-f3bf9bf9ceb0', { exact: true })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('banner').getByText('Adored E2E c74e6376-064d-4725-9c67-f3bf9bf9ceb0', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('banner').getByText('Adored E2E c74e6376-064d-4725-9c67-f3bf9bf9ceb0', { exact: true })\u001b[22m\n\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts:55:5",
+                    "location": {
+                      "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts",
+                      "column": 5,
+                      "line": 55
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 53 |\u001b[39m   \u001b[36mawait\u001b[39m expect(\n \u001b[90m 54 |\u001b[39m     page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"banner\"\u001b[39m)\u001b[33m.\u001b[39mgetByText(uniqueName\u001b[33m,\u001b[39m { exact\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m })\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 55 |\u001b[39m   )\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m15\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 56 |\u001b[39m\n \u001b[90m 57 |\u001b[39m   \u001b[90m// Guard against a false positive where a reload happened: the URL is still\u001b[39m\n \u001b[90m 58 |\u001b[39m   \u001b[90m// /profile and the in-page success status rendered (proves the SPA update\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts",
+                        "column": 5,
+                        "line": 55
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('banner').getByText('Adored E2E c74e6376-064d-4725-9c67-f3bf9bf9ceb0', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('banner').getByText('Adored E2E c74e6376-064d-4725-9c67-f3bf9bf9ceb0', { exact: true })\u001b[22m\n\n\n  53 |   await expect(\n  54 |     page.getByRole(\"banner\").getByText(uniqueName, { exact: true }),\n> 55 |   ).toBeVisible({ timeout: 15_000 });\n     |     ^\n  56 |\n  57 |   // Guard against a false positive where a reload happened: the URL is still\n  58 |   // /profile and the in-page success status rendered (proves the SPA update\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts:55:5"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:54:42.898Z",
+                  "startTime": "2026-07-08T23:47:15.159Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/profile-saving-a-new-displ-0a091-the-header-without-a-reload-tablet/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/profile-saving-a-new-displ-0a091-the-header-without-a-reload-tablet/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts",
+                    "column": 5,
+                    "line": 55
+                  }
+                },
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2020,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 1,
+                  "startTime": "2026-07-08T23:47:43.658Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/profile-saving-a-new-displ-0a091-the-header-without-a-reload-tablet-retry1/trace.zip"
+                    }
+                  ]
                 }
               ],
-              "status": "expected"
+              "status": "flaky"
             }
           ],
           "id": "e8b79b4ee550a37632f1-4dd4a58c47c7d10f604a",
@@ -4641,74 +4695,20 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 2,
-                  "parallelIndex": 0,
-                  "status": "failed",
-                  "duration": 17372,
-                  "error": {
-                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('banner').getByText('Adored E2E 5a693721-17f7-427a-9147-0029fdb924ce', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('banner').getByText('Adored E2E 5a693721-17f7-427a-9147-0029fdb924ce', { exact: true })\u001b[22m\n",
-                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('banner').getByText('Adored E2E 5a693721-17f7-427a-9147-0029fdb924ce', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('banner').getByText('Adored E2E 5a693721-17f7-427a-9147-0029fdb924ce', { exact: true })\u001b[22m\n\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts:55:5",
-                    "location": {
-                      "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts",
-                      "column": 5,
-                      "line": 55
-                    },
-                    "snippet": "\u001b[0m \u001b[90m 53 |\u001b[39m   \u001b[36mawait\u001b[39m expect(\n \u001b[90m 54 |\u001b[39m     page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"banner\"\u001b[39m)\u001b[33m.\u001b[39mgetByText(uniqueName\u001b[33m,\u001b[39m { exact\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m })\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 55 |\u001b[39m   )\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m15\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 56 |\u001b[39m\n \u001b[90m 57 |\u001b[39m   \u001b[90m// Guard against a false positive where a reload happened: the URL is still\u001b[39m\n \u001b[90m 58 |\u001b[39m   \u001b[90m// /profile and the in-page success status rendered (proves the SPA update\u001b[39m\u001b[0m"
-                  },
-                  "errors": [
-                    {
-                      "location": {
-                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts",
-                        "column": 5,
-                        "line": 55
-                      },
-                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('banner').getByText('Adored E2E 5a693721-17f7-427a-9147-0029fdb924ce', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('banner').getByText('Adored E2E 5a693721-17f7-427a-9147-0029fdb924ce', { exact: true })\u001b[22m\n\n\n  53 |   await expect(\n  54 |     page.getByRole(\"banner\").getByText(uniqueName, { exact: true }),\n> 55 |   ).toBeVisible({ timeout: 15_000 });\n     |     ^\n  56 |\n  57 |   // Guard against a false positive where a reload happened: the URL is still\n  58 |   // /profile and the in-page success status rendered (proves the SPA update\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts:55:5"
-                    }
-                  ],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-07-06T23:57:56.463Z",
-                  "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "screenshot",
-                      "contentType": "image/png",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/profile-saving-a-new-displ-0a091-the-header-without-a-reload-phone/test-failed-1.png"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/profile-saving-a-new-displ-0a091-the-header-without-a-reload-phone/error-context.md"
-                    }
-                  ],
-                  "errorLocation": {
-                    "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts",
-                    "column": 5,
-                    "line": 55
-                  }
-                },
-                {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2617,
+                  "duration": 2121,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
-                  "retry": 1,
-                  "startTime": "2026-07-06T23:58:44.665Z",
+                  "retry": 0,
+                  "startTime": "2026-07-08T23:50:13.810Z",
                   "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "trace",
-                      "contentType": "application/zip",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/profile-saving-a-new-displ-0a091-the-header-without-a-reload-phone-retry1/trace.zip"
-                    }
-                  ]
+                  "attachments": []
                 }
               ],
-              "status": "flaky"
+              "status": "expected"
             }
           ],
           "id": "e8b79b4ee550a37632f1-e06470906c8b5e01d876",
@@ -4729,15 +4729,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 561,
+                  "duration": 527,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-07T00:00:17.227Z",
+                  "startTime": "2026-07-08T23:52:28.372Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -4778,15 +4778,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1760,
+                      "duration": 1297,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:54:45.597Z",
+                      "startTime": "2026-07-08T23:47:46.009Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4812,15 +4812,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1939,
+                      "duration": 1996,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:58:47.707Z",
+                      "startTime": "2026-07-08T23:50:15.984Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4846,15 +4846,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 678,
+                      "duration": 605,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:17.808Z",
+                      "startTime": "2026-07-08T23:52:28.913Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4897,15 +4897,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1608,
+                      "duration": 1403,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:54:47.539Z",
+                      "startTime": "2026-07-08T23:47:47.414Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4931,15 +4931,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2087,
+                      "duration": 1739,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:58:49.876Z",
+                      "startTime": "2026-07-08T23:50:18.334Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -4965,15 +4965,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 642,
+                      "duration": 580,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:18.549Z",
+                      "startTime": "2026-07-08T23:52:29.577Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5016,15 +5016,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3721,
+                      "duration": 3102,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:54:49.409Z",
+                      "startTime": "2026-07-08T23:47:48.941Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5050,15 +5050,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2983,
+                      "duration": 2961,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:54:53.197Z",
+                      "startTime": "2026-07-08T23:47:52.061Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5084,15 +5084,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4927,
+                      "duration": 4871,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:58:52.259Z",
+                      "startTime": "2026-07-08T23:50:20.360Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5118,15 +5118,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3977,
+                      "duration": 4862,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:58:57.216Z",
+                      "startTime": "2026-07-08T23:50:25.260Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5152,15 +5152,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1191,
+                      "duration": 1164,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:19.259Z",
+                      "startTime": "2026-07-08T23:52:30.214Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5186,15 +5186,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1438,
+                      "duration": 1395,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:20.465Z",
+                      "startTime": "2026-07-08T23:52:31.395Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5237,15 +5237,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2283,
+                      "duration": 2392,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:54:56.223Z",
+                      "startTime": "2026-07-08T23:47:55.066Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5271,15 +5271,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3163,
+                      "duration": 3815,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:59:01.231Z",
+                      "startTime": "2026-07-08T23:50:30.179Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5305,15 +5305,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 928,
+                      "duration": 1060,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:21.923Z",
+                      "startTime": "2026-07-08T23:52:32.807Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5356,15 +5356,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2169,
+                      "duration": 2049,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:54:58.578Z",
+                      "startTime": "2026-07-08T23:47:57.529Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5390,15 +5390,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3026,
+                      "duration": 2662,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:59:04.567Z",
+                      "startTime": "2026-07-08T23:50:34.250Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5424,15 +5424,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 892,
+                      "duration": 956,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:22.910Z",
+                      "startTime": "2026-07-08T23:52:33.914Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5468,15 +5468,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 929,
+                  "duration": 1036,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:55:00.812Z",
+                  "startTime": "2026-07-08T23:47:59.661Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5502,15 +5502,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 998,
+                  "duration": 853,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:55:01.774Z",
+                  "startTime": "2026-07-08T23:48:00.714Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5536,15 +5536,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1045,
+                  "duration": 1184,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:55:02.794Z",
+                  "startTime": "2026-07-08T23:48:01.586Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5570,15 +5570,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1689,
+                  "duration": 1254,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:07.798Z",
+                  "startTime": "2026-07-08T23:50:37.124Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5604,15 +5604,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1448,
+                  "duration": 1331,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:09.529Z",
+                  "startTime": "2026-07-08T23:50:38.394Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5638,15 +5638,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1468,
+                  "duration": 1421,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:10.997Z",
+                  "startTime": "2026-07-08T23:50:39.763Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5672,15 +5672,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 316,
+                  "duration": 299,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-07T00:00:23.844Z",
+                  "startTime": "2026-07-08T23:52:34.917Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5706,15 +5706,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 313,
+                  "duration": 282,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-07T00:00:24.178Z",
+                  "startTime": "2026-07-08T23:52:35.233Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5740,15 +5740,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 344,
+                  "duration": 326,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-07T00:00:24.502Z",
+                  "startTime": "2026-07-08T23:52:35.533Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -5789,15 +5789,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3092,
+                      "duration": 1299,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:55:03.858Z",
+                      "startTime": "2026-07-08T23:48:02.789Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5823,15 +5823,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2638,
+                      "duration": 2168,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:59:12.520Z",
+                      "startTime": "2026-07-08T23:50:41.210Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5857,15 +5857,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 539,
+                      "duration": 516,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:24.861Z",
+                      "startTime": "2026-07-08T23:52:35.872Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5908,15 +5908,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1890,
+                      "duration": 1469,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:55:07.198Z",
+                      "startTime": "2026-07-08T23:48:04.163Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5942,15 +5942,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2532,
+                      "duration": 1672,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:55:11.614Z",
+                      "startTime": "2026-07-08T23:48:05.709Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -5976,15 +5976,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3571,
+                      "duration": 1476,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:55:14.200Z",
+                      "startTime": "2026-07-08T23:48:07.413Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6010,15 +6010,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2057,
+                      "duration": 2186,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:59:15.254Z",
+                      "startTime": "2026-07-08T23:50:43.549Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6044,15 +6044,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2873,
+                      "duration": 2198,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:59:18.968Z",
+                      "startTime": "2026-07-08T23:50:45.939Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6078,15 +6078,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3332,
+                      "duration": 1749,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:59:21.911Z",
+                      "startTime": "2026-07-08T23:50:48.166Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6112,15 +6112,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 540,
+                      "duration": 509,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:25.438Z",
+                      "startTime": "2026-07-08T23:52:36.422Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6146,15 +6146,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 840,
+                      "duration": 775,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:26.012Z",
+                      "startTime": "2026-07-08T23:52:36.961Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6180,15 +6180,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 546,
+                      "duration": 521,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:26.868Z",
+                      "startTime": "2026-07-08T23:52:37.754Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6222,20 +6222,74 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 8158,
-                      "errors": [],
+                      "status": "failed",
+                      "duration": 1975,
+                      "error": {
+                        "message": "Error: page.goto: Navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx223ejv1hknj2thv77483en/sort/1/compare\" is interrupted by another navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx223ejv1hknj2thv77483en/sort/1/triage\"\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx223ejv1hknj2thv77483en/sort/1/compare\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: Navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx223ejv1hknj2thv77483en/sort/1/compare\" is interrupted by another navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx223ejv1hknj2thv77483en/sort/1/triage\"\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx223ejv1hknj2thv77483en/sort/1/compare\", waiting until \"load\"\u001b[22m\n\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts:185:16",
+                        "location": {
+                          "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts",
+                          "column": 16,
+                          "line": 185
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 183 |\u001b[39m\n \u001b[90m 184 |\u001b[39m     \u001b[90m// 2. Move to compare and choose one card (tapping a card IS the choice).\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 185 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m`/collections/${slug}/sort/${sessionNumber}/compare`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 186 |\u001b[39m     \u001b[36mawait\u001b[39m expect(\n \u001b[90m 187 |\u001b[39m       page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"heading\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Which do you love more?\"\u001b[39m })\u001b[33m,\u001b[39m\n \u001b[90m 188 |\u001b[39m     )\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts",
+                            "column": 16,
+                            "line": 185
+                          },
+                          "message": "Error: page.goto: Navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx223ejv1hknj2thv77483en/sort/1/compare\" is interrupted by another navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx223ejv1hknj2thv77483en/sort/1/triage\"\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx223ejv1hknj2thv77483en/sort/1/compare\", waiting until \"load\"\u001b[22m\n\n\n  183 |\n  184 |     // 2. Move to compare and choose one card (tapping a card IS the choice).\n> 185 |     await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);\n      |                ^\n  186 |     await expect(\n  187 |       page.getByRole(\"heading\", { name: \"Which do you love more?\" }),\n  188 |     ).toBeVisible();\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts:185:16"
+                        }
+                      ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:55:17.817Z",
+                      "startTime": "2026-07-08T23:48:08.913Z",
                       "annotations": [],
-                      "attachments": []
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/sort-session-session-detai-5504a--result-and-navigates-to-it-tablet/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/sort-session-session-detai-5504a--result-and-navigates-to-it-tablet/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts",
+                        "column": 16,
+                        "line": 185
+                      }
+                    },
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4558,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 1,
+                      "startTime": "2026-07-08T23:48:11.661Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/sort-session-session-detai-5504a--result-and-navigates-to-it-tablet-retry1/trace.zip"
+                        }
+                      ]
                     }
                   ],
-                  "status": "expected"
+                  "status": "flaky"
                 }
               ],
               "id": "d87e823e04d4a9cf7490-ef3d306104e960b8bb5f",
@@ -6256,15 +6310,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1656,
+                      "duration": 1538,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:55:29.433Z",
+                      "startTime": "2026-07-08T23:48:17.021Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6274,7 +6328,7 @@
               ],
               "id": "d87e823e04d4a9cf7490-6a7cde59199cbdab78c1",
               "file": "sort-session.spec.ts",
-              "line": 206,
+              "line": 218,
               "column": 7
             },
             {
@@ -6290,15 +6344,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 6501,
+                      "duration": 4966,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:59:25.282Z",
+                      "startTime": "2026-07-08T23:50:49.937Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6324,15 +6378,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2279,
+                      "duration": 1564,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:59:32.571Z",
+                      "startTime": "2026-07-08T23:50:54.996Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6342,7 +6396,7 @@
               ],
               "id": "d87e823e04d4a9cf7490-a5187d4bb7d781b0c42a",
               "file": "sort-session.spec.ts",
-              "line": 206,
+              "line": 218,
               "column": 7
             },
             {
@@ -6358,15 +6412,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1470,
+                      "duration": 1484,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:27.432Z",
+                      "startTime": "2026-07-08T23:52:38.292Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6392,15 +6446,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 487,
+                      "duration": 546,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:28.941Z",
+                      "startTime": "2026-07-08T23:52:39.817Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6410,7 +6464,7 @@
               ],
               "id": "d87e823e04d4a9cf7490-d5b426c9e9ac891dcac1",
               "file": "sort-session.spec.ts",
-              "line": 206,
+              "line": 218,
               "column": 7
             }
           ]
@@ -6418,7 +6472,7 @@
         {
           "title": "unauthenticated sort access",
           "file": "sort-session.spec.ts",
-          "line": 232,
+          "line": 244,
           "column": 6,
           "specs": [
             {
@@ -6434,15 +6488,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1429,
+                      "duration": 1062,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:55:31.122Z",
+                      "startTime": "2026-07-08T23:48:18.579Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6452,7 +6506,7 @@
               ],
               "id": "d87e823e04d4a9cf7490-9bb3942df70c7129a71d",
               "file": "sort-session.spec.ts",
-              "line": 238,
+              "line": 250,
               "column": 7
             },
             {
@@ -6468,15 +6522,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1027,
+                      "duration": 991,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:55:32.575Z",
+                      "startTime": "2026-07-08T23:48:19.659Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6486,7 +6540,7 @@
               ],
               "id": "d87e823e04d4a9cf7490-799c753cb3c5e734bd8c",
               "file": "sort-session.spec.ts",
-              "line": 245,
+              "line": 257,
               "column": 7
             },
             {
@@ -6502,15 +6556,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1811,
+                      "duration": 1384,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:59:34.876Z",
+                      "startTime": "2026-07-08T23:50:56.593Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6520,7 +6574,7 @@
               ],
               "id": "d87e823e04d4a9cf7490-6c15e3d3d3f634c625ec",
               "file": "sort-session.spec.ts",
-              "line": 238,
+              "line": 250,
               "column": 7
             },
             {
@@ -6536,15 +6590,15 @@
                   "projectName": "phone",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1140,
+                      "duration": 1487,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-06T23:59:36.707Z",
+                      "startTime": "2026-07-08T23:50:57.993Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6554,7 +6608,7 @@
               ],
               "id": "d87e823e04d4a9cf7490-fa40638cb15efe21cf9a",
               "file": "sort-session.spec.ts",
-              "line": 245,
+              "line": 257,
               "column": 7
             },
             {
@@ -6570,15 +6624,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 292,
+                      "duration": 275,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:29.454Z",
+                      "startTime": "2026-07-08T23:52:40.380Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6588,7 +6642,7 @@
               ],
               "id": "d87e823e04d4a9cf7490-2a8fa4066ac1bd25a5ae",
               "file": "sort-session.spec.ts",
-              "line": 238,
+              "line": 250,
               "column": 7
             },
             {
@@ -6604,15 +6658,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 303,
+                      "duration": 283,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-07T00:00:29.760Z",
+                      "startTime": "2026-07-08T23:52:40.669Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -6622,7 +6676,7 @@
               ],
               "id": "d87e823e04d4a9cf7490-da4dc3bdb3804675cfc6",
               "file": "sort-session.spec.ts",
-              "line": 245,
+              "line": 257,
               "column": 7
             }
           ]
@@ -6648,15 +6702,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3454,
+                  "duration": 2679,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:55:33.642Z",
+                  "startTime": "2026-07-08T23:48:20.676Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -6682,15 +6736,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3072,
+                  "duration": 2626,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:55:37.133Z",
+                  "startTime": "2026-07-08T23:48:23.376Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -6716,15 +6770,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2785,
+                  "duration": 2130,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:55:40.243Z",
+                  "startTime": "2026-07-08T23:48:26.019Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -6750,15 +6804,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4977,
+                  "duration": 7344,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:37.978Z",
+                  "startTime": "2026-07-08T23:50:59.513Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -6784,15 +6838,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 5518,
+                  "duration": 7145,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:42.986Z",
+                  "startTime": "2026-07-08T23:51:06.887Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -6818,15 +6872,15 @@
               "projectName": "phone",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2368,
+                  "duration": 7583,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-06T23:59:48.525Z",
+                  "startTime": "2026-07-08T23:51:14.060Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -6852,15 +6906,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1038,
+                  "duration": 976,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-07T00:00:30.080Z",
+                  "startTime": "2026-07-08T23:52:40.967Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -6886,15 +6940,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1184,
+                  "duration": 1102,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-07T00:00:31.130Z",
+                  "startTime": "2026-07-08T23:52:41.954Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -6920,15 +6974,15 @@
               "projectName": "desktop",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 5,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 940,
+                  "duration": 995,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-07T00:00:32.330Z",
+                  "startTime": "2026-07-08T23:52:43.070Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -6946,11 +7000,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-07-06T23:50:57.957Z",
-    "duration": 575625.91,
-    "expected": 169,
+    "startTime": "2026-07-08T23:43:43.570Z",
+    "duration": 540829.554,
+    "expected": 168,
     "skipped": 8,
     "unexpected": 0,
-    "flaky": 1
+    "flaky": 2
   }
 }
