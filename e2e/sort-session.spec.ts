@@ -156,18 +156,30 @@ test.describe("session detail → See what you love most → results", () => {
     // Item 2: a second tap must succeed on the re-enabled control (regression U2 —
     // a user can actually sort past item 1). With two items, deciding the second
     // empties the queue, which ENDS the round: the round chrome swaps in the calm
-    // "what moved" recap in place of the (now item-less) triage content. Seeing the
-    // recap is the proof the second decision committed and both items are triaged.
+    // "what moved" recap in place of the (now item-less) triage content. Decisions
+    // ride the client queue (Epic P) and the round-end flush POSTs them to the
+    // batch route — await THAT (the load-bearing side effect) so the later
+    // results-trigger step never races the server-side decision log.
+    // Arm the refresh waiter BEFORE the tap: the round-end sequence is
+    // flush → router.refresh(), and that refresh (an RSC GET of the triage
+    // route) would otherwise interrupt the next page.goto() as a competing
+    // navigation. Awaiting it settles the page before we leave.
+    const roundEndRefresh = page.waitForResponse(
+      (r) =>
+        r.url().includes(`/sort/${sessionNumber}/triage`) &&
+        r.request().method() === "GET",
+    );
     await Promise.all([
       page.waitForResponse(
         (r) =>
-          /\/api\/sessions\/[^/]+\/decisions$/.test(r.url()) &&
+          /\/api\/sessions\/[^/]+\/decisions\/batch$/.test(r.url()) &&
           r.request().method() === "POST" &&
           r.status() < 400,
       ),
       page.getByRole("button", { name: "Like" }).click(),
     ]);
     await expect(page.getByRole("heading", { name: /Here.?s what moved/ })).toBeVisible();
+    await roundEndRefresh;
 
     // 2. Move to compare and choose one card (tapping a card IS the choice).
     await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);

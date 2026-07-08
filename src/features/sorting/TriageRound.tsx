@@ -112,6 +112,30 @@ export function TriageRound({
     setBoxMs(box === "none" ? null : box * MINUTE_MS);
   }, []);
 
+  // Bring-back restore (Epic C's §11 promise, kept under Epic P): when the
+  // provider's undo clears via "Bring back", the item returns to THIS round's
+  // focus — pure client un-advance, no refresh (the clear rides the queue).
+  // A queue-exhausted round un-ends (the recap recedes — the escape must
+  // never be a dead end); a TIMER-expired round stays ended: the time box is
+  // the boundary, and the item simply returns next round.
+  const lastUndoRef = useRef(undoCtx?.undo ?? null);
+  const undoNow = undoCtx?.undo ?? null;
+  useEffect(() => {
+    const prev = lastUndoRef.current;
+    lastUndoRef.current = undoNow;
+    if (prev === null || undoNow !== null) return;
+    if (!handled.has(prev.itemId)) return; // not this round's advance — nothing to restore
+    setHandled((handledPrev) => {
+      const next = new Set(handledPrev);
+      next.delete(prev.itemId);
+      return next;
+    });
+    if (!expired) {
+      endSequenceRan.current = false;
+      setFrozen(null);
+    }
+  }, [undoNow, handled, expired]);
+
   const current = entries.find((e) => !handled.has(e.item.id));
   const ended = expired || current === undefined;
   // While revisiting, the standing item is shown instead of the queue head; the

@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Item } from "@/types";
 import { readQueue, removeEntries, type QueueKey } from "./decisionQueue";
 import { TriageRound, type TriageRoundQueueEntry } from "./TriageRound";
 import { TriageUndoProvider } from "./TriageUndoProvider";
+import { TriageUndoNotice } from "./TriageUndoNotice";
 
 const { refresh, push } = vi.hoisted(() => ({ refresh: vi.fn(), push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push }) }));
@@ -291,6 +292,99 @@ describe("TriageRound set-aside stays optimistic and undoable", () => {
     });
     expect(global.fetch).not.toHaveBeenCalled();
     expect(flusher.triggerFlush).toHaveBeenCalled();
+  });
+});
+
+describe("TriageRound bring-back restores the item to the round (Epic C §11 under Epic P)", () => {
+  function renderWithProvider(queue: TriageRoundQueueEntry[]) {
+    return render(
+      <TriageUndoProvider curatorId="u1" sessionId="sess_1" collectionId="coll_1">
+        <TriageUndoNotice />
+        <TriageRound
+          curatorId="u1"
+          sessionId="sess_1"
+          collectionId="coll_1"
+          collectionSlugOrId="summer-bags"
+          queue={queue}
+          decisions={[]}
+          decidedSeed={0}
+          hubHref="/hub"
+          setAsideHref="/set-aside"
+        />
+      </TriageUndoProvider>,
+    );
+  }
+
+  it("mid-round: 'Bring back' refocuses the brought-back item — pure client, no refresh", async () => {
+    const user = userEvent.setup();
+    renderWithProvider([entry("item_a", "Bag A"), entry("item_b", "Bag B")]);
+
+    await user.click(screen.getByRole("button", { name: /not mine/i }));
+    expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /bring back/i }));
+
+    // The item returns to focus in THIS round; the queued disposition was the
+    // undo target, so storage is clean and nothing was fetched or refreshed.
+    expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
+    await waitFor(() => expect(readQueue(KEY)).toEqual([]));
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("after the LAST item ends the round: 'Bring back' un-ends it — the recap recedes and the item refocuses", async () => {
+    const user = userEvent.setup();
+    renderWithProvider([entry("item_a", "Bag A")]);
+
+    await user.click(screen.getByRole("button", { name: /not mine/i }));
+    // The queue emptied: the recap swapped in, but the notice survived it.
+    expect(await screen.findByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
+    const bringBack = screen.getByRole("button", { name: /bring back/i });
+
+    await user.click(bringBack);
+
+    // The escape actually brings the item back: recap recedes, card refocuses,
+    // and the disposition affordances are offered again — never a dead end.
+    expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /here.s what moved/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /not mine/i })).toBeInTheDocument();
+  });
+
+  it("re-ending the round after a bring-back runs the end sequence again (flush + one refresh)", async () => {
+    const user = userEvent.setup();
+    renderWithProvider([entry("item_a", "Bag A")]);
+
+    await user.click(screen.getByRole("button", { name: /not mine/i }));
+    await screen.findByRole("heading", { name: /here.s what moved/i });
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+
+    await user.click(screen.getByRole("button", { name: /bring back/i }));
+    await screen.findByRole("img", { name: "Bag A" });
+
+    await user.click(screen.getByRole("button", { name: "Love" }));
+    expect(await screen.findByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(2));
+  });
+
+  it("after TIMER expiry the recap stands: 'Bring back' clears the notice but never reopens a time-boxed round", async () => {
+    vi.useFakeTimers();
+    store.setItem("pi-round-box", "5");
+    renderWithProvider([entry("item_a", "Bag A"), entry("item_b", "Bag B")]);
+
+    fireEvent.click(screen.getByRole("button", { name: /not mine/i }));
+    await act(async () => {}); // flush the enqueue microtasks (findBy* polls on the faked timers)
+    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5 * 60_000 + 1_500);
+    });
+    expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
+
+    vi.useRealTimers(); // waitFor polls on real timers
+    fireEvent.click(screen.getByRole("button", { name: /bring back/i }));
+
+    await waitFor(() => expect(screen.queryByRole("button", { name: /bring back/i })).not.toBeInTheDocument());
+    // The time box is the boundary; the item returns next round instead.
+    expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
   });
 });
 
