@@ -111,15 +111,16 @@ export interface Session {
 }
 
 // ===== DECISION EVENT =====
-export type DecisionType = "triage" | "pairwise_compare";
+export type DecisionType = "triage" | "pairwise_compare" | "usage";
 export type TriageResult = "top" | "high" | "medium" | "low";
 export type PairwiseResult = "item_a" | "item_b" | "tie" | "skip";
+export type UsageResult = "uses" | "not_uses";
 
 export interface DecisionEvent {
   id: string;
   sessionId: string;
   type: DecisionType;
-  decision: TriageDecision | PairwiseDecision;
+  decision: TriageDecision | PairwiseDecision | UsageDecision;
   createdAt: Date;
 }
 
@@ -132,6 +133,13 @@ export interface PairwiseDecision {
   itemAId: string;
   itemBId: string;
   result: PairwiseResult;
+}
+
+// Deliberately no pass/skip member: absence of an event IS "undecided" — the
+// type system cannot express a counted non-answer (Epic R, spec §2.1).
+export interface UsageDecision {
+  itemId: string;
+  result: UsageResult;
 }
 
 // ===== AUDIT LOG =====

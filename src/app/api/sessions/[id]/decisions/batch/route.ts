@@ -29,10 +29,14 @@ export const maxDuration = 30;
 // written. Closes, for the batch route, the gap the single route still has
 // (purses-stln).
 function referencesUnknownItem(entry: BatchEntry, liveItemIds: Set<string>): boolean {
-  if (entry.type === "triage") return !liveItemIds.has(entry.decision.itemId);
-  return (
-    !liveItemIds.has(entry.decision.itemAId) || !liveItemIds.has(entry.decision.itemBId)
-  );
+  // A compare pair references two items — either side unknown rejects the entry.
+  // Single-item decisions (triage, usage) reference exactly one.
+  if (entry.type === "pairwise_compare") {
+    return (
+      !liveItemIds.has(entry.decision.itemAId) || !liveItemIds.has(entry.decision.itemBId)
+    );
+  }
+  return !liveItemIds.has(entry.decision.itemId);
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {

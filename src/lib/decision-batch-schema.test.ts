@@ -80,6 +80,45 @@ describe("BatchEntrySchema", () => {
   });
 });
 
+describe("BatchEntrySchema — usage variant (Epic R dark)", () => {
+  it("accepts a usage entry with repo-format itemId and lowercase ULID clientKey", () => {
+    expect(
+      BatchEntrySchema.safeParse({
+        type: "usage",
+        decision: { itemId: generateId("item"), result: "uses" },
+        clientKey: ulid().toLowerCase(),
+      }).success,
+    ).toBe(true);
+    expect(
+      BatchEntrySchema.safeParse({
+        type: "usage",
+        decision: { itemId: generateId("item"), result: "not_uses" },
+        clientKey: ulid().toLowerCase(),
+      }).success,
+    ).toBe(true);
+  });
+  it("rejects a bare 26-char ULID itemId (no item_ prefix — F1 drift guard)", () => {
+    expect(
+      BatchEntrySchema.safeParse({
+        type: "usage",
+        decision: { itemId: ulid().toLowerCase(), result: "uses" },
+        clientKey: ulid().toLowerCase(),
+      }).success,
+    ).toBe(false);
+  });
+  it("rejects out-of-enum usage results", () => {
+    for (const bad of ["sometimes", "skip", "yes"]) {
+      expect(
+        BatchEntrySchema.safeParse({
+          type: "usage",
+          decision: { itemId: generateId("item"), result: bad },
+          clientKey: ulid().toLowerCase(),
+        }).success,
+      ).toBe(false);
+    }
+  });
+});
+
 describe("BatchRequestSchema", () => {
   const triageEntry = () => ({
     type: "triage" as const,
@@ -95,6 +134,11 @@ describe("BatchRequestSchema", () => {
     },
     clientKey: ulid().toLowerCase(),
   });
+  const usageEntry = () => ({
+    type: "usage" as const,
+    decision: { itemId: generateId("item"), result: "uses" as const },
+    clientKey: ulid().toLowerCase(),
+  });
 
   it("rejects an empty decisions array (min 1)", () => {
     expect(BatchRequestSchema.safeParse({ decisions: [] }).success).toBe(false);
@@ -107,6 +151,10 @@ describe("BatchRequestSchema", () => {
     const decisions = Array.from({ length: 50 }, (_, i) =>
       i % 2 === 0 ? triageEntry() : compareEntry(),
     );
+    expect(BatchRequestSchema.safeParse({ decisions }).success).toBe(true);
+  });
+  it("accepts a mixed triage+pairwise_compare+usage batch (Epic R dark)", () => {
+    const decisions = [triageEntry(), compareEntry(), usageEntry()];
     expect(BatchRequestSchema.safeParse({ decisions }).success).toBe(true);
   });
 });

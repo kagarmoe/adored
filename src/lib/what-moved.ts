@@ -8,13 +8,15 @@
 // may be a Date or an epoch-ms number.
 
 type TriageResult = "top" | "high" | "medium" | "low";
+type UsageResult = "uses" | "not_uses";
 
 export interface MovedDecision {
-  type: "triage" | "pairwise_compare";
+  type: "triage" | "pairwise_compare" | "usage";
   createdAt: Date | number;
   decision:
     | { itemId: string; result: TriageResult }
-    | { itemAId: string; itemBId: string; result: string };
+    | { itemAId: string; itemBId: string; result: string }
+    | { itemId: string; result: UsageResult };
 }
 
 export interface WhatMovedSummary {
