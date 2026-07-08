@@ -6,6 +6,7 @@ import { SessionController } from "@/server/api/sessions";
 import { AppLayout } from "@/components/layout";
 import { Badge, Button, Card, EmptyState } from "@/components/ui";
 import { ResumeControl } from "@/features/sorting/ResumeControl";
+import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
 import Link from "next/link";
 
 interface SortPageProps {
@@ -39,6 +40,9 @@ export default async function SortPage({ params }: SortPageProps) {
         { label: "Sorting" },
       ]}
     >
+      {/* Recovery gate (spec §3.4): pending decisions drain before this hub
+          renders from stale session/preference data. Empty queue = zero cost. */}
+      <PendingDecisionsGate curatorId={session.user.id}>
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl text-ink">Sorting sessions</h1>
@@ -70,6 +74,7 @@ export default async function SortPage({ params }: SortPageProps) {
               <div className="flex gap-3">
                 {currentSession.status === "paused" ? (
                   <ResumeControl
+                    curatorId={session.user.id}
                     sessionId={currentSession.id}
                     sortHref={`${collectionHref}/sort/${currentSession.number}`}
                   />
@@ -117,6 +122,7 @@ export default async function SortPage({ params }: SortPageProps) {
           </div>
         )}
       </div>
+      </PendingDecisionsGate>
     </AppLayout>
   );
 }

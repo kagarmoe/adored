@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { selectTriageItem } from "./triage-selection";
+import { selectTriageItem, selectTriageQueue } from "./triage-selection";
 import type { Item, Disposition } from "@/types";
 
 const item = (id: string): Item => ({ id, collectionId: "c", name: id, brand: null, style: null, color: null, material: null, category: null, number: null, height: null, width: null, depth: null, weight: null, unit: "imperial", status: null, notes: null, createdAt: new Date(0), updatedAt: new Date(0), deletedAt: null });
@@ -126,5 +126,101 @@ describe("selectTriageItem", () => {
     );
     expect(r.item).toBeNull();
     expect(r.showingDeferred).toBe(false);
+  });
+});
+
+describe("selectTriageQueue", () => {
+  it("returns the whole eligible remainder: active first, then deferred, with per-entry flags", () => {
+    const disp = new Map<string, Disposition>([["b", "deferred"]]);
+    const q = selectTriageQueue([item("a"), item("b"), item("c")], new Set(), disp);
+    expect(q.map((e) => e.item.id)).toEqual(["a", "c", "b"]);
+    expect(q.map((e) => e.deferred)).toEqual([false, false, true]);
+  });
+
+  it("excludes triaged (in preferenceItemIds) and set_aside items; deferred still included at the tail", () => {
+    const disp = new Map<string, Disposition>([
+      ["b", "set_aside"],
+      ["c", "deferred"],
+    ]);
+    const q = selectTriageQueue([item("a"), item("b"), item("c"), item("d")], new Set(["a"]), disp);
+    expect(q.map((e) => e.item.id)).toEqual(["d", "c"]);
+    expect(q.map((e) => e.deferred)).toEqual([false, true]);
+  });
+
+  it("preserves input order within the active run and within the deferred tail", () => {
+    const disp = new Map<string, Disposition>([
+      ["x", "deferred"],
+      ["y", "deferred"],
+    ]);
+    const q = selectTriageQueue([item("y"), item("c"), item("x"), item("a")], new Set(), disp);
+    expect(q.map((e) => e.item.id)).toEqual(["c", "a", "y", "x"]);
+  });
+
+  it("returns [] for empty input", () => {
+    expect(selectTriageQueue([], new Set(), new Map())).toEqual([]);
+  });
+
+  it("returns [] when everything is triaged or set aside", () => {
+    const disp = new Map<string, Disposition>([["b", "set_aside"]]);
+    expect(selectTriageQueue([item("a"), item("b")], new Set(["a"]), disp)).toEqual([]);
+  });
+
+  // F6: selectTriageItem must be "first entry of selectTriageQueue" — every fixture
+  // case from the selectTriageItem table above, re-run through both derivations.
+  // (showingDeferred ≡ first entry's deferred flag: today's semantics
+  // `active.length === 0 && deferred.length > 0` hold exactly when the head is deferred.)
+  it("first-entry equivalence with selectTriageItem across the existing fixture table (F6)", () => {
+    const d = (pairs: Array<[string, Disposition]>) => new Map<string, Disposition>(pairs);
+    const cases: Array<{ items: Item[]; prefs: Set<string>; disp: Map<string, Disposition> }> = [
+      { items: [item("a"), item("b")], prefs: new Set(), disp: new Map() },
+      { items: [item("a"), item("b"), item("c")], prefs: new Set(["a"]), disp: new Map() },
+      { items: [item("a"), item("b")], prefs: new Set(), disp: d([["a", "set_aside"]]) },
+      { items: [item("a"), item("b")], prefs: new Set(), disp: d([["a", "deferred"]]) },
+      { items: [item("a"), item("b")], prefs: new Set(["b"]), disp: d([["a", "deferred"]]) },
+      { items: [item("a")], prefs: new Set(), disp: d([["a", "deferred"]]) },
+      {
+        items: [item("a"), item("b"), item("c")],
+        prefs: new Set(),
+        disp: d([
+          ["a", "deferred"],
+          ["b", "deferred"],
+        ]),
+      },
+      { items: [item("a")], prefs: new Set(["a"]), disp: new Map() },
+      { items: [item("a")], prefs: new Set(), disp: d([["a", "set_aside"]]) },
+      { items: [], prefs: new Set(), disp: new Map() },
+      { items: [item("c"), item("a"), item("b")], prefs: new Set(), disp: new Map() },
+      {
+        items: [item("b"), item("a")],
+        prefs: new Set(),
+        disp: d([
+          ["a", "deferred"],
+          ["b", "deferred"],
+        ]),
+      },
+      {
+        items: [item("a"), item("b"), item("c"), item("d")],
+        prefs: new Set(["a"]),
+        disp: d([
+          ["b", "set_aside"],
+          ["c", "deferred"],
+        ]),
+      },
+      {
+        items: [item("a"), item("b"), item("c"), item("d")],
+        prefs: new Set(["a", "d"]),
+        disp: d([
+          ["b", "set_aside"],
+          ["c", "deferred"],
+        ]),
+      },
+      { items: [item("a"), item("b")], prefs: new Set(["a"]), disp: d([["b", "set_aside"]]) },
+    ];
+    for (const c of cases) {
+      const queue = selectTriageQueue(c.items, c.prefs, c.disp);
+      const single = selectTriageItem(c.items, c.prefs, c.disp);
+      expect(queue[0]?.item ?? null).toEqual(single.item);
+      expect(queue[0]?.deferred ?? false).toBe(single.showingDeferred);
+    }
   });
 });

@@ -9,19 +9,13 @@ import { DecisionController } from "@/server/api/decisions";
 import { DispositionController } from "@/server/api/dispositions";
 import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
-import Link from "next/link";
 import { AppLayout } from "@/components/layout";
-import { Card, EmptyState } from "@/components/ui";
-import { DecisionControls } from "@/features/sorting/DecisionControls";
-import { triageDecisions } from "@/features/sorting/roundCopy";
-import { DeferControl } from "@/features/sorting/DeferControl";
 import { TriageUndoProvider } from "@/features/sorting/TriageUndoProvider";
 import { TriageUndoNotice } from "@/features/sorting/TriageUndoNotice";
-import { SetAsideButton } from "@/features/sorting/SetAsideButton";
 import { TakeABreakControl } from "@/features/sorting/TakeABreakControl";
-import { ItemCard } from "@/features/items/ItemCard";
-import { RoundSurface } from "@/features/sorting/RoundSurface";
-import { selectTriageItem } from "@/lib/triage-selection";
+import { TriageRound } from "@/features/sorting/TriageRound";
+import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
+import { selectTriageQueue } from "@/lib/triage-selection";
 
 interface TriagePageProps {
   params: { id: string; sessionNumber: string };
@@ -57,111 +51,77 @@ export default async function TriagePage({ params }: TriagePageProps) {
 
   const preferenceItemIds = new Set(preferences.map((p) => p.itemId));
   const dispositionByItemId = new Map(dispositions.map((d) => [d.itemId, d.disposition]));
-  const { item, showingDeferred } = selectTriageItem(items, preferenceItemIds, dispositionByItemId);
+  // The WHOLE eligible remainder (spec §3.3/F6): the client round advances
+  // through it locally — no per-decision refresh, no mid-round refetch.
+  const queueEntries = selectTriageQueue(items, preferenceItemIds, dispositionByItemId);
 
   // Round recap data: this session's decisions (server-time createdAt). The client
-  // round wrapper filters them to the round window; here we just hand over the log.
+  // round merges its own tap log over this and filters to the round window.
   const decisions = await DecisionController.fromDb(db).listBySession(sortSession.id);
 
-  const covers = item ? await PhotoController.fromDb(db).findCoverPhotosByItemIds([item.id]) : new Map();
-  const cover = item ? covers.get(item.id) : undefined;
-  const heroPhotoUrl = cover ? getPhotoAssetUrlForPhoto(cover, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
+  const covers =
+    queueEntries.length > 0
+      ? await PhotoController.fromDb(db).findCoverPhotosByItemIds(queueEntries.map((e) => e.item.id))
+      : new Map();
+  const queue = queueEntries.map(({ item, deferred }) => {
+    const cover = covers.get(item.id);
+    return {
+      item,
+      deferred,
+      heroPhotoUrl: cover
+        ? getPhotoAssetUrlForPhoto(cover, collection.id, { w: PHOTO_WIDTH.card })
+        : undefined,
+    };
+  });
 
-  // Ceiling-free cue: count only what the person has affirmed (TONE.md 1 & 4).
-  // Never a total, a remaining count, or a filling-to-100% bar — no count-down,
-  // no completion guilt.
-  const decided = preferences.length;
+  const slugOrId = collection.slug ?? collection.id;
+  const hubHref = `/collections/${slugOrId}/sort/${sortSession.number}`;
 
   return (
     <AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}` },
+        { label: collection.name, href: `/collections/${slugOrId}` },
+        { label: "Session", href: hubHref },
         { label: "Triage" },
       ]}
       actions={
         <TakeABreakControl
+          curatorId={session.user.id}
           sessionId={sortSession.id}
-          collectionHref={`/collections/${collection.slug ?? collection.id}`}
+          collectionHref={`/collections/${slugOrId}`}
         />
       }
     >
-      <TriageUndoProvider collectionId={collection.id}>
-        {/* The set-aside undo notice lives OUTSIDE RoundSurface so it survives BOTH
-            item === null AND the queue-empty "what moved" recap that RoundSurface
-            swaps in when the queue empties. Setting aside the LAST untriaged item
-            ends the round (recap replaces the round content), but the "Bring back"
-            escape must still be reachable — hoisting it here keeps that reversible
-            (spec §11; TONE: nothing lost, always undoable). */}
+      {/* Recovery gate (spec §3.4): the round below snapshots the server-selected
+          queue into client state at mount — it must never mount over undrained
+          decisions (conditional mount, never CSS-hide). */}
+      <PendingDecisionsGate curatorId={session.user.id}>
+      <TriageUndoProvider
+        curatorId={session.user.id}
+        sessionId={sortSession.id}
+        collectionId={collection.id}
+      >
+        {/* The set-aside undo notice lives OUTSIDE the round so it survives BOTH
+            the queue emptying AND the round-end recap — setting aside the LAST
+            item ends the round, but the "Bring back" escape must still be
+            reachable (spec §11; TONE: nothing lost, always undoable). */}
         <div className="mx-auto max-w-xl">
           <TriageUndoNotice />
         </div>
-        <RoundSurface
-          step={1}
-          totalSteps={3}
-          roundLabel="This round"
+        <TriageRound
+          curatorId={session.user.id}
+          sessionId={sortSession.id}
+          collectionId={collection.id}
+          collectionSlugOrId={slugOrId}
+          queue={queue}
           decisions={decisions}
-          hubHref={`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}`}
-          queueEmpty={!item}
-        >
-        <div className="mx-auto max-w-xl space-y-6">
-          <div>
-            <h1 className="text-3xl text-ink">How do you feel about this one?</h1>
-            {decided > 0 && (
-              <p className="mt-2 text-sm text-ink-soft">{decided} decided so far</p>
-            )}
-            {/* A quiet way back to the ones set aside — count-free, low-emphasis, and
-                well below the decision so it never competes with it (TONE.md 4). */}
-            <p className="mt-1 text-sm">
-              <Link
-                href={`/collections/${collection.slug ?? collection.id}/sort/set-aside`}
-                className="text-ink-soft underline underline-offset-2 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-sm"
-              >
-                Set aside
-              </Link>
-            </p>
-          </div>
-
-          {!item ? (
-            <EmptyState heading="You&apos;ve looked at everything for now" message="You&apos;ve thought through each one. View results to see what you love most." />
-          ) : (
-            <>
-              {showingDeferred && (
-                <div className="flex items-center gap-2 rounded-control bg-content-mid px-4 py-3 text-ink transition-opacity duration-300 ease-gentle motion-reduce:transition-none">
-                  <span aria-hidden className="text-lg leading-none">☾</span>
-                  <p className="text-sm">
-                    <span className="font-medium">Ready when you are.</span>{" "}
-                    This one was waiting for you — no rush.
-                  </p>
-                </div>
-              )}
-              <ItemCard item={item} collectionId={collection.slug ?? collection.id} heroPhotoUrl={heroPhotoUrl} imageClassName="h-64" />
-              <Card padding="lg">
-                <div className="space-y-4">
-                  <DecisionControls
-                    key={item.id}
-                    submit={{ kind: "session", sessionId: sortSession.id }}
-                    type="triage"
-                    decisions={triageDecisions(item.id)}
-                  />
-                  {/* Quiet, demoted escape: the four tiers stay the primary row;
-                      "Not yet" and "Not mine" sit below a hairline as two distinct
-                      low-pressure exits. SetAsideButton is intentionally UN-KEYED so
-                      focus stays on it across router.refresh() (it doesn't drop to
-                      <body>); its "Bring back" undo lives in TriageUndoNotice above,
-                      hoisted out of this branch so it survives the queue emptying. */}
-                  <div className="flex flex-wrap items-start gap-x-6 gap-y-3 border-t border-hairline pt-3">
-                    <DeferControl submit={{ kind: "session", collectionId: collection.id }} itemId={item.id} />
-                    <SetAsideButton submit={{ kind: "session" }} itemId={item.id} itemName={item.name} />
-                  </div>
-                </div>
-              </Card>
-            </>
-          )}
-        </div>
-        </RoundSurface>
+          decidedSeed={preferences.length}
+          hubHref={hubHref}
+          setAsideHref={`/collections/${slugOrId}/sort/set-aside`}
+        />
       </TriageUndoProvider>
+      </PendingDecisionsGate>
     </AppLayout>
   );
 }

@@ -6,12 +6,23 @@ import type { Item } from "@/types";
 import { itemDisplayName, itemInitial } from "@/lib/items";
 import { Button, CardImage } from "@/components/ui";
 import posthog from "posthog-js";
+import { enqueue, newClientKey, readQueue, type QueueKey } from "./decisionQueue";
+import { awaitAck, isInFlight, triggerFlush, type AckOutcome } from "./decisionFlusher";
 
 type Result = "item_a" | "item_b" | "tie" | "skip";
 
 export type CompareSubmit =
-  | { kind: "session"; sessionId: string }
+  | { kind: "session"; sessionId: string; curatorId: string; collectionId?: string }
   | { kind: "local"; onDecision: (result: Result) => void };
+
+// The compare surface does NOT wait out the flusher's 60 s backoff cap: after
+// this bound it shows the gentle retry state while the queue keeps the entry —
+// a later ack recovers silently (spec §3.3).
+export const COMPARE_ACK_BOUND_MS = 5_000;
+// TONE register — person-side, never "error"/"failed" (TONE-review item).
+export const COMPARE_SLOW_SAVE_LINE = "Still saving that one — it's safe, and it's on its way.";
+// The storage-unavailable fallback's stumble (today's copy — F18 degradation).
+const FALLBACK_RETRY_LINE = "That didn't save. Try again.";
 
 interface CompareChoiceProps {
   submit: CompareSubmit;
@@ -29,54 +40,119 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsM
   const [error, setError] = useState<string | null>(null);
   // Idempotency key per in-flight decision, keyed by the choice ("a"/"b"/"tie"/
   // "skip"). Generated ONCE when a tap starts and reused if that same tap is
-  // retried after a failure — so a timed-out-then-retried save returns the same
-  // event server-side instead of inserting a duplicate comparison. Cleared on
-  // success so a subsequent tap on the same card gets a fresh key.
+  // retried — the queue entry IS the retry, so a timed-out-then-re-tapped save
+  // dedupes server-side instead of inserting a duplicate comparison. Cleared on
+  // ack so a subsequent tap on the same card gets a fresh key.
   //
-  // Keying by choice slot (not by pair) is safe ONLY because failure does not
-  // router.refresh() — the pair never advances on error, so a given slot key can
-  // only ever recur as the same-comparison retry, never as a new pair reusing a
-  // stale key. Success clears the key AND refreshes to the next pair together.
+  // Keying by choice slot (not by pair) is safe ONLY because a not-yet-acked
+  // tap does not router.refresh() — the pair never advances before the ack, so
+  // a given slot key can only ever recur as the same-comparison retry, never as
+  // a new pair reusing a stale key. Ack clears the key AND refreshes together.
   const clientKeys = useRef<Record<string, string>>({});
+  // A late ack (after the bound) and a re-tap's ack can both land for one
+  // clientKey — settle exactly once per decision.
+  const settled = useRef(new Set<string>());
 
-  async function choose(result: Result, key: string) {
-    if (submit.kind === "local") {
-      submit.onDecision(result); // demo path: no clientKeys, no pending, no posthog, no refresh
-      return;
-    }
-
-    setPending(key);
-    setError(null);
-    const clientKey = (clientKeys.current[key] ??= crypto.randomUUID());
-    try {
-      const res = await fetch(`/api/sessions/${submit.sessionId}/decisions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "pairwise_compare",
-          decision: { itemAId: itemA.id, itemBId: itemB.id, result },
-          clientKey,
-        }),
-      });
-      if (!res.ok) throw new Error("That didn't save. Try again.");
-      // Success — retire this tap's key so re-tapping the card is a NEW decision.
-      delete clientKeys.current[key];
-      posthog.capture('pairwise_decision_made', {
+  function settle(clientKey: string, slot: string, result: Result, outcome: AckOutcome) {
+    if (submit.kind !== "session" || settled.current.has(clientKey)) return;
+    settled.current.add(clientKey);
+    delete clientKeys.current[slot];
+    if (outcome.status !== "rejected") {
+      posthog.capture("pairwise_decision_made", {
         result,
         session_id: submit.sessionId,
         item_a_id: itemA.id,
         item_b_id: itemB.id,
         comparisons_made: comparisonsMade + 1,
       });
-      // Clear pending BEFORE refresh: router.refresh() re-renders THIS same
-      // client instance with the next pair, so a still-set `pending` would
-      // soft-lock the next pair (all controls disabled, a card stuck "Saving…").
-      setPending(null);
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "That didn't save. Try again.");
-      setPending(null);
     }
+    // A rejected ack still advances — the piece is no longer in the collection,
+    // and the notice slot (PendingNotices) explains; this component stays quiet.
+    setError(null);
+    // Clear pending BEFORE refresh: router.refresh() re-renders THIS same
+    // client instance with the next pair, so a still-set `pending` would
+    // soft-lock the next pair (all controls disabled, a card stuck "Saving…").
+    setPending(null);
+    router.refresh();
+  }
+
+  async function choose(result: Result, slot: string) {
+    if (submit.kind === "local") {
+      submit.onDecision(result); // demo path: no clientKeys, no pending, no posthog, no refresh
+      return;
+    }
+
+    setPending(slot);
+    setError(null);
+    const key: QueueKey = {
+      curatorId: submit.curatorId,
+      sessionId: submit.sessionId,
+      collectionId: submit.collectionId,
+    };
+    const clientKey = (clientKeys.current[slot] ??= newClientKey());
+
+    // NEVER a bare fetch (spec §3.3/F11): the decision rides the queue and the
+    // single-flight flusher as a batch-of-1, so it cannot interleave with a
+    // draining triage queue. A re-tap of the same slot finds its entry already
+    // queued/in flight and simply re-awaits the same ack.
+    const alreadyRiding = readQueue(key).some((e) => e.clientKey === clientKey) || isInFlight(key, clientKey);
+    if (!alreadyRiding && !settled.current.has(clientKey)) {
+      const persisted = await enqueue(
+        key,
+        {
+          kind: "decision",
+          clientKey,
+          type: "pairwise_compare",
+          decision: { itemAId: itemA.id, itemBId: itemB.id, result },
+          enqueuedAt: new Date().toISOString(),
+        },
+        () => triggerFlush(key), // quota → shrink the queue, retry once (F18)
+      );
+      if (persisted === "needs_fallback") {
+        // Storage unavailable even after the flush: degrade to today's awaited
+        // single-route submit and advance on ITS ack (F18).
+        let landed = false;
+        try {
+          const res = await fetch(`/api/sessions/${submit.sessionId}/decisions`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "pairwise_compare",
+              decision: { itemAId: itemA.id, itemBId: itemB.id, result },
+              clientKey,
+            }),
+          });
+          landed = res.ok;
+        } catch {
+          landed = false;
+        }
+        if (!landed) {
+          setError(FALLBACK_RETRY_LINE);
+          setPending(null);
+          return; // the pair stays; re-tapping retries with the SAME clientKey
+        }
+        settle(clientKey, slot, result, { status: "created" }); // the awaited submit IS the ack
+        return;
+      }
+    }
+
+    const ack = awaitAck(key, clientKey);
+    void triggerFlush(key);
+    const outcome = await Promise.race([
+      ack,
+      new Promise<"slow">((resolve) => {
+        setTimeout(() => resolve("slow"), COMPARE_ACK_BOUND_MS);
+      }),
+    ]);
+    if (outcome === "slow") {
+      // Gentle retry state: the queue keeps the entry and keeps retrying on the
+      // pinned backoff; a later ack recovers silently (advances then).
+      setPending(null);
+      setError(COMPARE_SLOW_SAVE_LINE);
+      void ack.then((late) => settle(clientKey, slot, result, late));
+      return;
+    }
+    settle(clientKey, slot, result, outcome);
   }
 
   const busy = pending !== null;
@@ -135,7 +211,7 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsM
           {comparisonsMade} {comparisonsMade === 1 ? "comparison" : "comparisons"} made so far
         </p>
       )}
-      {error && <p className="text-center text-sm text-error">{error}</p>}
+      {error && <p className="text-center text-sm text-ink-soft">{error}</p>}
     </div>
   );
 }

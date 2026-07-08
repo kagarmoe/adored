@@ -475,6 +475,13 @@ function buildStrangerCases(
       { id: sessionId },
       { type: "triage", decision: { itemId: itemAId, result: "top" } }),
 
+    // ── /api/sessions/[id]/decisions/batch (curator-private, Epic P) ──────
+    c("sessions/[id]/decisions/batch/route.ts", "POST",
+      `/api/sessions/${sessionId}/decisions/batch`,
+      { id: sessionId },
+      { decisions: [{ type: "triage", decision: { itemId: itemAId, result: "top" },
+                      clientKey: "0123456789abcdefghjkmnpqrs" }] }),
+
     // ── /api/sort-results (curator-private, body.collectionId gate) ────────
     c("sort-results/route.ts", "POST",
       `/api/sort-results`,

@@ -159,6 +159,50 @@ describe("DecisionControls triage tier tap", () => {
   });
 });
 
+describe("prior answer (F19)", () => {
+  it("marks the standing tier as currently selected (aria-pressed) and leaves the others untouched", () => {
+    render(
+      <DecisionControls
+        submit={{ kind: "local", onDecision: vi.fn() }}
+        type="triage"
+        decisions={TRIAGE_DECISIONS}
+        priorAnswer="Like"
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Like" })).toHaveAttribute("aria-pressed", "true");
+    for (const label of ["Love", "Maybe", "Onward"]) {
+      expect(screen.getByRole("button", { name: label })).not.toHaveAttribute("aria-pressed");
+    }
+  });
+
+  it("without the prop, no tier is pressed — today's fresh rendering (regression)", () => {
+    render(
+      <DecisionControls
+        submit={{ kind: "local", onDecision: vi.fn() }}
+        type="triage"
+        decisions={TRIAGE_DECISIONS}
+      />,
+    );
+    for (const label of ["Love", "Like", "Maybe", "Onward"]) {
+      expect(screen.getByRole("button", { name: label })).not.toHaveAttribute("aria-pressed");
+    }
+  });
+
+  it("the standing tier stays tappable — a different tap still submits (change-your-mind path)", async () => {
+    const onDecision = vi.fn();
+    render(
+      <DecisionControls
+        submit={{ kind: "local", onDecision }}
+        type="triage"
+        decisions={TRIAGE_DECISIONS}
+        priorAnswer="Love"
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Maybe" }));
+    expect(onDecision).toHaveBeenCalledWith({ itemId: "item_1", result: "medium" });
+  });
+});
+
 describe("local mode", () => {
   it("calls onDecision synchronously with no fetch, no pending state", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");

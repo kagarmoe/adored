@@ -128,6 +128,35 @@ describe("TriagePage ceiling-free progress (TONE 1 & 4)", () => {
   });
 });
 
+describe("TriagePage round queue (Epic P)", () => {
+  it("server-selects the WHOLE eligible remainder and fetches covers for all of it in ONE call", async () => {
+    itemRepo.findByCollection.mockResolvedValue([
+      ITEM,
+      { id: "item_2", collectionId: "coll_01ABCDEF", number: 8, name: "Tote", brand: null, status: "active" },
+      { id: "item_3", collectionId: "coll_01ABCDEF", number: 9, name: "Clutch", brand: null, status: "active" },
+    ]);
+    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    render(ui);
+    expect(photoRepo.findCoverPhotosByItemIds).toHaveBeenCalledTimes(1);
+    expect(photoRepo.findCoverPhotosByItemIds).toHaveBeenCalledWith(["item_1", "item_2", "item_3"]);
+  });
+
+  it("puts deferred items at the queue tail (they are part of the round, after the active ones)", async () => {
+    dispRepo.findByCollectionAndCurator.mockResolvedValue([
+      { itemId: "item_1", disposition: "deferred" },
+    ]);
+    itemRepo.findByCollection.mockResolvedValue([
+      ITEM,
+      { id: "item_2", collectionId: "coll_01ABCDEF", number: 8, name: "Tote", brand: null, status: "active" },
+    ]);
+    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    render(ui);
+    expect(photoRepo.findCoverPhotosByItemIds).toHaveBeenCalledWith(["item_2", "item_1"]);
+    // The active item leads; no patient-waiting banner while it does.
+    expect(screen.queryByText(/ready when you are/i)).not.toBeInTheDocument();
+  });
+});
+
 describe("TriagePage round chrome (Epic 4c)", () => {
   it("wraps the triage content in the round shell (step 1 of 3) while keeping the decision UI", async () => {
     const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });

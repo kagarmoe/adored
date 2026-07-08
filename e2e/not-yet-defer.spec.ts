@@ -98,21 +98,34 @@ test.describe("triage — 'Not yet' defer flow", () => {
     // active items remain; tapping a tier ("Love"/"Like") triages each and the
     // next comes forward. Loop defensively until no active item is left and the
     // deferred one resurfaces (showingDeferred only flips once active is empty).
+    // Triage decisions now ride the client queue (Epic P): the tap advances the
+    // round optimistically and the flusher batches the POST to …/decisions/batch
+    // (on the 4 s / 5-pending / round-end triggers). Advance on the UI — the next
+    // card (or the resurfaced deferred one) — rather than a per-tap POST that no
+    // longer exists; the batch flush is asserted once, after both taps.
+    const sawBatchFlush = page.waitForResponse(
+      (r) =>
+        /\/api\/sessions\/[^/]+\/decisions\/batch$/.test(r.url()) &&
+        r.request().method() === "POST" &&
+        r.status() < 400,
+    );
     for (let i = 0; i < 2; i++) {
       const love = page.getByRole("button", { name: "Love" });
-      // Re-enabled tiers after each refresh (regression U2 — the reused client
+      // Re-enabled tiers after each advance (regression U2 — the reused client
       // must clear its pending state).
       await expect(love).toBeEnabled();
-      await Promise.all([
-        page.waitForResponse(
-          (r) =>
-            /\/api\/sessions\/[^/]+\/decisions$/.test(r.url()) &&
-            r.request().method() === "POST" &&
-            r.status() < 400,
-        ),
-        love.click(),
-      ]);
+      const beforeName = await focusedItemName(page);
+      await love.click();
+      // The round advanced locally: a different item focuses, or the deferred
+      // one resurfaces with the patient-waiting skin.
+      await expect(async () => {
+        const resurfaced = await page.getByText(/Ready when you are/).isVisible();
+        if (resurfaced) return;
+        expect(await focusedItemName(page)).not.toEqual(beforeName);
+      }).toPass({ timeout: 10_000 });
     }
+    // The decisions really left the device — the queue flushed to the batch route.
+    await sawBatchFlush;
 
     // The deferred item RESURFACES with the patient-waiting treatment: the calm
     // cornflower chip with the moon glyph and the "Ready when you are." headline.

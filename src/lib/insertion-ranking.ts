@@ -1,3 +1,5 @@
+import { compareByCreatedAtThenId } from "./decision-order";
+
 export type Bucket = "top" | "high" | "medium" | "low";
 
 // The single source of truth for which buckets carry an insertion order: only
@@ -19,10 +21,7 @@ export interface ComparisonEvent {
 export type Outcome = "x_more" | "y_more" | "tie" | "skip" | "unknown";
 
 function isAfter(a: ComparisonEvent, b: ComparisonEvent): boolean {
-  const ta = a.createdAt.getTime();
-  const tb = b.createdAt.getTime();
-  if (ta !== tb) return ta > tb;
-  return a.id > b.id;
+  return compareByCreatedAtThenId(a, b) > 0;
 }
 
 export function latestOutcome(comparisons: ComparisonEvent[], x: string, y: string): Outcome {
@@ -116,12 +115,7 @@ export interface DerivedOrder {
 }
 
 function canonicalSequence(rankable: RankItem[]): RankItem[] {
-  return [...rankable].sort((a, b) => {
-    const ta = a.createdAt.getTime();
-    const tb = b.createdAt.getTime();
-    if (ta !== tb) return ta - tb;
-    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
-  });
+  return [...rankable].sort(compareByCreatedAtThenId);
 }
 
 export function deriveOrder(rankable: RankItem[], comparisons: ComparisonEvent[]): DerivedOrder {

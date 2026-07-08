@@ -6,6 +6,7 @@ import type {
 } from "@/types";
 import type { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import type { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
+import { compareByCreatedAtThenId } from "@/lib/decision-order";
 
 // Triage seeds each item at the CENTER of its tier band, so triage -> getBucket
 // is an identity round-trip and every item has +/-0.125 of headroom for pairwise
@@ -85,11 +86,8 @@ export class ScoringService {
     };
 
     // Chronological order so the LAST triage per item wins its bucket. Ties on
-    // createdAt fall back to id for a stable, deterministic order.
-    const ordered = [...allDecisions].sort((a, b) => {
-      const byTime = a.createdAt.getTime() - b.createdAt.getTime();
-      return byTime !== 0 ? byTime : a.id.localeCompare(b.id);
-    });
+    // createdAt fall back to id via the shared comparator (spec §2.4).
+    const ordered = [...allDecisions].sort(compareByCreatedAtThenId);
 
     // Pass 1: triage seeds the score at its tier center — latest triage wins.
     for (const decision of ordered) {

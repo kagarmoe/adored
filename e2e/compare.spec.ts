@@ -73,12 +73,13 @@ test.describe("compare — which do you love more?", () => {
       nodes.map((n) => n.getAttribute("aria-label")).sort(),
     );
 
-    // The decision POST is the load-bearing side effect; wait for it so we don't
-    // race router.refresh().
+    // The decision rides the queue and flushes as a batch-of-1 (Epic P) — the
+    // batch POST is the load-bearing side effect; wait for it so we don't race
+    // the ack-driven router.refresh().
     await Promise.all([
       page.waitForResponse(
         (r) =>
-          /\/api\/sessions\/[^/]+\/decisions$/.test(r.url()) &&
+          /\/api\/sessions\/[^/]+\/decisions\/batch$/.test(r.url()) &&
           r.request().method() === "POST",
       ),
       firstChoices.first().click(),

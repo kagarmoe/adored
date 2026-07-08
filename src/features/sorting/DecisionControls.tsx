@@ -16,12 +16,20 @@ interface DecisionControlsProps<D extends Record<string, unknown> = Record<strin
   submit: DecisionSubmit<D>;
   type: "triage" | "pairwise_compare";
   decisions: Array<{ label: string; decision: D }>;
+  /**
+   * A decision label already standing for this item (undo-as-revisit, F19):
+   * that tier renders as currently selected (`aria-pressed` + a visible ring);
+   * the caller renders the "You placed this with … — change it?" line. Absent =
+   * today's fresh rendering, pixel-identical.
+   */
+  priorAnswer?: string;
 }
 
 export function DecisionControls<D extends Record<string, unknown> = Record<string, unknown>>({
   submit,
   type,
   decisions,
+  priorAnswer,
 }: DecisionControlsProps<D>) {
   const router = useRouter();
   const [pendingLabel, setPendingLabel] = useState<string | null>(null);
@@ -66,19 +74,23 @@ export function DecisionControls<D extends Record<string, unknown> = Record<stri
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
-        {decisions.map((item) => (
-          <Button
-            key={item.label}
-            type="button"
-            variant="primary"
-            size="lg"
-            disabled={pendingLabel !== null}
-            onClick={() => submitDecision(item.label, item.decision)}
-            className="flex-1 min-w-24"
-          >
-            {pendingLabel === item.label ? "Saving..." : item.label}
-          </Button>
-        ))}
+        {decisions.map((item) => {
+          const selected = priorAnswer !== undefined && item.label === priorAnswer;
+          return (
+            <Button
+              key={item.label}
+              type="button"
+              variant="primary"
+              size="lg"
+              disabled={pendingLabel !== null}
+              onClick={() => submitDecision(item.label, item.decision)}
+              aria-pressed={selected || undefined}
+              className={`flex-1 min-w-24${selected ? " ring-2 ring-offset-2 ring-primary" : ""}`}
+            >
+              {pendingLabel === item.label ? "Saving..." : item.label}
+            </Button>
+          );
+        })}
       </div>
       {error && <p className="text-sm text-error">{error}</p>}
     </div>
