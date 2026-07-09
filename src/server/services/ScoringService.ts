@@ -67,9 +67,20 @@ export class ScoringService {
   // `events` lets the caller supply an already-fetched decision log (see
   // loadCuratorDecisionEvents), avoiding a second read of the same events. When
   // omitted, they're fetched here — the standalone contract is unchanged.
+  //
+  // purses-5g1g: `liveItemIds` is the collection's live (non-deleted) item set.
+  // decision_events are append-only and SURVIVE an item purge (ItemPurgeService
+  // hard-deletes the item + its preferences, never its events), so a recompute
+  // over the surviving events would otherwise emit a preference row for a
+  // now-nonexistent item — an FK violation on preferences.item_id (no cascade)
+  // that rolls back the whole tap. The derived preference set must never include
+  // an item that no longer exists, so drop any itemId outside the live set at the
+  // emit point. Events for a purged item still fold into their opponents' counts,
+  // so LIVE items' scores/confidence are unchanged (mirrors deriveUsage).
   async computePreferences(
     collectionId: string,
     curatorId: string,
+    liveItemIds: ReadonlySet<string>,
     events?: DecisionEvent[],
   ): Promise<CollectionPreferenceItem[]> {
     const allDecisions =
@@ -116,6 +127,9 @@ export class ScoringService {
     const preferences: CollectionPreferenceItem[] = [];
     for (const [itemId, data] of itemState) {
       if (data.count === 0) continue;
+      // purses-5g1g: never emit a row for a purged/deleted item — its surviving
+      // events counted toward live opponents above, but it owns no live row.
+      if (!liveItemIds.has(itemId)) continue;
       preferences.push({
         id: `${collectionId}-${curatorId}-${itemId}`,
         collectionId,

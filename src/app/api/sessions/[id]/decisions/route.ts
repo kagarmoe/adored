@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/lib/db";
-import { decisionEventsTable } from "@/lib/db/schema";
+import { decisionEventsTable, itemsTable } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
 import { getSession } from "@/lib/auth";
 import { withTransaction, lockCollectionCurator } from "@/lib/transactions";
@@ -106,6 +106,36 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
   const body = parsed.data;
   const clientKey = body.clientKey;
+
+  // purses-stln: the decision must reference a LIVE item in THIS session's
+  // collection — the same semantic check the batch route already makes
+  // (referencesUnknownItem + liveItemIds). Without it a foreign/nonexistent/
+  // deleted itemId flows to the insert + recompute, planting a cross-collection
+  // preference row, and triage's bringBack would clear a disposition unscoped by
+  // collection. ONE indexed query for the collection's live item ids; reject the
+  // WHOLE request with 400 (the route's bad-input signal) BEFORE any write —
+  // EITHER side of a compare pair must be live.
+  const liveRows = await db
+    .select({ id: itemsTable.id })
+    .from(itemsTable)
+    .where(
+      and(
+        eq(itemsTable.collectionId, sortSession.collectionId),
+        isNull(itemsTable.deletedAt),
+      ),
+    );
+  const liveItemIds = new Set(liveRows.map((r) => r.id));
+  const referencesUnknownItem =
+    body.type === "pairwise_compare"
+      ? !liveItemIds.has(body.decision.itemAId) || !liveItemIds.has(body.decision.itemBId)
+      : !liveItemIds.has(body.decision.itemId);
+  if (referencesUnknownItem) {
+    return NextResponse.json(
+      { error: "Decision references an item not in this collection" },
+      { status: 400 },
+    );
+  }
+
   try {
     // Atomic: the event insert, preference recalc, and (for triage) the
     // disposition clear must all commit or all roll back. A partial failure
