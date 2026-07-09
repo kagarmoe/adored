@@ -1,4 +1,4 @@
-import type { CollectionPreferenceItem, DecisionEvent } from "@/types";
+import type { CollectionPreferenceItem, DecisionEvent, Item } from "@/types";
 import type { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import type { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import type { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
@@ -31,17 +31,23 @@ export class PreferenceStateService {
     // event set, so a single read is behavior-identical to the old double read.
     const events = await this.loadDecisionEvents(collectionId, curatorId);
 
+    // purses-5g1g: load the collection's LIVE items ONCE (findByCollection
+    // excludes soft-deleted rows and a purged item is gone entirely). This set
+    // gates the derived preference set so a purged item — whose append-only
+    // decision_events survive — can never be resurrected into a preference row
+    // (an FK violation on preferences.item_id that would roll back the tap). The
+    // same list feeds deriveOrderRanks, so it is read only once.
+    const items = await this.itemRepo.findByCollection(collectionId);
+    const liveItemIds = new Set(items.map((i) => i.id));
+
     const preferences = await this.scoringService.computePreferences(
       collectionId,
       curatorId,
+      liveItemIds,
       events,
     );
 
-    const orderRankByItem = await this.deriveOrderRanks(
-      collectionId,
-      preferences,
-      events,
-    );
+    const orderRankByItem = this.deriveOrderRanks(items, preferences, events);
 
     // TWO statements instead of ~2N: clear FIRST so every order_rank is NULL, then
     // upsert the whole recomputed set in ONE statement. Clearing first is REQUIRED —
@@ -70,19 +76,20 @@ export class PreferenceStateService {
   // Run the pure binary-insertion engine over the curator's pairwise comparisons
   // for the Love+Like items, mapping each placed item to its dense slot (0 = most
   // loved). Items the engine leaves unplaced are absent from the map (=> null).
-  private async deriveOrderRanks(
-    collectionId: string,
+  // `items` is the collection's LIVE item set, already loaded by the caller (the
+  // preference set is already filtered to it), so no second read is needed.
+  private deriveOrderRanks(
+    items: Item[],
     preferences: CollectionPreferenceItem[],
     events: DecisionEvent[],
-  ): Promise<Map<string, number>> {
+  ): Map<string, number> {
     const rankableIds = new Set(
       preferences.filter((p) => RANKABLE_BUCKETS.has(p.rankBucket)).map((p) => p.itemId),
     );
     if (rankableIds.size === 0) return new Map();
 
-    // One batched read of the collection's items; keep each rankable item's OWN
-    // createdAt (drives the engine's deterministic canonical insertion sequence).
-    const items = await this.itemRepo.findByCollection(collectionId);
+    // Keep each rankable item's OWN createdAt (drives the engine's deterministic
+    // canonical insertion sequence).
     const rankItems: RankItem[] = items
       .filter((i) => rankableIds.has(i.id))
       .map((i) => ({ id: i.id, createdAt: i.createdAt }));

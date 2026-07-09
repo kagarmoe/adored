@@ -66,10 +66,29 @@ function buildService(decisions: DecisionEvent[]): ScoringService {
   return new ScoringService(decisionRepo, sessionRepo);
 }
 
-async function scoreByItem(decisions: DecisionEvent[]) {
+// Every itemId a decision references — the default "live" set, so the existing
+// scoring tests behave exactly as before (nothing is filtered out).
+function referencedItemIds(decisions: DecisionEvent[]): Set<string> {
+  const ids = new Set<string>();
+  for (const d of decisions) {
+    if (d.type === "pairwise_compare") {
+      ids.add(d.decision.itemAId);
+      ids.add(d.decision.itemBId);
+    } else {
+      ids.add((d.decision as { itemId: string }).itemId);
+    }
+  }
+  return ids;
+}
+
+async function scoreByItem(
+  decisions: DecisionEvent[],
+  liveItemIds: ReadonlySet<string> = referencedItemIds(decisions),
+) {
   const prefs = await buildService(decisions).computePreferences(
     COLLECTION,
     CURATOR,
+    liveItemIds,
   );
   return new Map(prefs.map((p) => [p.itemId, p]));
 }
@@ -198,5 +217,27 @@ describe("ScoringService.computePreferences", () => {
     expect(byItem.get("a")!.score).toBeCloseTo(0.375);
     expect(byItem.get("a")!.rankBucket).toBe("medium");
     expect(byItem.get("a")!.comparisonCount).toBe(1);
+  });
+
+  // purses-5g1g: decision_events survive an item purge, so a recompute must NOT
+  // emit a preference row for an item outside the live set (that would FK-fail on
+  // preferences.item_id). The purged item's events still count toward its LIVE
+  // opponent, so live items' scores/confidence are unchanged.
+  it("drops an item outside the live set but keeps its opponent's evidence (purge safety)", async () => {
+    const decisions = [
+      triage("live", "high"), // 0.625
+      triage("purged", "high"),
+      pairwise("live", "purged", "item_a"), // counts for BOTH sides
+    ];
+    // "purged" is hard-deleted → absent from the live set.
+    const byItem = await scoreByItem(decisions, new Set(["live"]));
+
+    // No ghost row for the purged item.
+    expect(byItem.has("purged")).toBe(false);
+    // The live item keeps its triage seed AND the comparison as evidence —
+    // scoring for live items is unchanged by the purge.
+    expect(byItem.get("live")!.score).toBeCloseTo(0.625);
+    expect(byItem.get("live")!.rankBucket).toBe("high");
+    expect(byItem.get("live")!.comparisonCount).toBe(2); // triage + the compare
   });
 });
