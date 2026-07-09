@@ -19,7 +19,7 @@ export type PendingEntry =
   | {
       kind: "decision";
       clientKey: string;
-      type: "triage" | "pairwise_compare";
+      type: "triage" | "pairwise_compare" | "usage";
       decision: Record<string, unknown>;
       enqueuedAt: string;
     }

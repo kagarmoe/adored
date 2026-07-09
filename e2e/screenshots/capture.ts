@@ -119,9 +119,10 @@ for (const theme of ["light", "dark"] as const) {
     await page.addInitScript((t) => {
       try {
         localStorage.setItem("pi-theme", t);
-        // Epic 4: a 10-min round box so the round surfaces show the violet timer
-        // (round-preference defaults to "none" / no timer when unset).
-        localStorage.setItem("pi-round-box", "10");
+        // Epic 4: a round box so the round surfaces show the violet timer
+        // (round-preference defaults to "none" / no timer when unset). "2" is the
+        // new default; "10" is stale and clamps.
+        localStorage.setItem("pi-round-box", "2");
       } catch {
         /* storage blocked — falls back to light, fine */
       }
@@ -174,6 +175,14 @@ for (const theme of ["light", "dark"] as const) {
       ["workspace-items-first", `/collections/${workspaceItemsFirstSlug}`],
       // Epic 3: the pool "Photos" screen (grid + copy). poolOnly has loose photos.
       ["pool", `/collections/${workspacePoolFirstSlug}/pool`],
+      // Epic R: the session hub showing all three round cards (Get acquainted /
+      // Do you use this? / Which do you love more?) + the "recommended" card. The
+      // untriaged journey seed leaves items usage-unknown + undisposed, so the
+      // usage round renders.
+      ["sort-hub", `/collections/${triageSlug}/sort/${triageSessionNumber}`],
+      // Epic R: the usage round Relaxed surface (photo card, "Yes, I use it" /
+      // "Not these days", "Skip for now", the answered cue, RoundLengthChooser + timer).
+      ["usage-round", `/collections/${triageSlug}/sort/${triageSessionNumber}/usage`],
     ];
     for (const [name, url] of surfaces) {
       await page.goto(url);
@@ -190,15 +199,63 @@ for (const theme of ["light", "dark"] as const) {
       });
     }
 
+    const shot = (n: string) =>
+      page.screenshot({ path: `pr-screenshots/${n}-${theme}-${proj}.png`, fullPage: true });
+
+    // Epic R: usage-round scripted-tap surfaces. Like the /welcome beats below,
+    // these are driven by role/accessible-name (never CSS), with the same img-wait
+    // + settle. Placed before /welcome so its pre-existing flake can't block them.
+    const usageUrl = `/collections/${triageSlug}/sort/${triageSessionNumber}/usage`;
+
+    // Quick pace + its education line. Switching pace surfaces the reassurance copy
+    // ("If you're not sure, it just comes around again.").
+    await page.goto(usageUrl);
+    await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+    await page.getByRole("button", { name: "Quick pace" }).click();
+    await page
+      .getByText("If you're not sure, it just comes around again.")
+      .waitFor({ state: "visible", timeout: 10_000 });
+    await page.waitForTimeout(400);
+    await shot("usage-round-quick");
+
+    // Recap. Answer every queued item (3 in this seed; alternate "Yes, I use it" /
+    // "Not these days") until the answer controls are gone — that exhausts the
+    // queue and ends the round into the recap. Await the decisions flush (batch or
+    // single) so the recap reflects real DB state, not just the optimistic view.
+    await page.goto(usageUrl);
+    await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+    const yes = page.getByRole("button", { name: "Yes, I use it" });
+    const no = page.getByRole("button", { name: "Not these days" });
+    const skip = page.getByRole("button", { name: /Skip for now/ });
+    const decisionsPost = page.waitForResponse(
+      (r) =>
+        /\/api\/sessions\/[^/]+\/decisions(\/batch)?$/.test(r.url()) &&
+        r.request().method() === "POST" &&
+        r.status() < 400,
+    );
+    for (let i = 0; i < 6 && (await yes.isVisible().catch(() => false)); i++) {
+      await (i % 2 === 0 ? yes : no).click();
+      await page.waitForTimeout(300);
+    }
+    // Fallback: if a pass left an item queued, Skip terminates the round.
+    for (let i = 0; i < 3 && (await skip.isVisible().catch(() => false)); i++) {
+      await skip.click();
+      await page.waitForTimeout(300);
+    }
+    await decisionsPost.catch(() => {});
+    await page
+      .getByText(/in your life|resting for now/)
+      .first()
+      .waitFor({ state: "visible", timeout: 10_000 });
+    await page.waitForTimeout(400);
+    await shot("usage-round-recap");
+
     // purses-ka23: the /welcome onboarding walkthrough. Unlike the goto+shoot
     // surfaces above, this is ONE client-only route with five beats advanced by
     // taps — Purpose → Triage (×3) → Compare → Standing → Hand-off. We drive it
     // by role/accessible-name (never CSS) and shoot at each beat. The three
     // triage items reuse the same four tier buttons, so we tap "Love" (the
     // TierBadge's visible label; its glyph is aria-hidden) each time.
-    const shot = (n: string) =>
-      page.screenshot({ path: `pr-screenshots/${n}-${theme}-${proj}.png`, fullPage: true });
-
     await page.goto("/welcome");
 
     // Beat 1 — Purpose.

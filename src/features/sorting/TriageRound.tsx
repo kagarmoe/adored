@@ -1,23 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
 import type { MovedDecision } from "@/lib/what-moved";
-import { getRoundBox } from "@/lib/round-preference";
 import { Button, Card } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
 import { DecisionControls } from "./DecisionControls";
-import { triageDecisions, type TriageResult } from "./roundCopy";
+import { triageDecisions, THIS_ROUND_LABEL, type TriageResult } from "./roundCopy";
 import { DeferControl } from "./DeferControl";
 import { SetAsideButton } from "./SetAsideButton";
 import { useOptionalTriageUndo } from "./TriageUndoProvider";
 import { RoundShell } from "./RoundShell";
 import { RoundTimer } from "./RoundTimer";
+import { RoundLengthChooser } from "./RoundLengthChooser";
 import { WhatMoved } from "./WhatMoved";
-import { enqueue, newClientKey, removeQueued, type QueueKey } from "./decisionQueue";
-import { awaitAck, isInFlight, triggerFlush, useDecisionFlusher, type AckOutcome } from "./decisionFlusher";
+import { enqueue, newClientKey } from "./decisionQueue";
+import { triggerFlush } from "./decisionFlusher";
+import { STUMBLE_LINE, useOptimisticRound } from "./useOptimisticRound";
 import { PendingNotices } from "./pendingNotices";
 
 export interface TriageRoundQueueEntry {
@@ -43,11 +44,6 @@ interface TriageRoundProps {
   setAsideHref: string;
 }
 
-const MINUTE_MS = 60_000;
-// TONE register — a gentle stumble, never "error"/"failed" (matches the
-// provider's existing line).
-const STUMBLE_LINE = "That didn't go through — give it another try in a moment.";
-
 /**
  * The optimistic triage round (spec §3.3): advances through the server-selected
  * queue from LOCAL state, enqueueing each decision into the localStorage queue —
@@ -68,49 +64,35 @@ export function TriageRound({
   setAsideHref,
 }: TriageRoundProps) {
   const router = useRouter();
-  const key = useMemo<QueueKey>(
-    () => ({ curatorId, sessionId, collectionId }),
-    [curatorId, sessionId, collectionId],
-  );
-  useDecisionFlusher(key); // 5-pending / 4 s / pagehide triggers — the only wiring here
 
   // Round-local snapshot: mid-round prop updates (e.g. a legacy affordance's
-  // refresh) never perturb the round or double-count the seed (F20).
+  // refresh) never double-count the seed (F20).
   const seedRef = useRef(decidedSeed);
-  const serverLogRef = useRef(decisions);
-  const initialQueueEmpty = useRef(queue.length === 0);
   const [entries, setEntries] = useState<TriageRoundQueueEntry[]>(queue);
   const [handled, setHandled] = useState<ReadonlySet<string>>(new Set());
   const [newlyDecided, setNewlyDecided] = useState<ReadonlySet<string>>(new Set());
-  // This round's tap log — pending, in-flight AND already-acked entries alike,
-  // so the recap can never undercount what the person actually moved (F5). It
-  // doubles as the revisit history: the tail is what "Back" re-presents.
-  const roundLogRef = useRef<
-    Array<{ clientKey: string; itemId: string; label: string; moved: MovedDecision }>
-  >([]);
-  // Ack outcomes recorded as they land, so "Back" can tell a standing answer
-  // (created/duplicate) from a rejected one (no-op) without racing the drain.
-  const outcomesRef = useRef(new Map<string, AckOutcome>());
-  // Undo-as-revisit (F19): non-null while an in-flight/acked answer is being
-  // re-presented with its standing choice selected.
-  const [revisit, setRevisit] = useState<{ itemId: string; clientKey: string; label: string } | null>(
-    null,
-  );
-
-  // The round's clock is client-owned and fixed at mount (RoundSurface's pattern).
-  const startedAtRef = useRef(Date.now());
-  const [boxMs, setBoxMs] = useState<number | null>(null);
-  const [expired, setExpired] = useState(false);
-  const [frozen, setFrozen] = useState<{ decisions: MovedDecision[]; endedAtMs: number } | null>(null);
-  const [stumble, setStumble] = useState(false);
-  const busyRef = useRef(false);
-  const endSequenceRan = useRef(false);
   const undoCtx = useOptionalTriageUndo();
 
-  useEffect(() => {
-    const box = getRoundBox();
-    setBoxMs(box === "none" ? null : box * MINUTE_MS);
-  }, []);
+  // The queue fork is triage's own: the head not yet handled. Everything else
+  // about advancing that decision optimistically (flusher wiring, enqueue +
+  // quota fallback, the tap log + frozen recap + one-refresh end sequence, the
+  // undo-as-revisit machine, the round clock) rides the shared hook.
+  const current = entries.find((e) => !handled.has(e.item.id));
+  const round = useOptimisticRound<{ itemId: string; result: TriageResult }>({
+    curatorId,
+    sessionId,
+    collectionId,
+    decisionType: "triage",
+    serverLog: decisions,
+    initialQueueEmpty: queue.length === 0,
+    queueExhausted: current === undefined,
+    fallbackBody: (decision, clientKey) => ({ type: "triage", decision, clientKey }),
+    labelFor: (itemId, decision) =>
+      triageDecisions(itemId).find((t) => t.decision.result === decision.result)?.label ??
+      decision.result,
+    toMoved: (decision, createdAtMs) => ({ type: "triage", createdAt: createdAtMs, decision }),
+  });
+  const { key, revisit, expired, reopenRound } = round;
 
   // Bring-back restore (Epic C's §11 promise, kept under Epic P): when the
   // provider's undo clears via "Bring back", the item returns to THIS round's
@@ -130,123 +112,41 @@ export function TriageRound({
       next.delete(prev.itemId);
       return next;
     });
-    if (!expired) {
-      endSequenceRan.current = false;
-      setFrozen(null);
-    }
-  }, [undoNow, handled, expired]);
+    if (!expired) reopenRound();
+  }, [undoNow, handled, expired, reopenRound]);
 
-  const current = entries.find((e) => !handled.has(e.item.id));
-  const ended = expired || current === undefined;
   // While revisiting, the standing item is shown instead of the queue head; the
   // round itself hasn't moved (walking away resumes exactly where it was).
   const revisitEntry = revisit === null ? undefined : entries.find((e) => e.item.id === revisit.itemId);
   const shown = revisitEntry ?? current;
-
-  useEffect(() => {
-    if (!ended || endSequenceRan.current) return;
-    endSequenceRan.current = true;
-    // Frozen recap (F5): computed ONCE at round end — the pre-round server log
-    // (window-filtered away by whatMoved) merged with this round's client tap
-    // log. The round-end flush and refresh proceed BEHIND it; post-refresh data
-    // never re-renders it (prevents the double-count window).
-    setFrozen({
-      decisions: [...serverLogRef.current, ...roundLogRef.current.map((e) => e.moved)],
-      endedAtMs: Date.now(),
-    });
-    // A round that never was (mounted onto an empty queue) has nothing to flush
-    // and must not refresh — that would loop the empty mount.
-    if (initialQueueEmpty.current) return;
-    void (async () => {
-      try {
-        await triggerFlush(key); // drain settles (ack or terminal per taxonomy)…
-      } finally {
-        router.refresh(); // …then exactly ONE refresh (F15)
-      }
-    })();
-  }, [ended, key, router]);
 
   function advancePast(itemId: string) {
     setHandled((prev) => new Set(prev).add(itemId));
   }
 
   async function handleTriage(target: Item, decision: { itemId: string; result: TriageResult }) {
-    if (busyRef.current) return;
-    busyRef.current = true;
-    try {
-      setStumble(false);
-      const clientKey = newClientKey();
-      const enqueuedAt = new Date().toISOString();
-      const persisted = await enqueue(
-        key,
-        { kind: "decision", clientKey, type: "triage", decision, enqueuedAt },
-        () => triggerFlush(key), // quota → shrink the queue, retry once (F18)
-      );
-      if (persisted === "needs_fallback") {
-        // Storage unavailable even after the flush: degrade to today's awaited
-        // single-route submit and advance on ITS ack (F18).
-        let landed = false;
-        try {
-          const res = await fetch(`/api/sessions/${sessionId}/decisions`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ type: "triage", decision, clientKey }),
-          });
-          landed = res.ok;
-        } catch {
-          landed = false;
-        }
-        if (!landed) {
-          setStumble(true);
-          return; // the item stays; the person simply tries again
-        }
-        outcomesRef.current.set(clientKey, { status: "created" }); // the awaited submit IS the ack
-      } else {
-        void awaitAck(key, clientKey).then((o) => outcomesRef.current.set(clientKey, o));
-      }
-      const label =
-        triageDecisions(target.id).find((t) => t.decision.result === decision.result)?.label ??
-        decision.result;
-      roundLogRef.current.push({
-        clientKey,
-        itemId: target.id,
-        label,
-        moved: { type: "triage", createdAt: Date.parse(enqueuedAt), decision },
-      });
-      setNewlyDecided((prev) => new Set(prev).add(target.id)); // idempotent — a re-answer never double-counts
-      advancePast(target.id);
-      setRevisit(null); // a superseding answer resumes the round
-    } finally {
-      busyRef.current = false;
-    }
+    if (!(await round.submitDecision(target.id, decision))) return;
+    setNewlyDecided((prev) => new Set(prev).add(target.id)); // idempotent — a re-answer never double-counts
+    advancePast(target.id);
   }
 
-  // The round's back affordance: re-present the last answered item (spec §3.3).
-  // Still queued → pure client undo. In-flight/acked → the answer STANDS and is
-  // shown as the standing choice (F19). Rejected → nothing stands; no-op (F9 —
-  // resurfacing is the reconciliation).
+  // The round's back affordance (spec §3.3): the shared machine decides queued
+  // vs standing vs no-op. A queued undo comes back here to un-advance the item
+  // and decrement this round's count (F20) — the two pieces of triage state the
+  // hook never owns.
   function goBack() {
-    if (revisit !== null) return;
-    const last = roundLogRef.current[roundLogRef.current.length - 1];
-    if (last === undefined) return;
-    const outcome = outcomesRef.current.get(last.clientKey);
-    if (outcome?.status === "rejected") return;
-    if (outcome === undefined && !isInFlight(key, last.clientKey) && removeQueued(key, last.clientKey)) {
-      // The answer never left the device: remove it, re-present fresh (F20 decrement).
-      roundLogRef.current.pop();
-      setNewlyDecided((prev) => {
-        const next = new Set(prev);
-        next.delete(last.itemId);
-        return next;
-      });
-      setHandled((prev) => {
-        const next = new Set(prev);
-        next.delete(last.itemId);
-        return next;
-      });
-      return;
-    }
-    setRevisit({ itemId: last.itemId, clientKey: last.clientKey, label: last.label });
+    const fresh = round.goBack();
+    if (fresh === null) return;
+    setNewlyDecided((prev) => {
+      const next = new Set(prev);
+      next.delete(fresh.itemId);
+      return next;
+    });
+    setHandled((prev) => {
+      const next = new Set(prev);
+      next.delete(fresh.itemId);
+      return next;
+    });
   }
 
   async function handleDefer(target: Item) {
@@ -295,20 +195,28 @@ export function TriageRound({
   // never on the flush; dispositions don't count.
   const decided = seedRef.current + newlyDecided.size;
 
+  const roundOver = shown === undefined || expired;
   const timer = (
-    <RoundTimer
-      startedAtMs={startedAtRef.current}
-      boxMs={boxMs}
-      onExpire={() => setExpired(true)}
-      roundLabel="This round"
-    />
+    <div className="flex items-start gap-3">
+      <div className="min-w-0 flex-1">
+        <RoundTimer
+          startedAtMs={round.startedAtMs}
+          boxMs={round.boxMs}
+          onExpire={round.onExpire}
+          roundLabel={THIS_ROUND_LABEL}
+        />
+      </div>
+      {/* Switchable before AND during a round (parent D2); shown only while the
+          round is live — the recap has no length to choose. */}
+      {!roundOver && <RoundLengthChooser onChange={round.onBoxChange} />}
+    </div>
   );
 
   return (
     <RoundShell
       step={1}
-      totalSteps={3}
-      roundLabel="This round"
+      totalSteps={4}
+      roundLabel={THIS_ROUND_LABEL}
       timer={timer}
       onPause={() => router.push(hubHref)}
     >
@@ -320,9 +228,9 @@ export function TriageRound({
       </div>
       {shown === undefined || expired ? (
         <WhatMoved
-          decisions={frozen?.decisions ?? [...serverLogRef.current, ...roundLogRef.current.map((e) => e.moved)]}
-          windowStartMs={startedAtRef.current}
-          nowMs={frozen?.endedAtMs}
+          decisions={round.recapDecisions}
+          windowStartMs={round.windowStartMs}
+          nowMs={round.recapNowMs}
           hubHref={hubHref}
         />
       ) : (
@@ -343,7 +251,7 @@ export function TriageRound({
               </Link>
             </p>
             {/* Undo-as-revisit: a quiet single step back, never a rewind. */}
-            {revisit === null && roundLogRef.current.length > 0 && (
+            {round.canGoBack && (
               <p className="mt-1">
                 <button
                   type="button"
@@ -356,7 +264,7 @@ export function TriageRound({
             )}
           </div>
 
-          {stumble && (
+          {round.stumble && (
             <p role="status" className="text-sm text-ink-soft">
               {STUMBLE_LINE}
             </p>
@@ -411,7 +319,7 @@ export function TriageRound({
                    untriaged), so "Not yet"/"Not mine" step back while revisiting —
                    only a gentle way to resume remains. */
                 <div className="border-t border-hairline pt-3">
-                  <Button type="button" variant="ghost" onClick={() => setRevisit(null)}>
+                  <Button type="button" variant="ghost" onClick={round.clearRevisit}>
                     Keep going
                   </Button>
                 </div>

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { DecisionControls } from "@/features/sorting/DecisionControls";
 import { DeferControl } from "@/features/sorting/DeferControl";
 import { SetAsideButton } from "@/features/sorting/SetAsideButton";
-import { ROUND_COPY, triageDecisions } from "@/features/sorting/roundCopy";
+import { ROUND_COPY, WELCOME_ROUND_KICKER, triageDecisions } from "@/features/sorting/roundCopy";
 import { RESULT_TO_TIER, TRIAGE_ITEMS, type TriageOutcome } from "./sampleData";
 
 interface WelcomeTriageProps {
@@ -16,15 +16,15 @@ interface WelcomeTriageProps {
 
 // Beat 2 — one thing at a time, taught with the REAL sorting controls in their
 // synchronous local mode: no fetch, no router, no TriageUndoProvider. The kicker
-// reuses the hub's exact taught noun ("A Triage round") so the two surfaces
-// cannot fork.
+// uses a NEUTRAL round noun (WELCOME_ROUND_KICKER) distinct from the person-side
+// arc names in ROUND_COPY (user decision); the explainer still comes from ROUND_COPY.
 export function WelcomeTriage({ index, onOutcome }: WelcomeTriageProps) {
   const item = TRIAGE_ITEMS[index];
 
   return (
     <section className="flex flex-col items-center text-center gap-6">
       <div className="flex flex-col items-center gap-1">
-        <p className="text-sm text-ink-soft">A {ROUND_COPY.triage.name} round</p>
+        <p className="text-sm text-ink-soft">{WELCOME_ROUND_KICKER}</p>
         <p className="text-sm text-ink-soft">{ROUND_COPY.triage.explainer}</p>
       </div>
 

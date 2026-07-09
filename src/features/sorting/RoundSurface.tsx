@@ -2,15 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { getRoundBox } from "@/lib/round-preference";
+import { getRoundBox, type RoundBox } from "@/lib/round-preference";
 import type { MovedDecision } from "@/lib/what-moved";
 import { RoundShell } from "./RoundShell";
 import { RoundTimer } from "./RoundTimer";
+import { RoundLengthChooser } from "./RoundLengthChooser";
 import { WhatMoved } from "./WhatMoved";
 
 interface RoundSurfaceProps {
-  /** 1-based step in the 3-step round arc (triage = 1, compare = 2). */
-  step: 1 | 2 | 3;
+  /** 1-based step in the 4-step round arc (triage = 1, usage = 2, compare = 3, decide = 4). */
+  step: 1 | 2 | 3 | 4;
   totalSteps: number;
   roundLabel: string;
   /** The server-fetched round content (DecisionControls / CompareChoice etc.). */
@@ -57,17 +58,27 @@ export function RoundSurface({
     setBoxMs(box === "none" ? null : box * MINUTE_MS);
   }, []);
 
+  // Mid-round length switch (parent D2): re-arm boxMs against the UNCHANGED start —
+  // "none" drops the countdown, a shorter box expires at the next tick.
+  const onBoxChange = (box: RoundBox) => setBoxMs(box === "none" ? null : box * MINUTE_MS);
+
   // The round ends on the timer expiring OR the server handing us an empty queue —
   // either way the recap replaces the content and both paths terminate the round.
   const ended = expired || queueEmpty;
 
   const timer = (
-    <RoundTimer
-      startedAtMs={startedAtRef.current}
-      boxMs={boxMs}
-      onExpire={() => setExpired(true)}
-      roundLabel={roundLabel}
-    />
+    <div className="flex items-start gap-3">
+      <div className="min-w-0 flex-1">
+        <RoundTimer
+          startedAtMs={startedAtRef.current}
+          boxMs={boxMs}
+          onExpire={() => setExpired(true)}
+          roundLabel={roundLabel}
+        />
+      </div>
+      {/* Switchable before AND during a round (parent D2); only while live. */}
+      {!ended && <RoundLengthChooser onChange={onBoxChange} />}
+    </div>
   );
 
   return (

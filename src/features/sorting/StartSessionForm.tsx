@@ -4,7 +4,14 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Input, Select } from "@/components/ui";
-import { setRoundBox, type RoundBox } from "@/lib/round-preference";
+import { setRoundBox, ROUND_BOX_OPTIONS, DEFAULT_ROUND_BOX, type RoundBox } from "@/lib/round-preference";
+
+// Quiet helper lines under the Round length control, keyed to the selection (TONE).
+export const TIMED_BOX_HELPER = "A short round — it wraps up gently.";
+export const NO_TIMER_HELPER = "Take all the time you like.";
+
+// HTML <select> values are strings; ROUND_BOX_OPTIONS is the one home for the list.
+const TIMEBOX_OPTIONS = ROUND_BOX_OPTIONS.map((o) => ({ value: String(o.value), label: o.label }));
 
 interface StartSessionFormProps {
   collectionId: string;
@@ -15,9 +22,9 @@ export function StartSessionForm({ collectionId, collectionSlug }: StartSessionF
   const router = useRouter();
   const [goal, setGoal] = useState("Discover favorites");
   const [scope, setScope] = useState("all");
-  // Default to a gentle 10-minute round box so the timer is actually experienced;
-  // "No timer" is one tap away (a11y 2.2.1). Persisted device-locally, never to the DB.
-  const [timebox, setTimebox] = useState("10");
+  // Default to the shared gentle round box (round-preference.ts is the one home);
+  // "No timer" is a first-class peer, never buried. Persisted device-locally, never to the DB.
+  const [timebox, setTimebox] = useState(String(DEFAULT_ROUND_BOX));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,13 +84,11 @@ export function StartSessionForm({ collectionId, collectionSlug }: StartSessionF
                 aria-label="Round length"
                 value={timebox}
                 onChange={(event) => chooseTimebox(event.target.value)}
-                options={[
-                  { value: "5", label: "5 minutes" },
-                  { value: "10", label: "10 minutes" },
-                  { value: "20", label: "20 minutes" },
-                  { value: "none", label: "No timer" },
-                ]}
+                options={TIMEBOX_OPTIONS}
               />
+              <p className="mt-2 text-sm text-ink-soft">
+                {timebox === "none" ? NO_TIMER_HELPER : TIMED_BOX_HELPER}
+              </p>
             </div>
           </div>
         </div>

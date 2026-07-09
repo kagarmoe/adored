@@ -2,6 +2,10 @@
 
 This file provides instructions and context for AI coding agents working on this project.
 
+## Communication preferences
+
+Be brief.
+
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:6cd5cc61 -->
 ## Beads Issue Tracker
 
@@ -69,6 +73,9 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 - If a required sync or push is blocked, stop and report the exact command and error.
 <!-- END BEADS INTEGRATION -->
 
+**Definition of done for beads**
+- An epic is not complete until all follow-up beads are complete.
+- When working outside of an epic, an issue is not complete until all follow-up beads are complete.
 
 ## Build & Test
 

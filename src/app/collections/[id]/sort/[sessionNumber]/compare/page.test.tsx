@@ -157,10 +157,10 @@ describe("ComparePage gentle progress text (Epic 0 Task 8 regression)", () => {
 });
 
 describe("ComparePage round chrome + copy (Epic 4c)", () => {
-  it("wraps the compare content in the round shell (step 2 of 3)", async () => {
+  it("wraps the compare content in the round shell (step 3 of 4 — usage is now step 2)", async () => {
     const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
     render(ui);
-    expect(screen.getByRole("list", { name: /round progress: step 2 of 3/i })).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: /round progress: step 3 of 4/i })).toBeInTheDocument();
     // The live pair still renders inside the shell.
     expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
   });

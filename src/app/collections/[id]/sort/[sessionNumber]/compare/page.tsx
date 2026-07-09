@@ -149,8 +149,8 @@ export default async function ComparePage({ params }: ComparePageProps) {
           decision log — pending decisions must drain before it can be trusted. */}
       <PendingDecisionsGate curatorId={session.user.id}>
       <RoundSurface
-        step={2}
-        totalSteps={3}
+        step={3}
+        totalSteps={4}
         roundLabel="Comparing"
         decisions={decisions}
         hubHref={`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}`}

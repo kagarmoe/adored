@@ -11,8 +11,8 @@ import { AppLayout } from "@/components/layout";
 import { Badge, Button, Card } from "@/components/ui";
 import { SessionAnalytics } from "@/features/sessions/SessionAnalytics";
 import { SeeResultsCard } from "@/features/sessions/SeeResultsCard";
-import { RecommendedRoundCard } from "@/features/sessions/RecommendedRoundCard";
-import { recommendNextRound } from "@/lib/next-round";
+import { RecommendedRound } from "@/features/sessions/RecommendedRound";
+import { recommendNextRound, type NextRound } from "@/lib/next-round";
 import { ROUND_COPY } from "@/features/sorting/roundCopy";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
 import Link from "next/link";
@@ -49,27 +49,48 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
-  const [preferences, decisions, dispositions] = await Promise.all([
+  const [preferences, curatorDecisions, dispositions] = await Promise.all([
     PreferenceController.fromDb(db).listItemPreferences(collection.id, sortSession.curatorId),
-    DecisionController.fromDb(db).listBySession(sortSession.id),
+    // ONE decision read serves both consumers (spec §3.8/§2.6): the curator's whole
+    // cross-session log drives usage-known derivation; the session-scoped subset below
+    // feeds selectNextPair/analytics. The curator guard above makes the curator log a
+    // strict superset, so the filtered subset equals the retired listBySession result.
+    DecisionController.fromDb(db).listForCurator(collection.id, sortSession.curatorId),
     DispositionController.fromDb(db).listDispositions(collection.id, sortSession.curatorId),
   ]);
+
+  // The unchanged selectNextPair / SessionAnalytics input — §7.3's session-scoped quirk
+  // is preserved (not fixed) here.
+  const decisions = curatorDecisions.filter((e) => e.sessionId === sortSession.id);
 
   // Gates the "See results" card: at least one item has been given a feeling.
   const bucketed = preferences.length;
 
-  // Derived, no schema: which round is a good next step. Reuses the same
-  // selectTriageItem / selectNextPair the rounds themselves use, so it can never
-  // disagree with what a round would actually show (TONE: a suggestion, not a tally).
+  // Derived, no schema: which round is a good next step, plus the demoted twin the
+  // device-local anti-nagging swap needs. Reuses the same selectTriageItem /
+  // selectUsageQueue / selectNextPair the rounds use, so it can never disagree with
+  // what a round would actually show (TONE: a suggestion, not a tally).
   const dispositionByItemId = new Map(dispositions.map((d) => [d.itemId, d.disposition]));
-  const nextRound = recommendNextRound({ items, preferences, decisions, dispositionByItemId });
+  const { primary, whenUsageDemoted } = recommendNextRound({
+    items,
+    preferences,
+    decisions,
+    curatorDecisions,
+    dispositionByItemId,
+  });
   const collectionHref = `/collections/${collection.slug ?? collection.id}`;
-  const nextRoundHref =
-    nextRound.kind === "triage"
-      ? `${collectionHref}/sort/${sortSession.number}/triage`
-      : nextRound.kind === "compare"
-        ? `${collectionHref}/sort/${sortSession.number}/compare`
-        : `${collectionHref}/results`;
+  const hrefFor = (round: NextRound): string => {
+    switch (round.kind) {
+      case "triage":
+        return `${collectionHref}/sort/${sortSession.number}/triage`;
+      case "usage":
+        return `${collectionHref}/sort/${sortSession.number}/usage`;
+      case "compare":
+        return `${collectionHref}/sort/${sortSession.number}/compare`;
+      case "decide":
+        return `${collectionHref}/results`;
+    }
+  };
 
   return (
     <AppLayout
@@ -92,13 +113,29 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
           </div>
         </div>
 
-        <RecommendedRoundCard round={nextRound} href={nextRoundHref} />
+        <RecommendedRound
+          primary={{ round: primary, href: hrefFor(primary) }}
+          whenUsageDemoted={
+            whenUsageDemoted ? { round: whenUsageDemoted, href: hrefFor(whenUsageDemoted) } : undefined
+          }
+          curatorId={sortSession.curatorId}
+          sessionId={sortSession.id}
+        />
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           <Link href={`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}/triage`}>
             <Card interactive padding="lg">
               <h2 className="text-lg text-ink">{ROUND_COPY.triage.name}</h2>
               <p className="mt-2 text-sm text-ink-soft">{ROUND_COPY.triage.explainer}</p>
+              <div className="mt-4">
+                <Button size="sm">Open</Button>
+              </div>
+            </Card>
+          </Link>
+          <Link href={`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}/usage`}>
+            <Card interactive padding="lg">
+              <h2 className="text-lg text-ink">{ROUND_COPY.usage.name}</h2>
+              <p className="mt-2 text-sm text-ink-soft">{ROUND_COPY.usage.explainer}</p>
               <div className="mt-4">
                 <Button size="sm">Open</Button>
               </div>

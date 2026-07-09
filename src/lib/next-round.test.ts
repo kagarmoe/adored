@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { recommendNextRound } from "./next-round";
+import { ROUND_COPY } from "@/features/sorting/roundCopy";
 import type {
   CollectionPreferenceItem,
   DecisionEvent,
@@ -64,65 +65,177 @@ function compareEvent(
   };
 }
 
-describe("recommendNextRound", () => {
-  it("recommends triage when untriaged items remain", () => {
-    // 'b' has no preference → still untriaged.
+function usageEvent(
+  id: string,
+  itemId: string,
+  result: "uses" | "not_uses" = "uses",
+  createdAtMs = 0,
+): DecisionEvent {
+  return {
+    id,
+    sessionId: "sess-1",
+    type: "usage",
+    decision: { itemId, result },
+    createdAt: new Date(createdAtMs),
+  };
+}
+
+describe("recommendNextRound — ladder", () => {
+  it("recommends triage when untriaged items remain (no whenUsageDemoted)", () => {
+    // 'b' has no preference → still untriaged. Triage wins the top of the ladder.
     const items = [item("a", 1), item("b", 2)];
     const preferences = [pref("a")];
 
-    const next = recommendNextRound({ items, preferences, decisions: [] });
+    const { primary, whenUsageDemoted } = recommendNextRound({
+      items,
+      preferences,
+      decisions: [],
+      curatorDecisions: [],
+    });
 
-    expect(next.kind).toBe("triage");
-    expect(next.label).toBe("Quick triage");
+    expect(primary.kind).toBe("triage");
+    expect(primary.label).toBe("Quick triage");
+    expect(whenUsageDemoted).toBeUndefined();
   });
 
-  it("recommends compare when everything is triaged but a rankable pair remains", () => {
-    // Both triaged into rankable buckets (top/high), no comparison yet → a pair pends.
+  it("recommends usage when everything is triaged but usage is still unknown, and returns whenUsageDemoted", () => {
+    // Both triaged into rankable buckets; usage unknown for both → usage is primary.
+    // Demoted ladder skips usage → a pair still pends → compare.
     const items = [item("a", 1), item("b", 2)];
     const preferences = [pref("a", "top"), pref("b", "high")];
 
-    const next = recommendNextRound({ items, preferences, decisions: [] });
+    const { primary, whenUsageDemoted } = recommendNextRound({
+      items,
+      preferences,
+      decisions: [],
+      curatorDecisions: [],
+    });
 
-    expect(next.kind).toBe("compare");
-    expect(next.label).toBe("Refine the top tier");
+    expect(primary.kind).toBe("usage");
+    expect(whenUsageDemoted).toBeDefined();
+    // Demotion never re-promotes usage: skip it → compare (a rankable pair remains).
+    expect(whenUsageDemoted?.kind).toBe("compare");
   });
 
-  it("recommends decide when triage is done and the rankable set is fully ordered", () => {
-    // Both triaged, one comparison orders the pair → no pending pair, nothing untriaged.
+  it("recommends compare when triage + usage are known and a rankable pair remains (no whenUsageDemoted)", () => {
     const items = [item("a", 1), item("b", 2)];
     const preferences = [pref("a", "top"), pref("b", "high")];
+    // Usage answered for both → usage queue empty → usage falls through to compare.
+    const curatorDecisions = [usageEvent("u-a", "a"), usageEvent("u-b", "b")];
+
+    const { primary, whenUsageDemoted } = recommendNextRound({
+      items,
+      preferences,
+      decisions: [],
+      curatorDecisions,
+    });
+
+    expect(primary.kind).toBe("compare");
+    expect(primary.label).toBe("Refine the top tier");
+    expect(whenUsageDemoted).toBeUndefined();
+  });
+
+  it("recommends decide when triage + usage are known and the rankable set is fully ordered (no whenUsageDemoted)", () => {
+    const items = [item("a", 1), item("b", 2)];
+    const preferences = [pref("a", "top"), pref("b", "high")];
+    const curatorDecisions = [usageEvent("u-a", "a"), usageEvent("u-b", "b")];
+    // One comparison orders the pair → no pending pair.
     const decisions = [compareEvent("d1", "a", "b", "item_a", 10)];
 
-    const next = recommendNextRound({ items, preferences, decisions });
+    const { primary, whenUsageDemoted } = recommendNextRound({
+      items,
+      preferences,
+      decisions,
+      curatorDecisions,
+    });
 
-    expect(next.kind).toBe("decide");
+    expect(primary.kind).toBe("decide");
+    expect(whenUsageDemoted).toBeUndefined();
   });
 
   it("recommends decide when there are no items at all", () => {
-    const next = recommendNextRound({ items: [], preferences: [], decisions: [] });
-    expect(next.kind).toBe("decide");
+    const { primary, whenUsageDemoted } = recommendNextRound({
+      items: [],
+      preferences: [],
+      decisions: [],
+      curatorDecisions: [],
+    });
+    expect(primary.kind).toBe("decide");
+    expect(whenUsageDemoted).toBeUndefined();
   });
 
-  it("skips a set-aside item rather than recommending triage for it", () => {
-    // 'b' is untriaged but set aside → not a triage candidate; 'a' fully ordered alone.
+  it("demotion falls to decide (never usage) when no rankable pair remains", () => {
+    // A single triaged item with usage unknown → usage is primary. Skipping usage
+    // leaves one lonely item: no pair → decide. Usage is NEVER re-promoted.
+    const items = [item("a", 1)];
+    const preferences = [pref("a", "top")];
+
+    const { primary, whenUsageDemoted } = recommendNextRound({
+      items,
+      preferences,
+      decisions: [],
+      curatorDecisions: [],
+    });
+
+    expect(primary.kind).toBe("usage");
+    expect(whenUsageDemoted?.kind).toBe("decide");
+    expect(whenUsageDemoted?.kind).not.toBe("usage");
+  });
+
+  it("skips a set-aside item rather than recommending triage or usage for it", () => {
+    // 'b' is untriaged but set aside → neither a triage nor a usage candidate; 'a'
+    // triaged + usage-known and alone → no pair → decide.
     const items = [item("a", 1), item("b", 2)];
     const preferences = [pref("a", "top")];
+    const curatorDecisions = [usageEvent("u-a", "a")];
     const dispositionByItemId = new Map<string, "set_aside" | "deferred">([["b", "set_aside"]]);
 
-    const next = recommendNextRound({ items, preferences, decisions: [], dispositionByItemId });
+    const { primary } = recommendNextRound({
+      items,
+      preferences,
+      decisions: [],
+      curatorDecisions,
+      dispositionByItemId,
+    });
 
-    // 'a' alone is rankable but a single item has no pair → decide.
-    expect(next.kind).toBe("decide");
+    expect(primary.kind).toBe("decide");
+  });
+});
+
+describe("recommendNextRound — usage card copy (TONE)", () => {
+  it("labels the usage card via ROUND_COPY.usage.name (one home) with verbatim description + cta", () => {
+    const items = [item("a", 1)];
+    const preferences = [pref("a", "top")];
+
+    const { primary } = recommendNextRound({
+      items,
+      preferences,
+      decisions: [],
+      curatorDecisions: [],
+    });
+
+    expect(primary.kind).toBe("usage");
+    expect(primary.label).toBe(ROUND_COPY.usage.name);
+    expect(primary.description).toBe(
+      "An easy pass — just whether each piece is in your life right now.",
+    );
+    expect(primary.cta).toBe("Begin");
   });
 
-  it("emits no numeric denominator, percentage, or rate in any copy field", () => {
-    const items = [item("a", 1), item("b", 2)];
-    const preferences = [pref("a")];
-    const next = recommendNextRound({ items, preferences, decisions: [] });
+  it("emits no numeric denominator, percentage, or rate in any usage copy field", () => {
+    const items = [item("a", 1)];
+    const preferences = [pref("a", "top")];
+    const { primary } = recommendNextRound({
+      items,
+      preferences,
+      decisions: [],
+      curatorDecisions: [],
+    });
 
-    const copy = `${next.label} ${next.description} ${next.cta}`;
+    const copy = `${primary.label} ${primary.description} ${primary.cta}`;
     expect(copy).not.toMatch(/\bof\s+\d/i);
     expect(copy).not.toMatch(/%/);
+    expect(copy).not.toMatch(/\d/);
     expect(copy).not.toMatch(/per min|rate|coverage|remaining/i);
   });
 });

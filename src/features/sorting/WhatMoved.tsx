@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { whatMoved, type MovedDecision, type WhatMovedSummary } from "@/lib/what-moved";
+import {
+  whatMoved,
+  inYourLifeLine,
+  restingLine,
+  type MovedDecision,
+  type WhatMovedSummary,
+} from "@/lib/what-moved";
 
 interface WhatMovedProps {
   /** The session's decisions; only those inside the window are counted. */
@@ -24,6 +30,8 @@ function lines(summary: WhatMovedSummary): string[] {
   if (summary.ranked > 0) {
     out.push(`${summary.ranked} ${summary.ranked === 1 ? "comparison" : "comparisons"} made`);
   }
+  if (summary.uses > 0) out.push(inYourLifeLine(summary.uses));
+  if (summary.resting > 0) out.push(restingLine(summary.resting));
   return out;
 }
 

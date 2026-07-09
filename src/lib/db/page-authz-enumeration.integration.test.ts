@@ -156,6 +156,7 @@ function buildStrangerPageCases(collectionId: string): StrangerPageCase[] {
     p("collections/[id]/sort/set-aside", { id }),
     p("collections/[id]/sort/[sessionNumber]", { id, sessionNumber: N }),
     p("collections/[id]/sort/[sessionNumber]/triage", { id, sessionNumber: N }),
+    p("collections/[id]/sort/[sessionNumber]/usage", { id, sessionNumber: N }),
     p("collections/[id]/sort/[sessionNumber]/compare", { id, sessionNumber: N }),
   ];
 }

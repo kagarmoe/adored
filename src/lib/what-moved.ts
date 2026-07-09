@@ -30,12 +30,59 @@ export interface WhatMovedSummary {
   onward: number;
   /** Pairwise comparisons made (ranking). */
   ranked: number;
+  /** Usage → in your life ("uses"). */
+  uses: number;
+  /** Usage → resting for now ("not_uses"). */
+  resting: number;
   /** All decisions counted inside the window. */
   total: number;
 }
 
+// The two usage recap lines' one home ("{n} in your life" / "{n} resting for now",
+// spec §4). Count-first, affirming (F20) — the leading number is the by-design count,
+// never a remaining tally. One home so the recap surface and the TONE register scan
+// assert against the same template.
+export const inYourLifeLine = (n: number): string => `${n} in your life`;
+export const restingLine = (n: number): string => `${n} resting for now`;
+
 function toMs(at: Date | number): number {
   return typeof at === "number" ? at : at.getTime();
+}
+
+// The dedupe key for an item-scoped decision, or null for pairwise (which carries
+// no single itemId — each comparison is its own row and must never collapse).
+function itemKeyOf(d: MovedDecision): string | null {
+  if (d.type === "pairwise_compare") return null;
+  return `${d.type}:${(d.decision as { itemId: string }).itemId}`;
+}
+
+/**
+ * Collapse a round's decisions to ONE row per (type, itemId), keeping the entry
+ * with the latest createdAt (ties resolve to the later array position — the newer
+ * answer). Mirrors deriveUsage's latest-wins so the recap can never double-count an
+ * item that was answered, flushed, then changed via Back-as-revisit (which appends a
+ * second log entry rather than replacing the first). Pairwise comparisons pass
+ * through untouched; order is stable by first-seen. Applied where recap decisions are
+ * consumed, before whatMoved counts them.
+ */
+export function dedupeDecisionsLatestWins(decisions: MovedDecision[]): MovedDecision[] {
+  const result: MovedDecision[] = [];
+  const indexByKey = new Map<string, number>();
+  for (const d of decisions) {
+    const key = itemKeyOf(d);
+    if (key === null) {
+      result.push(d);
+      continue;
+    }
+    const existing = indexByKey.get(key);
+    if (existing === undefined) {
+      indexByKey.set(key, result.length);
+      result.push(d);
+    } else if (toMs(d.createdAt) >= toMs(result[existing].createdAt)) {
+      result[existing] = d; // latest wins, kept at the first-seen position
+    }
+  }
+  return result;
 }
 
 export function whatMoved(
@@ -43,7 +90,16 @@ export function whatMoved(
   windowStartMs: number,
   windowEndMs: number,
 ): WhatMovedSummary {
-  const summary: WhatMovedSummary = { love: 0, like: 0, maybe: 0, onward: 0, ranked: 0, total: 0 };
+  const summary: WhatMovedSummary = {
+    love: 0,
+    like: 0,
+    maybe: 0,
+    onward: 0,
+    ranked: 0,
+    uses: 0,
+    resting: 0,
+    total: 0,
+  };
 
   for (const d of decisions) {
     const ms = toMs(d.createdAt);
@@ -52,6 +108,13 @@ export function whatMoved(
 
     if (d.type === "pairwise_compare") {
       summary.ranked += 1;
+      continue;
+    }
+
+    if (d.type === "usage") {
+      const usageResult = (d.decision as { result: UsageResult }).result;
+      if (usageResult === "uses") summary.uses += 1;
+      else summary.resting += 1;
       continue;
     }
 

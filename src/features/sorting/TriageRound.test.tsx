@@ -85,6 +85,15 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+describe("TriageRound round chrome (4-step arc, Epic R)", () => {
+  it("wraps the round in the shell as step 1 of 4 — triage is the arc's first beat", () => {
+    renderRound();
+    expect(
+      screen.getByRole("list", { name: /round progress: step 1 of 4/i }),
+    ).toBeInTheDocument();
+  });
+});
+
 describe("TriageRound optimistic advance (F15)", () => {
   it("n taps advance through n items with ZERO refresh; each tap is persisted before the next item renders", async () => {
     const user = userEvent.setup();
@@ -502,6 +511,67 @@ describe("TriageRound undo-as-revisit (F19/F4)", () => {
     // Nothing stands to revisit — the round stays where it was.
     expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "Bag A" })).not.toBeInTheDocument();
+  });
+});
+
+describe("TriageRound round-length chooser (mid-round switch, spec §3.1)", () => {
+  it("mid-round switch to 'No timer' removes the countdown and the round no longer expires", async () => {
+    vi.useFakeTimers();
+    store.setItem("pi-round-box", "1"); // start with a 1-minute box
+    renderRound({ queue: [entry("item_a", "Bag A")] });
+
+    // The countdown is live.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(screen.getByRole("timer")).toBeInTheDocument();
+
+    // Switch to No timer mid-round: the countdown is gone…
+    fireEvent.change(screen.getByRole("combobox", { name: "Round length" }), {
+      target: { value: "none" },
+    });
+    expect(screen.queryByRole("timer")).not.toBeInTheDocument();
+
+    // …and advancing well past the old box never ends the round.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2 * 60_000);
+    });
+    expect(screen.queryByRole("heading", { name: /here.s what moved/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
+  });
+
+  it("switching to a box SHORTER than the elapsed time ends the round gently into the recap", async () => {
+    vi.useFakeTimers();
+    store.setItem("pi-round-box", "5"); // start with a 5-minute box
+    renderRound({ queue: [entry("item_a", "Bag A")] });
+
+    // 2 minutes elapse — short of the 5-minute box, the round is still live.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2 * 60_000);
+    });
+    expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
+
+    // Switch to a 1-minute box: already past. It expires (against the unchanged
+    // start) and ends the round into the recap — no error, no shaming.
+    fireEvent.change(screen.getByRole("combobox", { name: "Round length" }), {
+      target: { value: "1" },
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1_500);
+    });
+    expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
+    expect(screen.queryByText(/error|failed|too many/i)).not.toBeInTheDocument();
+  });
+
+  it("the round-length chooser is absent once the recap shows", async () => {
+    const user = userEvent.setup();
+    renderRound({ queue: [entry("item_a", "Bag A")] });
+
+    expect(screen.getByRole("combobox", { name: "Round length" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Love" }));
+
+    expect(await screen.findByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Round length" })).not.toBeInTheDocument();
   });
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { whatMoved, type MovedDecision } from "./what-moved";
+import { dedupeDecisionsLatestWins, whatMoved, type MovedDecision } from "./what-moved";
 
 const WSTART = 1_000_000;
 const WEND = 1_060_000; // one minute window
@@ -14,6 +14,10 @@ function pairwise(at: number): MovedDecision {
     createdAt: at,
     decision: { itemAId: "a", itemBId: "b", result: "item_a" },
   };
+}
+
+function usage(id: string, result: "uses" | "not_uses", at: number): MovedDecision {
+  return { type: "usage", createdAt: at, decision: { itemId: id, result } };
 }
 
 describe("whatMoved — window boundaries", () => {
@@ -54,6 +58,46 @@ describe("whatMoved — window boundaries", () => {
     expect(r.maybe).toBe(0);
     expect(r.onward).toBe(0);
     expect(r.ranked).toBe(0);
+    expect(r.uses).toBe(0);
+    expect(r.resting).toBe(0);
+  });
+});
+
+describe("whatMoved — usage results", () => {
+  it("counts usage results into uses/resting and total", () => {
+    const r = whatMoved(
+      [
+        usage("1", "uses", WSTART + 1_000),
+        usage("2", "uses", WSTART + 2_000),
+        usage("3", "not_uses", WSTART + 3_000),
+      ],
+      WSTART,
+      WEND,
+    );
+    expect(r.uses).toBe(2);
+    expect(r.resting).toBe(1);
+    expect(r.total).toBe(3);
+    // usage doesn't leak into triage/ranked buckets
+    expect(r.love).toBe(0);
+    expect(r.like).toBe(0);
+    expect(r.maybe).toBe(0);
+    expect(r.onward).toBe(0);
+    expect(r.ranked).toBe(0);
+  });
+
+  it("excludes usage results outside the window", () => {
+    const r = whatMoved(
+      [
+        usage("in", "uses", WSTART + 1_000),
+        usage("before", "uses", WSTART - 1),
+        usage("after", "not_uses", WEND + 1),
+      ],
+      WSTART,
+      WEND,
+    );
+    expect(r.uses).toBe(1);
+    expect(r.resting).toBe(0);
+    expect(r.total).toBe(1);
   });
 });
 
@@ -101,5 +145,78 @@ describe("whatMoved — grouping by outcome", () => {
     );
     expect(r.total).toBe(1);
     expect(r.love).toBe(1);
+  });
+});
+
+describe("dedupeDecisionsLatestWins — one row per (type, itemId), latest createdAt wins", () => {
+  it("usage: a re-answered item keeps only its latest result (uses → resting)", () => {
+    const deduped = dedupeDecisionsLatestWins([
+      usage("a", "uses", WSTART + 1_000),
+      usage("a", "not_uses", WSTART + 2_000),
+    ]);
+    expect(deduped).toEqual([usage("a", "not_uses", WSTART + 2_000)]);
+
+    const r = whatMoved(deduped, WSTART, WEND);
+    expect(r.uses).toBe(0);
+    expect(r.resting).toBe(1);
+    expect(r.total).toBe(1);
+  });
+
+  it("triage: a re-answered item keeps only its latest tier (top → low)", () => {
+    const deduped = dedupeDecisionsLatestWins([
+      triage("a", "top", WSTART + 1_000),
+      triage("a", "low", WSTART + 2_000),
+    ]);
+    const r = whatMoved(deduped, WSTART, WEND);
+    expect(r.love).toBe(0);
+    expect(r.onward).toBe(1);
+    expect(r.total).toBe(1);
+  });
+
+  it("a later entry with an EQUAL createdAt still supersedes (>= keeps the newer answer)", () => {
+    const deduped = dedupeDecisionsLatestWins([
+      usage("a", "uses", WSTART + 5_000),
+      usage("a", "not_uses", WSTART + 5_000),
+    ]);
+    expect(deduped).toEqual([usage("a", "not_uses", WSTART + 5_000)]);
+  });
+
+  it("an earlier-in-array entry that is actually LATER by createdAt wins", () => {
+    const deduped = dedupeDecisionsLatestWins([
+      usage("a", "uses", WSTART + 9_000),
+      usage("a", "not_uses", WSTART + 1_000),
+    ]);
+    // The first entry has the later timestamp, so it stands.
+    expect(deduped).toEqual([usage("a", "uses", WSTART + 9_000)]);
+  });
+
+  it("keeps distinct items separate and preserves first-seen order", () => {
+    const deduped = dedupeDecisionsLatestWins([
+      usage("a", "uses", WSTART + 1_000),
+      usage("b", "not_uses", WSTART + 2_000),
+      usage("a", "not_uses", WSTART + 3_000),
+    ]);
+    expect(deduped).toEqual([
+      usage("a", "not_uses", WSTART + 3_000),
+      usage("b", "not_uses", WSTART + 2_000),
+    ]);
+  });
+
+  it("dedupes per type: same itemId across triage and usage are independent rows", () => {
+    const deduped = dedupeDecisionsLatestWins([
+      triage("a", "top", WSTART + 1_000),
+      usage("a", "uses", WSTART + 2_000),
+    ]);
+    expect(deduped).toHaveLength(2);
+  });
+
+  it("never collapses pairwise comparisons (they carry no single itemId)", () => {
+    const decisions = [pairwise(WSTART + 1_000), pairwise(WSTART + 2_000)];
+    expect(dedupeDecisionsLatestWins(decisions)).toEqual(decisions);
+  });
+
+  it("is a no-op when nothing repeats", () => {
+    const decisions = [triage("a", "top", WSTART + 1_000), usage("b", "uses", WSTART + 2_000)];
+    expect(dedupeDecisionsLatestWins(decisions)).toEqual(decisions);
   });
 });

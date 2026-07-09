@@ -1,26 +1,33 @@
 import type { CollectionPreferenceItem, DecisionEvent, Disposition, Item } from "@/types";
 import { selectTriageItem } from "@/lib/triage-selection";
 import { selectNextPair } from "@/lib/pairwise-selection";
+import { selectUsageQueue } from "@/lib/usage-selection";
+import { deriveUsage } from "@/lib/derive-usage";
+import { ROUND_COPY } from "@/features/sorting/roundCopy";
 
 /**
  * Which round to gently steer the curator toward next, derived entirely from data
  * the hub already loads — no schema, no stored state. Person-side framing only:
  * this is the *recommendation*, never a tally or a "you still have N left" nag.
  *
- *  - untriaged items remain          → "triage"  ("Quick triage")
- *  - else a rankable pair remains    → "compare" ("Refine the top tier")
- *  - else                            → "decide"  (→ results)
+ *  - untriaged items remain           → "triage"  ("Quick triage")
+ *  - else usage still unknown for one  → "usage"   ("Do you use this?")
+ *  - else a rankable pair remains      → "compare" ("Refine the top tier")
+ *  - else                             → "decide"  (→ results)
  *
  * Reuses the same derivations the rounds themselves use (selectTriageItem /
- * selectNextPair over RANKABLE_BUCKETS) so the recommendation can never disagree
- * with what the round would actually show.
+ * selectUsageQueue+deriveUsage / selectNextPair over RANKABLE_BUCKETS) so the
+ * recommendation can never disagree with what the round would actually show (F6).
  */
-export type NextRoundKind = "triage" | "compare" | "decide";
+export type NextRoundKind = "triage" | "usage" | "compare" | "decide";
 
 export interface NextRoundInput {
   items: Item[];
   preferences: CollectionPreferenceItem[];
+  /** Session-scoped log — the unchanged selectNextPair input (§7.3 quirk preserved). */
   decisions: DecisionEvent[];
+  /** The §2.6 cross-session curator log — drives usage-known derivation. */
+  curatorDecisions: DecisionEvent[];
   dispositionByItemId?: Map<string, Disposition>;
 }
 
@@ -32,35 +39,70 @@ export interface NextRound {
   cta: string;
 }
 
-export function recommendNextRound(input: NextRoundInput): NextRound {
-  const { items, preferences, decisions } = input;
+const TRIAGE_ROUND: NextRound = {
+  kind: "triage",
+  label: "Quick triage",
+  description: "A few pieces are still waiting for a first feeling.",
+  cta: "Start triage",
+};
+
+// label is ROUND_COPY.usage.name (one home — the hub grid card and this suggestion
+// cannot fork); description + cta are the card's own copy per the triage/compare
+// precedent. TONE items: non-numeric, no denominator.
+const USAGE_ROUND: NextRound = {
+  kind: "usage",
+  label: ROUND_COPY.usage.name,
+  description: "An easy pass — just whether each piece is in your life right now.",
+  cta: "Begin",
+};
+
+const COMPARE_ROUND: NextRound = {
+  kind: "compare",
+  label: "Refine the top tier",
+  description: "Compare the ones you love to see which you love most.",
+  cta: "Refine",
+};
+
+const DECIDE_ROUND: NextRound = {
+  kind: "decide",
+  label: "See what you love most",
+  description: "You've thought through each one — take a look at what rose to the top.",
+  cta: "See results",
+};
+
+function runLadder(input: NextRoundInput, includeUsage: boolean): NextRound {
+  const { items, preferences, decisions, curatorDecisions } = input;
   const dispositionByItemId = input.dispositionByItemId ?? new Map<string, Disposition>();
 
   const preferenceItemIds = new Set(preferences.map((p) => p.itemId));
   const { item } = selectTriageItem(items, preferenceItemIds, dispositionByItemId);
-  if (item) {
-    return {
-      kind: "triage",
-      label: "Quick triage",
-      description: "A few pieces are still waiting for a first feeling.",
-      cta: "Start triage",
-    };
+  if (item) return TRIAGE_ROUND;
+
+  if (includeUsage) {
+    // Same selectors the usage round uses: latest usage event per live item wins,
+    // queue is the usage-unknown, non-disposed remainder (F6 — agree by construction).
+    const liveIds = new Set(items.map((i) => i.id));
+    const usageByItemId = deriveUsage(curatorDecisions, liveIds);
+    const usageQueue = selectUsageQueue(items, usageByItemId, dispositionByItemId);
+    if (usageQueue.length > 0) return USAGE_ROUND;
   }
 
   const pair = selectNextPair({ preferences, items, decisions, dispositionByItemId });
-  if (pair) {
-    return {
-      kind: "compare",
-      label: "Refine the top tier",
-      description: "Compare the ones you love to see which you love most.",
-      cta: "Refine",
-    };
-  }
+  if (pair) return COMPARE_ROUND;
 
-  return {
-    kind: "decide",
-    label: "See what you love most",
-    description: "You've thought through each one — take a look at what rose to the top.",
-    cta: "See results",
-  };
+  return DECIDE_ROUND;
+}
+
+export function recommendNextRound(input: NextRoundInput): {
+  primary: NextRound;
+  whenUsageDemoted?: NextRound;
+} {
+  const primary = runLadder(input, true);
+  if (primary.kind === "usage") {
+    // A device-local demotion the server can't see: re-run the ladder SKIPPING usage
+    // (triage → compare → decide). Usage is NEVER re-promoted on a demoted device —
+    // the always-present usage chooser card is the honored path back (§7.1, D5).
+    return { primary, whenUsageDemoted: runLadder(input, false) };
+  }
+  return { primary };
 }
