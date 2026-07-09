@@ -38,6 +38,13 @@ export interface WhatMovedSummary {
   total: number;
 }
 
+// The two usage recap lines' one home ("{n} in your life" / "{n} resting for now",
+// spec §4). Count-first, affirming (F20) — the leading number is the by-design count,
+// never a remaining tally. One home so the recap surface and the TONE register scan
+// assert against the same template.
+export const inYourLifeLine = (n: number): string => `${n} in your life`;
+export const restingLine = (n: number): string => `${n} resting for now`;
+
 function toMs(at: Date | number): number {
   return typeof at === "number" ? at : at.getTime();
 }

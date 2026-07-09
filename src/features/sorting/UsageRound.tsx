@@ -14,6 +14,7 @@ import {
   USAGE_PASS_TITLE,
   QUICK_PACE_LABEL,
   QUICK_INTRO_LINE,
+  THIS_ROUND_LABEL,
   nowAnnouncement,
   usageDecisions,
   type UsageResult,
@@ -321,7 +322,7 @@ export function UsageRound({
           startedAtMs={round.startedAtMs}
           boxMs={round.boxMs}
           onExpire={round.onExpire}
-          roundLabel="This round"
+          roundLabel={THIS_ROUND_LABEL}
         />
       </div>
       {/* Switchable before AND during a round (parent D2); live-only — the recap
@@ -335,7 +336,7 @@ export function UsageRound({
       <RoundShell
         step={2}
         totalSteps={4}
-        roundLabel="This round"
+        roundLabel={THIS_ROUND_LABEL}
         timer={timer}
         onPause={() => router.push(hubHref)}
       >

@@ -16,6 +16,11 @@ export const COMPARE_SUBLINE = "Tap the one you love more. Tie or skip whenever 
 // home so both Welcome beats assert against the same string.
 export const WELCOME_ROUND_KICKER = "A sorting round";
 
+// The RoundShell heading for the in-progress round. Shared by triage and usage
+// (spec §4: usage "matches triage's shipped label") — one home so the two round
+// surfaces cannot fork, and so the TONE register scan has a constant to check.
+export const THIS_ROUND_LABEL = "This round";
+
 // Usage-round pass button. The escape's contract lives in its accessible name
 // (WCAG 2.5.3: the accessible name begins with the visible label) — this is the
 // round copy's one home, mirroring the DeferControl precedent.

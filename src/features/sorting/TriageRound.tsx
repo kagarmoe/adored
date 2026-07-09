@@ -8,7 +8,7 @@ import type { MovedDecision } from "@/lib/what-moved";
 import { Button, Card } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
 import { DecisionControls } from "./DecisionControls";
-import { triageDecisions, type TriageResult } from "./roundCopy";
+import { triageDecisions, THIS_ROUND_LABEL, type TriageResult } from "./roundCopy";
 import { DeferControl } from "./DeferControl";
 import { SetAsideButton } from "./SetAsideButton";
 import { useOptionalTriageUndo } from "./TriageUndoProvider";
@@ -203,7 +203,7 @@ export function TriageRound({
           startedAtMs={round.startedAtMs}
           boxMs={round.boxMs}
           onExpire={round.onExpire}
-          roundLabel="This round"
+          roundLabel={THIS_ROUND_LABEL}
         />
       </div>
       {/* Switchable before AND during a round (parent D2); shown only while the
@@ -216,7 +216,7 @@ export function TriageRound({
     <RoundShell
       step={1}
       totalSteps={4}
-      roundLabel="This round"
+      roundLabel={THIS_ROUND_LABEL}
       timer={timer}
       onPause={() => router.push(hubHref)}
     >
