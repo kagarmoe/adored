@@ -2,7 +2,7 @@
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, act } from "@testing-library/react";
-import { RoundTimer } from "./RoundTimer";
+import { RoundTimer, SUB_MINUTE_LABEL } from "./RoundTimer";
 
 // The reduced-motion hook is mocked per-test; default is "no reduced motion".
 let reducedMotion = false;
@@ -114,5 +114,34 @@ describe("RoundTimer", () => {
       <RoundTimer startedAtMs={1_000_000} boxMs={90_000} onExpire={vi.fn()} roundLabel="Round" />,
     );
     expect(screen.getByRole("timer")).toHaveTextContent(/about 2 minutes left/i);
+  });
+
+  it("shows the sub-minute label (not a minute claim) when a 30s box has under a minute left", () => {
+    // A 30s box has < 60s remaining for its whole life: it must never claim a minute.
+    render(
+      <RoundTimer startedAtMs={1_000_000} boxMs={30_000} onExpire={vi.fn()} roundLabel="Round" />,
+    );
+    const timer = screen.getByRole("timer");
+    expect(timer).toHaveTextContent(SUB_MINUTE_LABEL);
+    expect(timer).not.toHaveTextContent(/about 1 minute/i);
+  });
+
+  it("shows the sub-minute label once a longer round crosses under 60s remaining", () => {
+    render(
+      <RoundTimer startedAtMs={1_000_000} boxMs={90_000} onExpire={vi.fn()} roundLabel="Round" />,
+    );
+    // 90s box: at start reads "about 2 minutes"; after 40s, 50s remain -> sub-minute.
+    expect(screen.getByRole("timer")).toHaveTextContent(/about 2 minutes left/i);
+    act(() => {
+      vi.setSystemTime(1_040_000);
+      vi.advanceTimersByTime(40_000);
+    });
+    const timer = screen.getByRole("timer");
+    expect(timer).toHaveTextContent(SUB_MINUTE_LABEL);
+    expect(timer).not.toHaveTextContent(/about 1 minute/i);
+  });
+
+  it("pins the sub-minute label verbatim (TONE item)", () => {
+    expect(SUB_MINUTE_LABEL).toBe("Less than a minute left in this round");
   });
 });

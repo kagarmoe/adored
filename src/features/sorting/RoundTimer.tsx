@@ -15,6 +15,9 @@ interface RoundTimerProps {
 
 const TICK_MS = 1_000;
 
+/** Under a minute left, honest for sub-minute boxes that must never claim a whole minute (TONE). */
+export const SUB_MINUTE_LABEL = "Less than a minute left in this round";
+
 /** Whole minutes left, rounded up so a still-running round never reads "0 minutes left". */
 function minutesLeft(ms: number): number {
   return Math.max(1, Math.ceil(ms / 60_000));
@@ -81,6 +84,8 @@ export function RoundTimer({ startedAtMs, boxMs, onExpire, roundLabel }: RoundTi
           <span aria-hidden>✓</span>
           <span>Round complete</span>
         </p>
+      ) : remaining < 60_000 ? (
+        <p className="text-sm text-ink-soft">{SUB_MINUTE_LABEL}</p>
       ) : (
         <p className="text-sm text-ink-soft">
           About {mins} {mins === 1 ? "minute" : "minutes"} left in this round
