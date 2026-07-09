@@ -23,6 +23,13 @@ export const USAGE_PASS_LABEL = "Skip for now";
 export const USAGE_PASS_TITLE = "It'll come around again";
 export const USAGE_PASS_ARIA_LABEL = "Skip for now — it'll come around again";
 
+// Quick-pace toggle + first-Quick education (spec §3.5, parent D2). TONE items —
+// one home so the round surface and its tests assert against the same strings.
+export const QUICK_PACE_LABEL = "Quick pace";
+export const QUICK_INTRO_LINE = "If you're not sure, it just comes around again.";
+// The visually-hidden advance announcement (WCAG 2.4.3 / SR): "Now: {item name}".
+export const nowAnnouncement = (itemName: string): string => `Now: ${itemName}`;
+
 // The ScoringService result buckets a triage tap can carry. Narrowed (not
 // `string`) so callers can index RESULT_TO_TIER without a cast, which
 // compile-couples this list to that map's keys.

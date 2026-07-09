@@ -5,9 +5,20 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event";
 import type { Item } from "@/types";
 import { readQueue, type QueueKey } from "./decisionQueue";
-import { ROUND_COPY, USAGE_PASS_ARIA_LABEL } from "./roundCopy";
-import { hasUsageRoundRan } from "@/lib/usage-round-prefs";
-import { UsageRound, answeredSoFar, type UsageRoundQueueEntry } from "./UsageRound";
+import {
+  ROUND_COPY,
+  USAGE_PASS_ARIA_LABEL,
+  QUICK_PACE_LABEL,
+  QUICK_INTRO_LINE,
+  nowAnnouncement,
+} from "./roundCopy";
+import {
+  getUsagePace,
+  hasSeenQuickIntro,
+  hasUsageRoundRan,
+  markQuickIntroSeen,
+} from "@/lib/usage-round-prefs";
+import { UsageRound, answeredSoFar, QUICK_BEAT_MS, type UsageRoundQueueEntry } from "./UsageRound";
 
 const { refresh, push } = vi.hoisted(() => ({ refresh: vi.fn(), push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push }) }));
@@ -55,6 +66,25 @@ function installStorage(): Storage {
   };
   Object.defineProperty(window, "localStorage", { value: store, configurable: true });
   return store;
+}
+
+// Reduced motion is a pure-CSS concern (motion-reduce:*), but the a11y-floor test
+// mocks matchMedia so the environment reports the preference the class responds to.
+function mockMatchMedia(reducedMotion: boolean) {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    configurable: true,
+    value: (query: string) => ({
+      matches: reducedMotion && query.includes("reduce"),
+      media: query,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    }),
+  });
 }
 
 const item = (id: string, name: string): Item =>
@@ -425,5 +455,247 @@ describe("UsageRound demotion memory (markUsageRoundRan, spec §3.8)", () => {
     const { unmount } = renderRound();
     unmount();
     expect(hasUsageRoundRan("u1", "sess_1")).toBe(false);
+  });
+});
+
+const enableQuick = () =>
+  fireEvent.click(screen.getByRole("button", { name: QUICK_PACE_LABEL }));
+
+describe("UsageRound Quick pacing — the beat (spec §3.5, parent D2)", () => {
+  it("Relaxed is the default: no beat fires without the toggle", async () => {
+    vi.useFakeTimers();
+    renderRound();
+
+    expect(screen.getByRole("button", { name: QUICK_PACE_LABEL })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS * 3);
+    });
+
+    // Never auto-advanced — Bag A still sits under the decision.
+    expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
+    expect(getUsagePace()).toBe("relaxed");
+  });
+
+  it("Quick: after QUICK_BEAT_MS the current item auto-passes to the tail, writing NOTHING", async () => {
+    vi.useFakeTimers();
+    renderRound(); // [A, B]
+    enableQuick();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS);
+    });
+    // A auto-passed (same outcome as a Skip tap) → B is up, nothing persisted.
+    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
+    expect(readQueue(KEY)).toEqual([]);
+    expect(global.fetch).not.toHaveBeenCalled();
+
+    // A rode to the tail: the next beat auto-passes B and A comes back around.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS);
+    });
+    expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
+  });
+
+  it("persists the pace and marks pressed when enabled", () => {
+    renderRound();
+    enableQuick();
+    expect(screen.getByRole("button", { name: QUICK_PACE_LABEL })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(getUsagePace()).toBe("quick");
+  });
+
+  it("a Yes tap racing the beat wins — the item is answered, never passed, no double-advance", async () => {
+    vi.useFakeTimers();
+    renderRound(); // [A, B]
+    enableQuick();
+
+    await act(async () => {
+      // The tap claims A synchronously (before its await); the beat fires mid-flight.
+      fireEvent.click(screen.getByRole("button", { name: YES }));
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS);
+    });
+
+    // Resolves to the tap: A is answered (one usage entry), B is up, no extra skip.
+    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
+    const queued = readQueue(KEY);
+    expect(queued).toHaveLength(1);
+    expect(queued[0]).toMatchObject({ type: "usage", decision: { itemId: "item_a", result: "uses" } });
+    expect(screen.getByText(answeredSoFar(1))).toBeInTheDocument();
+  });
+
+  it("after a queued undo, the beat resumes and can auto-pass the re-presented item", async () => {
+    vi.useFakeTimers();
+    renderRound(); // [A, B]
+    enableQuick();
+
+    fireEvent.click(screen.getByRole("button", { name: YES })); // answer A → claims A
+    await act(async () => {});
+    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /^back$/i })); // queued undo → A fresh
+    await act(async () => {});
+    expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS);
+    });
+    // The claim was released on undo — the beat is not stuck; A auto-passes to B.
+    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
+  });
+
+  it("toggling Quick off mid-round cancels the armed beat", async () => {
+    vi.useFakeTimers();
+    renderRound();
+    enableQuick();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS / 2);
+    });
+
+    enableQuick(); // same toggle, now leaving Quick
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS * 3);
+    });
+
+    // No auto-pass after leaving Quick — Bag A stays put.
+    expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: QUICK_PACE_LABEL })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+});
+
+describe("UsageRound Quick pacing — the a11y floor (parent D2 (a)-(d))", () => {
+  it.each([
+    ["the Round length chooser", () => screen.getByRole("combobox", { name: "Round length" })],
+    ["the Quick toggle", () => screen.getByRole("button", { name: QUICK_PACE_LABEL })],
+    ["Pause", () => screen.getByRole("button", { name: "Pause" })],
+  ])("(a) focus on %s suspends the beat; focusout re-arms the full beat", async (_label, getEl) => {
+    vi.useFakeTimers();
+    renderRound(); // [A, B]
+    enableQuick();
+
+    const el = getEl() as HTMLElement;
+    act(() => el.focus());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS * 2);
+    });
+    // Suspended while focus is on the chrome — no advance.
+    expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
+
+    act(() => el.blur());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS);
+    });
+    // A fresh full beat re-armed on focusout → now it advances.
+    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
+  });
+
+  it("(a) focus on the Back/undo control suspends the beat", async () => {
+    vi.useFakeTimers();
+    renderRound();
+    enableQuick();
+
+    // Answer A to surface a Back affordance; the advance re-arms the beat for B.
+    fireEvent.click(screen.getByRole("button", { name: YES }));
+    await act(async () => {});
+    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
+
+    act(() => screen.getByRole("button", { name: /^back$/i }).focus());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS * 2);
+    });
+    // Still on B — the escape hatch is operable without the beat firing beneath it.
+    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
+  });
+
+  it("(b) an auto-pass does NOT steal focus when focus is on interactive chrome outside the card", async () => {
+    vi.useFakeTimers();
+    renderRound();
+    enableQuick();
+
+    // Interactive element OUTSIDE the round root: the root listener never sees it
+    // (so the beat is not suspended), exercising the belt-and-braces guard in (b).
+    const outside = document.createElement("button");
+    document.body.appendChild(outside);
+    act(() => outside.focus());
+    expect(document.activeElement).toBe(outside);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS);
+    });
+
+    // Advanced (A→B) but focus stayed on the outside chrome, not stolen to the heading.
+    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
+    expect(document.activeElement).toBe(outside);
+    outside.remove();
+  });
+
+  it("(b)+(c) in Quick, an advance focuses the question heading and announces the new item", async () => {
+    vi.useFakeTimers();
+    renderRound();
+    enableQuick();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS);
+    });
+
+    expect(document.activeElement).toBe(screen.getByRole("heading", { level: 1 }));
+    // The visually-hidden status region announces the newly-shown item.
+    expect(screen.getByText(nowAnnouncement("Bag B"))).toBeInTheDocument();
+  });
+
+  it("(d) under reduced motion the beat still advances; the swap container keeps motion-reduce:transition-none", async () => {
+    mockMatchMedia(true);
+    vi.useFakeTimers();
+    const { container } = renderRound();
+    enableQuick();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS);
+    });
+
+    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
+    expect(container.querySelector(".motion-reduce\\:transition-none")).not.toBeNull();
+  });
+});
+
+describe("UsageRound first-Quick education (UX-4)", () => {
+  it("with the intro flag unset: the line renders BEFORE any advance and persists; the flag is set at enable", async () => {
+    vi.useFakeTimers();
+    expect(hasSeenQuickIntro()).toBe(false);
+    renderRound();
+
+    enableQuick();
+    // On screen the same commit as the toggle, a full beat before anything moves.
+    expect(screen.getByText(QUICK_INTRO_LINE)).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
+    // The flag is written at enable so later rounds skip the intro.
+    expect(hasSeenQuickIntro()).toBe(true);
+
+    // It stays visible for the rest of the round, through the first auto-pass.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS);
+    });
+    expect(screen.getByText(QUICK_INTRO_LINE)).toBeInTheDocument();
+  });
+
+  it("renders as role='status' so it is announced, not silently shown", () => {
+    renderRound();
+    enableQuick();
+    const line = screen.getByText(QUICK_INTRO_LINE);
+    expect(line.closest("[role='status']")).not.toBeNull();
+  });
+
+  it("with the intro flag already set: no education line on enable", () => {
+    markQuickIntroSeen();
+    renderRound();
+    enableQuick();
+    expect(screen.queryByText(QUICK_INTRO_LINE)).not.toBeInTheDocument();
   });
 });
