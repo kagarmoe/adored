@@ -191,27 +191,10 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
 
   // ── Whole-batch shape validation ──────────────────────────────────────────
 
-  it("shape-invalid bodies (bad enum / missing clientKey / bare-ULID itemId) → 400, nothing written", async () => {
-    const { db, items, sortSession } = await seedSession();
-    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-
-    const badBodies: unknown[] = [
-      // out-of-enum triage result
-      { decisions: [{ type: "triage", decision: { itemId: items[0].id, result: "nope" }, clientKey: ck() }] },
-      // missing clientKey
-      { decisions: [{ type: "triage", decision: { itemId: items[0].id, result: "top" } }] },
-      // bare 26-char ULID itemId (no `item_` prefix) — must be rejected (F1)
-      { decisions: [{ type: "triage", decision: { itemId: ulid().toLowerCase(), result: "top" }, clientKey: ck() }] },
-    ];
-    for (const body of badBodies) {
-      const res = await postBatch(
-        batchReq(sortSession.id, body) as any,
-        { params: { id: sortSession.id } } as any,
-      );
-      expect(res.status).toBe(400);
-    }
-    expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
-  });
+  // Per-entry shape validation (bad enum / missing clientKey / bare-ULID itemId)
+  // is unit-covered exhaustively by src/lib/decision-batch-schema.test.ts against
+  // the SAME shared Zod schema. The 51-entries case below retains the route-level
+  // proof that a schema failure returns 400 and writes nothing.
 
   it("51 entries → whole-batch 400, nothing written", async () => {
     const { db, items, sortSession } = await seedSession();

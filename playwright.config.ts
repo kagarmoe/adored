@@ -1,11 +1,31 @@
 import { defineConfig, devices } from "@playwright/test";
 import { TEST_DATABASE_URL } from "./e2e/fixtures/db";
 
-// Full suite runs on three viewports (tablet-first, but must work on phone +
-// desktop too). Specs are behavioral; exact-layout assertions live in
-// layout.spec.ts. See docs/ARCHITECTURE.md (testing strategy).
+// Viewport tiering (see docs/ARCHITECTURE.md, testing strategy):
+//   - tablet (iPad/WebKit) is the primary target and runs EVERY spec. All
+//     behavioral specs are tablet-only.
+//   - desktop (Desktop Chrome/Chromium) runs a thin allowlist: the layout spec
+//     (which branches on viewport internally, so tablet+desktop = two widths),
+//     smoke, and the critical sort→compare→results journey. This gives one
+//     cross-engine (Chromium) pass over the core flow without re-running the
+//     whole suite on a second engine.
+//   - phone was dropped: it was WebKit (same engine as tablet) so it added no
+//     engine coverage, no spec uses touch/drag, and per-viewport assertions
+//     live only in layout.spec.ts. It was pure duplication.
+// Net effect: the full matrix collapses from 3 viewports × all specs to
+// tablet(all) + desktop(allowlist).
 
 const DESKTOP = { viewport: { width: 1280, height: 800 } };
+
+// Specs that also run on desktop-Chromium: layout (viewport-branching),
+// smoke (fast health check), and the critical sort→compare→results journey.
+const DESKTOP_SPECS = [
+  "**/layout.spec.ts",
+  "**/smoke.spec.ts",
+  "**/sort-session.spec.ts",
+  "**/compare.spec.ts",
+  "**/results.spec.ts",
+];
 
 // Run e2e on a dedicated port so a developer's `npm run dev` on :3000 (which
 // reads .env.local → the dev Neon DB) is never silently reused. With a unique
@@ -40,20 +60,16 @@ export default defineConfig({
       testMatch: "**/auth.setup.ts",
     },
     {
+      // Primary target: runs every behavioral spec.
       name: "tablet",
       testIgnore: "**/auth.setup.ts",
       use: { ...devices["iPad (gen 7) landscape"], storageState: AUTH_STATE },
       dependencies: ["setup"],
     },
     {
-      name: "phone",
-      testIgnore: "**/auth.setup.ts",
-      use: { ...devices["iPhone 13"], storageState: AUTH_STATE },
-      dependencies: ["setup"],
-    },
-    {
+      // Cross-engine (Chromium) pass over layout + smoke + the critical journey.
       name: "desktop",
-      testIgnore: "**/auth.setup.ts",
+      testMatch: DESKTOP_SPECS,
       use: { ...devices["Desktop Chrome"], ...DESKTOP, storageState: AUTH_STATE },
       dependencies: ["setup"],
     },

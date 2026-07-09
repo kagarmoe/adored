@@ -31,10 +31,10 @@ describeDb("collection slug generation (repo -> DB)", () => {
     await closeDb();
   });
 
-  it("generates a slug from the name on create", async () => {
-    const c = await repo().create({ id: generateId("coll"), ownerId, name: "Summer Bags" });
-    expect(c.slug).toBe("summer-bags");
-  });
+  // The pure name→slug mapping ("Summer Bags" → "summer-bags") is unit-covered by
+  // src/lib/collections/slug.test.ts; the dedupe case below proves create() wires
+  // slugifyName in (a second "Summer Bags" only becomes "summer-bags-2" if the
+  // first resolved to "summer-bags").
 
   it("dedupes same-named collections globally", async () => {
     await repo().create({ id: generateId("coll"), ownerId, name: "Summer Bags" });
