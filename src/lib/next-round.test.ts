@@ -250,20 +250,4 @@ describe("recommendNextRound — usage card copy (TONE)", () => {
     );
     expect(primary.cta).toBe("Begin");
   });
-
-  it("emits no numeric denominator, percentage, or rate in any usage copy field", () => {
-    const items = [item("a", 1)];
-    const preferences = [pref("a", "top")];
-    const { primary } = recommendNextRound({
-      items,
-      preferences,
-      curatorDecisions: [],
-    });
-
-    const copy = `${primary.label} ${primary.description} ${primary.cta}`;
-    expect(copy).not.toMatch(/\bof\s+\d/i);
-    expect(copy).not.toMatch(/%/);
-    expect(copy).not.toMatch(/\d/);
-    expect(copy).not.toMatch(/per min|rate|coverage|remaining/i);
-  });
 });

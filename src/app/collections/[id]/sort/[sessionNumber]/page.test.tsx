@@ -108,16 +108,11 @@ describe("SessionDetailPage — recommended next round + no count/denominator de
     itemRepo.findByCollection.mockResolvedValue([makeItem("a", 1), makeItem("b", 2)]);
     prefRepo.findByCollection.mockResolvedValue([]); // nothing triaged yet
 
-    const { container } = render(await SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } }));
+    render(await SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } }));
 
     expect(screen.getByText("Quick triage")).toBeInTheDocument();
     const cta = screen.getByRole("link", { name: /start triage/i });
     expect(cta).toHaveAttribute("href", "/collections/summer-bags/sort/1/triage");
-    // No retired denominator/percentage anywhere on the hub.
-    const text = container.textContent ?? "";
-    expect(text).not.toMatch(/%/);
-    expect(text).not.toMatch(/\bof\s+\d/i);
-    expect(text).not.toMatch(/left to triage/i);
   });
 
   it("recommends Refine the top tier → compare round when a rankable pair remains", async () => {

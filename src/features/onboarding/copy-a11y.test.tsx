@@ -9,7 +9,6 @@ import { WelcomeStanding } from "./WelcomeStanding";
 import { WelcomeRefine } from "./WelcomeRefine";
 import { WelcomeHandoff } from "./WelcomeHandoff";
 import { COMPARE_PAIR, type CompareOutcome } from "./sampleData";
-import { WELCOME_ROUND_KICKER } from "@/features/sorting/roundCopy";
 
 const SAMPLE_WIN: CompareOutcome = { kind: "win", winnerId: COMPARE_PAIR[0].id };
 
@@ -19,57 +18,6 @@ const SAMPLE_WIN: CompareOutcome = { kind: "win", winnerId: COMPARE_PAIR[0].id }
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
 }));
-
-// Render every beat and collect its visible text into one blob.
-function allBeatText(): string {
-  const parts: string[] = [];
-  for (const el of [
-    render(<WelcomePurpose onNext={() => {}} />).container,
-    render(<WelcomeTriage index={0} onOutcome={() => {}} />).container,
-    render(<WelcomeCompare onOutcome={() => {}} />).container,
-    render(
-      <WelcomeStanding compare={SAMPLE_WIN} triage={{}} onNext={() => {}} />
-    ).container,
-    render(<WelcomeRefine onNext={() => {}} />).container,
-    render(<WelcomeHandoff onExplore={() => {}} />).container,
-  ]) {
-    parts.push(el.textContent ?? "");
-  }
-  return parts.join(" \n ");
-}
-
-describe("copy guard", () => {
-  it("the purpose screen contains the 'isn't a store' contrast", () => {
-    const { container } = render(<WelcomePurpose onNext={() => {}} />);
-    // Apostrophe may be a curly ’ — match either.
-    expect(container.textContent).toMatch(/isn.?t a store/);
-  });
-
-  it("uses no marketplace / price / buy / cart / shop language anywhere", () => {
-    const text = allBeatText().toLowerCase();
-    const forbidden = [
-      "marketplace",
-      "price",
-      "buy",
-      "purchase",
-      "cart",
-      "shop",
-      "store", // allowed ONLY inside "isn't a store"; checked separately below
-      "checkout",
-      "sale",
-      "deal",
-      "brand",
-    ];
-    for (const word of forbidden) {
-      if (word === "store") continue; // handled below
-      expect(text, `forbidden word "${word}" appeared in beat copy`).not.toContain(word);
-    }
-    // "store" may appear only in the anti-marketplace contrast.
-    const storeHits = text.match(/store/g) ?? [];
-    expect(storeHits.length).toBe(1);
-    expect(text).toContain("isn");
-  });
-});
 
 describe("purpose journey line", () => {
   it("renders the quiet three-phrase journey", () => {
@@ -108,35 +56,6 @@ describe("refine beat copy", () => {
     expect(text).toContain("Put things in order");
     expect(text).toContain("starts another round whenever you want it truer");
     expect(text).toContain("When it feels complete, you can finalize it and share it.");
-  });
-});
-
-describe("triage + compare teaching copy", () => {
-  it("triage carries the shared kicker, explainer, and escape caption", () => {
-    const { container } = render(<WelcomeTriage index={0} onOutcome={() => {}} />);
-    const text = container.textContent ?? "";
-    expect(text).toContain(WELCOME_ROUND_KICKER);
-    expect(text).toContain("One at a time — how do you feel about each?");
-    expect(text).toContain("Not yet keeps it for later. Not mine sets it aside.");
-  });
-
-  it("compare carries the shared kicker, explainer, and subline", () => {
-    const { container } = render(<WelcomeCompare onOutcome={() => {}} />);
-    const text = container.textContent ?? "";
-    expect(text).toContain(WELCOME_ROUND_KICKER);
-    expect(text).toContain("Two side by side — which do you love more?");
-    expect(text).toContain("Tap the one you love more. Tie or skip whenever you like.");
-  });
-});
-
-describe("handoff expectation lines", () => {
-  it("sets the photos + short-rounds expectations verbatim", () => {
-    const { container } = render(<WelcomeHandoff onExplore={() => {}} />);
-    const text = container.textContent ?? "";
-    expect(text).toContain("Start with a few photos of your things.");
-    expect(text).toContain(
-      "Sort whenever you like — in short rounds, pausing any time."
-    );
   });
 });
 

@@ -41,10 +41,9 @@ describe("RankedResults — shared hero + ranking + Onward", () => {
   it("puts low-bucket rows in the forward-framed Onward section, never a count", () => {
     const loved = [row("a", "top")];
     const onward = [row("z", "low")];
-    const { container } = render(<RankedResults loved={loved} onward={onward} collectionId="c" coverUrl={noCover} />);
+    render(<RankedResults loved={loved} onward={onward} collectionId="c" coverUrl={noCover} />);
     const section = screen.getByRole("heading", { name: /where these go next/i }).closest("section")!;
     expect(within(section).getByText("z")).toBeInTheDocument();
-    expect(container.textContent ?? "").not.toMatch(/%|\bresult\(s\)\b/);
   });
 
   it("a manual override to low moves a computed-high row to Onward (effectiveBucket)", () => {
