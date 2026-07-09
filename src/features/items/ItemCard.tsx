@@ -1,5 +1,7 @@
 import type { Item } from "@/types";
+import type { UsageAnswer } from "@/lib/derive-usage";
 import { hasName, itemDisplayName, itemInitial } from "@/lib/items";
+import { usageChipLabel } from "@/features/items/usage-chip-copy";
 import { Badge, Card, CardImage, PhotoViewControl, type ViewerPhoto } from "@/components/ui";
 import Link from "next/link";
 
@@ -13,6 +15,9 @@ interface ItemCardProps {
   imageClassName?: string;
   /** When set, a "view photo" control opens the zoom/rotate lightbox for the hero. */
   viewerPhoto?: ViewerPhoto;
+  /** Epic S1: a quiet, count-free usage note ("In your life" / "Resting").
+   *  Absent (undefined) when this item's usage is undecided — no chip renders. */
+  usage?: UsageAnswer;
 }
 
 const bucketDots = {
@@ -36,6 +41,7 @@ export function ItemCard({
   bucket,
   imageClassName = "aspect-square",
   viewerPhoto,
+  usage,
 }: ItemCardProps) {
   // Stretched-link: the navigating <Link> is an overlay sibling so the view
   // control is valid DOM. `isolate` keeps the control (z-20) above the link (z-10).
@@ -65,6 +71,14 @@ export function ItemCard({
           )}
           {item.status && item.status !== "active" && (
             <Badge variant={item.status === "deleted" ? "deleted" : "archived"}>{item.status}</Badge>
+          )}
+          {/* Epic S1 usage chip: a quiet, count-free note. Meaning is carried by
+              the words (not color), and the neutral "active" variant is AA in
+              both themes. No chip when usage is undecided (undefined). */}
+          {usage && (
+            <Badge variant="active" className="w-fit text-xs font-medium">
+              {usageChipLabel(usage)}
+            </Badge>
           )}
         </div>
       </div>

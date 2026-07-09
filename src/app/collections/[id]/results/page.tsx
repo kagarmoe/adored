@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemController } from "@/server/api/items";
 import { DispositionController } from "@/server/api/dispositions";
+import { DecisionController } from "@/server/api/decisions";
 import { PhotoController } from "@/server/api/photos";
 import { PreferenceController } from "@/server/api/preferences";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
@@ -12,7 +13,9 @@ import { Button, Card, CardImage } from "@/components/ui";
 import { RankedResults } from "@/features/results/RankedResults";
 import { FinalizeEntry } from "@/features/results/FinalizeEntry";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
+import { ItemCard } from "@/features/items/ItemCard";
 import { deriveStanding } from "@/features/results/standing";
+import { deriveUsage } from "@/lib/derive-usage";
 import { itemDisplayName } from "@/lib/items";
 import Link from "next/link";
 
@@ -40,23 +43,34 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   // items. deriveStanding runs the SAME rankPreferencesToItems/partitionRanked
   // derivation a finalized snapshot uses — orderRank is pre-materialized, so
   // there is no engine call here.
-  const [preferences, dispositions, items] = await Promise.all([
+  const [preferences, dispositions, items, curatorEvents] = await Promise.all([
     PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id),
     DispositionController.fromDb(db).listDispositions(collection.id, session.user.id),
     ItemController.fromDb(db).listItems(collection.id),
+    // The curator's whole cross-session decision log — consumed SERVER-SIDE ONLY
+    // to build the usage fold below; the raw events are never threaded to a
+    // client component (DATA-6). Mirrors usage/page.tsx.
+    DecisionController.fromDb(db).listForCurator(collection.id, session.user.id),
   ]);
 
   const itemById = new Map(items.map((item) => [item.id, item]));
   const { loved, onward } = deriveStanding(preferences, itemById);
+  // Read-time usage fold (latest event per live item wins) → the per-item chip.
+  // Only this small Map<itemId, "uses"|"not_uses"> leaves the server.
+  const usageByItemId = deriveUsage(curatorEvents, new Set(items.map((i) => i.id)));
 
   const setAsideItems = dispositions
     .map((d) => itemById.get(d.itemId))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
+  // The usage-only surface (F5): items with a usage answer but no love ranking
+  // still deserve to be shown. Rendered only when there is no love standing.
+  const usageOnlyItems = items.filter((i) => usageByItemId.has(i.id));
   const coverItemIds = [
     ...loved.map((r) => r.item.id),
     ...onward.map((r) => r.item.id),
     ...setAsideItems.map((i) => i.id),
+    ...usageOnlyItems.map((i) => i.id),
   ];
   const covers =
     coverItemIds.length > 0
@@ -109,7 +123,30 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
               onward={onward}
               collectionId={collection.slug ?? collection.id}
               coverUrl={coverUrl}
+              usageByItemId={usageByItemId}
             />
+          ) : usageOnlyItems.length > 0 ? (
+            // F5: usage answers but no love ranking yet. Show the items with their
+            // quiet usage chips rather than the "Start sorting" empty state — a
+            // usage-known collection is not empty.
+            <section className="space-y-4">
+              <div className="space-y-1">
+                <h2 className="font-display text-2xl text-ink">The ones you live with</h2>
+                <p className="text-ink-soft">A quiet note on each &mdash; in your life, or resting for now.</p>
+              </div>
+              <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                {usageOnlyItems.map((item) => (
+                  <li key={item.id}>
+                    <ItemCard
+                      item={item}
+                      collectionId={collection.slug ?? collection.id}
+                      heroPhotoUrl={coverUrl(item.id)}
+                      usage={usageByItemId.get(item.id)}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
           ) : (
             // Gentle, person-side empty state — never a shaming empty count.
             <section className="space-y-3">

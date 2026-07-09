@@ -1,4 +1,5 @@
 import type { Item } from "@/types";
+import type { UsageAnswer } from "@/lib/derive-usage";
 import { ItemCard } from "@/features/items/ItemCard";
 import { MostLovedHero } from "@/features/results/MostLovedHero";
 import { TierBadge } from "@/components/ui/TierBadge";
@@ -33,6 +34,10 @@ interface RankedResultsProps {
   onward: RankedJoinedRow[];
   collectionId: string;
   coverUrl: (itemId: string) => string | undefined;
+  /** Epic S1: the live usage fold, keyed by itemId. A row whose item is in the
+   *  map gets a quiet usage chip; an absent item gets none (undecided). The raw
+   *  event log is NEVER passed here — only this small derived map (DATA-6). */
+  usageByItemId?: ReadonlyMap<string, UsageAnswer>;
 }
 
 /** The affirmation composition shared by the live Standing surface and the
@@ -40,7 +45,7 @@ interface RankedResultsProps {
  *  forward-framed Onward section → an affirmation close. Callers derive
  *  loved/onward from the SAME partitionRanked/effectiveBucket source, so both
  *  surfaces read identically (TONE #1 affirmation-first, no counts). */
-export function RankedResults({ loved, onward, collectionId, coverUrl }: RankedResultsProps) {
+export function RankedResults({ loved, onward, collectionId, coverUrl, usageByItemId }: RankedResultsProps) {
   return (
     <div className="space-y-8">
       {loved.length > 0 && (
@@ -66,6 +71,7 @@ export function RankedResults({ loved, onward, collectionId, coverUrl }: RankedR
                     collectionId={collectionId}
                     heroPhotoUrl={coverUrl(item.id)}
                     bucket={bucket}
+                    usage={usageByItemId?.get(item.id)}
                   />
                 </div>
               );
@@ -107,6 +113,7 @@ export function RankedResults({ loved, onward, collectionId, coverUrl }: RankedR
                 collectionId={collectionId}
                 heroPhotoUrl={coverUrl(item.id)}
                 bucket={effectiveBucket(ri)}
+                usage={usageByItemId?.get(item.id)}
               />
             ))}
           </div>
