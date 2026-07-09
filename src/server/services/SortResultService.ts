@@ -42,6 +42,19 @@ export class FinalizeStateError extends Error {
 }
 
 /**
+ * Thrown when a bulk re-rank batch names a rid that is not an item of the target
+ * result (a foreign/absent rid). Raised INSIDE the reorder transaction so the
+ * whole batch rolls back; the route maps it to 404 (mirrors the per-item route's
+ * "result-item belongs to a different result" 404).
+ */
+export class ResultItemNotInResultError extends Error {
+  constructor() {
+    super("Result item does not belong to this result");
+    this.name = "ResultItemNotInResultError";
+  }
+}
+
+/**
  * Thrown when the (collection, number) race could not be won within the retry
  * budget. Distinct from a mid-transaction failure so ops can tell "retry storm
  * lost" apart from "DB fell over". The route maps it to 500.
@@ -233,6 +246,50 @@ export class SortResultService {
       manualBucket: null,
       updatedAt: new Date(),
     });
+  }
+
+  /**
+   * Epic S S3a: apply a whole ordering — an array of {rid, manualRank} — in ONE
+   * transaction, so a drag-to-position (a dense, gapless rewrite of the affected
+   * block) is a SINGLE atomic call instead of N fragile sequential PATCHes.
+   *
+   * `manualRank` is a dense int sharing numeric space with `computedRank`, so the
+   * caller passes the full new rank sequence for the moved block. EVERY rid is
+   * validated against the result's own items INSIDE the transaction: a bad rid
+   * throws ResultItemNotInResultError, which rolls back any writes already applied
+   * in this batch (the load-bearing atomicity guarantee — no partial reorder).
+   *
+   * Invariant: all writes go to the tx-bound repo, never `this.sortResultItemRepo`.
+   */
+  async reorderResultItems(
+    resultId: string,
+    order: ReadonlyArray<{ rid: string; manualRank: number }>,
+  ): Promise<SortResultItem[]> {
+    return withTransaction(
+      this.db,
+      async (tx) => {
+        const itemRepo = new SortResultItemRepository(tx);
+        const validIds = new Set(
+          (await itemRepo.findByResult(resultId)).map((i) => i.id),
+        );
+        for (const { rid, manualRank } of order) {
+          if (!validIds.has(rid)) throw new ResultItemNotInResultError();
+          await itemRepo.update(rid, { manualRank });
+        }
+        return itemRepo.findByResult(resultId);
+      },
+      { op: "reorder_result_items", ctx: { resultId } },
+    );
+  }
+
+  /**
+   * Epic S S3a: clear the manual overlay for EVERY item of a result in one
+   * statement — back to the computed order. A single UPDATE is atomic on its own,
+   * so no explicit transaction is needed.
+   */
+  async resetManualOverridesForResult(resultId: string): Promise<SortResultItem[]> {
+    await this.sortResultItemRepo.clearManualOverridesByResult(resultId);
+    return this.sortResultItemRepo.findByResult(resultId);
   }
 
   async deleteResultItem(id: string): Promise<void> {

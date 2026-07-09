@@ -25,6 +25,7 @@ export interface DbErrorContext {
   curatorId?: string;
   sessionId?: string;
   itemId?: string;
+  resultId?: string;
 }
 
 // A pg error surfaces its code at .code or, when wrapped by the driver/drizzle,
