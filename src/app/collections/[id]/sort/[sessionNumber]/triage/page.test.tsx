@@ -110,7 +110,7 @@ describe("TriagePage ceiling-free progress (TONE 1 & 4)", () => {
     // Counts what was decided, never what's left — and never "X of Y".
     expect(screen.getByText(/1 decided so far/i)).toBeInTheDocument();
     // The item-count cue must not use a "of N" ceiling. The round shell's a11y step
-    // announcement ("Step 1 of 3") is round progress, not an item ceiling, and is
+    // announcement ("Step 1 of 4") is round progress, not an item ceiling, and is
     // sr-only — exclude it so this guards the visible decision cue, its true target.
     const ofNMatches = screen
       .queryAllByText(/\bof\s+\d+\b/i)
@@ -164,11 +164,11 @@ describe("TriagePage round queue (Epic P)", () => {
 });
 
 describe("TriagePage round chrome (Epic 4c)", () => {
-  it("wraps the triage content in the round shell (step 1 of 3) while keeping the decision UI", async () => {
+  it("wraps the triage content in the round shell (step 1 of 4) while keeping the decision UI", async () => {
     const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
     render(ui);
     // The round shell's step indicator is present and on step 1.
-    expect(screen.getByRole("list", { name: /round progress: step 1 of 3/i })).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: /round progress: step 1 of 4/i })).toBeInTheDocument();
     // The existing decision controls still render inside the shell.
     expect(screen.getByRole("button", { name: /^love$/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /how do you feel about this one\?/i })).toBeInTheDocument();
