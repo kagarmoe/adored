@@ -73,6 +73,9 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 - If a required sync or push is blocked, stop and report the exact command and error.
 <!-- END BEADS INTEGRATION -->
 
+**Definition of done for beads**
+- An epic is not complete until all follow-up beads are complete.
+- When working outside of an epic, an issue is not complete until all follow-up beads are complete.
 
 ## Build & Test
 
@@ -142,10 +145,6 @@ Generic review rubber-stamps; scale the persona set to what changed (lens→engi
   `EnterWorktree`); never switch branches with uncommitted changes (commit or stash first).
 - **Commit:** frequent, one logical change per commit; don't park work only in the working tree.
 
-**Definition of done**
-- An epic is not complete until all follow-up beads are complete.
-- When working outside of an epic, an issue is not complete until all follow-up beads are complete.
-- 
 ## PR lifecycle automation
 
 - **Before pushing / opening a PR:** run `/sync-docs` (update the governance docs this branch's
