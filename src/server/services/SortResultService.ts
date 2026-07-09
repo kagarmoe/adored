@@ -7,6 +7,10 @@ import {
 } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
+import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
+import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
+import { loadCuratorDecisionEvents } from "@/server/services/decision-log";
+import { deriveUsage, type UsageAnswer } from "@/lib/derive-usage";
 import {
   rankPreferencesToItems,
   cloneItemsFrom,
@@ -76,12 +80,38 @@ export class SortResultService {
       curatorId,
     );
     const items = rankPreferencesToItems(preferences);
+    // Epic S: snapshot the LIVE usage fold at materialization — the same
+    // deriveUsage a revision re-runs (§3.3 fresh-fold), so a draft records usage
+    // as of the moment it was materialized.
+    const usageByItemId = await this.deriveCuratorUsage(collectionId, curatorId, items);
     // Materialize the NEW draft from CURRENT live prefs FIRST (fresh-at-finalize:
     // supersede-and-recreate, never reuse-stale), then reap the curator's PRIOR
     // unfinalized drafts so at most one draft exists per (collection, curator).
-    const result = await this.createResultWithItems(collectionId, curatorId, name, items);
+    const result = await this.createResultWithItems(collectionId, curatorId, name, items, usageByItemId);
     await this.supersedePriorDrafts(collectionId, curatorId, result.id);
     return result;
+  }
+
+  /**
+   * Epic S: derive the curator's usage standing for the items being materialized,
+   * from their CURRENT cross-session decision log (the SAME log the Standing
+   * surface reads — loadCuratorDecisionEvents). Called by every materialization
+   * path (fresh draft + revision), so a revision re-derives usage at its own
+   * moment (fresh-fold) rather than carrying the original snapshot forward. A
+   * usage-unknown item is simply absent from the map → stamped NULL.
+   */
+  private async deriveCuratorUsage(
+    collectionId: string,
+    curatorId: string,
+    items: MaterializedItem[],
+  ): Promise<Map<string, UsageAnswer>> {
+    const events = await loadCuratorDecisionEvents(
+      new SessionRepository(this.db),
+      new DecisionEventRepository(this.db),
+      collectionId,
+      curatorId,
+    );
+    return deriveUsage(events, new Set(items.map((i) => i.itemId)));
   }
 
   /**
@@ -127,6 +157,7 @@ export class SortResultService {
     curatorId: string,
     name: string,
     items: MaterializedItem[],
+    usageByItemId: ReadonlyMap<string, UsageAnswer>,
   ): Promise<SortResult> {
     for (let attempt = 0; attempt < 5; attempt++) {
       try {
@@ -142,7 +173,13 @@ export class SortResultService {
             number,
           });
           for (const item of items) {
-            await itemRepo.create({ sortResultId: result.id, ...item });
+            // Epic S: stamp usage at the materialization step (not the clone), so
+            // the snapshot records the fold passed in by the caller.
+            await itemRepo.create({
+              sortResultId: result.id,
+              ...item,
+              usage: usageByItemId.get(item.itemId) ?? null,
+            });
           }
           return result;
         }, { op: "materialize_result", ctx: { collectionId, curatorId } });
@@ -218,11 +255,21 @@ export class SortResultService {
     // Source is finalized/immutable, so reading its items pre-tx is benign.
     const sourceItems = await this.sortResultItemRepo.findByResult(id);
     const items = cloneItemsFrom(sourceItems);
+    // Epic S fresh-fold (§3.3): the clone drops manual overrides AND does not
+    // carry usage; usage is RE-DERIVED from the curator's CURRENT decision log
+    // here, so the revision's snapshot describes the revision moment — not the
+    // usage frozen into the original keepsake.
+    const usageByItemId = await this.deriveCuratorUsage(
+      source.collectionId,
+      source.curatorId,
+      items,
+    );
     return this.createResultWithItems(
       source.collectionId,
       source.curatorId,
       `${source.name} (Revision)`,
       items,
+      usageByItemId,
     );
   }
 

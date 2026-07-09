@@ -18,6 +18,13 @@ vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
 vi.mock("@/server/repositories/implementations/SortResultItemRepository", () => ({
   SortResultItemRepository: vi.fn(function () { return txItemRepo; }),
 }));
+// Epic S: the service reads the curator's decision log to snapshot usage at
+// materialization. This unit test isolates the tx wiring, so stub the log empty
+// → every item is stamped usage:null (the real usage-fold proof is the un-mocked
+// sort-results-usage-snapshot.integration.test.ts).
+vi.mock("@/server/services/decision-log", () => ({
+  loadCuratorDecisionEvents: async () => [],
+}));
 
 import {
   SortResultService,
@@ -85,6 +92,7 @@ function sortResultItem(
     computedBucket: "medium",
     manualRank: null,
     manualBucket: null,
+    usage: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
@@ -143,17 +151,21 @@ describe("SortResultService.createDraftResult", () => {
       }),
     );
     expect(txItemRepo.create).toHaveBeenCalledTimes(2);
+    // Epic S: the create-input now carries the snapshot usage (null here — the
+    // stubbed log is empty, so no item is usage-known).
     expect(txItemRepo.create).toHaveBeenNthCalledWith(1, {
       sortResultId: created.id,
       itemId: "a",
       computedRank: 0,
       computedBucket: "top",
+      usage: null,
     });
     expect(txItemRepo.create).toHaveBeenNthCalledWith(2, {
       sortResultId: created.id,
       itemId: "b",
       computedRank: 1,
       computedBucket: "medium",
+      usage: null,
     });
   });
 
@@ -259,17 +271,21 @@ describe("SortResultService.supersedeResult", () => {
         status: "draft",
       }),
     );
+    // Fresh-fold: the clone drops manual fields and does not carry usage; usage
+    // is re-derived here (empty stubbed log → null) and stamped by the create.
     expect(txItemRepo.create).toHaveBeenNthCalledWith(1, {
       sortResultId: newResult.id,
       itemId: "a",
       computedRank: 0,
       computedBucket: "top",
+      usage: null,
     });
     expect(txItemRepo.create).toHaveBeenNthCalledWith(2, {
       sortResultId: newResult.id,
       itemId: "b",
       computedRank: 1,
       computedBucket: "low",
+      usage: null,
     });
   });
 

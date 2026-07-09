@@ -372,6 +372,11 @@ export const sortResultItemsTable = pgTable(
     computedBucket: text("computed_bucket").notNull(),
     manualRank: integer("manual_rank"),
     manualBucket: text("manual_bucket"),
+    // Epic S: usage standing snapshotted AT materialization ('uses'|'not_uses'|
+    // NULL). Nullable text, no CHECK — matches the manualBucket plain-text
+    // precedent; deriveUsage's typed output guards writes. A pre-Epic-S row (all
+    // NULL) means "unknown at snapshot time" and renders no chip.
+    usage: text("usage"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

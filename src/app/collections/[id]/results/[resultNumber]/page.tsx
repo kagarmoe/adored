@@ -13,6 +13,7 @@ import { Badge, Button, EmptyState } from "@/components/ui";
 import { RankedResults } from "@/features/results/RankedResults";
 import { SharePanel } from "@/features/results/SharePanel";
 import { partitionRanked } from "@/lib/results-buckets";
+import type { UsageAnswer } from "@/lib/derive-usage";
 import Link from "next/link";
 
 interface ResultDetailPageProps {
@@ -46,6 +47,15 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
 
   const itemById = new Map(items.map((item) => [item.id, item]));
   const sortedResultItems = [...resultItems].sort((a, b) => (a.manualRank ?? a.computedRank) - (b.manualRank ?? b.computedRank));
+
+  // Epic S: the SNAPSHOT usage (frozen at materialization) drives the same quiet
+  // chip the live Standing renders. A legacy result whose rows are all NULL
+  // yields an empty map → no chip anywhere (backward compat).
+  const usageByItemId = new Map<string, UsageAnswer>(
+    resultItems
+      .filter((ri) => ri.usage != null)
+      .map((ri) => [ri.itemId, ri.usage as UsageAnswer]),
+  );
 
   // Affirmation, not subtraction (TONE #1): the loved tiers lead and the lowest
   // tier is partitioned into its own forward-framed Onward section — never tallied,
@@ -102,6 +112,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
             onward={onward}
             collectionId={collection.slug ?? collection.id}
             coverUrl={coverUrl}
+            usageByItemId={usageByItemId}
           />
         )}
 

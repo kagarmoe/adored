@@ -295,3 +295,54 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
     expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });
+
+// Epic S §3.4: the finalized keepsake renders the SNAPSHOT usage (the frozen
+// `usage` column) as the SAME quiet chip the live Standing built ("In your life"
+// / "Resting"). A pre-Epic-S result (all-NULL) renders no chip (backward compat).
+describe("ResultDetailPage snapshot usage chip (Epic S §3.4)", () => {
+  // Non-hero rows so the chip renders on the card (the most-loved hero shows no
+  // chip). HIGH carries "uses", MED carries "not_uses".
+  const TOP = { id: "i_top", collectionId: "coll_01ABCDEF", number: 1, name: "Top Bag", brand: null, status: "active" };
+  const HIGH = { id: "i_high", collectionId: "coll_01ABCDEF", number: 2, name: "High Bag", brand: null, status: "active" };
+  const MED = { id: "i_med", collectionId: "coll_01ABCDEF", number: 3, name: "Med Bag", brand: null, status: "active" };
+
+  beforeEach(() => {
+    itemRepo.findByCollection.mockResolvedValue([TOP, HIGH, MED]);
+    photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map());
+  });
+
+  it("renders the snapshot usage chips: 'In your life' for uses, 'Resting' for not_uses", async () => {
+    resultItemRepo.findByResult.mockResolvedValue([
+      { id: "ri_top", itemId: "i_top", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null, usage: null },
+      { id: "ri_high", itemId: "i_high", computedRank: 2, manualRank: null, computedBucket: "high", manualBucket: null, usage: "uses" },
+      { id: "ri_med", itemId: "i_med", computedRank: 3, manualRank: null, computedBucket: "medium", manualBucket: null, usage: "not_uses" },
+    ]);
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.getByText("In your life")).toBeInTheDocument();
+    expect(screen.getByText("Resting")).toBeInTheDocument();
+  });
+
+  it("renders NO chip when the snapshot usage is undecided (NULL) on a ranked row", async () => {
+    resultItemRepo.findByResult.mockResolvedValue([
+      { id: "ri_top", itemId: "i_top", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null, usage: null },
+      { id: "ri_high", itemId: "i_high", computedRank: 2, manualRank: null, computedBucket: "high", manualBucket: null, usage: null },
+    ]);
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.queryByText("In your life")).toBeNull();
+    expect(screen.queryByText("Resting")).toBeNull();
+  });
+
+  it("a legacy result whose rows have NO usage field renders no chip (backward compat)", async () => {
+    // Pre-Epic-S rows never carried a `usage` key at all.
+    resultItemRepo.findByResult.mockResolvedValue([
+      { id: "ri_top", itemId: "i_top", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null },
+      { id: "ri_high", itemId: "i_high", computedRank: 2, manualRank: null, computedBucket: "high", manualBucket: null },
+    ]);
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.queryByText("In your life")).toBeNull();
+    expect(screen.queryByText("Resting")).toBeNull();
+  });
+});
