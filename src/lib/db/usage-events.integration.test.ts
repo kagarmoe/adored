@@ -12,20 +12,35 @@
 // (no route import needed — this is a controller/helper-level seam). getDb is
 // mocked to the test pool so any transitive @/lib/db import is inert.
 // @vitest-environment node
-import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline, seedBareCollection, seedUserRow } from "../../../e2e/fixtures/seed";
+import { mockAuth } from "../../../e2e/fixtures/mock-auth";
 import { sessionsTable } from "@/lib/db/schema";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
+import { ItemDispositionRepository } from "@/server/repositories/implementations/ItemDispositionRepository";
+import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { DecisionController } from "@/server/api/decisions";
 import { loadCuratorDecisionEvents } from "@/server/services/decision-log";
 import { deriveUsage } from "@/lib/derive-usage";
 import type { UsageResult } from "@/types";
 
+const { mockGetSession, phCapture, phFlush } = vi.hoisted(() => ({
+  mockGetSession: vi.fn(),
+  phCapture: vi.fn(),
+  phFlush: vi.fn(),
+}));
+
+vi.mock("@/lib/auth", () => mockAuth(mockGetSession));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
+vi.mock("@/lib/posthog-server", () => ({
+  getPostHogClient: () => ({ capture: phCapture, flush: phFlush }),
+}));
+
+import { POST as postDecision } from "@/app/api/sessions/[id]/decisions/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -163,5 +178,166 @@ describeDb("the curator's decision log (loadCuratorDecisionEvents / listForCurat
     expect(idSet(viaController)).toEqual(expected);
     expect(idSet(viaHelper)).toEqual(expected);
     expect(idSet(viaController)).toEqual(idSet(viaHelper));
+  });
+});
+
+// Real-DB integration proof that the SINGLE decisions route accepts `usage`
+// (spec §2.3): the event persists on the shipped pipeline (gate ladder, advisory
+// lock, clientKey idempotency) but usage NEVER recomputes preferences and NEVER
+// clears a disposition — the two invariants that separate usage from triage.
+//
+// Mocks ONLY the true boundaries: auth (drive the curator), getDb (test pool),
+// posthog-server (assert capture without a network). Un-mocked: route ->
+// controller/repo -> pg.
+describeDb("single decisions route accepts usage (route -> controller -> repo -> DB)", () => {
+  let ownerId: string;
+
+  beforeEach(async () => {
+    await resetDb();
+    vi.clearAllMocks();
+    ownerId = await seedBaseline();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  afterAll(async () => {
+    await closeDb();
+  });
+
+  function usageReq(sessionId: string, body: unknown): Request {
+    return new Request(`http://localhost/api/sessions/${sessionId}/decisions`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: typeof body === "string" ? body : JSON.stringify(body),
+    });
+  }
+
+  // Seed a collection + one item + an active session owned by ownerId.
+  async function seedActiveSession(name = "The bag") {
+    const { db } = getTestDb();
+    const collectionId = await seedBareCollection(ownerId);
+    const item = await new ItemRepository(db).create({ collectionId, name });
+    const sortSession = await new SessionRepository(db).create({ collectionId, curatorId: ownerId });
+    return { db, collectionId, item, sortSession };
+  }
+
+  // The recompute observable (borrowed from decision-batch.integration.test.ts):
+  // every recompute clears every orderRank + bulk-upserts the whole set, both
+  // stamping updatedAt — so a byte-identical snapshot proves ZERO recomputes ran.
+  // This is the row observable, never a mock spy.
+  async function prefsSnapshot(db: unknown, collectionId: string, curatorId: string) {
+    const rows = await new CollectionPreferenceItemRepository(db as never).findByCollection(
+      collectionId,
+      curatorId,
+    );
+    return JSON.stringify(
+      rows
+        .map((r) => ({ id: r.id, itemId: r.itemId, rankBucket: r.rankBucket, updatedAt: r.updatedAt }))
+        .sort((a, b) => (a.itemId < b.itemId ? -1 : 1)),
+    );
+  }
+
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  it("usage POST → 201 with one decision_events row: type 'usage' and the payload verbatim", async () => {
+    const { db, item, sortSession } = await seedActiveSession();
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    const res = await postDecision(
+      usageReq(sortSession.id, { type: "usage", decision: { itemId: item.id, result: "uses" } }) as never,
+      { params: { id: sortSession.id } } as never,
+    );
+    expect(res.status).toBe(201);
+
+    const events = await new DecisionEventRepository(db).findBySession(sortSession.id);
+    expect(events).toHaveLength(1);
+    expect(events[0].type).toBe("usage");
+    expect(events[0].decision).toEqual({ itemId: item.id, result: "uses" });
+  });
+
+  it("zero recomputes: a usage POST leaves the preference rows byte-identical (row observable, not a spy)", async () => {
+    const { db, collectionId, item, sortSession } = await seedActiveSession();
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    // Seed one triage first so preference rows exist to snapshot.
+    const triageRes = await postDecision(
+      usageReq(sortSession.id, { type: "triage", decision: { itemId: item.id, result: "top" } }) as never,
+      { params: { id: sortSession.id } } as never,
+    );
+    expect(triageRes.status).toBe(201);
+    const snapshot = await prefsSnapshot(db, collectionId, ownerId);
+
+    // Sleep so a spurious recompute's JS-clock updatedAt could not collide with
+    // the triage's millisecond.
+    await sleep(5);
+    const usageRes = await postDecision(
+      usageReq(sortSession.id, { type: "usage", decision: { itemId: item.id, result: "not_uses" } }) as never,
+      { params: { id: sortSession.id } } as never,
+    );
+    expect(usageRes.status).toBe(201);
+
+    // Byte-identical preference rows: zero recomputes ran for the usage POST.
+    expect(await prefsSnapshot(db, collectionId, ownerId)).toBe(snapshot);
+  });
+
+  it("no disposition cleared: a usage POST on a set_aside item → 201 and the disposition row survives", async () => {
+    const { db, collectionId, item, sortSession } = await seedActiveSession();
+    // The disposed-then-usage-answered pin: usage must NOT run the triage bringBack.
+    await new ItemDispositionRepository(db).upsert({
+      collectionId,
+      curatorId: ownerId,
+      itemId: item.id,
+      disposition: "set_aside",
+    });
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    const res = await postDecision(
+      usageReq(sortSession.id, { type: "usage", decision: { itemId: item.id, result: "uses" } }) as never,
+      { params: { id: sortSession.id } } as never,
+    );
+    expect(res.status).toBe(201);
+
+    const disposition = await new ItemDispositionRepository(db).findByItem(item.id, ownerId);
+    expect(disposition).not.toBeNull();
+    expect(disposition?.disposition).toBe("set_aside");
+  });
+
+  it("idempotent replay: the same clientKey returns 200 with the same event id and still one row", async () => {
+    const { db, item, sortSession } = await seedActiveSession();
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    const clientKey = "usage-ck-1";
+    const body = { type: "usage", decision: { itemId: item.id, result: "uses" }, clientKey };
+
+    const first = await postDecision(
+      usageReq(sortSession.id, body) as never,
+      { params: { id: sortSession.id } } as never,
+    );
+    expect(first.status).toBe(201);
+    const firstEvent = await first.json();
+
+    const replay = await postDecision(
+      usageReq(sortSession.id, body) as never,
+      { params: { id: sortSession.id } } as never,
+    );
+    expect(replay.status).toBe(200);
+    const replayEvent = await replay.json();
+
+    expect(replayEvent.id).toBe(firstEvent.id);
+    expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(1);
+  });
+
+  it("malformed usage shape (result 'sometimes') → 400 and NO row persisted", async () => {
+    const { db, item, sortSession } = await seedActiveSession();
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    const res = await postDecision(
+      usageReq(sortSession.id, { type: "usage", decision: { itemId: item.id, result: "sometimes" } }) as never,
+      { params: { id: sortSession.id } } as never,
+    );
+    expect(res.status).toBe(400);
+    expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
   });
 });
