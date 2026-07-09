@@ -11191,7 +11191,7 @@
       "label": "enableQuick()",
       "file_type": "code",
       "source_file": "src/features/sorting/UsageRound.test.tsx",
-      "source_location": "L546",
+      "source_location": "L575",
       "_origin": "ast",
       "id": "sorting_usageround_test_enablequick",
       "community": 131,
@@ -17451,7 +17451,7 @@
       "label": "NextRound",
       "file_type": "code",
       "source_file": "src/lib/next-round.ts",
-      "source_location": "L34",
+      "source_location": "L35",
       "_origin": "ast",
       "id": "lib_next_round_nextround",
       "community": 176,
@@ -17461,7 +17461,7 @@
       "label": "TRIAGE_ROUND",
       "file_type": "code",
       "source_file": "src/lib/next-round.ts",
-      "source_location": "L42",
+      "source_location": "L43",
       "_origin": "ast",
       "id": "lib_next_round_triage_round",
       "community": 197,
@@ -17471,7 +17471,7 @@
       "label": "USAGE_ROUND",
       "file_type": "code",
       "source_file": "src/lib/next-round.ts",
-      "source_location": "L52",
+      "source_location": "L53",
       "_origin": "ast",
       "id": "lib_next_round_usage_round",
       "community": 197,
@@ -17481,7 +17481,7 @@
       "label": "COMPARE_ROUND",
       "file_type": "code",
       "source_file": "src/lib/next-round.ts",
-      "source_location": "L59",
+      "source_location": "L60",
       "_origin": "ast",
       "id": "lib_next_round_compare_round",
       "community": 197,
@@ -17491,7 +17491,7 @@
       "label": "DECIDE_ROUND",
       "file_type": "code",
       "source_file": "src/lib/next-round.ts",
-      "source_location": "L66",
+      "source_location": "L67",
       "_origin": "ast",
       "id": "lib_next_round_decide_round",
       "community": 197,
@@ -17501,7 +17501,7 @@
       "label": "runLadder()",
       "file_type": "code",
       "source_file": "src/lib/next-round.ts",
-      "source_location": "L73",
+      "source_location": "L74",
       "_origin": "ast",
       "id": "lib_next_round_runladder",
       "community": 197,
@@ -17511,7 +17511,7 @@
       "label": "recommendNextRound()",
       "file_type": "code",
       "source_file": "src/lib/next-round.ts",
-      "source_location": "L96",
+      "source_location": "L101",
       "_origin": "ast",
       "id": "lib_next_round_recommendnextround",
       "community": 45,
@@ -44810,9 +44810,9 @@
       "source_file": "e2e/usage-round.spec.ts",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_usage_round_spec",
-      "target": "fixtures_seed",
-      "confidence_score": 1.0
+      "target": "fixtures_seed"
     },
     {
       "relation": "imports_from",
@@ -46069,9 +46069,9 @@
       "source_file": "e2e/usage-round.spec.ts",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_usage_round_spec",
-      "target": "fixtures_seed_seedbaseline",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seedbaseline"
     },
     {
       "relation": "calls",
@@ -46267,9 +46267,9 @@
       "source_file": "e2e/usage-round.spec.ts",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "e2e_usage_round_spec",
-      "target": "fixtures_seed_seedjourneyscenario",
-      "confidence_score": 1.0
+      "target": "fixtures_seed_seedjourneyscenario"
     },
     {
       "relation": "calls",
@@ -70380,9 +70380,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/page.test.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessionnumber_page_test",
-      "target": "sessionnumber_page_test_mockgetsession_mockrequireaccess_redirectmock_sessionrepo_decisionrepo_itemrepo_prefrepo_dispositionrepo_analyticsprops_recommendedprops",
-      "confidence_score": 1.0
+      "target": "sessionnumber_page_test_mockgetsession_mockrequireaccess_redirectmock_sessionrepo_decisionrepo_itemrepo_prefrepo_dispositionrepo_analyticsprops_recommendedprops"
     },
     {
       "relation": "contains",
@@ -70390,9 +70390,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/page.test.tsx",
       "source_location": "L155",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessionnumber_page_test",
-      "target": "sessionnumber_page_test_toppref",
-      "confidence_score": 1.0
+      "target": "sessionnumber_page_test_toppref"
     },
     {
       "relation": "contains",
@@ -70400,9 +70400,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/page.test.tsx",
       "source_location": "L61",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessionnumber_page_test",
-      "target": "sessionnumber_page_test_usageevt",
-      "confidence_score": 1.0
+      "target": "sessionnumber_page_test_usageevt"
     },
     {
       "relation": "imports_from",
@@ -70730,9 +70730,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/page.tsx",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessionnumber_page",
-      "target": "lib_next_round_nextround",
-      "confidence_score": 1.0
+      "target": "lib_next_round_nextround"
     },
     {
       "relation": "imports",
@@ -70772,9 +70772,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/page.tsx",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessionnumber_page",
-      "target": "sessions_recommendedround",
-      "confidence_score": 1.0
+      "target": "sessions_recommendedround"
     },
     {
       "relation": "imports",
@@ -70783,9 +70783,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/page.tsx",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessionnumber_page",
-      "target": "sessions_recommendedround_recommendedround",
-      "confidence_score": 1.0
+      "target": "sessions_recommendedround_recommendedround"
     },
     {
       "relation": "imports_from",
@@ -71779,9 +71779,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.test.tsx",
       "source_location": "L80",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page_test",
-      "target": "usage_page",
-      "confidence_score": 1.0
+      "target": "usage_page"
     },
     {
       "relation": "contains",
@@ -71789,9 +71789,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.test.tsx",
       "source_location": "L82",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page_test",
-      "target": "usage_page_test_collection",
-      "confidence_score": 1.0
+      "target": "usage_page_test_collection"
     },
     {
       "relation": "contains",
@@ -71799,9 +71799,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.test.tsx",
       "source_location": "L83",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page_test",
-      "target": "usage_page_test_item",
-      "confidence_score": 1.0
+      "target": "usage_page_test_item"
     },
     {
       "relation": "contains",
@@ -71809,9 +71809,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.test.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page_test",
-      "target": "usage_page_test_mockgetsession_mockrequireaccess_itemrepo_sessionrepo_decisionrepo_photorepo_disprepo_usageroundprops",
-      "confidence_score": 1.0
+      "target": "usage_page_test_mockgetsession_mockrequireaccess_itemrepo_sessionrepo_decisionrepo_photorepo_disprepo_usageroundprops"
     },
     {
       "relation": "contains",
@@ -71819,9 +71819,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.test.tsx",
       "source_location": "L88",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page_test",
-      "target": "usage_page_test_pairwiseevent",
-      "confidence_score": 1.0
+      "target": "usage_page_test_pairwiseevent"
     },
     {
       "relation": "contains",
@@ -71829,9 +71829,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.test.tsx",
       "source_location": "L85",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page_test",
-      "target": "usage_page_test_usageevent",
-      "confidence_score": 1.0
+      "target": "usage_page_test_usageevent"
     },
     {
       "relation": "imports_from",
@@ -71840,9 +71840,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "api_decisions",
-      "confidence_score": 1.0
+      "target": "api_decisions"
     },
     {
       "relation": "imports",
@@ -71851,9 +71851,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "api_decisions_decisioncontroller",
-      "confidence_score": 1.0
+      "target": "api_decisions_decisioncontroller"
     },
     {
       "relation": "imports_from",
@@ -71862,9 +71862,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "api_dispositions",
-      "confidence_score": 1.0
+      "target": "api_dispositions"
     },
     {
       "relation": "imports",
@@ -71873,9 +71873,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "api_dispositions_dispositioncontroller",
-      "confidence_score": 1.0
+      "target": "api_dispositions_dispositioncontroller"
     },
     {
       "relation": "imports_from",
@@ -71884,9 +71884,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "api_items",
-      "confidence_score": 1.0
+      "target": "api_items"
     },
     {
       "relation": "imports",
@@ -71895,9 +71895,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "api_items_itemcontroller",
-      "confidence_score": 1.0
+      "target": "api_items_itemcontroller"
     },
     {
       "relation": "imports_from",
@@ -71906,9 +71906,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "api_photos",
-      "confidence_score": 1.0
+      "target": "api_photos"
     },
     {
       "relation": "imports",
@@ -71917,9 +71917,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "api_photos_photocontroller",
-      "confidence_score": 1.0
+      "target": "api_photos_photocontroller"
     },
     {
       "relation": "imports_from",
@@ -71928,9 +71928,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "api_sessions",
-      "confidence_score": 1.0
+      "target": "api_sessions"
     },
     {
       "relation": "imports",
@@ -71939,9 +71939,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "api_sessions_sessioncontroller",
-      "confidence_score": 1.0
+      "target": "api_sessions_sessioncontroller"
     },
     {
       "relation": "imports",
@@ -71950,9 +71950,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "layout_applayout_applayout",
-      "confidence_score": 1.0
+      "target": "layout_applayout_applayout"
     },
     {
       "relation": "imports_from",
@@ -71961,9 +71961,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "layout_index",
-      "confidence_score": 1.0
+      "target": "layout_index"
     },
     {
       "relation": "imports_from",
@@ -71972,9 +71972,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "lib_auth",
-      "confidence_score": 1.0
+      "target": "lib_auth"
     },
     {
       "relation": "imports",
@@ -71983,9 +71983,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "lib_auth_getsession",
-      "confidence_score": 1.0
+      "target": "lib_auth_getsession"
     },
     {
       "relation": "imports_from",
@@ -71994,9 +71994,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "lib_collection_access",
-      "confidence_score": 1.0
+      "target": "lib_collection_access"
     },
     {
       "relation": "imports",
@@ -72005,9 +72005,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "lib_collection_access_requirecollectionaccess",
-      "confidence_score": 1.0
+      "target": "lib_collection_access_requirecollectionaccess"
     },
     {
       "relation": "imports_from",
@@ -72016,9 +72016,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "lib_db",
-      "confidence_score": 1.0
+      "target": "lib_db"
     },
     {
       "relation": "imports",
@@ -72027,9 +72027,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "lib_db_getdb",
-      "confidence_score": 1.0
+      "target": "lib_db_getdb"
     },
     {
       "relation": "imports_from",
@@ -72038,9 +72038,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "lib_derive_usage",
-      "confidence_score": 1.0
+      "target": "lib_derive_usage"
     },
     {
       "relation": "imports",
@@ -72049,9 +72049,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "lib_derive_usage_deriveusage",
-      "confidence_score": 1.0
+      "target": "lib_derive_usage_deriveusage"
     },
     {
       "relation": "imports_from",
@@ -72060,9 +72060,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "lib_photos",
-      "confidence_score": 1.0
+      "target": "lib_photos"
     },
     {
       "relation": "imports",
@@ -72071,9 +72071,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "lib_photos_getphotoasseturlforphoto",
-      "confidence_score": 1.0
+      "target": "lib_photos_getphotoasseturlforphoto"
     },
     {
       "relation": "imports",
@@ -72082,9 +72082,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "lib_photos_photo_width",
-      "confidence_score": 1.0
+      "target": "lib_photos_photo_width"
     },
     {
       "relation": "imports_from",
@@ -72093,9 +72093,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "lib_usage_selection",
-      "confidence_score": 1.0
+      "target": "lib_usage_selection"
     },
     {
       "relation": "imports",
@@ -72104,9 +72104,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "lib_usage_selection_selectusagequeue",
-      "confidence_score": 1.0
+      "target": "lib_usage_selection_selectusagequeue"
     },
     {
       "relation": "imports_from",
@@ -72115,9 +72115,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "sorting_pendingdecisionsgate",
-      "confidence_score": 1.0
+      "target": "sorting_pendingdecisionsgate"
     },
     {
       "relation": "imports",
@@ -72126,9 +72126,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "sorting_pendingdecisionsgate_pendingdecisionsgate",
-      "confidence_score": 1.0
+      "target": "sorting_pendingdecisionsgate_pendingdecisionsgate"
     },
     {
       "relation": "imports_from",
@@ -72137,9 +72137,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "sorting_takeabreakcontrol",
-      "confidence_score": 1.0
+      "target": "sorting_takeabreakcontrol"
     },
     {
       "relation": "imports",
@@ -72148,9 +72148,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "sorting_takeabreakcontrol_takeabreakcontrol",
-      "confidence_score": 1.0
+      "target": "sorting_takeabreakcontrol_takeabreakcontrol"
     },
     {
       "relation": "imports_from",
@@ -72159,9 +72159,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "sorting_usageround",
-      "confidence_score": 1.0
+      "target": "sorting_usageround"
     },
     {
       "relation": "imports",
@@ -72170,9 +72170,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "sorting_usageround_usageround",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_usageround"
     },
     {
       "relation": "contains",
@@ -72180,9 +72180,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "usage_page_usagepage",
-      "confidence_score": 1.0
+      "target": "usage_page_usagepage"
     },
     {
       "relation": "contains",
@@ -72190,9 +72190,9 @@
       "source_file": "src/app/collections/[id]/sort/[sessionNumber]/usage/page.tsx",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "usage_page",
-      "target": "usage_page_usagepageprops",
-      "confidence_score": 1.0
+      "target": "usage_page_usagepageprops"
     },
     {
       "relation": "calls",
@@ -75762,9 +75762,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "ui_button_button",
-      "confidence_score": 1.0
+      "target": "ui_button_button"
     },
     {
       "relation": "imports",
@@ -76067,9 +76067,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "ui_card_card",
-      "confidence_score": 1.0
+      "target": "ui_card_card"
     },
     {
       "relation": "re_exports",
@@ -77764,9 +77764,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "ui_index",
-      "confidence_score": 1.0
+      "target": "ui_index"
     },
     {
       "relation": "imports_from",
@@ -78877,9 +78877,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "items_itemcard",
-      "confidence_score": 1.0
+      "target": "items_itemcard"
     },
     {
       "relation": "references",
@@ -78954,9 +78954,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "items_itemcard_itemcard",
-      "confidence_score": 1.0
+      "target": "items_itemcard_itemcard"
     },
     {
       "relation": "imports_from",
@@ -81414,9 +81414,9 @@
       "source_file": "src/features/onboarding/copy-a11y.test.tsx",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "onboarding_copy_a11y_test",
-      "target": "sorting_roundcopy",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy"
     },
     {
       "relation": "imports_from",
@@ -83363,9 +83363,9 @@
       "source_file": "src/features/sessions/RecommendedRound.test.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround_test",
-      "target": "lib_next_round",
-      "confidence_score": 1.0
+      "target": "lib_next_round"
     },
     {
       "relation": "imports",
@@ -83374,9 +83374,9 @@
       "source_file": "src/features/sessions/RecommendedRound.test.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround_test",
-      "target": "lib_next_round_nextround",
-      "confidence_score": 1.0
+      "target": "lib_next_round_nextround"
     },
     {
       "relation": "imports_from",
@@ -83385,9 +83385,9 @@
       "source_file": "src/features/sessions/RecommendedRound.test.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround_test",
-      "target": "lib_usage_round_prefs",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs"
     },
     {
       "relation": "imports",
@@ -83396,9 +83396,9 @@
       "source_file": "src/features/sessions/RecommendedRound.test.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround_test",
-      "target": "lib_usage_round_prefs_markusageroundran",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_markusageroundran"
     },
     {
       "relation": "imports_from",
@@ -83407,9 +83407,9 @@
       "source_file": "src/features/sessions/RecommendedRound.test.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround_test",
-      "target": "sessions_recommendedround",
-      "confidence_score": 1.0
+      "target": "sessions_recommendedround"
     },
     {
       "relation": "imports",
@@ -83418,9 +83418,9 @@
       "source_file": "src/features/sessions/RecommendedRound.test.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround_test",
-      "target": "sessions_recommendedround_recommendedround",
-      "confidence_score": 1.0
+      "target": "sessions_recommendedround_recommendedround"
     },
     {
       "relation": "contains",
@@ -83428,9 +83428,9 @@
       "source_file": "src/features/sessions/RecommendedRound.test.tsx",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround_test",
-      "target": "sessions_recommendedround_test_demotedround",
-      "confidence_score": 1.0
+      "target": "sessions_recommendedround_test_demotedround"
     },
     {
       "relation": "contains",
@@ -83438,9 +83438,9 @@
       "source_file": "src/features/sessions/RecommendedRound.test.tsx",
       "source_location": "L30",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround_test",
-      "target": "sessions_recommendedround_test_installstorage",
-      "confidence_score": 1.0
+      "target": "sessions_recommendedround_test_installstorage"
     },
     {
       "relation": "contains",
@@ -83448,9 +83448,9 @@
       "source_file": "src/features/sessions/RecommendedRound.test.tsx",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround_test",
-      "target": "sessions_recommendedround_test_primary",
-      "confidence_score": 1.0
+      "target": "sessions_recommendedround_test_primary"
     },
     {
       "relation": "contains",
@@ -83458,9 +83458,9 @@
       "source_file": "src/features/sessions/RecommendedRound.test.tsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround_test",
-      "target": "sessions_recommendedround_test_primaryround",
-      "confidence_score": 1.0
+      "target": "sessions_recommendedround_test_primaryround"
     },
     {
       "relation": "contains",
@@ -83468,9 +83468,9 @@
       "source_file": "src/features/sessions/RecommendedRound.test.tsx",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround_test",
-      "target": "sessions_recommendedround_test_whenusagedemoted",
-      "confidence_score": 1.0
+      "target": "sessions_recommendedround_test_whenusagedemoted"
     },
     {
       "relation": "imports_from",
@@ -83479,9 +83479,9 @@
       "source_file": "src/features/sessions/RecommendedRound.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround",
-      "target": "lib_next_round",
-      "confidence_score": 1.0
+      "target": "lib_next_round"
     },
     {
       "relation": "imports",
@@ -83490,9 +83490,9 @@
       "source_file": "src/features/sessions/RecommendedRound.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround",
-      "target": "lib_next_round_nextround",
-      "confidence_score": 1.0
+      "target": "lib_next_round_nextround"
     },
     {
       "relation": "imports_from",
@@ -83501,9 +83501,9 @@
       "source_file": "src/features/sessions/RecommendedRound.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround",
-      "target": "lib_usage_round_prefs",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs"
     },
     {
       "relation": "imports",
@@ -83512,9 +83512,9 @@
       "source_file": "src/features/sessions/RecommendedRound.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround",
-      "target": "lib_usage_round_prefs_hasusageroundran",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_hasusageroundran"
     },
     {
       "relation": "contains",
@@ -83522,9 +83522,9 @@
       "source_file": "src/features/sessions/RecommendedRound.tsx",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround",
-      "target": "sessions_recommendedround_recommendedround",
-      "confidence_score": 1.0
+      "target": "sessions_recommendedround_recommendedround"
     },
     {
       "relation": "contains",
@@ -83532,9 +83532,9 @@
       "source_file": "src/features/sessions/RecommendedRound.tsx",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround",
-      "target": "sessions_recommendedround_recommendedroundprops",
-      "confidence_score": 1.0
+      "target": "sessions_recommendedround_recommendedroundprops"
     },
     {
       "relation": "contains",
@@ -83542,9 +83542,9 @@
       "source_file": "src/features/sessions/RecommendedRound.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround",
-      "target": "sessions_recommendedround_roundlink",
-      "confidence_score": 1.0
+      "target": "sessions_recommendedround_roundlink"
     },
     {
       "relation": "imports_from",
@@ -83553,9 +83553,9 @@
       "source_file": "src/features/sessions/RecommendedRound.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround",
-      "target": "sessions_recommendedroundcard",
-      "confidence_score": 1.0
+      "target": "sessions_recommendedroundcard"
     },
     {
       "relation": "imports",
@@ -83564,9 +83564,9 @@
       "source_file": "src/features/sessions/RecommendedRound.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround",
-      "target": "sessions_recommendedroundcard_recommendedroundcard",
-      "confidence_score": 1.0
+      "target": "sessions_recommendedroundcard_recommendedroundcard"
     },
     {
       "relation": "references",
@@ -83575,9 +83575,9 @@
       "source_file": "src/features/sessions/RecommendedRound.tsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sessions_recommendedround_roundlink",
-      "target": "lib_next_round_nextround",
-      "confidence_score": 1.0
+      "target": "lib_next_round_nextround"
     },
     {
       "relation": "imports_from",
@@ -84428,9 +84428,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_decisioncontrols",
-      "confidence_score": 1.0
+      "target": "sorting_decisioncontrols"
     },
     {
       "relation": "imports",
@@ -84450,9 +84450,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_decisioncontrols_decisioncontrols",
-      "confidence_score": 1.0
+      "target": "sorting_decisioncontrols_decisioncontrols"
     },
     {
       "relation": "imports_from",
@@ -85094,9 +85094,9 @@
       "source_file": "src/features/sorting/RoundLengthChooser.test.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundlengthchooser_test",
-      "target": "lib_round_preference",
-      "confidence_score": 1.0
+      "target": "lib_round_preference"
     },
     {
       "relation": "imports",
@@ -85105,9 +85105,9 @@
       "source_file": "src/features/sorting/RoundLengthChooser.test.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundlengthchooser_test",
-      "target": "lib_round_preference_round_box_options",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_round_box_options"
     },
     {
       "relation": "imports",
@@ -85116,9 +85116,9 @@
       "source_file": "src/features/sorting/RoundLengthChooser.test.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundlengthchooser_test",
-      "target": "lib_round_preference_setroundbox",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_setroundbox"
     },
     {
       "relation": "imports_from",
@@ -85127,9 +85127,9 @@
       "source_file": "src/features/sorting/RoundLengthChooser.test.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundlengthchooser_test",
-      "target": "sorting_roundlengthchooser",
-      "confidence_score": 1.0
+      "target": "sorting_roundlengthchooser"
     },
     {
       "relation": "imports",
@@ -85138,9 +85138,9 @@
       "source_file": "src/features/sorting/RoundLengthChooser.test.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundlengthchooser_test",
-      "target": "sorting_roundlengthchooser_roundlengthchooser",
-      "confidence_score": 1.0
+      "target": "sorting_roundlengthchooser_roundlengthchooser"
     },
     {
       "relation": "imports_from",
@@ -85149,9 +85149,9 @@
       "source_file": "src/features/sorting/RoundLengthChooser.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundlengthchooser",
-      "target": "lib_round_preference",
-      "confidence_score": 1.0
+      "target": "lib_round_preference"
     },
     {
       "relation": "imports",
@@ -85160,9 +85160,9 @@
       "source_file": "src/features/sorting/RoundLengthChooser.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundlengthchooser",
-      "target": "lib_round_preference_getroundbox",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_getroundbox"
     },
     {
       "relation": "imports",
@@ -85171,9 +85171,9 @@
       "source_file": "src/features/sorting/RoundLengthChooser.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundlengthchooser",
-      "target": "lib_round_preference_round_box_options",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_round_box_options"
     },
     {
       "relation": "imports",
@@ -85182,9 +85182,9 @@
       "source_file": "src/features/sorting/RoundLengthChooser.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundlengthchooser",
-      "target": "lib_round_preference_roundbox",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_roundbox"
     },
     {
       "relation": "imports",
@@ -85193,9 +85193,9 @@
       "source_file": "src/features/sorting/RoundLengthChooser.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundlengthchooser",
-      "target": "lib_round_preference_setroundbox",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_setroundbox"
     },
     {
       "relation": "contains",
@@ -85203,9 +85203,9 @@
       "source_file": "src/features/sorting/RoundLengthChooser.tsx",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundlengthchooser",
-      "target": "sorting_roundlengthchooser_roundlengthchooser",
-      "confidence_score": 1.0
+      "target": "sorting_roundlengthchooser_roundlengthchooser"
     },
     {
       "relation": "contains",
@@ -85213,9 +85213,9 @@
       "source_file": "src/features/sorting/RoundLengthChooser.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundlengthchooser",
-      "target": "sorting_roundlengthchooser_roundlengthchooserprops",
-      "confidence_score": 1.0
+      "target": "sorting_roundlengthchooser_roundlengthchooserprops"
     },
     {
       "relation": "imports_from",
@@ -85224,9 +85224,9 @@
       "source_file": "src/features/sorting/RoundSurface.tsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundsurface",
-      "target": "sorting_roundlengthchooser",
-      "confidence_score": 1.0
+      "target": "sorting_roundlengthchooser"
     },
     {
       "relation": "imports_from",
@@ -85235,9 +85235,9 @@
       "source_file": "src/features/sorting/TriageRound.tsx",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_triageround",
-      "target": "sorting_roundlengthchooser",
-      "confidence_score": 1.0
+      "target": "sorting_roundlengthchooser"
     },
     {
       "relation": "imports_from",
@@ -85246,9 +85246,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L24",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_roundlengthchooser",
-      "confidence_score": 1.0
+      "target": "sorting_roundlengthchooser"
     },
     {
       "relation": "references",
@@ -85257,9 +85257,9 @@
       "source_file": "src/features/sorting/RoundLengthChooser.tsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundlengthchooser_roundlengthchooserprops",
-      "target": "lib_round_preference_roundbox",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_roundbox"
     },
     {
       "relation": "imports",
@@ -85268,9 +85268,9 @@
       "source_file": "src/features/sorting/RoundSurface.tsx",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundsurface",
-      "target": "sorting_roundlengthchooser_roundlengthchooser",
-      "confidence_score": 1.0
+      "target": "sorting_roundlengthchooser_roundlengthchooser"
     },
     {
       "relation": "imports",
@@ -85279,9 +85279,9 @@
       "source_file": "src/features/sorting/TriageRound.tsx",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_triageround",
-      "target": "sorting_roundlengthchooser_roundlengthchooser",
-      "confidence_score": 1.0
+      "target": "sorting_roundlengthchooser_roundlengthchooser"
     },
     {
       "relation": "imports",
@@ -85290,9 +85290,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L24",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_roundlengthchooser_roundlengthchooser",
-      "confidence_score": 1.0
+      "target": "sorting_roundlengthchooser_roundlengthchooser"
     },
     {
       "relation": "imports_from",
@@ -85365,9 +85365,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_roundshell",
-      "confidence_score": 1.0
+      "target": "sorting_roundshell"
     },
     {
       "relation": "imports",
@@ -85398,9 +85398,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_roundshell_roundshell",
-      "confidence_score": 1.0
+      "target": "sorting_roundshell_roundshell"
     },
     {
       "relation": "imports_from",
@@ -85409,9 +85409,9 @@
       "source_file": "src/features/sorting/RoundSurface.test.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundsurface_test",
-      "target": "sorting_roundsurface",
-      "confidence_score": 1.0
+      "target": "sorting_roundsurface"
     },
     {
       "relation": "imports",
@@ -85420,9 +85420,9 @@
       "source_file": "src/features/sorting/RoundSurface.test.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundsurface_test",
-      "target": "sorting_roundsurface_roundsurface",
-      "confidence_score": 1.0
+      "target": "sorting_roundsurface_roundsurface"
     },
     {
       "relation": "contains",
@@ -85430,9 +85430,9 @@
       "source_file": "src/features/sorting/RoundSurface.test.tsx",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundsurface_test",
-      "target": "sorting_roundsurface_test_installstorage",
-      "confidence_score": 1.0
+      "target": "sorting_roundsurface_test_installstorage"
     },
     {
       "relation": "contains",
@@ -85440,9 +85440,9 @@
       "source_file": "src/features/sorting/RoundSurface.test.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundsurface_test",
-      "target": "sorting_roundsurface_test_push",
-      "confidence_score": 1.0
+      "target": "sorting_roundsurface_test_push"
     },
     {
       "relation": "contains",
@@ -85450,9 +85450,9 @@
       "source_file": "src/features/sorting/RoundSurface.test.tsx",
       "source_location": "L39",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundsurface_test",
-      "target": "sorting_roundsurface_test_rendersurface",
-      "confidence_score": 1.0
+      "target": "sorting_roundsurface_test_rendersurface"
     },
     {
       "relation": "imports_from",
@@ -85483,9 +85483,9 @@
       "source_file": "src/features/sorting/RoundSurface.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundsurface",
-      "target": "lib_round_preference_roundbox",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_roundbox"
     },
     {
       "relation": "imports_from",
@@ -85613,9 +85613,9 @@
       "source_file": "src/features/sorting/roundCopy.test.ts",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundcopy_test",
-      "target": "sorting_roundtimer",
-      "confidence_score": 1.0
+      "target": "sorting_roundtimer"
     },
     {
       "relation": "imports_from",
@@ -85731,9 +85731,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_roundtimer",
-      "confidence_score": 1.0
+      "target": "sorting_roundtimer"
     },
     {
       "relation": "calls",
@@ -85808,9 +85808,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_roundtimer_roundtimer",
-      "confidence_score": 1.0
+      "target": "sorting_roundtimer_roundtimer"
     },
     {
       "relation": "contains",
@@ -86088,9 +86088,9 @@
       "source_file": "src/features/sorting/StartSessionForm.test.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_startsessionform_test",
-      "target": "lib_round_preference_round_box_options",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_round_box_options"
     },
     {
       "relation": "imports_from",
@@ -86141,9 +86141,9 @@
       "source_file": "src/features/sorting/roundCopy.test.ts",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundcopy_test",
-      "target": "sorting_startsessionform",
-      "confidence_score": 1.0
+      "target": "sorting_startsessionform"
     },
     {
       "relation": "imports_from",
@@ -86163,9 +86163,9 @@
       "source_file": "src/features/sorting/StartSessionForm.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_startsessionform",
-      "target": "lib_round_preference_round_box_options",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_round_box_options"
     },
     {
       "relation": "imports",
@@ -86215,9 +86215,9 @@
       "source_file": "src/features/sorting/StartSessionForm.tsx",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_startsessionform",
-      "target": "sorting_startsessionform_timebox_options",
-      "confidence_score": 1.0
+      "target": "sorting_startsessionform_timebox_options"
     },
     {
       "relation": "imports_from",
@@ -86851,9 +86851,9 @@
       "source_file": "src/features/sorting/TriageRound.tsx",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_triageround",
-      "target": "sorting_useoptimisticround",
-      "confidence_score": 1.0
+      "target": "sorting_useoptimisticround"
     },
     {
       "relation": "imports",
@@ -86862,9 +86862,9 @@
       "source_file": "src/features/sorting/TriageRound.tsx",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_triageround",
-      "target": "sorting_useoptimisticround_useoptimisticround",
-      "confidence_score": 1.0
+      "target": "sorting_useoptimisticround_useoptimisticround"
     },
     {
       "relation": "imports_from",
@@ -87196,9 +87196,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "lib_usage_round_prefs",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs"
     },
     {
       "relation": "imports",
@@ -87207,9 +87207,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "lib_usage_round_prefs_getusagepace",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_getusagepace"
     },
     {
       "relation": "imports",
@@ -87218,9 +87218,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "lib_usage_round_prefs_hasseenquickintro",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_hasseenquickintro"
     },
     {
       "relation": "imports",
@@ -87229,9 +87229,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "lib_usage_round_prefs_hasusageroundran",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_hasusageroundran"
     },
     {
       "relation": "imports",
@@ -87240,9 +87240,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "lib_usage_round_prefs_markquickintroseen",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_markquickintroseen"
     },
     {
       "relation": "imports_from",
@@ -87251,9 +87251,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_decisionqueue",
-      "confidence_score": 1.0
+      "target": "sorting_decisionqueue"
     },
     {
       "relation": "imports",
@@ -87262,9 +87262,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_decisionqueue_queuekey",
-      "confidence_score": 1.0
+      "target": "sorting_decisionqueue_queuekey"
     },
     {
       "relation": "imports",
@@ -87273,9 +87273,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_decisionqueue_readqueue",
-      "confidence_score": 1.0
+      "target": "sorting_decisionqueue_readqueue"
     },
     {
       "relation": "imports_from",
@@ -87284,9 +87284,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_roundcopy",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy"
     },
     {
       "relation": "imports",
@@ -87295,9 +87295,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_roundcopy_nowannouncement",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy_nowannouncement"
     },
     {
       "relation": "imports",
@@ -87306,9 +87306,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_roundcopy_round_copy",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy_round_copy"
     },
     {
       "relation": "imports_from",
@@ -87317,9 +87317,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_usageround",
-      "confidence_score": 1.0
+      "target": "sorting_usageround"
     },
     {
       "relation": "imports",
@@ -87328,9 +87328,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_usageround_answeredsofar",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_answeredsofar"
     },
     {
       "relation": "contains",
@@ -87338,9 +87338,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_usageround_test_dc",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_test_dc"
     },
     {
       "relation": "contains",
@@ -87348,9 +87348,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L546",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_usageround_test_enablequick",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_test_enablequick"
     },
     {
       "relation": "contains",
@@ -87358,9 +87358,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L93",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_usageround_test_entry",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_test_entry"
     },
     {
       "relation": "contains",
@@ -87368,9 +87368,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_usageround_test_flusher",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_test_flusher"
     },
     {
       "relation": "contains",
@@ -87378,9 +87378,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L55",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_usageround_test_installstorage",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_test_installstorage"
     },
     {
       "relation": "contains",
@@ -87388,9 +87388,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L90",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_usageround_test_item",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_test_item"
     },
     {
       "relation": "contains",
@@ -87398,9 +87398,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L98",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_usageround_test_key",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_test_key"
     },
     {
       "relation": "contains",
@@ -87408,9 +87408,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L73",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_usageround_test_mockmatchmedia",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_test_mockmatchmedia"
     },
     {
       "relation": "contains",
@@ -87418,9 +87418,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_usageround_test_refresh_push",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_test_refresh_push"
     },
     {
       "relation": "contains",
@@ -87428,9 +87428,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L103",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_usageround_test_renderround",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_test_renderround"
     },
     {
       "relation": "imports",
@@ -87439,9 +87439,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_usageround_usageround",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_usageround"
     },
     {
       "relation": "imports",
@@ -87450,9 +87450,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "sorting_usageround_usageroundqueueentry",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_usageroundqueueentry"
     },
     {
       "relation": "imports",
@@ -87461,9 +87461,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "types_domain_item",
-      "confidence_score": 1.0
+      "target": "types_domain_item"
     },
     {
       "relation": "imports_from",
@@ -87472,9 +87472,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test",
-      "target": "types_index",
-      "confidence_score": 1.0
+      "target": "types_index"
     },
     {
       "relation": "calls",
@@ -87483,9 +87483,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L94",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test_entry",
-      "target": "sorting_usageround_test_item",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_test_item"
     },
     {
       "relation": "calls",
@@ -87494,9 +87494,9 @@
       "source_file": "src/features/sorting/UsageRound.test.tsx",
       "source_location": "L109",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_test_renderround",
-      "target": "sorting_usageround_test_entry",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_test_entry"
     },
     {
       "relation": "imports_from",
@@ -87505,9 +87505,9 @@
       "source_file": "src/features/sorting/roundCopy.test.ts",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundcopy_test",
-      "target": "sorting_usageround",
-      "confidence_score": 1.0
+      "target": "sorting_usageround"
     },
     {
       "relation": "imports_from",
@@ -87516,9 +87516,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "lib_usage_round_prefs",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs"
     },
     {
       "relation": "imports",
@@ -87527,9 +87527,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "lib_usage_round_prefs_getusagepace",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_getusagepace"
     },
     {
       "relation": "imports",
@@ -87538,9 +87538,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "lib_usage_round_prefs_hasseenquickintro",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_hasseenquickintro"
     },
     {
       "relation": "imports",
@@ -87549,9 +87549,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "lib_usage_round_prefs_markquickintroseen",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_markquickintroseen"
     },
     {
       "relation": "imports",
@@ -87560,9 +87560,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "lib_usage_round_prefs_markusageroundran",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_markusageroundran"
     },
     {
       "relation": "imports",
@@ -87571,9 +87571,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "lib_usage_round_prefs_setusagepace",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_setusagepace"
     },
     {
       "relation": "imports",
@@ -87582,9 +87582,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "lib_usage_round_prefs_usagepace",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_usagepace"
     },
     {
       "relation": "imports_from",
@@ -87593,9 +87593,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "lib_what_moved",
-      "confidence_score": 1.0
+      "target": "lib_what_moved"
     },
     {
       "relation": "imports",
@@ -87604,9 +87604,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "lib_what_moved_moveddecision",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_moveddecision"
     },
     {
       "relation": "imports_from",
@@ -87615,9 +87615,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_pendingnotices",
-      "confidence_score": 1.0
+      "target": "sorting_pendingnotices"
     },
     {
       "relation": "imports",
@@ -87626,9 +87626,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_pendingnotices_pendingnotices",
-      "confidence_score": 1.0
+      "target": "sorting_pendingnotices_pendingnotices"
     },
     {
       "relation": "imports_from",
@@ -87637,9 +87637,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_roundcopy",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy"
     },
     {
       "relation": "imports",
@@ -87648,9 +87648,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_roundcopy_nowannouncement",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy_nowannouncement"
     },
     {
       "relation": "imports",
@@ -87659,9 +87659,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_roundcopy_round_copy",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy_round_copy"
     },
     {
       "relation": "imports",
@@ -87670,9 +87670,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_roundcopy_usagedecisions",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy_usagedecisions"
     },
     {
       "relation": "imports",
@@ -87681,9 +87681,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_roundcopy_usageresult",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy_usageresult"
     },
     {
       "relation": "contains",
@@ -87691,9 +87691,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_usageround_answeredsofar",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_answeredsofar"
     },
     {
       "relation": "contains",
@@ -87701,9 +87701,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L68",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_usageround_isinteractiveel",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_isinteractiveel"
     },
     {
       "relation": "contains",
@@ -87711,9 +87711,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L90",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_usageround_usageround",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_usageround"
     },
     {
       "relation": "contains",
@@ -87721,9 +87721,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L42",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_usageround_usageroundprops",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_usageroundprops"
     },
     {
       "relation": "contains",
@@ -87731,9 +87731,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L37",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_usageround_usageroundqueueentry",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_usageroundqueueentry"
     },
     {
       "relation": "imports_from",
@@ -87742,9 +87742,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_useoptimisticround",
-      "confidence_score": 1.0
+      "target": "sorting_useoptimisticround"
     },
     {
       "relation": "imports",
@@ -87753,9 +87753,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_useoptimisticround_useoptimisticround",
-      "confidence_score": 1.0
+      "target": "sorting_useoptimisticround_useoptimisticround"
     },
     {
       "relation": "imports_from",
@@ -87764,9 +87764,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_whatmoved",
-      "confidence_score": 1.0
+      "target": "sorting_whatmoved"
     },
     {
       "relation": "imports",
@@ -87775,9 +87775,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "sorting_whatmoved_whatmoved",
-      "confidence_score": 1.0
+      "target": "sorting_whatmoved_whatmoved"
     },
     {
       "relation": "imports",
@@ -87786,9 +87786,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "types_domain_item",
-      "confidence_score": 1.0
+      "target": "types_domain_item"
     },
     {
       "relation": "imports_from",
@@ -87797,9 +87797,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround",
-      "target": "types_index",
-      "confidence_score": 1.0
+      "target": "types_index"
     },
     {
       "relation": "references",
@@ -87808,9 +87808,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L38",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_usageroundqueueentry",
-      "target": "types_domain_item",
-      "confidence_score": 1.0
+      "target": "types_domain_item"
     },
     {
       "relation": "references",
@@ -87819,9 +87819,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L52",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_usageroundprops",
-      "target": "lib_what_moved_moveddecision",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_moveddecision"
     },
     {
       "relation": "imports",
@@ -87830,9 +87830,9 @@
       "source_file": "src/features/sorting/roundCopy.test.ts",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundcopy_test",
-      "target": "sorting_usageround_answeredsofar",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_answeredsofar"
     },
     {
       "relation": "calls",
@@ -87841,9 +87841,9 @@
       "source_file": "src/features/sorting/UsageRound.tsx",
       "source_location": "L397",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_usageround_usageround",
-      "target": "sorting_usageround_answeredsofar",
-      "confidence_score": 1.0
+      "target": "sorting_usageround_answeredsofar"
     },
     {
       "relation": "calls",
@@ -87926,9 +87926,9 @@
       "source_file": "src/features/sorting/WhatMoved.test.tsx",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_whatmoved_test",
-      "target": "sorting_whatmoved_test_usage",
-      "confidence_score": 1.0
+      "target": "sorting_whatmoved_test_usage"
     },
     {
       "relation": "imports",
@@ -87959,9 +87959,9 @@
       "source_file": "src/features/sorting/WhatMoved.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_whatmoved",
-      "target": "lib_what_moved_inyourlifeline",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_inyourlifeline"
     },
     {
       "relation": "imports",
@@ -87981,9 +87981,9 @@
       "source_file": "src/features/sorting/WhatMoved.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_whatmoved",
-      "target": "lib_what_moved_restingline",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_restingline"
     },
     {
       "relation": "imports",
@@ -88055,9 +88055,9 @@
       "source_file": "src/features/sorting/WhatMoved.tsx",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_whatmoved_lines",
-      "target": "lib_what_moved_inyourlifeline",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_inyourlifeline"
     },
     {
       "relation": "calls",
@@ -88066,9 +88066,9 @@
       "source_file": "src/features/sorting/WhatMoved.tsx",
       "source_location": "L34",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_whatmoved_lines",
-      "target": "lib_what_moved_restingline",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_restingline"
     },
     {
       "relation": "calls",
@@ -88250,9 +88250,9 @@
       "source_file": "src/features/sorting/decisionFlusher.test.ts",
       "source_location": "L69",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_decisionflusher_test",
-      "target": "sorting_decisionflusher_test_usage",
-      "confidence_score": 1.0
+      "target": "sorting_decisionflusher_test_usage"
     },
     {
       "relation": "imports_from",
@@ -88382,9 +88382,9 @@
       "source_file": "src/features/sorting/decisionFlusher.test.ts",
       "source_location": "L72",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_decisionflusher_test_usage",
-      "target": "sorting_decisionqueue_newclientkey",
-      "confidence_score": 1.0
+      "target": "sorting_decisionqueue_newclientkey"
     },
     {
       "relation": "calls",
@@ -88972,9 +88972,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_decisionflusher",
-      "confidence_score": 1.0
+      "target": "sorting_decisionflusher"
     },
     {
       "relation": "imports",
@@ -88983,9 +88983,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_decisionflusher_ackoutcome",
-      "confidence_score": 1.0
+      "target": "sorting_decisionflusher_ackoutcome"
     },
     {
       "relation": "imports",
@@ -89137,9 +89137,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_decisionflusher_isinflight",
-      "confidence_score": 1.0
+      "target": "sorting_decisionflusher_isinflight"
     },
     {
       "relation": "calls",
@@ -89159,9 +89159,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_decisionflusher_awaitack",
-      "confidence_score": 1.0
+      "target": "sorting_decisionflusher_awaitack"
     },
     {
       "relation": "calls",
@@ -89269,9 +89269,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_decisionflusher_triggerflush",
-      "confidence_score": 1.0
+      "target": "sorting_decisionflusher_triggerflush"
     },
     {
       "relation": "calls",
@@ -89544,9 +89544,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_decisionflusher_usedecisionflusher",
-      "confidence_score": 1.0
+      "target": "sorting_decisionflusher_usedecisionflusher"
     },
     {
       "relation": "calls",
@@ -89813,9 +89813,9 @@
       "source_file": "src/features/sorting/decisionQueue.test.ts",
       "source_location": "L38",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_decisionqueue_test",
-      "target": "sorting_decisionqueue_test_usageentry",
-      "confidence_score": 1.0
+      "target": "sorting_decisionqueue_test_usageentry"
     },
     {
       "relation": "calls",
@@ -89835,9 +89835,9 @@
       "source_file": "src/features/sorting/decisionQueue.test.ts",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_decisionqueue_test_usageentry",
-      "target": "sorting_decisionqueue_newclientkey",
-      "confidence_score": 1.0
+      "target": "sorting_decisionqueue_newclientkey"
     },
     {
       "relation": "calls",
@@ -90110,9 +90110,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_decisionqueue",
-      "confidence_score": 1.0
+      "target": "sorting_decisionqueue"
     },
     {
       "relation": "imports",
@@ -90154,9 +90154,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_decisionqueue_queuekey",
-      "confidence_score": 1.0
+      "target": "sorting_decisionqueue_queuekey"
     },
     {
       "relation": "references",
@@ -90165,9 +90165,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L53",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround_optimisticround",
-      "target": "sorting_decisionqueue_queuekey",
-      "confidence_score": 1.0
+      "target": "sorting_decisionqueue_queuekey"
     },
     {
       "relation": "imports",
@@ -90198,9 +90198,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_decisionqueue_pendingentry",
-      "confidence_score": 1.0
+      "target": "sorting_decisionqueue_pendingentry"
     },
     {
       "relation": "imports",
@@ -90253,9 +90253,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_decisionqueue_newclientkey",
-      "confidence_score": 1.0
+      "target": "sorting_decisionqueue_newclientkey"
     },
     {
       "relation": "calls",
@@ -90506,9 +90506,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_decisionqueue_enqueue",
-      "confidence_score": 1.0
+      "target": "sorting_decisionqueue_enqueue"
     },
     {
       "relation": "calls",
@@ -90539,9 +90539,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_decisionqueue_removequeued",
-      "confidence_score": 1.0
+      "target": "sorting_decisionqueue_removequeued"
     },
     {
       "relation": "imports",
@@ -90760,9 +90760,9 @@
       "source_file": "src/features/sorting/roundCopy.test.ts",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundcopy_test",
-      "target": "lib_round_preference",
-      "confidence_score": 1.0
+      "target": "lib_round_preference"
     },
     {
       "relation": "imports",
@@ -90771,9 +90771,9 @@
       "source_file": "src/features/sorting/roundCopy.test.ts",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundcopy_test",
-      "target": "lib_round_preference_round_box_options",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_round_box_options"
     },
     {
       "relation": "imports_from",
@@ -90782,9 +90782,9 @@
       "source_file": "src/features/sorting/roundCopy.test.ts",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundcopy_test",
-      "target": "lib_what_moved",
-      "confidence_score": 1.0
+      "target": "lib_what_moved"
     },
     {
       "relation": "imports",
@@ -90793,9 +90793,9 @@
       "source_file": "src/features/sorting/roundCopy.test.ts",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundcopy_test",
-      "target": "lib_what_moved_inyourlifeline",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_inyourlifeline"
     },
     {
       "relation": "imports",
@@ -90804,9 +90804,9 @@
       "source_file": "src/features/sorting/roundCopy.test.ts",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundcopy_test",
-      "target": "lib_what_moved_restingline",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_restingline"
     },
     {
       "relation": "imports_from",
@@ -90836,9 +90836,9 @@
       "source_file": "src/features/sorting/roundCopy.test.ts",
       "source_location": "L95",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundcopy_test",
-      "target": "sorting_roundcopy_test_registerviolation",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy_test_registerviolation"
     },
     {
       "relation": "imports",
@@ -90858,9 +90858,9 @@
       "source_file": "src/features/sorting/roundCopy.test.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundcopy_test",
-      "target": "sorting_roundcopy_usagedecisions",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy_usagedecisions"
     },
     {
       "relation": "imports_from",
@@ -90869,9 +90869,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round",
-      "target": "sorting_roundcopy",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy"
     },
     {
       "relation": "imports_from",
@@ -90880,9 +90880,9 @@
       "source_file": "src/lib/next-round.test.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round_test",
-      "target": "sorting_roundcopy",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy"
     },
     {
       "relation": "contains",
@@ -90890,9 +90890,9 @@
       "source_file": "src/features/sorting/roundCopy.ts",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundcopy",
-      "target": "sorting_roundcopy_nowannouncement",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy_nowannouncement"
     },
     {
       "relation": "contains",
@@ -90930,9 +90930,9 @@
       "source_file": "src/features/sorting/roundCopy.ts",
       "source_location": "L60",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundcopy",
-      "target": "sorting_roundcopy_usagedecisions",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy_usagedecisions"
     },
     {
       "relation": "contains",
@@ -90940,9 +90940,9 @@
       "source_file": "src/features/sorting/roundCopy.ts",
       "source_location": "L57",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_roundcopy",
-      "target": "sorting_roundcopy_usageresult",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy_usageresult"
     },
     {
       "relation": "imports",
@@ -90951,9 +90951,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round",
-      "target": "sorting_roundcopy_round_copy",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy_round_copy"
     },
     {
       "relation": "imports",
@@ -90962,9 +90962,9 @@
       "source_file": "src/lib/next-round.test.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round_test",
-      "target": "sorting_roundcopy_round_copy",
-      "confidence_score": 1.0
+      "target": "sorting_roundcopy_round_copy"
     },
     {
       "relation": "imports_from",
@@ -91098,9 +91098,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "lib_round_preference",
-      "confidence_score": 1.0
+      "target": "lib_round_preference"
     },
     {
       "relation": "imports",
@@ -91109,9 +91109,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "lib_round_preference_getroundbox",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_getroundbox"
     },
     {
       "relation": "imports",
@@ -91120,9 +91120,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "lib_round_preference_roundbox",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_roundbox"
     },
     {
       "relation": "imports_from",
@@ -91131,9 +91131,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "lib_what_moved",
-      "confidence_score": 1.0
+      "target": "lib_what_moved"
     },
     {
       "relation": "imports",
@@ -91142,9 +91142,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "lib_what_moved_dedupedecisionslatestwins",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_dedupedecisionslatestwins"
     },
     {
       "relation": "imports",
@@ -91153,9 +91153,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "lib_what_moved_moveddecision",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_moveddecision"
     },
     {
       "relation": "contains",
@@ -91163,9 +91163,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_useoptimisticround_decisiontype",
-      "confidence_score": 1.0
+      "target": "sorting_useoptimisticround_decisiontype"
     },
     {
       "relation": "contains",
@@ -91173,9 +91173,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L52",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_useoptimisticround_optimisticround",
-      "confidence_score": 1.0
+      "target": "sorting_useoptimisticround_optimisticround"
     },
     {
       "relation": "contains",
@@ -91183,9 +91183,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_useoptimisticround_representfresh",
-      "confidence_score": 1.0
+      "target": "sorting_useoptimisticround_representfresh"
     },
     {
       "relation": "contains",
@@ -91193,9 +91193,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_useoptimisticround_revisitstate",
-      "confidence_score": 1.0
+      "target": "sorting_useoptimisticround_revisitstate"
     },
     {
       "relation": "contains",
@@ -91203,9 +91203,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L90",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_useoptimisticround_useoptimisticround",
-      "confidence_score": 1.0
+      "target": "sorting_useoptimisticround_useoptimisticround"
     },
     {
       "relation": "contains",
@@ -91213,9 +91213,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround",
-      "target": "sorting_useoptimisticround_useoptimisticroundoptions",
-      "confidence_score": 1.0
+      "target": "sorting_useoptimisticround_useoptimisticroundoptions"
     },
     {
       "relation": "references",
@@ -91224,9 +91224,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L39",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround_useoptimisticroundoptions",
-      "target": "lib_what_moved_moveddecision",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_moveddecision"
     },
     {
       "relation": "references",
@@ -91235,9 +91235,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L61",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround_optimisticround",
-      "target": "lib_round_preference_roundbox",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_roundbox"
     },
     {
       "relation": "references",
@@ -91246,9 +91246,9 @@
       "source_file": "src/features/sorting/useOptimisticRound.ts",
       "source_location": "L63",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "sorting_useoptimisticround_optimisticround",
-      "target": "lib_what_moved_moveddecision",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_moveddecision"
     },
     {
       "relation": "calls",
@@ -103999,9 +103999,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round",
-      "target": "lib_derive_usage",
-      "confidence_score": 1.0
+      "target": "lib_derive_usage"
     },
     {
       "relation": "imports_from",
@@ -104010,9 +104010,9 @@
       "source_file": "src/lib/usage-selection.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection",
-      "target": "lib_derive_usage",
-      "confidence_score": 1.0
+      "target": "lib_derive_usage"
     },
     {
       "relation": "imports_from",
@@ -104021,9 +104021,9 @@
       "source_file": "src/lib/usage-selection.test.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection_test",
-      "target": "lib_derive_usage",
-      "confidence_score": 1.0
+      "target": "lib_derive_usage"
     },
     {
       "relation": "imports",
@@ -104032,9 +104032,9 @@
       "source_file": "src/lib/usage-selection.ts",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection",
-      "target": "lib_derive_usage_usageanswer",
-      "confidence_score": 1.0
+      "target": "lib_derive_usage_usageanswer"
     },
     {
       "relation": "imports",
@@ -104043,9 +104043,9 @@
       "source_file": "src/lib/usage-selection.test.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection_test",
-      "target": "lib_derive_usage_usageanswer",
-      "confidence_score": 1.0
+      "target": "lib_derive_usage_usageanswer"
     },
     {
       "relation": "imports",
@@ -104054,9 +104054,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round",
-      "target": "lib_derive_usage_deriveusage",
-      "confidence_score": 1.0
+      "target": "lib_derive_usage_deriveusage"
     },
     {
       "relation": "calls",
@@ -104065,9 +104065,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L85",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round_runladder",
-      "target": "lib_derive_usage_deriveusage",
-      "confidence_score": 1.0
+      "target": "lib_derive_usage_deriveusage"
     },
     {
       "relation": "contains",
@@ -105804,9 +105804,9 @@
       "source_file": "src/lib/next-round.test.ts",
       "source_location": "L68",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round_test",
-      "target": "lib_next_round_test_usageevent",
-      "confidence_score": 1.0
+      "target": "lib_next_round_test_usageevent"
     },
     {
       "relation": "imports",
@@ -105869,9 +105869,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round",
-      "target": "lib_next_round_compare_round",
-      "confidence_score": 1.0
+      "target": "lib_next_round_compare_round"
     },
     {
       "relation": "contains",
@@ -105879,9 +105879,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L66",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round",
-      "target": "lib_next_round_decide_round",
-      "confidence_score": 1.0
+      "target": "lib_next_round_decide_round"
     },
     {
       "relation": "contains",
@@ -105929,9 +105929,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L73",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round",
-      "target": "lib_next_round_runladder",
-      "confidence_score": 1.0
+      "target": "lib_next_round_runladder"
     },
     {
       "relation": "contains",
@@ -105939,9 +105939,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L42",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round",
-      "target": "lib_next_round_triage_round",
-      "confidence_score": 1.0
+      "target": "lib_next_round_triage_round"
     },
     {
       "relation": "contains",
@@ -105949,9 +105949,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L52",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round",
-      "target": "lib_next_round_usage_round",
-      "confidence_score": 1.0
+      "target": "lib_next_round_usage_round"
     },
     {
       "relation": "imports_from",
@@ -106004,9 +106004,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round",
-      "target": "lib_usage_selection",
-      "confidence_score": 1.0
+      "target": "lib_usage_selection"
     },
     {
       "relation": "imports",
@@ -106015,9 +106015,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round",
-      "target": "lib_usage_selection_selectusagequeue",
-      "confidence_score": 1.0
+      "target": "lib_usage_selection_selectusagequeue"
     },
     {
       "relation": "imports",
@@ -106125,9 +106125,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L100",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round_recommendnextround",
-      "target": "lib_next_round_runladder",
-      "confidence_score": 1.0
+      "target": "lib_next_round_runladder"
     },
     {
       "relation": "calls",
@@ -106136,9 +106136,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L90",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round_runladder",
-      "target": "lib_pairwise_selection_selectnextpair",
-      "confidence_score": 1.0
+      "target": "lib_pairwise_selection_selectnextpair"
     },
     {
       "relation": "calls",
@@ -106147,9 +106147,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L78",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round_runladder",
-      "target": "lib_triage_selection_selecttriageitem",
-      "confidence_score": 1.0
+      "target": "lib_triage_selection_selecttriageitem"
     },
     {
       "relation": "calls",
@@ -106158,9 +106158,9 @@
       "source_file": "src/lib/next-round.ts",
       "source_location": "L86",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_next_round_runladder",
-      "target": "lib_usage_selection_selectusagequeue",
-      "confidence_score": 1.0
+      "target": "lib_usage_selection_selectusagequeue"
     },
     {
       "relation": "calls",
@@ -107578,9 +107578,9 @@
       "source_file": "src/lib/round-preference.test.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_round_preference_test",
-      "target": "lib_round_preference_round_box_options",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_round_box_options"
     },
     {
       "relation": "imports",
@@ -107619,9 +107619,9 @@
       "source_file": "src/lib/round-preference.ts",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_round_preference",
-      "target": "lib_round_preference_round_box_options",
-      "confidence_score": 1.0
+      "target": "lib_round_preference_round_box_options"
     },
     {
       "relation": "contains",
@@ -108495,9 +108495,9 @@
       "source_file": "src/lib/usage-round-prefs.test.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs_test",
-      "target": "lib_usage_round_prefs",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs"
     },
     {
       "relation": "imports",
@@ -108506,9 +108506,9 @@
       "source_file": "src/lib/usage-round-prefs.test.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs_test",
-      "target": "lib_usage_round_prefs_getusagepace",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_getusagepace"
     },
     {
       "relation": "imports",
@@ -108517,9 +108517,9 @@
       "source_file": "src/lib/usage-round-prefs.test.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs_test",
-      "target": "lib_usage_round_prefs_hasseenquickintro",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_hasseenquickintro"
     },
     {
       "relation": "imports",
@@ -108528,9 +108528,9 @@
       "source_file": "src/lib/usage-round-prefs.test.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs_test",
-      "target": "lib_usage_round_prefs_hasusageroundran",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_hasusageroundran"
     },
     {
       "relation": "imports",
@@ -108539,9 +108539,9 @@
       "source_file": "src/lib/usage-round-prefs.test.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs_test",
-      "target": "lib_usage_round_prefs_markquickintroseen",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_markquickintroseen"
     },
     {
       "relation": "imports",
@@ -108550,9 +108550,9 @@
       "source_file": "src/lib/usage-round-prefs.test.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs_test",
-      "target": "lib_usage_round_prefs_markusageroundran",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_markusageroundran"
     },
     {
       "relation": "imports",
@@ -108561,9 +108561,9 @@
       "source_file": "src/lib/usage-round-prefs.test.ts",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs_test",
-      "target": "lib_usage_round_prefs_setusagepace",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_setusagepace"
     },
     {
       "relation": "contains",
@@ -108571,9 +108571,9 @@
       "source_file": "src/lib/usage-round-prefs.test.ts",
       "source_location": "L14",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs_test",
-      "target": "lib_usage_round_prefs_test_installstorage",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_test_installstorage"
     },
     {
       "relation": "contains",
@@ -108581,9 +108581,9 @@
       "source_file": "src/lib/usage-round-prefs.test.ts",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs_test",
-      "target": "lib_usage_round_prefs_test_installthrowingstorage",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_test_installthrowingstorage"
     },
     {
       "relation": "contains",
@@ -108591,9 +108591,9 @@
       "source_file": "src/lib/usage-round-prefs.ts",
       "source_location": "L18",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs",
-      "target": "lib_usage_round_prefs_getusagepace",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_getusagepace"
     },
     {
       "relation": "contains",
@@ -108601,9 +108601,9 @@
       "source_file": "src/lib/usage-round-prefs.ts",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs",
-      "target": "lib_usage_round_prefs_hasseenquickintro",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_hasseenquickintro"
     },
     {
       "relation": "contains",
@@ -108611,9 +108611,9 @@
       "source_file": "src/lib/usage-round-prefs.ts",
       "source_location": "L67",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs",
-      "target": "lib_usage_round_prefs_hasusageroundran",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_hasusageroundran"
     },
     {
       "relation": "contains",
@@ -108621,9 +108621,9 @@
       "source_file": "src/lib/usage-round-prefs.ts",
       "source_location": "L45",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs",
-      "target": "lib_usage_round_prefs_markquickintroseen",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_markquickintroseen"
     },
     {
       "relation": "contains",
@@ -108631,9 +108631,9 @@
       "source_file": "src/lib/usage-round-prefs.ts",
       "source_location": "L58",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs",
-      "target": "lib_usage_round_prefs_markusageroundran",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_markusageroundran"
     },
     {
       "relation": "contains",
@@ -108641,9 +108641,9 @@
       "source_file": "src/lib/usage-round-prefs.ts",
       "source_location": "L54",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs",
-      "target": "lib_usage_round_prefs_roundrankey",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_roundrankey"
     },
     {
       "relation": "contains",
@@ -108651,9 +108651,9 @@
       "source_file": "src/lib/usage-round-prefs.ts",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs",
-      "target": "lib_usage_round_prefs_setusagepace",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_setusagepace"
     },
     {
       "relation": "contains",
@@ -108661,9 +108661,9 @@
       "source_file": "src/lib/usage-round-prefs.ts",
       "source_location": "L12",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs",
-      "target": "lib_usage_round_prefs_usagepace",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_usagepace"
     },
     {
       "relation": "calls",
@@ -108672,9 +108672,9 @@
       "source_file": "src/lib/usage-round-prefs.ts",
       "source_location": "L70",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs_hasusageroundran",
-      "target": "lib_usage_round_prefs_roundrankey",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_roundrankey"
     },
     {
       "relation": "calls",
@@ -108683,9 +108683,9 @@
       "source_file": "src/lib/usage-round-prefs.ts",
       "source_location": "L61",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_round_prefs_markusageroundran",
-      "target": "lib_usage_round_prefs_roundrankey",
-      "confidence_score": 1.0
+      "target": "lib_usage_round_prefs_roundrankey"
     },
     {
       "relation": "imports_from",
@@ -108694,9 +108694,9 @@
       "source_file": "src/lib/usage-selection.test.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection_test",
-      "target": "lib_usage_selection",
-      "confidence_score": 1.0
+      "target": "lib_usage_selection"
     },
     {
       "relation": "imports",
@@ -108705,9 +108705,9 @@
       "source_file": "src/lib/usage-selection.test.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection_test",
-      "target": "lib_usage_selection_selectusagequeue",
-      "confidence_score": 1.0
+      "target": "lib_usage_selection_selectusagequeue"
     },
     {
       "relation": "contains",
@@ -108715,9 +108715,9 @@
       "source_file": "src/lib/usage-selection.test.ts",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection_test",
-      "target": "lib_usage_selection_test_disp",
-      "confidence_score": 1.0
+      "target": "lib_usage_selection_test_disp"
     },
     {
       "relation": "contains",
@@ -108725,9 +108725,9 @@
       "source_file": "src/lib/usage-selection.test.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection_test",
-      "target": "lib_usage_selection_test_item",
-      "confidence_score": 1.0
+      "target": "lib_usage_selection_test_item"
     },
     {
       "relation": "contains",
@@ -108735,9 +108735,9 @@
       "source_file": "src/lib/usage-selection.test.ts",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection_test",
-      "target": "lib_usage_selection_test_usage",
-      "confidence_score": 1.0
+      "target": "lib_usage_selection_test_usage"
     },
     {
       "relation": "imports",
@@ -108746,9 +108746,9 @@
       "source_file": "src/lib/usage-selection.test.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection_test",
-      "target": "types_domain_disposition",
-      "confidence_score": 1.0
+      "target": "types_domain_disposition"
     },
     {
       "relation": "imports",
@@ -108757,9 +108757,9 @@
       "source_file": "src/lib/usage-selection.test.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection_test",
-      "target": "types_domain_item",
-      "confidence_score": 1.0
+      "target": "types_domain_item"
     },
     {
       "relation": "imports_from",
@@ -108768,9 +108768,9 @@
       "source_file": "src/lib/usage-selection.test.ts",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection_test",
-      "target": "types_index",
-      "confidence_score": 1.0
+      "target": "types_index"
     },
     {
       "relation": "contains",
@@ -108778,9 +108778,9 @@
       "source_file": "src/lib/usage-selection.ts",
       "source_location": "L10",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection",
-      "target": "lib_usage_selection_selectusagequeue",
-      "confidence_score": 1.0
+      "target": "lib_usage_selection_selectusagequeue"
     },
     {
       "relation": "imports",
@@ -108789,9 +108789,9 @@
       "source_file": "src/lib/usage-selection.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection",
-      "target": "types_domain_disposition",
-      "confidence_score": 1.0
+      "target": "types_domain_disposition"
     },
     {
       "relation": "imports",
@@ -108800,9 +108800,9 @@
       "source_file": "src/lib/usage-selection.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection",
-      "target": "types_domain_item",
-      "confidence_score": 1.0
+      "target": "types_domain_item"
     },
     {
       "relation": "imports_from",
@@ -108811,9 +108811,9 @@
       "source_file": "src/lib/usage-selection.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_usage_selection",
-      "target": "types_index",
-      "confidence_score": 1.0
+      "target": "types_index"
     },
     {
       "relation": "imports_from",
@@ -108966,9 +108966,9 @@
       "source_file": "src/lib/what-moved.test.ts",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_what_moved_test",
-      "target": "lib_what_moved_dedupedecisionslatestwins",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_dedupedecisionslatestwins"
     },
     {
       "relation": "imports",
@@ -109007,9 +109007,9 @@
       "source_file": "src/lib/what-moved.test.ts",
       "source_location": "L19",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_what_moved_test",
-      "target": "lib_what_moved_test_usage",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_test_usage"
     },
     {
       "relation": "imports",
@@ -109028,9 +109028,9 @@
       "source_file": "src/lib/what-moved.ts",
       "source_location": "L68",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_what_moved",
-      "target": "lib_what_moved_dedupedecisionslatestwins",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_dedupedecisionslatestwins"
     },
     {
       "relation": "contains",
@@ -109038,9 +109038,9 @@
       "source_file": "src/lib/what-moved.ts",
       "source_location": "L45",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_what_moved",
-      "target": "lib_what_moved_inyourlifeline",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_inyourlifeline"
     },
     {
       "relation": "contains",
@@ -109048,9 +109048,9 @@
       "source_file": "src/lib/what-moved.ts",
       "source_location": "L54",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_what_moved",
-      "target": "lib_what_moved_itemkeyof",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_itemkeyof"
     },
     {
       "relation": "contains",
@@ -109068,9 +109068,9 @@
       "source_file": "src/lib/what-moved.ts",
       "source_location": "L46",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_what_moved",
-      "target": "lib_what_moved_restingline",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_restingline"
     },
     {
       "relation": "contains",
@@ -109129,9 +109129,9 @@
       "source_file": "src/lib/what-moved.ts",
       "source_location": "L81",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_what_moved_dedupedecisionslatestwins",
-      "target": "lib_what_moved_toms",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_toms"
     },
     {
       "relation": "calls",
@@ -109151,9 +109151,9 @@
       "source_file": "src/lib/what-moved.ts",
       "source_location": "L72",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "lib_what_moved_dedupedecisionslatestwins",
-      "target": "lib_what_moved_itemkeyof",
-      "confidence_score": 1.0
+      "target": "lib_what_moved_itemkeyof"
     },
     {
       "relation": "contains",
@@ -123366,9 +123366,9 @@
       "source_file": "CLAUDE.md",
       "source_location": "L5",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "claude_project_instructions_for_ai_agents",
-      "target": "claude_communication_preferences",
-      "confidence_score": 1.0
+      "target": "claude_communication_preferences"
     },
     {
       "relation": "contains",
@@ -135792,5 +135792,5 @@
       "source_file": "docs/ARCHITECTURE.md"
     }
   ],
-  "built_at_commit": "c9a93d725ba563d813832faf744647b531048244"
+  "built_at_commit": "3fa372e3eaefd9d4662ed5fb739268efce39fec0"
 }

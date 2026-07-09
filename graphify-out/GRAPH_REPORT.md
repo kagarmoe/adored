@@ -1,7 +1,7 @@
 # Graph Report - purseinator-app  (2026-07-08)
 
 ## Corpus Check
-- 659 files · ~892,786 words
+- 659 files · ~894,104 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `c9a93d72`
+- Built from commit: `3fa372e3`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
