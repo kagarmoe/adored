@@ -128,6 +128,23 @@ describe("RecommendedRound — device-local demotion swap", () => {
     expect(swapContainer.className).not.toMatch(/transition|animate|duration|fade|slide/);
   });
 
+  it("reserves a min-height so the primary→demoted swap never reflows the hub (I1)", () => {
+    // Spec §3.8: primary and demoted copy must render at the same size (zero layout
+    // shift on the post-hydration swap). The card carries a min-height reservation
+    // sized for the tallest round description at hub widths.
+    const { container } = render(
+      <RecommendedRound
+        primary={primary}
+        whenUsageDemoted={whenUsageDemoted}
+        curatorId={CURATOR}
+        sessionId={SESSION}
+      />,
+    );
+    const card = container.firstElementChild as HTMLElement;
+    expect(card).not.toBeNull();
+    expect(card.className).toMatch(/min-h-/);
+  });
+
   it("renders the primary unchanged when there is no whenUsageDemoted alternative", () => {
     const compareOnly = { round: demotedRound, href: "/collections/c/sort/1/compare" };
     // Even with a stray flag set, a primary that is not usage has no demoted twin to swap to.

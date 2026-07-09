@@ -141,6 +141,36 @@ describe("RoundTimer", () => {
     expect(timer).not.toHaveTextContent(/about 1 minute/i);
   });
 
+  it("crosses to the sub-minute label exactly at the 60000ms boundary — < 60_000, not <= (T9)", () => {
+    // Pins RoundTimer's `remaining < 60_000` off-by-one. Ticks land on whole seconds,
+    // so two boxes land the observed remaining exactly on each side of the boundary:
+    // a 120000ms box at 60s elapsed reads 60000ms; a 119999ms box reads 59999ms.
+
+    // Exactly 60000ms remaining → still the honest minute form.
+    const atBoundary = render(
+      <RoundTimer startedAtMs={1_000_000} boxMs={120_000} onExpire={vi.fn()} roundLabel="Round" />,
+    );
+    act(() => {
+      vi.advanceTimersByTime(60_000);
+    });
+    const boundaryTimer = atBoundary.getByRole("timer");
+    expect(boundaryTimer).toHaveTextContent(/about 1 minute left/i);
+    expect(boundaryTimer).not.toHaveTextContent(SUB_MINUTE_LABEL);
+    atBoundary.unmount();
+
+    // One millisecond less (59999ms remaining) → the sub-minute label.
+    vi.setSystemTime(1_000_000);
+    const belowBoundary = render(
+      <RoundTimer startedAtMs={1_000_000} boxMs={119_999} onExpire={vi.fn()} roundLabel="Round" />,
+    );
+    act(() => {
+      vi.advanceTimersByTime(60_000);
+    });
+    const belowTimer = belowBoundary.getByRole("timer");
+    expect(belowTimer).toHaveTextContent(SUB_MINUTE_LABEL);
+    expect(belowTimer).not.toHaveTextContent(/about 1 minute/i);
+  });
+
   it("pins the sub-minute label verbatim (TONE item)", () => {
     expect(SUB_MINUTE_LABEL).toBe("Less than a minute left in this round");
   });

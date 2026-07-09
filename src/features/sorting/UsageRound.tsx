@@ -154,14 +154,20 @@ export function UsageRound({
   // landed. An in-progress unmount never reaches here (the effect runs on the
   // end-transition, not on cleanup).
   const ranRef = useRef(false);
+  // Synchronous "an answer landed this round" flag — set INSIDE handleUsage BEFORE
+  // the submit await, so a box expiring mid-flush (the quota fallback awaits a
+  // multi-macrotask network POST) can't false-demote on the lagging newlyAnswered
+  // state (final review #2). The component never remounts across rounds, so it
+  // needs no reset.
+  const answeredThisRoundRef = useRef(false);
   const ended = expired || queueExhausted;
   useEffect(() => {
     if (!ended || ranRef.current) return;
     ranRef.current = true;
-    if (queueExhausted || newlyAnswered.size === 0) {
+    if (queueExhausted || !answeredThisRoundRef.current) {
       markUsageRoundRan(curatorId, sessionId);
     }
-  }, [ended, queueExhausted, newlyAnswered, curatorId, sessionId]);
+  }, [ended, queueExhausted, curatorId, sessionId]);
 
   // While revisiting, the standing item is shown instead of the queue head.
   const revisitEntry = revisit === null ? undefined : entries.find((e) => e.item.id === revisit.itemId);
@@ -174,6 +180,9 @@ export function UsageRound({
   async function handleUsage(target: Item, decision: { itemId: string; result: UsageResult }) {
     // Claim BEFORE the await so a beat firing in this same tick bails (tap wins).
     claimedRef.current.add(target.id);
+    // Engagement is recorded synchronously, before the submit await, so an
+    // in-flight expiry can't demote a device whose person actively answered (#2).
+    answeredThisRoundRef.current = true;
     if (!(await round.submitDecision(target.id, decision))) {
       claimedRef.current.delete(target.id); // busy/stumble: release so the beat can resume
       return;

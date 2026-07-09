@@ -491,6 +491,51 @@ describe("UsageRound demotion memory (markUsageRoundRan, spec §3.8)", () => {
     expect(hasUsageRoundRan("u1", "sess_1")).toBe(false);
   });
 
+  it("does NOT write the flag when the box expires mid-flush on the FIRST answer (quota fallback, #2)", async () => {
+    // Regression (final review #2): the expiry gate keys off a SYNCHRONOUS answered
+    // ref, not the lagging newlyAnswered state. On the quota fallback the single-route
+    // POST is awaited across macrotasks; if the box expires during that flush on the
+    // person's first answer, the device must NOT be demoted — they actively answered.
+    vi.useFakeTimers();
+    store.setItem("pi-round-box", "5");
+
+    // Quota ONLY on the decision queue → submitDecision degrades to the awaited POST
+    // (the demotion-flag write on its own key must still work if it were reached).
+    const passthrough = store.setItem;
+    store.setItem = (k: string, v: string) => {
+      if (k.startsWith("adored.pending.")) throw new Error("quota");
+      return passthrough(k, v);
+    };
+    // Hold the fallback POST pending so the box expires WHILE the flush is in flight.
+    let resolveFetch!: () => void;
+    global.fetch = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = () => resolve({ ok: true, status: 201, json: async () => ({}) });
+        }),
+    ) as unknown as typeof fetch;
+
+    renderRound(); // [A, B] — answering A leaves B, so exhaustion never fires
+
+    // First answer: claims + sets the answered ref synchronously, then awaits the POST.
+    fireEvent.click(screen.getByRole("button", { name: YES }));
+    await act(async () => {}); // let submitDecision reach the awaited fetch
+
+    // The POST is still pending — expire the round box now.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5 * 60_000 + 1_500);
+    });
+
+    expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
+    // No false demotion despite newlyAnswered still lagging at size 0.
+    expect(hasUsageRoundRan("u1", "sess_1")).toBe(false);
+
+    // Let the flush settle so no promise dangles into the next test.
+    await act(async () => {
+      resolveFetch();
+    });
+  });
+
   it("never writes the flag on an unmount mid-round", () => {
     const { unmount } = renderRound();
     unmount();

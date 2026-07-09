@@ -2,6 +2,10 @@
 
 This file provides instructions and context for AI coding agents working on this project.
 
+## Communication preferences
+
+Be brief.
+
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:6cd5cc61 -->
 ## Beads Issue Tracker
 
@@ -138,6 +142,10 @@ Generic review rubber-stamps; scale the persona set to what changed (lens→engi
   `EnterWorktree`); never switch branches with uncommitted changes (commit or stash first).
 - **Commit:** frequent, one logical change per commit; don't park work only in the working tree.
 
+**Definition of done**
+- An epic is not complete until all follow-up beads are complete.
+- When working outside of an epic, an issue is not complete until all follow-up beads are complete.
+- 
 ## PR lifecycle automation
 
 - **Before pushing / opening a PR:** run `/sync-docs` (update the governance docs this branch's

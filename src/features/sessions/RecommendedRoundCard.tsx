@@ -15,7 +15,7 @@ interface RecommendedRoundCardProps {
  */
 export function RecommendedRoundCard({ round, href }: RecommendedRoundCardProps) {
   return (
-    <Card padding="lg" className="border-hairline bg-content-soft">
+    <Card padding="lg" className="min-h-52 border-hairline bg-content-soft">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-ink-soft">A good next step</p>
