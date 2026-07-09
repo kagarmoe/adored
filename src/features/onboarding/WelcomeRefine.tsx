@@ -6,7 +6,7 @@ interface WelcomeRefineProps {
   onNext: () => void;
 }
 
-// Beat 5 — teach that the standing is living, not a verdict. It keeps updating
+// Beat 6 — teach that the standing is living, not a verdict. It keeps updating
 // as they sort ("Put things in order" names the real button they'll meet), and
 // only becomes a shareable artifact when they choose to finalize it.
 export function WelcomeRefine({ onNext }: WelcomeRefineProps) {

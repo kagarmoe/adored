@@ -49,8 +49,15 @@ async function tapTiers(user: ReturnType<typeof userEvent.setup>, label = "Love"
   }
 }
 
+// The usage teaching beat now sits between triage and compare. A single tap on any
+// of its affordances advances to compare; the happy path answers "Yes, I use it".
+async function passUsage(user: ReturnType<typeof userEvent.setup>) {
+  expect(screen.getByRole("heading", { name: "Do you use this?" })).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Yes, I use it" }));
+}
+
 describe("WalkthroughShell", () => {
-  it("full happy path: purpose -> 3 triage taps -> compare -> standing -> refine -> handoff", async () => {
+  it("full happy path: purpose -> 3 triage taps -> usage -> compare -> standing -> refine -> handoff", async () => {
     const user = userEvent.setup();
     render(<WalkthroughShell />);
 
@@ -62,6 +69,9 @@ describe("WalkthroughShell", () => {
 
     // Triage — one item at a time.
     await tapTiers(user);
+
+    // Usage — "Do you use this?" one teaching tap.
+    await passUsage(user);
 
     // Compare
     expect(screen.getByRole("heading", { name: "Which do you love more?" })).toBeInTheDocument();
@@ -86,6 +96,7 @@ describe("WalkthroughShell", () => {
     render(<WalkthroughShell />);
     await user.click(screen.getByRole("button", { name: "Show me how" }));
     await tapTiers(user);
+    await passUsage(user);
     await user.click(screen.getByRole("button", { name: "Tie" }));
     expect(screen.getByRole("heading", { name: "Where things stand" })).toBeInTheDocument();
     expect(screen.getByText(COMPARE_PAIR[0].name)).toBeInTheDocument();
@@ -97,6 +108,7 @@ describe("WalkthroughShell", () => {
     render(<WalkthroughShell />);
     await user.click(screen.getByRole("button", { name: "Show me how" }));
     await tapTiers(user);
+    await passUsage(user);
     await user.click(screen.getByRole("button", { name: "Skip" }));
     expect(screen.getByRole("heading", { name: "Where things stand" })).toBeInTheDocument();
     expect(screen.getByText(COMPARE_PAIR[0].name)).toBeInTheDocument();
@@ -118,11 +130,14 @@ describe("WalkthroughShell", () => {
     await user.click(screen.getByText("Love"));
     await user.click(screen.getByText("Like"));
 
-    // Exactly three choices land on compare — no fourth triage item.
-    expect(screen.getByRole("heading", { name: "Which do you love more?" })).toBeInTheDocument();
+    // Exactly three choices land on the usage beat — no fourth triage item.
     expect(
       screen.queryByRole("heading", { name: "How do you feel about this one?" })
     ).not.toBeInTheDocument();
+    await passUsage(user);
+
+    // ...and then compare.
+    expect(screen.getByRole("heading", { name: "Which do you love more?" })).toBeInTheDocument();
   });
 
   it("set-aside path shows the set-aside group in standing", async () => {
@@ -134,6 +149,7 @@ describe("WalkthroughShell", () => {
     await user.click(screen.getByText("Love")); // item 2 (books)
     await user.click(screen.getByText("Not mine")); // item 3 (cushion) — set aside
 
+    await passUsage(user); // usage beat -> compare
     await user.click(screen.getByText(COMPARE_PAIR[0].name));
 
     expect(screen.getByRole("heading", { name: "Where things stand" })).toBeInTheDocument();
@@ -153,6 +169,7 @@ describe("WalkthroughShell", () => {
     await user.click(screen.getByText("Not mine")); // item 2 set aside
     await user.click(screen.getByText("Not yet")); // item 3 deferred
 
+    await passUsage(user); // usage beat -> compare
     await user.click(screen.getByRole("button", { name: "Skip" })); // compare skip
 
     expect(screen.getByRole("heading", { name: "Where things stand" })).toBeInTheDocument();
@@ -212,10 +229,18 @@ describe("WalkthroughShell", () => {
       },
     ],
     [
+      "usage",
+      async (user: ReturnType<typeof userEvent.setup>) => {
+        await user.click(screen.getByRole("button", { name: "Show me how" }));
+        await tapTiers(user);
+      },
+    ],
+    [
       "compare",
       async (user: ReturnType<typeof userEvent.setup>) => {
         await user.click(screen.getByRole("button", { name: "Show me how" }));
         await tapTiers(user);
+        await passUsage(user);
       },
     ],
     [
@@ -223,6 +248,7 @@ describe("WalkthroughShell", () => {
       async (user: ReturnType<typeof userEvent.setup>) => {
         await user.click(screen.getByRole("button", { name: "Show me how" }));
         await tapTiers(user);
+        await passUsage(user);
         await user.click(screen.getByText(COMPARE_PAIR[0].name));
       },
     ],
@@ -231,6 +257,7 @@ describe("WalkthroughShell", () => {
       async (user: ReturnType<typeof userEvent.setup>) => {
         await user.click(screen.getByRole("button", { name: "Show me how" }));
         await tapTiers(user);
+        await passUsage(user);
         await user.click(screen.getByText(COMPARE_PAIR[0].name));
         await user.click(screen.getByRole("button", { name: "Continue" }));
       },
@@ -253,6 +280,7 @@ describe("WalkthroughShell", () => {
     render(<WalkthroughShell />);
     await user.click(screen.getByRole("button", { name: "Show me how" }));
     await tapTiers(user);
+    await passUsage(user);
     await user.click(screen.getByText(COMPARE_PAIR[0].name));
     await user.click(screen.getByRole("button", { name: "Continue" })); // standing -> refine
     await user.click(screen.getByRole("button", { name: "Continue" })); // refine -> handoff
@@ -276,6 +304,10 @@ describe("WalkthroughShell", () => {
     await user.click(screen.getByRole("button", { name: "Show me how" }));
     expect(screen.getByRole("button", { name: "Skip for now" })).toBeInTheDocument();
     await tapTiers(user);
+    // Usage beat — the shell's exact "Skip for now" exit is still present (distinct
+    // from the usage pass's longer "Skip for now — it'll come around again").
+    expect(screen.getByRole("button", { name: "Skip for now" })).toBeInTheDocument();
+    await passUsage(user);
     await user.click(screen.getByText(COMPARE_PAIR[0].name));
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: "Continue" }));

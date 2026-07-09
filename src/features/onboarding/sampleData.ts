@@ -28,6 +28,12 @@ export const COMPARE_PAIR: readonly [SampleItem, SampleItem] = [
   SAMPLE_ITEMS[1],
 ];
 
+// The single item the usage teaching beat asks "Do you use this?" about. It reuses
+// an existing sample (the compare pair's lead) rather than a new asset, and is
+// deliberately NOT itself a member of SAMPLE_ITEMS beyond that reuse — the usage
+// beat is a pure teaching moment that never perturbs buildStanding's ranking.
+export const USAGE_SAMPLE: SampleItem = COMPARE_PAIR[0];
+
 // The items the triage beat asks about, one at a time.
 export const TRIAGE_ITEMS: readonly SampleItem[] = [
   SAMPLE_ITEMS[2],
@@ -52,6 +58,12 @@ export type CompareOutcome =
   | { kind: "win"; winnerId: string }
   | { kind: "tie" }
   | { kind: "skip" };
+
+// The outcome of the usage teaching beat: in use, resting, or passed (Skip for now).
+export type UsageOutcome =
+  | { kind: "used" }
+  | { kind: "unused" }
+  | { kind: "pass" };
 
 export interface Standing {
   ranked: StandingRow[]; // hero = ranked[0] when non-empty

@@ -251,11 +251,11 @@ for (const theme of ["light", "dark"] as const) {
     await shot("usage-round-recap");
 
     // purses-ka23: the /welcome onboarding walkthrough. Unlike the goto+shoot
-    // surfaces above, this is ONE client-only route with five beats advanced by
-    // taps — Purpose → Triage (×3) → Compare → Standing → Hand-off. We drive it
-    // by role/accessible-name (never CSS) and shoot at each beat. The three
-    // triage items reuse the same four tier buttons, so we tap "Love" (the
-    // TierBadge's visible label; its glyph is aria-hidden) each time.
+    // surfaces above, this is ONE client-only route with seven beats advanced by
+    // taps — Purpose → Triage (×3) → Usage → Compare → Standing → Refine →
+    // Hand-off. We drive it by role/accessible-name (never CSS) and shoot at each
+    // beat. The three triage items reuse the same four tier buttons, so we tap
+    // "Love" (the TierBadge's visible label; its glyph is aria-hidden) each time.
     await page.goto("/welcome");
 
     // Beat 1 — Purpose.
@@ -269,12 +269,19 @@ for (const theme of ["light", "dark"] as const) {
     await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
     await page.waitForTimeout(400);
     await shot("welcome-2-triage");
-    // Tap "Love" for all three triage items (advances item→item, then to Compare).
+    // Tap "Love" for all three triage items (advances item→item, then to Usage).
     await page.getByRole("button", { name: "Love" }).click();
     await page.getByRole("button", { name: "Love" }).click();
     await page.getByRole("button", { name: "Love" }).click();
 
-    // Beat 3 — Compare.
+    // Usage beat — "Do you use this?" A single tap advances; shoot before tapping.
+    await page.getByRole("heading", { name: "Do you use this?" }).waitFor();
+    await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+    await page.waitForTimeout(400);
+    await shot("welcome-usage");
+    await page.getByRole("button", { name: "Yes, I use it" }).click();
+
+    // Beat 4 — Compare.
     await page.getByRole("heading", { name: "Which do you love more?" }).waitFor();
     await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
     await page.waitForTimeout(400);
@@ -288,7 +295,15 @@ for (const theme of ["light", "dark"] as const) {
     await page.waitForTimeout(400);
     await shot("welcome-4-standing");
 
-    // Beat 5 — Hand-off.
+    // Beat 6 — Refine. Standing's Continue advances to Refine (NOT straight to
+    // Hand-off) since the #304 six-beat rebuild; the previous final step tapped
+    // once and then waited for "Now, your turn.", which lands on Refine and hung.
+    await page.getByRole("button", { name: "Continue" }).click();
+    await page.getByRole("heading", { name: "Refine it any time" }).waitFor();
+    await page.waitForTimeout(400);
+    await shot("welcome-refine");
+
+    // Beat 7 — Hand-off. WelcomeHandoff's heading is "Now, your turn." (unchanged).
     await page.getByRole("button", { name: "Continue" }).click();
     await page.getByRole("heading", { name: "Now, your turn." }).waitFor();
     await page.waitForTimeout(400);

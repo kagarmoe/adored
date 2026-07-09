@@ -20,7 +20,7 @@ interface WelcomeStandingProps {
 
 const HEADING_ID = "welcome-standing-heading";
 
-// Beat 4 — the payoff, mirroring the real results page (RankedResults): the
+// Beat 5 — the payoff, mirroring the real results page (RankedResults): the
 // beat is titled "Where things stand", the most-loved item leads under the
 // "What you love most" eyebrow, then the ranking, then the onward / set-aside /
 // deferred groups in subordinate styling, closing on the affirmation. The
