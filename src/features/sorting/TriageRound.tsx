@@ -14,6 +14,7 @@ import { SetAsideButton } from "./SetAsideButton";
 import { useOptionalTriageUndo } from "./TriageUndoProvider";
 import { RoundShell } from "./RoundShell";
 import { RoundTimer } from "./RoundTimer";
+import { RoundLengthChooser } from "./RoundLengthChooser";
 import { WhatMoved } from "./WhatMoved";
 import { enqueue, newClientKey } from "./decisionQueue";
 import { triggerFlush } from "./decisionFlusher";
@@ -194,13 +195,21 @@ export function TriageRound({
   // never on the flush; dispositions don't count.
   const decided = seedRef.current + newlyDecided.size;
 
+  const roundOver = shown === undefined || expired;
   const timer = (
-    <RoundTimer
-      startedAtMs={round.startedAtMs}
-      boxMs={round.boxMs}
-      onExpire={round.onExpire}
-      roundLabel="This round"
-    />
+    <div className="flex items-start gap-3">
+      <div className="min-w-0 flex-1">
+        <RoundTimer
+          startedAtMs={round.startedAtMs}
+          boxMs={round.boxMs}
+          onExpire={round.onExpire}
+          roundLabel="This round"
+        />
+      </div>
+      {/* Switchable before AND during a round (parent D2); shown only while the
+          round is live — the recap has no length to choose. */}
+      {!roundOver && <RoundLengthChooser onChange={round.onBoxChange} />}
+    </div>
   );
 
   return (

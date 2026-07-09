@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { MovedDecision } from "@/lib/what-moved";
-import { getRoundBox } from "@/lib/round-preference";
+import { getRoundBox, type RoundBox } from "@/lib/round-preference";
 import { enqueue, newClientKey, removeQueued, type PendingEntry, type QueueKey } from "./decisionQueue";
 import { awaitAck, isInFlight, triggerFlush, useDecisionFlusher, type AckOutcome } from "./decisionFlusher";
 
@@ -56,6 +56,9 @@ export interface OptimisticRound<D extends Record<string, unknown>> {
   boxMs: number | null;
   expired: boolean;
   onExpire: () => void;
+  /** Mid-round length switch (parent D2): re-arm `boxMs` against the UNCHANGED
+   *  `startedAtRef` — "none" → null, else box·MINUTE_MS. Never resets the clock. */
+  onBoxChange: (box: RoundBox) => void;
   // Frozen recap (F5).
   recapDecisions: MovedDecision[];
   recapNowMs: number | undefined;
@@ -138,6 +141,13 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
 
   useEffect(() => {
     const box = getRoundBox();
+    setBoxMs(box === "none" ? null : box * MINUTE_MS);
+  }, []);
+
+  // Mid-round length switch (parent D2): recompute the box against the UNCHANGED
+  // start — RoundTimer's effect re-arms on the boxMs prop, so "none" drops the
+  // countdown and a box shorter than the elapsed time expires at the next tick.
+  const onBoxChange = useCallback((box: RoundBox) => {
     setBoxMs(box === "none" ? null : box * MINUTE_MS);
   }, []);
 
@@ -239,6 +249,7 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
     boxMs,
     expired,
     onExpire: () => setExpired(true),
+    onBoxChange,
     recapDecisions:
       frozen?.decisions ?? [...serverLogRef.current, ...roundLogRef.current.map((e) => e.moved)],
     recapNowMs: frozen?.endedAtMs,
