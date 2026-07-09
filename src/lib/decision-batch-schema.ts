@@ -32,6 +32,11 @@ export const BatchEntrySchema = z.discriminatedUnion("type", [
     }),
     clientKey: ClientKey,
   }),
+  z.object({
+    type: z.literal("usage"),
+    decision: z.object({ itemId: ItemId, result: z.enum(["uses", "not_uses"]) }),
+    clientKey: ClientKey,
+  }),
 ]);
 
 export const BatchRequestSchema = z.object({

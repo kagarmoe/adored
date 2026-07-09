@@ -22,7 +22,7 @@ import { ulid } from "ulid";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline, seedBareCollection, seedUserRow } from "../../../e2e/fixtures/seed";
 import { mockAuth } from "../../../e2e/fixtures/mock-auth";
-import { sessionsTable } from "@/lib/db/schema";
+import { sessionsTable, itemsTable } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
@@ -30,6 +30,7 @@ import { MembershipRepository } from "@/server/repositories/implementations/Memb
 import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { ItemDispositionRepository } from "@/server/repositories/implementations/ItemDispositionRepository";
+import { deriveUsage } from "@/lib/derive-usage";
 import * as txMod from "@/lib/transactions";
 
 const { mockGetSession, phCapture, phFlush } = vi.hoisted(() => ({
@@ -89,6 +90,12 @@ function streamBatchReq(sessionId: string, totalBytes: number): Request {
 
 const triage = (itemId: string, result: string, clientKey = ck()) => ({
   type: "triage",
+  decision: { itemId, result },
+  clientKey,
+});
+
+const usage = (itemId: string, result: "uses" | "not_uses", clientKey = ck()) => ({
+  type: "usage",
   decision: { itemId, result },
   clientKey,
 });
@@ -616,5 +623,299 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
       duplicate: 1,
       rejected: 0,
     });
+  });
+
+  // ══ Task 5 (Epic R): usage rides the batch but is DARK — it never recomputes
+  // preferences and never clears a disposition. The predicate split is
+  // `insertedScoringCount` (non-usage inserts) driving BOTH the recompute and the
+  // disposition-clear; `counts.created > 0` still drives 201/200. ══════════════
+
+  // Score/orderRank pin (case 4): the recompute is a pure fold over the triage/
+  // compare log and MUST ignore usage — so score/orderRank are byte-identical
+  // whether or not usage events are interleaved. Drop item ids (they differ
+  // between control collections); the distinct rank buckets give a stable sort.
+  async function scoreSnapshot(db: unknown, collectionId: string, curatorId: string) {
+    const rows = await new CollectionPreferenceItemRepository(db as any).findByCollection(
+      collectionId,
+      curatorId,
+    );
+    return JSON.stringify(
+      rows
+        .map((r) => ({ score: r.score, orderRank: r.orderRank, rankBucket: r.rankBucket }))
+        .sort((a, b) => (a.rankBucket < b.rankBucket ? -1 : a.rankBucket > b.rankBucket ? 1 : 0)),
+    );
+  }
+
+  it("case 1 — usage-only batch → 201 all created, ZERO recomputes, ZERO bringBack (pre-seeded disposition survives)", async () => {
+    const { db, collectionId, items, sortSession } = await seedSession(2);
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    // A prior triage batch creates preference rows to snapshot against.
+    const seedRes = await postBatch(
+      batchReq(sortSession.id, {
+        decisions: [triage(items[0].id, "top"), triage(items[1].id, "low")],
+      }) as any,
+      { params: { id: sortSession.id } } as any,
+    );
+    expect(seedRes.status).toBe(201);
+
+    // Pre-seed a disposition AFTER the recompute — a usage-only batch must not
+    // clear it (QA-9: usage can never trigger bringBack).
+    await new ItemDispositionRepository(db).upsert({
+      collectionId,
+      curatorId: ownerId,
+      itemId: items[0].id,
+      disposition: "deferred",
+    });
+
+    const snapshot = await prefsSnapshot(db, collectionId, ownerId);
+    // Guard against a vacuous pass: the snapshot must be NON-EMPTY, else a
+    // vanished seed would make byte-identity trivially true.
+    expect(snapshot).not.toBe("[]");
+
+    await sleep(5);
+    const keys = [ck(), ck()];
+    const res = await postBatch(
+      batchReq(sortSession.id, {
+        decisions: [usage(items[0].id, "uses", keys[0]), usage(items[1].id, "not_uses", keys[1])],
+      }) as any,
+      { params: { id: sortSession.id } } as any,
+    );
+    expect(res.status).toBe(201);
+    expect((await res.json()).results).toEqual(keys.map((clientKey) => ({ clientKey, status: "created" })));
+
+    // Row observable (NOT a spy): byte-identical preference rows ⇒ zero recomputes.
+    expect(await prefsSnapshot(db, collectionId, ownerId)).toBe(snapshot);
+    // The pre-seeded disposition survives ⇒ zero bringBack.
+    expect(await new ItemDispositionRepository(db).findByItem(items[0].id, ownerId)).not.toBeNull();
+
+    // Usage is derivable afterwards from the session's events.
+    const events = await new DecisionEventRepository(db).findBySession(sortSession.id);
+    const derived = deriveUsage(events as any, new Set([items[0].id, items[1].id]));
+    expect(derived.get(items[0].id)).toBe("uses");
+    expect(derived.get(items[1].id)).toBe("not_uses");
+  });
+
+  it("case 2 — mixed usage+triage → exactly one recompute (observable advances), disposition cleared ONLY for the triaged item", async () => {
+    const { db, collectionId, items, sortSession } = await seedSession(2);
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const triagedItem = items[0];
+    const usageItem = items[1];
+
+    // Prior recompute so both items have preference rows.
+    await postBatch(
+      batchReq(sortSession.id, {
+        decisions: [triage(triagedItem.id, "top"), triage(usageItem.id, "low")],
+      }) as any,
+      { params: { id: sortSession.id } } as any,
+    );
+
+    // Pre-seed dispositions on BOTH: only the triaged one may be cleared.
+    for (const itemId of [triagedItem.id, usageItem.id]) {
+      await new ItemDispositionRepository(db).upsert({
+        collectionId,
+        curatorId: ownerId,
+        itemId,
+        disposition: "deferred",
+      });
+    }
+    const snapshot = await prefsSnapshot(db, collectionId, ownerId);
+    expect(snapshot).not.toBe("[]");
+
+    await sleep(5);
+    const res = await postBatch(
+      batchReq(sortSession.id, {
+        decisions: [triage(triagedItem.id, "high"), usage(usageItem.id, "uses")],
+      }) as any,
+      { params: { id: sortSession.id } } as any,
+    );
+    expect(res.status).toBe(201);
+    expect((await res.json()).results.map((r: { status: string }) => r.status)).toEqual([
+      "created",
+      "created",
+    ]);
+
+    // The recompute ran once: the observable advanced.
+    expect(await prefsSnapshot(db, collectionId, ownerId)).not.toBe(snapshot);
+    // Disposition-clear is triage-only: the triaged item's disposition cleared,
+    // the usage-only item's survives.
+    expect(await new ItemDispositionRepository(db).findByItem(triagedItem.id, ownerId)).toBeNull();
+    expect(await new ItemDispositionRepository(db).findByItem(usageItem.id, ownerId)).not.toBeNull();
+
+    // Usage derivable from the session log (QA-9).
+    const events = await new DecisionEventRepository(db).findBySession(sortSession.id);
+    expect(deriveUsage(events as any, new Set([usageItem.id])).get(usageItem.id)).toBe("uses");
+  });
+
+  it("case 3 — triage-all-duplicate + usage-created batch → 201, ZERO recomputes (the duplicates already drove their recompute)", async () => {
+    const { db, collectionId, items, sortSession } = await seedSession(2);
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    const dupKey = ck();
+    const firstRes = await postBatch(
+      batchReq(sortSession.id, { decisions: [triage(items[0].id, "top", dupKey)] }) as any,
+      { params: { id: sortSession.id } } as any,
+    );
+    expect(firstRes.status).toBe(201);
+    const snapshot = await prefsSnapshot(db, collectionId, ownerId);
+    expect(snapshot).not.toBe("[]");
+
+    await sleep(5);
+    const usageKey = ck();
+    const res = await postBatch(
+      batchReq(sortSession.id, {
+        // Triage entry is a replay (duplicate); the usage entry inserts.
+        decisions: [triage(items[0].id, "top", dupKey), usage(items[1].id, "uses", usageKey)],
+      }) as any,
+      { params: { id: sortSession.id } } as any,
+    );
+    expect(res.status).toBe(201); // ≥1 entry of any type created ⇒ 201
+    expect((await res.json()).results).toEqual([
+      { clientKey: dupKey, status: "duplicate" },
+      { clientKey: usageKey, status: "created" },
+    ]);
+
+    // insertedScoringCount === 0 (only usage inserted) ⇒ no recompute.
+    expect(await prefsSnapshot(db, collectionId, ownerId)).toBe(snapshot);
+  });
+
+  it("case 4 — recompute-output invariance: usage never perturbs score/orderRank (the regression pin)", async () => {
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    // One run WITH interleaved usage, one control WITHOUT — identical triage log.
+    // Distinct buckets ⇒ distinct scores ⇒ deterministic orderRank, so the
+    // id-drop comparison is stable across the two (separate) collections.
+    async function runScoring(withUsage: boolean) {
+      const { db, collectionId, items, sortSession } = await seedSession(3);
+      await postBatch(
+        batchReq(sortSession.id, {
+          decisions: [
+            triage(items[0].id, "top"),
+            triage(items[1].id, "high"),
+            triage(items[2].id, "low"),
+          ],
+        }) as any,
+        { params: { id: sortSession.id } } as any,
+      );
+      if (withUsage) {
+        await postBatch(
+          batchReq(sortSession.id, {
+            decisions: [
+              usage(items[0].id, "uses"),
+              usage(items[1].id, "not_uses"),
+              usage(items[2].id, "uses"),
+            ],
+          }) as any,
+          { params: { id: sortSession.id } } as any,
+        );
+      }
+      // Force one more recompute (re-affirm the same buckets, fresh clientKeys).
+      // If the scorer wrongly read the interleaved usage events, THIS recompute
+      // would diverge from the control.
+      await postBatch(
+        batchReq(sortSession.id, {
+          decisions: [
+            triage(items[0].id, "top"),
+            triage(items[1].id, "high"),
+            triage(items[2].id, "low"),
+          ],
+        }) as any,
+        { params: { id: sortSession.id } } as any,
+      );
+      return scoreSnapshot(db, collectionId, ownerId);
+    }
+
+    const control = await runScoring(false);
+    const withUsage = await runScoring(true);
+    expect(control).not.toBe("[]");
+    // ANY diff in score/orderRank here is a stop-and-report finding.
+    expect(withUsage).toBe(control);
+  });
+
+  it("case 5 — disposed (live) item usage → created; unknown/foreign/deleted itemId → rejected(unknown_item), others written", async () => {
+    const { db, collectionId, items, sortSession } = await seedSession(2);
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const disposedItem = items[0];
+    const deletedItem = items[1];
+
+    // A disposed item is a LIVE row (deletedAt IS NULL): a usage event for it
+    // (cross-device race) is ACCEPTED (D3/QA-7).
+    await new ItemDispositionRepository(db).upsert({
+      collectionId,
+      curatorId: ownerId,
+      itemId: disposedItem.id,
+      disposition: "set_aside",
+    });
+    // A soft-deleted item is NOT live ⇒ its usage event is rejected.
+    await db.update(itemsTable).set({ deletedAt: new Date() }).where(eq(itemsTable.id, deletedItem.id));
+    // A foreign item lives in another collection ⇒ not in this collection's live set.
+    const foreignCollectionId = await seedBareCollection(ownerId);
+    const foreignItem = await new ItemRepository(db).create({
+      collectionId: foreignCollectionId,
+      name: "Foreign bag",
+    });
+
+    const keys = { disposed: ck(), unknown: ck(), foreign: ck(), deleted: ck() };
+    const res = await postBatch(
+      batchReq(sortSession.id, {
+        decisions: [
+          usage(disposedItem.id, "uses", keys.disposed),
+          usage(generateId("item"), "uses", keys.unknown),
+          usage(foreignItem.id, "not_uses", keys.foreign),
+          usage(deletedItem.id, "uses", keys.deleted),
+        ],
+      }) as any,
+      { params: { id: sortSession.id } } as any,
+    );
+    expect(res.status).toBe(201);
+    expect((await res.json()).results).toEqual([
+      { clientKey: keys.disposed, status: "created" },
+      { clientKey: keys.unknown, status: "rejected", reason: "unknown_item" },
+      { clientKey: keys.foreign, status: "rejected", reason: "unknown_item" },
+      { clientKey: keys.deleted, status: "rejected", reason: "unknown_item" },
+    ]);
+
+    // Only the disposed (live) item's usage row was written.
+    const events = await new DecisionEventRepository(db).findBySession(sortSession.id);
+    expect(events).toHaveLength(1);
+    expect(events[0].type).toBe("usage");
+    expect((events[0].decision as { itemId: string }).itemId).toBe(disposedItem.id);
+    // The disposition on the disposed item survives (usage never clears).
+    expect(await new ItemDispositionRepository(db).findByItem(disposedItem.id, ownerId)).not.toBeNull();
+  });
+
+  it("case 6 — latest-wins via the shared comparator: in-batch monotonic-id tiebreak + cross-batch createdAt, asserted through deriveUsage", async () => {
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    // In-batch: two usage entries for ONE item share the batch's createdAt; the
+    // monotonic id makes the LATER array entry win.
+    const A = await seedSession(1);
+    const inBatch = await postBatch(
+      batchReq(A.sortSession.id, {
+        decisions: [usage(A.items[0].id, "uses"), usage(A.items[0].id, "not_uses")],
+      }) as any,
+      { params: { id: A.sortSession.id } } as any,
+    );
+    expect(inBatch.status).toBe(201);
+    const eventsA = await new DecisionEventRepository(A.db).findBySession(A.sortSession.id);
+    expect(eventsA).toHaveLength(2);
+    expect(eventsA[0].createdAt.getTime()).toBe(eventsA[1].createdAt.getTime()); // shared timestamp
+    expect(deriveUsage(eventsA as any, new Set([A.items[0].id])).get(A.items[0].id)).toBe("not_uses");
+
+    // Cross-batch: two sequential POSTs (separate transactions) resolve by
+    // createdAt — the later batch wins.
+    const B = await seedSession(1);
+    await postBatch(
+      batchReq(B.sortSession.id, { decisions: [usage(B.items[0].id, "not_uses")] }) as any,
+      { params: { id: B.sortSession.id } } as any,
+    );
+    await sleep(5);
+    await postBatch(
+      batchReq(B.sortSession.id, { decisions: [usage(B.items[0].id, "uses")] }) as any,
+      { params: { id: B.sortSession.id } } as any,
+    );
+    const eventsB = await new DecisionEventRepository(B.db).findBySession(B.sortSession.id);
+    expect(eventsB).toHaveLength(2);
+    expect(deriveUsage(eventsB as any, new Set([B.items[0].id])).get(B.items[0].id)).toBe("uses");
   });
 });

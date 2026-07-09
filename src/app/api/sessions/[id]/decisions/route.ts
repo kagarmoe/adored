@@ -48,6 +48,13 @@ const DecisionRequestSchema = z
         bucket: z.enum(["top", "high", "medium", "low"]),
       }),
     }),
+    z.object({
+      type: z.literal("usage"),
+      decision: z.object({
+        itemId: z.string().min(1),
+        result: z.enum(["uses", "not_uses"]),
+      }),
+    }),
   ])
   .and(z.object({ clientKey: z.string().min(1).optional() }));
 
@@ -147,7 +154,13 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         clientKey,
       }).returning();
 
-      await PreferenceController.fromDb(tx).recalculatePreferences(sortSession.collectionId, userId);
+      // Parent D3: usage NEVER recomputes. The recompute output would be
+      // identical anyway (the scorer ignores unknown types), but it still clears
+      // every orderRank + bulk-upserts the whole (collection,curator) set — pure
+      // waste inside the advisory lock. Skip it for usage.
+      if (body.type !== "usage") {
+        await PreferenceController.fromDb(tx).recalculatePreferences(sortSession.collectionId, userId);
+      }
 
       // disposed <=> untriaged: triaging an item clears any prior disposition for
       // this curator, so a previously set_aside/deferred item can't be both at once.

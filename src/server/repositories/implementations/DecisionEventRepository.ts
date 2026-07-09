@@ -1,7 +1,13 @@
 import { eq, inArray } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { decisionEventsTable, sessionsTable } from "@/lib/db/schema";
-import type { DecisionEvent, TriageDecision, PairwiseDecision } from "@/types";
+import type {
+  DecisionEvent,
+  DecisionType,
+  TriageDecision,
+  PairwiseDecision,
+  UsageDecision,
+} from "@/types";
 import { generateId } from "@/lib/id";
 
 export class DecisionEventRepository {
@@ -10,8 +16,8 @@ export class DecisionEventRepository {
   async create(data: {
     id?: string;
     sessionId: string;
-    type: "triage" | "pairwise_compare";
-    decision: TriageDecision | PairwiseDecision;
+    type: DecisionType;
+    decision: TriageDecision | PairwiseDecision | UsageDecision;
   }): Promise<DecisionEvent> {
     const id = data.id || generateId("evt");
     const [event] = await this.db
@@ -75,8 +81,8 @@ export class DecisionEventRepository {
     return {
       id: row.id,
       sessionId: row.sessionId,
-      type: row.type as "triage" | "pairwise_compare",
-      decision: row.decision as TriageDecision | PairwiseDecision,
+      type: row.type as DecisionType,
+      decision: row.decision as TriageDecision | PairwiseDecision | UsageDecision,
       createdAt: row.createdAt,
     };
   }
