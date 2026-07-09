@@ -91,14 +91,22 @@ describe("RoundSurface round-length chooser (compare, spec §3.1)", () => {
     expect(screen.queryByAltText("Pair")).not.toBeInTheDocument();
   });
 
-  it("the chooser shows while the round is live and is absent once the recap shows", () => {
-    const { unmount } = renderSurface();
-    expect(screen.getByRole("combobox", { name: "Round length" })).toBeInTheDocument();
-    unmount();
+  it("the chooser shows while the round is live and disappears when it ends into the recap", async () => {
+    vi.useFakeTimers();
+    store.setItem("pi-round-box", "1"); // a 1-minute box so the live round expires in place
+    renderSurface();
 
-    // A server-empty queue ends the round: the recap replaces the content and the
-    // chooser is gone with it.
-    renderSurface({ queueEmpty: true });
+    // Live: the chooser is present.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(screen.getByRole("combobox", { name: "Round length" })).toBeInTheDocument();
+
+    // Drive the real live→recap transition in place: let the box expire, and the
+    // recap replaces the content — the chooser (live-only) goes with it.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000 + 1_500);
+    });
     expect(screen.queryByRole("combobox", { name: "Round length" })).not.toBeInTheDocument();
   });
 });

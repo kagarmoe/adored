@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
-import { getRoundBox, setRoundBox, ROUND_BOX_OPTIONS, type RoundBox } from "@/lib/round-preference";
+import { useEffect, useState, type ChangeEvent } from "react";
+import { getRoundBox, setRoundBox, ROUND_BOX_OPTIONS, DEFAULT_ROUND_BOX, type RoundBox } from "@/lib/round-preference";
 
 interface RoundLengthChooserProps {
   /** Fires with the newly chosen box so the LIVE round re-arms its clock against
@@ -16,9 +16,14 @@ interface RoundLengthChooserProps {
  * "No timer" is a first-class peer in the same list, never a hidden mode.
  */
 export function RoundLengthChooser({ onChange }: RoundLengthChooserProps) {
-  // Seed from the same device-local preference the round read at mount, so the
-  // control shows the box the round is actually running.
-  const [value, setValue] = useState<RoundBox>(() => getRoundBox());
+  // Seed to a stable literal so SSR and the first client render agree (getRoundBox
+  // reads localStorage → would mismatch on hydration); reconcile to the real stored
+  // box in a mount effect, matching the sibling clock (RoundSurface/useOptimisticRound).
+  const [value, setValue] = useState<RoundBox>(DEFAULT_ROUND_BOX);
+
+  useEffect(() => {
+    setValue(getRoundBox());
+  }, []);
 
   function handleChange(event: ChangeEvent<HTMLSelectElement>) {
     const raw = event.target.value;
