@@ -220,4 +220,124 @@ describeDb("decisions/dispositions hardening (route -> controller -> repo -> DB)
     // And the row was persisted under the lock.
     expect(await new ItemDispositionRepository(db).findByItem(item.id, ownerId)).not.toBeNull();
   });
+
+  // ── purses-stln: the decision must reference a LIVE item in THIS collection ──
+  //
+  // The single route (unlike the batch route) never validated the referenced
+  // item. A foreign itemId (an item in ANOTHER collection), or a nonexistent /
+  // deleted one, would flow to the insert + recompute — planting a
+  // cross-collection preference row — and triage's bringBack would clear a
+  // disposition unscoped by collection. The route now rejects the whole request
+  // with 400 BEFORE any write, matching the batch route's live-item set check.
+
+  it("stln: triage referencing an item in ANOTHER collection → 400, NO event, NO preference planted, disposition NOT cleared", async () => {
+    const { db } = getTestDb();
+    const ownCollectionId = await seedBareCollection(ownerId);
+    const foreignCollectionId = await seedBareCollection(ownerId);
+    const foreignItem = await new ItemRepository(db).create({ collectionId: foreignCollectionId, name: "Foreign bag" });
+    // The curator has a disposition on the foreign item — bringBack(foreignItem)
+    // would clear it if the unscoped call ran. It must survive the rejection.
+    await new ItemDispositionRepository(db).upsert({
+      collectionId: foreignCollectionId,
+      curatorId: ownerId,
+      itemId: foreignItem.id,
+      disposition: "set_aside",
+    });
+    const sortSession = await new SessionRepository(db).create({ collectionId: ownCollectionId, curatorId: ownerId });
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    const res = await postDecision(
+      decisionReq(sortSession.id, { type: "triage", decision: { itemId: foreignItem.id, result: "top" } }) as any,
+      { params: { id: sortSession.id } } as any,
+    );
+    expect(res.status).toBe(400);
+    // No decision_events row, no cross-collection preference row, no cleared disposition.
+    expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
+    expect(await new CollectionPreferenceItemRepository(db).findByCollection(ownCollectionId, ownerId)).toHaveLength(0);
+    expect(await new ItemDispositionRepository(db).findByItem(foreignItem.id, ownerId)).not.toBeNull();
+  });
+
+  it("stln: triage referencing a NONEXISTENT itemId → 400 and NO event", async () => {
+    const { db } = getTestDb();
+    const collectionId = await seedBareCollection(ownerId);
+    const sortSession = await new SessionRepository(db).create({ collectionId, curatorId: ownerId });
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    const res = await postDecision(
+      decisionReq(sortSession.id, { type: "triage", decision: { itemId: "item_does_not_exist", result: "top" } }) as any,
+      { params: { id: sortSession.id } } as any,
+    );
+    expect(res.status).toBe(400);
+    expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
+  });
+
+  it("stln: usage referencing an item in ANOTHER collection → 400 and NO event", async () => {
+    const { db } = getTestDb();
+    const ownCollectionId = await seedBareCollection(ownerId);
+    const foreignCollectionId = await seedBareCollection(ownerId);
+    const foreignItem = await new ItemRepository(db).create({ collectionId: foreignCollectionId, name: "Foreign bag" });
+    const sortSession = await new SessionRepository(db).create({ collectionId: ownCollectionId, curatorId: ownerId });
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    const res = await postDecision(
+      decisionReq(sortSession.id, { type: "usage", decision: { itemId: foreignItem.id, result: "uses" } }) as any,
+      { params: { id: sortSession.id } } as any,
+    );
+    expect(res.status).toBe(400);
+    expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
+  });
+
+  it("stln: pairwise_compare where ONE side is foreign → 400 and NO event", async () => {
+    const { db } = getTestDb();
+    const ownCollectionId = await seedBareCollection(ownerId);
+    const foreignCollectionId = await seedBareCollection(ownerId);
+    const liveItem = await new ItemRepository(db).create({ collectionId: ownCollectionId, name: "Live bag" });
+    const foreignItem = await new ItemRepository(db).create({ collectionId: foreignCollectionId, name: "Foreign bag" });
+    const sortSession = await new SessionRepository(db).create({ collectionId: ownCollectionId, curatorId: ownerId });
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    const res = await postDecision(
+      decisionReq(sortSession.id, {
+        type: "pairwise_compare",
+        decision: { itemAId: liveItem.id, itemBId: foreignItem.id, result: "item_a" },
+      }) as any,
+      { params: { id: sortSession.id } } as any,
+    );
+    expect(res.status).toBe(400);
+    expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
+  });
+
+  it("stln: usage on a LIVE item → 201 and the event persists (positive control)", async () => {
+    const { db } = getTestDb();
+    const collectionId = await seedBareCollection(ownerId);
+    const item = await new ItemRepository(db).create({ collectionId, name: "Bag" });
+    const sortSession = await new SessionRepository(db).create({ collectionId, curatorId: ownerId });
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    const res = await postDecision(
+      decisionReq(sortSession.id, { type: "usage", decision: { itemId: item.id, result: "uses" } }) as any,
+      { params: { id: sortSession.id } } as any,
+    );
+    expect(res.status).toBe(201);
+    expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(1);
+  });
+
+  it("stln: pairwise_compare of two LIVE items → 201 and the event persists (positive control)", async () => {
+    const { db } = getTestDb();
+    const collectionId = await seedBareCollection(ownerId);
+    const itemA = await new ItemRepository(db).create({ collectionId, name: "Bag A" });
+    const itemB = await new ItemRepository(db).create({ collectionId, name: "Bag B" });
+    const sortSession = await new SessionRepository(db).create({ collectionId, curatorId: ownerId });
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    const res = await postDecision(
+      decisionReq(sortSession.id, {
+        type: "pairwise_compare",
+        decision: { itemAId: itemA.id, itemBId: itemB.id, result: "item_a" },
+      }) as any,
+      { params: { id: sortSession.id } } as any,
+    );
+    expect(res.status).toBe(201);
+    expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(1);
+  });
 });
