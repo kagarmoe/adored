@@ -3,8 +3,8 @@
 import type { ReactNode } from "react";
 
 interface RoundShellProps {
-  /** 1-based current step. */
-  step: 1 | 2 | 3;
+  /** 1-based current step in the 4-step round arc. */
+  step: 1 | 2 | 3 | 4;
   totalSteps: number;
   roundLabel: string;
   /** The round's timer chrome (e.g. <RoundTimer />), rendered in the header. */

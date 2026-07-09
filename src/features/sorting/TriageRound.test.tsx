@@ -85,6 +85,15 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+describe("TriageRound round chrome (4-step arc, Epic R)", () => {
+  it("wraps the round in the shell as step 1 of 4 — triage is the arc's first beat", () => {
+    renderRound();
+    expect(
+      screen.getByRole("list", { name: /round progress: step 1 of 4/i }),
+    ).toBeInTheDocument();
+  });
+});
+
 describe("TriageRound optimistic advance (F15)", () => {
   it("n taps advance through n items with ZERO refresh; each tap is persisted before the next item renders", async () => {
     const user = userEvent.setup();

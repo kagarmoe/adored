@@ -10,8 +10,8 @@ import { RoundLengthChooser } from "./RoundLengthChooser";
 import { WhatMoved } from "./WhatMoved";
 
 interface RoundSurfaceProps {
-  /** 1-based step in the 3-step round arc (triage = 1, compare = 2). */
-  step: 1 | 2 | 3;
+  /** 1-based step in the 4-step round arc (triage = 1, usage = 2, compare = 3, decide = 4). */
+  step: 1 | 2 | 3 | 4;
   totalSteps: number;
   roundLabel: string;
   /** The server-fetched round content (DecisionControls / CompareChoice etc.). */

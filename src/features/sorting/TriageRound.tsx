@@ -215,7 +215,7 @@ export function TriageRound({
   return (
     <RoundShell
       step={1}
-      totalSteps={3}
+      totalSteps={4}
       roundLabel="This round"
       timer={timer}
       onPause={() => router.push(hubHref)}

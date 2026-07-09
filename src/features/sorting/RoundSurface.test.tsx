@@ -38,7 +38,7 @@ afterEach(() => {
 
 function renderSurface(over: Partial<Parameters<typeof RoundSurface>[0]> = {}) {
   return render(
-    <RoundSurface step={2} totalSteps={3} roundLabel="Comparing" decisions={[]} hubHref="/hub" {...over}>
+    <RoundSurface step={3} totalSteps={4} roundLabel="Comparing" decisions={[]} hubHref="/hub" {...over}>
       <img src="/pair.jpg" alt="Pair" />
     </RoundSurface>,
   );
