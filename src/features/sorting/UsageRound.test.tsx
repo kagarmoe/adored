@@ -395,6 +395,46 @@ describe("UsageRound round end (F15) & recap", () => {
     expect(screen.getByText("1 resting for now")).toBeInTheDocument();
   });
 
+  it("a revisit-after-ack that changes the answer never double-counts the item (dedup latest-wins)", async () => {
+    // Answer A, let the ack LAND (in-flight/acked, not still-queued), Back to A, then
+    // change it. submitDecision appends a SECOND log entry for A rather than replacing
+    // the first — the recap must still show ONE outcome line, agreeing with the cue.
+    vi.useFakeTimers();
+    flusher.awaitAck.mockImplementation(() => Promise.resolve({ status: "created" }));
+    store.setItem("pi-round-box", "5");
+    renderRound(); // [A, B]
+
+    fireEvent.click(screen.getByRole("button", { name: YES }));
+    await act(async () => {}); // flush the ack so A's outcome is recorded as acked
+    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
+
+    // Acked → Back re-presents A as a standing revisit (the log entry STAYS).
+    fireEvent.click(screen.getByRole("button", { name: /^back$/i }));
+    await act(async () => {});
+    expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: YES })).toHaveAttribute("aria-pressed", "true");
+
+    // Change to "Not these days" → appends a second (A, not_uses) entry; B is up again.
+    fireEvent.click(screen.getByRole("button", { name: NO }));
+    await act(async () => {});
+    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
+    // The answered cue is a Set — idempotent — so it reads 1 all along.
+    expect(screen.getByText(answeredSoFar(1))).toBeInTheDocument();
+
+    // End the round with B unanswered so only A's two log entries reach the recap.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5 * 60_000 + 1_500);
+    });
+
+    expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
+    // Latest-wins: A is resting, and the contradictory "in your life" line is gone.
+    expect(screen.getByText("1 resting for now")).toBeInTheDocument();
+    expect(screen.queryByText("1 in your life")).not.toBeInTheDocument();
+    // Exactly one recap line → whatMoved total for the round is 1, not an inflated 2.
+    const recapList = screen.getByText("1 resting for now").closest("ul");
+    expect(recapList?.querySelectorAll("li")).toHaveLength(1);
+  });
+
   it("timer expiry terminates into the recap just like exhaustion", async () => {
     vi.useFakeTimers();
     store.setItem("pi-round-box", "5");

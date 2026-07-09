@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { MovedDecision } from "@/lib/what-moved";
+import { dedupeDecisionsLatestWins, type MovedDecision } from "@/lib/what-moved";
 import { getRoundBox, type RoundBox } from "@/lib/round-preference";
 import { enqueue, newClientKey, removeQueued, type PendingEntry, type QueueKey } from "./decisionQueue";
 import { awaitAck, isInFlight, triggerFlush, useDecisionFlusher, type AckOutcome } from "./decisionFlusher";
@@ -250,8 +250,12 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
     expired,
     onExpire: () => setExpired(true),
     onBoxChange,
-    recapDecisions:
+    // Dedup latest-wins BEFORE the recap counts these (F5): the append-on-ack log
+    // holds a second entry for any item answered, flushed, then changed via
+    // Back-as-revisit — one physical item must never show in two outcome lines.
+    recapDecisions: dedupeDecisionsLatestWins(
       frozen?.decisions ?? [...serverLogRef.current, ...roundLogRef.current.map((e) => e.moved)],
+    ),
     recapNowMs: frozen?.endedAtMs,
     windowStartMs: startedAtRef.current,
     reopenRound,

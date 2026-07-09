@@ -49,6 +49,42 @@ function toMs(at: Date | number): number {
   return typeof at === "number" ? at : at.getTime();
 }
 
+// The dedupe key for an item-scoped decision, or null for pairwise (which carries
+// no single itemId — each comparison is its own row and must never collapse).
+function itemKeyOf(d: MovedDecision): string | null {
+  if (d.type === "pairwise_compare") return null;
+  return `${d.type}:${(d.decision as { itemId: string }).itemId}`;
+}
+
+/**
+ * Collapse a round's decisions to ONE row per (type, itemId), keeping the entry
+ * with the latest createdAt (ties resolve to the later array position — the newer
+ * answer). Mirrors deriveUsage's latest-wins so the recap can never double-count an
+ * item that was answered, flushed, then changed via Back-as-revisit (which appends a
+ * second log entry rather than replacing the first). Pairwise comparisons pass
+ * through untouched; order is stable by first-seen. Applied where recap decisions are
+ * consumed, before whatMoved counts them.
+ */
+export function dedupeDecisionsLatestWins(decisions: MovedDecision[]): MovedDecision[] {
+  const result: MovedDecision[] = [];
+  const indexByKey = new Map<string, number>();
+  for (const d of decisions) {
+    const key = itemKeyOf(d);
+    if (key === null) {
+      result.push(d);
+      continue;
+    }
+    const existing = indexByKey.get(key);
+    if (existing === undefined) {
+      indexByKey.set(key, result.length);
+      result.push(d);
+    } else if (toMs(d.createdAt) >= toMs(result[existing].createdAt)) {
+      result[existing] = d; // latest wins, kept at the first-seen position
+    }
+  }
+  return result;
+}
+
 export function whatMoved(
   decisions: MovedDecision[],
   windowStartMs: number,
