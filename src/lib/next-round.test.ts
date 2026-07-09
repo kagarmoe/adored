@@ -89,7 +89,6 @@ describe("recommendNextRound — ladder", () => {
     const { primary, whenUsageDemoted } = recommendNextRound({
       items,
       preferences,
-      decisions: [],
       curatorDecisions: [],
     });
 
@@ -107,7 +106,6 @@ describe("recommendNextRound — ladder", () => {
     const { primary, whenUsageDemoted } = recommendNextRound({
       items,
       preferences,
-      decisions: [],
       curatorDecisions: [],
     });
 
@@ -126,7 +124,6 @@ describe("recommendNextRound — ladder", () => {
     const { primary, whenUsageDemoted } = recommendNextRound({
       items,
       preferences,
-      decisions: [],
       curatorDecisions,
     });
 
@@ -168,13 +165,11 @@ describe("recommendNextRound — ladder", () => {
       decision: { itemAId: "a", itemBId: "b", result: "item_a" },
       createdAt: new Date(10),
     };
-    const sessionDecisions: DecisionEvent[] = []; // this session has no compare yet
     const curatorDecisions = [usageEvent("u-a", "a"), usageEvent("u-b", "b"), priorCompare];
 
     const { primary } = recommendNextRound({
       items,
       preferences,
-      decisions: sessionDecisions,
       curatorDecisions,
     });
     // Curator-wide: a↔b is already ordered → nothing left to compare → decide.
@@ -186,7 +181,6 @@ describe("recommendNextRound — ladder", () => {
     const { primary: asIfSessionScoped } = recommendNextRound({
       items,
       preferences,
-      decisions: sessionDecisions,
       curatorDecisions: [usageEvent("u-a", "a"), usageEvent("u-b", "b")],
     });
     expect(asIfSessionScoped.kind).toBe("compare");
@@ -196,7 +190,6 @@ describe("recommendNextRound — ladder", () => {
     const { primary, whenUsageDemoted } = recommendNextRound({
       items: [],
       preferences: [],
-      decisions: [],
       curatorDecisions: [],
     });
     expect(primary.kind).toBe("decide");
@@ -212,7 +205,6 @@ describe("recommendNextRound — ladder", () => {
     const { primary, whenUsageDemoted } = recommendNextRound({
       items,
       preferences,
-      decisions: [],
       curatorDecisions: [],
     });
 
@@ -232,7 +224,6 @@ describe("recommendNextRound — ladder", () => {
     const { primary } = recommendNextRound({
       items,
       preferences,
-      decisions: [],
       curatorDecisions,
       dispositionByItemId,
     });
@@ -249,7 +240,6 @@ describe("recommendNextRound — usage card copy (TONE)", () => {
     const { primary } = recommendNextRound({
       items,
       preferences,
-      decisions: [],
       curatorDecisions: [],
     });
 
@@ -267,7 +257,6 @@ describe("recommendNextRound — usage card copy (TONE)", () => {
     const { primary } = recommendNextRound({
       items,
       preferences,
-      decisions: [],
       curatorDecisions: [],
     });
 

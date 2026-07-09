@@ -24,11 +24,10 @@ export type NextRoundKind = "triage" | "usage" | "compare" | "decide";
 export interface NextRoundInput {
   items: Item[];
   preferences: CollectionPreferenceItem[];
-  /** Session-scoped log the hub also feeds SessionAnalytics. No longer the
-   *  selectNextPair input — §7.3 is fixed: compare selection reads curatorDecisions. */
-  decisions: DecisionEvent[];
-  /** The §2.6 cross-session curator log — drives usage-known derivation AND, now,
-   *  compare selection (selectNextPair), so both agree with the recompute. */
+  /** The §2.6 cross-session curator log — drives usage-known derivation AND
+   *  compare selection (selectNextPair), so both agree with the recompute.
+   *  (§7.3 fixed: selectNextPair is curator-wide; the hub feeds its own
+   *  session-scoped subset to SessionAnalytics, not this input.) */
   curatorDecisions: DecisionEvent[];
   dispositionByItemId?: Map<string, Disposition>;
 }

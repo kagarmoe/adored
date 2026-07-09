@@ -59,8 +59,9 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
     DispositionController.fromDb(db).listDispositions(collection.id, sortSession.curatorId),
   ]);
 
-  // The unchanged selectNextPair / SessionAnalytics input — §7.3's session-scoped quirk
-  // is preserved (not fixed) here.
+  // Session-scoped subset for SessionAnalytics only. §7.3 is fixed: selectNextPair
+  // reads the curator-wide log (see recommendNextRound), so the compare recommendation
+  // agrees with the recompute across sessions.
   const decisions = curatorDecisions.filter((e) => e.sessionId === sortSession.id);
 
   // Gates the "See results" card: at least one item has been given a feeling.
@@ -74,7 +75,6 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
   const { primary, whenUsageDemoted } = recommendNextRound({
     items,
     preferences,
-    decisions,
     curatorDecisions,
     dispositionByItemId,
   });
