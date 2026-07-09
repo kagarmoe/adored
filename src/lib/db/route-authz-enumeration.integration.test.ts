@@ -515,6 +515,15 @@ function buildStrangerCases(
     c("sort-results/[id]/items/route.ts", "GET",
       `/api/sort-results/${sortResultId}/items`,
       { id: sortResultId }),
+    // Bulk re-rank (Epic S): PATCH parses the body then requireApiResultAccess —
+    // give a valid order body so json() succeeds and the authz gate is reached.
+    c("sort-results/[id]/items/route.ts", "PATCH",
+      `/api/sort-results/${sortResultId}/items`,
+      { id: sortResultId },
+      { order: [{ rid: resultItemId, manualRank: 0 }] }),
+    c("sort-results/[id]/items/route.ts", "DELETE",
+      `/api/sort-results/${sortResultId}/items`,
+      { id: sortResultId }),
 
     // ── /api/sort-results/[id]/items/[rid] ────────────────────────────────
     c("sort-results/[id]/items/[rid]/route.ts", "GET",
