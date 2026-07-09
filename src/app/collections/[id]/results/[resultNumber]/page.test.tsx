@@ -16,7 +16,7 @@ const { mockGetSession, mockRequireAccess, redirectMock, resultRepo, resultItemR
 
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
-vi.mock("next/navigation", () => ({ redirect: redirectMock }));
+vi.mock("next/navigation", () => ({ redirect: redirectMock, useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@/components/layout", () => ({ AppLayout: ({ children }: any) => <div>{children}</div> }));
 vi.mock("@/lib/collection-access", () => ({ requireCollectionAccess: mockRequireAccess }));
 vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({ SortResultRepository: vi.fn(function () { return resultRepo; }) }));
@@ -116,6 +116,40 @@ describe("ResultDetailPage SharePanel curator gate (axn)", () => {
     const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
     render(ui);
     expect(screen.queryByRole("heading", { name: /share this result/i })).toBeNull();
+  });
+});
+
+// Epic S S3b: the draft result page mounts the manual re-rank affordance ("Put in
+// order by hand"); a finalized keepsake does NOT (reorder is a draft activity) and
+// instead offers "Make a revision".
+describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () => {
+  beforeEach(() => {
+    resultItemRepo.findByResult.mockResolvedValue([
+      { id: "ri_1", itemId: "item_hero", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null },
+      { id: "ri_2", itemId: "item_rest", computedRank: 2, manualRank: null, computedBucket: "high", manualBucket: null },
+    ]);
+    itemRepo.findByCollection.mockResolvedValue([HERO, REST]);
+    photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map());
+  });
+
+  it("offers 'Put in order by hand' on a DRAFT result, not 'Make a revision'", async () => {
+    resultRepo.findByCollectionAndNumber.mockResolvedValue({
+      id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "draft", curatorId: "u1",
+    });
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.getByRole("button", { name: "Put in order by hand" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Make a revision" })).toBeNull();
+  });
+
+  it("hides the reorder affordance on a FINALIZED result and offers 'Make a revision'", async () => {
+    resultRepo.findByCollectionAndNumber.mockResolvedValue({
+      id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "finalized", curatorId: "u1",
+    });
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.queryByRole("button", { name: "Put in order by hand" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Make a revision" })).toBeInTheDocument();
   });
 });
 

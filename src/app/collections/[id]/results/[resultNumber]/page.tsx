@@ -11,8 +11,10 @@ import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
 import { Badge, Button, EmptyState } from "@/components/ui";
 import { RankedResults } from "@/features/results/RankedResults";
+import { RerankPanel, type RerankRow } from "@/features/results/RerankPanel";
 import { SharePanel } from "@/features/results/SharePanel";
 import { partitionRanked } from "@/lib/results-buckets";
+import { itemDisplayName } from "@/lib/items";
 import type { UsageAnswer } from "@/lib/derive-usage";
 import Link from "next/link";
 
@@ -75,6 +77,20 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
     return c ? getPhotoAssetUrlForPhoto(c, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
   };
 
+  // Epic S S3b: the flat reorder list works over the WHOLE ranking (loved + onward)
+  // in current display order. Item name + cover are resolved server-side (the
+  // client never touches the item store or photo store); computedRank rides along
+  // so "Back to the computed order" can revert optimistically.
+  const collectionSegment = collection.slug ?? collection.id;
+  const rerankRows: RerankRow[] = sortedResultItems
+    .map((ri): RerankRow | null => {
+      const item = itemById.get(ri.itemId);
+      return item
+        ? { rid: ri.id, itemId: item.id, name: itemDisplayName(item), coverUrl: coverUrl(item.id), computedRank: ri.computedRank }
+        : null;
+    })
+    .filter((r): r is RerankRow => r !== null);
+
   return (
     <AppLayout
       breadcrumbs={[
@@ -107,13 +123,20 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
         {loved.length === 0 && onward.length === 0 ? (
           <EmptyState heading="No ranked items yet" message="A little more sorting and your ranking will appear here." />
         ) : (
-          <RankedResults
-            loved={loved}
-            onward={onward}
-            collectionId={collection.slug ?? collection.id}
-            coverUrl={coverUrl}
-            usageByItemId={usageByItemId}
-          />
+          <RerankPanel
+            resultId={result.id}
+            collectionId={collectionSegment}
+            status={result.status}
+            rows={rerankRows}
+          >
+            <RankedResults
+              loved={loved}
+              onward={onward}
+              collectionId={collectionSegment}
+              coverUrl={coverUrl}
+              usageByItemId={usageByItemId}
+            />
+          </RerankPanel>
         )}
 
         {result.status === "finalized" && result.curatorId === session.user.id && (

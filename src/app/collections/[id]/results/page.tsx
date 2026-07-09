@@ -15,6 +15,7 @@ import { FinalizeEntry } from "@/features/results/FinalizeEntry";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
 import { ItemCard } from "@/features/items/ItemCard";
 import { deriveStanding } from "@/features/results/standing";
+import { STANDING_CURRENT_FRAMING } from "@/features/results/rerank-copy";
 import { deriveUsage } from "@/lib/derive-usage";
 import { itemDisplayName } from "@/lib/items";
 import Link from "next/link";
@@ -99,6 +100,10 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
             <h1 className="font-display text-3xl text-ink">Where things stand</h1>
             {/* Person-side, forward-framed, no count (TONE #1, #4). */}
             <p className="mt-2 text-ink-soft">The clearer this feels, the more it&rsquo;s yours.</p>
+            {/* Epic S §4.4 bridge: name live Standing as the always-current picture,
+                so a hand-order (which lives on a saved draft result, not here) never
+                reads as "my order reverted". */}
+            <p className="mt-1 text-sm text-ink-soft">{STANDING_CURRENT_FRAMING}</p>
           </div>
           {/* Calm, side-by-side entry points — neither competes. Put-in-order
               leads to the compare round; Finalize keeps it steady for now. */}

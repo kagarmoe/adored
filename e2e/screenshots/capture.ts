@@ -250,6 +250,16 @@ for (const theme of ["light", "dark"] as const) {
     await page.waitForTimeout(400);
     await shot("usage-round-recap");
 
+    // Epic S S3b: the DRAFT result's "Put in order by hand" mode — the flat
+    // reorder list with the ≥44px drag handles + move-up/down controls + the
+    // "Back to the computed order" reset. Driven by clicking the affordance
+    // (role/accessible-name), then shot in both themes.
+    await page.goto(`/collections/${slug}/results/${resultNumber}`);
+    await page.getByRole("button", { name: "Put in order by hand" }).click();
+    await page.getByTestId("rerank-row").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+    await page.waitForTimeout(400);
+    await shot("results-rerank");
+
     // purses-ka23: the /welcome onboarding walkthrough. Unlike the goto+shoot
     // surfaces above, this is ONE client-only route with seven beats advanced by
     // taps — Purpose → Triage (×3) → Usage → Compare → Standing → Refine →
