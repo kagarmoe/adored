@@ -59,8 +59,10 @@ describe("StartSessionForm", () => {
     render(<StartSessionForm collectionId="c" collectionSlug="s" />);
     const select = screen.getByRole("combobox", { name: /round length/i });
 
+    // "20" is a stale shipped option (Task 10 replaces the list); it persists then
+    // clamps on read to the new 5-minute ceiling — the clamp is the migration.
     fireEvent.change(select, { target: { value: "20" } });
-    expect(getRoundBox()).toBe(20);
+    expect(getRoundBox()).toBe(5);
 
     fireEvent.change(select, { target: { value: "none" } });
     expect(getRoundBox()).toBe("none");

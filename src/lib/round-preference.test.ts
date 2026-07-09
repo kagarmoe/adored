@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
-import { getRoundBox, setRoundBox, DEFAULT_ROUND_BOX } from "./round-preference";
+import { getRoundBox, setRoundBox, DEFAULT_ROUND_BOX, ROUND_BOX_OPTIONS } from "./round-preference";
 
 // jsdom in this setup does not expose a working localStorage on file:// URLs, so
 // install a minimal Map-backed Storage for the hermetic round-trip tests.
@@ -25,31 +25,64 @@ describe("round-preference", () => {
     installStorage();
   });
 
-  it("defaults to 'none' when nothing is stored", () => {
-    expect(DEFAULT_ROUND_BOX).toBe("none");
-    expect(getRoundBox()).toBe("none");
+  it("defaults to 2 minutes when nothing is stored", () => {
+    expect(DEFAULT_ROUND_BOX).toBe(2);
+    expect(getRoundBox()).toBe(2);
   });
 
-  it("round-trips each valid value", () => {
-    for (const v of [5, 10, 20, "none"] as const) {
+  it("round-trips each valid value (incl. the 0.5 → '0.5' → 0.5 trip)", () => {
+    for (const v of [0.5, 1, 2, 5, "none"] as const) {
       setRoundBox(v);
       expect(getRoundBox()).toBe(v);
     }
   });
 
+  it("persists 0.5 as the string '0.5'", () => {
+    setRoundBox(0.5);
+    expect(window.localStorage.getItem("pi-round-box")).toBe("0.5");
+  });
+
   it("persists to the pi-round-box key", () => {
-    setRoundBox(10);
-    expect(window.localStorage.getItem("pi-round-box")).toBe("10");
+    setRoundBox(5);
+    expect(window.localStorage.getItem("pi-round-box")).toBe("5");
   });
 
-  it("falls back to the default for an invalid stored value", () => {
-    window.localStorage.setItem("pi-round-box", "banana");
-    expect(getRoundBox()).toBe("none");
+  describe("clamp-on-read migration (the clamp IS the migration)", () => {
+    it("keeps 'none' as 'none'", () => {
+      window.localStorage.setItem("pi-round-box", "none");
+      expect(getRoundBox()).toBe("none");
+    });
+
+    for (const raw of ["0.5", "1", "2", "5"] as const) {
+      it(`keeps a valid stored ${raw} as itself`, () => {
+        window.localStorage.setItem("pi-round-box", raw);
+        expect(getRoundBox()).toBe(Number(raw));
+      });
+    }
+
+    for (const stale of ["10", "20"] as const) {
+      it(`clamps stale ${stale} down to 5`, () => {
+        window.localStorage.setItem("pi-round-box", stale);
+        expect(getRoundBox()).toBe(5);
+      });
+    }
+
+    for (const garbage of ["7", "abc", ""] as const) {
+      it(`falls back to the default (2) for garbage ${JSON.stringify(garbage)}`, () => {
+        window.localStorage.setItem("pi-round-box", garbage);
+        expect(getRoundBox()).toBe(2);
+      });
+    }
   });
 
-  it("falls back to the default for a non-allowed number", () => {
-    window.localStorage.setItem("pi-round-box", "7");
-    expect(getRoundBox()).toBe("none");
+  it("ROUND_BOX_OPTIONS is the one home for the option list (verbatim)", () => {
+    expect(ROUND_BOX_OPTIONS).toEqual([
+      { value: 0.5, label: "30 seconds" },
+      { value: 1, label: "1 minute" },
+      { value: 2, label: "2 minutes" },
+      { value: 5, label: "5 minutes" },
+      { value: "none", label: "No timer" },
+    ]);
   });
 
   describe("SSR safety (no window)", () => {
@@ -62,12 +95,12 @@ describe("round-preference", () => {
     it("returns the default without throwing when window is undefined", () => {
       vi.stubGlobal("window", undefined);
       expect(() => getRoundBox()).not.toThrow();
-      expect(getRoundBox()).toBe("none");
+      expect(getRoundBox()).toBe(2);
     });
 
     it("is a no-op (no throw) when setting with no window", () => {
       vi.stubGlobal("window", undefined);
-      expect(() => setRoundBox(20)).not.toThrow();
+      expect(() => setRoundBox(5)).not.toThrow();
     });
   });
 });
