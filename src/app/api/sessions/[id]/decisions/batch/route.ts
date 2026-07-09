@@ -151,7 +151,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       const nextId = generateOrderedIdFactory();
       const seenKeys = new Set<string>();
       const insertedTriagedItemIds = new Set<string>();
-      let insertedCount = 0;
+      // §2.4 (Epic R) — count only inserted SCORING entries (triage/compare, not
+      // usage): usage rides this route but is dark to the scorer. 201/200 still
+      // derives from counts.created (any-type), so no separate inserted counter.
+      let insertedScoringCount = 0;
       const results: BatchResult[] = [];
 
       for (const entry of entries) {
@@ -189,15 +192,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           results.push({ clientKey: entry.clientKey, status: "duplicate" });
           continue;
         }
-        insertedCount++;
+        if (entry.type !== "usage") insertedScoringCount++;
         if (entry.type === "triage") insertedTriagedItemIds.add(entry.decision.itemId);
         results.push({ clientKey: entry.clientKey, status: "created" });
       }
 
-      // §2.3.6 — ONE recompute, only if ≥1 row was inserted: an all-duplicate/
-      // rejected batch (e.g. the recovery gate replaying a batch whose ack was
-      // lost after commit) must not rewrite the preference set.
-      if (insertedCount > 0) {
+      // §2.3.6 / §2.4 — ONE recompute, iff ≥1 *scoring* entry was inserted (Epic
+      // P §2.3.6's anticipated extension). A usage-only, all-duplicate, or
+      // all-rejected batch inserts nothing scoring, so it must NOT rewrite the
+      // preference set or clear a disposition — usage is dark to both.
+      if (insertedScoringCount > 0) {
         await PreferenceController.fromDb(tx).recalculatePreferences(
           sortSession.collectionId,
           userId,
