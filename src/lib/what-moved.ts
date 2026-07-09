@@ -30,6 +30,10 @@ export interface WhatMovedSummary {
   onward: number;
   /** Pairwise comparisons made (ranking). */
   ranked: number;
+  /** Usage → in your life ("uses"). */
+  uses: number;
+  /** Usage → resting for now ("not_uses"). */
+  resting: number;
   /** All decisions counted inside the window. */
   total: number;
 }
@@ -43,7 +47,16 @@ export function whatMoved(
   windowStartMs: number,
   windowEndMs: number,
 ): WhatMovedSummary {
-  const summary: WhatMovedSummary = { love: 0, like: 0, maybe: 0, onward: 0, ranked: 0, total: 0 };
+  const summary: WhatMovedSummary = {
+    love: 0,
+    like: 0,
+    maybe: 0,
+    onward: 0,
+    ranked: 0,
+    uses: 0,
+    resting: 0,
+    total: 0,
+  };
 
   for (const d of decisions) {
     const ms = toMs(d.createdAt);
@@ -52,6 +65,13 @@ export function whatMoved(
 
     if (d.type === "pairwise_compare") {
       summary.ranked += 1;
+      continue;
+    }
+
+    if (d.type === "usage") {
+      const usageResult = (d.decision as { result: UsageResult }).result;
+      if (usageResult === "uses") summary.uses += 1;
+      else summary.resting += 1;
       continue;
     }
 

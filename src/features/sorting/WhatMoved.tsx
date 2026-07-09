@@ -24,6 +24,8 @@ function lines(summary: WhatMovedSummary): string[] {
   if (summary.ranked > 0) {
     out.push(`${summary.ranked} ${summary.ranked === 1 ? "comparison" : "comparisons"} made`);
   }
+  if (summary.uses > 0) out.push(`${summary.uses} in your life`);
+  if (summary.resting > 0) out.push(`${summary.resting} resting for now`);
   return out;
 }
 

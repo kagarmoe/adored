@@ -14,6 +14,9 @@ function triage(result: "top" | "high" | "medium" | "low", at: number): MovedDec
 function compare(at: number): MovedDecision {
   return { type: "pairwise_compare", createdAt: at, decision: { itemAId: "a", itemBId: "b", result: "item_a" } };
 }
+function usage(result: "uses" | "not_uses", at: number): MovedDecision {
+  return { type: "usage", createdAt: at, decision: { itemId: `u-${at}`, result } };
+}
 
 describe("WhatMoved", () => {
   it("summarizes only the decisions inside the round window, grouped by outcome", () => {
@@ -35,6 +38,23 @@ describe("WhatMoved", () => {
     expect(screen.getByText(/1 to sit with/i)).toBeInTheDocument();
     expect(screen.getByText(/1 moved onward/i)).toBeInTheDocument();
     expect(screen.getByText(/1 comparison made/i)).toBeInTheDocument();
+  });
+
+  it("counts usage results into 'in your life' and 'resting for now' lines", () => {
+    const decisions: MovedDecision[] = [
+      usage("uses", 2_000),
+      usage("uses", 3_000),
+      usage("not_uses", 4_000),
+    ];
+    render(<WhatMoved decisions={decisions} windowStartMs={START} nowMs={NOW} hubHref="/hub" />);
+    expect(screen.getByText(/2 in your life/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 resting for now/i)).toBeInTheDocument();
+  });
+
+  it("renders no usage lines for a triage-only recap", () => {
+    render(<WhatMoved decisions={[triage("top", 2_000)]} windowStartMs={START} nowMs={NOW} hubHref="/hub" />);
+    expect(screen.queryByText(/in your life/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/resting for now/i)).not.toBeInTheDocument();
   });
 
   it("announces the recap via an aria-live region", () => {
