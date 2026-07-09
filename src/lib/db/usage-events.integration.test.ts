@@ -268,6 +268,9 @@ describeDb("single decisions route accepts usage (route -> controller -> repo ->
     );
     expect(triageRes.status).toBe(201);
     const snapshot = await prefsSnapshot(db, collectionId, ownerId);
+    // Guard against a vacuous pass: the snapshot must be NON-EMPTY, else a
+    // vanished seed would make byte-identity trivially true.
+    expect(snapshot).not.toBe("[]");
 
     // Sleep so a spurious recompute's JS-clock updatedAt could not collide with
     // the triage's millisecond.
