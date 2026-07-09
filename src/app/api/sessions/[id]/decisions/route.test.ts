@@ -59,7 +59,13 @@ function req(body: unknown): any {
 beforeEach(() => {
   vi.clearAllMocks();
   mockGetSession.mockResolvedValue({ user: { id: CURATOR } });
-  mockGetDb.mockReturnValue({ db: "fake" });
+  // getDb() returns the drizzle instance directly (const db = getDb()). db is only
+  // touched here for the stln live-item check (the write path is mocked via
+  // withTransaction); the select chain resolves to itm_1 as a live item so the check
+  // passes and these observability/analytics paths are reached.
+  mockGetDb.mockReturnValue({
+    select: () => ({ from: () => ({ where: () => Promise.resolve([{ id: "itm_1" }]) }) }),
+  });
   // status: "active" — an in-progress session clears the duv4 status gate so
   // these observability/analytics paths are reached (a terminal session 409s first).
   mockGetSessionOrNull.mockResolvedValue({ collectionId: COLLECTION, curatorId: CURATOR, status: "active" });
