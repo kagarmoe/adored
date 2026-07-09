@@ -66,6 +66,17 @@ function setAside(over: Partial<Extract<PendingEntry, { kind: "disposition" }>> 
   };
 }
 
+function usage(over: Partial<Extract<PendingEntry, { kind: "decision" }>> = {}): PendingEntry {
+  return {
+    kind: "decision",
+    clientKey: newClientKey(),
+    type: "usage",
+    decision: { itemId: `item_${ulid().toLowerCase()}`, result: "uses" },
+    enqueuedAt: new Date().toISOString(),
+    ...over,
+  };
+}
+
 const jsonRes = (status: number, body: unknown = {}): Response =>
   ({ ok: status >= 200 && status < 300, status, json: async () => body }) as unknown as Response;
 
@@ -132,6 +143,41 @@ describe("drain — ordering", () => {
     });
     expect(fetchMock.mock.calls[2][0]).toBe(BATCH_URL);
     expect(batchBodyKeys(fetchMock.mock.calls[2][1])).toEqual([c.clientKey]);
+    expect(readQueue(keyA)).toEqual([]);
+  });
+
+  it("flushes [usage, triage, set_aside, usage] as batch(2) → disposition POST → batch(1), usage riding contiguous decision runs verbatim (spec §5)", async () => {
+    const engine = await loadEngine();
+    const fetchMock = installAutoFetch();
+    const u1 = usage();
+    const t = triage();
+    const s = setAside();
+    const u2 = usage();
+    await enqueue(keyA, u1);
+    await enqueue(keyA, t);
+    await enqueue(keyA, s);
+    await enqueue(keyA, u2);
+
+    await engine.drain([keyA]);
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    // First contiguous decision run: usage + triage batched together, order kept.
+    expect(fetchMock.mock.calls[0][0]).toBe(BATCH_URL);
+    expect(batchBodyKeys(fetchMock.mock.calls[0][1])).toEqual([u1.clientKey, t.clientKey]);
+    const firstBody = JSON.parse(String(fetchMock.mock.calls[0][1]?.body)) as {
+      decisions: Array<{ type: string }>;
+    };
+    // The usage type flows verbatim into the batch body — no rewrite, no coercion.
+    expect(firstBody.decisions.map((d) => d.type)).toEqual(["usage", "triage"]);
+    // The disposition breaks the run and flushes alone.
+    expect(fetchMock.mock.calls[1][0]).toBe(DISPOSITIONS_URL);
+    expect(JSON.parse(String(fetchMock.mock.calls[1][1]?.body))).toEqual({
+      itemId: (s as { itemId: string }).itemId,
+      disposition: "set_aside",
+    });
+    // Second run: the trailing usage entry alone.
+    expect(fetchMock.mock.calls[2][0]).toBe(BATCH_URL);
+    expect(batchBodyKeys(fetchMock.mock.calls[2][1])).toEqual([u2.clientKey]);
     expect(readQueue(keyA)).toEqual([]);
   });
 

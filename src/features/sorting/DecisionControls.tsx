@@ -14,7 +14,7 @@ export type DecisionSubmit<D = Record<string, unknown>> =
 
 interface DecisionControlsProps<D extends Record<string, unknown> = Record<string, unknown>> {
   submit: DecisionSubmit<D>;
-  type: "triage" | "pairwise_compare";
+  type: "triage" | "pairwise_compare" | "usage";
   decisions: Array<{ label: string; decision: D }>;
   /**
    * A decision label already standing for this item (undo-as-revisit, F19):

@@ -35,6 +35,17 @@ function triageEntry(overrides: Partial<Extract<PendingEntry, { kind: "decision"
   };
 }
 
+function usageEntry(overrides: Partial<Extract<PendingEntry, { kind: "decision" }>> = {}): PendingEntry {
+  return {
+    kind: "decision",
+    clientKey: newClientKey(),
+    type: "usage",
+    decision: { itemId: "item_01hzy5e8n5g3km9r2p4q6s7t8v", result: "uses" },
+    enqueuedAt: new Date().toISOString(),
+    ...overrides,
+  };
+}
+
 function dispositionEntry(overrides: Partial<Extract<PendingEntry, { kind: "disposition" }>> = {}): PendingEntry {
   return {
     kind: "disposition",
@@ -107,6 +118,14 @@ describe("enqueue", () => {
     await enqueue(keyA, e3);
     expect(readQueue(keyA).map((e) => e.clientKey)).toEqual([e1.clientKey, e2.clientKey, e3.clientKey]);
     expect(readQueueCollectionId(keyA)).toBe("col_1");
+  });
+
+  it("round-trips an enqueued usage entry through readQueue with its type preserved (ordinary decision entry)", async () => {
+    const entry = usageEntry();
+    await enqueue(keyA, entry);
+    const [read] = readQueue(keyA);
+    expect(read).toEqual(entry);
+    expect(read).toMatchObject({ kind: "decision", type: "usage" });
   });
 
   it("dispatches a same-document change event carrying the storage key (flusher trigger seam)", async () => {
