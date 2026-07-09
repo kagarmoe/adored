@@ -110,7 +110,7 @@ test.describe("sort — 'Take a break' pause → calm landing → Resume", () =>
     // triage entry is reachable from here (the sort continues).
     await expect(page.getByText(/Your sort is safe/)).toHaveCount(0);
     await expect(
-      page.getByRole("link", { name: "Triage" }).first(),
+      page.getByRole("link", { name: "Get acquainted" }).first(),
     ).toBeVisible();
 
     // ── Re-confirm the landing now shows the sort as ACTIVE (resumed), and the

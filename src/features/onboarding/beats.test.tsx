@@ -47,7 +47,7 @@ describe("WelcomePurpose", () => {
 describe("WelcomeTriage", () => {
   it("renders the kicker + shared explainer and NOT the old reassurance line", () => {
     render(<WelcomeTriage index={0} onOutcome={vi.fn()} />);
-    // Kicker reuses the hub's exact taught noun, composed "A Triage round".
+    // Kicker reuses the hub's exact taught noun from ROUND_COPY (composed "A <name> round").
     expect(screen.getByText(`A ${ROUND_COPY.triage.name} round`)).toBeInTheDocument();
     expect(screen.getByText(ROUND_COPY.triage.explainer)).toBeInTheDocument();
     // The old hand-rolled reassurance line is gone.
@@ -93,7 +93,7 @@ describe("WelcomeCompare", () => {
 
   it("renders the kicker + shared explainer, the dominant prompt, and the compare sub-line", () => {
     render(<WelcomeCompare onOutcome={vi.fn()} />);
-    // Kicker reuses the hub's exact taught noun, composed "A Compare round".
+    // Kicker reuses the hub's exact taught noun from ROUND_COPY (composed "A <name> round").
     expect(screen.getByText(`A ${ROUND_COPY.compare.name} round`)).toBeInTheDocument();
     expect(screen.getByText(ROUND_COPY.compare.explainer)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Which do you love more?" })).toBeInTheDocument();
