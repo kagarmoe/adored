@@ -117,8 +117,14 @@ describe("TriagePage ceiling-free progress (TONE 1 & 4)", () => {
       .filter((el) => !el.className.includes("sr-only"));
     expect(ofNMatches).toHaveLength(0);
     expect(screen.queryByText(/\d+\s+(left|remaining|to go|undecided)/i)).not.toBeInTheDocument();
-    // No filling progress bar (an inline width style is the tell of the old bar).
-    expect(container.querySelector('[style*="width"]')).toBeNull();
+    // No filling per-item progress bar (an inline width style is the tell of the old bar).
+    // The default round is now timed (Task 8: DEFAULT_ROUND_BOX = 2), so the sanctioned
+    // round-timer fill (inside role="timer") legitimately renders — exclude it while still
+    // forbidding any OTHER width-styled (item-progress) element.
+    const widthEls = Array.from(container.querySelectorAll('[style*="width"]')).filter(
+      (el) => !el.closest('[role="timer"]'),
+    );
+    expect(widthEls).toHaveLength(0);
   });
 
   it("omits the cue entirely before the first decision (no '0 decided')", async () => {

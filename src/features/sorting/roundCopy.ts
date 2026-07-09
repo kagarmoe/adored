@@ -10,6 +10,12 @@ export const ROUND_COPY = {
 
 export const COMPARE_SUBLINE = "Tap the one you love more. Tie or skip whenever you like.";
 
+// The /welcome walkthrough teaches with a NEUTRAL round noun distinct from the
+// person-side arc names in ROUND_COPY (user decision): interpolating those names
+// as "A <name> round" read awkwardly ("A Which do you love more? round"). One
+// home so both Welcome beats assert against the same string.
+export const WELCOME_ROUND_KICKER = "A sorting round";
+
 // Usage-round pass button. The escape's contract lives in its accessible name
 // (WCAG 2.5.3: the accessible name begins with the visible label) — this is the
 // round copy's one home, mirroring the DeferControl precedent.

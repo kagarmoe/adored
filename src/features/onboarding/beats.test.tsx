@@ -15,7 +15,7 @@ import {
   type CompareOutcome,
   type TriageOutcome,
 } from "./sampleData";
-import { COMPARE_SUBLINE, ROUND_COPY } from "@/features/sorting/roundCopy";
+import { COMPARE_SUBLINE, ROUND_COPY, WELCOME_ROUND_KICKER } from "@/features/sorting/roundCopy";
 
 // The triage beat now renders the real sorting controls, which call useRouter()
 // unconditionally. Local mode never touches the router, but the hook still reads
@@ -47,8 +47,8 @@ describe("WelcomePurpose", () => {
 describe("WelcomeTriage", () => {
   it("renders the kicker + shared explainer and NOT the old reassurance line", () => {
     render(<WelcomeTriage index={0} onOutcome={vi.fn()} />);
-    // Kicker reuses the hub's exact taught noun from ROUND_COPY (composed "A <name> round").
-    expect(screen.getByText(`A ${ROUND_COPY.triage.name} round`)).toBeInTheDocument();
+    // Kicker is a neutral round noun distinct from the person-side arc names (user decision).
+    expect(screen.getByText(WELCOME_ROUND_KICKER)).toBeInTheDocument();
     expect(screen.getByText(ROUND_COPY.triage.explainer)).toBeInTheDocument();
     // The old hand-rolled reassurance line is gone.
     expect(screen.queryByText(/no wrong answers/i)).not.toBeInTheDocument();
@@ -93,8 +93,8 @@ describe("WelcomeCompare", () => {
 
   it("renders the kicker + shared explainer, the dominant prompt, and the compare sub-line", () => {
     render(<WelcomeCompare onOutcome={vi.fn()} />);
-    // Kicker reuses the hub's exact taught noun from ROUND_COPY (composed "A <name> round").
-    expect(screen.getByText(`A ${ROUND_COPY.compare.name} round`)).toBeInTheDocument();
+    // Kicker is a neutral round noun distinct from the person-side arc names (user decision).
+    expect(screen.getByText(WELCOME_ROUND_KICKER)).toBeInTheDocument();
     expect(screen.getByText(ROUND_COPY.compare.explainer)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Which do you love more?" })).toBeInTheDocument();
     expect(screen.getByText(COMPARE_SUBLINE)).toBeInTheDocument();
