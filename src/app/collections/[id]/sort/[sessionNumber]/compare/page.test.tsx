@@ -7,7 +7,7 @@ const { mockGetSession, mockRequireAccess, itemRepo, sessionRepo, prefRepo, deci
   mockGetSession: vi.fn(),
   mockRequireAccess: vi.fn(),
   itemRepo: { findByCollection: vi.fn() },
-  sessionRepo: { findByCollectionAndNumber: vi.fn() },
+  sessionRepo: { findByCollectionAndNumber: vi.fn(), findByCollectionAndCurator: vi.fn() },
   prefRepo: { findByCollection: vi.fn() },
   decisionRepo: { findBySession: vi.fn() },
   photoRepo: { findCoverPhotosByItemIds: vi.fn() },
@@ -39,6 +39,8 @@ beforeEach(() => {
   mockRequireAccess.mockResolvedValue(COLLECTION);
   itemRepo.findByCollection.mockResolvedValue([A, B]);
   sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_1", collectionId: "coll_01ABCDEF", number: 1, status: "active", curatorId: "u1" });
+  // listForCurator = findByCollectionAndCurator + one findBySession per curator session.
+  sessionRepo.findByCollectionAndCurator.mockResolvedValue([{ id: "sess_1" }]);
   // Both items are Love/Like so they're in the engine's rankable set; with no
   // comparison recorded yet, selectNextPair asks about exactly this pair.
   prefRepo.findByCollection.mockResolvedValue([
@@ -102,6 +104,7 @@ describe("ComparePage gentle progress text (Epic 0 Task 8 regression)", () => {
     decisionRepo.findBySession.mockResolvedValue([
       {
         id: "dec_1",
+        sessionId: "sess_1",
         type: "pairwise_compare",
         createdAt: new Date(10),
         decision: { itemAId: "item_a", itemBId: "item_b", result: "item_a" },
@@ -131,6 +134,7 @@ describe("ComparePage gentle progress text (Epic 0 Task 8 regression)", () => {
     decisionRepo.findBySession.mockResolvedValue([
       {
         id: "dec_1",
+        sessionId: "sess_1",
         type: "pairwise_compare",
         createdAt: new Date(10),
         decision: { itemAId: "item_a", itemBId: "item_b", result: "item_a" },
@@ -173,6 +177,53 @@ describe("ComparePage round chrome + copy (Epic 4c)", () => {
     // Regression guard: the utility/keep framing TONE.md forbids must not return.
     expect(screen.queryByRole("heading", { name: /reach for/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/\bkeep\b/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("ComparePage curator-wide compare selection (§7.3)", () => {
+  it("reads the curator log once via listForCurator — no per-session listBySession short-cut", async () => {
+    sessionRepo.findByCollectionAndCurator.mockResolvedValue([{ id: "sess_1" }]);
+
+    await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+
+    // listForCurator = findByCollectionAndCurator(collectionId, curatorId) + one
+    // findBySession per curator session. A stray direct listBySession would make
+    // findBySession fire without the curator lookup preceding it.
+    expect(sessionRepo.findByCollectionAndCurator).toHaveBeenCalledTimes(1);
+    expect(sessionRepo.findByCollectionAndCurator).toHaveBeenCalledWith("coll_01ABCDEF", "u1");
+    expect(decisionRepo.findBySession).toHaveBeenCalledTimes(1);
+    expect(decisionRepo.findBySession).toHaveBeenCalledWith("sess_1");
+  });
+
+  it("selection sees a prior-session comparison (→ all complete) while the recap count excludes it", async () => {
+    // A↔B were compared in a PRIOR session (sess_0). This session (sess_1) has no
+    // comparison. The curator log is the union of both sessions.
+    sessionRepo.findByCollectionAndCurator.mockResolvedValue([{ id: "sess_1" }, { id: "sess_0" }]);
+    decisionRepo.findBySession.mockImplementation((sid: string) =>
+      sid === "sess_0"
+        ? Promise.resolve([
+            {
+              id: "prior",
+              sessionId: "sess_0",
+              type: "pairwise_compare",
+              createdAt: new Date(10),
+              decision: { itemAId: "item_a", itemBId: "item_b", result: "item_a" },
+            },
+          ])
+        : Promise.resolve([]),
+    );
+
+    const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    render(ui);
+
+    // Selection read the curator-wide log → A↔B already ordered → no pair to offer.
+    // (Session-scoped selection would have seen an empty log and re-offered the pair.)
+    expect(screen.getByText("All comparisons complete")).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Bag A" })).not.toBeInTheDocument();
+
+    // The recap/count is the session-scoped subset (filtered to sess_1), so the
+    // prior-session comparison is excluded → the gentle count stays hidden at zero.
+    expect(screen.queryByText(/comparison(s)? made so far/)).not.toBeInTheDocument();
   });
 });
 

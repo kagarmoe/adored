@@ -57,12 +57,19 @@ export default async function ComparePage({ params }: ComparePageProps) {
     />
   );
 
-  const [items, preferences, decisions, dispositions] = await Promise.all([
+  const [items, preferences, curatorDecisions, dispositions] = await Promise.all([
     ItemController.fromDb(db).listItems(collection.id),
     PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id),
-    DecisionController.fromDb(db).listBySession(sortSession.id),
+    // ONE curator-wide read (§2.6/§7.3, Task-21 pattern): compare selection reads the
+    // same cross-session log the recompute does, so a pair ordered in a prior session
+    // isn't re-asked. The session-scoped subset below drives the recap + gentle count.
+    DecisionController.fromDb(db).listForCurator(collection.id, sortSession.curatorId),
     DispositionController.fromDb(db).listDispositions(collection.id, session.user.id),
   ]);
+
+  // Session-scoped subset for the recap + comparison count. The curator guard above
+  // makes the curator log a strict superset, so this equals the retired listBySession.
+  const decisions = curatorDecisions.filter((e) => e.sessionId === sortSession.id);
 
   // A disposed item (set_aside / deferred) is never offered for pairwise compare.
   const dispositionByItemId = new Map(dispositions.map((d) => [d.itemId, d.disposition]));
@@ -93,10 +100,11 @@ export default async function ComparePage({ params }: ComparePageProps) {
   // comparisons complete" screen still affirms the work done, not just an empty end.
   const comparisonsMade = decisions.filter((d) => d.type === "pairwise_compare").length;
 
+  // Curator-wide log so the offered pair agrees with the recompute (§7.3).
   const pair = selectNextPair({
     preferences,
     items,
-    decisions,
+    decisions: curatorDecisions,
     dispositionByItemId,
   });
 
