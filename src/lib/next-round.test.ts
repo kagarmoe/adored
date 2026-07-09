@@ -89,7 +89,6 @@ describe("recommendNextRound — ladder", () => {
     const { primary, whenUsageDemoted } = recommendNextRound({
       items,
       preferences,
-      decisions: [],
       curatorDecisions: [],
     });
 
@@ -107,7 +106,6 @@ describe("recommendNextRound — ladder", () => {
     const { primary, whenUsageDemoted } = recommendNextRound({
       items,
       preferences,
-      decisions: [],
       curatorDecisions: [],
     });
 
@@ -126,7 +124,6 @@ describe("recommendNextRound — ladder", () => {
     const { primary, whenUsageDemoted } = recommendNextRound({
       items,
       preferences,
-      decisions: [],
       curatorDecisions,
     });
 
@@ -138,9 +135,11 @@ describe("recommendNextRound — ladder", () => {
   it("recommends decide when triage + usage are known and the rankable set is fully ordered (no whenUsageDemoted)", () => {
     const items = [item("a", 1), item("b", 2)];
     const preferences = [pref("a", "top"), pref("b", "high")];
-    const curatorDecisions = [usageEvent("u-a", "a"), usageEvent("u-b", "b")];
-    // One comparison orders the pair → no pending pair.
-    const decisions = [compareEvent("d1", "a", "b", "item_a", 10)];
+    // One comparison orders the pair → no pending pair. The compare lives in the
+    // curator log (selection's input); the session subset mirrors it (one session).
+    const compare = compareEvent("d1", "a", "b", "item_a", 10);
+    const curatorDecisions = [usageEvent("u-a", "a"), usageEvent("u-b", "b"), compare];
+    const decisions = [compare];
 
     const { primary, whenUsageDemoted } = recommendNextRound({
       items,
@@ -153,11 +152,44 @@ describe("recommendNextRound — ladder", () => {
     expect(whenUsageDemoted).toBeUndefined();
   });
 
+  it("selects compare from the CURATOR-WIDE log: a pair ordered in a prior session is not re-recommended (§7.3)", () => {
+    // Both triaged + usage-known so the ladder reaches compare/decide. The a↔b
+    // comparison was made in a PRIOR session, so it lives in the curator log but NOT
+    // in this session's log (the empty session subset selection used to read).
+    const items = [item("a", 1), item("b", 2)];
+    const preferences = [pref("a", "top"), pref("b", "high")];
+    const priorCompare: DecisionEvent = {
+      id: "prior",
+      sessionId: "sess-0",
+      type: "pairwise_compare",
+      decision: { itemAId: "a", itemBId: "b", result: "item_a" },
+      createdAt: new Date(10),
+    };
+    const curatorDecisions = [usageEvent("u-a", "a"), usageEvent("u-b", "b"), priorCompare];
+
+    const { primary } = recommendNextRound({
+      items,
+      preferences,
+      curatorDecisions,
+    });
+    // Curator-wide: a↔b is already ordered → nothing left to compare → decide.
+    expect(primary.kind).toBe("decide");
+
+    // Contrast: the OLD §7.3 quirk read the session subset. Feed selection a log
+    // WITHOUT the prior compare (what the session-scoped input was) and the pair is
+    // unordered again → it would re-recommend compare.
+    const { primary: asIfSessionScoped } = recommendNextRound({
+      items,
+      preferences,
+      curatorDecisions: [usageEvent("u-a", "a"), usageEvent("u-b", "b")],
+    });
+    expect(asIfSessionScoped.kind).toBe("compare");
+  });
+
   it("recommends decide when there are no items at all", () => {
     const { primary, whenUsageDemoted } = recommendNextRound({
       items: [],
       preferences: [],
-      decisions: [],
       curatorDecisions: [],
     });
     expect(primary.kind).toBe("decide");
@@ -173,7 +205,6 @@ describe("recommendNextRound — ladder", () => {
     const { primary, whenUsageDemoted } = recommendNextRound({
       items,
       preferences,
-      decisions: [],
       curatorDecisions: [],
     });
 
@@ -193,7 +224,6 @@ describe("recommendNextRound — ladder", () => {
     const { primary } = recommendNextRound({
       items,
       preferences,
-      decisions: [],
       curatorDecisions,
       dispositionByItemId,
     });
@@ -210,7 +240,6 @@ describe("recommendNextRound — usage card copy (TONE)", () => {
     const { primary } = recommendNextRound({
       items,
       preferences,
-      decisions: [],
       curatorDecisions: [],
     });
 
@@ -228,7 +257,6 @@ describe("recommendNextRound — usage card copy (TONE)", () => {
     const { primary } = recommendNextRound({
       items,
       preferences,
-      decisions: [],
       curatorDecisions: [],
     });
 

@@ -24,9 +24,10 @@ export type NextRoundKind = "triage" | "usage" | "compare" | "decide";
 export interface NextRoundInput {
   items: Item[];
   preferences: CollectionPreferenceItem[];
-  /** Session-scoped log — the unchanged selectNextPair input (§7.3 quirk preserved). */
-  decisions: DecisionEvent[];
-  /** The §2.6 cross-session curator log — drives usage-known derivation. */
+  /** The §2.6 cross-session curator log — drives usage-known derivation AND
+   *  compare selection (selectNextPair), so both agree with the recompute.
+   *  (§7.3 fixed: selectNextPair is curator-wide; the hub feeds its own
+   *  session-scoped subset to SessionAnalytics, not this input.) */
   curatorDecisions: DecisionEvent[];
   dispositionByItemId?: Map<string, Disposition>;
 }
@@ -71,7 +72,7 @@ const DECIDE_ROUND: NextRound = {
 };
 
 function runLadder(input: NextRoundInput, includeUsage: boolean): NextRound {
-  const { items, preferences, decisions, curatorDecisions } = input;
+  const { items, preferences, curatorDecisions } = input;
   const dispositionByItemId = input.dispositionByItemId ?? new Map<string, Disposition>();
 
   const preferenceItemIds = new Set(preferences.map((p) => p.itemId));
@@ -87,7 +88,11 @@ function runLadder(input: NextRoundInput, includeUsage: boolean): NextRound {
     if (usageQueue.length > 0) return USAGE_ROUND;
   }
 
-  const pair = selectNextPair({ preferences, items, decisions, dispositionByItemId });
+  // §7.3 (fixed): feed the CURATOR-WIDE log — the same log the preference recompute
+  // reads — so this recommendation (and whenUsageDemoted's re-run, which shares this
+  // ladder) can never disagree with what the recompute would need next. A pair already
+  // ordered in a prior session is not re-recommended as "compare".
+  const pair = selectNextPair({ preferences, items, decisions: curatorDecisions, dispositionByItemId });
   if (pair) return COMPARE_ROUND;
 
   return DECIDE_ROUND;

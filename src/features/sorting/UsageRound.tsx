@@ -307,6 +307,7 @@ export function UsageRound({
     const fresh = round.goBack();
     if (fresh === null) return;
     claimedRef.current.delete(fresh.itemId); // re-presented fresh — the beat may act on it again
+    passesRef.current.delete(fresh.itemId); // reset the pass budget so a re-presented item cycles, not drops
     setNewlyAnswered((prev) => {
       const next = new Set(prev);
       next.delete(fresh.itemId);
