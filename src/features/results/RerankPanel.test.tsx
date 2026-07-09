@@ -13,7 +13,8 @@ import {
 } from "./rerank-copy";
 
 const pushMock = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: pushMock }) }));
+const refreshMock = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: pushMock, refresh: refreshMock }) }));
 
 function makeRows(): RerankRow[] {
   return [
@@ -40,6 +41,7 @@ function orderOf(fetchMock: ReturnType<typeof vi.fn>, call = 0): Array<{ rid: st
 
 beforeEach(() => {
   pushMock.mockClear();
+  refreshMock.mockClear();
 });
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -85,13 +87,17 @@ describe("RerankPanel — drag reorder issues ONE bulk PATCH with the new dense 
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe("/api/sort-results/res_1/items");
     expect((init as RequestInit).method).toBe("PATCH");
-    // Aqua moved to the end → dense 0..2 over [Blue, Cream, Aqua].
+    // Aqua moved to the end → dense 1..3 over [Blue, Cream, Aqua] (manualRank
+    // shares computedRank's 1-indexed space).
     expect(orderOf(fetchMock)).toEqual([
-      { rid: "ri_b", manualRank: 0 },
-      { rid: "ri_c", manualRank: 1 },
-      { rid: "ri_a", manualRank: 2 },
+      { rid: "ri_b", manualRank: 1 },
+      { rid: "ri_c", manualRank: 2 },
+      { rid: "ri_a", manualRank: 3 },
     ]);
     expect(rowNames()).toEqual(["Blue clutch", "Cream bag", "Aqua tote"]);
+    // The server-composed keepsake view (children) is materialized at load, so a
+    // SUCCESSFUL reorder refreshes it to reveal the new order without a reload.
+    await waitFor(() => expect(refreshMock).toHaveBeenCalledTimes(1));
   });
 });
 
@@ -110,6 +116,8 @@ describe("RerankPanel — optimistic update + rollback on PATCH failure", () => 
     // ...then the failed PATCH rolls it back to the original.
     await waitFor(() => expect(rowNames()).toEqual(["Aqua tote", "Blue clutch", "Cream bag"]));
     expect(fetchMock).toHaveBeenCalledTimes(1);
+    // A FAILED reorder must NOT refresh (the rollback is the whole state change).
+    expect(refreshMock).not.toHaveBeenCalled();
   });
 });
 
@@ -123,9 +131,9 @@ describe("RerankPanel — keyboard move-up / move-down issues the adjacent-swap 
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(orderOf(fetchMock)).toEqual([
-      { rid: "ri_b", manualRank: 0 },
-      { rid: "ri_a", manualRank: 1 },
-      { rid: "ri_c", manualRank: 2 },
+      { rid: "ri_b", manualRank: 1 },
+      { rid: "ri_a", manualRank: 2 },
+      { rid: "ri_c", manualRank: 3 },
     ]);
     expect(rowNames()).toEqual(["Blue clutch", "Aqua tote", "Cream bag"]);
   });
@@ -167,6 +175,23 @@ describe("RerankPanel — reset to the computed order (DELETE)", () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     expect(fetchMock.mock.calls[0][0]).toBe("/api/sort-results/res_1/items");
     expect((fetchMock.mock.calls[0][1] as RequestInit).method).toBe("DELETE");
+    // A successful reset refreshes the server-composed keepsake view.
+    await waitFor(() => expect(refreshMock).toHaveBeenCalledTimes(1));
+  });
+
+  it("a FAILED reset rolls back the order and does NOT refresh", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
+    vi.stubGlobal("fetch", fetchMock);
+    renderDraft([
+      { rid: "ri_c", itemId: "c", name: "Cream bag", computedRank: 2 },
+      { rid: "ri_a", itemId: "a", name: "Aqua tote", computedRank: 0 },
+      { rid: "ri_b", itemId: "b", name: "Blue clutch", computedRank: 1 },
+    ]);
+    enterReorder();
+    fireEvent.click(screen.getByRole("button", { name: BACK_TO_COMPUTED }));
+    // Optimistic revert, then rollback to the seeded hand-order on failure.
+    await waitFor(() => expect(rowNames()).toEqual(["Cream bag", "Aqua tote", "Blue clutch"]));
+    expect(refreshMock).not.toHaveBeenCalled();
   });
 });
 
@@ -207,9 +232,9 @@ describe("RerankPanel — a11y affordance sizing + reduced motion", () => {
 });
 
 describe("RerankPanel — finalized guard (§4.4)", () => {
-  it("shows NO reorder affordance on a finalized result and offers 'Make a revision'", () => {
+  it("shows NO reorder affordance on a finalized result and offers 'Make a revision' to the curator", () => {
     render(
-      <RerankPanel resultId="res_1" collectionId="my-bags" status="finalized" rows={makeRows()}>
+      <RerankPanel resultId="res_1" collectionId="my-bags" status="finalized" canRevise rows={makeRows()}>
         <div>NORMAL VIEW</div>
       </RerankPanel>,
     );
@@ -220,11 +245,23 @@ describe("RerankPanel — finalized guard (§4.4)", () => {
     expect(screen.getByText("NORMAL VIEW")).toBeInTheDocument();
   });
 
+  it("hides 'Make a revision' for a NON-curator (canRevise=false), still shows the keepsake", () => {
+    render(
+      <RerankPanel resultId="res_1" collectionId="my-bags" status="finalized" canRevise={false} rows={makeRows()}>
+        <div>NORMAL VIEW</div>
+      </RerankPanel>,
+    );
+    // A non-curator collaborator is never offered to fork someone else's keepsake.
+    expect(screen.queryByRole("button", { name: MAKE_A_REVISION })).toBeNull();
+    expect(screen.queryByRole("button", { name: PUT_IN_ORDER })).toBeNull();
+    expect(screen.getByText("NORMAL VIEW")).toBeInTheDocument();
+  });
+
   it("'Make a revision' POSTs supersede and routes to the fresh draft", async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ number: 7 }) });
     vi.stubGlobal("fetch", fetchMock);
     render(
-      <RerankPanel resultId="res_1" collectionId="my-bags" status="finalized" rows={makeRows()}>
+      <RerankPanel resultId="res_1" collectionId="my-bags" status="finalized" canRevise rows={makeRows()}>
         <div>NORMAL VIEW</div>
       </RerankPanel>,
     );

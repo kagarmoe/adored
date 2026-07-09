@@ -76,7 +76,7 @@ export function ItemCard({
               the words (not color), and the neutral "active" variant is AA in
               both themes. No chip when usage is undecided (undefined). */}
           {usage && (
-            <Badge variant="active" className="w-fit text-xs font-medium">
+            <Badge variant="active" className="w-fit text-xs">
               {usageChipLabel(usage)}
             </Badge>
           )}

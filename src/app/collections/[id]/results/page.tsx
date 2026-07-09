@@ -136,7 +136,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
             // usage-known collection is not empty.
             <section className="space-y-4">
               <div className="space-y-1">
-                <h2 className="font-display text-2xl text-ink">The ones you live with</h2>
+                <h2 className="font-display text-2xl text-ink">The ones you&rsquo;ve weighed in on</h2>
                 <p className="text-ink-soft">A quiet note on each &mdash; in your life, or resting for now.</p>
               </div>
               <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">

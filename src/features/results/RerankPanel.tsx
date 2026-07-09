@@ -34,6 +34,10 @@ interface RerankPanelProps {
   status: "draft" | "finalized";
   /** Rows in current display order (manualRank ?? computedRank). */
   rows: RerankRow[];
+  /** Whether the viewer is the result's curator. Gates the finalized-branch
+   *  "Make a revision" affordance so a non-curator collaborator is never offered
+   *  to fork another curator's keepsake (mirrors the SharePanel curator gate). */
+  canRevise?: boolean;
   /** The normal (bucketed) results composition, shown when not reordering. */
   children: React.ReactNode;
 }
@@ -63,7 +67,8 @@ function reorder<T>(arr: readonly T[], from: number, to: number): T[] {
  * - A finalized result shows NO reorder affordance — reorder is a draft
  *   activity — and instead offers "Make a revision" (the supersede flow).
  */
-export function RerankPanel({ resultId, collectionId, status, rows, children }: RerankPanelProps) {
+export function RerankPanel({ resultId, collectionId, status, rows, canRevise = false, children }: RerankPanelProps) {
+  const router = useRouter();
   const [mode, setMode] = useState<"view" | "reorder">("view");
   const [order, setOrder] = useState<RerankRow[]>(rows);
   const [busy, setBusy] = useState(false);
@@ -103,10 +108,15 @@ export function RerankPanel({ resultId, collectionId, status, rows, children }: 
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            order: next.map((r, i) => ({ rid: r.rid, manualRank: i })),
+            // 1-indexed to share manualRank's numeric space with computedRank
+            // (1..N), so a mixed manual/NULL state never ties rank 0 to rank 1.
+            order: next.map((r, i) => ({ rid: r.rid, manualRank: i + 1 })),
           }),
         });
         if (!res.ok) throw new Error("reorder failed");
+        // The composed keepsake view (server-rendered `children`) is materialized
+        // at load; refresh it so the new hand-order is visible without a reload.
+        router.refresh();
       } catch {
         setOrder(prev); // clean rollback — one call, one revert (§4.3)
         setAnnounce(GENTLE_FAIL);
@@ -114,7 +124,7 @@ export function RerankPanel({ resultId, collectionId, status, rows, children }: 
         setBusy(false);
       }
     },
-    [order, resultId],
+    [order, resultId, router],
   );
 
   function moveByButton(index: number, dir: "up" | "down") {
@@ -145,6 +155,7 @@ export function RerankPanel({ resultId, collectionId, status, rows, children }: 
     try {
       const res = await fetch(`/api/sort-results/${resultId}/items`, { method: "DELETE" });
       if (!res.ok) throw new Error("reset failed");
+      router.refresh(); // re-render the server-composed keepsake at the reset order
     } catch {
       setOrder(prev);
       setAnnounce(GENTLE_FAIL);
@@ -163,12 +174,16 @@ export function RerankPanel({ resultId, collectionId, status, rows, children }: 
 
   if (status === "finalized") {
     // §4.4 finalized guard: no reorder affordance — reorder is a draft activity —
-    // offer the existing supersede flow instead.
+    // offer the existing supersede flow instead, but ONLY to the curator (mirrors
+    // the SharePanel curator gate). A non-curator collaborator sees the keepsake,
+    // never an affordance to fork someone else's result.
     return (
       <div className="space-y-6">
-        <div>
-          <RevisionButton resultId={resultId} collectionId={collectionId} />
-        </div>
+        {canRevise && (
+          <div>
+            <RevisionButton resultId={resultId} collectionId={collectionId} />
+          </div>
+        )}
         {children}
       </div>
     );

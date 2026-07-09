@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, fireEvent } from "@testing-library/react";
 
 const { mockGetSession, mockRequireAccess, redirectMock, resultRepo, resultItemRepo, itemRepo, shareRepo, photoRepo } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
@@ -142,7 +142,7 @@ describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () =
     expect(screen.queryByRole("button", { name: "Make a revision" })).toBeNull();
   });
 
-  it("hides the reorder affordance on a FINALIZED result and offers 'Make a revision'", async () => {
+  it("hides the reorder affordance on a FINALIZED result and offers 'Make a revision' to the curator", async () => {
     resultRepo.findByCollectionAndNumber.mockResolvedValue({
       id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "finalized", curatorId: "u1",
     });
@@ -150,6 +150,40 @@ describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () =
     render(ui);
     expect(screen.queryByRole("button", { name: "Put in order by hand" })).toBeNull();
     expect(screen.getByRole("button", { name: "Make a revision" })).toBeInTheDocument();
+  });
+
+  // F-UX-I3: the finalized "Make a revision" affordance is curator-gated (mirrors
+  // the SharePanel gate) — a non-curator collaborator must not be offered to fork
+  // another curator's keepsake.
+  it("hides 'Make a revision' for a NON-curator viewing a finalized result", async () => {
+    resultRepo.findByCollectionAndNumber.mockResolvedValue({
+      id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "finalized", curatorId: "someone_else",
+    });
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.queryByRole("button", { name: "Make a revision" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Put in order by hand" })).toBeNull();
+  });
+
+  // F-UX-I2: the hand-order list is scoped to the LOVED tier — an Onward (low)
+  // row is not draggable/in the list (cross-tier hand-order is a follow-up). The
+  // Onward item still renders read-only in the composed keepsake view.
+  it("scopes the reorder list to loved-tier rows, excluding Onward items", async () => {
+    resultRepo.findByCollectionAndNumber.mockResolvedValue({
+      id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "draft", curatorId: "u1",
+    });
+    resultItemRepo.findByResult.mockResolvedValue([
+      { id: "ri_hero", itemId: "item_hero", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null },
+      { id: "ri_rest", itemId: "item_rest", computedRank: 2, manualRank: null, computedBucket: "low", manualBucket: null },
+    ]);
+    itemRepo.findByCollection.mockResolvedValue([HERO, REST]);
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    fireEvent.click(screen.getByRole("button", { name: "Put in order by hand" }));
+    const rows = screen.getAllByTestId("rerank-row");
+    const names = rows.map((li) => within(li).getByText(/Bag/).textContent);
+    expect(names).toEqual(["Hero Bag"]); // the loved (top) row only
+    expect(names).not.toContain("Rest Bag"); // the Onward (low) row is excluded
   });
 });
 

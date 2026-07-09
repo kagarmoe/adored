@@ -77,19 +77,23 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
     return c ? getPhotoAssetUrlForPhoto(c, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
   };
 
-  // Epic S S3b: the flat reorder list works over the WHOLE ranking (loved + onward)
-  // in current display order. Item name + cover are resolved server-side (the
-  // client never touches the item store or photo store); computedRank rides along
-  // so "Back to the computed order" can revert optimistically.
+  // Epic S S3b: the flat hand-order list is scoped to the LOVED tier — what
+  // manualRank meaningfully orders. Onward (resting) rows are excluded so a
+  // within-tier reorder visibly sticks (dragging an Onward row wouldn't change
+  // its bucket, which read as "my arrangement didn't hold"); cross-tier hand-order
+  // is a follow-up (purses-9v1f.1). Onward items still render read-only in the
+  // composed keepsake view. Item name + cover are resolved server-side (the client
+  // never touches the item store or photo store); computedRank rides along so
+  // "Back to the suggested order" can revert optimistically.
   const collectionSegment = collection.slug ?? collection.id;
-  const rerankRows: RerankRow[] = sortedResultItems
-    .map((ri): RerankRow | null => {
-      const item = itemById.get(ri.itemId);
-      return item
-        ? { rid: ri.id, itemId: item.id, name: itemDisplayName(item), coverUrl: coverUrl(item.id), computedRank: ri.computedRank }
-        : null;
-    })
-    .filter((r): r is RerankRow => r !== null);
+  const isCurator = result.curatorId === session.user.id;
+  const rerankRows: RerankRow[] = loved.map(({ ri, item }) => ({
+    rid: ri.id,
+    itemId: item.id,
+    name: itemDisplayName(item),
+    coverUrl: coverUrl(item.id),
+    computedRank: ri.computedRank,
+  }));
 
   return (
     <AppLayout
@@ -128,6 +132,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
             collectionId={collectionSegment}
             status={result.status}
             rows={rerankRows}
+            canRevise={isCurator}
           >
             <RankedResults
               loved={loved}
@@ -139,7 +144,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
           </RerankPanel>
         )}
 
-        {result.status === "finalized" && result.curatorId === session.user.id && (
+        {result.status === "finalized" && isCurator && (
           <SharePanel
             resultId={result.id}
             initialShares={shares}

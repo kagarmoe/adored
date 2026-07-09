@@ -5,6 +5,7 @@ import {
   DeleteResultStateError,
   SupersedeStateError,
   FinalizeStateError,
+  ReorderFinalizedError,
   ResultItemNotInResultError,
 } from "@/server/services/SortResultService";
 import { CurrentSessionExistsError } from "@/server/repositories/implementations/SessionRepository";
@@ -22,6 +23,7 @@ import { CurrentSessionExistsError } from "@/server/repositories/implementations
  *   DeleteResultStateError
  *   | SupersedeStateError
  *   | FinalizeStateError
+ *   | ReorderFinalizedError
  *   | CurrentSessionExistsError → 409 (error.message)
  *   ResultItemNotInResultError → 404 (error.message)
  *   UnauthorizedError
@@ -43,6 +45,7 @@ export function errorResponse(error: unknown): NextResponse {
     error instanceof DeleteResultStateError ||
     error instanceof SupersedeStateError ||
     error instanceof FinalizeStateError ||
+    error instanceof ReorderFinalizedError ||
     error instanceof CurrentSessionExistsError
   ) {
     return NextResponse.json({ error: error.message }, { status: 409 });

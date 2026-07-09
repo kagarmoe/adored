@@ -19,7 +19,13 @@ const ReorderResultItemsSchema = z.object({
       manualRank: z.number().int(),
     }),
   ),
-});
+  // Validate at the boundary: a batch that names the same rid twice is malformed
+  // (its manualRank is ambiguous). Reject it → 400 rather than let the last write
+  // win non-deterministically.
+}).refine(
+  ({ order }) => new Set(order.map((o) => o.rid)).size === order.length,
+  { message: "Duplicate rid in reorder batch", path: ["order"] },
+);
 
 
 export class ResultItemController {

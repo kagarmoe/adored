@@ -223,6 +223,10 @@ describe("Decide Standing — usage-only collection (F5 gate)", () => {
 
     // NOT the gentle empty state.
     expect(screen.queryByText("Nothing to see yet — and that’s fine.")).toBeNull();
+    // F-UX-M2: the heading is honest — it does not claim possession ("live with")
+    // that the Resting rows in the same section contradict.
+    expect(screen.getByRole("heading", { name: /the ones you.?ve weighed in on/i })).toBeInTheDocument();
+    expect(screen.queryByText(/the ones you live with/i)).toBeNull();
     // The usage-known items appear, each with its chip.
     expect(within(screen.getByText("In your life").closest(".isolate")!).getByText("Alpha")).toBeInTheDocument();
     expect(within(screen.getByText("Resting").closest(".isolate")!).getByText("Bravo")).toBeInTheDocument();

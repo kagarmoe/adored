@@ -10,8 +10,9 @@ export const PUT_IN_ORDER = "Put in order by hand";
 /** Leaves reorder mode. */
 export const DONE_ARRANGING = "Done";
 
-/** Resets the manual overlay — NULLs manualRank for every item. */
-export const BACK_TO_COMPUTED = "Back to the computed order";
+/** Resets the manual overlay — NULLs manualRank for every item. Person-side copy
+ *  ("suggested", not the machinery word "computed"). */
+export const BACK_TO_COMPUTED = "Back to the suggested order";
 
 /** The finalized keepsake is immutable; reorder is a draft activity, so a
  *  finalized result offers the existing supersede flow instead. */

@@ -13,6 +13,7 @@ import { ItemRepository } from "@/server/repositories/implementations/ItemReposi
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
+import { SortResultService, ReorderFinalizedError } from "@/server/services/SortResultService";
 
 const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
 // Flat-replace BOTH exports the routes use, derived from one spy (spread form pulls in nodemailer).
@@ -200,6 +201,53 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     );
     expect(res.status).toBe(400);
     expect((await new SortResultItemRepository(db).findById(items[0].id))!.manualRank).toBeNull();
+  });
+
+  // F-Data-M2: a batch that names the same rid twice is ambiguous — reject it at
+  // the Zod boundary (400) rather than let the last write win non-deterministically.
+  it("400s a batch with a DUPLICATE rid and writes nothing", async () => {
+    const { db } = getTestDb();
+    const { resultId, items } = await seedResultWithItems(ownerId, ownerId);
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await reorderItems(
+      patchReq({ order: [
+        { rid: items[0].id, manualRank: 1 },
+        { rid: items[0].id, manualRank: 2 },
+      ] }) as any,
+      { params: { id: resultId } },
+    );
+    expect(res.status).toBe(400);
+    expect((await new SortResultItemRepository(db).findById(items[0].id))!.manualRank).toBeNull();
+  });
+
+  // F-Data-I1: the finalized-immutability guard lives INSIDE the write transaction
+  // (a FOR UPDATE row lock + status re-check), not only in the route's pre-tx gate.
+  // Calling the service directly on a finalized result (bypassing the route gate,
+  // the way a TOCTOU race would) still rejects and writes nothing.
+  it("in-tx guard: reorderResultItems on a FINALIZED result throws and writes nothing", async () => {
+    const { db } = getTestDb();
+    const { resultId, items } = await seedResultWithItems(ownerId, ownerId);
+    // Finalize AFTER seeding a draft — the route would 409 pre-tx, but here we
+    // hit the service directly to prove the guard is in the transaction.
+    await new SortResultRepository(db).update(resultId, { status: "finalized" });
+    await expect(
+      SortResultService.fromDb(db).reorderResultItems(resultId, [
+        { rid: items[0].id, manualRank: 1 },
+      ]),
+    ).rejects.toBeInstanceOf(ReorderFinalizedError);
+    expect((await new SortResultItemRepository(db).findById(items[0].id))!.manualRank).toBeNull();
+  });
+
+  it("in-tx guard: resetManualOverridesForResult on a FINALIZED result throws and leaves overrides intact", async () => {
+    const { db } = getTestDb();
+    const { resultId, items } = await seedResultWithItems(ownerId, ownerId);
+    const repo = new SortResultItemRepository(db);
+    await repo.update(items[0].id, { manualRank: 99, manualBucket: "top" });
+    await new SortResultRepository(db).update(resultId, { status: "finalized" });
+    await expect(
+      SortResultService.fromDb(db).resetManualOverridesForResult(resultId),
+    ).rejects.toBeInstanceOf(ReorderFinalizedError);
+    expect((await repo.findById(items[0].id))!.manualRank).toBe(99);
   });
 
   it("DELETE clears manualRank/manualBucket for every item (back to the computed order)", async () => {

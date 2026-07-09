@@ -42,6 +42,20 @@ export class FinalizeStateError extends Error {
 }
 
 /**
+ * Thrown when a re-rank or reset targets a result that is no longer a draft.
+ * Re-asserted INSIDE the write transaction (after a FOR UPDATE row lock), so a
+ * finalize that commits between the route's pre-tx status check and the write
+ * (the finalized-immutability TOCTOU) can no longer slip a manual-overlay change
+ * onto a finalized keepsake. The route maps it to 409 (same as the pre-tx gate).
+ */
+export class ReorderFinalizedError extends Error {
+  constructor() {
+    super("Result is finalized");
+    this.name = "ReorderFinalizedError";
+  }
+}
+
+/**
  * Thrown when a bulk re-rank batch names a rid that is not an item of the target
  * result (a foreign/absent rid). Raised INSIDE the reorder transaction so the
  * whole batch rolls back; the route maps it to 404 (mirrors the per-item route's
@@ -268,6 +282,11 @@ export class SortResultService {
     return withTransaction(
       this.db,
       async (tx) => {
+        // Lock the result row and re-assert draft status IN-TX: a finalize that
+        // committed after the route's pre-tx 409 gate now serializes here, so a
+        // re-rank can never land on a finalized keepsake (TOCTOU).
+        const result = await new SortResultRepository(tx).findByIdForUpdate(resultId);
+        if (result && result.status !== "draft") throw new ReorderFinalizedError();
         const itemRepo = new SortResultItemRepository(tx);
         const validIds = new Set(
           (await itemRepo.findByResult(resultId)).map((i) => i.id),
@@ -283,13 +302,23 @@ export class SortResultService {
   }
 
   /**
-   * Epic S S3a: clear the manual overlay for EVERY item of a result in one
-   * statement — back to the computed order. A single UPDATE is atomic on its own,
-   * so no explicit transaction is needed.
+   * Epic S S3a: clear the manual overlay for EVERY item of a result — back to the
+   * suggested order. Runs in a transaction that FIRST locks the result row and
+   * re-asserts draft status (the same finalized-immutability TOCTOU guard as
+   * reorderResultItems), so a concurrent finalize serializes with the reset.
    */
   async resetManualOverridesForResult(resultId: string): Promise<SortResultItem[]> {
-    await this.sortResultItemRepo.clearManualOverridesByResult(resultId);
-    return this.sortResultItemRepo.findByResult(resultId);
+    return withTransaction(
+      this.db,
+      async (tx) => {
+        const result = await new SortResultRepository(tx).findByIdForUpdate(resultId);
+        if (result && result.status !== "draft") throw new ReorderFinalizedError();
+        const itemRepo = new SortResultItemRepository(tx);
+        await itemRepo.clearManualOverridesByResult(resultId);
+        return itemRepo.findByResult(resultId);
+      },
+      { op: "reset_result_items", ctx: { resultId } },
+    );
   }
 
   async deleteResultItem(id: string): Promise<void> {
