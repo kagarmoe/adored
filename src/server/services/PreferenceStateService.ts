@@ -4,6 +4,7 @@ import type { DecisionEventRepository } from "@/server/repositories/implementati
 import type { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import type { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import type { ScoringService } from "@/server/services/ScoringService";
+import { loadCuratorDecisionEvents } from "@/server/services/decision-log";
 import {
   deriveOrder,
   RANKABLE_BUCKETS,
@@ -93,18 +94,15 @@ export class PreferenceStateService {
     return new Map(order.map((id, i) => [id, i]));
   }
 
-  // The curator's non-deleted sessions' decision events, fetched once and in
-  // parallel (findByCollectionAndCurator yields the same session set the scorer
-  // scopes to). Shared by bucket scoring and the pairwise mapping.
+  // ONE definition of "the curator's decision log" (spec §2.6): delegates to the
+  // shared helper so the recompute and the round page (DecisionController
+  // .listForCurator) provably read the same event set. Shared by bucket scoring
+  // and the pairwise mapping.
   private async loadDecisionEvents(
     collectionId: string,
     curatorId: string,
   ): Promise<DecisionEvent[]> {
-    const sessions = await this.sessionRepo.findByCollectionAndCurator(collectionId, curatorId);
-    const perSession = await Promise.all(
-      sessions.map((s) => this.decisionRepo.findBySession(s.id)),
-    );
-    return perSession.flat();
+    return loadCuratorDecisionEvents(this.sessionRepo, this.decisionRepo, collectionId, curatorId);
   }
 
   async getItemPreferences(
