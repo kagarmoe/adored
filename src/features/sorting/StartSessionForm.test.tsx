@@ -6,8 +6,8 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }));
 
-import { StartSessionForm } from "./StartSessionForm";
-import { getRoundBox } from "@/lib/round-preference";
+import { StartSessionForm, TIMED_BOX_HELPER, NO_TIMER_HELPER } from "./StartSessionForm";
+import { getRoundBox, ROUND_BOX_OPTIONS } from "@/lib/round-preference";
 
 // jsdom here does not expose a working localStorage on file:// URLs (same as
 // round-preference.test); install a minimal Map-backed Storage so the persistence
@@ -42,27 +42,41 @@ describe("StartSessionForm", () => {
     expect(body.collectionId).toBe("coll_01ULID"); // API body uses the ULID, not the slug
   });
 
-  it("offers the round-length options including a 'No timer' path (a11y 2.2.1)", () => {
+  it("renders the round-length options from the one home (ROUND_BOX_OPTIONS), 'No timer' a first-class peer", () => {
     render(<StartSessionForm collectionId="c" collectionSlug="s" />);
     const select = screen.getByRole("combobox", { name: /round length/i });
-    const labels = Array.from(select.querySelectorAll("option")).map((o) => o.textContent);
-    expect(labels).toEqual(["5 minutes", "10 minutes", "20 minutes", "No timer"]);
+    const opts = Array.from(select.querySelectorAll("option"));
+    // List identity against the single source of truth — never re-pin the label strings.
+    expect(opts.map((o) => o.value)).toEqual(ROUND_BOX_OPTIONS.map((o) => String(o.value)));
+    expect(opts.map((o) => o.textContent)).toEqual(ROUND_BOX_OPTIONS.map((o) => o.label));
   });
 
-  it("defaults the selection to the gentle 10-minute round box", () => {
+  it("defaults the selection to the gentle 2-minute round box", () => {
     render(<StartSessionForm collectionId="c" collectionSlug="s" />);
     const select = screen.getByRole("combobox", { name: /round length/i }) as HTMLSelectElement;
-    expect(select.value).toBe("10");
+    expect(select.value).toBe("2");
+  });
+
+  it("shows a quiet helper keyed to the selection — timed vs 'No timer'", () => {
+    render(<StartSessionForm collectionId="c" collectionSlug="s" />);
+    const select = screen.getByRole("combobox", { name: /round length/i });
+
+    // Default is a timed box → the gentle timed helper.
+    expect(screen.getByText(TIMED_BOX_HELPER)).toBeInTheDocument();
+    expect(screen.queryByText(NO_TIMER_HELPER)).not.toBeInTheDocument();
+
+    // Choosing "No timer" swaps the helper to the no-pressure line.
+    fireEvent.change(select, { target: { value: "none" } });
+    expect(screen.getByText(NO_TIMER_HELPER)).toBeInTheDocument();
+    expect(screen.queryByText(TIMED_BOX_HELPER)).not.toBeInTheDocument();
   });
 
   it("persists the chosen box to the device-local round preference (not the DB)", () => {
     render(<StartSessionForm collectionId="c" collectionSlug="s" />);
     const select = screen.getByRole("combobox", { name: /round length/i });
 
-    // "20" is a stale shipped option (Task 10 replaces the list); it persists then
-    // clamps on read to the new 5-minute ceiling — the clamp is the migration.
-    fireEvent.change(select, { target: { value: "20" } });
-    expect(getRoundBox()).toBe(5);
+    fireEvent.change(select, { target: { value: "0.5" } });
+    expect(getRoundBox()).toBe(0.5);
 
     fireEvent.change(select, { target: { value: "none" } });
     expect(getRoundBox()).toBe("none");
