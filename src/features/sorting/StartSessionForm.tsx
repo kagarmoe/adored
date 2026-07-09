@@ -42,7 +42,7 @@ export function StartSessionForm({ collectionId, collectionSlug }: StartSessionF
     const response = await fetch("/api/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ collectionId, goal, scope, timebox }),
+      body: JSON.stringify({ collectionId, goal, scope }),
     });
 
     if (!response.ok) {

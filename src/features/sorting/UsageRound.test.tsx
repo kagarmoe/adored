@@ -321,6 +321,35 @@ describe("UsageRound undo-as-revisit (F19)", () => {
     expect(screen.getByRole("button", { name: YES })).not.toHaveAttribute("aria-pressed");
   });
 
+  it("queued: Back resets the item's pass budget so a re-presented item CYCLES, never drops (purses-9kwd)", async () => {
+    const user = userEvent.setup();
+    renderRound(); // queue [A, B]
+
+    // A is passed once (seen=1) and cycles to the tail; B is passed once too so A
+    // returns to the head still carrying its one pass.
+    await user.click(screen.getByRole("button", { name: USAGE_PASS_ARIA_LABEL }));
+    await screen.findByRole("img", { name: "Bag B" });
+    await user.click(screen.getByRole("button", { name: USAGE_PASS_ARIA_LABEL }));
+    await screen.findByRole("img", { name: "Bag A" });
+
+    // Answer A, then Back to it — a queued undo re-presents A fresh. Its pass budget
+    // must reset here; otherwise the next Skip reads seen=2 and drops A immediately.
+    await user.click(screen.getByRole("button", { name: YES }));
+    await screen.findByRole("img", { name: "Bag B" });
+    await user.click(screen.getByRole("button", { name: /^back$/i }));
+    await screen.findByRole("img", { name: "Bag A" });
+
+    // A Skip on the re-presented A must CYCLE it (budget reset to 0 → seen=1), not
+    // drop it. Proof it survived: answering B brings A back around instead of
+    // exhausting the round into the recap.
+    await user.click(screen.getByRole("button", { name: USAGE_PASS_ARIA_LABEL }));
+    await screen.findByRole("img", { name: "Bag B" });
+    await user.click(screen.getByRole("button", { name: YES }));
+
+    expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /here.s what moved/i })).not.toBeInTheDocument();
+  });
+
   it("acked: the standing answer shows selected and a different tap enqueues a superseding entry", async () => {
     flusher.awaitAck.mockImplementation(() => Promise.resolve({ status: "created" }));
     const user = userEvent.setup();
