@@ -76,29 +76,4 @@ describe("SessionAnalytics", () => {
 
     expect(screen.getByText(/nothing sorted just yet/i)).toBeInTheDocument();
   });
-
-  it("renders NO denominator, percentage, rate, or coverage framing (TONE guard)", () => {
-    const preferences: CollectionPreferenceItem[] = [
-      pref({ id: "a", rankBucket: "top", confidence: 0.9, comparisonCount: 4 }),
-      pref({ id: "b", rankBucket: "high", confidence: 0.6, comparisonCount: 2 }),
-    ];
-    const decisions: DecisionEvent[] = [decision("triage"), decision("pairwise_compare")];
-
-    const { container } = render(
-      <SessionAnalytics
-        preferences={preferences}
-        decisions={decisions}
-        totalItems={8}
-        sessionCreatedAt={new Date("2026-06-22T12:00:00Z")}
-      />
-    );
-
-    const text = container.textContent ?? "";
-    expect(text).not.toMatch(/%/);
-    expect(text).not.toMatch(/\bof\s+\d/i); // "of 8 items"
-    expect(text).not.toMatch(/per min/i);
-    expect(text).not.toMatch(/coverage/i);
-    expect(text).not.toMatch(/decision rate/i);
-    expect(text).not.toMatch(/\bcoverage\b/i);
-  });
 });

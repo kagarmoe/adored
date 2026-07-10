@@ -170,6 +170,21 @@ jobs:
     outputs:
       ui: ${{ steps.filter.outputs.ui }}
       hot: ${{ steps.filter.outputs.hot }}
+      # Blast-radius: a change here can't be safely narrowed to one flow, so the
+      # e2e job runs the FULL suite (see the "Select e2e specs" step).
+      broad: ${{ steps.filter.outputs.broad }}
+      # Per-flow area flags. Each maps SOURCE paths -> the e2e AREA they exercise;
+      # the e2e job unions the true areas' specs (+ the layout/smoke/a11y floor)
+      # into a selective Playwright run. The area -> spec map lives in the
+      # "Select e2e specs" step; keep the two halves in sync.
+      sort: ${{ steps.filter.outputs.sort }}
+      results: ${{ steps.filter.outputs.results }}
+      onboarding: ${{ steps.filter.outputs.onboarding }}
+      auth: ${{ steps.filter.outputs.auth }}
+      collection: ${{ steps.filter.outputs.collection }}
+      members: ${{ steps.filter.outputs.members }}
+      items: ${{ steps.filter.outputs.items }}
+      profile: ${{ steps.filter.outputs.profile }}
     steps:
       - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v4
@@ -202,6 +217,83 @@ jobs:
               - 'scripts/seed-load.ts'
               - 'scripts/seed-load-core.ts'
               - 'scripts/bench-recompute.ts'
+            # Blast-radius paths: shared UI primitives, design tokens, global
+            # styles, build/dep config, the e2e harness itself, and broad
+            # server/db changes. A change here can affect ANY flow, so we can't
+            # safely narrow — force the FULL e2e suite. (Server/db-only changes
+            # keep ui==false and skip e2e entirely; broad only forces full when
+            # it rides along with a UI change that already set ui==true.)
+            broad:
+              - 'src/components/ui/**'
+              - 'src/lib/design/**'
+              - '**/*.css'
+              - 'tailwind.config.ts'
+              - 'postcss.config.mjs'
+              - 'next.config.mjs'
+              - 'e2e/**'
+              - 'playwright.config.ts'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'src/lib/db/**'
+              - 'src/server/**'
+            # ---- Per-flow AREA filters (SOURCE paths -> e2e area) ----
+            # '*' stands in for the dynamic [id] route segment (picomatch reads
+            # a literal '[id]' as a character class, so we avoid the brackets).
+            sort:
+              - 'src/features/sorting/**'
+              - 'src/features/sessions/**'
+              - 'src/app/collections/*/sort/**'
+              - 'src/lib/triage-selection.ts'
+              - 'src/lib/pairwise-selection.ts'
+              - 'src/lib/usage-selection.ts'
+              - 'src/lib/derive-usage.ts'
+              - 'src/lib/decision-order.ts'
+              - 'src/lib/decision-batch-schema.ts'
+              - 'src/lib/round-preference.ts'
+              - 'src/lib/round-timer.ts'
+              - 'src/lib/insertion-ranking.ts'
+            results:
+              - 'src/features/results/**'
+              - 'src/features/sessions/**'
+              - 'src/app/collections/*/results/**'
+              - 'src/app/shared-results/**'
+              - 'src/lib/next-round.ts'
+              - 'src/lib/results-buckets.ts'
+              - 'src/lib/what-moved.ts'
+            onboarding:
+              - 'src/features/onboarding/**'
+              - 'src/app/welcome/**'
+              - 'src/app/tutorial/**'
+            auth:
+              - 'src/middleware.ts'
+              - 'src/lib/auth.ts'
+              - 'src/lib/auth-client.ts'
+              - 'src/lib/auth-server.ts'
+              - 'src/lib/middleware-auth.ts'
+              - 'src/app/login/**'
+              - 'src/app/signup/**'
+              - 'src/app/api/auth/**'
+            collection:
+              - 'src/features/collections/**'
+              - 'src/features/pool/**'
+              - 'src/app/collections/page.tsx'
+              - 'src/app/collections/*/page.tsx'
+              - 'src/app/collections/*/edit/**'
+            members:
+              - 'src/app/collections/*/members/**'
+              - 'src/app/invitations/**'
+              - 'src/lib/collection-access.ts'
+            items:
+              - 'src/features/items/**'
+              - 'src/app/collections/*/items/**'
+              - 'src/lib/items.ts'
+              - 'src/lib/photos.ts'
+              - 'src/lib/photo-serving.ts'
+              - 'src/lib/photo-variants.ts'
+              - 'src/lib/heic.ts'
+            profile:
+              - 'src/features/profile/**'
+              - 'src/app/profile/**'
 
   # E2E only runs when `changes` says the UI moved. When it doesn't, this job is
   # skipped — which GitHub reports as success, so it can be a REQUIRED check
@@ -229,8 +321,77 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium webkit
 
+      # Decide which specs to run. FULL suite (specs="") when: merging to main
+      # (the safety net), a blast-radius change (broad), or a UI change that
+      # mapped to NO area (unknown surface -> don't under-test). Otherwise
+      # SELECTIVE: the union of the touched areas' specs plus the always-on
+      # layout/smoke/a11y floor. The area -> spec map below is the sibling of
+      # the source -> area filters in the `changes` job; keep them in sync.
+      - name: Select e2e specs
+        id: select
+        env:
+          REF: ${{ github.ref }}
+          BROAD: ${{ needs.changes.outputs.broad }}
+          A_SORT: ${{ needs.changes.outputs.sort }}
+          A_RESULTS: ${{ needs.changes.outputs.results }}
+          A_ONBOARDING: ${{ needs.changes.outputs.onboarding }}
+          A_AUTH: ${{ needs.changes.outputs.auth }}
+          A_COLLECTION: ${{ needs.changes.outputs.collection }}
+          A_MEMBERS: ${{ needs.changes.outputs.members }}
+          A_ITEMS: ${{ needs.changes.outputs.items }}
+          A_PROFILE: ${{ needs.changes.outputs.profile }}
+        run: |
+          set -euo pipefail
+          # Always-on floor: cheap, cross-cutting specs (layout + smoke + a11y).
+          FLOOR="e2e/layout.spec.ts e2e/smoke.spec.ts e2e/a11y.spec.ts"
+          area_specs=""
+          matched=0
+          add() { area_specs="$area_specs $1"; matched=1; }
+          if [ "$A_SORT" = "true" ]; then
+            add "e2e/compare.spec.ts e2e/not-mine-set-aside.spec.ts e2e/not-yet-defer.spec.ts e2e/session-create-after-set-aside.spec.ts e2e/session-pause.spec.ts e2e/session-undo.spec.ts e2e/sort-images.spec.ts e2e/sort-session.spec.ts e2e/usage-round.spec.ts"
+          fi
+          if [ "$A_RESULTS" = "true" ]; then
+            add "e2e/results.spec.ts e2e/results-onward.spec.ts"
+          fi
+          if [ "$A_ONBOARDING" = "true" ]; then
+            add "e2e/welcome-walkthrough.spec.ts"
+          fi
+          if [ "$A_AUTH" = "true" ]; then
+            add "e2e/auth.spec.ts e2e/auth-navigation.spec.ts"
+          fi
+          if [ "$A_COLLECTION" = "true" ]; then
+            add "e2e/adaptive-collection-workspace.spec.ts e2e/delete-collection.spec.ts"
+          fi
+          if [ "$A_MEMBERS" = "true" ]; then
+            add "e2e/members.spec.ts"
+          fi
+          if [ "$A_ITEMS" = "true" ]; then
+            add "e2e/item-page.spec.ts e2e/item-removal.spec.ts e2e/delete-photo.spec.ts e2e/image-perf.spec.ts e2e/image-rotate.spec.ts"
+          fi
+          if [ "$A_PROFILE" = "true" ]; then
+            add "e2e/profile.spec.ts"
+          fi
+          if [ "$REF" = "refs/heads/main" ] || [ "$BROAD" = "true" ] || [ "$matched" = "0" ]; then
+            mode="FULL"
+            list="(entire suite)"
+            echo "specs=" >> "$GITHUB_OUTPUT"
+          else
+            mode="SELECTIVE"
+            list="$FLOOR$area_specs"
+            echo "specs=$list" >> "$GITHUB_OUTPUT"
+          fi
+          {
+            echo "## E2E spec selection"
+            echo ""
+            echo "- Mode: **$mode**"
+            echo "- Specs: $list"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Empty steps.select.outputs.specs -> `npx playwright test` (full suite);
+      # a spec list -> only those files. The `setup` project (auth state) is a
+      # project dependency, so it runs regardless of the file filter.
       - name: Run e2e
-        run: npx playwright test
+        run: npx playwright test ${{ steps.select.outputs.specs }}
         env:
           DATABASE_URL_TEST: postgresql://postgres:test@localhost:5433/app_test
 

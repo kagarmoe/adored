@@ -1,11 +1,23 @@
 import { defineConfig, devices } from "@playwright/test";
 import { TEST_DATABASE_URL } from "./e2e/fixtures/db";
 
-// Full suite runs on three viewports (tablet-first, but must work on phone +
-// desktop too). Specs are behavioral; exact-layout assertions live in
-// layout.spec.ts. See docs/ARCHITECTURE.md (testing strategy).
+// Viewport strategy (see docs/ARCHITECTURE.md, testing strategy):
+//   - tablet (iPad/WebKit) is the DEFAULT and runs every spec. Ordinary runs
+//     (CI and local) exercise only this one viewport — no 3-way matrix.
+//   - phone and desktop are OPT-IN: select one explicitly when doing
+//     viewport-specific work, and ONLY that viewport runs:
+//       PW_VIEWPORT=phone   npx playwright test   → iPhone (WebKit) only
+//       PW_VIEWPORT=desktop npx playwright test   → Desktop Chrome (Chromium) only
+//   No env → tablet only. (Tradeoff: PR runs are WebKit-only; a Chromium-only
+//   regression is caught by an explicit PW_VIEWPORT=desktop run, not by default.)
 
-const DESKTOP = { viewport: { width: 1280, height: 800 } };
+const VIEWPORT = process.env.PW_VIEWPORT ?? "tablet";
+const VIEWPORT_DEVICE: Record<string, Record<string, unknown>> = {
+  tablet: devices["iPad (gen 7) landscape"],
+  phone: devices["iPhone 13"],
+  desktop: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
+};
+const ACTIVE_DEVICE = VIEWPORT_DEVICE[VIEWPORT] ?? VIEWPORT_DEVICE.tablet;
 
 // Run e2e on a dedicated port so a developer's `npm run dev` on :3000 (which
 // reads .env.local → the dev Neon DB) is never silently reused. With a unique
@@ -40,21 +52,11 @@ export default defineConfig({
       testMatch: "**/auth.setup.ts",
     },
     {
-      name: "tablet",
+      // The one active viewport (tablet by default; phone/desktop via PW_VIEWPORT).
+      // Runs every behavioral spec on that single viewport.
+      name: VIEWPORT,
       testIgnore: "**/auth.setup.ts",
-      use: { ...devices["iPad (gen 7) landscape"], storageState: AUTH_STATE },
-      dependencies: ["setup"],
-    },
-    {
-      name: "phone",
-      testIgnore: "**/auth.setup.ts",
-      use: { ...devices["iPhone 13"], storageState: AUTH_STATE },
-      dependencies: ["setup"],
-    },
-    {
-      name: "desktop",
-      testIgnore: "**/auth.setup.ts",
-      use: { ...devices["Desktop Chrome"], ...DESKTOP, storageState: AUTH_STATE },
+      use: { ...ACTIVE_DEVICE, storageState: AUTH_STATE },
       dependencies: ["setup"],
     },
   ],

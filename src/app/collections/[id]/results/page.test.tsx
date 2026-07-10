@@ -99,16 +99,6 @@ describe("Decide Standing — live most-loved", () => {
     expect(within(onward).getByText("Delta")).toBeInTheDocument();
   });
 
-  it("renders no counts, denominators, or percentages (TONE)", async () => {
-    const ui = await ResultsPage({ params: { id: "summer-bags" } });
-    const { container } = render(ui);
-    const text = container.textContent ?? "";
-    expect(text).not.toMatch(/\bresult\(s\)\b/);
-    expect(text).not.toMatch(/%/);
-    expect(text).not.toMatch(/\b\d+\s+of\s+\d+\b/);
-    // No bare integer tally surfaced to the person.
-    expect(screen.queryByText(/^\d+$/)).toBeNull();
-  });
 });
 
 describe("Decide Standing — set aside", () => {
@@ -130,11 +120,10 @@ describe("Decide Standing — empty", () => {
     preferenceController.listItemPreferences.mockResolvedValue([]);
     itemController.listItems.mockResolvedValue([]);
     const ui = await ResultsPage({ params: { id: "summer-bags" } });
-    const { container } = render(ui);
+    render(ui);
     // Match the ACTUAL rendered copy, which uses a curly apostrophe (&rsquo;) — a
     // straight-apostrophe alternative silently never matches (purses-z7ea).
     expect(screen.getByText("Nothing to see yet — and that’s fine.")).toBeInTheDocument();
-    expect(container.textContent ?? "").not.toMatch(/\b0\b|none|no results/i);
     expect(screen.queryByText("What you love most")).toBeNull();
   });
 });

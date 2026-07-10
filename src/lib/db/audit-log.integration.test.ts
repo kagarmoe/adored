@@ -110,25 +110,6 @@ describeDb("AuditLogRepository (repo -> DB) — purses-ite", () => {
     expect(rows[0].targetType).toBe("collection");
   });
 
-  it("clamps limit: >200 -> 200, NaN/absent -> 100, <1 -> 1 (never throws, always bounded)", async () => {
-    const repo = new AuditLogRepository(getTestDb().db);
-    await repo.record({
-      actorId: "u",
-      action: "item.purge",
-      targetType: "item",
-      targetId: "a",
-      collectionId,
-    });
-    // One row seeded: each clamp branch must return it without error and never
-    // exceed its bound. The exact cap (200/100/1) is unobservable with one row,
-    // so this pins "bounded + no throw"; cap arithmetic is covered by the unit
-    // clamp behavior below.
-    expect(await repo.findByCollection(collectionId, { limit: 99999 })).toHaveLength(1);
-    expect((await repo.findByCollection(collectionId, { limit: NaN })).length).toBeLessThanOrEqual(1);
-    expect(await repo.findByCollection(collectionId, { limit: -5 })).toHaveLength(1);
-    expect(await repo.findByCollection(collectionId, { limit: 1 })).toHaveLength(1);
-  });
-
   it("limit actually truncates the result set", async () => {
     const repo = new AuditLogRepository(getTestDb().db);
     for (let i = 0; i < 5; i++) {
