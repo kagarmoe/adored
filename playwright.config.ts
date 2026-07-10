@@ -1,31 +1,23 @@
 import { defineConfig, devices } from "@playwright/test";
 import { TEST_DATABASE_URL } from "./e2e/fixtures/db";
 
-// Viewport tiering (see docs/ARCHITECTURE.md, testing strategy):
-//   - tablet (iPad/WebKit) is the primary target and runs EVERY spec. All
-//     behavioral specs are tablet-only.
-//   - desktop (Desktop Chrome/Chromium) runs a thin allowlist: the layout spec
-//     (which branches on viewport internally, so tablet+desktop = two widths),
-//     smoke, and the critical sort→compare→results journey. This gives one
-//     cross-engine (Chromium) pass over the core flow without re-running the
-//     whole suite on a second engine.
-//   - phone was dropped: it was WebKit (same engine as tablet) so it added no
-//     engine coverage, no spec uses touch/drag, and per-viewport assertions
-//     live only in layout.spec.ts. It was pure duplication.
-// Net effect: the full matrix collapses from 3 viewports × all specs to
-// tablet(all) + desktop(allowlist).
+// Viewport strategy (see docs/ARCHITECTURE.md, testing strategy):
+//   - tablet (iPad/WebKit) is the DEFAULT and runs every spec. Ordinary runs
+//     (CI and local) exercise only this one viewport — no 3-way matrix.
+//   - phone and desktop are OPT-IN: select one explicitly when doing
+//     viewport-specific work, and ONLY that viewport runs:
+//       PW_VIEWPORT=phone   npx playwright test   → iPhone (WebKit) only
+//       PW_VIEWPORT=desktop npx playwright test   → Desktop Chrome (Chromium) only
+//   No env → tablet only. (Tradeoff: PR runs are WebKit-only; a Chromium-only
+//   regression is caught by an explicit PW_VIEWPORT=desktop run, not by default.)
 
-const DESKTOP = { viewport: { width: 1280, height: 800 } };
-
-// Specs that also run on desktop-Chromium: layout (viewport-branching),
-// smoke (fast health check), and the critical sort→compare→results journey.
-const DESKTOP_SPECS = [
-  "**/layout.spec.ts",
-  "**/smoke.spec.ts",
-  "**/sort-session.spec.ts",
-  "**/compare.spec.ts",
-  "**/results.spec.ts",
-];
+const VIEWPORT = process.env.PW_VIEWPORT ?? "tablet";
+const VIEWPORT_DEVICE: Record<string, Record<string, unknown>> = {
+  tablet: devices["iPad (gen 7) landscape"],
+  phone: devices["iPhone 13"],
+  desktop: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
+};
+const ACTIVE_DEVICE = VIEWPORT_DEVICE[VIEWPORT] ?? VIEWPORT_DEVICE.tablet;
 
 // Run e2e on a dedicated port so a developer's `npm run dev` on :3000 (which
 // reads .env.local → the dev Neon DB) is never silently reused. With a unique
@@ -60,17 +52,11 @@ export default defineConfig({
       testMatch: "**/auth.setup.ts",
     },
     {
-      // Primary target: runs every behavioral spec.
-      name: "tablet",
+      // The one active viewport (tablet by default; phone/desktop via PW_VIEWPORT).
+      // Runs every behavioral spec on that single viewport.
+      name: VIEWPORT,
       testIgnore: "**/auth.setup.ts",
-      use: { ...devices["iPad (gen 7) landscape"], storageState: AUTH_STATE },
-      dependencies: ["setup"],
-    },
-    {
-      // Cross-engine (Chromium) pass over layout + smoke + the critical journey.
-      name: "desktop",
-      testMatch: DESKTOP_SPECS,
-      use: { ...devices["Desktop Chrome"], ...DESKTOP, storageState: AUTH_STATE },
+      use: { ...ACTIVE_DEVICE, storageState: AUTH_STATE },
       dependencies: ["setup"],
     },
   ],
