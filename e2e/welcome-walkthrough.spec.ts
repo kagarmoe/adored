@@ -54,9 +54,10 @@ async function signUpFresh(page: Page, testInfo: TestInfo): Promise<void> {
   await page.waitForURL(/\/welcome/, { timeout: 15_000 });
 }
 
-// Walk purpose → triage(×3) → compare → standing → refine, stopping ON the
-// handoff beat (its CTA visible, not yet clicked). The intermediate assertions
-// are both the spec's teaching-fidelity checks AND the per-beat sync barriers.
+// Walk purpose → triage(×3) → usage → compare → standing → refine, stopping ON
+// the handoff beat (its CTA visible, not yet clicked). The intermediate
+// assertions are both the spec's teaching-fidelity checks AND the per-beat sync
+// barriers.
 async function walkToHandoff(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Show me how" }).click();
 
@@ -68,6 +69,10 @@ async function walkToHandoff(page: Page): Promise<void> {
 
   await expect(page.getByText(TRIAGE.third)).toBeVisible();
   await page.getByRole("button", { name: /not mine/i }).click(); // set aside
+
+  // Usage beat — "Do you use this?" A single answer advances to compare.
+  await expect(page.getByRole("heading", { name: "Do you use this?" })).toBeVisible();
+  await page.getByRole("button", { name: "Yes, I use it" }).click();
 
   await page.getByRole("button", { name: "Tie", exact: true }).click();
 

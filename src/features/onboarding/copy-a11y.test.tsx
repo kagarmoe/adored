@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render } from "@testing-library/react";
 import { WelcomePurpose } from "./WelcomePurpose";
 import { WelcomeTriage } from "./WelcomeTriage";
+import { WelcomeUsage } from "./WelcomeUsage";
 import { WelcomeCompare } from "./WelcomeCompare";
 import { WelcomeStanding } from "./WelcomeStanding";
 import { WelcomeRefine } from "./WelcomeRefine";
@@ -65,6 +66,7 @@ describe("a11y: touch targets >= 44px", () => {
     for (const c of [
       render(<WelcomePurpose onNext={() => {}} />).container,
       render(<WelcomeTriage index={0} onOutcome={() => {}} />).container,
+      render(<WelcomeUsage onOutcome={() => {}} />).container,
       render(<WelcomeCompare onOutcome={() => {}} />).container,
       render(
         <WelcomeStanding compare={SAMPLE_WIN} triage={{}} onNext={() => {}} />

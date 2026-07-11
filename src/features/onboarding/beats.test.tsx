@@ -5,6 +5,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { WelcomePurpose } from "./WelcomePurpose";
 import { WelcomeTriage } from "./WelcomeTriage";
+import { WelcomeUsage } from "./WelcomeUsage";
 import { WelcomeCompare } from "./WelcomeCompare";
 import { WelcomeStanding } from "./WelcomeStanding";
 import { WelcomeRefine } from "./WelcomeRefine";
@@ -15,7 +16,12 @@ import {
   type CompareOutcome,
   type TriageOutcome,
 } from "./sampleData";
-import { COMPARE_SUBLINE, ROUND_COPY, WELCOME_ROUND_KICKER } from "@/features/sorting/roundCopy";
+import {
+  COMPARE_SUBLINE,
+  ROUND_COPY,
+  USAGE_PASS_ARIA_LABEL,
+  WELCOME_ROUND_KICKER,
+} from "@/features/sorting/roundCopy";
 
 // The triage beat now renders the real sorting controls, which call useRouter()
 // unconditionally. Local mode never touches the router, but the hook still reads
@@ -82,6 +88,57 @@ describe("WelcomeTriage", () => {
       await userEvent.click(screen.getByRole("button", { name: /not yet/i }));
       await userEvent.click(screen.getByRole("button", { name: /not mine/i }));
       expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("WelcomeUsage", () => {
+  it("renders the kicker + shared usage explainer and the 'Do you use this?' prompt", () => {
+    render(<WelcomeUsage onOutcome={vi.fn()} />);
+    // Kicker is the neutral round noun distinct from the person-side arc names (user decision).
+    expect(screen.getByText(WELCOME_ROUND_KICKER)).toBeInTheDocument();
+    expect(screen.getByText(ROUND_COPY.usage.explainer)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Do you use this?" })).toBeInTheDocument();
+  });
+
+  it("offers both usage decisions and the write-nothing 'Skip for now' pass", () => {
+    render(<WelcomeUsage onOutcome={vi.fn()} />);
+    expect(screen.getByRole("button", { name: "Yes, I use it" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Not these days" })).toBeInTheDocument();
+    // The pass's accessible name begins with its visible label (WCAG 2.5.3), so it
+    // is distinct from the shell's own "Skip for now" exit.
+    expect(screen.getByRole("button", { name: USAGE_PASS_ARIA_LABEL })).toBeInTheDocument();
+  });
+
+  it("'Yes, I use it' reports a used outcome; 'Not these days' reports an unused outcome", async () => {
+    const onOutcome = vi.fn();
+    render(<WelcomeUsage onOutcome={onOutcome} />);
+    await userEvent.click(screen.getByRole("button", { name: "Yes, I use it" }));
+    expect(onOutcome).toHaveBeenCalledWith({ kind: "used" });
+    await userEvent.click(screen.getByRole("button", { name: "Not these days" }));
+    expect(onOutcome).toHaveBeenCalledWith({ kind: "unused" });
+  });
+
+  it("'Skip for now' reports a pass outcome", async () => {
+    const onOutcome = vi.fn();
+    render(<WelcomeUsage onOutcome={onOutcome} />);
+    await userEvent.click(screen.getByRole("button", { name: USAGE_PASS_ARIA_LABEL }));
+    expect(onOutcome).toHaveBeenCalledWith({ kind: "pass" });
+  });
+
+  it("never fetches across taps (local mode is synchronous)", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    try {
+      const onOutcome = vi.fn();
+      render(<WelcomeUsage onOutcome={onOutcome} />);
+      await userEvent.click(screen.getByRole("button", { name: "Yes, I use it" }));
+      await userEvent.click(screen.getByRole("button", { name: USAGE_PASS_ARIA_LABEL }));
+      expect(fetchSpy).not.toHaveBeenCalled();
+      // Non-vacuous: the taps really landed on the local handler.
+      expect(onOutcome).toHaveBeenCalledTimes(2);
     } finally {
       vi.unstubAllGlobals();
     }

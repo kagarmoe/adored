@@ -10,12 +10,27 @@
 // intercept, and a waitForResponse on the decisions batch route as the
 // load-bearing DB-crossing signal (never a sleep).
 //
-// DEFERRED (spec §5/§6): the smoke's reload half — "reload lands the events
-// before the round re-renders" — is out of PR 2. The Epic P crash-reload harness
-// does not exist yet; it lands with bead purses-hmjs (gated on purses-yuw), and
-// the reload assertion joins this suite then.
-import { test, expect } from "@playwright/test";
+// RELOAD HALF (spec §5/§6), formerly deferred as purses-hmjs: the smoke's second
+// journey — "reload lands the events before the round re-renders" — now lives in
+// the "reload lands the pending answer" test below (the Epic P crash-reload harness
+// landed with purses-hmjs; see e2e/decision-recovery.spec.ts for the shared
+// crash/pagehide tier).
+import { test, expect, type Page } from "@playwright/test";
 import { seedBaseline, seedJourneyScenario } from "./fixtures/seed";
+
+// Curator's single pending envelope, read straight from localStorage without the
+// session ULID: enumerate adored.pending.v1.* and count entries. null when none.
+async function pendingCount(page: Page): Promise<number | null> {
+  return page.evaluate(() => {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith("adored.pending.v1.")) {
+        return (JSON.parse(localStorage.getItem(k) as string) as { entries: unknown[] }).entries.length;
+      }
+    }
+    return null;
+  });
+}
 
 // Fulfil every protected /file request with a local fixture so each item's hero
 // renders without a blob emulator (same approach as the sibling specs).
@@ -104,5 +119,56 @@ test.describe("usage round — do you use this?", () => {
 
     // The answers actually reached the server/DB (not just the optimistic recap).
     await batchPost;
+  });
+
+  // The reload half (spec §5, formerly purses-hmjs): an answer that persisted to the
+  // client queue but never flushed (a crash between enqueue and flush — simulated by
+  // aborting the batch POST; submitDecision advances on localStorage persist, not on
+  // the ack) is drained by PendingDecisionsGate on reload BEFORE the round re-renders
+  // from stale server data. Fresh scenario so this session's usage state is pristine.
+  test("reload lands the pending answer before the round re-renders (crash-reload catch-up)", async ({
+    page,
+  }) => {
+    const BATCH_GLOB = "**/api/sessions/*/decisions/batch";
+    const ownerId = await seedBaseline();
+    const fresh = await seedJourneyScenario(ownerId, 3);
+
+    await page.goto(`/collections/${fresh.slug}/sort/${fresh.sessionNumber}/usage`);
+    await expect(page.getByRole("heading", { name: "Do you use this?", exact: true })).toBeVisible();
+
+    // Crash: block the flush so the answer stays pending on the device.
+    await page.route(BATCH_GLOB, (route) => route.abort());
+    await page.getByRole("button", { name: "Yes, I use it" }).click();
+    await expect(page.getByText("1 answered so far")).toBeVisible();
+    expect(await pendingCount(page), "answer pending, unflushed").toBe(1);
+
+    // Lift the block; delay the reload drain server-side so the gate's "gathering"
+    // state is observable. The assertion still gates on the real response.
+    await page.unroute(BATCH_GLOB);
+    await page.route(BATCH_GLOB, async (route) => {
+      await new Promise((r) => setTimeout(r, 800));
+      await route.continue();
+    });
+
+    const batchPost = page.waitForResponse(
+      (r) =>
+        /\/api\/sessions\/[^/]+\/decisions\/batch$/.test(r.url()) &&
+        r.request().method() === "POST" &&
+        r.status() < 400,
+    );
+    await page.reload();
+
+    // The gate recovers first: gathering line up, round NOT yet mounted.
+    await expect(page.getByText(/Gathering up the answers you already gave/)).toBeVisible();
+
+    // The event landed on the server during the gate phase…
+    await batchPost;
+
+    // …so when the round finally re-renders (post-refresh payload), the answered item
+    // is usage-known and the SERVER-derived seed counts it: proof the reload landed
+    // the event before the surface trusted the server log.
+    await expect(page.getByRole("heading", { name: "Do you use this?", exact: true })).toBeVisible();
+    await expect(page.getByText("1 answered so far")).toBeVisible();
+    expect(await pendingCount(page), "queue drained after recovery").toBeNull();
   });
 });

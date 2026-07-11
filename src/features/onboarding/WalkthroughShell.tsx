@@ -5,12 +5,13 @@ import { dismissWelcome } from "./dismissal";
 import { TRIAGE_ITEMS, type CompareOutcome, type TriageOutcome } from "./sampleData";
 import { WelcomePurpose } from "./WelcomePurpose";
 import { WelcomeTriage } from "./WelcomeTriage";
+import { WelcomeUsage } from "./WelcomeUsage";
 import { WelcomeCompare } from "./WelcomeCompare";
 import { WelcomeStanding } from "./WelcomeStanding";
 import { WelcomeRefine } from "./WelcomeRefine";
 import { WelcomeHandoff } from "./WelcomeHandoff";
 
-type Beat = "purpose" | "triage" | "compare" | "standing" | "refine" | "handoff";
+type Beat = "purpose" | "triage" | "usage" | "compare" | "standing" | "refine" | "handoff";
 
 // The walkthrough is client-only state: a step cursor plus the typed outcomes the
 // person taps. No API, no DB — the Standing beat reads these outcomes back.
@@ -40,11 +41,11 @@ export function WalkthroughShell() {
   const handleTriageOutcome = (itemId: string, outcome: TriageOutcome) => {
     setTriageOutcomes((prev) => ({ ...prev, [itemId]: outcome }));
     // Every outcome — tier, defer, or set-aside — advances by index. The demo
-    // never re-queues, so three taps always reach compare.
+    // never re-queues, so three taps always reach the usage beat.
     if (triageIndex + 1 < TRIAGE_ITEMS.length) {
       setTriageIndex((i) => i + 1);
     } else {
-      goTo("compare");
+      goTo("usage");
     }
   };
 
@@ -73,6 +74,9 @@ export function WalkthroughShell() {
         {beat === "triage" && (
           <WelcomeTriage index={triageIndex} onOutcome={handleTriageOutcome} />
         )}
+        {/* Usage is a pure teaching beat — the demo standing doesn't reflect it,
+            so any single tap (Yes / Not these days / Skip for now) advances. */}
+        {beat === "usage" && <WelcomeUsage onOutcome={() => goTo("compare")} />}
         {beat === "compare" && <WelcomeCompare onOutcome={handleCompareOutcome} />}
         {/* ponytail: standing is only reachable after a compare tap, so
             compareOutcome is non-null here; the ?? "skip" fallback keeps the type
