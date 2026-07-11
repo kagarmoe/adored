@@ -77,22 +77,23 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
     return c ? getPhotoAssetUrlForPhoto(c, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
   };
 
-  // Epic S S3b: the flat hand-order list is scoped to the LOVED tier — what
-  // manualRank meaningfully orders. Onward (resting) rows are excluded so a
-  // within-tier reorder visibly sticks (dragging an Onward row wouldn't change
-  // its bucket, which read as "my arrangement didn't hold"); cross-tier hand-order
-  // is a follow-up (purses-9v1f.1). Onward items still render read-only in the
-  // composed keepsake view. Item name + cover are resolved server-side (the client
-  // never touches the item store or photo store); computedRank rides along so
-  // "Back to the suggested order" can revert optimistically.
+  // 9v1f.1: the hand-order list spans BOTH tiers — loved rows then onward rows, in
+  // display order — so a user can move an item across the loved/onward boundary by
+  // hand (the panel renders a sentinel divider at `lovedCount`; a cross-boundary
+  // move writes manualBucket, not just manualRank). Item name + cover are resolved
+  // server-side (the client never touches the item/photo store); computedRank +
+  // computedBucket ride along so "Back to the suggested order" reverts optimistically
+  // and the client can compute each row's target manualBucket (null on its computed
+  // side; "low"/"medium" when hand-crossed).
   const collectionSegment = collection.slug ?? collection.id;
   const isCurator = result.curatorId === session.user.id;
-  const rerankRows: RerankRow[] = loved.map(({ ri, item }) => ({
+  const rerankRows: RerankRow[] = [...loved, ...onward].map(({ ri, item }) => ({
     rid: ri.id,
     itemId: item.id,
     name: itemDisplayName(item),
     coverUrl: coverUrl(item.id),
     computedRank: ri.computedRank,
+    computedBucket: ri.computedBucket,
   }));
 
   return (
@@ -132,6 +133,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
             collectionId={collectionSegment}
             status={result.status}
             rows={rerankRows}
+            lovedCount={loved.length}
             canRevise={isCurator}
           >
             <RankedResults

@@ -165,10 +165,10 @@ describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () =
     expect(screen.queryByRole("button", { name: "Put in order by hand" })).toBeNull();
   });
 
-  // F-UX-I2: the hand-order list is scoped to the LOVED tier — an Onward (low)
-  // row is not draggable/in the list (cross-tier hand-order is a follow-up). The
-  // Onward item still renders read-only in the composed keepsake view.
-  it("scopes the reorder list to loved-tier rows, excluding Onward items", async () => {
+  // 9v1f.1: the hand-order list now spans BOTH tiers — loved rows, a sentinel
+  // "Onward" divider, then onward (low) rows — so a user can move an item across
+  // the boundary by hand. Each row exposes its zone (loved | onward).
+  it("includes both loved and Onward rows with a sentinel divider (cross-tier hand-order)", async () => {
     resultRepo.findByCollectionAndNumber.mockResolvedValue({
       id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "draft", curatorId: "u1",
     });
@@ -182,8 +182,11 @@ describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () =
     fireEvent.click(screen.getByRole("button", { name: "Put in order by hand" }));
     const rows = screen.getAllByTestId("rerank-row");
     const names = rows.map((li) => within(li).getByText(/Bag/).textContent);
-    expect(names).toEqual(["Hero Bag"]); // the loved (top) row only
-    expect(names).not.toContain("Rest Bag"); // the Onward (low) row is excluded
+    expect(names).toEqual(["Hero Bag", "Rest Bag"]); // loved row, then the Onward row
+    // The sentinel divider is present, and the Onward row is marked as such.
+    expect(screen.getByTestId("rerank-onward-divider")).toBeInTheDocument();
+    const restRow = rows.find((li) => within(li).queryByText("Rest Bag"))!;
+    expect(restRow.getAttribute("data-zone")).toBe("onward");
   });
 });
 

@@ -17,6 +17,11 @@ const ReorderResultItemsSchema = z.object({
     z.object({
       rid: z.string(),
       manualRank: z.number().int(),
+      // Epic S 9v1f.1 cross-tier: the row's target bucket. Required-nullable (NOT
+      // optional): the batch is a FULL overlay, so every entry carries value-or-null
+      // — an omitted field would let drizzle skip the column and strand a stale
+      // override. `null` = no override (fall back to computed bucket).
+      manualBucket: z.enum(["top", "high", "medium", "low"]).nullable(),
     }),
   ),
   // Validate at the boundary: a batch that names the same rid twice is malformed

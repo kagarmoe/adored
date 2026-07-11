@@ -1,4 +1,4 @@
-import type { SortResult, SortResultItem } from "@/types";
+import type { SortResult, SortResultItem, RankBucket } from "@/types";
 import type { Database } from "@/lib/db";
 import { withTransaction } from "@/lib/transactions";
 import {
@@ -277,7 +277,7 @@ export class SortResultService {
    */
   async reorderResultItems(
     resultId: string,
-    order: ReadonlyArray<{ rid: string; manualRank: number }>,
+    order: ReadonlyArray<{ rid: string; manualRank: number; manualBucket: RankBucket | null }>,
   ): Promise<SortResultItem[]> {
     return withTransaction(
       this.db,
@@ -291,9 +291,12 @@ export class SortResultService {
         const validIds = new Set(
           (await itemRepo.findByResult(resultId)).map((i) => i.id),
         );
-        for (const { rid, manualRank } of order) {
+        // 9v1f.1 cross-tier: write manualBucket alongside manualRank. `?? null` so
+        // an undefined can never make drizzle skip the column and strand a prior
+        // override — the batch is a FULL overlay describing every row's manual state.
+        for (const { rid, manualRank, manualBucket } of order) {
           if (!validIds.has(rid)) throw new ResultItemNotInResultError();
-          await itemRepo.update(rid, { manualRank });
+          await itemRepo.update(rid, { manualRank, manualBucket: manualBucket ?? null });
         }
         return itemRepo.findByResult(resultId);
       },
