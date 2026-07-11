@@ -18,24 +18,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/4c8e4bf414abd4da367549dc96c1476657b3ad15",
-        "commitHash": "4c8e4bf414abd4da367549dc96c1476657b3ad15",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29165907864"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/7e86f9dcfcf2d09abed8c4b80c44fcb3ae03e86f",
+        "commitHash": "7e86f9dcfcf2d09abed8c4b80c44fcb3ae03e86f",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29166311635"
       },
       "gitCommit": {
-        "shortHash": "4c8e4bf",
-        "hash": "4c8e4bf414abd4da367549dc96c1476657b3ad15",
-        "subject": "feat(onboarding): /welcome walkthrough teaches the usage round (Do you use this?) (#313)",
-        "body": "feat(onboarding): /welcome walkthrough teaches the usage round (Do you use this?) (#313)\n\n* feat(onboarding): /welcome walkthrough teaches the usage round (Do you use this?)\n\nInsert a \"Do you use this?\" usage teaching beat between triage and compare in\nthe /welcome walkthrough (arc: Get acquainted -> Do you use this? -> Which do\nyou love more?). WelcomeUsage mirrors WelcomeTriage's synchronous local mode:\nneutral kicker, ROUND_COPY.usage explainer + question, a sample item, the real\nusageDecisions buttons, and the \"Skip for now\" pass — one tap advances.\n\nAlso fix a pre-existing capture.ts break: after the #304 six-beat rebuild the\nfinal /welcome shot tapped Standing's Continue once and waited for the handoff\nheading, but Standing now advances to Refine first, so the wait hung. Add the\nRefine step (+ shot) so it reaches Hand-off (\"Now, your turn.\", unchanged), and\nadd a welcome-usage shot.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* test(e2e): decision-queue crash-reload catch-up + pagehide delivery + usage-round reload (hmjs)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* chore(graph): refresh graphify graph for welcome usage beat\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Tb3s1QSGtkTEuF18Euaqf6\n\n* test(e2e): walk the new usage beat in welcome-walkthrough\n\nfi9y inserted the usage beat (Do you use this?) between triage and compare\nbut walkToHandoff still jumped straight to compare's Tie, timing out. Tap\n\"Yes, I use it\" to advance through the beat.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Tb3s1QSGtkTEuF18Euaqf6\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "7e86f9d",
+        "hash": "7e86f9dcfcf2d09abed8c4b80c44fcb3ae03e86f",
+        "subject": "feat(sorting): Epic S — Standing usage chip + hand-orderable draft results (mvn5) (#314)",
+        "body": "feat(sorting): Epic S — Standing usage chip + hand-orderable draft results (mvn5) (#314)\n\n* docs(specs): Epic S design (rev 2, adversarial review folded) + implementation plan\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* feat(results): usage chip on Standing — per-item In your life / Resting annotation (Epic S)\n\nThread the live usage fold (DecisionController.listForCurator + deriveUsage) into\nthe Decide/Standing surface and render a quiet, count-free per-item chip — \"In\nyour life\" (uses) / \"Resting\" (not_uses) — on usage-known ranked rows; no chip\nwhen usage is undecided. Extend the render gate so a usage-only collection (usage\nanswers, no love ranking) shows the item list with chips instead of the empty\nstate. deriveStanding is unchanged (love-only). DATA-6: only the derived\nMap<itemId,answer> is threaded to the client; the raw curator event log stays\nserver-side.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* feat(results): sort_result_items.usage snapshot at materialization + fresh-fold on revision (Epic S)\n\nAdd a nullable `usage` text column to sort_result_items (additive migration\n0016, no CHECK, no backfill — matches the manualBucket plain-text precedent).\nStamp it at draft materialization from the curator's LIVE usage fold\n(loadCuratorDecisionEvents + deriveUsage), threaded through the create-path:\ncreateResultWithItems gains a usageByItemId map and the repo create-input gains\na `usage` field. A usage-unknown item stamps NULL.\n\nRevision uses fresh-fold (§3.3): supersedeResult RE-DERIVES usage from the\nCURRENT decision log at revision materialization (the same deriveUsage a fresh\ndraft runs), so the revision's snapshot describes the revision moment.\ncloneItemsFrom stays unchanged — it drops manual overrides and simply does not\ncarry usage; usage is stamped by the materialization step, not the clone.\n\nThe finalized keepsake page reads the snapshot `usage` into the SAME quiet chip\nS1 built (\"In your life\" / \"Resting\"); a legacy all-NULL result renders none.\n\nTests: new un-mocked DB integration file proving the migration applied,\nper-item stamping (unknown -> NULL), and one revision test asserting BOTH halves\n(fresh-folded usage + dropped manual overlay); finalized-page chip render +\nlegacy-no-chip; existing service/materialization/pipeline suites kept green.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* feat(results): transactional bulk re-rank endpoint for draft results (Epic S)\n\nPATCH /api/sort-results/[id]/items applies a whole {rid,manualRank} ordering\nin one withTransaction (one drag = one atomic call), and DELETE resets the\nmanual overlay for every item (back to the computed order). Draft-only (409\nfinalized), curator-scoped, Zod-validated; every rid is validated against the\nresult's own items inside the tx so a bad/foreign rid rolls the whole batch\nback with a 404. Backs S3b's drag-to-reorder UI.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* feat(results): manual re-rank UI — drag + move-up/down on draft results, wired to the bulk endpoint (Epic S)\n\nThe DRAFT result page gains a 'Put in order by hand' affordance that flips the\naffirmation composition into a flat drag-to-reorder list (native HTML5 draggable,\n≥44px handles, no swiping) plus a per-row move-up/move-down keyboard/AT path. Every\nmove — drag OR button — recomputes a dense manualRank 0..N-1 over the whole list and\nissues ONE bulk PATCH /api/sort-results/[id]/items (S3a); the order updates\noptimistically and reverts wholesale on failure (single atomic call = clean\nrollback). 'Back to the computed order' DELETEs the overlay (optimistic revert by\ncomputedRank). A finalized keepsake shows NO reorder affordance — reorder is a draft\nactivity — and instead offers 'Make a revision' (the supersede flow).\n\na11y: an sr-only role=status announces 'Moved {name} to position N of M'; keyboard\nfocus stays on the moved item's control (retained across the in-flight disabled\nwindow); rows carry motion-reduce:transition-none. §4.4 framing lines name live\nStanding as 'the current picture' and the draft as 'the keepsake you can shape'. All\ncopy is exported TONE constants with a register scan.\n\nTests: rerank-copy register scan; 12-case RerankPanel jsdom suite (drag→one PATCH,\noptimistic+rollback, move-up/down swap PATCH, finalized guard + Make-a-revision,\nrole=status announce, ≥44px targets, reduced-motion, focus retention); page-level\ndraft-vs-finalized affordance assertions; an un-mocked e2e driving the move-up button\nthrough the bulk endpoint → reload → persisted order (all 3 projects).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* test(authz): register bulk re-rank PATCH/DELETE in the stranger-enumeration backstop (Epic S)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* fix(results): fold Epic S review — refresh after reorder, curator-gate revision, in-tx finalized guard, within-tier hand-order, 1-indexed manualRank, dup-rid + copy/weight polish\n\n- F-UX-I1: router.refresh() after a successful reorder/reset so the server-composed\n  keepsake reflects the new order without a reload (optimistic + rollback kept).\n- F-UX-I3: curator-gate the finalized \"Make a revision\" affordance (new canRevise\n  prop, mirrors the SharePanel gate) so a non-curator can't fork another's keepsake.\n- F-Data-I1: re-assert draft status INSIDE the reorder/reset transactions via a\n  SELECT ... FOR UPDATE row lock (findByIdForUpdate) + ReorderFinalizedError → 409,\n  closing the finalized-immutability TOCTOU.\n- F-UX-I2: scope the hand-order list to the loved tier (what manualRank orders);\n  Onward rows render read-only. Follow-up purses-9v1f.1 for cross-tier hand-order.\n- F-Data-M1: write manualRank 1-indexed to share computedRank's 1..N space.\n- F-Data-M2: reject duplicate rids in the reorder batch at the Zod boundary → 400.\n- F-UX-M1: \"Back to the computed order\" → \"Back to the suggested order\".\n- F-UX-M2: F5 heading \"The ones you live with\" → \"The ones you've weighed in on\".\n- F-UX-M4: drop font-medium from the usage chip (Badge base font-semibold wins).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* chore(epicS): CI wiring, usage-chip seed, doc + test alignment for merge\n\n- ci.yml: add e2e/results-rerank.spec.ts to the results area→spec map so a\n  results-only PR selects it (it never ran in CI before).\n- seed: seedSortScenario records usage decisions (so the Standing usage chip\n  renders on the draft + live Decide surfaces) and a finalized result carrying\n  the usage snapshot; capture.ts adds the results-finalized surface.\n- results-rerank.spec: correct to the shipped loved-only hand-order design —\n  the reorder list holds the 2 loved rows (Onward excluded, cross-tier is\n  purses-9v1f.1); assert the Onward item is not reorderable.\n- Drop the redundant copy-ceremony tests (usage-chip-copy, rerank-copy): the\n  register-scans/tautologies are covered by RerankPanel.test.tsx against real\n  DOM (aria labels, role=status announcement).\n- ARCHITECTURE: decision #29 (Standing usage chip + hand-order).\n- Refresh graphify graph.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Tb3s1QSGtkTEuF18Euaqf6\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1783799308000
+          "time": 1783800134000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1783799308000
+          "time": 1783800134000
         },
         "branch": "main"
       },
@@ -49,24 +49,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/4c8e4bf414abd4da367549dc96c1476657b3ad15",
-            "commitHash": "4c8e4bf414abd4da367549dc96c1476657b3ad15",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29165907864"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/7e86f9dcfcf2d09abed8c4b80c44fcb3ae03e86f",
+            "commitHash": "7e86f9dcfcf2d09abed8c4b80c44fcb3ae03e86f",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29166311635"
           },
           "gitCommit": {
-            "shortHash": "4c8e4bf",
-            "hash": "4c8e4bf414abd4da367549dc96c1476657b3ad15",
-            "subject": "feat(onboarding): /welcome walkthrough teaches the usage round (Do you use this?) (#313)",
-            "body": "feat(onboarding): /welcome walkthrough teaches the usage round (Do you use this?) (#313)\n\n* feat(onboarding): /welcome walkthrough teaches the usage round (Do you use this?)\n\nInsert a \"Do you use this?\" usage teaching beat between triage and compare in\nthe /welcome walkthrough (arc: Get acquainted -> Do you use this? -> Which do\nyou love more?). WelcomeUsage mirrors WelcomeTriage's synchronous local mode:\nneutral kicker, ROUND_COPY.usage explainer + question, a sample item, the real\nusageDecisions buttons, and the \"Skip for now\" pass — one tap advances.\n\nAlso fix a pre-existing capture.ts break: after the #304 six-beat rebuild the\nfinal /welcome shot tapped Standing's Continue once and waited for the handoff\nheading, but Standing now advances to Refine first, so the wait hung. Add the\nRefine step (+ shot) so it reaches Hand-off (\"Now, your turn.\", unchanged), and\nadd a welcome-usage shot.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* test(e2e): decision-queue crash-reload catch-up + pagehide delivery + usage-round reload (hmjs)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* chore(graph): refresh graphify graph for welcome usage beat\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Tb3s1QSGtkTEuF18Euaqf6\n\n* test(e2e): walk the new usage beat in welcome-walkthrough\n\nfi9y inserted the usage beat (Do you use this?) between triage and compare\nbut walkToHandoff still jumped straight to compare's Tie, timing out. Tap\n\"Yes, I use it\" to advance through the beat.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Tb3s1QSGtkTEuF18Euaqf6\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "7e86f9d",
+            "hash": "7e86f9dcfcf2d09abed8c4b80c44fcb3ae03e86f",
+            "subject": "feat(sorting): Epic S — Standing usage chip + hand-orderable draft results (mvn5) (#314)",
+            "body": "feat(sorting): Epic S — Standing usage chip + hand-orderable draft results (mvn5) (#314)\n\n* docs(specs): Epic S design (rev 2, adversarial review folded) + implementation plan\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* feat(results): usage chip on Standing — per-item In your life / Resting annotation (Epic S)\n\nThread the live usage fold (DecisionController.listForCurator + deriveUsage) into\nthe Decide/Standing surface and render a quiet, count-free per-item chip — \"In\nyour life\" (uses) / \"Resting\" (not_uses) — on usage-known ranked rows; no chip\nwhen usage is undecided. Extend the render gate so a usage-only collection (usage\nanswers, no love ranking) shows the item list with chips instead of the empty\nstate. deriveStanding is unchanged (love-only). DATA-6: only the derived\nMap<itemId,answer> is threaded to the client; the raw curator event log stays\nserver-side.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* feat(results): sort_result_items.usage snapshot at materialization + fresh-fold on revision (Epic S)\n\nAdd a nullable `usage` text column to sort_result_items (additive migration\n0016, no CHECK, no backfill — matches the manualBucket plain-text precedent).\nStamp it at draft materialization from the curator's LIVE usage fold\n(loadCuratorDecisionEvents + deriveUsage), threaded through the create-path:\ncreateResultWithItems gains a usageByItemId map and the repo create-input gains\na `usage` field. A usage-unknown item stamps NULL.\n\nRevision uses fresh-fold (§3.3): supersedeResult RE-DERIVES usage from the\nCURRENT decision log at revision materialization (the same deriveUsage a fresh\ndraft runs), so the revision's snapshot describes the revision moment.\ncloneItemsFrom stays unchanged — it drops manual overrides and simply does not\ncarry usage; usage is stamped by the materialization step, not the clone.\n\nThe finalized keepsake page reads the snapshot `usage` into the SAME quiet chip\nS1 built (\"In your life\" / \"Resting\"); a legacy all-NULL result renders none.\n\nTests: new un-mocked DB integration file proving the migration applied,\nper-item stamping (unknown -> NULL), and one revision test asserting BOTH halves\n(fresh-folded usage + dropped manual overlay); finalized-page chip render +\nlegacy-no-chip; existing service/materialization/pipeline suites kept green.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* feat(results): transactional bulk re-rank endpoint for draft results (Epic S)\n\nPATCH /api/sort-results/[id]/items applies a whole {rid,manualRank} ordering\nin one withTransaction (one drag = one atomic call), and DELETE resets the\nmanual overlay for every item (back to the computed order). Draft-only (409\nfinalized), curator-scoped, Zod-validated; every rid is validated against the\nresult's own items inside the tx so a bad/foreign rid rolls the whole batch\nback with a 404. Backs S3b's drag-to-reorder UI.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* feat(results): manual re-rank UI — drag + move-up/down on draft results, wired to the bulk endpoint (Epic S)\n\nThe DRAFT result page gains a 'Put in order by hand' affordance that flips the\naffirmation composition into a flat drag-to-reorder list (native HTML5 draggable,\n≥44px handles, no swiping) plus a per-row move-up/move-down keyboard/AT path. Every\nmove — drag OR button — recomputes a dense manualRank 0..N-1 over the whole list and\nissues ONE bulk PATCH /api/sort-results/[id]/items (S3a); the order updates\noptimistically and reverts wholesale on failure (single atomic call = clean\nrollback). 'Back to the computed order' DELETEs the overlay (optimistic revert by\ncomputedRank). A finalized keepsake shows NO reorder affordance — reorder is a draft\nactivity — and instead offers 'Make a revision' (the supersede flow).\n\na11y: an sr-only role=status announces 'Moved {name} to position N of M'; keyboard\nfocus stays on the moved item's control (retained across the in-flight disabled\nwindow); rows carry motion-reduce:transition-none. §4.4 framing lines name live\nStanding as 'the current picture' and the draft as 'the keepsake you can shape'. All\ncopy is exported TONE constants with a register scan.\n\nTests: rerank-copy register scan; 12-case RerankPanel jsdom suite (drag→one PATCH,\noptimistic+rollback, move-up/down swap PATCH, finalized guard + Make-a-revision,\nrole=status announce, ≥44px targets, reduced-motion, focus retention); page-level\ndraft-vs-finalized affordance assertions; an un-mocked e2e driving the move-up button\nthrough the bulk endpoint → reload → persisted order (all 3 projects).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* test(authz): register bulk re-rank PATCH/DELETE in the stranger-enumeration backstop (Epic S)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* fix(results): fold Epic S review — refresh after reorder, curator-gate revision, in-tx finalized guard, within-tier hand-order, 1-indexed manualRank, dup-rid + copy/weight polish\n\n- F-UX-I1: router.refresh() after a successful reorder/reset so the server-composed\n  keepsake reflects the new order without a reload (optimistic + rollback kept).\n- F-UX-I3: curator-gate the finalized \"Make a revision\" affordance (new canRevise\n  prop, mirrors the SharePanel gate) so a non-curator can't fork another's keepsake.\n- F-Data-I1: re-assert draft status INSIDE the reorder/reset transactions via a\n  SELECT ... FOR UPDATE row lock (findByIdForUpdate) + ReorderFinalizedError → 409,\n  closing the finalized-immutability TOCTOU.\n- F-UX-I2: scope the hand-order list to the loved tier (what manualRank orders);\n  Onward rows render read-only. Follow-up purses-9v1f.1 for cross-tier hand-order.\n- F-Data-M1: write manualRank 1-indexed to share computedRank's 1..N space.\n- F-Data-M2: reject duplicate rids in the reorder batch at the Zod boundary → 400.\n- F-UX-M1: \"Back to the computed order\" → \"Back to the suggested order\".\n- F-UX-M2: F5 heading \"The ones you live with\" → \"The ones you've weighed in on\".\n- F-UX-M4: drop font-medium from the usage chip (Badge base font-semibold wins).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* chore(epicS): CI wiring, usage-chip seed, doc + test alignment for merge\n\n- ci.yml: add e2e/results-rerank.spec.ts to the results area→spec map so a\n  results-only PR selects it (it never ran in CI before).\n- seed: seedSortScenario records usage decisions (so the Standing usage chip\n  renders on the draft + live Decide surfaces) and a finalized result carrying\n  the usage snapshot; capture.ts adds the results-finalized surface.\n- results-rerank.spec: correct to the shipped loved-only hand-order design —\n  the reorder list holds the 2 loved rows (Onward excluded, cross-tier is\n  purses-9v1f.1); assert the Onward item is not reorderable.\n- Drop the redundant copy-ceremony tests (usage-chip-copy, rerank-copy): the\n  register-scans/tautologies are covered by RerankPanel.test.tsx against real\n  DOM (aria labels, role=status announcement).\n- ARCHITECTURE: decision #29 (Standing usage chip + hand-order).\n- Refresh graphify graph.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Tb3s1QSGtkTEuF18Euaqf6\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783799308000
+              "time": 1783800134000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783799308000
+              "time": 1783800134000
             },
             "branch": "main"
           },
@@ -87,24 +87,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/4c8e4bf414abd4da367549dc96c1476657b3ad15",
-            "commitHash": "4c8e4bf414abd4da367549dc96c1476657b3ad15",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29165907864"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/7e86f9dcfcf2d09abed8c4b80c44fcb3ae03e86f",
+            "commitHash": "7e86f9dcfcf2d09abed8c4b80c44fcb3ae03e86f",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29166311635"
           },
           "gitCommit": {
-            "shortHash": "4c8e4bf",
-            "hash": "4c8e4bf414abd4da367549dc96c1476657b3ad15",
-            "subject": "feat(onboarding): /welcome walkthrough teaches the usage round (Do you use this?) (#313)",
-            "body": "feat(onboarding): /welcome walkthrough teaches the usage round (Do you use this?) (#313)\n\n* feat(onboarding): /welcome walkthrough teaches the usage round (Do you use this?)\n\nInsert a \"Do you use this?\" usage teaching beat between triage and compare in\nthe /welcome walkthrough (arc: Get acquainted -> Do you use this? -> Which do\nyou love more?). WelcomeUsage mirrors WelcomeTriage's synchronous local mode:\nneutral kicker, ROUND_COPY.usage explainer + question, a sample item, the real\nusageDecisions buttons, and the \"Skip for now\" pass — one tap advances.\n\nAlso fix a pre-existing capture.ts break: after the #304 six-beat rebuild the\nfinal /welcome shot tapped Standing's Continue once and waited for the handoff\nheading, but Standing now advances to Refine first, so the wait hung. Add the\nRefine step (+ shot) so it reaches Hand-off (\"Now, your turn.\", unchanged), and\nadd a welcome-usage shot.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* test(e2e): decision-queue crash-reload catch-up + pagehide delivery + usage-round reload (hmjs)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* chore(graph): refresh graphify graph for welcome usage beat\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Tb3s1QSGtkTEuF18Euaqf6\n\n* test(e2e): walk the new usage beat in welcome-walkthrough\n\nfi9y inserted the usage beat (Do you use this?) between triage and compare\nbut walkToHandoff still jumped straight to compare's Tie, timing out. Tap\n\"Yes, I use it\" to advance through the beat.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Tb3s1QSGtkTEuF18Euaqf6\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "7e86f9d",
+            "hash": "7e86f9dcfcf2d09abed8c4b80c44fcb3ae03e86f",
+            "subject": "feat(sorting): Epic S — Standing usage chip + hand-orderable draft results (mvn5) (#314)",
+            "body": "feat(sorting): Epic S — Standing usage chip + hand-orderable draft results (mvn5) (#314)\n\n* docs(specs): Epic S design (rev 2, adversarial review folded) + implementation plan\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* feat(results): usage chip on Standing — per-item In your life / Resting annotation (Epic S)\n\nThread the live usage fold (DecisionController.listForCurator + deriveUsage) into\nthe Decide/Standing surface and render a quiet, count-free per-item chip — \"In\nyour life\" (uses) / \"Resting\" (not_uses) — on usage-known ranked rows; no chip\nwhen usage is undecided. Extend the render gate so a usage-only collection (usage\nanswers, no love ranking) shows the item list with chips instead of the empty\nstate. deriveStanding is unchanged (love-only). DATA-6: only the derived\nMap<itemId,answer> is threaded to the client; the raw curator event log stays\nserver-side.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* feat(results): sort_result_items.usage snapshot at materialization + fresh-fold on revision (Epic S)\n\nAdd a nullable `usage` text column to sort_result_items (additive migration\n0016, no CHECK, no backfill — matches the manualBucket plain-text precedent).\nStamp it at draft materialization from the curator's LIVE usage fold\n(loadCuratorDecisionEvents + deriveUsage), threaded through the create-path:\ncreateResultWithItems gains a usageByItemId map and the repo create-input gains\na `usage` field. A usage-unknown item stamps NULL.\n\nRevision uses fresh-fold (§3.3): supersedeResult RE-DERIVES usage from the\nCURRENT decision log at revision materialization (the same deriveUsage a fresh\ndraft runs), so the revision's snapshot describes the revision moment.\ncloneItemsFrom stays unchanged — it drops manual overrides and simply does not\ncarry usage; usage is stamped by the materialization step, not the clone.\n\nThe finalized keepsake page reads the snapshot `usage` into the SAME quiet chip\nS1 built (\"In your life\" / \"Resting\"); a legacy all-NULL result renders none.\n\nTests: new un-mocked DB integration file proving the migration applied,\nper-item stamping (unknown -> NULL), and one revision test asserting BOTH halves\n(fresh-folded usage + dropped manual overlay); finalized-page chip render +\nlegacy-no-chip; existing service/materialization/pipeline suites kept green.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* feat(results): transactional bulk re-rank endpoint for draft results (Epic S)\n\nPATCH /api/sort-results/[id]/items applies a whole {rid,manualRank} ordering\nin one withTransaction (one drag = one atomic call), and DELETE resets the\nmanual overlay for every item (back to the computed order). Draft-only (409\nfinalized), curator-scoped, Zod-validated; every rid is validated against the\nresult's own items inside the tx so a bad/foreign rid rolls the whole batch\nback with a 404. Backs S3b's drag-to-reorder UI.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* feat(results): manual re-rank UI — drag + move-up/down on draft results, wired to the bulk endpoint (Epic S)\n\nThe DRAFT result page gains a 'Put in order by hand' affordance that flips the\naffirmation composition into a flat drag-to-reorder list (native HTML5 draggable,\n≥44px handles, no swiping) plus a per-row move-up/move-down keyboard/AT path. Every\nmove — drag OR button — recomputes a dense manualRank 0..N-1 over the whole list and\nissues ONE bulk PATCH /api/sort-results/[id]/items (S3a); the order updates\noptimistically and reverts wholesale on failure (single atomic call = clean\nrollback). 'Back to the computed order' DELETEs the overlay (optimistic revert by\ncomputedRank). A finalized keepsake shows NO reorder affordance — reorder is a draft\nactivity — and instead offers 'Make a revision' (the supersede flow).\n\na11y: an sr-only role=status announces 'Moved {name} to position N of M'; keyboard\nfocus stays on the moved item's control (retained across the in-flight disabled\nwindow); rows carry motion-reduce:transition-none. §4.4 framing lines name live\nStanding as 'the current picture' and the draft as 'the keepsake you can shape'. All\ncopy is exported TONE constants with a register scan.\n\nTests: rerank-copy register scan; 12-case RerankPanel jsdom suite (drag→one PATCH,\noptimistic+rollback, move-up/down swap PATCH, finalized guard + Make-a-revision,\nrole=status announce, ≥44px targets, reduced-motion, focus retention); page-level\ndraft-vs-finalized affordance assertions; an un-mocked e2e driving the move-up button\nthrough the bulk endpoint → reload → persisted order (all 3 projects).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* test(authz): register bulk re-rank PATCH/DELETE in the stranger-enumeration backstop (Epic S)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* fix(results): fold Epic S review — refresh after reorder, curator-gate revision, in-tx finalized guard, within-tier hand-order, 1-indexed manualRank, dup-rid + copy/weight polish\n\n- F-UX-I1: router.refresh() after a successful reorder/reset so the server-composed\n  keepsake reflects the new order without a reload (optimistic + rollback kept).\n- F-UX-I3: curator-gate the finalized \"Make a revision\" affordance (new canRevise\n  prop, mirrors the SharePanel gate) so a non-curator can't fork another's keepsake.\n- F-Data-I1: re-assert draft status INSIDE the reorder/reset transactions via a\n  SELECT ... FOR UPDATE row lock (findByIdForUpdate) + ReorderFinalizedError → 409,\n  closing the finalized-immutability TOCTOU.\n- F-UX-I2: scope the hand-order list to the loved tier (what manualRank orders);\n  Onward rows render read-only. Follow-up purses-9v1f.1 for cross-tier hand-order.\n- F-Data-M1: write manualRank 1-indexed to share computedRank's 1..N space.\n- F-Data-M2: reject duplicate rids in the reorder batch at the Zod boundary → 400.\n- F-UX-M1: \"Back to the computed order\" → \"Back to the suggested order\".\n- F-UX-M2: F5 heading \"The ones you live with\" → \"The ones you've weighed in on\".\n- F-UX-M4: drop font-medium from the usage chip (Badge base font-semibold wins).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01UQS4F4JxwFSyyMxHhVdSYz\n\n* chore(epicS): CI wiring, usage-chip seed, doc + test alignment for merge\n\n- ci.yml: add e2e/results-rerank.spec.ts to the results area→spec map so a\n  results-only PR selects it (it never ran in CI before).\n- seed: seedSortScenario records usage decisions (so the Standing usage chip\n  renders on the draft + live Decide surfaces) and a finalized result carrying\n  the usage snapshot; capture.ts adds the results-finalized surface.\n- results-rerank.spec: correct to the shipped loved-only hand-order design —\n  the reorder list holds the 2 loved rows (Onward excluded, cross-tier is\n  purses-9v1f.1); assert the Onward item is not reorderable.\n- Drop the redundant copy-ceremony tests (usage-chip-copy, rerank-copy): the\n  register-scans/tautologies are covered by RerankPanel.test.tsx against real\n  DOM (aria labels, role=status announcement).\n- ARCHITECTURE: decision #29 (Standing usage chip + hand-order).\n- Refresh graphify graph.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01Tb3s1QSGtkTEuF18Euaqf6\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783799308000
+              "time": 1783800134000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783799308000
+              "time": 1783800134000
             },
             "branch": "main"
           },
@@ -187,12 +187,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 437,
+                  "duration": 425,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:51:30.206Z",
+                  "startTime": "2026-07-11T20:05:42.252Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -229,7 +229,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 20181,
+                  "duration": 23226,
                   "errors": [],
                   "stdout": [
                     {
@@ -259,7 +259,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:51:31.312Z",
+                  "startTime": "2026-07-11T20:05:43.351Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -288,7 +288,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 16027,
+                  "duration": 31579,
                   "errors": [],
                   "stdout": [
                     {
@@ -318,7 +318,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:51:52.507Z",
+                  "startTime": "2026-07-11T20:06:07.901Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -347,7 +347,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3144,
+                  "duration": 4620,
                   "errors": [],
                   "stdout": [
                     {
@@ -359,7 +359,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:52:08.553Z",
+                  "startTime": "2026-07-11T20:06:39.518Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -388,7 +388,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2870,
+                  "duration": 3637,
                   "errors": [],
                   "stdout": [
                     {
@@ -400,7 +400,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:52:11.714Z",
+                  "startTime": "2026-07-11T20:06:44.164Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -436,18 +436,77 @@
                 {
                   "workerIndex": 1,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 2226,
-                  "errors": [],
+                  "status": "failed",
+                  "duration": 7559,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/collections\\/e2e-workspace-pool-only-col_01kx9cma0wdv0gbmp0j4r45vgx\\/pool$/\u001b[39m\nReceived string:  \u001b[31m\"http://127.0.0.1:3100/collections/e2e-workspace-pool-only-col_01kx9cma0wdv0gbmp0j4r45vgx\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    14 × unexpected value \"http://127.0.0.1:3100/collections/e2e-workspace-pool-only-col_01kx9cma0wdv0gbmp0j4r45vgx\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/collections\\/e2e-workspace-pool-only-col_01kx9cma0wdv0gbmp0j4r45vgx\\/pool$/\u001b[39m\nReceived string:  \u001b[31m\"http://127.0.0.1:3100/collections/e2e-workspace-pool-only-col_01kx9cma0wdv0gbmp0j4r45vgx\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    14 × unexpected value \"http://127.0.0.1:3100/collections/e2e-workspace-pool-only-col_01kx9cma0wdv0gbmp0j4r45vgx\"\u001b[22m\n\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts:40:22",
+                    "location": {
+                      "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts",
+                      "column": 22,
+                      "line": 40
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 38 |\u001b[39m   \u001b[90m// Real browser navigation — prove the link actually reaches /pool, not just its href.\u001b[39m\n \u001b[90m 39 |\u001b[39m   \u001b[36mawait\u001b[39m makeItems\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 40 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[36mnew\u001b[39m \u001b[33mRegExp\u001b[39m(\u001b[32m`/collections/${poolOnly.slug}/pool$`\u001b[39m))\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 41 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 42 |\u001b[39m\n \u001b[90m 43 |\u001b[39m test(\u001b[32m\"both: Photo pool renders before Items, with the item preview shown\"\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts",
+                        "column": 22,
+                        "line": 40
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/collections\\/e2e-workspace-pool-only-col_01kx9cma0wdv0gbmp0j4r45vgx\\/pool$/\u001b[39m\nReceived string:  \u001b[31m\"http://127.0.0.1:3100/collections/e2e-workspace-pool-only-col_01kx9cma0wdv0gbmp0j4r45vgx\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    14 × unexpected value \"http://127.0.0.1:3100/collections/e2e-workspace-pool-only-col_01kx9cma0wdv0gbmp0j4r45vgx\"\u001b[22m\n\n\n  38 |   // Real browser navigation — prove the link actually reaches /pool, not just its href.\n  39 |   await makeItems.click();\n> 40 |   await expect(page).toHaveURL(new RegExp(`/collections/${poolOnly.slug}/pool$`));\n     |                      ^\n  41 | });\n  42 |\n  43 | test(\"both: Photo pool renders before Items, with the item preview shown\", async ({ page }) => {\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts:40:22"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:52:14.616Z",
+                  "startTime": "2026-07-11T20:06:48.081Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-337e6-ke-items-routes-to-the-pool-tablet/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-337e6-ke-items-routes-to-the-pool-tablet/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-337e6-ke-items-routes-to-the-pool-tablet/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts",
+                    "column": 22,
+                    "line": 40
+                  }
+                },
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12787,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 1,
+                  "startTime": "2026-07-11T20:07:34.873Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-337e6-ke-items-routes-to-the-pool-tablet-retry1/trace.zip"
+                    }
+                  ]
                 }
               ],
-              "status": "expected"
+              "status": "flaky"
             }
           ],
           "id": "8459740f6655c8183518-9cc62fddf7c1e16375db",
@@ -468,15 +527,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1483,
+                  "duration": 2411,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:52:16.924Z",
+                  "startTime": "2026-07-11T20:07:49.855Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -502,15 +561,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1664,
+                  "duration": 2341,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:52:18.423Z",
+                  "startTime": "2026-07-11T20:07:52.289Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -536,15 +595,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1039,
+                  "duration": 1283,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:52:20.106Z",
+                  "startTime": "2026-07-11T20:07:54.649Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -570,15 +629,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1156,
+                  "duration": 1488,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:52:21.159Z",
+                  "startTime": "2026-07-11T20:07:55.975Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -612,15 +671,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1933,
+                  "duration": 2944,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:52:22.418Z",
+                  "startTime": "2026-07-11T20:07:57.629Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -646,15 +705,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2219,
+                  "duration": 3442,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:52:24.440Z",
+                  "startTime": "2026-07-11T20:08:00.689Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -688,15 +747,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2698,
+                  "duration": 2981,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:52:26.704Z",
+                  "startTime": "2026-07-11T20:08:04.164Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -722,15 +781,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3873,
+                  "duration": 1980,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:52:29.524Z",
+                  "startTime": "2026-07-11T20:08:07.243Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -756,15 +815,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 5223,
+                  "duration": 2042,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:52:33.472Z",
+                  "startTime": "2026-07-11T20:08:09.268Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -805,15 +864,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 6641,
+                      "duration": 1576,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:52:39.161Z",
+                      "startTime": "2026-07-11T20:08:11.361Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -839,15 +898,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2303,
+                      "duration": 1507,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:52:53.036Z",
+                      "startTime": "2026-07-11T20:08:13.174Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -873,15 +932,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2079,
+                      "duration": 1487,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:52:55.361Z",
+                      "startTime": "2026-07-11T20:08:14.700Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -924,15 +983,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 10664,
+                      "duration": 4285,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:52:58.067Z",
+                      "startTime": "2026-07-11T20:08:16.243Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -958,15 +1017,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4726,
+                      "duration": 2577,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:53:08.753Z",
+                      "startTime": "2026-07-11T20:08:20.560Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1009,15 +1068,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3301,
+                      "duration": 1680,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:53:13.956Z",
+                      "startTime": "2026-07-11T20:08:23.174Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1060,15 +1119,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4339,
+                      "duration": 2153,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:53:17.715Z",
+                      "startTime": "2026-07-11T20:08:24.931Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1111,15 +1170,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1501,
+                      "duration": 1085,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:53:22.804Z",
+                      "startTime": "2026-07-11T20:08:27.204Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1145,15 +1204,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1528,
+                      "duration": 1262,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:53:25.241Z",
+                      "startTime": "2026-07-11T20:08:28.340Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1196,15 +1255,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5434,
+                      "duration": 4480,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:53:26.915Z",
+                      "startTime": "2026-07-11T20:08:29.647Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1230,15 +1289,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4941,
+                      "duration": 3992,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:53:32.476Z",
+                      "startTime": "2026-07-11T20:08:34.187Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1281,15 +1340,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2631,
+                      "duration": 1885,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:53:37.521Z",
+                      "startTime": "2026-07-11T20:08:38.219Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1315,15 +1374,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2847,
+                      "duration": 3761,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:53:40.346Z",
+                      "startTime": "2026-07-11T20:08:40.150Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1366,15 +1425,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1401,
+                      "duration": 14901,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:53:43.350Z",
+                      "startTime": "2026-07-11T20:08:44.117Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1400,15 +1459,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 744,
+                      "duration": 2893,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:53:44.795Z",
+                      "startTime": "2026-07-11T20:08:59.048Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1434,15 +1493,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 638,
+                      "duration": 2518,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:53:45.551Z",
+                      "startTime": "2026-07-11T20:09:01.954Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1478,15 +1537,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1565,
+                  "duration": 1399,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:53:46.265Z",
+                  "startTime": "2026-07-11T20:09:05.261Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1512,15 +1571,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2374,
+                  "duration": 1485,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:53:47.913Z",
+                  "startTime": "2026-07-11T20:09:06.982Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1554,15 +1613,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1959,
+                  "duration": 1697,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:53:50.367Z",
+                  "startTime": "2026-07-11T20:09:09.512Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1588,15 +1647,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1461,
+                  "duration": 1633,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:53:52.484Z",
+                  "startTime": "2026-07-11T20:09:11.751Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1622,20 +1681,71 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 2002,
-                  "errors": [],
+                  "status": "timedOut",
+                  "duration": 30319,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts",
+                        "column": 10,
+                        "line": 81
+                      },
+                      "message": "Error: page.waitForResponse: Test timeout of 30000ms exceeded.\n\n  79 |   await page.getByLabel(\"Invite by email\").fill(email);\n  80 |   await Promise.all([\n> 81 |     page.waitForResponse(\n     |          ^\n  82 |       (r) =>\n  83 |         r.url().includes(`/api/collections/${collectionId}/invitations`) &&\n  84 |         r.request().method() === \"POST\",\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts:81:10"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:53:53.979Z",
+                  "startTime": "2026-07-11T20:09:13.413Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/error-context.md"
+                    }
+                  ]
+                },
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1928,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 1,
+                  "startTime": "2026-07-11T20:09:44.729Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/trace.zip"
+                    }
+                  ]
                 }
               ],
-              "status": "expected"
+              "status": "flaky"
             }
           ],
           "id": "01480a904f937bb0a1f8-16a0057158965d3a7188",
@@ -1671,15 +1781,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3997,
+                      "duration": 3209,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:53:56.045Z",
+                      "startTime": "2026-07-11T20:09:47.002Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1705,15 +1815,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3501,
+                      "duration": 2948,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:54:00.253Z",
+                      "startTime": "2026-07-11T20:09:50.318Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1739,15 +1849,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2127,
+                      "duration": 1454,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:54:03.785Z",
+                      "startTime": "2026-07-11T20:09:53.285Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1790,15 +1900,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 11443,
+                      "duration": 9910,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:54:05.957Z",
+                      "startTime": "2026-07-11T20:09:54.793Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1824,15 +1934,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1786,
+                      "duration": 1450,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:54:17.552Z",
+                      "startTime": "2026-07-11T20:10:04.818Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1868,15 +1978,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2449,
+                  "duration": 1870,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:54:19.406Z",
+                  "startTime": "2026-07-11T20:10:06.304Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1917,15 +2027,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1641,
+                      "duration": 1286,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:54:21.906Z",
+                      "startTime": "2026-07-11T20:10:08.215Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1936,6 +2046,57 @@
               "id": "87a4a8f69574e1074df1-000662385e0eb8034ef9",
               "file": "results-onward.spec.ts",
               "line": 60,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "results-rerank.spec.ts",
+      "file": "results-rerank.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "draft result — manual re-rank persists through the bulk endpoint",
+          "file": "results-rerank.spec.ts",
+          "line": 23,
+          "column": 6,
+          "specs": [
+            {
+              "title": "move-up on the 2nd item PATCHes the new order and it survives a reload",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2459,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-07-11T20:10:09.636Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3774d9eecc31377d94ee-852548a357bfe88aae03",
+              "file": "results-rerank.spec.ts",
+              "line": 38,
               "column": 7
             }
           ]
@@ -1968,15 +2129,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2214,
+                      "duration": 1278,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:54:23.781Z",
+                      "startTime": "2026-07-11T20:10:12.211Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2019,15 +2180,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 13684,
+                      "duration": 2830,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:54:27.159Z",
+                      "startTime": "2026-07-11T20:10:13.596Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2053,15 +2214,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 11983,
+                      "duration": 2978,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:54:40.867Z",
+                      "startTime": "2026-07-11T20:10:16.446Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2104,15 +2265,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2793,
+                      "duration": 2366,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:54:53.109Z",
+                      "startTime": "2026-07-11T20:10:19.453Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2155,15 +2316,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2493,
+                      "duration": 2099,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:54:56.110Z",
+                      "startTime": "2026-07-11T20:10:21.893Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2199,15 +2360,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1048,
+                  "duration": 901,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:54:58.720Z",
+                  "startTime": "2026-07-11T20:10:24.054Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2233,15 +2394,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1003,
+                  "duration": 1112,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:54:59.796Z",
+                  "startTime": "2026-07-11T20:10:24.973Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2267,15 +2428,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1350,
+                  "duration": 1041,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:55:00.819Z",
+                  "startTime": "2026-07-11T20:10:26.101Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2316,15 +2477,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1806,
+                      "duration": 1465,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:55:02.210Z",
+                      "startTime": "2026-07-11T20:10:27.169Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2367,15 +2528,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2573,
+                      "duration": 2242,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:55:04.177Z",
+                      "startTime": "2026-07-11T20:10:28.706Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2401,15 +2562,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3261,
+                      "duration": 2861,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:55:06.939Z",
+                      "startTime": "2026-07-11T20:10:31.053Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2435,15 +2596,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2202,
+                      "duration": 2749,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:55:10.274Z",
+                      "startTime": "2026-07-11T20:10:33.962Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2477,13 +2638,13 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 3152,
+                      "duration": 3786,
                       "error": {
-                        "message": "Error: page.goto: Navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9bz2swdnx04s34np4j6q8e/sort/1/compare\" is interrupted by another navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9bz2swdnx04s34np4j6q8e/sort/1/triage\"\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9bz2swdnx04s34np4j6q8e/sort/1/compare\", waiting until \"load\"\u001b[22m\n",
-                        "stack": "Error: page.goto: Navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9bz2swdnx04s34np4j6q8e/sort/1/compare\" is interrupted by another navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9bz2swdnx04s34np4j6q8e/sort/1/triage\"\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9bz2swdnx04s34np4j6q8e/sort/1/compare\", waiting until \"load\"\u001b[22m\n\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts:185:16",
+                        "message": "Error: page.goto: Navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9cv9apsvaz9vreqng4kdbj/sort/1/compare\" is interrupted by another navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9cv9apsvaz9vreqng4kdbj/sort/1/triage\"\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9cv9apsvaz9vreqng4kdbj/sort/1/compare\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: Navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9cv9apsvaz9vreqng4kdbj/sort/1/compare\" is interrupted by another navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9cv9apsvaz9vreqng4kdbj/sort/1/triage\"\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9cv9apsvaz9vreqng4kdbj/sort/1/compare\", waiting until \"load\"\u001b[22m\n\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts:185:16",
                         "location": {
                           "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts",
                           "column": 16,
@@ -2498,13 +2659,13 @@
                             "column": 16,
                             "line": 185
                           },
-                          "message": "Error: page.goto: Navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9bz2swdnx04s34np4j6q8e/sort/1/compare\" is interrupted by another navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9bz2swdnx04s34np4j6q8e/sort/1/triage\"\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9bz2swdnx04s34np4j6q8e/sort/1/compare\", waiting until \"load\"\u001b[22m\n\n\n  183 |\n  184 |     // 2. Move to compare and choose one card (tapping a card IS the choice).\n> 185 |     await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);\n      |                ^\n  186 |     await expect(\n  187 |       page.getByRole(\"heading\", { name: \"Which do you love more?\" }),\n  188 |     ).toBeVisible();\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts:185:16"
+                          "message": "Error: page.goto: Navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9cv9apsvaz9vreqng4kdbj/sort/1/compare\" is interrupted by another navigation to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9cv9apsvaz9vreqng4kdbj/sort/1/triage\"\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3100/collections/e2e-journey-bags-col_01kx9cv9apsvaz9vreqng4kdbj/sort/1/compare\", waiting until \"load\"\u001b[22m\n\n\n  183 |\n  184 |     // 2. Move to compare and choose one card (tapping a card IS the choice).\n> 185 |     await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);\n      |                ^\n  186 |     await expect(\n  187 |       page.getByRole(\"heading\", { name: \"Which do you love more?\" }),\n  188 |     ).toBeVisible();\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/sort-session.spec.ts:185:16"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:55:12.555Z",
+                      "startTime": "2026-07-11T20:10:36.737Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2525,15 +2686,15 @@
                       }
                     },
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 6747,
+                      "duration": 6515,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2026-07-11T19:55:47.939Z",
+                      "startTime": "2026-07-11T20:11:12.133Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2565,15 +2726,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2196,
+                      "duration": 2428,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:55:56.056Z",
+                      "startTime": "2026-07-11T20:11:19.857Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2607,15 +2768,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1195,
+                      "duration": 2082,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:55:58.274Z",
+                      "startTime": "2026-07-11T20:11:22.305Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2641,15 +2802,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1261,
+                      "duration": 1066,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:55:59.485Z",
+                      "startTime": "2026-07-11T20:11:24.412Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2692,15 +2853,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3646,
+                      "duration": 3175,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:56:00.788Z",
+                      "startTime": "2026-07-11T20:11:25.533Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2726,15 +2887,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4076,
+                      "duration": 3134,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-11T19:56:04.540Z",
+                      "startTime": "2026-07-11T20:11:28.789Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2770,15 +2931,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4065,
+                  "duration": 2883,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:56:08.668Z",
+                  "startTime": "2026-07-11T20:11:31.964Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2804,15 +2965,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3483,
+                  "duration": 2862,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:56:12.756Z",
+                  "startTime": "2026-07-11T20:11:34.867Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2838,15 +2999,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2698,
+                  "duration": 2061,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-11T19:56:16.271Z",
+                  "startTime": "2026-07-11T20:11:37.748Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2864,11 +3025,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-07-11T19:50:07.836Z",
-    "duration": 371665.42699999997,
-    "expected": 63,
+    "startTime": "2026-07-11T20:04:18.216Z",
+    "duration": 442697.418,
+    "expected": 62,
     "skipped": 0,
     "unexpected": 0,
-    "flaky": 1
+    "flaky": 3
   }
 }
