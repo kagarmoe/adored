@@ -152,7 +152,7 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 | GET·PATCH·DELETE | `/api/sort-results/[id]` | curator |
 | POST | `/api/sort-results/[id]/finalize` | curator |
 | POST | `/api/sort-results/[id]/supersede` | curator |
-| GET | `/api/sort-results/[id]/items` | curator |
+| GET·PATCH·DELETE | `/api/sort-results/[id]/items` | curator |
 | GET·PATCH·DELETE | `/api/sort-results/[id]/items/[rid]` | curator |
 | POST | `/api/sort-results/[id]/items/[rid]/reset` | curator |
 
@@ -343,8 +343,8 @@ Curator-private results, gated by `requireApiResultAccess` (member-or-owner **an
 ### `POST /api/sort-results/[id]/supersede`
 `requireAuth` + `requireApiResultAccess`. Delegates to `SortResultService.supersedeResult`. When the source is **finalized**, creates a new **draft** result (`name` = `"<source name> (Revision)"`) with the source's items **cloned** (computed rank/bucket carried over) **atomically** (result + items in one transaction — `purses-nea`) → **`201`** the new draft `SortResult`. **`409`** (`"Can only supersede finalized results"`) if the source is not finalized; **`404`** if the source is absent.
 
-### `GET /api/sort-results/[id]/items`
-`requireApiResultAccess`. Returns `SortResultItem[]`.
+### `GET·PATCH·DELETE /api/sort-results/[id]/items`
+`requireApiResultAccess`. `GET` → `SortResultItem[]`. **Epic S bulk re-rank** (`purses-mvn5`): `PATCH` body `{ order: [{ rid, manualRank }] }` writes the whole sequence's 1-indexed `manualRank` in **one `withTransaction`** (atomic — a partial reorder is never persisted); `DELETE` clears the manual overlay (NULLs every `manualRank`, back to the suggested order). Both **reject a finalized parent with `409`** (the keepsake is immutable). Hand-order is scoped to the loved tier; cross-tier is deferred (`purses-9v1f.1`).
 
 ### `GET·PATCH·DELETE /api/sort-results/[id]/items/[rid]`
 `requireApiResultAccess` + belongs-to-parent (`item.sortResultId !== id` → `404`). `PATCH`/`DELETE` reject a **finalized** parent result with **`409`** (finalized results are immutable — infra §11.3; `purses-526`). `GET` → `SortResultItem`; `PATCH` body → updated item (`400` invalid JSON); `DELETE` removes the item via `SortResultService.deleteResultItem` → `200 { message }`.

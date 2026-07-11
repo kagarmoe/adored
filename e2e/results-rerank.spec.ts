@@ -10,8 +10,9 @@
 // drag path in jsdom.
 //
 // seedSortScenario materializes a DRAFT result (SortResultService.createDraftResult)
-// with three items ranked top/high/low → display order Item 1, Item 2, Item 3.
-// Moving Item 2 up must persist (Item 2, Item 1, Item 3) across a reload.
+// with three items ranked top/high/low. The hand-order list is LOVED-only, so it
+// holds the two loved items (Item 1, Item 2); Item 3 (low → Onward) is excluded.
+// Moving Item 2 up must persist (Item 2, Item 1) across a reload.
 //
 // Auth via the shared storageState (playwright.config.ts); mirrors results.spec.ts.
 import { test, expect } from "@playwright/test";
@@ -41,10 +42,15 @@ test.describe("draft result — manual re-rank persists through the bulk endpoin
     await page.getByRole("button", { name: "Put in order by hand" }).click();
 
     const rows = page.getByTestId("rerank-row");
-    await expect(rows).toHaveCount(3);
-    // Seeded display order: Item 1 (top), Item 2 (high), Item 3 (low).
+    // Hand-order is scoped to the LOVED tier (top/high). Item 3 (low) is Onward
+    // and renders read-only OUTSIDE the reorder list — cross-tier hand-order is
+    // the deferred follow-up (purses-9v1f.1).
+    await expect(rows).toHaveCount(2);
+    // Seeded loved order: Item 1 (top), Item 2 (high).
     await expect(rows.nth(0)).toContainText("E2E Sort Item 1");
     await expect(rows.nth(1)).toContainText("E2E Sort Item 2");
+    // The Onward item is not reorderable (no move control for it).
+    await expect(page.getByRole("button", { name: "Move E2E Sort Item 3 up" })).toHaveCount(0);
 
     // Move Item 2 up — one bulk PATCH to the transactional endpoint.
     const patch = page.waitForResponse(
@@ -65,8 +71,8 @@ test.describe("draft result — manual re-rank persists through the bulk endpoin
     await page.reload();
     await page.getByRole("button", { name: "Put in order by hand" }).click();
     const reloaded = page.getByTestId("rerank-row");
+    await expect(reloaded).toHaveCount(2);
     await expect(reloaded.nth(0)).toContainText("E2E Sort Item 2");
     await expect(reloaded.nth(1)).toContainText("E2E Sort Item 1");
-    await expect(reloaded.nth(2)).toContainText("E2E Sort Item 3");
   });
 });
