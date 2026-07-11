@@ -37,3 +37,20 @@ export const dragHandleLabel = (name: string) => `Reorder ${name}`;
 /** The role="status" announcement after a move (§4.3). Position is 1-based. */
 export const movedAnnouncement = (name: string, position: number, total: number) =>
   `Moved ${name} to position ${position} of ${total}.`;
+
+/** 9v1f.1 cross-tier: the boundary between the loved ranking and the Onward group
+ *  in the hand-order list. A real (AT-perceivable) divider, not a hairline. */
+export const HANDORDER_ONWARD_LABEL = "Onward";
+export const HANDORDER_ONWARD_CAPTION = "Ready to move on — arrange these too.";
+
+/** 9v1f.1 cross-tier: each row's zone, exposed to AT via a visually-hidden span so
+ *  group membership is perceivable on static navigation, not just on a move. */
+export const ZONE_LOVED_LABEL = "In your ranking";
+export const ZONE_ONWARD_LABEL = "In Onward";
+
+/** 9v1f.1 cross-tier: announcements that name the DESTINATION section on a cross
+ *  (neutral — no demotion framing; position is the AT necessity). */
+export const movedToOnwardAnnouncement = (name: string, position: number, total: number) =>
+  `Moved ${name} to Onward, position ${position} of ${total}.`;
+export const movedToRankingAnnouncement = (name: string, position: number, total: number) =>
+  `Moved ${name} into your ranking, position ${position} of ${total}.`;

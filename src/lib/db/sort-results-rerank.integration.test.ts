@@ -124,12 +124,12 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     const { db } = getTestDb();
     const { resultId, items } = await seedResultWithItems(ownerId, ownerId);
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    // Reverse the computed order by hand.
+    // Reverse the computed order by hand (within-tier: manualBucket null).
     const res = await reorderItems(
       patchReq({ order: [
-        { rid: items[0].id, manualRank: 3 },
-        { rid: items[1].id, manualRank: 2 },
-        { rid: items[2].id, manualRank: 1 },
+        { rid: items[0].id, manualRank: 3, manualBucket: null },
+        { rid: items[1].id, manualRank: 2, manualBucket: null },
+        { rid: items[2].id, manualRank: 1, manualBucket: null },
       ] }) as any,
       { params: { id: resultId } },
     );
@@ -144,6 +144,61 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     expect(byId.get(items[2].id)).toBe(1);
   });
 
+  // 9v1f.1: a cross-tier move writes manual_bucket alongside manual_rank in the same
+  // transaction, so effectiveBucket flips the item across the loved/onward boundary.
+  it("200s and writes manual_bucket on a cross-tier move (loved item → Onward)", async () => {
+    const { db } = getTestDb();
+    const { resultId, items } = await seedResultWithItems(ownerId, ownerId);
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await reorderItems(
+      patchReq({ order: [
+        { rid: items[0].id, manualRank: 1, manualBucket: null },
+        { rid: items[1].id, manualRank: 2, manualBucket: null },
+        { rid: items[2].id, manualRank: 3, manualBucket: "low" }, // hand-moved to Onward
+      ] }) as any,
+      { params: { id: resultId } },
+    );
+    expect(res.status).toBe(200);
+    const repo = new SortResultItemRepository(db);
+    const moved = (await repo.findById(items[2].id))!;
+    expect(moved.manualRank).toBe(3);
+    expect(moved.manualBucket).toBe("low");
+    // The un-crossed rows keep manual_bucket NULL (badge preserved).
+    expect((await repo.findById(items[0].id))!.manualBucket).toBeNull();
+  });
+
+  // R4: the batch is a FULL overlay — a row sent with manualBucket null CLEARS a
+  // prior override (the `?? null` coalesce; drizzle must SET NULL, not skip).
+  it("200s and CLEARS a stale manual_bucket override when the batch sends null", async () => {
+    const { db } = getTestDb();
+    const { resultId, items } = await seedResultWithItems(ownerId, ownerId);
+    const repo = new SortResultItemRepository(db);
+    await repo.update(items[2].id, { manualRank: 3, manualBucket: "low" }); // prior override
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await reorderItems(
+      patchReq({ order: [
+        { rid: items[0].id, manualRank: 1, manualBucket: null },
+        { rid: items[1].id, manualRank: 2, manualBucket: null },
+        { rid: items[2].id, manualRank: 3, manualBucket: null }, // back to its computed side
+      ] }) as any,
+      { params: { id: resultId } },
+    );
+    expect(res.status).toBe(200);
+    expect((await repo.findById(items[2].id))!.manualBucket).toBeNull();
+  });
+
+  it("400s a batch missing the required manualBucket field and writes nothing (R4)", async () => {
+    const { db } = getTestDb();
+    const { resultId, items } = await seedResultWithItems(ownerId, ownerId);
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await reorderItems(
+      patchReq({ order: [{ rid: items[0].id, manualRank: 1 }] }) as any, // no manualBucket
+      { params: { id: resultId } },
+    );
+    expect(res.status).toBe(400);
+    expect((await new SortResultItemRepository(db).findById(items[0].id))!.manualRank).toBeNull();
+  });
+
   it("ATOMICITY: one bad rid rolls the WHOLE batch back (no valid row changed) and 404s", async () => {
     const { db } = getTestDb();
     const { resultId, items } = await seedResultWithItems(ownerId, ownerId);
@@ -152,9 +207,9 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     // transactional those two would persist. The rollback is what we pin.
     const res = await reorderItems(
       patchReq({ order: [
-        { rid: items[0].id, manualRank: 3 },
-        { rid: items[1].id, manualRank: 2 },
-        { rid: "sri_not_in_this_result", manualRank: 1 },
+        { rid: items[0].id, manualRank: 3, manualBucket: null },
+        { rid: items[1].id, manualRank: 2, manualBucket: null },
+        { rid: "sri_not_in_this_result", manualRank: 1, manualBucket: null },
       ] }) as any,
       { params: { id: resultId } },
     );
@@ -179,8 +234,8 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await reorderItems(
       patchReq({ order: [
-        { rid: items[0].id, manualRank: 3 },
-        { rid: foreign.id, manualRank: 1 },
+        { rid: items[0].id, manualRank: 3, manualBucket: null },
+        { rid: foreign.id, manualRank: 1, manualBucket: null },
       ] }) as any,
       { params: { id: resultId } },
     );
@@ -196,7 +251,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     const { resultId, items } = await seedResultWithItems(ownerId, ownerId);
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await reorderItems(
-      patchReq({ order: [{ rid: items[0].id }] }) as any,
+      patchReq({ order: [{ rid: items[0].id, manualBucket: null }] }) as any, // manualRank missing
       { params: { id: resultId } },
     );
     expect(res.status).toBe(400);
@@ -211,8 +266,8 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await reorderItems(
       patchReq({ order: [
-        { rid: items[0].id, manualRank: 1 },
-        { rid: items[0].id, manualRank: 2 },
+        { rid: items[0].id, manualRank: 1, manualBucket: null },
+        { rid: items[0].id, manualRank: 2, manualBucket: null },
       ] }) as any,
       { params: { id: resultId } },
     );
@@ -232,7 +287,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     await new SortResultRepository(db).update(resultId, { status: "finalized" });
     await expect(
       SortResultService.fromDb(db).reorderResultItems(resultId, [
-        { rid: items[0].id, manualRank: 1 },
+        { rid: items[0].id, manualRank: 1, manualBucket: null },
       ]),
     ).rejects.toBeInstanceOf(ReorderFinalizedError);
     expect((await new SortResultItemRepository(db).findById(items[0].id))!.manualRank).toBeNull();

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { RankBucket } from "@/types";
 import { Button, CardImage } from "@/components/ui";
 import {
   PUT_IN_ORDER,
@@ -9,22 +10,30 @@ import {
   BACK_TO_COMPUTED,
   MAKE_A_REVISION,
   DRAFT_SHAPE_FRAMING,
+  HANDORDER_ONWARD_LABEL,
+  HANDORDER_ONWARD_CAPTION,
+  ZONE_LOVED_LABEL,
+  ZONE_ONWARD_LABEL,
   moveUpLabel,
   moveDownLabel,
   dragHandleLabel,
   movedAnnouncement,
+  movedToOnwardAnnouncement,
+  movedToRankingAnnouncement,
 } from "@/features/results/rerank-copy";
 
 /** A serializable ranked row for the reorder list. The page resolves the item
  *  name + cover URL server-side (the client never touches the photo store or the
- *  raw item), and passes computedRank so "Back to the computed order" can revert
- *  optimistically without waiting on the DELETE response. */
+ *  raw item), and passes computedRank + computedBucket so "Back to the suggested
+ *  order" can revert optimistically and the client can compute each row's target
+ *  manualBucket on a cross-tier move without waiting on a response. */
 export interface RerankRow {
   rid: string;
   itemId: string;
   name: string;
   coverUrl?: string;
   computedRank: number;
+  computedBucket: RankBucket;
 }
 
 interface RerankPanelProps {
@@ -32,8 +41,10 @@ interface RerankPanelProps {
   /** slug or id — the segment the revision route navigates to. */
   collectionId: string;
   status: "draft" | "finalized";
-  /** Rows in current display order (manualRank ?? computedRank). */
+  /** Rows in display order: the `lovedCount` loved rows first, then the onward rows. */
   rows: RerankRow[];
+  /** How many leading rows are loved — seeds the sentinel (Onward divider) position. */
+  lovedCount: number;
   /** Whether the viewer is the result's curator. Gates the finalized-branch
    *  "Make a revision" affordance so a non-curator collaborator is never offered
    *  to fork another curator's keepsake (mirrors the SharePanel curator gate). */
@@ -45,6 +56,14 @@ interface RerankPanelProps {
 const GENTLE_FAIL =
   "That didn't hold just now — nothing was lost. Try again whenever you like.";
 
+/** 9v1f.1: the hand-order surface is ONE ordered sequence of rows plus a single
+ *  sentinel that marks the loved↔onward boundary. Zone is DERIVED purely from a
+ *  row's position relative to the sentinel (before = loved, after = onward), so
+ *  manualRank (position) and zone can never disagree — the sequence is monotonic
+ *  by construction (adversarial-review R1/R2). Moving a row past the sentinel is
+ *  how a cross-tier move happens, for both drag and the keyboard/AT buttons. */
+type SeqEntry = { kind: "row"; row: RerankRow } | { kind: "sentinel" };
+
 /** Move the element at `from` to index `to`, returning a new array. */
 function reorder<T>(arr: readonly T[], from: number, to: number): T[] {
   const next = [...arr];
@@ -53,24 +72,87 @@ function reorder<T>(arr: readonly T[], from: number, to: number): T[] {
   return next;
 }
 
+function buildSeq(rows: RerankRow[], lovedCount: number): SeqEntry[] {
+  const rowEntry = (row: RerankRow): SeqEntry => ({ kind: "row", row });
+  return [
+    ...rows.slice(0, lovedCount).map(rowEntry),
+    { kind: "sentinel" },
+    ...rows.slice(lovedCount).map(rowEntry),
+  ];
+}
+
+/** The suggested (computed) sequence: rows by computedRank, split by computedBucket. */
+function computedSeq(rows: RerankRow[]): SeqEntry[] {
+  const sorted = [...rows].sort((a, b) => a.computedRank - b.computedRank);
+  const loved = sorted.filter((r) => r.computedBucket !== "low");
+  return buildSeq(
+    [...loved, ...sorted.filter((r) => r.computedBucket === "low")],
+    loved.length,
+  );
+}
+
+/** The full manual overlay this sequence describes: a dense 1-indexed manualRank
+ *  across BOTH zones, and a manualBucket per row that is null on the row's computed
+ *  side (badge preserved) or the canonical target bucket when hand-crossed. The
+ *  payload fully describes every row so a stale override never lingers (R4). */
+function toPayload(seq: SeqEntry[]): { rid: string; manualRank: number; manualBucket: RankBucket | null }[] {
+  const out: { rid: string; manualRank: number; manualBucket: RankBucket | null }[] = [];
+  let rank = 0;
+  let onward = false;
+  for (const e of seq) {
+    if (e.kind === "sentinel") {
+      onward = true;
+      continue;
+    }
+    rank += 1;
+    const computedOnward = e.row.computedBucket === "low";
+    const manualBucket: RankBucket | null =
+      onward === computedOnward ? null : onward ? "low" : "medium";
+    out.push({ rid: e.row.rid, manualRank: rank, manualBucket });
+  }
+  return out;
+}
+
+/** A row's 1-based position among rows, and whether it sits in the onward group. */
+function locate(seq: SeqEntry[], rid: string): { position: number; onward: boolean; total: number } {
+  let position = 0;
+  let onward = false;
+  let seenSentinel = false;
+  let total = 0;
+  let found = { position: 0, onward: false };
+  for (const e of seq) {
+    if (e.kind === "sentinel") {
+      seenSentinel = true;
+      continue;
+    }
+    total += 1;
+    if (e.row.rid === rid) found = { position: total, onward: seenSentinel };
+  }
+  position = found.position;
+  onward = found.onward;
+  return { position, onward, total };
+}
+
 /**
- * Epic S S3b (spec §4.3): the manual re-rank surface on the DRAFT result page.
+ * Epic S S3b + 9v1f.1: the manual re-rank surface on the DRAFT result page.
  *
- * - "Put in order by hand" flips the bucketed composition into a flat
- *   drag-to-reorder list (native HTML5 draggable; ≥44px handles; no swiping).
+ * - "Put in order by hand" flips the bucketed composition into ONE ordered list
+ *   spanning both tiers, with a sentinel marking the Onward boundary (native HTML5
+ *   draggable; ≥44px handles; no swiping).
  * - Per-row move-up / move-down buttons are the AA keyboard/AT path (≥44px,
- *   disabled at the ends, focus stays on the moved control) — no full aria
- *   grabbed/dropped pattern.
- * - Every reorder (drag OR button) recomputes a dense manualRank 0..N-1 and
- *   issues ONE bulk PATCH; the optimistic order reverts wholesale on failure
- *   (single atomic call = clean rollback).
- * - A finalized result shows NO reorder affordance — reorder is a draft
- *   activity — and instead offers "Make a revision" (the supersede flow).
+ *   disabled only at the sequence ends, focus stays on the moved control). Moving a
+ *   row across the sentinel crosses tiers — the empty-zone case is reachable because
+ *   the sentinel can sit at either end.
+ * - Every reorder (drag OR button) recomputes a dense manualRank + a manualBucket
+ *   per row and issues ONE bulk PATCH; the optimistic order reverts wholesale on
+ *   failure (single atomic call = clean rollback).
+ * - A finalized result shows NO reorder affordance — reorder is a draft activity —
+ *   and instead offers "Make a revision" (the supersede flow).
  */
-export function RerankPanel({ resultId, collectionId, status, rows, canRevise = false, children }: RerankPanelProps) {
+export function RerankPanel({ resultId, collectionId, status, rows, lovedCount, canRevise = false, children }: RerankPanelProps) {
   const router = useRouter();
   const [mode, setMode] = useState<"view" | "reorder">("view");
-  const [order, setOrder] = useState<RerankRow[]>(rows);
+  const [seq, setSeq] = useState<SeqEntry[]>(() => buildSeq(rows, lovedCount));
   const [busy, setBusy] = useState(false);
   const [announce, setAnnounce] = useState("");
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
@@ -84,10 +166,6 @@ export function RerankPanel({ resultId, collectionId, status, rows, canRevise = 
   useEffect(() => {
     const want = pendingFocus.current;
     if (!want) return;
-    // The moved row's same-direction control, unless that end is now disabled (top
-    // reached, or the row is momentarily disabled while the PATCH is in flight) —
-    // then the opposite control. If BOTH are disabled (busy), keep the intent and
-    // retry once `busy` clears, so focus is never dropped onto a disabled button.
     const same = buttonRefs.current.get(`${want.rid}:${want.dir}`);
     const other = buttonRefs.current.get(`${want.rid}:${want.dir === "up" ? "down" : "up"}`);
     const target = same && !same.disabled ? same : other && !other.disabled ? other : null;
@@ -95,61 +173,68 @@ export function RerankPanel({ resultId, collectionId, status, rows, canRevise = 
       pendingFocus.current = null;
       target.focus();
     }
-  }, [order, busy]);
+  }, [seq, busy]);
 
   const persist = useCallback(
-    async (next: RerankRow[], announceMsg: string) => {
-      const prev = order;
-      setOrder(next);
+    async (next: SeqEntry[], announceMsg: string) => {
+      const prev = seq;
+      setSeq(next);
       setAnnounce(announceMsg);
       setBusy(true);
       try {
         const res = await fetch(`/api/sort-results/${resultId}/items`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            // 1-indexed to share manualRank's numeric space with computedRank
-            // (1..N), so a mixed manual/NULL state never ties rank 0 to rank 1.
-            order: next.map((r, i) => ({ rid: r.rid, manualRank: i + 1 })),
-          }),
+          body: JSON.stringify({ order: toPayload(next) }),
         });
         if (!res.ok) throw new Error("reorder failed");
-        // The composed keepsake view (server-rendered `children`) is materialized
-        // at load; refresh it so the new hand-order is visible without a reload.
         router.refresh();
       } catch {
-        setOrder(prev); // clean rollback — one call, one revert (§4.3)
+        setSeq(prev); // clean rollback — one call, one revert (§4.3)
         setAnnounce(GENTLE_FAIL);
       } finally {
         setBusy(false);
       }
     },
-    [order, resultId, router],
+    [seq, resultId, router],
   );
+
+  /** Announcement naming the destination when the move crossed the sentinel. */
+  function announcementFor(next: SeqEntry[], row: RerankRow, prevOnward: boolean): string {
+    const { position, onward, total } = locate(next, row.rid);
+    if (onward !== prevOnward) {
+      return onward
+        ? movedToOnwardAnnouncement(row.name, position, total)
+        : movedToRankingAnnouncement(row.name, position, total);
+    }
+    return movedAnnouncement(row.name, position, total);
+  }
 
   function moveByButton(index: number, dir: "up" | "down") {
     const to = dir === "up" ? index - 1 : index + 1;
-    if (to < 0 || to >= order.length) return;
-    const moved = order[index];
-    pendingFocus.current = { rid: moved.rid, dir };
-    const next = reorder(order, index, to);
-    void persist(next, movedAnnouncement(moved.name, to + 1, next.length));
+    if (to < 0 || to >= seq.length) return;
+    const entry = seq[index];
+    if (entry.kind !== "row") return;
+    const prevOnward = locate(seq, entry.row.rid).onward;
+    pendingFocus.current = { rid: entry.row.rid, dir };
+    const next = reorder(seq, index, to);
+    void persist(next, announcementFor(next, entry.row, prevOnward));
   }
 
   function handleDrop(index: number) {
     const from = draggingIndex;
     setDraggingIndex(null);
     if (from === null || from === index) return;
-    const moved = order[from];
-    const next = reorder(order, from, index);
-    const newPos = next.findIndex((r) => r.rid === moved.rid);
-    void persist(next, movedAnnouncement(moved.name, newPos + 1, next.length));
+    const entry = seq[from];
+    if (entry.kind !== "row") return; // the sentinel is not draggable
+    const prevOnward = locate(seq, entry.row.rid).onward;
+    const next = reorder(seq, from, index);
+    void persist(next, announcementFor(next, entry.row, prevOnward));
   }
 
   async function resetToComputed() {
-    const prev = order;
-    const computed = [...order].sort((a, b) => a.computedRank - b.computedRank);
-    setOrder(computed);
+    const prev = seq;
+    setSeq(computedSeq(rows));
     setAnnounce(BACK_TO_COMPUTED);
     setBusy(true);
     try {
@@ -157,7 +242,7 @@ export function RerankPanel({ resultId, collectionId, status, rows, canRevise = 
       if (!res.ok) throw new Error("reset failed");
       router.refresh(); // re-render the server-composed keepsake at the reset order
     } catch {
-      setOrder(prev);
+      setSeq(prev);
       setAnnounce(GENTLE_FAIL);
     } finally {
       setBusy(false);
@@ -212,58 +297,85 @@ export function RerankPanel({ resultId, collectionId, status, rows, canRevise = 
         <section aria-label={PUT_IN_ORDER} className="space-y-3">
           <p className="text-ink-soft">{DRAFT_SHAPE_FRAMING}</p>
           <ol className="space-y-2">
-            {order.map((row, i) => (
-              <li
-                key={row.rid}
-                draggable={!busy}
-                onDragStart={() => setDraggingIndex(i)}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={() => handleDrop(i)}
-                onDragEnd={() => setDraggingIndex(null)}
-                data-testid="rerank-row"
-                className={`flex items-center gap-3 rounded-card border border-hairline bg-content p-2 transition-transform duration-200 ease-gentle motion-reduce:transition-none ${
-                  draggingIndex === i ? "opacity-60" : ""
-                }`}
-              >
-                <span
-                  aria-hidden
-                  title={dragHandleLabel(row.name)}
-                  className="flex h-11 w-11 shrink-0 cursor-grab items-center justify-center text-lg text-ink-soft"
-                >
-                  ⠿
-                </span>
-                <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded bg-content-soft">
-                  <CardImage src={row.coverUrl} alt="" fallback={<span aria-hidden />} />
-                </div>
-                <span className="flex-1 truncate text-ink">{row.name}</span>
-                <button
-                  type="button"
-                  aria-label={moveUpLabel(row.name)}
-                  disabled={i === 0 || busy}
-                  onClick={() => moveByButton(i, "up")}
-                  ref={(el) => {
-                    if (el) buttonRefs.current.set(`${row.rid}:up`, el);
-                    else buttonRefs.current.delete(`${row.rid}:up`);
-                  }}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-ink hover:bg-content-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <span aria-hidden>↑</span>
-                </button>
-                <button
-                  type="button"
-                  aria-label={moveDownLabel(row.name)}
-                  disabled={i === order.length - 1 || busy}
-                  onClick={() => moveByButton(i, "down")}
-                  ref={(el) => {
-                    if (el) buttonRefs.current.set(`${row.rid}:down`, el);
-                    else buttonRefs.current.delete(`${row.rid}:down`);
-                  }}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-ink hover:bg-content-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <span aria-hidden>↓</span>
-                </button>
-              </li>
-            ))}
+            {(() => {
+              const sentinelIndex = seq.findIndex((e) => e.kind === "sentinel");
+              return seq.map((entry, i) => {
+                if (entry.kind === "sentinel") {
+                  // The Onward boundary — a REAL, AT-perceivable divider (an <li>,
+                  // valid inside <ol>), not a hairline. Rows move across it to cross
+                  // tiers; it is also a drop target so a drag can land at the boundary.
+                  return (
+                    <li
+                      key="sentinel"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => handleDrop(i)}
+                      data-testid="rerank-onward-divider"
+                      className="flex flex-col gap-0.5 border-t border-hairline pt-3"
+                    >
+                      <span className="text-sm font-medium text-ink">{HANDORDER_ONWARD_LABEL}</span>
+                      <span className="text-sm text-ink-soft">{HANDORDER_ONWARD_CAPTION}</span>
+                    </li>
+                  );
+                }
+                const { row } = entry;
+                const onward = i > sentinelIndex;
+                return (
+                  <li
+                    key={row.rid}
+                    draggable={!busy}
+                    onDragStart={() => setDraggingIndex(i)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => handleDrop(i)}
+                    onDragEnd={() => setDraggingIndex(null)}
+                    data-testid="rerank-row"
+                    data-zone={onward ? "onward" : "loved"}
+                    className={`flex items-center gap-3 rounded-card border border-hairline bg-content p-2 transition-transform duration-200 ease-gentle motion-reduce:transition-none ${
+                      draggingIndex === i ? "opacity-60" : ""
+                    }`}
+                  >
+                    <span
+                      aria-hidden
+                      title={dragHandleLabel(row.name)}
+                      className="flex h-11 w-11 shrink-0 cursor-grab items-center justify-center text-lg text-ink-soft"
+                    >
+                      ⠿
+                    </span>
+                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded bg-content-soft">
+                      <CardImage src={row.coverUrl} alt="" fallback={<span aria-hidden />} />
+                    </div>
+                    <span className="flex-1 truncate text-ink">{row.name}</span>
+                    {/* Group membership, perceivable on static AT navigation (R3). */}
+                    <span className="sr-only">{onward ? ZONE_ONWARD_LABEL : ZONE_LOVED_LABEL}</span>
+                    <button
+                      type="button"
+                      aria-label={moveUpLabel(row.name)}
+                      disabled={i === 0 || busy}
+                      onClick={() => moveByButton(i, "up")}
+                      ref={(el) => {
+                        if (el) buttonRefs.current.set(`${row.rid}:up`, el);
+                        else buttonRefs.current.delete(`${row.rid}:up`);
+                      }}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-ink hover:bg-content-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <span aria-hidden>↑</span>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={moveDownLabel(row.name)}
+                      disabled={i === seq.length - 1 || busy}
+                      onClick={() => moveByButton(i, "down")}
+                      ref={(el) => {
+                        if (el) buttonRefs.current.set(`${row.rid}:down`, el);
+                        else buttonRefs.current.delete(`${row.rid}:down`);
+                      }}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-ink hover:bg-content-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <span aria-hidden>↓</span>
+                    </button>
+                  </li>
+                );
+              });
+            })()}
           </ol>
         </section>
       ) : (
