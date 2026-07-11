@@ -228,6 +228,9 @@ export interface SortResultItem {
   computedBucket: RankBucket;
   manualRank: number | null;
   manualBucket: RankBucket | null;
+  // Epic S: usage standing snapshotted at materialization (fresh-folded on
+  // revision). NULL = unknown at snapshot time (legacy/undecided).
+  usage: UsageResult | null;
   createdAt: Date;
   updatedAt: Date;
 }

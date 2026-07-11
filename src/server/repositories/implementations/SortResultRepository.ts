@@ -66,6 +66,19 @@ export class SortResultRepository {
     return result ? this.mapToResult(result) : null;
   }
 
+  // Read + row-lock (SELECT ... FOR UPDATE) so a concurrent finalize and a
+  // re-rank/reset serialize on the sort_results row. MUST be called inside a
+  // transaction (the lock is held until commit); use to re-assert draft status
+  // in the same tx as the manual-overlay write (finalized-immutability TOCTOU).
+  async findByIdForUpdate(id: string): Promise<SortResult | null> {
+    const [result] = await this.db
+      .select()
+      .from(sortResultsTable)
+      .where(eq(sortResultsTable.id, id))
+      .for("update");
+    return result ? this.mapToResult(result) : null;
+  }
+
   async findByCollectionAndNumber(
     collectionId: string,
     number: number,

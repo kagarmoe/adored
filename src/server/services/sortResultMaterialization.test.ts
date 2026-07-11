@@ -36,6 +36,7 @@ function sortResultItem(
     computedBucket: "medium",
     manualRank: null,
     manualBucket: null,
+    usage: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

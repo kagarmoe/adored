@@ -277,6 +277,7 @@ export async function seedSortScenario(ownerId: string): Promise<{
   sessionNumber: number;
   itemIds: string[];
   resultNumber: number;
+  finalizedResultNumber: number;
 }> {
   const { db } = getTestDb();
   const collectionId = generateId("col");
@@ -322,6 +323,23 @@ export async function seedSortScenario(ownerId: string): Promise<{
   const session = await new SessionRepository(db).create({ collectionId, curatorId: ownerId });
   if (session.number == null) throw new Error("seedSortScenario: session.number was not allocated");
 
+  // Epic S: usage answers so the Standing usage chip renders. item[0] becomes the
+  // hero (no chip); put "uses" on item[1] ("In your life" in the full ranking) and
+  // "not_uses" on item[2] ("Resting" in the Onward section). createDraftResult's
+  // deriveCuratorUsage reads these, so the draft snapshot + live Decide page both
+  // show the chips.
+  const decisionRepo = new DecisionEventRepository(db);
+  await decisionRepo.create({
+    sessionId: session.id,
+    type: "usage",
+    decision: { itemId: itemIds[1], result: "uses" },
+  });
+  await decisionRepo.create({
+    sessionId: session.id,
+    type: "usage",
+    decision: { itemId: itemIds[2], result: "not_uses" },
+  });
+
   // The correct path: the service reads the seeded preferences and materializes
   // the ranked result items — same code the real finalize flow uses.
   const service = new SortResultService(
@@ -333,7 +351,37 @@ export async function seedSortScenario(ownerId: string): Promise<{
   const result = await service.createDraftResult(collectionId, ownerId, "E2E Sort Result");
   if (result.number == null) throw new Error("seedSortScenario: result.number was not allocated");
 
-  return { collectionId, slug, sessionNumber: session.number, itemIds, resultNumber: result.number };
+  // Epic S: a FINALIZED result carrying the same usage snapshot, so the "Saved"
+  // result surface can show the chip too. Built the DB-layer way (mirrors
+  // seedRemovalScenario) so the existing draft stays intact.
+  const resultRepo = new SortResultRepository(db);
+  const resultItemRepo = new SortResultItemRepository(db);
+  const finalized = await resultRepo.create({
+    collectionId,
+    curatorId: ownerId,
+    name: "E2E Sort Result (Saved)",
+    status: "finalized",
+  });
+  if (finalized.number == null) throw new Error("seedSortScenario: finalized.number was not allocated");
+  const finalizedUsage = ["uses", "uses", "not_uses"] as const;
+  for (let i = 0; i < itemIds.length; i++) {
+    await resultItemRepo.create({
+      sortResultId: finalized.id,
+      itemId: itemIds[i],
+      computedRank: i,
+      computedBucket: SORT_SCENARIO_BUCKETS[i],
+      usage: finalizedUsage[i],
+    });
+  }
+
+  return {
+    collectionId,
+    slug,
+    sessionNumber: session.number,
+    itemIds,
+    resultNumber: result.number,
+    finalizedResultNumber: finalized.number,
+  };
 }
 
 /**

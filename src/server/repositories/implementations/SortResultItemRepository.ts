@@ -13,6 +13,9 @@ export class SortResultItemRepository {
     itemId: string;
     computedRank: number;
     computedBucket: "top" | "high" | "medium" | "low";
+    // Epic S: usage standing stamped by the materialization step (deriveUsage's
+    // typed output guards the value). Absent/undefined → NULL ("unknown").
+    usage?: "uses" | "not_uses" | null;
   }): Promise<SortResultItem> {
     const id = data.id || generateId("sri");
     const [item] = await this.db
@@ -25,6 +28,7 @@ export class SortResultItemRepository {
         computedBucket: data.computedBucket,
         manualRank: null,
         manualBucket: null,
+        usage: data.usage ?? null,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -62,6 +66,15 @@ export class SortResultItemRepository {
 
   async delete(id: string): Promise<void> {
     await this.db.delete(sortResultItemsTable).where(eq(sortResultItemsTable.id, id));
+  }
+
+  // Epic S S3a: clear the manual overlay (rank + bucket) for every item of a
+  // result in a single UPDATE — the whole-list "back to the computed order" reset.
+  async clearManualOverridesByResult(sortResultId: string): Promise<void> {
+    await this.db
+      .update(sortResultItemsTable)
+      .set({ manualRank: null, manualBucket: null, updatedAt: new Date() })
+      .where(eq(sortResultItemsTable.sortResultId, sortResultId));
   }
 
   async deleteByResult(sortResultId: string): Promise<void> {
@@ -161,6 +174,7 @@ export class SortResultItemRepository {
       computedBucket: row.computedBucket,
       manualRank: row.manualRank,
       manualBucket: row.manualBucket,
+      usage: row.usage ?? null,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

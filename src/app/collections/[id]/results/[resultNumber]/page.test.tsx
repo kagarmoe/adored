@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, fireEvent } from "@testing-library/react";
 
 const { mockGetSession, mockRequireAccess, redirectMock, resultRepo, resultItemRepo, itemRepo, shareRepo, photoRepo } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
@@ -16,7 +16,7 @@ const { mockGetSession, mockRequireAccess, redirectMock, resultRepo, resultItemR
 
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
-vi.mock("next/navigation", () => ({ redirect: redirectMock }));
+vi.mock("next/navigation", () => ({ redirect: redirectMock, useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@/components/layout", () => ({ AppLayout: ({ children }: any) => <div>{children}</div> }));
 vi.mock("@/lib/collection-access", () => ({ requireCollectionAccess: mockRequireAccess }));
 vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({ SortResultRepository: vi.fn(function () { return resultRepo; }) }));
@@ -116,6 +116,74 @@ describe("ResultDetailPage SharePanel curator gate (axn)", () => {
     const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
     render(ui);
     expect(screen.queryByRole("heading", { name: /share this result/i })).toBeNull();
+  });
+});
+
+// Epic S S3b: the draft result page mounts the manual re-rank affordance ("Put in
+// order by hand"); a finalized keepsake does NOT (reorder is a draft activity) and
+// instead offers "Make a revision".
+describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () => {
+  beforeEach(() => {
+    resultItemRepo.findByResult.mockResolvedValue([
+      { id: "ri_1", itemId: "item_hero", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null },
+      { id: "ri_2", itemId: "item_rest", computedRank: 2, manualRank: null, computedBucket: "high", manualBucket: null },
+    ]);
+    itemRepo.findByCollection.mockResolvedValue([HERO, REST]);
+    photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map());
+  });
+
+  it("offers 'Put in order by hand' on a DRAFT result, not 'Make a revision'", async () => {
+    resultRepo.findByCollectionAndNumber.mockResolvedValue({
+      id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "draft", curatorId: "u1",
+    });
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.getByRole("button", { name: "Put in order by hand" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Make a revision" })).toBeNull();
+  });
+
+  it("hides the reorder affordance on a FINALIZED result and offers 'Make a revision' to the curator", async () => {
+    resultRepo.findByCollectionAndNumber.mockResolvedValue({
+      id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "finalized", curatorId: "u1",
+    });
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.queryByRole("button", { name: "Put in order by hand" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Make a revision" })).toBeInTheDocument();
+  });
+
+  // F-UX-I3: the finalized "Make a revision" affordance is curator-gated (mirrors
+  // the SharePanel gate) — a non-curator collaborator must not be offered to fork
+  // another curator's keepsake.
+  it("hides 'Make a revision' for a NON-curator viewing a finalized result", async () => {
+    resultRepo.findByCollectionAndNumber.mockResolvedValue({
+      id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "finalized", curatorId: "someone_else",
+    });
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.queryByRole("button", { name: "Make a revision" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Put in order by hand" })).toBeNull();
+  });
+
+  // F-UX-I2: the hand-order list is scoped to the LOVED tier — an Onward (low)
+  // row is not draggable/in the list (cross-tier hand-order is a follow-up). The
+  // Onward item still renders read-only in the composed keepsake view.
+  it("scopes the reorder list to loved-tier rows, excluding Onward items", async () => {
+    resultRepo.findByCollectionAndNumber.mockResolvedValue({
+      id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "draft", curatorId: "u1",
+    });
+    resultItemRepo.findByResult.mockResolvedValue([
+      { id: "ri_hero", itemId: "item_hero", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null },
+      { id: "ri_rest", itemId: "item_rest", computedRank: 2, manualRank: null, computedBucket: "low", manualBucket: null },
+    ]);
+    itemRepo.findByCollection.mockResolvedValue([HERO, REST]);
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    fireEvent.click(screen.getByRole("button", { name: "Put in order by hand" }));
+    const rows = screen.getAllByTestId("rerank-row");
+    const names = rows.map((li) => within(li).getByText(/Bag/).textContent);
+    expect(names).toEqual(["Hero Bag"]); // the loved (top) row only
+    expect(names).not.toContain("Rest Bag"); // the Onward (low) row is excluded
   });
 });
 
@@ -293,5 +361,56 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
     const onwardHeading = screen.getByRole("heading", { name: /where these go next/i });
     const position = onwardHeading.compareDocumentPosition(close);
     expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+});
+
+// Epic S §3.4: the finalized keepsake renders the SNAPSHOT usage (the frozen
+// `usage` column) as the SAME quiet chip the live Standing built ("In your life"
+// / "Resting"). A pre-Epic-S result (all-NULL) renders no chip (backward compat).
+describe("ResultDetailPage snapshot usage chip (Epic S §3.4)", () => {
+  // Non-hero rows so the chip renders on the card (the most-loved hero shows no
+  // chip). HIGH carries "uses", MED carries "not_uses".
+  const TOP = { id: "i_top", collectionId: "coll_01ABCDEF", number: 1, name: "Top Bag", brand: null, status: "active" };
+  const HIGH = { id: "i_high", collectionId: "coll_01ABCDEF", number: 2, name: "High Bag", brand: null, status: "active" };
+  const MED = { id: "i_med", collectionId: "coll_01ABCDEF", number: 3, name: "Med Bag", brand: null, status: "active" };
+
+  beforeEach(() => {
+    itemRepo.findByCollection.mockResolvedValue([TOP, HIGH, MED]);
+    photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map());
+  });
+
+  it("renders the snapshot usage chips: 'In your life' for uses, 'Resting' for not_uses", async () => {
+    resultItemRepo.findByResult.mockResolvedValue([
+      { id: "ri_top", itemId: "i_top", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null, usage: null },
+      { id: "ri_high", itemId: "i_high", computedRank: 2, manualRank: null, computedBucket: "high", manualBucket: null, usage: "uses" },
+      { id: "ri_med", itemId: "i_med", computedRank: 3, manualRank: null, computedBucket: "medium", manualBucket: null, usage: "not_uses" },
+    ]);
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.getByText("In your life")).toBeInTheDocument();
+    expect(screen.getByText("Resting")).toBeInTheDocument();
+  });
+
+  it("renders NO chip when the snapshot usage is undecided (NULL) on a ranked row", async () => {
+    resultItemRepo.findByResult.mockResolvedValue([
+      { id: "ri_top", itemId: "i_top", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null, usage: null },
+      { id: "ri_high", itemId: "i_high", computedRank: 2, manualRank: null, computedBucket: "high", manualBucket: null, usage: null },
+    ]);
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.queryByText("In your life")).toBeNull();
+    expect(screen.queryByText("Resting")).toBeNull();
+  });
+
+  it("a legacy result whose rows have NO usage field renders no chip (backward compat)", async () => {
+    // Pre-Epic-S rows never carried a `usage` key at all.
+    resultItemRepo.findByResult.mockResolvedValue([
+      { id: "ri_top", itemId: "i_top", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null },
+      { id: "ri_high", itemId: "i_high", computedRank: 2, manualRank: null, computedBucket: "high", manualBucket: null },
+    ]);
+    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    render(ui);
+    expect(screen.queryByText("In your life")).toBeNull();
+    expect(screen.queryByText("Resting")).toBeNull();
   });
 });
