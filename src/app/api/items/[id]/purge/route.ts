@@ -14,14 +14,15 @@ const PurgeConfirmSchema = z.object({ confirm: z.literal("PURGE") });
 // 400 that would leak body validity as an existence/permission oracle.
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const db = getDb();
 
     // items:purge = owner. includeDeleted: true — the item to purge may be soft-deleted.
-    const item = await requireApiItemCapability(db, params.id, user.id, "items:purge", { includeDeleted: true });
+    const item = await requireApiItemCapability(db, id, user.id, "items:purge", { includeDeleted: true });
     if (item instanceof NextResponse) return item; // 404 (absent) / 403 (not owner)
 
     // Authz passed — only now parse + validate the confirm body.

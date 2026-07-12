@@ -13,14 +13,15 @@ import { errorResponse } from "@/server/api/http-errors";
 // access: a non-owner never reaches the service.
 export async function POST(
   _request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const db = getDb();
 
     // items:purge = owner. includeDeleted: true — item may be soft-deleted pre-purge.
-    const item = await requireApiItemCapability(db, params.id, user.id, "items:purge", { includeDeleted: true });
+    const item = await requireApiItemCapability(db, id, user.id, "items:purge", { includeDeleted: true });
     if (item instanceof NextResponse) return item; // 404 (absent) / 403 (not owner)
 
     const service = SortResultService.fromDb(db);

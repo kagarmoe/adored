@@ -7,16 +7,17 @@ import { errorResponse } from "@/server/api/http-errors";
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const db = getDb();
     // items:write = curator. includeDeleted: true — the item to restore IS soft-deleted.
-    const item = await requireApiItemCapability(db, params.id, user.id, "items:write", { includeDeleted: true });
+    const item = await requireApiItemCapability(db, id, user.id, "items:write", { includeDeleted: true });
     if (item instanceof NextResponse) return item;
 
-    const restored = await ItemController.fromDb(db).restoreItem(params.id);
+    const restored = await ItemController.fromDb(db).restoreItem(id);
     return NextResponse.json(restored);
   } catch (error) {
     return errorResponse(error);

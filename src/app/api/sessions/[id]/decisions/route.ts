@@ -58,7 +58,8 @@ const DecisionRequestSchema = z
   ])
   .and(z.object({ clientKey: z.string().min(1).optional() }));
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   // Capture once: the `session.user` narrowing above is lost inside the tx closure.
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const db = getDb();
   // Authorize BEFORE any write: the session must belong to a collection the user can access.
   // getSessionOrNull distinguishes absent (→404) from a real DB error (→ propagates, 500).
-  const sortSession = await SessionController.fromDb(db).getSessionOrNull(params.id);
+  const sortSession = await SessionController.fromDb(db).getSessionOrNull(id);
   if (!sortSession) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const access = await requireApiCollectionAccess(db, sortSession.collectionId, userId);
   if (access instanceof NextResponse) return access;
@@ -161,7 +162,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
               .from(decisionEventsTable)
               .where(
                 and(
-                  eq(decisionEventsTable.sessionId, params.id),
+                  eq(decisionEventsTable.sessionId, id),
                   eq(decisionEventsTable.clientKey, clientKey),
                 ),
               )
@@ -178,7 +179,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       // transaction would die with 25P02. Spec §2.5.)
       const [inserted] = await tx.insert(decisionEventsTable).values({
         id: generateId("event"),
-        sessionId: params.id,
+        sessionId: id,
         type: body.type,
         decision: body.decision,
         clientKey,
@@ -201,7 +202,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return { event: inserted, isNew: true };
     }, {
       op: "record_decision",
-      ctx: { collectionId: sortSession.collectionId, curatorId: userId, sessionId: params.id },
+      ctx: { collectionId: sortSession.collectionId, curatorId: userId, sessionId: id },
     });
 
     // Emit analytics only for a genuinely NEW decision — an idempotent replay
@@ -213,7 +214,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         event: "sort_decision_recorded",
         properties: {
           decision_type: body.type,
-          session_id: params.id,
+          session_id: id,
           collection_id: sortSession.collectionId,
         },
       });
