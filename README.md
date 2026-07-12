@@ -103,8 +103,10 @@ A full-featured web application for managing collections and sorting items throu
 **Database**
 - `npm run db:generate` — Generate Drizzle migrations from the schema
 - `npm run db:migrate` — Apply pending migrations
+- `npm run db:reset` — **Destructive.** Drop the schema and re-derive it from `drizzle/`.
+  Takes `-- --database-url <url>`; refuses an ambient `DATABASE_URL` and a non-interactive
+  terminal, and makes you type the target host back.
 - `npm run db:backfill-slugs` — Backfill collection slugs on existing rows
-- `npm run db:backfill-numbers` — Backfill sequential session/result numbers
 
 **Utilities**
 - `npm run auth:verify` — Verify the auth env/config wiring

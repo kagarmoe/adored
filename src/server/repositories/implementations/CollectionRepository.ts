@@ -4,6 +4,7 @@ import { collectionsTable, membershipsTable } from "@/lib/db/schema";
 import type { Collection } from "@/types";
 import { slugifyName, RESERVED_COLLECTION_SLUGS } from "@/lib/collections/slug";
 import { allocateWithRetry } from "../allocateWithRetry";
+import { isUniqueViolation } from "../pg-conflict";
 
 export class CollectionRepository {
   constructor(private db: Database) {}
@@ -208,7 +209,5 @@ function randomSlug(): string {
 function isSlugConflict(error: unknown): boolean {
   // Retry ONLY the UNIQUE(slug) race — any other unique violation is a real bug
   // and must surface. Constraint name matches the Drizzle-generated index.
-  const code = (error as { code?: string })?.code;
-  const message = error instanceof Error ? error.message : String(error);
-  return code === "23505" && message.includes("collections_slug_unique");
+  return isUniqueViolation(error, "collections_slug_unique");
 }
