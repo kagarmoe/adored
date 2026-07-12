@@ -7,16 +7,17 @@ import { errorResponse } from "@/server/api/http-errors";
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const db = getDb();
     // requireApiCapability resolves-then-authorizes: 404 absent, 403 not owner.
-    const access = await requireApiCapability(db, params.id, user.id, "collection:manage");
+    const access = await requireApiCapability(db, id, user.id, "collection:manage");
     if (access instanceof NextResponse) return access;
 
-    const collection = await CollectionController.fromDb(db).restoreCollection(params.id);
+    const collection = await CollectionController.fromDb(db).restoreCollection(id);
     return NextResponse.json(collection);
   } catch (error) {
     return errorResponse(error);

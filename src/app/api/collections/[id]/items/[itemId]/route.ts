@@ -7,7 +7,7 @@ import { errorResponse } from "@/server/api/http-errors";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string; itemId: string } }
+  { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
   const session = await getSession();
   if (!session?.user) {
@@ -17,20 +17,21 @@ export async function PATCH(
   const db = getDb();
 
   try {
+    const { id, itemId } = await params;
     // Authz before existence (purses-ct0): the collection is in the URL, so a
     // non-curator never learns whether the item exists.
     // items:write = curator — any curator may edit metadata (full-curator model).
-    const access = await requireApiCapability(db, params.id, session.user.id, "items:write");
+    const access = await requireApiCapability(db, id, session.user.id, "items:write");
     if (access instanceof NextResponse) return access;
 
     // Verify item belongs to collection (belongs-to-parent).
-    const item = await ItemController.fromDb(db).getItem(params.itemId);
-    if (!item || item.collectionId !== params.id) {
+    const item = await ItemController.fromDb(db).getItem(itemId);
+    if (!item || item.collectionId !== id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     const body = await req.json();
-    const updated = await ItemController.fromDb(db).updateItem(params.itemId, body);
+    const updated = await ItemController.fromDb(db).updateItem(itemId, body);
 
     return NextResponse.json(updated);
   } catch (error) {

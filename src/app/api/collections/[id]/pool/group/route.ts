@@ -7,7 +7,8 @@ import { errorResponse } from "@/server/api/http-errors";
 
 // Groups selected pooled photos into one new (nameless, catalog-numbered) item.
 // photos:write = curator (full-curator model).
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -15,7 +16,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
   const db = getDb();
   // photos:write = curator — any curator may group pool photos (full-curator model).
-  const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
+  const access = await requireApiCapability(db, id, session.user.id, "photos:write");
   if (access instanceof NextResponse) return access;
 
   let body: unknown;
@@ -45,10 +46,10 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const service = ItemService.fromDb(db);
   try {
     if (mode === "each") {
-      const items = await service.createItemsFromPoolEach(params.id, photoIds as string[]);
+      const items = await service.createItemsFromPoolEach(id, photoIds as string[]);
       return NextResponse.json({ count: items.length }, { status: 201 });
     }
-    const item = await service.createItemFromPool(params.id, photoIds as string[]);
+    const item = await service.createItemFromPool(id, photoIds as string[]);
     return NextResponse.json({ number: item.number }, { status: 201 });
   } catch (error) {
     return errorResponse(error);

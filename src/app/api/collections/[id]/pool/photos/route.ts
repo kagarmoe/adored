@@ -6,7 +6,8 @@ import { requireApiCapability } from "@/server/dal/collection-access";
 
 // Lists a collection's pooled (unassigned) photos as JSON.
 // items:read = curator (full-curator model).
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -14,10 +15,10 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
   const db = getDb();
   // items:read = curator — any curator may list pool photos (full-curator model).
-  const access = await requireApiCapability(db, params.id, session.user.id, "items:read");
+  const access = await requireApiCapability(db, id, session.user.id, "items:read");
   if (access instanceof NextResponse) return access;
 
-  const pool = await PhotoController.fromDb(db).findPoolByCollection(params.id);
+  const pool = await PhotoController.fromDb(db).findPoolByCollection(id);
   return NextResponse.json({
     photos: pool.map((p) => ({ id: p.id, filename: p.filename })),
   });
