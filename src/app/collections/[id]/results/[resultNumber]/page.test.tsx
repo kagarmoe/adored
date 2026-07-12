@@ -106,7 +106,7 @@ describe("ResultDetailPage SharePanel curator gate (axn)", () => {
     });
     const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
     render(ui);
-    expect(screen.getByRole("heading", { name: /share this result/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /show someone what you love/i })).toBeInTheDocument();
   });
 
   it("hides SharePanel for a non-curator viewing a finalized result", async () => {
@@ -115,7 +115,7 @@ describe("ResultDetailPage SharePanel curator gate (axn)", () => {
     });
     const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
     render(ui);
-    expect(screen.queryByRole("heading", { name: /share this result/i })).toBeNull();
+    expect(screen.queryByRole("heading", { name: /show someone what you love/i })).toBeNull();
   });
 });
 
