@@ -4,6 +4,7 @@ import { sessionsTable } from "@/lib/db/schema";
 import type { Session } from "@/types";
 import { generateId } from "@/lib/id";
 import { allocateWithRetry } from "../allocateWithRetry";
+import { isUniqueViolation } from "../pg-conflict";
 
 /**
  * Thrown when a curator already holds an IN-PROGRESS session in a (collection,
@@ -245,15 +246,11 @@ export class SessionRepository {
 function isSessionNumberConflict(error: unknown): boolean {
   // Retry ONLY the UNIQUE(collection_id, number) race — any other unique
   // violation is a real condition and must surface.
-  const code = (error as { code?: string })?.code;
-  const message = (error as { message?: string })?.message ?? "";
-  return code === "23505" && message.includes("sessions_collection_number_unique");
+  return isUniqueViolation(error, "sessions_collection_number_unique");
 }
 
 function isCurrentSessionConflict(error: unknown): boolean {
   // The UNIQUE(collection_id, curator_id) slot is occupied. Sibling of
   // isSessionNumberConflict — NOT retried; mapped to a gentle 409.
-  const code = (error as { code?: string })?.code;
-  const message = (error as { message?: string })?.message ?? "";
-  return code === "23505" && message.includes("sessions_active_unique");
+  return isUniqueViolation(error, "sessions_active_unique");
 }

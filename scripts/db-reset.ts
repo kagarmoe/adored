@@ -28,6 +28,14 @@ async function main(): Promise<void> {
     );
   }
 
+  // An echo-back prompt is NOT a lock on its own: `echo "host/db" | npm run db:reset`
+  // satisfies it with zero interaction, which is exactly what a CI job, a Makefile,
+  // or an agent does the first time a prompt looks like it is hanging. Requiring a
+  // TTY subsumes a CI/VERCEL env check (no builder has one) and the agent case too.
+  if (!process.stdin.isTTY) {
+    throw new Error("requires an interactive terminal — refusing a piped/non-TTY stdin.");
+  }
+
   const { hostname, pathname } = new URL(url);
   const target = `${hostname}${pathname}`;
 
@@ -45,10 +53,15 @@ async function main(): Promise<void> {
     // only public leaves those rows alive, and the next migrate then finds its
     // newest entry already recorded, applies NOTHING, and reports success against
     // an empty database.
+    // The re-created `public` is owned by whatever role THIS url connects as, and
+    // carries none of the original grants. Reset with the SAME connection string the
+    // app uses (copy it from the Vercel env; do not hand-assemble one) or the app can
+    // hit "permission denied for schema public" at runtime after a green migrate.
     await sql.unsafe(
       `DROP SCHEMA IF EXISTS public CASCADE;
        DROP SCHEMA IF EXISTS drizzle CASCADE;
-       CREATE SCHEMA public;`,
+       CREATE SCHEMA public;
+       GRANT USAGE, CREATE ON SCHEMA public TO PUBLIC;`,
     );
   } finally {
     await sql.end();

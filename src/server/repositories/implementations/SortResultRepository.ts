@@ -4,6 +4,7 @@ import { sortResultsTable } from "@/lib/db/schema";
 import type { SortResult } from "@/types";
 import { generateId } from "@/lib/id";
 import { allocateWithRetry } from "../allocateWithRetry";
+import { isUniqueViolation } from "../pg-conflict";
 
 export class SortResultRepository {
   constructor(private db: Database) {}
@@ -177,7 +178,5 @@ export class SortResultRepository {
 export function isResultNumberConflict(error: unknown): boolean {
   // Retry ONLY the UNIQUE(collection_id, number) race — any other unique
   // violation is a real condition and must surface.
-  const code = (error as { code?: string })?.code;
-  const message = (error as { message?: string })?.message ?? "";
-  return code === "23505" && message.includes("sort_results_collection_number_unique");
+  return isUniqueViolation(error, "sort_results_collection_number_unique");
 }

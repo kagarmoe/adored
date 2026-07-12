@@ -401,7 +401,12 @@ export const sortResultSharesTable = pgTable(
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => ({
-    tokenIdx: uniqueIndex("sort_shares_token_unique").on(table.shareToken),
+    // NO uniqueIndex on shareToken: the column's .unique() above already emits a
+    // constraint (sort_result_shares_share_token_unique) and Postgres backs it with
+    // an index. An explicit second unique index here differs only in NAME, so both
+    // survived — two btrees maintained on every share insert, for one guarantee.
+    // Dropped while the DB is being rebuilt from scratch, which is the only moment
+    // it is free. (The invitations twin had the SAME name and so was a fatal 42P07.)
     resultIdx: index("sort_shares_result_id_idx").on(table.sortResultId),
   }),
 );

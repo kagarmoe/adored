@@ -261,7 +261,6 @@ CREATE INDEX "sessions_curator_id_idx" ON "sessions" USING btree ("curator_id");
 CREATE UNIQUE INDEX "sessions_active_unique" ON "sessions" USING btree ("collection_id","curator_id") WHERE "sessions"."deleted_at" is null and "sessions"."status" in ('active','paused');--> statement-breakpoint
 CREATE UNIQUE INDEX "sessions_collection_number_unique" ON "sessions" USING btree ("collection_id","number");--> statement-breakpoint
 CREATE INDEX "sort_result_items_result_id_idx" ON "sort_result_items" USING btree ("sort_result_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "sort_shares_token_unique" ON "sort_result_shares" USING btree ("share_token");--> statement-breakpoint
 CREATE INDEX "sort_shares_result_id_idx" ON "sort_result_shares" USING btree ("sort_result_id");--> statement-breakpoint
 CREATE INDEX "sort_results_collection_id_idx" ON "sort_results" USING btree ("collection_id");--> statement-breakpoint
 CREATE INDEX "sort_results_curator_id_idx" ON "sort_results" USING btree ("curator_id");--> statement-breakpoint

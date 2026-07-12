@@ -1,5 +1,5 @@
 {
-  "id": "c89fa353-4eb2-496f-9df7-1e8737fd3b42",
+  "id": "7989efe8-9673-4c6e-8d45-0733bba2da6d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1806,21 +1806,6 @@
         }
       },
       "indexes": {
-        "sort_shares_token_unique": {
-          "name": "sort_shares_token_unique",
-          "columns": [
-            {
-              "expression": "share_token",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "sort_shares_result_id_idx": {
           "name": "sort_shares_result_id_idx",
           "columns": [
