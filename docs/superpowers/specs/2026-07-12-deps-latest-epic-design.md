@@ -1,6 +1,8 @@
 # Get on latest: every major dep — epic design (purses-9oxh)
 
-**Status:** draft — pending adversarial review (spec gate, CLAUDE.md Workflow step 2)
+**Status:** revised after adversarial review round 1 (QA/Test, Architect, Security — all
+CONCERNS, no BLOCK; findings folded below, contradictions between personas resolved
+against the artifacts). Pending owner review.
 **Owner directive (2026-07-12):** "LETS GET OURSELVES ON LATEST" / "CHECK ALL THE MAJOR DEPS."
 Scope is every outdated major. Do not present a menu — do them.
 
@@ -29,8 +31,13 @@ Rationale:
 - One PR at a time; no stacked PRs (memories `one-pr-at-a-time`, `serial-epic-prs`).
 - CI cost restraint through July 2026: all gates run locally first, one push per PR, no
   force-push to re-trigger (memory `ci-cost-restraint-july-2026`).
-- Each PR is independently revertable with a clean `git revert` of its squash commit.
-  **No DB migrations anywhere in this epic** — every change is dep/code only.
+- **Revertability is LIFO, not independent** (round 1 corrected the draft's overclaim):
+  each PR reverts cleanly only while it is the top of the sequence. Once a successor
+  lands, some reverts become one-way — reverting `.4` after `.2` restores `next ^14`
+  against `react ^19` (peer-uninstallable), and reverting `.3` after `.4` restores sync
+  `params.id` under a runtime that passes real Promises (mass 404). Revert in reverse
+  order or roll forward. **No DB migrations anywhere in this epic** — every change is
+  dep/code only.
 - Four majors landing together means bisecting four majors when something breaks
   (epic rationale; the drizzle precedent `purses-mebk` produced three latent bugs from
   "just a version bump").
@@ -46,30 +53,57 @@ either app-breaking or unfalsifiable:
 
 - (a) **All 49 route handlers** (65 param annotations) move to
   `{ params }: { params: Promise<{ … }> }` + `const { … } = await params`.
-- (b) **All 39 test files** that pass a bare `params: {…}` object (34 are
-  `src/lib/db/*.integration.test.ts`) move to `Promise.resolve(params)`;
-  `importHandler`'s ctx type tightens to the Promise form.
+- (b) **Every route-invoking test call site** that passes a bare `params: {…}` object
+  moves to `Promise.resolve(params)`. Measured surface: **51 test files** match the
+  pattern (36 `src/lib/db/*.integration.test.ts`, 3 API-route unit tests, 12
+  `page.test.tsx`) — the 12 page-test files migrate in PR 3 with the pages; the rest
+  migrate here. Re-measure at execution.
 
 Why atomic: (b) alone → routes still read `params.id` synchronously → `.id` off a Promise →
 `undefined` → every dynamic route 404s. (a) alone → tests still pass a plain object →
-`await plainObject` no-ops → the oracle cannot fail and proves nothing. Only both together
-make a mis-migrated route genuinely fail in test, exactly as it would in prod.
+`await plainObject` no-ops and proves nothing.
 
-**Pages are NOT touched here.** They have no test oracle to harden and belong to the
-codemod in `.4`.
+**Where falsifiability actually lives (review round 1 corrected this — the original
+draft mis-attributed it):** the stranger-enumeration suite **cannot fail on a params
+mistake**: a mis-migrated handler resolves `undefined` → 404, and 404 is an *accepted*
+status (`route-authz-enumeration.integration.test.ts:775`). Its hardening preserves the
+authz oracle's integrity; it does not falsify the migration. The migration's real
+oracles are, in order:
+1. **the owner-happy-path 2xx suites** (a missed `await` 404s where 200 is asserted),
+2. **full e2e** (drives real routes through the real runtime),
+3. at PR 3, **Next 16's typegen + the zero-sync-survivors grep** (Next 14 accepts both
+   param forms, so `npm run build` here cannot prove completeness — it only proves the
+   Promise form is *accepted*).
 
-**Verification (the full-surface proof — a single-route build is NOT sufficient):**
-- `npm run build` on Next 14 type-validates **every** route via `.next/types` — the
-  Promise-params pattern was spike-verified on one route only; this PR is where the whole
-  surface gets proven.
-- Full `test:db` — the 34 owner-happy-path suites asserting 200 are the real backstop
-  (a missed `await` 404s instead of 200).
-- Sanity floors in `route-authz-enumeration.integration.test.ts` (line 746 `>= 40`,
-  line 790 `>= 50`) bump to **exact equality** on actual counts, recorded in the PR body
-  for the pre/post-Next diff in `.4`.
-- Full `test:ci`, `lint`, `auth:verify`, e2e.
-- `tsc` is NOT a gate (96 pre-existing errors on main); the runtime assertions carry the
-  proof, the tightened type is developer convenience.
+**Oracle-integrity invariants (Security round 1) — PR 1 rewrites the file that proves
+authz, so the hardening itself must be provably non-weakening:**
+- **Key-set snapshot, not counts:** assert the sorted stranger-case keys and the sorted
+  `PUBLIC_OR_SELF_KEYS` against literal expected lists. Count floors (lines 746/790)
+  fall out for free; counts alone permit key-set drift, predicate loosening, and
+  seeded-id → `nonexistent-*` downgrades.
+- **Allowlist frozen:** PR 1 adds zero entries to `PUBLIC_OR_SELF_KEYS` and changes zero
+  rationales — any allowlist edit is out of scope by rule.
+- **Predicate frozen:** the `403/404` status assertion and the exhaustiveness logic stay
+  byte-identical apart from params plumbing.
+- **Diff-shape rule for every rewritten test file:** changed lines match only
+  `params: X` → `params: Promise.resolve(X)`; **zero `expect()` lines change** (the
+  cross-parent IDOR suites in `sort-results-authz.integration.test.ts` are in this set
+  and are equally load-bearing).
+- **Test-side exhaustiveness gate:** a check asserting zero bare-params call sites remain
+  in route-invoking tests — **proven able to fail by running it pre-migration (expect
+  N > 0)**. Without it, a missed test file no-ops forever and silently loses that
+  route's 200-backstop.
+- **Owner-2xx coverage statement:** enumerate which of the 49 route+method pairs lack an
+  owner happy-path 2xx test and record the gaps in the PR body. QA round 1 sampled
+  broadly and found dense coverage; the known thin spot is `POST
+  collections/[id]/pool/upload`, whose entire params proof is one `tokenPayload`
+  assertion in a mocked unit test.
+
+**Gates:** full `test:db`, `test:ci`, `lint`, build, e2e. **`auth:verify` currently runs
+nowhere automatically** (not in `ci.yml`, not in the pre-push hook — CLAUDE.md's claim
+that the hook mirrors it is wrong). PR 1 adds it as a CI gate step (seconds, no matrix
+cost) and corrects the CLAUDE.md sentence. `tsc` is NOT a gate (96 pre-existing errors);
+the tightened `importHandler` ctx type is developer convenience, not verification.
 
 **Review lenses:** QA/Test + Architect + Security (it rewrites the authz test oracle).
 
@@ -110,11 +144,28 @@ React major.
     ^19-on-18 bug #329 fixed.
   - **Delete `@eslint/eslintrc`** — it exists only to power FlatCompat.
 
+**Page-oracle hardening moves HERE (round 1 corrected the draft's false claim that
+pages have no test oracle):** `src/lib/db/page-authz-enumeration.integration.test.ts:267`
+invokes page default exports with a bare `{ params: tc.params }`, and 12 `page.test.tsx`
+files do likewise. All get the same `Promise.resolve` treatment, same diff-shape rule and
+key-set-snapshot invariants as PR 1's route tests.
+
+**Middleware (round 1 — the draft was silent on the file guarding the login-redirect
+boundary):** Next 16 deprecates/renames the `middleware.ts` convention (→ `proxy.ts`).
+Verify the exact v16 status in the upgrade guide, migrate `src/middleware.ts` if
+required, and treat the logged-out-redirect e2e (`auth-navigation.spec.ts`) as the named
+oracle — a silently-dead matcher is a UX regression the DAL guards bound, but it must
+not ship unnoticed.
+
 **Verification:**
-- The PR-1 oracle: exact discovered-route count **identical pre/post** migration.
-- `grep -rn "params: {" src/app` — zero survivors of the sync form.
-- Full gates + **full e2e** (UI paths trigger it; expect spec-copy/selector churn and
-  possibly a real regression — memory `e2e-catches-real-ui-regressions`).
+- `grep -rn "params: {" src/app` — zero survivors of the sync form — plus **Next 16's
+  own typegen**: this build is the first that *rejects* un-migrated handlers, so it is
+  the completeness proof PR 1 could not give. (The draft's "route count identical
+  pre/post" was dropped: PR 3 changes no route exports, so a filesystem+regex count
+  cannot fail — a gate that cannot fail is not a gate.)
+- PR 1's key-set snapshot byte-identical after the bump.
+- Full gates + **full e2e** (expect spec-copy/selector churn and possibly a real
+  regression — memory `e2e-catches-real-ui-regressions`).
 
 **Review lenses:** QA/Test + Architect + Security.
 
@@ -144,10 +195,28 @@ files plus three routes" PR #329's body claimed** (measured 2026-07-12 by
   verify this file first.
 - `src/lib/decision-batch-schema.ts`
 
-**Rejects-still-reject first:** before flipping, pin the current reject behavior across
-that surface (env.ts included) and the `errorResponse` 400-body shape built from
-`.flatten()` (v4 changed the issue format). A validation boundary that silently accepts
-MORE than it did is the failure mode to hunt.
+**Rejects-still-reject first — and round 1 established most of these pins must be
+WRITTEN, not found:** the executor will find green tests and be tempted to check the box;
+these are the traps, named:
+
+- **`http-errors.test.ts:70` is tautological for this migration:** it asserts
+  `b.details` equals `err.flatten()` — both sides computed by the *same installed zod*,
+  so under v4's changed issue format the test auto-adapts and stays green while the wire
+  400-body contract changes. **Convert it to a literal shape assertion before the bump.**
+- **`env.ts:104` reads `error.errors` — removed in zod 4** (alias of `.issues` dropped).
+  Fail-closed (boot still dies) but the catch would throw a masking TypeError; rename to
+  `.issues` as part of the migration.
+- **"Verify env.ts first" means:** the existing `src/lib/env.test.ts` reject-matrix green
+  before the bump and unchanged after — **extended first** to the currently-unpinned
+  constraints (invalid `AUTH_URL`, invalid `EMAIL_FROM`, bad `NODE_ENV`/`VERCEL_ENV`
+  enum values, empty-string `AUTH_SECRET`/`DATABASE_URL`). Verification by executable
+  test, not by reading the diff.
+- **Client pins are net-new:** `CollectionForm` has no test file at all; `InviteForm`'s
+  only reject test exercises the native `type=email` guard, which fires *before* zod —
+  the zod client path is untested today. (Round 1 verified all three forms' constraints
+  are mirrored server-side, so this is defense-in-depth, not a gap.)
+- **The 19-file surface is asserted in a test, not prose** — a grep-based inventory
+  assertion, so an unpinned file cannot pass silently.
 
 Then flip directly to zod@4. The zod/v4-subpath incremental path (available since 3.25.x)
 is the **fallback** if the diff explodes, not the default. better-auth already carries a
@@ -169,21 +238,31 @@ changes. This repo's design system rides on it.
   `src/lib/design/contrast.test.ts` read `globals.css` directly, killing the
   `tokens.ts` mirror drift that has produced a false-green AA gate before (memory
   `design-aa-tokens-mirror`).
-- **Before/after light+dark screenshots of every surface, diffed** + `e2e/a11y.spec.ts`
-  (axe) in both themes. Unit tests cannot prove a v4 migration didn't change what the
-  user sees; screenshots + axe are the only honest gate.
+- **Before/after light+dark screenshots, diffed, against a COUNTED inventory** — "every
+  surface" is bound to the enumerated screenshot-capture surface list plus the 29
+  `page.tsx` files, with the count stated in the PR body. An empty diff over an
+  unenumerated set analyzes nothing (round 1; cf. memory
+  `prove-no-violation-gates-ran`). Plus `e2e/a11y.spec.ts` (axe) in both themes. Unit
+  tests cannot prove a v4 migration didn't change what the user sees.
 
 **Review lenses:** Graphic Design (DESIGN.md) + UX + QA/Test.
 
 ## PR 7 — `9oxh.7`: tooling batch (P3, blocked by .4)
 
-TypeScript 7, ESLint 10 (+ `@eslint/js`), Vite 8, `@vitejs/plugin-react` 6, dotenv 17,
+TypeScript, ESLint 10 (+ `@eslint/js`), Vite 8, `@vitejs/plugin-react` 6, dotenv 17,
 ulid 3. Grouped because they share one gate and none touch user-visible runtime.
 Split out any that turns out to be a real migration.
 
-- **TypeScript 7 policy:** the repo carries 96 pre-existing `tsc` errors; `tsc` is not a
-  gate. Re-baseline, confirm `npm run build` (the actual typechecking gate) passes, file
-  a debt bead if the number grew. Do NOT chase zero here.
+- **TypeScript lands at 6.0.x, NOT 7 — re-scoped by round 1.** TS 7 is a *certain* peer
+  wall today: `@typescript-eslint/eslint-plugin@8` (in the tree via `eslint-config-next`,
+  which stays at 16) peers `typescript >=4.8.4 <6.1.0`, so `typescript@7` ERESOLVEs on
+  `npm ci`, and this spec's own "no legacy-peer-deps, ever" makes that a hard stop. Land
+  **6.0.3**, record TS 7 as a deliberate hold (revisit when typescript-eslint supports
+  it), and let the close-out `npm outdated` gate carry that recorded hold rather than
+  inherit it silently.
+- **TypeScript baseline policy:** the repo carries 96 pre-existing `tsc` errors; `tsc` is
+  not a gate. Re-baseline under 6.0.x, confirm `npm run build` (the actual typechecking
+  gate) passes, file a debt bead if the number grew. Do NOT chase zero here.
 - **ESLint 10** after `.4` (eslint-config-next coupling) — config is already flat, should
   be small.
 - **ulid 3:** `generateId()` reaches ~536 nodes — assert ids still sort lexicographically
@@ -230,5 +309,23 @@ Split out any that turns out to be a real migration.
 1. Vercel production's actual Node major (PR 2 — dashboard/deploy logs).
 2. `@testing-library/react` React-19 support (PR 4 — before starting).
 3. Tailwind v4's emission for the `selector` dark-mode strategy (PR 6 — before migrating).
-4. Whether Next 16 requires a Node minimum that interacts with PR 2's choice (check the
-   v16 upgrade guide during PR 3).
+4. ~~Next 16's Node minimum~~ **CLOSED by round 1:** `next@16.2.10` engines
+   `node >=20.9.0` — both 22 and 24 satisfy it; no interaction with PR 2's choice.
+5. Next 16's `middleware.ts` → `proxy.ts` convention status: deprecation warning or
+   silent no-op, and whether the matcher semantics change (PR 3 — upgrade guide, before
+   migrating; the logged-out-redirect e2e is the named oracle either way).
+6. Exact zod-4 `error.errors` removal semantics against the official migration guide
+   (PR 5 — reviewer confidence 8, verify before relying).
+
+## Adversarial review — round 1 record (2026-07-12)
+
+Three personas (QA/Test, Architect, Security), all **CONCERNS**, no BLOCK. Major folds:
+falsifiability re-attributed from the stranger enum (which accepts 404 and thus cannot
+fail on a params mistake) to the owner-2xx suites + e2e + PR-3 typegen; oracle-integrity
+invariants upgraded from exact counts to key-set snapshot + frozen allowlist/predicate +
+diff-shape rule + test-side exhaustiveness gate; test surface corrected 39 → 51 files;
+the page oracle (draft claimed none existed) routed to PR 3; `auth:verify` found running
+nowhere automatically (fixed in PR 1); TS 7 re-scoped to 6.0.x on a verified peer wall;
+revertability corrected to LIFO; zod pins identified as mostly net-new with one
+tautological pin to convert. Persona contradictions (env.test.ts existence) were resolved
+against the artifacts, not by vote.
