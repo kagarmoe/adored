@@ -1,7 +1,9 @@
 import type { Database } from "@/lib/db";
 import type { Item } from "@/types/domain";
 import { withTransaction } from "@/lib/transactions";
+import { lockCollectionCurators } from "@/server/services/purge-lock";
 import { del } from "@vercel/blob";
+import { deleteVariants, variantPrefix } from "@/lib/photo-variants";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
@@ -57,7 +59,8 @@ export class ItemPurgeService {
       throw new ItemInResultError();
     }
 
-    const blobKeys = await withTransaction(this.db, async (tx) => {
+    const photos = await withTransaction(this.db, async (tx) => {
+      await lockCollectionCurators(tx, item.collectionId);
       const preferencesDeleted = await new CollectionPreferenceItemRepository(tx).deleteByItem(item.id);
       // The item_dispositions FK has no ON DELETE CASCADE, so a leftover
       // disposition would block the item hard-delete with a 23503.
@@ -81,12 +84,16 @@ export class ItemPurgeService {
     // (matches the photo DELETE route's guard); a `del` rejection is logged, not
     // fatal — the DB delete already committed.
     const results = await Promise.allSettled(
-      blobKeys.filter((k) => k.startsWith("http")).map((k) => del(k)),
+      photos.filter((p) => p.blobKey.startsWith("http")).map((p) => del(p.blobKey)),
     );
     for (const r of results) {
       if (r.status === "rejected") {
         console.error("ItemPurgeService: blob del failed (orphaned, sweepable)", r.reason);
       }
     }
+
+    // Best-effort: sweep each photo's persisted resized variants. Without this
+    // every purge leaks its variants forever (deleteVariants never throws).
+    await Promise.all(photos.map((p) => deleteVariants(variantPrefix(item.collectionId, p.id))));
   }
 }

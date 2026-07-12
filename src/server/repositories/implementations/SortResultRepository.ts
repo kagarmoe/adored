@@ -3,6 +3,7 @@ import type { Database } from "@/lib/db";
 import { sortResultsTable } from "@/lib/db/schema";
 import type { SortResult } from "@/types";
 import { generateId } from "@/lib/id";
+import { allocateWithRetry } from "../allocateWithRetry";
 
 export class SortResultRepository {
   constructor(private db: Database) {}
@@ -46,16 +47,10 @@ export class SortResultRepository {
     // on the UNIQUE(collection_id, number) race. postgres-js autocommits each
     // statement here, so a conflicting INSERT can be retried in place. Any
     // other unique violation surfaces, not retried.
-    for (let attempt = 0; attempt < 5; attempt++) {
+    return allocateWithRetry(async () => {
       const number = await this.getNextResultNumber(data.collectionId);
-      try {
-        return await this.insertWithNumber({ ...data, number });
-      } catch (error) {
-        if (isResultNumberConflict(error) && attempt < 4) continue;
-        throw error;
-      }
-    }
-    throw new Error("Could not allocate a result number");
+      return this.insertWithNumber({ ...data, number });
+    }, isResultNumberConflict);
   }
 
   async findById(id: string): Promise<SortResult | null> {
