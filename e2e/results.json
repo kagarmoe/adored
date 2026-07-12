@@ -18,24 +18,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f906a2079b754e1ab37388b851f0ccb22875c2c1",
-        "commitHash": "f906a2079b754e1ab37388b851f0ccb22875c2c1",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29180729533"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/b8af2d22a1eda8cec2182dce01630b8a63ae7ffc",
+        "commitHash": "b8af2d22a1eda8cec2182dce01630b8a63ae7ffc",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29181020055"
       },
       "gitCommit": {
-        "shortHash": "f906a20",
-        "hash": "f906a2079b754e1ab37388b851f0ccb22875c2c1",
-        "subject": "fix(api): one error chokepoint — stop leaking Postgres driver text to callers (hiez, 2eoy, 13ya, ibl) (#320)",
-        "body": "fix(api): one error chokepoint — stop leaking Postgres driver text to callers (hiez, 2eoy, 13ya, ibl) (#320)\n\nThe 500 fallback in errorResponse() echoed error.message, so any unmapped error\nreturned raw driver text (relation names, constraint names, sometimes column\nvalues) to the caller — including an UNAUTHENTICATED caller via\nGET /api/shared-results/[token]. 13 more routes hand-rolled their own catch and\ndid the same. The docblock documented the leak as intended and a passing unit\ntest pinned it, so code, comment and test all agreed — and all agreed wrongly.\n\n- errorResponse() is now the sole error path: no response body is ever derived\n  from a caught error. Unmapped -> { error: generic, errorId } (crypto.randomUUID).\n- The full error goes to ONE structured log line, [api_error], keyed by the same\n  errorId: name/message/stack (read explicitly — they're non-enumerable, so\n  JSON.stringify(error) is \"{}\"), the recursively-unwrapped cause chain (drizzle\n  wraps the driver error), and the postgres-js snake_case driver fields.\n  query/parameters are omitted — they carry user values.\n- Detail is inlined in the body ONLY when NODE_ENV !== \"production\". Deliberately\n  NOT VERCEL_ENV: Vercel sets NODE_ENV=production on PREVIEW deploys, and preview\n  URLs are shareable. Pinned by a test that stubs production and asserts the body\n  is exactly { error, errorId }.\n- Curated/typed domain errors are unchanged — they stay the sanctioned channel\n  for user-facing copy and specific statuses. A test catches over-generalization.\n- ESLint no-restricted-syntax makes it hold for the NEXT route: no reading\n  .message under src/app/api. Watched failing on a reintroduced leak; it catches\n  the (error as Error).message cast form too.\n\nAlso closes three gaps found while in here:\n- purses-2eoy's \"enum backstop gap\" was live, not latent: the authz-enumeration\n  gate's regex couldn't see `export const { GET, POST } = toNextJsHandler(auth)`,\n  so the ENTIRE better-auth surface was invisible to the filesystem-exhaustive\n  authz test and its two PUBLIC_OR_SELF keys were dead. A zero-method backstop\n  now fails loudly naming any route that yields no methods.\n- purses-13ya: Header's display-name fallback no longer derives from the email\n  local-part.\n- purses-ibl: dead listInvitations() (return [] behind a stale TODO) deleted.\n- purses-fh3e: bcryptjs + @types/bcryptjs removed (dead since better-auth).\n\nGates: lint 0 errors, test:ci 1295 passed, test:db 652 passed, build, auth:verify.\n\n\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "b8af2d2",
+        "hash": "b8af2d22a1eda8cec2182dce01630b8a63ae7ffc",
+        "subject": "fix(sorting): announce the decision loop, and fix the refresh that raced navigation (e2zj, l5gd, hzwj) (#321)",
+        "body": "fix(sorting): announce the decision loop, and fix the refresh that raced navigation (e2zj, l5gd, hzwj) (#321)\n\na11y (purses-e2zj, WCAG 2.1 AA). The decision loop is the core of the app and it\nwas silent:\n- CompareChoice and DecisionControls had NO live region, so a screen-reader user\n  got no announcement when a choice registered and the next pair loaded — the\n  screen changed under them (SC 4.1.3).\n- The first fix was theater and review caught it: every production caller passes\n  kind:\"local\", and the announcement sat BELOW the `if (kind === \"local\") return`\n  early return, so the region shipped permanently empty. The original test only\n  went green because it constructed kind:\"session\" itself.\n- Both parents rendered <DecisionControls key={shown.item.id}>, remounting the\n  region on every advance. A live region that appears together with its content\n  is not announced. Dropped the key.\n- Triage runs Love, Love, Love — identical text is not re-announced, so the\n  setter nudges the string. Without that one line the fix does nothing.\n- TierBadge with showLabel={false} rendered an aria-hidden glyph and no label:\n  no accessible name at all (SC 1.1.1/4.1.2). Now role=\"img\" + aria-label.\n- SharePanel nested a <Button> inside a <Link> — invalid, duplicate tab stop,\n  ambiguous role (SC 4.1.2).\n\npurses-l5gd. PhotoUpload announced neither progress nor success: the copy lived\nonly in button text (announced only if focus happened to rest there), and success\nwas window.location.reload(), which tears down the a11y tree and drops the AT\ncursor into a fresh document. Now a persistent sr-only role=status (mounted EMPTY\nat first render — the assertion that actually pins the bug) + router.refresh().\n\npurses-hzwj. The round-end router.refresh() raced the navigation to /compare and\nthe goto aborted — if Playwright can lose that navigation, a human on a slow\ntablet can drop a tap. The refresh existed to defeat Next 14's 30s dynamic RSC\ncache (returning to the hub would show pre-round copy). Fixed the CAUSE, not the\nsymptom: experimental.staleTimes.dynamic = 0 (Next 15's default), so the page\nisn't stale and the refresh isn't needed. The e2e's bounded-retry workaround is\ngone, so the spec proves the race is closed rather than absorbing it.\n\nCopy per TONE.md: gentle, no counts, no tally, no scold. SharePanel's \"Failed to\ncreate/revoke share link\" also replaced — the revoke message now says the link is\nstill shared, which \"Failed to revoke\" left ambiguous at exactly the wrong moment.\n\nGates: lint 0 errors, test:ci 1295 passed, test:db 652 passed, build, auth:verify.\n\n\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1783832900000
+          "time": 1783833614000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1783832900000
+          "time": 1783833614000
         },
         "branch": "main"
       },
@@ -49,24 +49,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f906a2079b754e1ab37388b851f0ccb22875c2c1",
-            "commitHash": "f906a2079b754e1ab37388b851f0ccb22875c2c1",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29180729533"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/b8af2d22a1eda8cec2182dce01630b8a63ae7ffc",
+            "commitHash": "b8af2d22a1eda8cec2182dce01630b8a63ae7ffc",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29181020055"
           },
           "gitCommit": {
-            "shortHash": "f906a20",
-            "hash": "f906a2079b754e1ab37388b851f0ccb22875c2c1",
-            "subject": "fix(api): one error chokepoint — stop leaking Postgres driver text to callers (hiez, 2eoy, 13ya, ibl) (#320)",
-            "body": "fix(api): one error chokepoint — stop leaking Postgres driver text to callers (hiez, 2eoy, 13ya, ibl) (#320)\n\nThe 500 fallback in errorResponse() echoed error.message, so any unmapped error\nreturned raw driver text (relation names, constraint names, sometimes column\nvalues) to the caller — including an UNAUTHENTICATED caller via\nGET /api/shared-results/[token]. 13 more routes hand-rolled their own catch and\ndid the same. The docblock documented the leak as intended and a passing unit\ntest pinned it, so code, comment and test all agreed — and all agreed wrongly.\n\n- errorResponse() is now the sole error path: no response body is ever derived\n  from a caught error. Unmapped -> { error: generic, errorId } (crypto.randomUUID).\n- The full error goes to ONE structured log line, [api_error], keyed by the same\n  errorId: name/message/stack (read explicitly — they're non-enumerable, so\n  JSON.stringify(error) is \"{}\"), the recursively-unwrapped cause chain (drizzle\n  wraps the driver error), and the postgres-js snake_case driver fields.\n  query/parameters are omitted — they carry user values.\n- Detail is inlined in the body ONLY when NODE_ENV !== \"production\". Deliberately\n  NOT VERCEL_ENV: Vercel sets NODE_ENV=production on PREVIEW deploys, and preview\n  URLs are shareable. Pinned by a test that stubs production and asserts the body\n  is exactly { error, errorId }.\n- Curated/typed domain errors are unchanged — they stay the sanctioned channel\n  for user-facing copy and specific statuses. A test catches over-generalization.\n- ESLint no-restricted-syntax makes it hold for the NEXT route: no reading\n  .message under src/app/api. Watched failing on a reintroduced leak; it catches\n  the (error as Error).message cast form too.\n\nAlso closes three gaps found while in here:\n- purses-2eoy's \"enum backstop gap\" was live, not latent: the authz-enumeration\n  gate's regex couldn't see `export const { GET, POST } = toNextJsHandler(auth)`,\n  so the ENTIRE better-auth surface was invisible to the filesystem-exhaustive\n  authz test and its two PUBLIC_OR_SELF keys were dead. A zero-method backstop\n  now fails loudly naming any route that yields no methods.\n- purses-13ya: Header's display-name fallback no longer derives from the email\n  local-part.\n- purses-ibl: dead listInvitations() (return [] behind a stale TODO) deleted.\n- purses-fh3e: bcryptjs + @types/bcryptjs removed (dead since better-auth).\n\nGates: lint 0 errors, test:ci 1295 passed, test:db 652 passed, build, auth:verify.\n\n\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "b8af2d2",
+            "hash": "b8af2d22a1eda8cec2182dce01630b8a63ae7ffc",
+            "subject": "fix(sorting): announce the decision loop, and fix the refresh that raced navigation (e2zj, l5gd, hzwj) (#321)",
+            "body": "fix(sorting): announce the decision loop, and fix the refresh that raced navigation (e2zj, l5gd, hzwj) (#321)\n\na11y (purses-e2zj, WCAG 2.1 AA). The decision loop is the core of the app and it\nwas silent:\n- CompareChoice and DecisionControls had NO live region, so a screen-reader user\n  got no announcement when a choice registered and the next pair loaded — the\n  screen changed under them (SC 4.1.3).\n- The first fix was theater and review caught it: every production caller passes\n  kind:\"local\", and the announcement sat BELOW the `if (kind === \"local\") return`\n  early return, so the region shipped permanently empty. The original test only\n  went green because it constructed kind:\"session\" itself.\n- Both parents rendered <DecisionControls key={shown.item.id}>, remounting the\n  region on every advance. A live region that appears together with its content\n  is not announced. Dropped the key.\n- Triage runs Love, Love, Love — identical text is not re-announced, so the\n  setter nudges the string. Without that one line the fix does nothing.\n- TierBadge with showLabel={false} rendered an aria-hidden glyph and no label:\n  no accessible name at all (SC 1.1.1/4.1.2). Now role=\"img\" + aria-label.\n- SharePanel nested a <Button> inside a <Link> — invalid, duplicate tab stop,\n  ambiguous role (SC 4.1.2).\n\npurses-l5gd. PhotoUpload announced neither progress nor success: the copy lived\nonly in button text (announced only if focus happened to rest there), and success\nwas window.location.reload(), which tears down the a11y tree and drops the AT\ncursor into a fresh document. Now a persistent sr-only role=status (mounted EMPTY\nat first render — the assertion that actually pins the bug) + router.refresh().\n\npurses-hzwj. The round-end router.refresh() raced the navigation to /compare and\nthe goto aborted — if Playwright can lose that navigation, a human on a slow\ntablet can drop a tap. The refresh existed to defeat Next 14's 30s dynamic RSC\ncache (returning to the hub would show pre-round copy). Fixed the CAUSE, not the\nsymptom: experimental.staleTimes.dynamic = 0 (Next 15's default), so the page\nisn't stale and the refresh isn't needed. The e2e's bounded-retry workaround is\ngone, so the spec proves the race is closed rather than absorbing it.\n\nCopy per TONE.md: gentle, no counts, no tally, no scold. SharePanel's \"Failed to\ncreate/revoke share link\" also replaced — the revoke message now says the link is\nstill shared, which \"Failed to revoke\" left ambiguous at exactly the wrong moment.\n\nGates: lint 0 errors, test:ci 1295 passed, test:db 652 passed, build, auth:verify.\n\n\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783832900000
+              "time": 1783833614000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783832900000
+              "time": 1783833614000
             },
             "branch": "main"
           },
@@ -87,24 +87,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f906a2079b754e1ab37388b851f0ccb22875c2c1",
-            "commitHash": "f906a2079b754e1ab37388b851f0ccb22875c2c1",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29180729533"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/b8af2d22a1eda8cec2182dce01630b8a63ae7ffc",
+            "commitHash": "b8af2d22a1eda8cec2182dce01630b8a63ae7ffc",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29181020055"
           },
           "gitCommit": {
-            "shortHash": "f906a20",
-            "hash": "f906a2079b754e1ab37388b851f0ccb22875c2c1",
-            "subject": "fix(api): one error chokepoint — stop leaking Postgres driver text to callers (hiez, 2eoy, 13ya, ibl) (#320)",
-            "body": "fix(api): one error chokepoint — stop leaking Postgres driver text to callers (hiez, 2eoy, 13ya, ibl) (#320)\n\nThe 500 fallback in errorResponse() echoed error.message, so any unmapped error\nreturned raw driver text (relation names, constraint names, sometimes column\nvalues) to the caller — including an UNAUTHENTICATED caller via\nGET /api/shared-results/[token]. 13 more routes hand-rolled their own catch and\ndid the same. The docblock documented the leak as intended and a passing unit\ntest pinned it, so code, comment and test all agreed — and all agreed wrongly.\n\n- errorResponse() is now the sole error path: no response body is ever derived\n  from a caught error. Unmapped -> { error: generic, errorId } (crypto.randomUUID).\n- The full error goes to ONE structured log line, [api_error], keyed by the same\n  errorId: name/message/stack (read explicitly — they're non-enumerable, so\n  JSON.stringify(error) is \"{}\"), the recursively-unwrapped cause chain (drizzle\n  wraps the driver error), and the postgres-js snake_case driver fields.\n  query/parameters are omitted — they carry user values.\n- Detail is inlined in the body ONLY when NODE_ENV !== \"production\". Deliberately\n  NOT VERCEL_ENV: Vercel sets NODE_ENV=production on PREVIEW deploys, and preview\n  URLs are shareable. Pinned by a test that stubs production and asserts the body\n  is exactly { error, errorId }.\n- Curated/typed domain errors are unchanged — they stay the sanctioned channel\n  for user-facing copy and specific statuses. A test catches over-generalization.\n- ESLint no-restricted-syntax makes it hold for the NEXT route: no reading\n  .message under src/app/api. Watched failing on a reintroduced leak; it catches\n  the (error as Error).message cast form too.\n\nAlso closes three gaps found while in here:\n- purses-2eoy's \"enum backstop gap\" was live, not latent: the authz-enumeration\n  gate's regex couldn't see `export const { GET, POST } = toNextJsHandler(auth)`,\n  so the ENTIRE better-auth surface was invisible to the filesystem-exhaustive\n  authz test and its two PUBLIC_OR_SELF keys were dead. A zero-method backstop\n  now fails loudly naming any route that yields no methods.\n- purses-13ya: Header's display-name fallback no longer derives from the email\n  local-part.\n- purses-ibl: dead listInvitations() (return [] behind a stale TODO) deleted.\n- purses-fh3e: bcryptjs + @types/bcryptjs removed (dead since better-auth).\n\nGates: lint 0 errors, test:ci 1295 passed, test:db 652 passed, build, auth:verify.\n\n\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "b8af2d2",
+            "hash": "b8af2d22a1eda8cec2182dce01630b8a63ae7ffc",
+            "subject": "fix(sorting): announce the decision loop, and fix the refresh that raced navigation (e2zj, l5gd, hzwj) (#321)",
+            "body": "fix(sorting): announce the decision loop, and fix the refresh that raced navigation (e2zj, l5gd, hzwj) (#321)\n\na11y (purses-e2zj, WCAG 2.1 AA). The decision loop is the core of the app and it\nwas silent:\n- CompareChoice and DecisionControls had NO live region, so a screen-reader user\n  got no announcement when a choice registered and the next pair loaded — the\n  screen changed under them (SC 4.1.3).\n- The first fix was theater and review caught it: every production caller passes\n  kind:\"local\", and the announcement sat BELOW the `if (kind === \"local\") return`\n  early return, so the region shipped permanently empty. The original test only\n  went green because it constructed kind:\"session\" itself.\n- Both parents rendered <DecisionControls key={shown.item.id}>, remounting the\n  region on every advance. A live region that appears together with its content\n  is not announced. Dropped the key.\n- Triage runs Love, Love, Love — identical text is not re-announced, so the\n  setter nudges the string. Without that one line the fix does nothing.\n- TierBadge with showLabel={false} rendered an aria-hidden glyph and no label:\n  no accessible name at all (SC 1.1.1/4.1.2). Now role=\"img\" + aria-label.\n- SharePanel nested a <Button> inside a <Link> — invalid, duplicate tab stop,\n  ambiguous role (SC 4.1.2).\n\npurses-l5gd. PhotoUpload announced neither progress nor success: the copy lived\nonly in button text (announced only if focus happened to rest there), and success\nwas window.location.reload(), which tears down the a11y tree and drops the AT\ncursor into a fresh document. Now a persistent sr-only role=status (mounted EMPTY\nat first render — the assertion that actually pins the bug) + router.refresh().\n\npurses-hzwj. The round-end router.refresh() raced the navigation to /compare and\nthe goto aborted — if Playwright can lose that navigation, a human on a slow\ntablet can drop a tap. The refresh existed to defeat Next 14's 30s dynamic RSC\ncache (returning to the hub would show pre-round copy). Fixed the CAUSE, not the\nsymptom: experimental.staleTimes.dynamic = 0 (Next 15's default), so the page\nisn't stale and the refresh isn't needed. The e2e's bounded-retry workaround is\ngone, so the spec proves the race is closed rather than absorbing it.\n\nCopy per TONE.md: gentle, no counts, no tally, no scold. SharePanel's \"Failed to\ncreate/revoke share link\" also replaced — the revoke message now says the link is\nstill shared, which \"Failed to revoke\" left ambiguous at exactly the wrong moment.\n\nGates: lint 0 errors, test:ci 1295 passed, test:db 652 passed, build, auth:verify.\n\n\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783832900000
+              "time": 1783833614000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783832900000
+              "time": 1783833614000
             },
             "branch": "main"
           },
@@ -187,12 +187,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 415,
+                  "duration": 436,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:11:18.161Z",
+                  "startTime": "2026-07-12T05:23:20.054Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -229,7 +229,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 17713,
+                  "duration": 28388,
                   "errors": [],
                   "stdout": [
                     {
@@ -245,7 +245,7 @@
                       "text": "[a11y] item-detail/light: 21 checks passed, 0 violation(s)\n"
                     },
                     {
-                      "text": "[a11y] results/light: 21 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] results/light: 22 checks passed, 0 violation(s)\n"
                     },
                     {
                       "text": "[a11y] members/light: 23 checks passed, 0 violation(s)\n"
@@ -259,7 +259,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:11:19.313Z",
+                  "startTime": "2026-07-12T05:23:21.240Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -288,7 +288,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 15786,
+                  "duration": 16078,
                   "errors": [],
                   "stdout": [
                     {
@@ -304,7 +304,7 @@
                       "text": "[a11y] item-detail/dark: 21 checks passed, 0 violation(s)\n"
                     },
                     {
-                      "text": "[a11y] results/dark: 21 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] results/dark: 22 checks passed, 0 violation(s)\n"
                     },
                     {
                       "text": "[a11y] members/dark: 23 checks passed, 0 violation(s)\n"
@@ -318,7 +318,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:11:37.657Z",
+                  "startTime": "2026-07-12T05:23:50.991Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -347,7 +347,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2914,
+                  "duration": 2936,
                   "errors": [],
                   "stdout": [
                     {
@@ -359,7 +359,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:11:53.470Z",
+                  "startTime": "2026-07-12T05:24:07.095Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -388,7 +388,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2705,
+                  "duration": 2728,
                   "errors": [],
                   "stdout": [
                     {
@@ -400,7 +400,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:11:56.406Z",
+                  "startTime": "2026-07-12T05:24:10.052Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -437,12 +437,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2194,
+                  "duration": 2186,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:11:59.145Z",
+                  "startTime": "2026-07-12T05:24:12.808Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -471,12 +471,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1368,
+                  "duration": 1484,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:12:01.401Z",
+                  "startTime": "2026-07-12T05:24:15.078Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -505,12 +505,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2301,
+                  "duration": 1693,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:12:02.784Z",
+                  "startTime": "2026-07-12T05:24:16.577Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -539,12 +539,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1858,
+                  "duration": 1083,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:12:05.129Z",
+                  "startTime": "2026-07-12T05:24:18.302Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -573,12 +573,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4960,
+                  "duration": 1130,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:12:07.034Z",
+                  "startTime": "2026-07-12T05:24:19.427Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -615,12 +615,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4127,
+                  "duration": 1966,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:12:12.245Z",
+                  "startTime": "2026-07-12T05:24:20.647Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -649,12 +649,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3323,
+                  "duration": 2091,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:12:16.470Z",
+                  "startTime": "2026-07-12T05:24:22.669Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -691,12 +691,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6582,
+                  "duration": 1536,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:12:19.886Z",
+                  "startTime": "2026-07-12T05:24:24.778Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -725,12 +725,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2489,
+                  "duration": 1558,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:12:26.498Z",
+                  "startTime": "2026-07-12T05:24:26.356Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -759,12 +759,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1979,
+                  "duration": 1552,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:12:29.010Z",
+                  "startTime": "2026-07-12T05:24:27.942Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -808,12 +808,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1565,
+                      "duration": 1248,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:12:31.039Z",
+                      "startTime": "2026-07-12T05:24:29.523Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -842,12 +842,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2296,
+                      "duration": 2418,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:12:34.192Z",
+                      "startTime": "2026-07-12T05:24:30.890Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -876,12 +876,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1881,
+                      "duration": 2123,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:12:36.553Z",
+                      "startTime": "2026-07-12T05:24:33.335Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -927,12 +927,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4946,
+                      "duration": 9396,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:12:38.631Z",
+                      "startTime": "2026-07-12T05:24:35.735Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -961,12 +961,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2927,
+                      "duration": 6622,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:12:43.592Z",
+                      "startTime": "2026-07-12T05:24:45.169Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1012,12 +1012,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2283,
+                      "duration": 6769,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:12:46.636Z",
+                      "startTime": "2026-07-12T05:24:51.963Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1063,12 +1063,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2389,
+                      "duration": 2957,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:12:49.045Z",
+                      "startTime": "2026-07-12T05:25:01.328Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1114,12 +1114,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1298,
+                      "duration": 1379,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:12:51.609Z",
+                      "startTime": "2026-07-12T05:25:04.405Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1148,12 +1148,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1673,
+                      "duration": 1966,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:12:52.986Z",
+                      "startTime": "2026-07-12T05:25:05.881Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1199,12 +1199,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5256,
+                      "duration": 4985,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:12:54.739Z",
+                      "startTime": "2026-07-12T05:25:07.982Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1233,12 +1233,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4473,
+                      "duration": 6546,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:13:00.075Z",
+                      "startTime": "2026-07-12T05:25:13.236Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1284,12 +1284,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1814,
+                      "duration": 2034,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:13:04.581Z",
+                      "startTime": "2026-07-12T05:25:19.937Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1318,12 +1318,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2201,
+                      "duration": 3532,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:13:06.515Z",
+                      "startTime": "2026-07-12T05:25:22.198Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1369,12 +1369,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 639,
+                      "duration": 6710,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:13:08.814Z",
+                      "startTime": "2026-07-12T05:25:26.085Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1403,12 +1403,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 345,
+                      "duration": 2435,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:13:09.470Z",
+                      "startTime": "2026-07-12T05:25:32.810Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1437,12 +1437,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 315,
+                      "duration": 2180,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:13:09.836Z",
+                      "startTime": "2026-07-12T05:25:35.262Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1481,12 +1481,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 978,
+                  "duration": 1489,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:13:10.181Z",
+                  "startTime": "2026-07-12T05:25:37.936Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1515,12 +1515,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1209,
+                  "duration": 1993,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:13:11.204Z",
+                  "startTime": "2026-07-12T05:25:39.642Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1557,12 +1557,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1135,
+                  "duration": 1478,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:13:12.450Z",
+                  "startTime": "2026-07-12T05:25:41.687Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1591,12 +1591,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1200,
+                  "duration": 2159,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:13:13.644Z",
+                  "startTime": "2026-07-12T05:25:43.359Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1625,12 +1625,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1573,
+                  "duration": 2542,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:13:14.878Z",
+                  "startTime": "2026-07-12T05:25:45.544Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1674,12 +1674,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3247,
+                      "duration": 6793,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:13:16.500Z",
+                      "startTime": "2026-07-12T05:25:48.192Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1708,12 +1708,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2773,
+                      "duration": 3587,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:13:19.849Z",
+                      "startTime": "2026-07-12T05:25:55.201Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1742,12 +1742,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1458,
+                      "duration": 2793,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:13:22.641Z",
+                      "startTime": "2026-07-12T05:25:58.846Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1793,12 +1793,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 12013,
+                      "duration": 10615,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:13:24.149Z",
+                      "startTime": "2026-07-12T05:26:01.984Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1827,12 +1827,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2161,
+                      "duration": 2085,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:13:36.246Z",
+                      "startTime": "2026-07-12T05:26:13.515Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1871,12 +1871,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3190,
+                  "duration": 2672,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:13:39.142Z",
+                  "startTime": "2026-07-12T05:26:15.939Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1920,12 +1920,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2618,
+                      "duration": 2117,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:13:42.589Z",
+                      "startTime": "2026-07-12T05:26:18.819Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1971,12 +1971,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5052,
+                      "duration": 4269,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:13:48.433Z",
+                      "startTime": "2026-07-12T05:26:23.231Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2022,12 +2022,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1844,
+                      "duration": 1634,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:13:57.533Z",
+                      "startTime": "2026-07-12T05:26:29.827Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2073,12 +2073,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4722,
+                      "duration": 4037,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:14:02.344Z",
+                      "startTime": "2026-07-12T05:26:32.390Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2107,12 +2107,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 6579,
+                      "duration": 4246,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:14:07.121Z",
+                      "startTime": "2026-07-12T05:26:36.506Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2158,12 +2158,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3371,
+                      "duration": 2798,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:14:14.100Z",
+                      "startTime": "2026-07-12T05:26:40.815Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2209,12 +2209,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3088,
+                      "duration": 2608,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:14:18.794Z",
+                      "startTime": "2026-07-12T05:26:43.781Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2253,12 +2253,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1252,
+                  "duration": 1327,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:14:22.235Z",
+                  "startTime": "2026-07-12T05:26:46.491Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2287,12 +2287,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1222,
+                  "duration": 1270,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:14:23.501Z",
+                  "startTime": "2026-07-12T05:26:47.844Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2321,12 +2321,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1717,
+                  "duration": 1401,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:14:24.764Z",
+                  "startTime": "2026-07-12T05:26:49.147Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2370,12 +2370,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1670,
+                      "duration": 1438,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:14:26.647Z",
+                      "startTime": "2026-07-12T05:26:50.569Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2421,12 +2421,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2077,
+                      "duration": 1673,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:14:28.551Z",
+                      "startTime": "2026-07-12T05:26:52.083Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2455,12 +2455,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3490,
+                      "duration": 2487,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:14:30.761Z",
+                      "startTime": "2026-07-12T05:26:53.842Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2489,12 +2489,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3008,
+                      "duration": 2253,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:14:34.301Z",
+                      "startTime": "2026-07-12T05:26:56.382Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2531,12 +2531,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5349,
+                      "duration": 6286,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:14:37.351Z",
+                      "startTime": "2026-07-12T05:26:58.667Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2565,12 +2565,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2066,
+                      "duration": 1719,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:14:42.810Z",
+                      "startTime": "2026-07-12T05:27:05.066Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2580,7 +2580,7 @@
               ],
               "id": "d87e823e04d4a9cf7490-6a7cde59199cbdab78c1",
               "file": "sort-session.spec.ts",
-              "line": 227,
+              "line": 231,
               "column": 7
             }
           ]
@@ -2588,7 +2588,7 @@
         {
           "title": "unauthenticated sort access",
           "file": "sort-session.spec.ts",
-          "line": 253,
+          "line": 257,
           "column": 6,
           "specs": [
             {
@@ -2607,12 +2607,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1035,
+                      "duration": 890,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:14:44.899Z",
+                      "startTime": "2026-07-12T05:27:06.809Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2622,7 +2622,7 @@
               ],
               "id": "d87e823e04d4a9cf7490-9bb3942df70c7129a71d",
               "file": "sort-session.spec.ts",
-              "line": 259,
+              "line": 263,
               "column": 7
             },
             {
@@ -2641,12 +2641,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1395,
+                      "duration": 1169,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:14:45.952Z",
+                      "startTime": "2026-07-12T05:27:07.719Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2656,7 +2656,7 @@
               ],
               "id": "d87e823e04d4a9cf7490-799c753cb3c5e734bd8c",
               "file": "sort-session.spec.ts",
-              "line": 266,
+              "line": 270,
               "column": 7
             }
           ]
@@ -2692,12 +2692,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3599,
+                      "duration": 2738,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:14:47.401Z",
+                      "startTime": "2026-07-12T05:27:08.911Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2726,12 +2726,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3792,
+                      "duration": 3241,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T05:14:51.130Z",
+                      "startTime": "2026-07-12T05:27:11.732Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2770,12 +2770,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3651,
+                  "duration": 2957,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:14:55.014Z",
+                  "startTime": "2026-07-12T05:27:15.038Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2804,12 +2804,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3483,
+                  "duration": 2992,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:14:58.689Z",
+                  "startTime": "2026-07-12T05:27:18.031Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2838,12 +2838,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2583,
+                  "duration": 2072,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T05:15:02.189Z",
+                  "startTime": "2026-07-12T05:27:21.037Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2861,8 +2861,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-07-12T05:09:55.362Z",
-    "duration": 309735.135,
+    "startTime": "2026-07-12T05:21:54.428Z",
+    "duration": 328997.655,
     "expected": 65,
     "skipped": 0,
     "unexpected": 0,
