@@ -81,15 +81,16 @@ the schema we have today." The missing CHECK is caught only because someone happ
 test for it; a lost `sessions_active_unique` predicate would **not** be caught. The suite is an
 accidental oracle.
 
-**The real gate:** `pg_dump --schema-only` of a DB migrated from the current 17, diffed against
-one built from the new `0000_init`. Any non-empty diff (beyond formatting) is a lost schema fact.
+**The gap is already closed by enumeration, not by a gate.** Review read all 17 `.sql` files and
+found exactly ONE object that exists in migration SQL but not in `schema.ts`: `memberships_role_check`
+(decision 1a). Everything else is either declared in `schema.ts` already — including all three
+partial-index predicates (`schema.ts:205,232,296`, each with its `.where()`) — or is a data-migration
+`UPDATE`/`DELETE` that is meaningless on an empty DB.
 
-**Also pin `sessions_active_unique`'s predicate.** `binary-insertion-ranking.integration.test.ts:90`
-already asserts `pg_indexes.indexdef` contains the predicate for the other two partial indexes;
-`sessions_active_unique` has no such assertion. A partial unique is **behaviorally
-indistinguishable** from an unconditional one in the direction that matters (an unconditional
-unique still rejects a second active session, so the conflict tests stay green while the
-"terminal sessions free the slot" guarantee is quietly lost). Only an `indexdef` assertion is honest.
+So: **no `pg_dump` diff gate.** Run the diff ONCE locally while implementing, as a sanity check that
+the enumeration was right. Do not build it into CI. (Cut on owner's instruction, 2026-07-12: we ship
+ONE migration and the final schema is `schema.ts`; a permanent gate re-proving a known fact is
+ceremony.)
 
 ### 3. `db:reset` — declarative, fail-closed, and it drops BOTH schemas
 
@@ -119,13 +120,14 @@ Neither existing precedent covers this: `seed-load-core.ts resolveLocalUrl()` wh
 (we must hit remote DBs); `blob-orphans.ts deleteRefusal()` counts results (a schema drop has
 nothing to count). So:
 
-- **Never read a bare `DATABASE_URL`.** Require an explicit target (`--database-url`, or `--target
-  dev|prod` → distinctly-named vars). An ambient var is a **hard refusal**.
-- **Echo-back confirmation, not a boolean flag.** Print the resolved `host/database`; require it
-  typed back exactly. A `--force` flag is re-runnable from shell history against the wrong target;
-  an echoed host is not.
-- **Separate prod gate:** `ALLOW_PROD_RESET=1` *plus* the confirm token.
-- **Refuse when `CI` or `VERCEL` is set.** Unreachable from any build.
+- **Never read a bare `DATABASE_URL`.** Require an explicit `--database-url`. An ambient var is a
+  **hard refusal** — that is the line between "reset dev" and "dropped prod".
+- **Echo-back confirmation.** Print the resolved `host/database`; require it typed back exactly. A
+  `--force` flag is re-runnable from shell history against the wrong target; an echoed host is not.
+
+That is the whole guard. (Trimmed on owner's instruction, 2026-07-12: an `ALLOW_PROD_RESET` var and
+a `CI`/`VERCEL` refusal were belt-and-braces on top of a script that already cannot fire without a
+URL typed on the command line and a host typed back.)
 
 Note: `db-reset.ts` must **not** call `migrate(getDb(), …)` — `getDb()` returns the widened base
 type (decision 4), which won't typecheck against `migrate()`. Shell out to `npm run db:migrate` or
@@ -175,16 +177,17 @@ claim. Stated sloppily, a future reader "simplifies" the alias and breaks it.
 impossible. Today's mocks all use `as unknown as Database` and survive; `satisfies Database` will
 not work. One comment to that effect.
 
-### 5. Journal guard — pin content hashes, not just `(tag, when)`
+### 5. Journal guard — CUT (YAGNI)
 
-A re-baseline is **invisible to every existing gate**: a regenerated `drizzle/` still builds a
-perfect schema from empty, so `test:db` and e2e go **green** and only the prod deploy goes red.
-That green-CI/red-prod asymmetry is exactly what a pinned invariant exists to catch.
+A re-baseline is invisible to every existing gate (a regenerated `drizzle/` still builds a perfect
+schema from empty, so CI goes green and only the prod deploy goes red). A content-hash pin would
+catch it.
 
-`(tag, when)` alone catches a re-baseline but **not an edit to an already-applied `.sql` file**
-(content changes, `when` unchanged, migrate no-ops, `drizzle/` silently diverges from the deployed
-schema). Equally cheap: pin a **content hash per migration file**. ≤10 lines, folded into an
-existing test file — no new spec file, no journal-parsing helper.
+**Cut anyway** (owner, 2026-07-12). It guards a scenario that only bites once there is data worth
+keeping. Today the data is disposable and the app is pre-launch, so the worst case is a failed
+deploy. Add it when there is a real user — and note the reason here so the next person doesn't have
+to re-derive it.
+
 
 ## Scope
 
@@ -197,7 +200,6 @@ existing test file — no new spec file, no journal-parsing helper.
 4. Drop `legacy-peer-deps=true` from `.npmrc`
 5. `scripts/db-reset.ts` + `npm run db:reset` (3)
 6. **Delete `backfill-numbers`** — script, module, test, npm script, and its `vercel-build` step (3a)
-7. `sessions_active_unique` `indexdef` assertion (2); journal content-hash guard (5)
 
 | Confirmed break | Fix |
 |---|---|
@@ -243,7 +245,7 @@ the recovery tool is the very script whose guard we just (correctly) made hard t
 
 So: **prove the install on a preview before prod is ever touched.**
 
-1. Gates green locally (incl. the `pg_dump` diff).
+1. Gates green locally.
 2. **Reset `development`** with the new script (drop + migrate).
    ⚠️ Must happen **before pushing the branch** — otherwise the first preview build runs the new
    baseline against an un-reset dev DB and dies on `relation "user" already exists`.
@@ -265,8 +267,7 @@ acceptable — stated plainly rather than sprung.
 
 - `.npmrc` has no `legacy-peer-deps`; `rm -rf node_modules && npm ci` succeeds clean.
 - `drizzle/` is one v7 migration, generated by the new kit.
-- **`pg_dump --schema-only` diff (old 17 vs new baseline) is empty** — the real proof.
-- `memberships_role_check` survives; all three partial-index predicates pinned by `indexdef`.
+- `memberships_role_check` survives (`role-constraint.integration.test.ts` proves it in CI).
 - `npm run db:reset` is committed, drops **both** schemas, runs migrate, refuses an ambient
   `DATABASE_URL`, refuses prod without explicit authorization, and refuses to run in CI.
 - `backfill-numbers` is gone — script, module, test, npm script, and its `vercel-build` step.
