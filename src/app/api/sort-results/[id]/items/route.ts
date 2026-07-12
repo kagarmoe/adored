@@ -7,14 +7,15 @@ import { errorResponse } from "@/server/api/http-errors";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
-    const items = await ResultItemController.fromDb(db).listResultItems(params.id);
+    const items = await ResultItemController.fromDb(db).listResultItems(id);
     return NextResponse.json(items);
   } catch (error) {
     return errorResponse(error);
@@ -27,18 +28,19 @@ export async function GET(
 // enforced inside the service tx — a bad/foreign rid rolls the whole batch back → 404.
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const body = await request.json();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
     if (access.status === "finalized") {
       return NextResponse.json({ error: "Result is finalized" }, { status: 409 });
     }
-    const items = await ResultItemController.fromDb(db).reorderResultItems(params.id, body);
+    const items = await ResultItemController.fromDb(db).reorderResultItems(id, body);
     return NextResponse.json(items);
   } catch (error) {
     return errorResponse(error);
@@ -49,17 +51,18 @@ export async function PATCH(
 // computed order). Draft-only (409 finalized), curator-scoped.
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
     if (access.status === "finalized") {
       return NextResponse.json({ error: "Result is finalized" }, { status: 409 });
     }
-    const items = await ResultItemController.fromDb(db).resetResultItems(params.id);
+    const items = await ResultItemController.fromDb(db).resetResultItems(id);
     return NextResponse.json(items);
   } catch (error) {
     return errorResponse(error);
