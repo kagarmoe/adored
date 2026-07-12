@@ -92,17 +92,23 @@ function routePatternFromFile(filePath: string): string {
 
 /**
  * Extract exported HTTP method names from a route.ts source.
- * Handles `export async function GET(...)` and `export { handler as GET }`.
+ * Handles `export async function GET(...)`, `export const GET = ...`,
+ * `export { handler as GET }` and `export const { GET, POST } = ...`. Any other
+ * form is caught by the zero-method backstop in discoverAllRoutes (purses-2eoy):
+ * a route whose methods this regex cannot see would silently escape the
+ * exhaustiveness + stranger checks — as /api/auth/[...all] in fact did.
  */
 function methodsFromRoute(src: string): string[] {
   const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"] as const;
   const methods = new Set<string>();
 
-  const fnRe = /export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\b/g;
+  const fnRe =
+    /export\s+(?:(?:async\s+)?function\s+|const\s+)(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\b/g;
   let m: RegExpExecArray | null;
   while ((m = fnRe.exec(src)) !== null) methods.add(m[1]);
 
-  const reExportRe = /export\s*\{([^}]+)\}/g;
+  // `export { handler as GET }` and `export const { GET, POST } = toNextJsHandler(auth)`.
+  const reExportRe = /export\s*(?:const\s*)?\{([^}]+)\}/g;
   while ((m = reExportRe.exec(src)) !== null) {
     const inner = m[1];
     const aliasRe = /\bas\s+(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\b/g;
@@ -132,6 +138,14 @@ function discoverAllRoutes(repoRoot: string): RouteEntry[] {
     const src = fs.readFileSync(abs, "utf-8");
     const pattern = routePatternFromFile(abs);
     const methods = methodsFromRoute(src);
+    // Backstop: a route file must export at least one HTTP method. Zero means the
+    // extractor failed to see them (a new export form), and the route would slip
+    // past both checks below unnoticed — fail loudly instead.
+    if (methods.length === 0) {
+      throw new Error(
+        `route file exports no recognized HTTP method — methodsFromRoute needs updating: ${abs}`,
+      );
+    }
     for (const method of methods) {
       entries.push({ file: abs, pattern, method, key: `${method} ${pattern}` });
     }

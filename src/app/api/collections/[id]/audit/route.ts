@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { requireApiCollectionOwner } from "@/server/dal/collection-access";
 import { AuditController } from "@/server/api/audit";
+import { errorResponse } from "@/server/api/http-errors";
 
 // Owner-only read of a collection's permanent-purge trail. 404 (absent) is
 // returned BEFORE 403 (not owner) by the gate — the existence-oracle convention
@@ -24,10 +25,6 @@ export async function GET(
     });
     return NextResponse.json(entries);
   } catch (error) {
-    const status = error instanceof Error && error.message === "Unauthorized" ? 401 : 500;
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status },
-    );
+    return errorResponse(error);
   }
 }

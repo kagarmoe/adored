@@ -28,11 +28,6 @@ export class InvitationController {
     return this.invitationRepo.findByCollection(collectionId);
   }
 
-  async listInvitations(): Promise<Invitation[]> {
-    // TODO: Implement when InvitationRepository.findByCollection available
-    return [];
-  }
-
   async createInvitation(
     collectionId: string,
     data: unknown,
@@ -81,11 +76,5 @@ export class InvitationController {
     }
     await sendInvitation({ to: invitation.email, token: invitation.token });
     return { message: "Invitation resent" };
-  }
-
-  async acceptInvitation(): Promise<{ message: string }> {
-    // TODO: Find invitation by token, validate not expired, create membership
-    // TODO: Update invitation status to accepted and set acceptedAt
-    return { message: "Invitation accepted" };
   }
 }

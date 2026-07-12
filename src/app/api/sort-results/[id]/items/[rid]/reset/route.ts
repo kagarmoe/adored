@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { ResultItemController } from "@/server/api/result-items";
 import { getDb } from "@/lib/db";
 import { requireApiResultAccess } from "@/server/dal/collection-access";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function POST(
   _request: NextRequest,
@@ -27,9 +28,6 @@ export async function POST(
     const item = await ctrl.resetResultItem(params.rid);
     return NextResponse.json(item);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 },
-    );
+    return errorResponse(error);
   }
 }

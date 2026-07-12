@@ -35,8 +35,8 @@ In Vercel Project Settings → Environment Variables, add:
 | Variable | Example | Notes |
 |----------|---------|-------|
 | `DATABASE_URL` | `postgresql://user:pass@host:5432/db` | Vercel Postgres or external DB connection string |
-| `AUTH_SECRET` | `(generated value)` | Generate: `openssl rand -base64 32`. Validated by `src/lib/env.ts`, bridged to `NEXTAUTH_SECRET` internally |
-| `AUTH_URL` | `https://your-domain.vercel.app` | Production domain. Previews derive it from `VERCEL_URL` if unset. Bridged to `NEXTAUTH_URL` internally |
+| `AUTH_SECRET` | `(generated value)` | Generate: `openssl rand -base64 32`. Validated by `src/lib/env.ts` (min 32 chars); it is the **fallback source for `BETTER_AUTH_SECRET`** (NextAuth is retired — there is no `NEXTAUTH_*` bridge) |
+| `AUTH_URL` | `https://your-domain.vercel.app` | Production domain. Previews derive it from `VERCEL_URL` if unset. Fallback source for `BETTER_AUTH_URL` (`src/lib/auth-server.ts`) |
 
 #### Optional (Production)
 
@@ -51,7 +51,7 @@ In Vercel Project Settings → Environment Variables, add:
 #### Auto-Configured by Vercel
 
 - `BLOB_READ_WRITE_TOKEN` — Automatically set for Vercel Blob storage access
-- `NODE_ENV` — Automatically set based on deployment environment
+- `NODE_ENV` — Automatically set based on deployment environment. **Vercel sets `NODE_ENV=production` for PREVIEW deploys as well as production.** The API's `500` handler relies on exactly that: it inlines full error detail in the response body only when `NODE_ENV !== "production"` (local dev), so preview URLs — which are internet-reachable and get shared — never leak driver text. The gate is deliberately `NODE_ENV`, **not** `VERCEL_ENV`; do not "fix" it to the latter (see [Tracing a 500](#tracing-a-500-in-production)).
 
 ### Step 3: Connect Database
 
@@ -217,6 +217,29 @@ The `vercel.ts` configuration includes:
 3. **Serverless Function Duration** — Monitor in deployment logs
 4. **Error Tracking** — Failed requests visible in logs
 
+### Tracing a 500 in production
+
+An unhandled API error returns **no detail** to the caller — only generic copy plus a correlation id:
+
+```json
+{ "error": "Something went wrong. Please try again.", "errorId": "b1e2…-uuid" }
+```
+
+The full error is in the runtime logs under a greppable prefix, keyed by that same `errorId`:
+
+```bash
+vercel logs --follow          # then grep for [api_error] or the errorId the user reported
+```
+
+```
+[api_error] {"errorId":"b1e2…","error":{"name":…,"message":…,"stack":…,"cause":{…},
+             "code":"23503","constraint_name":…,"table_name":…, …}}
+```
+
+The log line carries the error's `name`/`message`/`stack`, the recursively-unwrapped `cause` chain (drizzle/postgres wrap the real driver error underneath), and the postgres-js driver fields. It deliberately **omits `query` and `parameters`** — those carry user values (PII). So: get the `errorId` from the caller's response, grep one log line, get the whole error. Do **not** re-add raw error text to the response to make debugging easier — that leak is what this replaced (it reached *unauthenticated* callers via `GET /api/shared-results/[token]`). Contract: [`docs/API.md`](API.md#error-bodies-the-errorresponse-contract); rationale: ARCHITECTURE decision 30.
+
+DB-layer failures log separately under `[db_error]` (`src/lib/db-error-log.ts`) and emit one `db_action_failed` PostHog event — same greppable shape.
+
 ## Troubleshooting
 
 ### Build Failures
@@ -264,6 +287,13 @@ vercel logs --grep email
 vercel env pull
 npm run dev
 ```
+
+## CI gates that stand between a merge and a deploy
+
+Vercel deploys `main` on merge, so CI (`.github/workflows/ci.yml`) is the last gate before production. Two notes that surprise people:
+
+- **`Recompute bench (p95 gate)`** — the sort-recompute benchmark is a **blocking gate**, not advisory (it was renamed from `Recompute bench (advisory)`; `continue-on-error` is gone and `scripts/bench-recompute.ts` now exits non-zero). It runs **only when the `hot` paths-filter fires** (`src/server/services/**` and the rest of the recompute hot path) and fails the build when the compare-phase **p95 exceeds 4× the committed baseline** (`bench/recompute-baseline.json`), or when the baseline is missing, or when the bench cannot run. The 4× is deliberately generous — a GitHub runner already measures ~1.5× the dev-Mac baseline from hardware alone, so a tighter gate would flake — and it is a *shape* gate (an O(N²) path returning), not an absolute-latency gate: local Docker p95 ≠ Neon p95. If it fires, **do not re-baseline to go green**; `--update-baseline` is only for a deliberate algorithm change. Rationale: ARCHITECTURE decision 31.
+- **E2E Postgres is on a worktree-derived port, not `:5433`.** `e2e/fixtures/test-db.sh` hashes the worktree path into a slot → container `pi-e2e-db-<slot>`, DB port `15432 + slot`, app port `3100 + slot` (parallel worktrees used to clobber each other's container/database). Ask the script (`test-db.sh url` / `app-url`) — never hardcode a literal, and note CI no longer pins `DATABASE_URL_TEST` for the e2e job.
 
 ## Rolling Back
 

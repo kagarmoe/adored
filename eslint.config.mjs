@@ -69,6 +69,58 @@ const eslintConfig = [
       ],
     },
   },
+
+  // Raw-error leak guard. A route that reads `error.message` echoes Postgres driver text
+  // (relation names, constraint names, sometimes values) straight to the caller. Every
+  // catch under src/app/api returns errorResponse(error) instead — that mapper is the ONLY
+  // place allowed to read .message, and it echoes it only for typed domain errors whose
+  // message is curated copy. The rule is absolute, so it has no false positives.
+  {
+    files: ['src/app/api/**/*.ts'],
+    ignores: ['src/app/api/**/*.test.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'MemberExpression[property.name="message"]',
+          message:
+            'API routes must not read error.message — it leaks driver text to the caller. Return errorResponse(error) from the catch (src/server/api/http-errors.ts); add a typed error there if you need curated copy or a specific status.',
+        },
+        // The rule above bans one spelling; this one bans the SHAPE. Inside a catch, an
+        // `error:` body value that is not a string literal is derived from the caught
+        // error — String(e), `${e}`, e.toString(), a destructured `message`, or bare
+        // `{ error }` (whose pg fields code/detail/table/constraint serialize too).
+        // Curated literals stay legal, so the 413/generic-copy catches still pass.
+        {
+          selector:
+            'CatchClause Property[key.name="error"]:not([value.type="Literal"])',
+          message:
+            'API routes must not derive the error body from the caught error — it leaks driver text to the caller. Return errorResponse(error) (src/server/api/http-errors.ts), or use a curated string literal.',
+        },
+      ],
+    },
+  },
+
+  // Same leak, one layer down: helpers outside src/app/api also build the route's
+  // response body (src/lib/photo-serving.ts serves /file; src/server/dal/collection-access.ts
+  // returns the 403/404 a route hands straight back), so the guard has to follow them.
+  // Only the SHAPE rule applies here — this layer legitimately reads .message (db-error-log,
+  // the repository constraint sniffers, and errorResponse itself, which is the sanctioned mapper).
+  {
+    files: ['src/lib/**/*.ts', 'src/server/**/*.ts'],
+    ignores: ['**/*.test.ts', 'src/server/api/http-errors.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'CatchClause CallExpression[callee.object.name="NextResponse"][callee.property.name="json"] Property[key.name="error"]:not([value.type="Literal"])',
+          message:
+            'Do not derive an HTTP error body from the caught error — it leaks driver text to the caller. Return errorResponse(error) (src/server/api/http-errors.ts), or use a curated string literal.',
+        },
+      ],
+    },
+  },
 ];
 
 export default eslintConfig;

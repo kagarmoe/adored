@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { requireApiItemCapability, requireApiCollectionAccess } from "@/server/dal/collection-access";
-import { DispositionController, PreferenceExistsError } from "@/server/api/dispositions";
+import { DispositionController } from "@/server/api/dispositions";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getSession();
@@ -21,9 +22,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const result = await DispositionController.fromDb(db).setDisposition(params.id, session.user.id, body);
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    if (error instanceof PreferenceExistsError) return NextResponse.json({ error: error.message }, { status: 409 });
-    if (error instanceof Error && error.name === "ZodError") return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-    return NextResponse.json({ error: "Failed to set disposition" }, { status: 500 });
+    return errorResponse(error);
   }
 }
 

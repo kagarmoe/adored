@@ -17,10 +17,7 @@ export async function GET(
     const items = await ResultItemController.fromDb(db).listResultItems(params.id);
     return NextResponse.json(items);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }
 

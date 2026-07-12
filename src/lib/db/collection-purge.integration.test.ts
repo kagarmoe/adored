@@ -15,6 +15,7 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { sql } from "drizzle-orm";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
+import { mockAuth } from "../../../e2e/fixtures/mock-auth";
 import { seedBaseline } from "../../../e2e/fixtures/seed";
 import { generateId } from "@/lib/id";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
@@ -36,15 +37,9 @@ const { mockGetSession, mockBlobDel, mockBlobList } = vi.hoisted(() => ({
   mockBlobDel: vi.fn(),
   mockBlobList: vi.fn(),
 }));
-// Flat-replace BOTH auth exports from one spy (spread form pulls in nodemailer).
-vi.mock("@/lib/auth", () => ({
-  getSession: mockGetSession,
-  requireAuth: async () => {
-    const s = await mockGetSession();
-    if (!s?.user) throw new Error("Unauthorized");
-    return s.user;
-  },
-}));
+// Shared fixture: replaces the auth exports (spread form pulls in nodemailer) and
+// supplies UnauthorizedError, which http-errors instanceof-checks.
+vi.mock("@/lib/auth", () => mockAuth(mockGetSession));
 vi.mock("@vercel/blob", () => ({ del: mockBlobDel, list: mockBlobList }));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 

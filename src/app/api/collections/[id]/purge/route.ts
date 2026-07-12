@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { CollectionController } from "@/server/api/collections";
 import { CollectionPurgeService } from "@/server/services/CollectionPurgeService";
+import { errorResponse } from "@/server/api/http-errors";
 
 const ConfirmSchema = z.object({ confirm: z.string() });
 
@@ -45,11 +46,6 @@ export async function POST(
     await new CollectionPurgeService(db).purge(collection, user.id);
     return NextResponse.json({ message: "Collection purged" });
   } catch (error) {
-    const status =
-      error instanceof Error && error.message === "Unauthorized" ? 401 : 500;
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status },
-    );
+    return errorResponse(error);
   }
 }
