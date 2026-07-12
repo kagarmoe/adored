@@ -182,10 +182,22 @@ test.describe("session detail → See what you love most → results", () => {
     await roundEndRefresh;
 
     // 2. Move to compare and choose one card (tapping a card IS the choice).
-    await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
-    await expect(
-      page.getByRole("heading", { name: "Which do you love more?" }),
-    ).toBeVisible();
+    // The goto is retried rather than fired once (purses-pw52). Awaiting the RSC
+    // response above proves the network settled, NOT that the client router did —
+    // the round-end refresh can still be committing, and a competing navigation to
+    // /triage aborts an in-flight goto ("interrupted by another navigation"). That
+    // surfaced as a CI-only flake; it always cleared on retry.
+    //
+    // This absorbs the transient interruption WITHOUT masking a real regression:
+    // the compare heading is still asserted inside the retry, so a gate that truly
+    // kept redirecting to /triage would exhaust the retries and fail the test.
+    await expect(async () => {
+      await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
+      await expect(
+        page.getByRole("heading", { name: "Which do you love more?" }),
+      ).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 30_000 });
+
     await page.getByRole("button", { name: /^Choose / }).first().click();
 
     // 3. Return to the session detail (the breadcrumb's "Session" target).
