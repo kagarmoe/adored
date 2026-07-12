@@ -32,6 +32,16 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [wasConverted, setWasConverted] = useState(false);
 
+  // Re-announce a REPEATED identical error (purses-orsx). setError(null) + setError(msg)
+  // batch into one commit, so picking two non-images in a row renders byte-identical text:
+  // React touches no DOM node and role="alert" never re-fires — the second rejection is
+  // silent. Keying the alert on a nonce remounts it, so every rejection is announced.
+  const [errorNonce, setErrorNonce] = useState(0);
+  const fail = (message: string) => {
+    setError(message);
+    setErrorNonce((n) => n + 1);
+  };
+
   const resetSelection = () => {
     setPreview(null);
     setSelectedFile(null);
@@ -48,7 +58,7 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
     setError(null);
 
     if (!file.type.startsWith("image/")) {
-      setError("Please select an image file");
+      fail("Please select an image file");
       return;
     }
 
@@ -60,7 +70,7 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
 
       if (uploadFile.size > MAX_UPLOAD_BYTES) {
         resetSelection();
-        setError(MAX_UPLOAD_ERROR);
+        fail(MAX_UPLOAD_ERROR);
         return;
       }
 
@@ -69,7 +79,7 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
       setPreview(await readFileAsDataUrl(uploadFile));
     } catch (err) {
       resetSelection();
-      setError(
+      fail(
         err instanceof Error
           ? err.message
           : "Could not prepare the selected image for upload"
@@ -81,7 +91,7 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      setError("Please select a file");
+      fail("Please select a file");
       return;
     }
 
@@ -110,7 +120,7 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
       resetSelection();
       window.location.reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      fail(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setLoading(false);
     }
@@ -180,9 +190,15 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
         )}
       </div>
 
-      {/* Assertive: a failed upload is a single blocking failure the user must hear (purses-orsx). */}
+      {/* Assertive: a failed upload is a single blocking failure the user must hear.
+          Keyed on errorNonce so a repeated identical error remounts the alert (purses-orsx). */}
       {error && (
-        <Card role="alert" padding="md" className="bg-error-soft border border-error-soft">
+        <Card
+          key={errorNonce}
+          role="alert"
+          padding="md"
+          className="bg-error-soft border border-error-soft"
+        >
           <p className="text-error-deep text-sm">{error}</p>
         </Card>
       )}
