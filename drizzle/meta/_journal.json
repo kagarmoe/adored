@@ -1,124 +1,12 @@
 {
-  "version": "5",
-  "dialect": "pg",
+  "version": "7",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "5",
-      "when": 1780123134408,
-      "tag": "0000_absurd_secret_warriors",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1781389433465,
-      "tag": "0001_calm_zaladane",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1781567884850,
-      "tag": "0002_violet_norman_osborn",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "5",
-      "when": 1781717463646,
-      "tag": "0003_parallel_sleeper",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "5",
-      "when": 1781935961388,
-      "tag": "0004_pretty_veda",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "5",
-      "when": 1781993076062,
-      "tag": "0005_nebulous_warbird",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "5",
-      "when": 1782079476062,
-      "tag": "0006_authz_role_check",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "5",
-      "when": 1782192114840,
-      "tag": "0007_cold_steve_rogers",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "5",
-      "when": 1782287074409,
-      "tag": "0008_cynical_zodiak",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "5",
-      "when": 1782330805291,
-      "tag": "0009_partial_active_session",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "5",
-      "when": 1782867576257,
-      "tag": "0010_mighty_photon",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "5",
-      "when": 1782867576258,
-      "tag": "0011_orderrank_clientkey_partial_indexes",
-      "breakpoints": true
-    },
-    {
-      "idx": 12,
-      "version": "5",
-      "when": 1782867576259,
-      "tag": "0012_reset_elo_drafts",
-      "breakpoints": true
-    },
-    {
-      "idx": 13,
-      "version": "5",
-      "when": 1782932299839,
-      "tag": "0013_cuddly_ikaris",
-      "breakpoints": true
-    },
-    {
-      "idx": 14,
-      "version": "5",
-      "when": 1783123498632,
-      "tag": "0014_icy_gamma_corps",
-      "breakpoints": true
-    },
-    {
-      "idx": 15,
-      "version": "5",
-      "when": 1783209898632,
-      "tag": "0015_collapse_to_canonical_better_auth_user",
-      "breakpoints": true
-    },
-    {
-      "idx": 16,
-      "version": "5",
-      "when": 1783587761953,
-      "tag": "0016_sturdy_the_professor",
+      "version": "7",
+      "when": 1783845933476,
+      "tag": "0000_init",
       "breakpoints": true
     }
   ]

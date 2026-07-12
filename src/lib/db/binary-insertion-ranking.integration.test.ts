@@ -99,6 +99,24 @@ describeDb("binary-insertion ranking — schema", () => {
     expect(rows.length).toBe(1);
     expect((rows[0] as { indexdef: string }).indexdef).toContain("order_rank IS NOT NULL");
   });
+
+  // The third partial index. Unlike the two above it is NOT a NULLS-DISTINCT case,
+  // but it is the one whose predicate a serializer actually ATE once: drizzle-kit
+  // 0.20 could not emit index predicates, which is why migrations 0009/0011 were
+  // hand-authored. The squash to a single generated baseline re-runs that same
+  // codegen path, so pin the predicate rather than trust the tool.
+  // Without the WHERE, this collapses to an unconditional UNIQUE(collection_id,
+  // curator_id) — a curator could then never start a second sort in a collection,
+  // because a completed or set-aside session would still occupy the slot forever.
+  it("sessions_active_unique is PARTIAL on deleted_at IS NULL AND status IN (active,paused)", async () => {
+    const { db } = getTestDb();
+    const rows = await db.execute(sql`
+      select indexdef from pg_indexes where indexname = 'sessions_active_unique'`);
+    expect(rows.length).toBe(1);
+    const { indexdef } = rows[0] as { indexdef: string };
+    expect(indexdef).toContain("deleted_at IS NULL");
+    expect(indexdef).toContain("status = ANY");
+  });
 });
 
 // These behavioral cases prove that *a* unique constraint enforces uniqueness on the

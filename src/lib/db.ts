@@ -1,4 +1,5 @@
-import { drizzle } from "drizzle-orm/postgres-js";
+import { drizzle, type PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
+import type { PgDatabase } from "drizzle-orm/pg-core";
 import postgres from "postgres";
 import * as schema from "./db/schema";
 
@@ -25,7 +26,14 @@ const client = postgres(connectionString, {
 // (an optional env var read directly, not routed through the validated proxy).
 const db = drizzle(client, { schema, logger: process.env.DB_QUERY_LOG === "1" });
 
-export type Database = typeof db;
+// The SHARED BASE CLASS of the root db and a transaction — not `typeof db`.
+// PostgresJsDatabase and PgTransaction both extend PgDatabase with the same
+// generics, so a `tx` satisfies this and withTransaction's callback typechecks.
+// Narrowing this back to `typeof db` (the concrete PostgresJsDatabase) breaks
+// every withTransaction caller: a tx is not assignable to it.
+// It carries a `protected authToken`, so an object-literal mock can never
+// `satisfies Database` — test doubles must go through `as unknown as Database`.
+export type Database = PgDatabase<PostgresJsQueryResultHKT, typeof schema>;
 
 export function getDb(): Database {
   return db;

@@ -1,1 +1,0 @@
-ALTER TABLE "sort_result_items" ADD COLUMN "usage" text;

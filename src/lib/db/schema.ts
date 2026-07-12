@@ -8,6 +8,7 @@ import {
   jsonb,
   index,
   uniqueIndex,
+  check,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -422,7 +423,11 @@ export const invitationsTable = pgTable(
   },
   (table) => ({
     collectionIdx: index("invitations_collection_id_idx").on(table.collectionId),
-    tokenIdx: uniqueIndex("invitations_token_unique").on(table.token),
+    // NO uniqueIndex on `token` here: the column's .unique() above already emits a
+    // constraint named `invitations_token_unique`, and an explicit index of that
+    // name collides with it. drizzle-kit 0.20 emitted CREATE UNIQUE INDEX IF NOT
+    // EXISTS, so the duplicate silently no-op'd; 0.31 drops the IF NOT EXISTS and
+    // it is a fatal 42P07. The constraint is what actually exists in the DB.
     emailIdx: index("invitations_email_idx").on(table.email),
   }),
 );
@@ -447,5 +452,10 @@ export const membershipsTable = pgTable(
       table.collectionId,
       table.userId,
     ),
+    // Ported from migration 0006, which added this by hand: drizzle-orm 0.30 had
+    // no check() API, so the constraint lived ONLY in migration SQL and was
+    // invisible to `drizzle-kit generate`. Declaring it here is what stops the
+    // squashed baseline from silently shipping `role` as free text.
+    roleCheck: check("memberships_role_check", sql`${table.role} in ('owner', 'curator')`),
   }),
 );
