@@ -20,9 +20,10 @@ describe("TierBadge", () => {
     });
   }
 
-  it("hides the label but keeps the glyph when showLabel is false", () => {
+  it("keeps an accessible name when showLabel is false (the glyph alone is aria-hidden)", () => {
     const { container } = render(<TierBadge tier="love" showLabel={false} />);
-    expect(screen.queryByText("Love")).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Love" })).toBeInTheDocument();
+    expect(screen.queryByText("Love")).not.toBeInTheDocument(); // no visible label (TONE)
     expect(container.textContent).toContain("●");
   });
 

@@ -48,9 +48,9 @@ interface TriageRoundProps {
  * The optimistic triage round (spec §3.3): advances through the server-selected
  * queue from LOCAL state, enqueueing each decision into the localStorage queue —
  * the UI advances only after the entry is persisted (persist-before-advance),
- * and `router.refresh()` fires exactly ONCE, at round end, after the final
- * drain settles (F15). No mid-round refetch: the queue/seed/decision-log props
- * are snapshotted at mount, so a stray refresh can never desync the round.
+ * and round end runs ONE drain and NO `router.refresh()` (F15/purses-hzwj). No
+ * refetch at all: the queue/seed/decision-log props are snapshotted at mount, so
+ * nothing here would consume a refreshed payload anyway.
  */
 export function TriageRound({
   curatorId,
@@ -75,7 +75,7 @@ export function TriageRound({
 
   // The queue fork is triage's own: the head not yet handled. Everything else
   // about advancing that decision optimistically (flusher wiring, enqueue +
-  // quota fallback, the tap log + frozen recap + one-refresh end sequence, the
+  // quota fallback, the tap log + frozen recap + drain-only end sequence, the
   // undo-as-revisit machine, the round clock) rides the shared hook.
   const current = entries.find((e) => !handled.has(e.item.id));
   const round = useOptimisticRound<{ itemId: string; result: TriageResult }>({
@@ -293,8 +293,11 @@ export function TriageRound({
                   You placed this with {revisit.label} — change it?
                 </p>
               )}
+              {/* NOT keyed per item: a re-keyed DecisionControls remounts its
+                  sr-only live region with each advance, and a region that appears
+                  with its content is never announced (SC 4.1.3). Its state is
+                  props-derived on this local path, so there is nothing to reset. */}
               <DecisionControls
-                key={shown.item.id}
                 submit={{ kind: "local", onDecision: (d) => void handleTriage(shown.item, d) }}
                 type="triage"
                 decisions={triageDecisions(shown.item.id)}

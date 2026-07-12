@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button, Card } from "@/components/ui";
 import { convertHeifToJpeg } from "@/lib/heic";
 import {
@@ -25,12 +26,25 @@ async function readFileAsDataUrl(file: File): Promise<string> {
 
 export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [wasConverted, setWasConverted] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  // One coarse sentence for AT (purses-l5gd): progress and the successful add both
+  // count as status messages under SC 4.1.3, and the visible copy for them lives only
+  // in button labels — heard only if focus happens to rest there.
+  const status = preparing
+    ? "Preparing your photo…"
+    : loading
+      ? "Adding your photo…"
+      : added
+        ? "Photo added."
+        : "";
 
   // Re-announce a REPEATED identical error (purses-orsx). setError(null) + setError(msg)
   // batch into one commit, so picking two non-images in a row renders byte-identical text:
@@ -56,6 +70,7 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
     if (!file) return;
 
     setError(null);
+    setAdded(false);
 
     if (!file.type.startsWith("image/")) {
       fail("Please select an image file");
@@ -118,7 +133,10 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
       }
 
       resetSelection();
-      window.location.reload();
+      setAdded(true);
+      // refresh(), not location.reload(): a hard reload tears down the document —
+      // and the live region with it — before AT can read the announcement.
+      router.refresh();
     } catch (err) {
       fail(err instanceof Error ? err.message : "Upload failed");
     } finally {
@@ -189,6 +207,13 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
           </div>
         )}
       </div>
+
+      {/* Mounted for the component's whole life, NOT gated on `status` (purses-l5gd):
+          a live region must already exist when its text changes, or AT never observes
+          the mutation — a region born with content is the classic silent-live-region bug. */}
+      <p role="status" className="sr-only">
+        {status}
+      </p>
 
       {/* Assertive: a failed upload is a single blocking failure the user must hear.
           Keyed on errorNonce so a repeated identical error remounts the alert (purses-orsx). */}

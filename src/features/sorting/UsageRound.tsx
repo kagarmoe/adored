@@ -75,7 +75,7 @@ function isInteractiveEl(el: EventTarget | null): el is HTMLElement {
 /**
  * The optimistic usage round (spec §3.4): the SECOND consumer of
  * `useOptimisticRound`. It rides the shared machine for persist-before-advance,
- * the frozen recap + one-refresh end sequence (F15), undo-as-revisit (F19), and
+ * the frozen recap + drain-only end sequence (F15), undo-as-revisit (F19), and
  * the round clock — and forks only where usage genuinely differs:
  *
  *  - Three affordances: Yes / Not these days / Skip. No dispositions, no undo
@@ -438,8 +438,10 @@ export function UsageRound({
                   You placed this with {revisit.label} — change it?
                 </p>
               )}
+              {/* Not keyed per item — see TriageRound: re-keying remounts the
+                  sr-only live region, and a region that appears with its content
+                  is never announced (SC 4.1.3). */}
               <DecisionControls
-                key={shown.item.id}
                 submit={{ kind: "local", onDecision: (d) => void handleUsage(shown.item, d) }}
                 type="usage"
                 decisions={usageDecisions(shown.item.id)}

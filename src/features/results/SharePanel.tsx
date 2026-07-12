@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card, Input } from "@/components/ui";
+import { Button, buttonVariants, Card, Input } from "@/components/ui";
 import type { SortResultShare } from "@/types";
 import Link from "next/link";
 
@@ -9,6 +9,11 @@ interface SharePanelProps {
   resultId: string;
   initialShares: SortResultShare[];
 }
+
+// The API's `error` field is developer-facing (see src/server/api/http-errors.ts);
+// what the person reads is these, in their own voice.
+const CREATE_FAILED = "That link didn't come together just now. Nothing changed — try again whenever you like.";
+const REVOKE_FAILED = "That link is still shared — we couldn't put it away just now. Try again in a moment.";
 
 export function SharePanel({ resultId, initialShares }: SharePanelProps) {
   const [shares, setShares] = useState(initialShares);
@@ -27,20 +32,22 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create share link");
+        setError(CREATE_FAILED);
+        return;
       }
 
       const newShare = await response.json();
       setShares((prev) => [...prev, newShare]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create share link");
+    } catch {
+      setError(CREATE_FAILED);
     } finally {
       setLoading(false);
     }
   };
 
   const handleRevokeShare = async (shareId: string) => {
-    if (!confirm("Revoke this share link?")) return;
+    if (!confirm("Stop sharing this link?")) return;
+    setError(null);
 
     try {
       const response = await fetch(`/api/sort-results/${resultId}/shares/${shareId}`, {
@@ -48,12 +55,13 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to revoke share");
+        setError(REVOKE_FAILED);
+        return;
       }
 
       setShares((prev) => prev.filter((s) => s.id !== shareId));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to revoke share");
+    } catch {
+      setError(REVOKE_FAILED);
     }
   };
 
@@ -106,10 +114,15 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
                     >
                       Copy
                     </Button>
-                    <Link href={getShareUrl(share.shareToken)} target="_blank">
-                      <Button size="sm" variant="secondary">
-                        Preview
-                      </Button>
+                    {/* Styled as a button, but a link is a link: a <button> inside
+                        an <a> is a duplicate tab stop with an ambiguous role. */}
+                    <Link
+                      href={getShareUrl(share.shareToken)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={buttonVariants({ size: "sm", variant: "secondary" })}
+                    >
+                      Preview
                     </Link>
                     <Button
                       size="sm"

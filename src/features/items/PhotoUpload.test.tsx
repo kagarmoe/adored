@@ -3,14 +3,15 @@ import "@testing-library/jest-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-// Boundary mocks only. PhotoUpload does NOT use @vercel/blob/client or
-// next/navigation — it POSTs a FormData multipart to the photos API and, on
-// success, calls window.location.reload(). The real @/lib/uploads helpers
-// (isHeifFile, MAX_UPLOAD_BYTES) are exercised, not mocked.
-const { convertHeifToJpeg } = vi.hoisted(() => ({
+// Boundary mocks only. PhotoUpload POSTs a FormData multipart to the photos API
+// and, on success, refreshes the server tree via next/navigation's router. The
+// real @/lib/uploads helpers (isHeifFile, MAX_UPLOAD_BYTES) are exercised, not mocked.
+const { convertHeifToJpeg, refresh } = vi.hoisted(() => ({
   convertHeifToJpeg: vi.fn(async (f: File) => f),
+  refresh: vi.fn(),
 }));
 vi.mock("@/lib/heic", () => ({ convertHeifToJpeg }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 
 import { PhotoUpload } from "./PhotoUpload";
 
@@ -27,18 +28,10 @@ function okResponse() {
   return { ok: true, json: async () => ({ id: "photo_1" }) };
 }
 
-let reload: ReturnType<typeof vi.fn>;
-
 beforeEach(() => {
   vi.clearAllMocks();
   convertHeifToJpeg.mockImplementation(async (f: File) => f);
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse()));
-  // window.location.reload is the navigation boundary for this component.
-  reload = vi.fn();
-  Object.defineProperty(window, "location", {
-    configurable: true,
-    value: { ...window.location, reload },
-  });
 });
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -46,7 +39,7 @@ afterEach(() => {
 });
 
 describe("PhotoUpload", () => {
-  it("happy path: selecting a JPEG previews it, then Upload POSTs the file and reloads", async () => {
+  it("happy path: selecting a JPEG previews it, then Upload POSTs the file and refreshes", async () => {
     render(<PhotoUpload itemId="item_1" collectionId="coll_1" />);
 
     const file = jpeg("bag.jpg");
@@ -59,7 +52,7 @@ describe("PhotoUpload", () => {
 
     fireEvent.click(uploadBtn);
 
-    await waitFor(() => expect(reload).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
 
     // The fetch hits the item's photos route with the File in a FormData body.
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -85,14 +78,40 @@ describe("PhotoUpload", () => {
     expect(screen.getByText(/converted to jpeg: trip\.jpg/i)).toBeInTheDocument();
 
     fireEvent.click(uploadBtn);
-    await waitFor(() => expect(reload).toHaveBeenCalled());
+    await waitFor(() => expect(refresh).toHaveBeenCalled());
 
     // The converted JPEG (not the original heic) is what gets uploaded.
     const body = (fetch as any).mock.calls[0][1].body as FormData;
     expect(body.get("file")).toBe(converted);
   });
 
-  it("error path: a failed upload surfaces the API error and does NOT reload", async () => {
+  it("announces progress and the successful add in a persistent live region", async () => {
+    // purses-l5gd: SC 4.1.3 covers success and results of an action, not only errors.
+    // The region must be MOUNTED AND EMPTY at rest — a region that only appears once
+    // there is something to say is never observed by AT (the silent-live-region bug).
+    let settle!: (r: unknown) => void;
+    (fetch as any).mockReturnValueOnce(
+      new Promise((resolve) => {
+        settle = resolve;
+      }),
+    );
+
+    render(<PhotoUpload itemId="item_1" collectionId="coll_1" />);
+    const region = screen.getByRole("status");
+    expect(region).toBeEmptyDOMElement();
+
+    fireEvent.change(fileInput(), { target: { files: [jpeg()] } });
+    fireEvent.click(await screen.findByRole("button", { name: /upload photo/i }));
+
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/adding your photo/i));
+
+    settle(okResponse());
+
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/photo added/i));
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("error path: a failed upload surfaces the API error and does NOT refresh", async () => {
     (fetch as any).mockResolvedValueOnce({
       ok: false,
       json: async () => ({ error: "Storage is full" }),
@@ -106,7 +125,7 @@ describe("PhotoUpload", () => {
     // silent to AT users (WCAG 2.1 AA, SC 4.1.3 Status Messages).
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("Storage is full");
-    expect(reload).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("re-announces a REPEATED identical rejection (the alert node is replaced, not reused)", async () => {

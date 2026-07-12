@@ -123,6 +123,34 @@ describe("DecisionControls triage tier tap", () => {
     expect(screen.queryByRole("button", { name: "Saving..." })).not.toBeInTheDocument();
   });
 
+  it("announces the saved tier in a live region that already exists before the tap, and re-announces a repeated tier (SC 4.1.3)", async () => {
+    // `kind: "local"` on purpose: that is the shape every real page ships
+    // (TriageRound/UsageRound/onboarding). An announcement wired only into the
+    // session branch would be dead in the app.
+    const user = userEvent.setup();
+    render(
+      <DecisionControls
+        submit={{ kind: "local", onDecision: vi.fn() }}
+        type="triage"
+        decisions={TRIAGE_DECISIONS}
+      />,
+    );
+
+    // The region must be in the DOM BEFORE its text changes, or screen readers
+    // never announce it.
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+
+    await user.click(screen.getByRole("button", { name: "Love" }));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Love — saved."));
+    const first = screen.getByRole("status").textContent;
+
+    // Triage runs Love, Love, Love — identical text would not re-fire the live
+    // region, so the second save must still mutate it.
+    await user.click(screen.getByRole("button", { name: "Love" }));
+    await waitFor(() => expect(screen.getByRole("status").textContent).not.toBe(first));
+    expect(screen.getByRole("status")).toHaveTextContent("Love — saved.");
+  });
+
   it("calls onDecisionMade instead of router.refresh when a callback is provided", async () => {
     const onDecisionMade = vi.fn();
     const user = userEvent.setup();

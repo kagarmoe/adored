@@ -138,12 +138,19 @@ test.describe("session detail → See what you love most → results", () => {
   test("triage a decision → compare a pair → the trigger creates a populated result and navigates to it", async ({
     page,
   }) => {
-    // 1. Land on triage and triage BOTH items consecutively. This is the honest
-    //    multi-item demonstration (regression for U2): after a tier tap the
-    //    control POSTs the decision then router.refresh()es to the next item, and
-    //    the reused client instance MUST re-enable its tiers — otherwise a normal
-    //    user is stuck on item 1 with every button frozen on "Saving...".
-    await page.goto(`/collections/${slug}/sort/${sessionNumber}/triage`);
+    // 1. Reach triage the way a person does — from the session hub, by TAP (a
+    //    client navigation), not a hard page.goto. This is load-bearing: a client
+    //    nav puts the hub's RSC payload in Next's client Router Cache, so step 3
+    //    below can prove the hub we come BACK to isn't a stale pre-round copy
+    //    (purses-hzwj). A goto would hard-navigate and hide that entirely.
+    //    Then triage BOTH items consecutively — the honest multi-item
+    //    demonstration (regression for U2): the reused control instance MUST
+    //    re-enable its tiers, or a person is stuck on item 1 with every button
+    //    frozen on "Saving...".
+    await page.goto(`/collections/${slug}/sort/${sessionNumber}`);
+    await expect(page.getByRole("heading", { name: "Sorting session" })).toBeVisible();
+    await page.getByRole("link", { name: /Get acquainted/ }).click();
+    await expect(page).toHaveURL(new RegExp(`/collections/${slug}/sort/${sessionNumber}/triage$`));
     await expect(page.getByRole("heading", { name: "How do you feel about this one?", exact: true })).toBeVisible();
 
     // Item 1: tap a tier, then confirm the page advanced (the second item is now
@@ -160,15 +167,6 @@ test.describe("session detail → See what you love most → results", () => {
     // ride the client queue (Epic P) and the round-end flush POSTs them to the
     // batch route — await THAT (the load-bearing side effect) so the later
     // results-trigger step never races the server-side decision log.
-    // Arm the refresh waiter BEFORE the tap: the round-end sequence is
-    // flush → router.refresh(), and that refresh (an RSC GET of the triage
-    // route) would otherwise interrupt the next page.goto() as a competing
-    // navigation. Awaiting it settles the page before we leave.
-    const roundEndRefresh = page.waitForResponse(
-      (r) =>
-        r.url().includes(`/sort/${sessionNumber}/triage`) &&
-        r.request().method() === "GET",
-    );
     await Promise.all([
       page.waitForResponse(
         (r) =>
@@ -179,44 +177,50 @@ test.describe("session detail → See what you love most → results", () => {
       page.getByRole("button", { name: "Like" }).click(),
     ]);
     await expect(page.getByRole("heading", { name: /Here.?s what moved/ })).toBeVisible();
-    await roundEndRefresh;
 
-    // 2. Move to compare and choose one card (tapping a card IS the choice).
-    // Retried, not fired once (purses-pw52): awaiting the RSC response proves the
-    // network settled, not that the client router did, so the still-committing
-    // round-end refresh can abort the goto as a competing navigation to /triage.
-    // Bounded tight — the heading is asserted INSIDE the retry, so a gate that really
-    // kept redirecting still fails, and a latency regression fails fast rather than
-    // being absorbed. The product-side race itself is purses-hzwj.
-    await expect(async () => {
-      await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
-      await expect(
-        page.getByRole("heading", { name: "Which do you love more?" }),
-      ).toBeVisible({ timeout: 3_000 });
-    }).toPass({ timeout: 10_000 });
+    // 2. Back to the hub from the recap, by TAP (a client navigation, the way the
+    //    recap's own link works). The hub MUST show the round we just finished:
+    //    the SeeResultsCard trigger only renders once an item has a feeling, so a
+    //    hub served stale from Next's client Router Cache (30s default for dynamic
+    //    routes) would render the pre-round payload and have no trigger at all.
+    //    Regression for purses-hzwj: round end no longer router.refresh()es, so the
+    //    cache invalidation has to come from somewhere — it comes from staleTimes.
+    await page.getByRole("link", { name: "Back to your sort" }).click();
+    await expect(page).toHaveURL(new RegExp(`/collections/${slug}/sort/${sessionNumber}$`));
+    await expect(page.getByRole("button", { name: "Show me what I love" })).toBeVisible();
+
+    // 3. Move to compare and choose one card (tapping a card IS the choice).
+    // ONE un-retried goto, deliberately (purses-hzwj): round end no longer
+    // router.refresh()es the route the person is leaving, so nothing competes
+    // with this navigation. If a refresh ever came back, this goto would abort
+    // ("interrupted by another navigation") and fail rather than absorb the race.
+    await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
+    await expect(
+      page.getByRole("heading", { name: "Which do you love more?" }),
+    ).toBeVisible();
 
     await page.getByRole("button", { name: /^Choose / }).first().click();
 
-    // 3. Return to the session detail (the breadcrumb's "Session" target).
+    // 4. Return to the session detail (the breadcrumb's "Session" target).
     await page.getByRole("link", { name: "Session" }).first().click();
     await expect(page.getByRole("heading", { name: "Sorting session" })).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`/collections/${slug}/sort/${sessionNumber}$`));
 
-    // 4. The inert "View Results" card is gone; the reachable trigger is present.
+    // 5. The inert "View Results" card is gone; the reachable trigger is present.
     // ("See what you love most" now appears twice — as the SeeResultsCard heading
     // AND as the Epic-4 next-step recommendation — so target the unique, load-bearing
     // trigger button, which lives only on the SeeResultsCard, not the ambiguous text.)
     const trigger = page.getByRole("button", { name: "Show me what I love" });
     await expect(trigger).toBeVisible();
 
-    // 5. Tap it → POST /api/sort-results materializes a draft and we land on it.
+    // 6. Tap it → POST /api/sort-results materializes a draft and we land on it.
     await Promise.all([
       page.waitForURL(new RegExp(`/collections/${slug}/results/\\d+$`)),
       trigger.click(),
     ]);
     await expect(page).toHaveURL(new RegExp(`/collections/${slug}/results/\\d+$`));
 
-    // 6. The results page shows ranked items (≥1 tier populated): the most-loved
+    // 7. The results page shows ranked items (≥1 tier populated): the most-loved
     //    hero renders for the top-ranked item. Exact match: the page also ends on
     //    the affirmation "What you love most is at the top." (o93), which would
     //    otherwise make this a strict-mode 2-element match.
