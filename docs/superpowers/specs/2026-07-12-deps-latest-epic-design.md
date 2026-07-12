@@ -24,8 +24,11 @@ Scope is every outdated major. Do not present a menu — do them.
 
 ## Shape
 
-**Seven serial PRs, one bead each, strictly one open at a time.**
-Order: **.3 → .1 → .4 → .2 → .5 → .6 → .7**
+**Six serial PRs, strictly one open at a time.**
+Order: **.3 → .4 → .2 → .5 → .6 → .7** (`.7` absorbs `.1` — round 2 folded the
+four-line Node alignment into the tooling batch; a config alignment does not earn a
+full CI run under the July cost restraint, and round 1 already proved no ordering
+dependency: Next 16 needs only node >=20.9.0 and `tsc` is not a gate).
 
 Rationale:
 - One PR at a time; no stacked PRs (memories `one-pr-at-a-time`, `serial-epic-prs`).
@@ -77,22 +80,32 @@ oracles are, in order:
 
 **Oracle-integrity invariants (Security round 1) — PR 1 rewrites the file that proves
 authz, so the hardening itself must be provably non-weakening:**
-- **Key-set snapshot, not counts:** assert the sorted stranger-case keys and the sorted
-  `PUBLIC_OR_SELF_KEYS` against literal expected lists. Count floors (lines 746/790)
-  fall out for free; counts alone permit key-set drift, predicate loosening, and
-  seeded-id → `nonexistent-*` downgrades.
+- **Key-set diff, one-time (round 2 demoted this from a permanent snapshot test):**
+  capture the sorted stranger-case keys and sorted `PUBLIC_OR_SELF_KEYS` before and
+  after, diff, paste in the PR body; re-run the same diff once at PR 3 (must be
+  byte-identical). A permanent literal snapshot in the same file that defines the
+  allowlist forces no independent scrutiny and breaks on every legitimate future route.
+  The existing count floors (lines 746/790) stay untouched, and the structural
+  exhaustiveness gate (lines 726–739, throws on any uncategorized route) already fails
+  hard on a dropped case — the diff covers what those cannot see: a key quietly moving
+  between sets.
 - **Allowlist frozen:** PR 1 adds zero entries to `PUBLIC_OR_SELF_KEYS` and changes zero
-  rationales — any allowlist edit is out of scope by rule.
+  rationales — any allowlist edit is out of scope by rule (and visible in the key-set
+  diff).
 - **Predicate frozen:** the `403/404` status assertion and the exhaustiveness logic stay
   byte-identical apart from params plumbing.
 - **Diff-shape rule for every rewritten test file:** changed lines match only
   `params: X` → `params: Promise.resolve(X)`; **zero `expect()` lines change** (the
   cross-parent IDOR suites in `sort-results-authz.integration.test.ts` are in this set
-  and are equally load-bearing).
-- **Test-side exhaustiveness gate:** a check asserting zero bare-params call sites remain
-  in route-invoking tests — **proven able to fail by running it pre-migration (expect
-  N > 0)**. Without it, a missed test file no-ops forever and silently loses that
-  route's 200-backstop.
+  and are equally load-bearing). This rule — not the key-set diff — is what catches a
+  seeded-id → `nonexistent-*` downgrade.
+- **Test-side exhaustiveness check, twice-run script (round 2 demoted this from a
+  permanent test):** the bare-params grep runs pre-migration (**expect N > 0** — the
+  prove-it-can-fail discipline), then post-migration (N = 0, output in the PR body),
+  and once more at PR 3. It is load-bearing only while un-migrated handlers can exist
+  (a bare-params test cannot *falsify a missed handler*; it still drives a migrated one
+  correctly) — after PR 3, Next 16 typegen dominates it, and a gate that can no longer
+  fail is not a gate.
 - **Owner-2xx coverage statement:** enumerate which of the 49 route+method pairs lack an
   owner happy-path 2xx test and record the gaps in the PR body. QA round 1 sampled
   broadly and found dense coverage; the known thin spot is `POST
@@ -102,24 +115,24 @@ authz, so the hardening itself must be provably non-weakening:**
 **Gates:** full `test:db`, `test:ci`, `lint`, build, e2e. **`auth:verify` currently runs
 nowhere automatically** (not in `ci.yml`, not in the pre-push hook — CLAUDE.md's claim
 that the hook mirrors it is wrong). PR 1 adds it as a CI gate step (seconds, no matrix
-cost) and corrects the CLAUDE.md sentence. `tsc` is NOT a gate (96 pre-existing errors);
-the tightened `importHandler` ctx type is developer convenience, not verification.
+cost) and corrects the CLAUDE.md sentence; the PR body carries the revert-coupling note
+*"on revert, preserve the auth:verify CI step"* (the gate is auth-surface; only its
+vehicle is this PR). `tsc` is NOT a gate (96 pre-existing errors); the tightened
+`importHandler` ctx type is developer convenience, not verification.
 
 **Review lenses:** QA/Test + Architect + Security (it rewrites the authz test oracle).
 
-## PR 2 — `9oxh.1`: Node version truth (P1)
+## ~~PR 2 — `9oxh.1`: Node version truth~~ — FOLDED INTO PR 7 (round 2)
 
 Three declarations disagree today (all verified in the file): `engines.node: 24.x`,
-`.nvmrc: 22`, `@types/node ^20.0.0` (installed 20.19.43). We type-check against Node 20's
-API surface while declaring 24 and telling nvm 22.
-
-**Verify what Vercel production actually runs first** (dashboard / deploy logs — not
-guessed; expected 24.x since that is Vercel's default and engines already says 24), then
-align all four — `engines`, `.nvmrc`, CI's node version, `@types/node` — to that one major.
-Vite 8's peer (`@types/node ^20.19.0 || >=22.12.0`) is satisfied either way; re-check
-after moving.
-
-**Review lens:** Craftsman (small diff, config truth).
+`.nvmrc: 22`, `@types/node ^20.0.0` (installed 20.19.43). Real, but a four-line config
+alignment does not earn a standalone PR + full CI run under the July restraint, and no
+ordering dependency exists (round 1: Next 16 needs only node >=20.9.0; `tsc` is not a
+gate). The work — verify Vercel production's actual Node major first (dashboard/deploy
+logs, never guessed), then align `engines` + `.nvmrc` + CI + `@types/node` to it — moves
+verbatim into PR 7, which closes bead `9oxh.1`. The `9oxh.4`-blocked-by-`9oxh.1` bd
+dependency is removed. (Section kept, struck, so cross-references and PR numbering
+elsewhere in this spec stay valid.)
 
 ## PR 3 — `9oxh.4`: Next 14 → 16 directly, React HELD at 18 (P1)
 
@@ -211,12 +224,18 @@ these are the traps, named:
   constraints (invalid `AUTH_URL`, invalid `EMAIL_FROM`, bad `NODE_ENV`/`VERCEL_ENV`
   enum values, empty-string `AUTH_SECRET`/`DATABASE_URL`). Verification by executable
   test, not by reading the diff.
-- **Client pins are net-new:** `CollectionForm` has no test file at all; `InviteForm`'s
-  only reject test exercises the native `type=email` guard, which fires *before* zod —
-  the zod client path is untested today. (Round 1 verified all three forms' constraints
-  are mirrored server-side, so this is defense-in-depth, not a gap.)
-- **The 19-file surface is asserted in a test, not prose** — a grep-based inventory
-  assertion, so an unpinned file cannot pass silently.
+- **Client-form pins CUT (round 2):** round 1 verified all three forms' constraints are
+  mirrored server-side — the server schema is the guard, and those pins stay. A client
+  zod drift under v4 degrades to "server 400 instead of inline message": UX copy, not a
+  boundary breach, and no memory records this repo bitten by client-validation drift.
+  Net-new `CollectionForm`/`InviteForm` zod-path tests would be a redundant permutation
+  of one guard. Cheap form: during PR 5, manually trigger one inline validation error
+  per form and note it in the PR body.
+- **The 19-file surface is proven by grep output in the PR body (round 2 demoted this
+  from a permanent inventory test):** `grep -rl 'from "zod"' src` pasted next to the
+  touched-file list. A permanent inventory assertion is a register-scan that fires on
+  every innocent future zod import; the #329 burn was *stale prose*, and the antidote is
+  the re-measure rule plus review-time evidence, not a treadmill test.
 
 Then flip directly to zod@4. The zod/v4-subpath incremental path (available since 3.25.x)
 is the **fallback** if the diff explodes, not the default. better-auth already carries a
@@ -265,8 +284,18 @@ Split out any that turns out to be a real migration.
   gate) passes, file a debt bead if the number grew. Do NOT chase zero here.
 - **ESLint 10** after `.4` (eslint-config-next coupling) — config is already flat, should
   be small.
-- **ulid 3:** `generateId()` reaches ~536 nodes — assert ids still sort lexicographically
-  by time and the API is unchanged.
+- **Node version truth (absorbed bead `9oxh.1`, round 2):** verify Vercel production's
+  actual Node major (dashboard/deploy logs — never guessed), then align `engines`
+  (says 24.x) + `.nvmrc` (says 22) + CI + `@types/node` (^20) to that one major. Vite 8's
+  peer (`@types/node ^20.19.0 || >=22.12.0`) is satisfied either way. This PR closes
+  `9oxh.1`.
+- **ulid 3:** `generateId()` reaches ~536 nodes, and ULID lexicographic-time ordering is
+  **load-bearing, verified**: `compareByCreatedAtThenId()` (`src/lib/decision-order.ts:11`)
+  ties the canonical decision-event ordering on id, so a ulid-3 format/ordering change
+  would reorder tied decisions and change ranking replay. The permanent
+  sorts-lexicographically-by-time assertion is earned (round 2 conditioned it on exactly
+  this check; the condition is met — extend `decision-order.test.ts` if it doesn't
+  already pin it).
 - **dotenv 17:** check for behavior/log changes on load.
 
 **Review lens:** Craftsman.
@@ -306,7 +335,8 @@ Split out any that turns out to be a real migration.
 
 ## Open facts to verify during execution (not guesses to carry)
 
-1. Vercel production's actual Node major (PR 2 — dashboard/deploy logs).
+1. Vercel production's actual Node major (PR 7, absorbed from `.1` — dashboard/deploy
+   logs).
 2. `@testing-library/react` React-19 support (PR 4 — before starting).
 3. Tailwind v4's emission for the `selector` dark-mode strategy (PR 6 — before migrating).
 4. ~~Next 16's Node minimum~~ **CLOSED by round 1:** `next@16.2.10` engines
@@ -329,3 +359,19 @@ nowhere automatically (fixed in PR 1); TS 7 re-scoped to 6.0.x on a verified pee
 revertability corrected to LIFO; zod pins identified as mostly net-new with one
 tautological pin to convert. Persona contradictions (env.test.ts existence) were resolved
 against the artifacts, not by vote.
+
+## Adversarial review — round 2, Craftsman/ponytail (2026-07-12)
+
+Verdict **CONCERNS** — nothing unsafe; four round-1 additions were more than they needed
+to be. Folds: key-set snapshot and test-side exhaustiveness gate demoted from permanent
+tests to one-time PR-body evidence (each re-run once at PR 3; the structural
+exhaustiveness gate, frozen-allowlist/predicate rules, diff-shape rule, and owner-2xx
+enumeration — the protections that make the demotions safe — all stay); the 19-file zod
+inventory test demoted to PR-body grep output; net-new client-form zod pins cut (server
+mirrors verified in round 1; the server pins stay); PR 2 (Node truth) folded into PR 7,
+saving a CI run under the July restraint (owner confirmed). Declined cuts, on safety:
+`contrast.test.ts`→globals.css stays in PR 6 (the migration is the drift moment;
+`design-aa-tokens-mirror` records a real prior false green), counted screenshot
+inventory, middleware e2e oracle, env reject-matrix extension, and the .3/.4 and
+zod/tailwind PR splits. One demotion reversed against the artifacts: the ulid ordering
+assertion is permanent — `compareByCreatedAtThenId()` proves id ordering is load-bearing.
