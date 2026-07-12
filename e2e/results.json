@@ -18,24 +18,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/44c2d10c6fb3b0d542fbf4bfb7a66fc965018153",
-        "commitHash": "44c2d10c6fb3b0d542fbf4bfb7a66fc965018153",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29182063069"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/fd36fd4ed4168f7db9d4ac11982f619c9a7e04ee",
+        "commitHash": "fd36fd4ed4168f7db9d4ac11982f619c9a7e04ee",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29183032909"
       },
       "gitCommit": {
-        "shortHash": "44c2d10",
-        "hash": "44c2d10c6fb3b0d542fbf4bfb7a66fc965018153",
-        "subject": "ci: make the recompute bench a real gate; assert the screenshot queue precondition (k6z8, r4it) (#322)",
-        "body": "ci: make the recompute bench a real gate; assert the screenshot queue precondition (k6z8, r4it) (#322)\n\npurses-k6z8. The \"Recompute bench (advisory)\" job could never fail: the script\nended in .finally(() => process.exit(0)), so even a totally broken bench was\ngreen — and continue-on-error was set on top of that. A p95 regression sailed\nthrough.\n\nNow a gate: renamed \"Recompute bench (p95 gate)\", continue-on-error dropped,\nexits 1 on regression, on a missing baseline, and on any unexpected error.\n\nThreshold honesty: the committed baseline (compare p95 25.4ms) was taken on a dev\nMac; the one surviving CI log measured 38.6ms, so the runner is already ~1.5x over\nbaseline from hardware alone, with up to 172ms of tail noise. A 2x gate would be a\nflake generator, and a flaky gate gets disabled — worse than no gate. Gated at 4x\n(fails above 101.7ms): still catches what the bench exists for (an O(N^2) path at\nN=100 is a multiple-x regression, not a 30% one).\n\nThe gate's real contract — a non-zero exit — now has its own test: it spawns the\nscript against an unreachable DB and asserts exit 1, so restoring the old\nprocess.exit(0) cannot silently green it.\n\npurses-r4it. capture.ts runs in no CI gate, so the drained-queue bug it was fixed\nfor could silently rot back with nothing going red. Added the queue precondition\nassert in-script: it fails loudly for the human running it rather than producing\ngarbage screenshots. A whole CI job for a local PR-authoring tool would cost more\nthan it protects.\n\n.npmrc: the legacy-peer-deps comment blamed @vercel/analytics — that conflict is\nlong resolved. The flag now survives only because better-auth 1.6.x peers\ndrizzle-kit >=0.31.4 / drizzle-orm ^0.45.2 against our pins. Corrected so it stops\nbaiting a re-file; removing it needs the drizzle upgrade (purses-c3je).\n\nDROPPED from this PR: the purses-eweb worktree-derived container/port machinery.\nIt deleted the e2e job's DATABASE_URL_TEST=:5433 pin on the theory that\ntest-db.sh would derive the port from the worktree path — but CI is a fresh\ncheckout, not a worktree, so the derived port did not match the port the job's\npostgres service opened, and E2E went red. It rewrote test-db.sh, run-db-tests.sh,\ndb.ts, playwright.config.ts, auth.setup.ts, api-auth.ts, better-auth.ts and\nseed-load* to solve a problem that only exists on a laptop running two worktrees\nat once. Risking the pipeline everything else depends on is a bad trade for that.\neweb goes back to the backlog.\n\nGates (local): lint 0 errors, test:ci 1297, test:db 652, e2e 65/65, build.\n\n\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "fd36fd4",
+        "hash": "fd36fd4ed4168f7db9d4ac11982f619c9a7e04ee",
+        "subject": "fix(results): SharePanel copy speaks from the person's side (xaaf) (#326)",
+        "body": "fix(results): SharePanel copy speaks from the person's side (xaaf) (#326)\n\nTONE.md's litmus test: does a word speak from the person's side — what they feel\nabout their things — or the machine's side, what the software does to them? These\nthree were machine-side.\n\n  \"Share this result\"                                    -> \"Show someone what you love\"\n  \"Create a shareable link for anyone to view this\n   result without logging in.\"                           -> \"A link they can open straight\n                                                             away — no account, no signing in.\"\n  \"No active share links yet\"                            -> \"Nothing shared yet — whenever\n                                                             you'd like to, make a link.\"\n\nThe empty state was the real miss. Per PRODUCT.md, sharing is showing someone what\nyou love — the empty state is an invitation, not an inventory count of zero. And\nthis sits on the emotional peak of the app: the screen where you see what you love\nmost.\n\nAlso fixed an inconsistency the earlier copy pass left behind: the confirm dialog\nwas changed to \"Stop sharing this link?\" but the button that opens it still said\n\"Revoke\" — machine-side and punitive. Now \"Stop sharing\".\n\nOne test updated: the SharePanel curator-gate test in the results page spec probes\nfor that heading by name (it is an authz assertion worth keeping — it checks the\npanel is shown to the curator and NOT to a non-curator), so it now looks for the\nnew heading.\n\nGates (local): lint 0 errors, test:ci 1297, build. Screenshots in the PR body.\n\n\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1783836167000
+          "time": 1783838485000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1783836167000
+          "time": 1783838485000
         },
         "branch": "main"
       },
@@ -49,24 +49,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/44c2d10c6fb3b0d542fbf4bfb7a66fc965018153",
-            "commitHash": "44c2d10c6fb3b0d542fbf4bfb7a66fc965018153",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29182063069"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/fd36fd4ed4168f7db9d4ac11982f619c9a7e04ee",
+            "commitHash": "fd36fd4ed4168f7db9d4ac11982f619c9a7e04ee",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29183032909"
           },
           "gitCommit": {
-            "shortHash": "44c2d10",
-            "hash": "44c2d10c6fb3b0d542fbf4bfb7a66fc965018153",
-            "subject": "ci: make the recompute bench a real gate; assert the screenshot queue precondition (k6z8, r4it) (#322)",
-            "body": "ci: make the recompute bench a real gate; assert the screenshot queue precondition (k6z8, r4it) (#322)\n\npurses-k6z8. The \"Recompute bench (advisory)\" job could never fail: the script\nended in .finally(() => process.exit(0)), so even a totally broken bench was\ngreen — and continue-on-error was set on top of that. A p95 regression sailed\nthrough.\n\nNow a gate: renamed \"Recompute bench (p95 gate)\", continue-on-error dropped,\nexits 1 on regression, on a missing baseline, and on any unexpected error.\n\nThreshold honesty: the committed baseline (compare p95 25.4ms) was taken on a dev\nMac; the one surviving CI log measured 38.6ms, so the runner is already ~1.5x over\nbaseline from hardware alone, with up to 172ms of tail noise. A 2x gate would be a\nflake generator, and a flaky gate gets disabled — worse than no gate. Gated at 4x\n(fails above 101.7ms): still catches what the bench exists for (an O(N^2) path at\nN=100 is a multiple-x regression, not a 30% one).\n\nThe gate's real contract — a non-zero exit — now has its own test: it spawns the\nscript against an unreachable DB and asserts exit 1, so restoring the old\nprocess.exit(0) cannot silently green it.\n\npurses-r4it. capture.ts runs in no CI gate, so the drained-queue bug it was fixed\nfor could silently rot back with nothing going red. Added the queue precondition\nassert in-script: it fails loudly for the human running it rather than producing\ngarbage screenshots. A whole CI job for a local PR-authoring tool would cost more\nthan it protects.\n\n.npmrc: the legacy-peer-deps comment blamed @vercel/analytics — that conflict is\nlong resolved. The flag now survives only because better-auth 1.6.x peers\ndrizzle-kit >=0.31.4 / drizzle-orm ^0.45.2 against our pins. Corrected so it stops\nbaiting a re-file; removing it needs the drizzle upgrade (purses-c3je).\n\nDROPPED from this PR: the purses-eweb worktree-derived container/port machinery.\nIt deleted the e2e job's DATABASE_URL_TEST=:5433 pin on the theory that\ntest-db.sh would derive the port from the worktree path — but CI is a fresh\ncheckout, not a worktree, so the derived port did not match the port the job's\npostgres service opened, and E2E went red. It rewrote test-db.sh, run-db-tests.sh,\ndb.ts, playwright.config.ts, auth.setup.ts, api-auth.ts, better-auth.ts and\nseed-load* to solve a problem that only exists on a laptop running two worktrees\nat once. Risking the pipeline everything else depends on is a bad trade for that.\neweb goes back to the backlog.\n\nGates (local): lint 0 errors, test:ci 1297, test:db 652, e2e 65/65, build.\n\n\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "fd36fd4",
+            "hash": "fd36fd4ed4168f7db9d4ac11982f619c9a7e04ee",
+            "subject": "fix(results): SharePanel copy speaks from the person's side (xaaf) (#326)",
+            "body": "fix(results): SharePanel copy speaks from the person's side (xaaf) (#326)\n\nTONE.md's litmus test: does a word speak from the person's side — what they feel\nabout their things — or the machine's side, what the software does to them? These\nthree were machine-side.\n\n  \"Share this result\"                                    -> \"Show someone what you love\"\n  \"Create a shareable link for anyone to view this\n   result without logging in.\"                           -> \"A link they can open straight\n                                                             away — no account, no signing in.\"\n  \"No active share links yet\"                            -> \"Nothing shared yet — whenever\n                                                             you'd like to, make a link.\"\n\nThe empty state was the real miss. Per PRODUCT.md, sharing is showing someone what\nyou love — the empty state is an invitation, not an inventory count of zero. And\nthis sits on the emotional peak of the app: the screen where you see what you love\nmost.\n\nAlso fixed an inconsistency the earlier copy pass left behind: the confirm dialog\nwas changed to \"Stop sharing this link?\" but the button that opens it still said\n\"Revoke\" — machine-side and punitive. Now \"Stop sharing\".\n\nOne test updated: the SharePanel curator-gate test in the results page spec probes\nfor that heading by name (it is an authz assertion worth keeping — it checks the\npanel is shown to the curator and NOT to a non-curator), so it now looks for the\nnew heading.\n\nGates (local): lint 0 errors, test:ci 1297, build. Screenshots in the PR body.\n\n\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783836167000
+              "time": 1783838485000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783836167000
+              "time": 1783838485000
             },
             "branch": "main"
           },
@@ -87,24 +87,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/44c2d10c6fb3b0d542fbf4bfb7a66fc965018153",
-            "commitHash": "44c2d10c6fb3b0d542fbf4bfb7a66fc965018153",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29182063069"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/fd36fd4ed4168f7db9d4ac11982f619c9a7e04ee",
+            "commitHash": "fd36fd4ed4168f7db9d4ac11982f619c9a7e04ee",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29183032909"
           },
           "gitCommit": {
-            "shortHash": "44c2d10",
-            "hash": "44c2d10c6fb3b0d542fbf4bfb7a66fc965018153",
-            "subject": "ci: make the recompute bench a real gate; assert the screenshot queue precondition (k6z8, r4it) (#322)",
-            "body": "ci: make the recompute bench a real gate; assert the screenshot queue precondition (k6z8, r4it) (#322)\n\npurses-k6z8. The \"Recompute bench (advisory)\" job could never fail: the script\nended in .finally(() => process.exit(0)), so even a totally broken bench was\ngreen — and continue-on-error was set on top of that. A p95 regression sailed\nthrough.\n\nNow a gate: renamed \"Recompute bench (p95 gate)\", continue-on-error dropped,\nexits 1 on regression, on a missing baseline, and on any unexpected error.\n\nThreshold honesty: the committed baseline (compare p95 25.4ms) was taken on a dev\nMac; the one surviving CI log measured 38.6ms, so the runner is already ~1.5x over\nbaseline from hardware alone, with up to 172ms of tail noise. A 2x gate would be a\nflake generator, and a flaky gate gets disabled — worse than no gate. Gated at 4x\n(fails above 101.7ms): still catches what the bench exists for (an O(N^2) path at\nN=100 is a multiple-x regression, not a 30% one).\n\nThe gate's real contract — a non-zero exit — now has its own test: it spawns the\nscript against an unreachable DB and asserts exit 1, so restoring the old\nprocess.exit(0) cannot silently green it.\n\npurses-r4it. capture.ts runs in no CI gate, so the drained-queue bug it was fixed\nfor could silently rot back with nothing going red. Added the queue precondition\nassert in-script: it fails loudly for the human running it rather than producing\ngarbage screenshots. A whole CI job for a local PR-authoring tool would cost more\nthan it protects.\n\n.npmrc: the legacy-peer-deps comment blamed @vercel/analytics — that conflict is\nlong resolved. The flag now survives only because better-auth 1.6.x peers\ndrizzle-kit >=0.31.4 / drizzle-orm ^0.45.2 against our pins. Corrected so it stops\nbaiting a re-file; removing it needs the drizzle upgrade (purses-c3je).\n\nDROPPED from this PR: the purses-eweb worktree-derived container/port machinery.\nIt deleted the e2e job's DATABASE_URL_TEST=:5433 pin on the theory that\ntest-db.sh would derive the port from the worktree path — but CI is a fresh\ncheckout, not a worktree, so the derived port did not match the port the job's\npostgres service opened, and E2E went red. It rewrote test-db.sh, run-db-tests.sh,\ndb.ts, playwright.config.ts, auth.setup.ts, api-auth.ts, better-auth.ts and\nseed-load* to solve a problem that only exists on a laptop running two worktrees\nat once. Risking the pipeline everything else depends on is a bad trade for that.\neweb goes back to the backlog.\n\nGates (local): lint 0 errors, test:ci 1297, test:db 652, e2e 65/65, build.\n\n\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "fd36fd4",
+            "hash": "fd36fd4ed4168f7db9d4ac11982f619c9a7e04ee",
+            "subject": "fix(results): SharePanel copy speaks from the person's side (xaaf) (#326)",
+            "body": "fix(results): SharePanel copy speaks from the person's side (xaaf) (#326)\n\nTONE.md's litmus test: does a word speak from the person's side — what they feel\nabout their things — or the machine's side, what the software does to them? These\nthree were machine-side.\n\n  \"Share this result\"                                    -> \"Show someone what you love\"\n  \"Create a shareable link for anyone to view this\n   result without logging in.\"                           -> \"A link they can open straight\n                                                             away — no account, no signing in.\"\n  \"No active share links yet\"                            -> \"Nothing shared yet — whenever\n                                                             you'd like to, make a link.\"\n\nThe empty state was the real miss. Per PRODUCT.md, sharing is showing someone what\nyou love — the empty state is an invitation, not an inventory count of zero. And\nthis sits on the emotional peak of the app: the screen where you see what you love\nmost.\n\nAlso fixed an inconsistency the earlier copy pass left behind: the confirm dialog\nwas changed to \"Stop sharing this link?\" but the button that opens it still said\n\"Revoke\" — machine-side and punitive. Now \"Stop sharing\".\n\nOne test updated: the SharePanel curator-gate test in the results page spec probes\nfor that heading by name (it is an authz assertion worth keeping — it checks the\npanel is shown to the curator and NOT to a non-curator), so it now looks for the\nnew heading.\n\nGates (local): lint 0 errors, test:ci 1297, build. Screenshots in the PR body.\n\n\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783836167000
+              "time": 1783838485000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783836167000
+              "time": 1783838485000
             },
             "branch": "main"
           },
@@ -187,12 +187,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 458,
+                  "duration": 460,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:05:44.143Z",
+                  "startTime": "2026-07-12T06:44:41.889Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -229,7 +229,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 21945,
+                  "duration": 23574,
                   "errors": [],
                   "stdout": [
                     {
@@ -259,7 +259,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:05:45.352Z",
+                  "startTime": "2026-07-12T06:44:43.034Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -288,7 +288,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 16166,
+                  "duration": 16371,
                   "errors": [],
                   "stdout": [
                     {
@@ -318,7 +318,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:06:08.641Z",
+                  "startTime": "2026-07-12T06:45:07.715Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -347,7 +347,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2934,
+                  "duration": 2916,
                   "errors": [],
                   "stdout": [
                     {
@@ -359,7 +359,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:06:24.826Z",
+                  "startTime": "2026-07-12T06:45:24.116Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -388,7 +388,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2771,
+                  "duration": 2941,
                   "errors": [],
                   "stdout": [
                     {
@@ -400,7 +400,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:06:27.780Z",
+                  "startTime": "2026-07-12T06:45:27.051Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -437,12 +437,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2220,
+                  "duration": 2195,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:06:30.577Z",
+                  "startTime": "2026-07-12T06:45:30.028Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -471,12 +471,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1470,
+                  "duration": 1396,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:06:32.862Z",
+                  "startTime": "2026-07-12T06:45:32.297Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -505,12 +505,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1568,
+                  "duration": 1667,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:06:34.352Z",
+                  "startTime": "2026-07-12T06:45:33.710Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -539,12 +539,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 989,
+                  "duration": 1057,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:06:35.944Z",
+                  "startTime": "2026-07-12T06:45:35.398Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -573,12 +573,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1202,
+                  "duration": 1162,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:06:36.964Z",
+                  "startTime": "2026-07-12T06:45:36.479Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -615,12 +615,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1894,
+                  "duration": 2886,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:06:38.232Z",
+                  "startTime": "2026-07-12T06:45:37.717Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -649,12 +649,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2084,
+                  "duration": 3164,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:06:40.198Z",
+                  "startTime": "2026-07-12T06:45:40.707Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -691,12 +691,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1514,
+                  "duration": 2252,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:06:42.309Z",
+                  "startTime": "2026-07-12T06:45:44.049Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -725,12 +725,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1544,
+                  "duration": 3067,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:06:43.881Z",
+                  "startTime": "2026-07-12T06:45:46.352Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -759,12 +759,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1945,
+                  "duration": 4548,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:06:45.461Z",
+                  "startTime": "2026-07-12T06:45:49.454Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -808,12 +808,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1300,
+                      "duration": 5299,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:06:47.436Z",
+                      "startTime": "2026-07-12T06:45:54.094Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -842,12 +842,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1575,
+                      "duration": 1758,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:06:48.849Z",
+                      "startTime": "2026-07-12T06:46:06.459Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -876,12 +876,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1394,
+                      "duration": 2180,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:06:50.447Z",
+                      "startTime": "2026-07-12T06:46:08.239Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -927,12 +927,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4705,
+                      "duration": 4430,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:06:51.890Z",
+                      "startTime": "2026-07-12T06:46:10.478Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -961,12 +961,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2557,
+                      "duration": 3338,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:06:56.614Z",
+                      "startTime": "2026-07-12T06:46:14.931Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1012,12 +1012,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1917,
+                      "duration": 2615,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:06:59.201Z",
+                      "startTime": "2026-07-12T06:46:18.349Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1063,12 +1063,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2012,
+                      "duration": 2423,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:07:01.180Z",
+                      "startTime": "2026-07-12T06:46:21.092Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1114,12 +1114,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1552,
+                      "duration": 1401,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:07:03.275Z",
+                      "startTime": "2026-07-12T06:46:23.624Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1148,12 +1148,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2230,
+                      "duration": 1541,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:07:04.882Z",
+                      "startTime": "2026-07-12T06:46:25.126Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1199,12 +1199,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 8592,
+                      "duration": 4747,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:07:07.221Z",
+                      "startTime": "2026-07-12T06:46:26.702Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1233,12 +1233,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 10737,
+                      "duration": 6405,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:07:20.494Z",
+                      "startTime": "2026-07-12T06:46:31.554Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1284,12 +1284,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2216,
+                      "duration": 2168,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:07:31.327Z",
+                      "startTime": "2026-07-12T06:46:38.002Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1318,12 +1318,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3056,
+                      "duration": 2315,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:07:34.322Z",
+                      "startTime": "2026-07-12T06:46:40.277Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1369,12 +1369,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 787,
+                      "duration": 608,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:07:37.490Z",
+                      "startTime": "2026-07-12T06:46:42.657Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1403,12 +1403,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2158,
+                      "duration": 372,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:07:38.295Z",
+                      "startTime": "2026-07-12T06:46:43.283Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1437,12 +1437,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 504,
+                      "duration": 374,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:07:40.465Z",
+                      "startTime": "2026-07-12T06:46:43.664Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1481,12 +1481,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1373,
+                  "duration": 975,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:07:41.014Z",
+                  "startTime": "2026-07-12T06:46:44.069Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1515,12 +1515,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1758,
+                  "duration": 2029,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:07:42.462Z",
+                  "startTime": "2026-07-12T06:46:45.089Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1557,12 +1557,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1442,
+                  "duration": 1535,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:07:44.264Z",
+                  "startTime": "2026-07-12T06:46:47.169Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1591,12 +1591,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1431,
+                  "duration": 2016,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:07:45.801Z",
+                  "startTime": "2026-07-12T06:46:48.811Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1625,12 +1625,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1724,
+                  "duration": 4176,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:07:47.262Z",
+                  "startTime": "2026-07-12T06:46:50.854Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1674,12 +1674,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4247,
+                      "duration": 10184,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:07:49.090Z",
+                      "startTime": "2026-07-12T06:46:57.198Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1708,12 +1708,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3789,
+                      "duration": 4460,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:07:53.451Z",
+                      "startTime": "2026-07-12T06:47:09.999Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1742,12 +1742,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1940,
+                      "duration": 1686,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:07:57.276Z",
+                      "startTime": "2026-07-12T06:47:14.477Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1793,12 +1793,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 10239,
+                      "duration": 10517,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:07:59.274Z",
+                      "startTime": "2026-07-12T06:47:16.206Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1827,12 +1827,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1314,
+                      "duration": 1601,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:09.609Z",
+                      "startTime": "2026-07-12T06:47:26.825Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1870,18 +1870,72 @@
                 {
                   "workerIndex": 1,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1860,
-                  "errors": [],
+                  "status": "failed",
+                  "duration": 16924,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('banner').getByText('Adored E2E d5e82bd9-684c-4574-86f4-a4e4a2d9f40d', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('banner').getByText('Adored E2E d5e82bd9-684c-4574-86f4-a4e4a2d9f40d', { exact: true })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('banner').getByText('Adored E2E d5e82bd9-684c-4574-86f4-a4e4a2d9f40d', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('banner').getByText('Adored E2E d5e82bd9-684c-4574-86f4-a4e4a2d9f40d', { exact: true })\u001b[22m\n\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts:55:5",
+                    "location": {
+                      "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts",
+                      "column": 5,
+                      "line": 55
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 53 |\u001b[39m   \u001b[36mawait\u001b[39m expect(\n \u001b[90m 54 |\u001b[39m     page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"banner\"\u001b[39m)\u001b[33m.\u001b[39mgetByText(uniqueName\u001b[33m,\u001b[39m { exact\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m })\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 55 |\u001b[39m   )\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m15\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 56 |\u001b[39m\n \u001b[90m 57 |\u001b[39m   \u001b[90m// Guard against a false positive where a reload happened: the URL is still\u001b[39m\n \u001b[90m 58 |\u001b[39m   \u001b[90m// /profile and the in-page success status rendered (proves the SPA update\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts",
+                        "column": 5,
+                        "line": 55
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('banner').getByText('Adored E2E d5e82bd9-684c-4574-86f4-a4e4a2d9f40d', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('banner').getByText('Adored E2E d5e82bd9-684c-4574-86f4-a4e4a2d9f40d', { exact: true })\u001b[22m\n\n\n  53 |   await expect(\n  54 |     page.getByRole(\"banner\").getByText(uniqueName, { exact: true }),\n> 55 |   ).toBeVisible({ timeout: 15_000 });\n     |     ^\n  56 |\n  57 |   // Guard against a false positive where a reload happened: the URL is still\n  58 |   // /profile and the in-page success status rendered (proves the SPA update\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts:55:5"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:08:10.957Z",
+                  "startTime": "2026-07-12T06:47:28.496Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/profile-saving-a-new-displ-0a091-the-header-without-a-reload-tablet/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/profile-saving-a-new-displ-0a091-the-header-without-a-reload-tablet/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts",
+                    "column": 5,
+                    "line": 55
+                  }
+                },
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2062,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 1,
+                  "startTime": "2026-07-12T06:47:46.366Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/profile-saving-a-new-displ-0a091-the-header-without-a-reload-tablet-retry1/trace.zip"
+                    }
+                  ]
                 }
               ],
-              "status": "expected"
+              "status": "flaky"
             }
           ],
           "id": "e8b79b4ee550a37632f1-4dd4a58c47c7d10f604a",
@@ -1917,15 +1971,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1543,
+                      "duration": 1311,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:12.842Z",
+                      "startTime": "2026-07-12T06:47:48.833Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1968,15 +2022,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2707,
+                      "duration": 2556,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:14.523Z",
+                      "startTime": "2026-07-12T06:47:50.338Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2019,15 +2073,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1267,
+                      "duration": 1204,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:17.349Z",
+                      "startTime": "2026-07-12T06:47:53.023Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2070,15 +2124,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2978,
+                      "duration": 2807,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:18.712Z",
+                      "startTime": "2026-07-12T06:47:54.328Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2104,15 +2158,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3161,
+                      "duration": 2890,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:21.710Z",
+                      "startTime": "2026-07-12T06:47:57.159Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2155,15 +2209,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2411,
+                      "duration": 2331,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:24.910Z",
+                      "startTime": "2026-07-12T06:48:00.087Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2206,15 +2260,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2103,
+                      "duration": 2033,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:27.405Z",
+                      "startTime": "2026-07-12T06:48:02.492Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2250,15 +2304,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1085,
+                  "duration": 922,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:08:29.568Z",
+                  "startTime": "2026-07-12T06:48:04.600Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2284,15 +2338,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 984,
+                  "duration": 1159,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:08:30.674Z",
+                  "startTime": "2026-07-12T06:48:05.539Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2318,15 +2372,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1071,
+                  "duration": 1024,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:08:31.674Z",
+                  "startTime": "2026-07-12T06:48:06.720Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2367,15 +2421,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1291,
+                      "duration": 1297,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:32.769Z",
+                      "startTime": "2026-07-12T06:48:07.770Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2418,15 +2472,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1494,
+                      "duration": 2221,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:34.119Z",
+                      "startTime": "2026-07-12T06:48:09.124Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2452,15 +2506,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1841,
+                      "duration": 2907,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:35.670Z",
+                      "startTime": "2026-07-12T06:48:11.416Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2486,15 +2540,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1563,
+                      "duration": 4682,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:37.547Z",
+                      "startTime": "2026-07-12T06:48:14.374Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2528,15 +2582,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4043,
+                      "duration": 10246,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:39.143Z",
+                      "startTime": "2026-07-12T06:48:19.078Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2562,15 +2616,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1722,
+                      "duration": 3331,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:43.266Z",
+                      "startTime": "2026-07-12T06:48:35.268Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2604,15 +2658,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 947,
+                      "duration": 1082,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:45.007Z",
+                      "startTime": "2026-07-12T06:48:38.615Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2638,15 +2692,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1045,
+                      "duration": 1437,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:45.970Z",
+                      "startTime": "2026-07-12T06:48:39.723Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2689,15 +2743,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2951,
+                      "duration": 3575,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:47.037Z",
+                      "startTime": "2026-07-12T06:48:41.201Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2723,15 +2777,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3223,
+                      "duration": 4152,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T06:08:50.061Z",
+                      "startTime": "2026-07-12T06:48:44.848Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2767,15 +2821,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3144,
+                  "duration": 4102,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:08:53.311Z",
+                  "startTime": "2026-07-12T06:48:49.026Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2801,15 +2855,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3476,
+                  "duration": 3699,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:08:56.472Z",
+                  "startTime": "2026-07-12T06:48:53.151Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2835,15 +2889,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2150,
+                  "duration": 2579,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T06:08:59.963Z",
+                  "startTime": "2026-07-12T06:48:56.917Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2861,11 +2915,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-07-12T06:04:20.198Z",
-    "duration": 282313.815,
-    "expected": 65,
+    "startTime": "2026-07-12T06:43:17.910Z",
+    "duration": 349280.781,
+    "expected": 64,
     "skipped": 0,
     "unexpected": 0,
-    "flaky": 0
+    "flaky": 1
   }
 }
