@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">93.75% </span>
+                <span class="strong">87.5% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>15/16</span>
+                <span class='fraction'>14/16</span>
             </div>
         
             
@@ -115,7 +115,11 @@
 <a name='L50'></a><a href='#L50'>50</a>
 <a name='L51'></a><a href='#L51'>51</a>
 <a name='L52'></a><a href='#L52'>52</a>
-<a name='L53'></a><a href='#L53'>53</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -130,27 +134,31 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -190,19 +198,23 @@ export async function GET(
   const db = getDb();
 &nbsp;
   try {
+    // Authz BEFORE existence (purses-ct0): the collection is known from the URL, so a
+    // caller with no access is turned away without ever learning whether the item or
+    // photo exists. Resolving first would leak that (404 "not here" vs 403 "here, but
+    // not yours") — an existence oracle for a non-member.
+    // items:read = curator — any curator may view photo files (full-curator model).
+    const access = await requireApiCapability(db, params.id, session.user.id, "items:read");
+    if (access instanceof NextResponse) return access;
+&nbsp;
     const item = await ItemController.fromDb(db).getItem(params.itemId);
-    if (!item || item.collectionId !== params.id) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (!item || item.collectionId !== params.id) {
+<span class="cstat-no" title="statement not covered" >      return NextResponse.json({ error: "Not found" }, { status: 404 });</span>
     }
 &nbsp;
     const photo = await PhotoController.fromDb(db).findById(params.photoId);
     if (!photo || photo.itemId !== params.itemId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-&nbsp;
-    // items:read = curator — any curator may view photo files (full-curator model).
-    const access = await requireApiCapability(db, params.id, session.user.id, "items:read");
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (access instanceof NextResponse) <span class="cstat-no" title="statement not covered" >return access;</span>
 &nbsp;
     return servePhotoFile(
       {
@@ -226,7 +238,7 @@ export async function GET(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-11T21:53:42.118Z
+                at 2026-07-12T01:16:48.183Z
             </div>
         <script src="../../../../../../../../../../prettify.js"></script>
         <script>
