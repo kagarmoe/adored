@@ -120,6 +120,17 @@ cost) and corrects the CLAUDE.md sentence; the PR body carries the revert-coupli
 vehicle is this PR). `tsc` is NOT a gate (96 pre-existing errors); the tightened
 `importHandler` ctx type is developer convenience, not verification.
 
+**CI cost tuning rides the same `ci.yml` touch** (owner-driven, 2026-07-12 — CI is
+billed in build minutes and July is under restraint). Four changes, none altering what
+is tested: (1) drop `chromium` from the Playwright install — dead weight since PR #312
+made tablet/WebKit the sole CI viewport; (2) cache `~/.cache/ms-playwright` keyed on the
+Playwright version; (3) cache `.next/cache` — the gate job builds Next and the e2e
+webServer builds it again; (4) `timeout-minutes` on every job (the GitHub default is
+360 minutes; one hung e2e bills ~$3 — this repo has recorded hang modes). Expected
+effect: roughly 2–4 minutes off every UI-PR run plus the hang cap. (A fifth idea —
+one-viewport PR e2e — was withdrawn: PR #312 already did it; the stale
+`e2e-harness-shape` memory that claimed otherwise has been corrected.)
+
 **Review lenses:** QA/Test + Architect + Security (it rewrites the authz test oracle).
 
 ## ~~PR 2 — `9oxh.1`: Node version truth~~ — FOLDED INTO PR 7 (round 2)
