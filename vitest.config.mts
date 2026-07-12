@@ -7,6 +7,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    // A failing assertion aborts the test before any trailing cleanup line runs.
+    // Without these, a leaked vi.stubEnv("NODE_ENV") or console spy cascades into
+    // the following tests and one real failure reports as four.
+    unstubEnvs: true,
+    restoreMocks: true,
     // Unit tests live under src/. Keep vitest out of e2e/ — those are
     // Playwright specs that import @playwright/test and must not be collected
     // by the vitest runner (they'd throw "test() called outside Playwright").

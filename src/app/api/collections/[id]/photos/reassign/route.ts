@@ -4,10 +4,10 @@ import { getDb } from "@/lib/db";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import {
   ItemService,
-  PoolGroupError,
   MAX_GROUP_PHOTOS,
   type ReassignDest,
 } from "@/server/services/ItemService";
+import { errorResponse } from "@/server/api/http-errors";
 
 // Unified "Move to…": reassigns selected photos to an existing item, a new item,
 // or back to the pool. photos:write = curator (full-curator model).
@@ -54,10 +54,6 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const result = await ItemService.fromDb(db).reassignPhotos(params.id, photoIds as string[], dest);
     return NextResponse.json({ number: result.number }, { status: 200 });
   } catch (error) {
-    if (error instanceof PoolGroupError) {
-      const status = error.code === "conflict" ? 409 : 400;
-      return NextResponse.json({ error: error.message }, { status });
-    }
-    throw error;
+    return errorResponse(error);
   }
 }

@@ -7,6 +7,7 @@ import { requireApiCapability } from "@/server/dal/collection-access";
 import { generateId } from "@/lib/id";
 import { put } from "@vercel/blob";
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_ERROR } from "@/lib/uploads";
+import { errorResponse } from "@/server/api/http-errors";
 
 export const MAX_SERVER_UPLOAD_BYTES = MAX_UPLOAD_BYTES;
 
@@ -73,9 +74,8 @@ export async function POST(
 
     return NextResponse.json(photo, { status: 201 });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Upload failed" },
-      { status: 400 }
-    );
+    // Every expected failure returns explicitly above, so anything reaching here is
+    // unexpected — errorResponse logs it and returns generic copy (purses-hiez).
+    return errorResponse(error);
   }
 }

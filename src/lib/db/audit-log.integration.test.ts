@@ -12,6 +12,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { sql } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
+import { mockAuth } from "../../../e2e/fixtures/mock-auth";
 import { seedBaseline } from "../../../e2e/fixtures/seed";
 import { generateId } from "@/lib/id";
 import { AuditLogRepository } from "@/server/repositories/implementations/AuditLogRepository";
@@ -26,14 +27,8 @@ const { mockGetSession, mockBlobDel } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockBlobDel: vi.fn(),
 }));
-vi.mock("@/lib/auth", () => ({
-  getSession: mockGetSession,
-  requireAuth: async () => {
-    const s = await mockGetSession();
-    if (!s?.user) throw new Error("Unauthorized");
-    return s.user;
-  },
-}));
+// Shared fixture: also exports UnauthorizedError, which http-errors instanceof-checks.
+vi.mock("@/lib/auth", () => mockAuth(mockGetSession));
 vi.mock("@vercel/blob", () => ({ del: mockBlobDel }));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 

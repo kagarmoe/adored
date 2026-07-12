@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { PreferenceController } from "@/server/api/preferences";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { getDb } from "@/lib/db";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function GET(
   _request: NextRequest,
@@ -17,9 +18,6 @@ export async function GET(
     const items = await PreferenceController.fromDb(db).listItemPreferences(params.id, user.id);
     return NextResponse.json(items);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    return errorResponse(error);
   }
 }

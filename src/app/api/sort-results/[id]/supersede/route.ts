@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-import { SortResultService, SupersedeStateError } from "@/server/services/SortResultService";
+import { SortResultService } from "@/server/services/SortResultService";
+import { errorResponse } from "@/server/api/http-errors";
 import { getDb } from "@/lib/db";
 import { requireApiResultAccess } from "@/server/dal/collection-access";
 
@@ -19,12 +20,7 @@ export async function POST(
     }
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    if (error instanceof SupersedeStateError) {
-      return NextResponse.json({ error: error.message }, { status: 409 });
-    }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: error instanceof Error && error.message === "Unauthorized" ? 401 : 500 }
-    );
+    // errorResponse already maps SupersedeStateError → 409 and Unauthorized → 401.
+    return errorResponse(error);
   }
 }

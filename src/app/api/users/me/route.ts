@@ -15,10 +15,7 @@ export async function GET() {
     const user = await UserController.fromDb(db).getCurrentUser(session.user.id);
     return NextResponse.json(user);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
-    );
+    return errorResponse(error);
   }
 }
 

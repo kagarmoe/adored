@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { InvitationAcceptService, InvitationAcceptError } from "@/server/services/InvitationAcceptService";
+import { InvitationAcceptService } from "@/server/services/InvitationAcceptService";
 import { getPostHogClient } from "@/lib/posthog-server";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,10 +27,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(invitation);
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
-    );
+    return errorResponse(error);
   }
 }
 
@@ -52,28 +50,17 @@ export async function POST(request: NextRequest) {
     }
 
     const db = getDb();
-    try {
-      await InvitationAcceptService.fromDb(db).accept(token, userId);
-      const phClient = getPostHogClient();
-      phClient.capture({
-        distinctId: userId,
-        event: 'invitation_accepted',
-      });
-      await phClient.flush();
-      return NextResponse.json({ message: "Invitation accepted successfully" });
-    } catch (error) {
-      if (error instanceof InvitationAcceptError) {
-        return NextResponse.json({ error: error.message }, { status: error.status });
-      }
-      return NextResponse.json(
-        { error: error instanceof Error ? error.message : "Unknown error" },
-        { status: 500 }
-      );
-    }
+    await InvitationAcceptService.fromDb(db).accept(token, userId);
+    const phClient = getPostHogClient();
+    phClient.capture({
+      distinctId: userId,
+      event: 'invitation_accepted',
+    });
+    await phClient.flush();
+    return NextResponse.json({ message: "Invitation accepted successfully" });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
-    );
+    // errorResponse passes InvitationAcceptError's curated copy + status through,
+    // and logs+hides anything internal.
+    return errorResponse(error);
   }
 }

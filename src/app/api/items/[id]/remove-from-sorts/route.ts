@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { requireApiItemCapability } from "@/server/dal/collection-access";
 import { SortResultService } from "@/server/services/SortResultService";
+import { errorResponse } from "@/server/api/http-errors";
 
 // Owner-only bulk-detach: remove an item from all DRAFT sort results in one call,
 // the purge-prep companion to POST /api/items/[id]/purge. A deliberate t9l
@@ -28,11 +29,6 @@ export async function POST(
 
     return NextResponse.json({ removed, remainingInFinalized });
   } catch (error) {
-    const status =
-      error instanceof Error && error.message === "Unauthorized" ? 401 : 500;
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status },
-    );
+    return errorResponse(error);
   }
 }

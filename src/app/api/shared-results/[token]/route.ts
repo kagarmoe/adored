@@ -11,8 +11,11 @@ export async function GET(
     const share = await ShareController.fromDb(db).viewSharedResult(params.token);
     return NextResponse.json(share);
   } catch (error) {
+    // Public route: never echo the underlying error to an unauthenticated caller
+    // (it carries driver text, constraint names, sometimes values). Log, return generic.
+    console.error("shared-results view failed", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
+      { error: "That shared result isn't available." },
       { status: 404 }
     );
   }

@@ -6,15 +6,7 @@ import { PhotoController } from "@/server/api/photos";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import { POOL_ALLOWED_CONTENT_TYPES, POOL_MAX_BYTES } from "@/lib/uploads";
 import { getPostHogClient } from "@/lib/posthog-server";
-
-class HttpError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-  ) {
-    super(message);
-  }
-}
+import { errorResponse, HttpError } from "@/server/api/http-errors";
 
 async function assertPhotosWrite(collectionId: string): Promise<string> {
   const session = await getSession();
@@ -77,9 +69,6 @@ export async function POST(
     });
     return NextResponse.json(jsonResponse);
   } catch (error) {
-    if (error instanceof HttpError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    return errorResponse(error);
   }
 }

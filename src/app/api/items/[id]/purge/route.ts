@@ -3,7 +3,8 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { requireApiItemCapability } from "@/server/dal/collection-access";
-import { ItemPurgeService, ItemInResultError } from "@/server/services/ItemPurgeService";
+import { ItemPurgeService } from "@/server/services/ItemPurgeService";
+import { errorResponse } from "@/server/api/http-errors";
 
 const PurgeConfirmSchema = z.object({ confirm: z.literal("PURGE") });
 
@@ -34,23 +35,10 @@ export async function POST(
       return NextResponse.json({ error: "Confirmation required" }, { status: 400 });
     }
 
-    const service = ItemPurgeService.fromDb(db);
-    try {
-      await service.purge(item, user.id);
-    } catch (error) {
-      if (error instanceof ItemInResultError) {
-        return NextResponse.json({ error: error.message }, { status: 409 });
-      }
-      throw error;
-    }
+    await ItemPurgeService.fromDb(db).purge(item, user.id);
 
     return NextResponse.json({ message: "Item purged" });
   } catch (error) {
-    const status =
-      error instanceof Error && error.message === "Unauthorized" ? 401 : 500;
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status },
-    );
+    return errorResponse(error);
   }
 }

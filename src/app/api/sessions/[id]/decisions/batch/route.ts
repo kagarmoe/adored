@@ -241,8 +241,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // "record_decision_batch" + ctx), which logs [db_error] + emits
     // db_action_failed ONCE and rethrows — this catch only maps to a 500 and
     // never re-logs.
+    // Never echo the error: it carries driver text (purses-hiez).
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to record decisions" },
+      { error: "Failed to record decisions" },
       { status: 500 },
     );
   }

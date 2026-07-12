@@ -24,7 +24,7 @@ export function Header() {
                 href="/profile"
                 className="flex h-11 items-center rounded-control px-2 text-sm text-ink-soft transition-colors hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
               >
-                {session.user.name || session.user.email?.split("@")[0]}
+                {session.user.name || "Your profile"}
               </Link>
               <button
                 type="button"

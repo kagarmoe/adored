@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import { ItemController } from "@/server/api/items";
 import { PhotoController } from "@/server/api/photos";
+import { errorResponse } from "@/server/api/http-errors";
 
 export async function POST(
   _req: NextRequest,
@@ -34,6 +35,8 @@ export async function POST(
     await photoCtrl.setHero(params.photoId, params.itemId);
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Set hero failed" }, { status: 400 });
+    // Expected failures return explicitly above; anything here is unexpected and its
+    // message carries driver text — errorResponse logs it, returns generic (purses-hiez).
+    return errorResponse(error);
   }
 }

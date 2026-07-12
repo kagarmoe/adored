@@ -7,6 +7,7 @@ import { requireApiCapability } from "@/server/dal/collection-access";
 import { del } from "@vercel/blob";
 import { ALLOWED_ROTATIONS } from "@/lib/photos";
 import { deleteVariants, variantPrefix } from "@/lib/photo-variants";
+import { errorResponse } from "@/server/api/http-errors";
 
 // Rotate a photo (persisted, non-destructive). photos:write = curator (full-curator model).
 export async function PATCH(
@@ -104,9 +105,8 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Delete failed" },
-      { status: 400 }
-    );
+    // Every expected failure returns explicitly above, so anything reaching here is
+    // unexpected — errorResponse logs it and returns generic copy (purses-hiez).
+    return errorResponse(error);
   }
 }
