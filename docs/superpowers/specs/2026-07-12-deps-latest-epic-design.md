@@ -311,6 +311,38 @@ Split out any that turns out to be a real migration.
 
 **Review lens:** Craftsman.
 
+## Supply-chain hygiene (owner-approved 2026-07-12)
+
+The freshness paradox resolved: the risk is not *latest*, it is *freshly published* —
+npm supply-chain attacks live in an hours-to-days window between malicious publish and
+takedown. Policy: **latest, minus a quarantine window.** Binding on every PR in this
+epic and on future dependency work:
+
+1. **14-day release-age quarantine.** Before flipping any version, check
+   `npm view <pkg> time --json` — refuse a version younger than 14 days, UNLESS it is a
+   security patch for a known CVE (the one case where fresh beats quarantined).
+2. **`npm audit signatures`** runs with the gates on every dependency-changing PR —
+   verifies registry signatures and provenance attestations across the lockfile.
+3. **Lockfile trust is the baseline:** `npm ci` + integrity hashes mean nothing floats
+   at install time; new code enters only at a deliberate bump, which is where 1–2 sit.
+4. **osv-scanner on the lockfile** — measured 2026-07-12: **2.4s locally**, ~10s in CI
+   with binary download. Runs (a) locally per dependency bump (CLI, brew-installed) and
+   (b) as a gate-job CI step (added in PR 1's `ci.yml` batch). OSV ingests npm *malware*
+   advisories, not just CVEs. It exits 1 on findings, and the baseline scan already
+   found 16: `next@14.2.35` carries **14 advisories (max CVSS 8.6)** + a transitive
+   `postcss@8.4.31` pinned inside Next (both erased by PR 3), and one dev-only
+   `esbuild@0.18.20` under drizzle-kit's deprecated `@esbuild-kit` chain. So the CI
+   step ships with a committed **`osv-scanner.toml`** where every ignore carries a
+   reason + the bead that deletes it — PR 3 removes the next/postcss ignores when the
+   bump lands. An ignore without a reason and an owning bead is banned (that would be
+   the hacky form).
+5. **`ignore-scripts` was proposed and NOT adopted** (owner approved only 1–4,
+   2026-07-12). Recorded so it isn't re-litigated by accident; revisit on request.
+
+Honest limit: none of this catches a novel, patient compromise that survives the
+quarantine window (the xz shape). This covers the attack shapes that have actually
+occurred on npm.
+
 ## Cross-cutting rules
 
 - **Range hygiene:** every PR rewrites the version ranges of packages it touches to the

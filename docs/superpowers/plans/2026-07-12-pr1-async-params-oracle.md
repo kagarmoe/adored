@@ -320,8 +320,43 @@ All anchors workflow-verified against the current file:
 
 - [ ] **Step 5: `timeout-minutes` on all 7 jobs** — after each `runs-on: ubuntu-latest`: gate 15 (line 23), db-tests 10 (line 67), coverage 5 (line 125), changes 5 (line 170), e2e 25 (line 348), bench 10 (line 485), deploy-report 10 (line 534).
 - [ ] **Step 6: CLAUDE.md:82** — change `Gates (the pre-push hook mirrors these):` to `Gates (CI runs all five; the pre-push hook mirrors lint + test:ci + build):`
-- [ ] **Step 7: Workflow lints clean:** `npx --yes actionlint .github/workflows/ci.yml` → no errors (actionlint runs via npx, nothing installed).
-- [ ] **Step 8: Commit** — `ci: auth:verify gate; webkit-only install, playwright+next caches, job timeouts (July cost restraint)`
+- [ ] **Step 7: Supply-chain scan (spec: owner-approved policy).** Create `osv-scanner.toml` at repo root — every ignore carries a reason + owning bead:
+
+```toml
+# Reasoned ignores only — each entry names the bead that deletes it.
+# Baseline scan 2026-07-12: osv-scanner scan source -L package-lock.json (2.4s local).
+
+[[IgnoredVulns]]
+id = "GHSA-36qx-fr4f-26g5"
+reason = "next@14 advisory; fixed by the Next 16 bump (purses-9oxh.4) which deletes this entry"
+# … one block per next advisory: GHSA-3g8h-86w9-wvmq, GHSA-3x4c-7xq6-9pq8,
+# GHSA-8h8q-6873-q5fj, GHSA-9g9p-9gw9-jx7f, GHSA-c4j6-fc7j-m34r, GHSA-ffhc-5mcf-pf4q,
+# GHSA-ggv3-7p47-pfv8, GHSA-gx5p-jg67-6x7h, GHSA-h25m-26qc-wcjf, GHSA-h64f-5h5j-jqjh,
+# GHSA-q4gf-8mx6-v5v3, GHSA-vfv6-92ff-j949, GHSA-wfc6-r584-vfw7 — same reason, written out in full in the real file
+
+[[IgnoredVulns]]
+id = "GHSA-qx2v-qp2m-jg93"
+reason = "postcss@8.4.31 pinned inside next@14; erased by the Next 16 bump (purses-9oxh.4)"
+
+[[IgnoredVulns]]
+id = "GHSA-67mh-4wv8-2f99"
+reason = "esbuild@0.18.20 dev-only, under drizzle-kit's deprecated @esbuild-kit chain; never in the runtime bundle; revisit in purses-9oxh.7"
+```
+
+Then add the CI step to the gate job, after `npm ci` (measured cost ~10s):
+
+```yaml
+      - name: Supply-chain scan (osv-scanner)
+        run: |
+          curl -sSfL -o /usr/local/bin/osv-scanner https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64
+          chmod +x /usr/local/bin/osv-scanner
+          osv-scanner scan source -L package-lock.json
+```
+
+Verify locally that the toml silences exactly the 16 baseline findings: `osv-scanner scan source -L package-lock.json` → exit 0.
+
+- [ ] **Step 8: Workflow lints clean:** `npx --yes actionlint .github/workflows/ci.yml` → no errors (actionlint runs via npx, nothing installed).
+- [ ] **Step 9: Commit** — `ci: auth:verify gate; osv-scanner + reasoned ignores; webkit-only install, playwright+next caches, job timeouts`
 
 ### Task 8: Whole-branch gates, evidence assembly, single push + PR
 
@@ -330,10 +365,15 @@ All anchors workflow-verified against the current file:
 ```bash
 npm run lint && npm run test:ci && npm run auth:verify && npm run build
 npm run test:db
+npm audit signatures
+osv-scanner scan source -L package-lock.json
 ./e2e/fixtures/test-db.sh up && npx playwright test && ./e2e/fixtures/test-db.sh down
 ```
 
-Expected: everything green. e2e runs because `src/app/**` changed → the `ui` filter fires in CI; running it locally first is the frugality rule.
+Expected: everything green; `audit signatures` verified; osv-scanner exit 0 (the toml
+covers exactly the 16 baseline findings — PR 1 changes no dependency versions, so any
+NEW finding here is a red flag, stop and investigate). The 14-day release-age rule
+first bites at the epic's next dependency-flipping PR (Next 16).
 
 - [ ] **Step 2: PR-boundary steps:** run `/sync-docs` (docs/API.md maps to `src/app/api/**` — the params plumbing changes no documented contract, but the doc-check hook will demand the touch; update API.md's params-typing note honestly rather than `--no-verify`), then `graphify update .`
 - [ ] **Step 3: Whole-branch adversarial review** (QA/Test + Architect + Security personas per the spec) — findings folded via receiving-code-review BEFORE the push.
