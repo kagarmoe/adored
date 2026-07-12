@@ -103,6 +103,46 @@ describe("env validation — failure", () => {
   });
 });
 
+describe("previewTrustedOrigins", () => {
+  it("returns [] when not on Vercel (local dev)", async () => {
+    const { previewTrustedOrigins } = await import("./env");
+    expect(previewTrustedOrigins()).toEqual([]);
+  });
+
+  it("returns [] in production even when the Vercel host vars are present", async () => {
+    // THE SECURITY LINE: production's trusted set must stay exactly origin(AUTH_URL).
+    process.env.VERCEL_ENV = "production";
+    process.env.VERCEL_URL = "adored-abc123-team.vercel.app";
+    process.env.VERCEL_BRANCH_URL = "adored-git-main-team.vercel.app";
+    const { previewTrustedOrigins } = await import("./env");
+
+    expect(previewTrustedOrigins()).toEqual([]);
+  });
+
+  it("trusts this deployment's own URL and branch alias on a preview deploy", async () => {
+    process.env.VERCEL_ENV = "preview";
+    process.env.VERCEL_URL = "adored-abc123-team.vercel.app";
+    process.env.VERCEL_BRANCH_URL = "adored-git-my-branch-team.vercel.app";
+    const { previewTrustedOrigins } = await import("./env");
+
+    expect(previewTrustedOrigins()).toEqual([
+      "https://adored-abc123-team.vercel.app",
+      "https://adored-git-my-branch-team.vercel.app",
+    ]);
+  });
+
+  it("rejects wildcard hosts — a '*.vercel.app' pattern would trust every Vercel deploy on the internet", async () => {
+    // better-auth's matchesOriginPattern treats * and ? as wildcards, so a host
+    // carrying them would widen the trusted set to an attacker's own project.
+    process.env.VERCEL_ENV = "preview";
+    process.env.VERCEL_URL = "*.vercel.app";
+    process.env.VERCEL_BRANCH_URL = "adored-git-?-team.vercel.app";
+    const { previewTrustedOrigins } = await import("./env");
+
+    expect(previewTrustedOrigins()).toEqual([]);
+  });
+});
+
 describe("env warnings", () => {
   it("warns when VERCEL is set but AUTH_URL is http:// (Secure-cookie footgun)", async () => {
     process.env.VERCEL = "1";
