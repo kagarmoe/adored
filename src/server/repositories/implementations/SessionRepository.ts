@@ -3,6 +3,7 @@ import type { Database } from "@/lib/db";
 import { sessionsTable } from "@/lib/db/schema";
 import type { Session } from "@/types";
 import { generateId } from "@/lib/id";
+import { allocateWithRetry } from "../allocateWithRetry";
 
 /**
  * Thrown when a curator already holds an IN-PROGRESS session in a (collection,
@@ -43,7 +44,7 @@ export class SessionRepository {
 
     // Auto-allocate MAX+1, retry on the UNIQUE(collection_id, number) race
     // (a retry-able insert — simpler than locking the max; a transaction is available but unnecessary here).
-    for (let attempt = 0; attempt < 5; attempt++) {
+    return allocateWithRetry(async () => {
       const number = await this.getNextSessionNumber(data.collectionId);
       try {
         const [session] = await this.db
@@ -57,13 +58,12 @@ export class SessionRepository {
         // sessions_active_unique index covers after migration 0009. Terminal
         // and soft-deleted rows free the slot and don't collide. Surface a
         // gentle, typed 409 instead of a raw 500. Not retried — a fresh number
-        // won't free a slot held by the curator's live session.
+        // won't free a slot held by the curator's live session (and the retry
+        // predicate below matches only the number conflict, so it propagates).
         if (isCurrentSessionConflict(error)) throw new CurrentSessionExistsError();
-        if (isSessionNumberConflict(error) && attempt < 4) continue;
         throw error;
       }
-    }
-    throw new Error("Could not allocate a session number");
+    }, isSessionNumberConflict);
   }
 
   async findById(id: string): Promise<Session | null> {

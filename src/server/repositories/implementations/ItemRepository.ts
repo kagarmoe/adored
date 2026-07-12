@@ -3,6 +3,7 @@ import type { Database } from "@/lib/db";
 import { itemsTable } from "@/lib/db/schema";
 import type { Item } from "@/types";
 import { generateId } from "@/lib/id";
+import { allocateWithRetry } from "../allocateWithRetry";
 
 // Optional bounds for the workspace item preview. Omit both and findByCollection
 // keeps today's behavior (full, unordered collection read for the /items grid).
@@ -60,22 +61,14 @@ export class ItemRepository {
 
     // Auto-allocate MAX+1, retry on the UNIQUE(collection_id, number) race
     // (a retry-able insert — simpler than locking the max; a transaction is available but unnecessary here).
-    for (let attempt = 0; attempt < 5; attempt++) {
+    return allocateWithRetry(async () => {
       const number = await this.getNextCatalogNumber(data.collectionId);
-      try {
-        const [item] = await this.db
-          .insert(itemsTable)
-          .values({ ...base, number })
-          .returning();
-        return this.mapToItem(item);
-      } catch (error) {
-        if (isCatalogNumberConflict(error) && attempt < 4) {
-          continue;
-        }
-        throw error;
-      }
-    }
-    throw new Error("Could not allocate a catalog number");
+      const [item] = await this.db
+        .insert(itemsTable)
+        .values({ ...base, number })
+        .returning();
+      return this.mapToItem(item);
+    }, isCatalogNumberConflict);
   }
 
   async findById(id: string): Promise<Item | null> {

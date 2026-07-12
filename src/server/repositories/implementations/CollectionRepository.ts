@@ -3,6 +3,7 @@ import type { Database } from "@/lib/db";
 import { collectionsTable, membershipsTable } from "@/lib/db/schema";
 import type { Collection } from "@/types";
 import { slugifyName, RESERVED_COLLECTION_SLUGS } from "@/lib/collections/slug";
+import { allocateWithRetry } from "../allocateWithRetry";
 
 export class CollectionRepository {
   constructor(private db: Database) {}
@@ -13,30 +14,24 @@ export class CollectionRepository {
     name: string;
     description?: string;
   }): Promise<Collection> {
-    for (let attempt = 0; attempt < 5; attempt++) {
+    return allocateWithRetry(async () => {
       const slug = await this.generateUniqueSlug(data.name);
-      try {
-        const [collection] = await this.db
-          .insert(collectionsTable)
-          .values({
-            id: data.id,
-            ownerId: data.ownerId,
-            name: data.name,
-            slug,
-            description: data.description || null,
-            status: "active",
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            deletedAt: null,
-          })
-          .returning();
-        return this.mapToCollection(collection);
-      } catch (error) {
-        if (isSlugConflict(error) && attempt < 4) continue;
-        throw error;
-      }
-    }
-    throw new Error("Could not allocate a collection slug");
+      const [collection] = await this.db
+        .insert(collectionsTable)
+        .values({
+          id: data.id,
+          ownerId: data.ownerId,
+          name: data.name,
+          slug,
+          description: data.description || null,
+          status: "active",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        })
+        .returning();
+      return this.mapToCollection(collection);
+    }, isSlugConflict);
   }
 
   async findById(id: string): Promise<Collection | null> {
@@ -117,10 +112,12 @@ export class CollectionRepository {
     data: Partial<Omit<Collection, "id" | "createdAt" | "slug">>,
   ): Promise<Collection> {
     // Regenerate the slug when the name changes (excluding this row from dedupe).
+    // On a lost slug race the closure recomputes against the now-current set;
+    // a non-renaming update has no slug to recompute, so it is never retried.
     const renaming = data.name !== undefined;
-    let newSlug = renaming ? await this.generateUniqueSlug(data.name!, id) : undefined;
-    for (let attempt = 0; attempt < 5; attempt++) {
-      try {
+    return allocateWithRetry(
+      async () => {
+        const newSlug = renaming ? await this.generateUniqueSlug(data.name!, id) : undefined;
         const [collection] = await this.db
           .update(collectionsTable)
           .set({
@@ -131,16 +128,9 @@ export class CollectionRepository {
           .where(eq(collectionsTable.id, id))
           .returning();
         return this.mapToCollection(collection);
-      } catch (error) {
-        if (isSlugConflict(error) && renaming && attempt < 4) {
-          // Lost the race; recompute against the now-current set and retry.
-          newSlug = await this.generateUniqueSlug(data.name!, id);
-          continue;
-        }
-        throw error;
-      }
-    }
-    throw new Error("Could not allocate a collection slug");
+      },
+      (error) => renaming && isSlugConflict(error),
+    );
   }
 
   async softDelete(id: string): Promise<Collection> {

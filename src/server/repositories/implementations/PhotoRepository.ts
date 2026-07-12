@@ -341,15 +341,15 @@ export class PhotoRepository {
   }
 
   // Permanently DELETE every photo of an item (active AND soft-deleted — no
-  // deletedAt filter), returning each row's blob_key so the caller can purge the
-  // backing blobs. Purge-only; the item is being hard-deleted, so all its photos
-  // must go regardless of soft-delete state.
-  async hardDeleteByItem(itemId: string): Promise<string[]> {
-    const rows = await this.db
+  // deletedAt filter), returning each row's id + blob_key so the caller can purge
+  // the backing blobs AND that photo's resized variants (which are keyed by photo
+  // id). Purge-only; the item is being hard-deleted, so all its photos must go
+  // regardless of soft-delete state.
+  async hardDeleteByItem(itemId: string): Promise<{ id: string; blobKey: string }[]> {
+    return this.db
       .delete(photosTable)
       .where(eq(photosTable.itemId, itemId))
-      .returning({ blobKey: photosTable.blobKey });
-    return rows.map((r) => r.blobKey);
+      .returning({ id: photosTable.id, blobKey: photosTable.blobKey });
   }
 
   // Permanently DELETE every photo of the collection (active AND soft-deleted,

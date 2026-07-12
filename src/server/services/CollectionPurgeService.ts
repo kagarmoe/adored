@@ -1,6 +1,7 @@
 import type { Database } from "@/lib/db";
 import type { Collection } from "@/types";
 import { withTransaction } from "@/lib/transactions";
+import { lockCollectionCurators } from "@/server/services/purge-lock";
 import { del } from "@vercel/blob";
 import { deleteVariants, variantPrefix } from "@/lib/photo-variants";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
@@ -36,6 +37,7 @@ export class CollectionPurgeService {
 
   async purge(collection: Collection, actorId: string): Promise<void> {
     const blobKeys = await withTransaction(this.db, async (tx) => {
+      await lockCollectionCurators(tx, collection.id);
       await new SortResultShareRepository(tx).deleteByCollection(collection.id);
       await new SortResultItemRepository(tx).deleteByCollection(collection.id);
       await new SortResultRepository(tx).deleteByCollection(collection.id);
