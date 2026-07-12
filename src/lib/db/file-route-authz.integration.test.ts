@@ -18,6 +18,7 @@ vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
 // Route imported via the @/ alias (literal [id]/[itemId]/... are real dirs).
 import { GET } from "@/app/api/collections/[id]/items/[itemId]/photos/[photoId]/file/route";
+import { GET as GET_POOL } from "@/app/api/collections/[id]/pool/photos/[photoId]/file/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -43,6 +44,10 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
       mimeType: "image/jpeg", fileSize: 1, uploadedBy: ownerId, isHero: true,
     });
     photoId = photo.id;
+    // Clear call history per test: without this the "never serves bytes" assertions
+    // read calls accumulated from the earlier 200-status tests, and only pass by
+    // accident of declaration order.
+    mockBlobGet.mockClear();
     mockBlobGet.mockResolvedValue({ statusCode: 200, stream: "bytes", blob: { contentType: "image/jpeg" } });
   });
 
@@ -94,6 +99,47 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
     mockGetSession.mockResolvedValue({ user: { id: memberId } });
     const res = await GET(req() as any, { params: { id: collectionId, itemId, photoId } });
     expect(res.status).toBe(200);
+  });
+
+  // ── No existence oracle for a stranger (purses-ct0) ────────────────────────
+  // A non-member must not be able to tell "this photo exists in that collection"
+  // from "it doesn't". Both must answer identically, because authz is decided
+  // BEFORE existence — the route knows the collectionId from the URL, so it never
+  // needs to resolve the item to know the caller has no business here.
+  describe("stranger (non-member) gets no existence oracle", () => {
+    beforeEach(async () => {
+      const strangerId = await seedUserRow("file-stranger");
+      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+    });
+
+    it("item /file: a real photo and a nonexistent one are indistinguishable", async () => {
+      const real = await GET(req() as any, { params: { id: collectionId, itemId, photoId } });
+      const fake = await GET(req() as any, {
+        params: { id: collectionId, itemId: "item_does_not_exist", photoId: "photo_does_not_exist" },
+      });
+
+      expect(real.status).toBe(403);
+      expect(fake.status).toBe(real.status);
+      expect(mockBlobGet).not.toHaveBeenCalled();
+    });
+
+    it("pool /file: a real pooled photo and a nonexistent one are indistinguishable", async () => {
+      const pooled = await new PhotoRepository(getTestDb().db).create({
+        itemId: null, collectionId, blobKey: "pk", filename: "pk.jpg",
+        mimeType: "image/jpeg", fileSize: 1, uploadedBy: ownerId, isHero: false,
+      });
+
+      const real = await GET_POOL(req() as any, {
+        params: { id: collectionId, photoId: pooled.id },
+      });
+      const fake = await GET_POOL(req() as any, {
+        params: { id: collectionId, photoId: "photo_does_not_exist" },
+      });
+
+      expect(real.status).toBe(403);
+      expect(fake.status).toBe(real.status);
+      expect(mockBlobGet).not.toHaveBeenCalled();
+    });
   });
 
 });
