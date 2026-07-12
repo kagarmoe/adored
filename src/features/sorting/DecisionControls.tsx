@@ -34,10 +34,22 @@ export function DecisionControls<D extends Record<string, unknown> = Record<stri
   const router = useRouter();
   const [pendingLabel, setPendingLabel] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Mounted (empty) on first render so the region exists BEFORE its text ever
+  // changes — a live region that appears with its content is not announced.
+  const [announcement, setAnnouncement] = useState("");
+
+  // The item advances silently under a screen-reader user otherwise (SC 4.1.3).
+  // Triage runs Love, Love, Love — identical text does NOT re-fire a live region,
+  // so nudge the string (a trailing space is not spoken).
+  function announce(label: string) {
+    const line = `${label} — saved.`;
+    setAnnouncement((prev) => (prev === line ? `${line} ` : line));
+  }
 
   async function submitDecision(label: string, decision: D) {
     if (submit.kind === "local") {
-      submit.onDecision(decision); // synchronous demo path: no fetch, no pending, no refresh
+      announce(label);
+      submit.onDecision(decision); // synchronous local path: no fetch, no pending, no refresh
       return;
     }
 
@@ -59,6 +71,7 @@ export function DecisionControls<D extends Record<string, unknown> = Record<stri
       // instance across the soft router.refresh(), so a lingering pendingLabel
       // would keep every tier disabled and block triaging the next item (U2).
       setPendingLabel(null);
+      announce(label);
 
       if (submit.onDecisionMade) {
         submit.onDecisionMade();
@@ -73,6 +86,9 @@ export function DecisionControls<D extends Record<string, unknown> = Record<stri
 
   return (
     <div className="space-y-3">
+      <p role="status" aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
       <div className="flex flex-wrap gap-3">
         {decisions.map((item) => {
           const selected = priorAnswer !== undefined && item.label === priorAnswer;

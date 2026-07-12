@@ -136,7 +136,7 @@ describe("PendingNotices — quarantine (F9)", () => {
 });
 
 describe("PendingNotices in the round — rejected acks (F9)", () => {
-  it("a rejected ack renders its notice exactly once, with no refresh at ack time, optimistic state retained, and the notice still mounted when the round-end revert lands", async () => {
+  it("a rejected ack renders its notice exactly once, with no refresh, optimistic state retained, and the notice still mounted at round end", async () => {
     rejectAllFetch();
     const ids = Array.from({ length: 6 }, () => realItemId());
     const queue = ids.map((id, i) => ({
@@ -170,11 +170,14 @@ describe("PendingNotices in the round — rejected acks (F9)", () => {
     expect(screen.getByRole("img", { name: "Bag 6" })).toBeInTheDocument();
     expect(screen.getByText("5 decided so far")).toBeInTheDocument();
 
-    // …and the revert (the single round-end refresh) arrives with the notice
-    // still on screen — never later than the revert.
+    // …and the round ends into the recap with the notice still on screen. The
+    // round never refreshes — not at ack time, not at round end (purses-hzwj):
+    // a refresh still committing when the person leaves can eat their next tap.
     await user.click(screen.getByRole("button", { name: "Love" }));
-    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    expect(
+      await screen.findByRole("heading", { name: /here.s what moved/i }),
+    ).toBeInTheDocument();
     expect(screen.getAllByText(REJECTED_NOTICE)).toHaveLength(1);
-    expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
+    expect(refresh).not.toHaveBeenCalled();
   });
 });

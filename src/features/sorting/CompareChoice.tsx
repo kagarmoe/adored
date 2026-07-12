@@ -49,6 +49,9 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsM
   // a given slot key can only ever recur as the same-comparison retry, never as
   // a new pair reusing a stale key. Ack clears the key AND refreshes together.
   const clientKeys = useRef<Record<string, string>>({});
+  // Mounted (empty) on first render so the region exists BEFORE its text ever
+  // changes — a live region that appears with its content is not announced.
+  const [announcement, setAnnouncement] = useState("");
   // A late ack (after the bound) and a re-tap's ack can both land for one
   // clientKey — settle exactly once per decision.
   const settled = useRef(new Set<string>());
@@ -69,6 +72,18 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsM
     // A rejected ack still advances — the piece is no longer in the collection,
     // and the notice slot (PendingNotices) explains; this component stays quiet.
     setError(null);
+    // The pair advances silently under a screen-reader user otherwise (SC 4.1.3).
+    // Naming both pieces is load-bearing, not decoration: a live region does not
+    // re-announce identical text, and the pair always changes.
+    const a = itemDisplayName(itemA);
+    const b = itemDisplayName(itemB);
+    setAnnouncement(
+      result === "tie"
+        ? `${a} and ${b} — loved just the same.`
+        : result === "skip"
+          ? `${a} and ${b} — set aside for now.`
+          : `You love ${result === "item_a" ? a : b} more than ${result === "item_a" ? b : a}.`,
+    );
     // Clear pending BEFORE refresh: router.refresh() re-renders THIS same
     // client instance with the next pair, so a still-set `pending` would
     // soft-lock the next pair (all controls disabled, a card stuck "Saving…").
@@ -163,6 +178,9 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsM
 
   return (
     <div className="space-y-6">
+      <p role="status" aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
       {/* Tapping a card IS the choice (tap-first). Always two-up: a comparison. */}
       <div className="grid grid-cols-2 gap-4">
         {choices.map(({ item, hero, result, key }) => (

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { dedupeDecisionsLatestWins, type MovedDecision } from "@/lib/what-moved";
 import { getRoundBox, type RoundBox } from "@/lib/round-preference";
 import { enqueue, newClientKey, removeQueued, type PendingEntry, type QueueKey } from "./decisionQueue";
@@ -37,7 +36,7 @@ export interface UseOptimisticRoundOptions<D extends Record<string, unknown>> {
   decisionType: DecisionType;
   /** Server decision log merged into the frozen recap; usage passes `[]`. */
   serverLog: MovedDecision[];
-  /** The round mounted onto an empty queue: nothing to flush, never refresh. */
+  /** The round mounted onto an empty queue: nothing to flush. */
   initialQueueEmpty: boolean;
   /** This round's own queue fork is exhausted (round-computed; the hook adds the clock). */
   queueExhausted: boolean;
@@ -82,7 +81,8 @@ export interface OptimisticRound<D extends Record<string, unknown>> {
  * The optimistic-round engine shared by triage and usage rounds (spec §3.4):
  * the flusher wiring, persist-before-advance enqueue with the F18 quota
  * fallback, this round's tap log + frozen recap + the exactly-once end
- * sequence (F15), the undo-as-revisit state machine (F19), and the round
+ * sequence (F15 — a drain, and no route refresh: purses-hzwj), the
+ * undo-as-revisit state machine (F19), and the round
  * clock. Queue-state derivation (`entries`/`handled`/passes → `queueExhausted`)
  * and every round-specific surface (dispositions, labels, counts) stay in the
  * consuming component; the hook never owns the queue fork.
@@ -99,7 +99,6 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
   labelFor,
   toMoved,
 }: UseOptimisticRoundOptions<D>): OptimisticRound<D> {
-  const router = useRouter();
   const key = useMemo<QueueKey>(
     () => ({ curatorId, sessionId, collectionId }),
     [curatorId, sessionId, collectionId],
@@ -158,23 +157,25 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
     endSequenceRan.current = true;
     // Frozen recap (F5): computed ONCE at round end — the pre-round server log
     // (window-filtered away by whatMoved) merged with this round's client tap
-    // log. The round-end flush and refresh proceed BEHIND it; post-refresh data
-    // never re-renders it (prevents the double-count window).
+    // log. The round-end flush proceeds BEHIND it; the recap never re-renders
+    // from server data (prevents the double-count window).
     setFrozen({
       decisions: [...serverLogRef.current, ...roundLogRef.current.map((e) => e.moved)],
       endedAtMs: Date.now(),
     });
-    // A round that never was (mounted onto an empty queue) has nothing to flush
-    // and must not refresh — that would loop the empty mount.
+    // A round that never was (mounted onto an empty queue) has nothing to flush.
     if (initialQueueEmptyRef.current) return;
-    void (async () => {
-      try {
-        await triggerFlush(key); // drain settles (ack or terminal per taxonomy)…
-      } finally {
-        router.refresh(); // …then exactly ONE refresh (F15)
-      }
-    })();
-  }, [ended, key, router]);
+    // Flush only — NO router.refresh() (purses-hzwj). Nothing on this route
+    // consumes a refreshed payload: the recap is frozen and the round's server
+    // props are snapshotted at mount. A refresh of the route the person is
+    // leaving stays in flight past the recap, and Next falls back to a hard
+    // navigation to the current URL when a real navigation starts mid-commit —
+    // silently eating the tap that took them to /compare. The freshness the
+    // refresh used to buy the NEXT route (the hub) now comes from
+    // `experimental.staleTimes: { dynamic: 0 }` in next.config.mjs, which races
+    // nothing.
+    void triggerFlush(key);
+  }, [ended, key]);
 
   async function submitDecision(itemId: string, decision: D): Promise<boolean> {
     if (busyRef.current) return false;

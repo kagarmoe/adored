@@ -94,6 +94,25 @@ describe("TriageRound round chrome (4-step arc, Epic R)", () => {
   });
 });
 
+describe("TriageRound decision announcement (SC 4.1.3)", () => {
+  it("announces the saved tier in the SAME live-region node that was mounted before the tap, as the next item swaps in", async () => {
+    // Regression: DecisionControls used to be keyed per item here, so its sr-only
+    // region was torn down and re-created on every advance — a region that appears
+    // together with its content is not announced, and the screen changed silently.
+    const user = userEvent.setup();
+    renderRound({ queue: [entry("item_a", "Bag A"), entry("item_b", "Bag B")] });
+
+    const region = screen.getByRole("status");
+    expect(region).toBeEmptyDOMElement();
+
+    await user.click(screen.getByRole("button", { name: "Love" }));
+
+    expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toBe(region);
+    expect(region).toHaveTextContent("Love — saved.");
+  });
+});
+
 describe("TriageRound optimistic advance (F15)", () => {
   it("n taps advance through n items with ZERO refresh; each tap is persisted before the next item renders", async () => {
     const user = userEvent.setup();
@@ -128,7 +147,7 @@ describe("TriageRound optimistic advance (F15)", () => {
 });
 
 describe("TriageRound round end (queue exhaustion, F6/F15)", () => {
-  it("exhaustion ends the round early into the recap; refresh fires exactly once, only after the drain resolves", async () => {
+  it("exhaustion ends the round into the recap and drains — and NEVER refreshes the route the person is leaving (purses-hzwj)", async () => {
     let resolveDrain!: () => void;
     flusher.triggerFlush.mockImplementation(
       () => new Promise<void>((resolve) => (resolveDrain = resolve)),
@@ -140,16 +159,19 @@ describe("TriageRound round end (queue exhaustion, F6/F15)", () => {
 
     // Recap replaces the round content immediately (client-owned counts)…
     expect(await screen.findByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-    // …but the single refresh waits for the drain to settle.
     expect(refresh).not.toHaveBeenCalled();
+    // …and the drain settles behind it. A refresh here would still be committing
+    // when the person taps through to /compare, and the competing navigation back
+    // to /triage can silently eat that tap — nothing on this route consumes the
+    // refreshed payload, so it does not fire at all.
     await act(async () => {
       resolveDrain();
     });
-    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
-    expect(flusher.triggerFlush).toHaveBeenCalled();
+    await waitFor(() => expect(flusher.triggerFlush).toHaveBeenCalledTimes(1));
+    expect(refresh).not.toHaveBeenCalled();
   });
 
-  it("timer expiry ends the round into the recap with the same single refresh", async () => {
+  it("timer expiry ends the round into the recap, drains, and never refreshes", async () => {
     vi.useFakeTimers();
     store.setItem("pi-round-box", "5");
     renderRound({ queue: [entry("item_a", "Bag A")] });
@@ -159,7 +181,8 @@ describe("TriageRound round end (queue exhaustion, F6/F15)", () => {
     });
 
     expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(flusher.triggerFlush).toHaveBeenCalledTimes(1);
+    expect(refresh).not.toHaveBeenCalled();
   });
 });
 
@@ -359,20 +382,25 @@ describe("TriageRound bring-back restores the item to the round (Epic C §11 und
     expect(screen.getByRole("button", { name: /not mine/i })).toBeInTheDocument();
   });
 
-  it("re-ending the round after a bring-back runs the end sequence again (flush + one refresh)", async () => {
+  it("re-ending the round after a bring-back runs the end sequence again (a second flush, still no refresh)", async () => {
     const user = userEvent.setup();
     renderWithProvider([entry("item_a", "Bag A")]);
 
     await user.click(screen.getByRole("button", { name: /not mine/i }));
     await screen.findByRole("heading", { name: /here.s what moved/i });
-    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    // (The set-aside tap triggers its own flush, so count the END-sequence drain
+    // as a delta from whatever the first end left behind.)
+    const drainsAfterFirstEnd = flusher.triggerFlush.mock.calls.length;
 
     await user.click(screen.getByRole("button", { name: /bring back/i }));
     await screen.findByRole("img", { name: "Bag A" });
 
     await user.click(screen.getByRole("button", { name: "Love" }));
     expect(await screen.findByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(flusher.triggerFlush.mock.calls.length).toBeGreaterThan(drainsAfterFirstEnd),
+    );
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("after TIMER expiry the recap stands: 'Bring back' clears the notice but never reopens a time-boxed round", async () => {

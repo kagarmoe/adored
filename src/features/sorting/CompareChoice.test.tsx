@@ -336,6 +336,19 @@ describe("CompareChoice submits through the queue as a batch-of-1 (Epic P Task 1
     expect(refresh).toHaveBeenCalledTimes(1); // the ack still advanced exactly once
   });
 
+  it("announces the registered choice in a live region that already exists before the choice (SC 4.1.3)", async () => {
+    const user = userEvent.setup();
+    renderChoice();
+
+    // The region must be in the DOM BEFORE its text changes, or screen readers
+    // never announce it.
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+
+    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole("status")).toHaveTextContent("You love Bag A more than Bag B.");
+  });
+
   it("a genuinely new tap after a success carries a DIFFERENT clientKey", async () => {
     const user = userEvent.setup();
     const { rerender } = renderChoice();

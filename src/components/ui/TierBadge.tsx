@@ -37,8 +37,15 @@ interface TierBadgeProps
 const TierBadge = React.forwardRef<HTMLSpanElement, TierBadgeProps>(
   ({ tier = "love", showLabel = true, className = "", ...props }, ref) => {
     const meta = TIER_META[tier as Tier];
+    // Glyph-only badges carry the tier in their accessible name — a visible text
+    // label would break the loved ranking's deliberately label-free surface.
     return (
-      <span ref={ref} className={`${tierBadgeVariants({ tier })} ${className}`} {...props}>
+      <span
+        ref={ref}
+        className={`${tierBadgeVariants({ tier })} ${className}`}
+        {...(showLabel ? {} : { role: "img", "aria-label": meta.label })}
+        {...props}
+      >
         <span aria-hidden="true">{meta.glyph}</span>
         {showLabel && <span>{meta.label}</span>}
       </span>

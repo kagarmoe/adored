@@ -187,7 +187,9 @@ describe("TriagePage patient-waiting skin (showingDeferred)", () => {
     // re-rendered on every refresh, NOT a discrete state change to announce — and
     // role="status" here would compete with the undo notice's live region. So the
     // copy renders but is NOT a status live region. The H1 conveys the screen.
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    // (DecisionControls owns a separate sr-only status region for the decision
+    // itself — SC 4.1.3 — so scope this to the banner.)
+    expect(screen.getByText(/ready when you are/i).closest('[role="status"]')).toBeNull();
     // Never a remaining-count / inbox framing.
     expect(screen.queryByText(/\d+\s+left/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/inbox|resting place/i)).not.toBeInTheDocument();

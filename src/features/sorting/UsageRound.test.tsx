@@ -393,7 +393,7 @@ describe("UsageRound undo-as-revisit (F19)", () => {
 });
 
 describe("UsageRound round end (F15) & recap", () => {
-  it("zero mid-round refresh; exactly one at round end after the drain settles", async () => {
+  it("zero refresh — mid-round AND at round end: the round drains, it never refreshes the route being left (purses-hzwj)", async () => {
     let resolveDrain!: () => void;
     flusher.triggerFlush.mockImplementation(
       () => new Promise<void>((resolve) => (resolveDrain = resolve)),
@@ -408,7 +408,8 @@ describe("UsageRound round end (F15) & recap", () => {
     await act(async () => {
       resolveDrain();
     });
-    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(flusher.triggerFlush).toHaveBeenCalledTimes(1));
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("the recap shows this round's usage counts (uses / resting)", async () => {
@@ -474,7 +475,7 @@ describe("UsageRound round end (F15) & recap", () => {
     });
 
     expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(refresh).not.toHaveBeenCalled();
   });
 });
 
