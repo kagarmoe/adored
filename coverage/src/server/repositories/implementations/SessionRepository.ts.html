@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">89.47% </span>
+                <span class="strong">92.45% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>51/57</span>
+                <span class='fraction'>49/53</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">77.77% </span>
+                <span class="strong">78.12% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>28/36</span>
+                <span class='fraction'>25/32</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>21/21</span>
+                <span class='fraction'>22/22</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">90% </span>
+                <span class="strong">93.75% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>45/50</span>
+                <span class='fraction'>45/48</span>
             </div>
         
             
@@ -340,13 +340,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">554x</span>
+<span class="cline-any cline-yes">556x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -382,12 +383,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -481,7 +481,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">116x</span>
+<span class="cline-any cline-yes">117x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -491,7 +491,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">116x</span>
+<span class="cline-any cline-yes">117x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -542,7 +542,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -569,9 +569,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -586,6 +586,7 @@ import type { Database } from "@/lib/db";
 import { sessionsTable } from "@/lib/db/schema";
 import type { Session } from "@/types";
 import { generateId } from "@/lib/id";
+import { allocateWithRetry } from "../allocateWithRetry";
 &nbsp;
 /**
  * Thrown when a curator already holds an IN-PROGRESS session in a (collection,
@@ -626,7 +627,7 @@ export class SessionRepository {
 &nbsp;
     // Auto-allocate MAX+1, retry on the UNIQUE(collection_id, number) race
     // (a retry-able insert — simpler than locking the max; a transaction is available but unnecessary here).
-    for (let attempt = 0; attempt &lt; 5; attempt++) {
+    return allocateWithRetry(async () =&gt; {
       const number = await this.getNextSessionNumber(data.collectionId);
       try {
         const [session] = await this.db
@@ -640,13 +641,12 @@ export class SessionRepository {
         // sessions_active_unique index covers after migration 0009. Terminal
         // and soft-deleted rows free the slot and don't collide. Surface a
         // gentle, typed 409 instead of a raw 500. Not retried — a fresh number
-        // won't free a slot held by the curator's live session.
+        // won't free a slot held by the curator's live session (and the retry
+        // predicate below matches only the number conflict, so it propagates).
         if (isCurrentSessionConflict(error)) throw new CurrentSessionExistsError();
-        <span class="missing-if-branch" title="else path not taken" >E</span>if (isSessionNumberConflict(error) &amp;&amp; attempt &lt; 4) continue;
-<span class="cstat-no" title="statement not covered" >        throw error;</span>
+        throw error;
       }
-    }
-<span class="cstat-no" title="statement not covered" >    throw new Error("Could not allocate a session number");</span>
+    }, isSessionNumberConflict);
   }
 &nbsp;
   async findById(id: string): Promise&lt;Session | null&gt; {
@@ -847,7 +847,7 @@ function isCurrentSessionConflict(error: unknown): boolean {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-12T05:26:12.870Z
+                at 2026-07-12T05:40:41.044Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">91.89% </span>
+                <span class="strong">93.54% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>34/37</span>
+                <span class='fraction'>29/31</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">77.27% </span>
+                <span class="strong">72.22% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>17/22</span>
+                <span class='fraction'>13/18</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.44% </span>
+                <span class="strong">94.73% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>17/18</span>
+                <span class='fraction'>18/19</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">90.9% </span>
+                <span class="strong">93.1% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>30/33</span>
+                <span class='fraction'>27/29</span>
             </div>
         
             
@@ -246,19 +246,15 @@
 <a name='L181'></a><a href='#L181'>181</a>
 <a name='L182'></a><a href='#L182'>182</a>
 <a name='L183'></a><a href='#L183'>183</a>
-<a name='L184'></a><a href='#L184'>184</a>
-<a name='L185'></a><a href='#L185'>185</a>
-<a name='L186'></a><a href='#L186'>186</a>
-<a name='L187'></a><a href='#L187'>187</a>
-<a name='L188'></a><a href='#L188'>188</a>
-<a name='L189'></a><a href='#L189'>189</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L184'></a><a href='#L184'>184</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">482x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">483x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -302,13 +298,7 @@
 <span class="cline-any cline-yes">317x</span>
 <span class="cline-any cline-yes">318x</span>
 <span class="cline-any cline-yes">318x</span>
-<span class="cline-any cline-yes">318x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -407,7 +397,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -444,6 +434,7 @@ import type { Database } from "@/lib/db";
 import { sortResultsTable } from "@/lib/db/schema";
 import type { SortResult } from "@/types";
 import { generateId } from "@/lib/id";
+import { allocateWithRetry } from "../allocateWithRetry";
 &nbsp;
 export class SortResultRepository {
   constructor(private db: Database) {}
@@ -487,16 +478,10 @@ export class SortResultRepository {
     // on the UNIQUE(collection_id, number) race. postgres-js autocommits each
     // statement here, so a conflicting INSERT can be retried in place. Any
     // other unique violation surfaces, not retried.
-    for (let attempt = 0; attempt &lt; 5; attempt++) {
+    return allocateWithRetry(async () =&gt; {
       const number = await this.getNextResultNumber(data.collectionId);
-      try {
-        return await this.insertWithNumber({ ...data, number });
-      } catch (error) {
-        if (isResultNumberConflict(error) &amp;&amp; attempt &lt; 4) continue;
-        throw error;
-      }
-    }
-<span class="cstat-no" title="statement not covered" >    throw new Error("Could not allocate a result number");</span>
+      return this.insertWithNumber({ ...data, number });
+    }, isResultNumberConflict);
   }
 &nbsp;
   async findById(id: string): Promise&lt;SortResult | null&gt; {
@@ -634,7 +619,7 @@ export function isResultNumberConflict(error: unknown): boolean {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-12T05:26:12.870Z
+                at 2026-07-12T05:40:41.044Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>
