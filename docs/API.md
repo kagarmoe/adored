@@ -29,6 +29,8 @@ Authentication is *who you are*; authorization is *what you may touch*. The mode
 
 Path params at the API layer are **always ULIDs**, never slugs (slugs are client-side nav). Handlers narrow a guard result with `instanceof NextResponse` and otherwise proceed with the resolved entity.
 
+**Params are async (Next 15 convention, adopted on Next 14 — `purses-9oxh.3`):** every dynamic handler types its context as `{ params }: { params: Promise<{ … }> }` and destructures via `const { id } = await params;` as its first statement. New routes MUST follow this form, and tests invoke handlers with `params: Promise.resolve({ … })` — a bare object in a test cannot catch a mis-migrated handler (ARCHITECTURE decision 34).
+
 ## Status-code semantics
 
 | Code | Meaning |
