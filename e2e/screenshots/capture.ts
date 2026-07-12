@@ -8,7 +8,7 @@
 // every image spec uses (no blob emulator locally).
 //
 // Then follow docs/cookbook/add-images-to-pr.md to release + embed them.
-import { test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import {
   seedBaseline,
   seedSortScenario,
@@ -134,6 +134,18 @@ for (const theme of ["light", "dark"] as const) {
     await page.route("**/photos/**/file*", (route) =>
       route.fulfill({ path: FIXTURE, contentType: "image/jpeg" }),
     );
+
+    // purses-r4it: assert the precondition z23h violated, before any file is written.
+    // Every usage surface below needs an UNANSWERED queue; the recap block at the end
+    // of this test answers it out. A seed shared across the two themes (or one hoisted
+    // into beforeAll, which does not re-run on retry) leaves this empty, and the shots
+    // silently capture the recap instead of the round. Fail here, loudly and in seconds,
+    // rather than 30s later on a "Quick pace" click timeout with garbage already on disk.
+    await page.goto(`/collections/${triageSlug}/sort/${triageSessionNumber}/usage`);
+    await expect(
+      page.getByRole("button", { name: "Yes, I use it" }),
+      'usage queue is drained — the journey seed must be PER TEST (purses-z23h), not shared across themes',
+    ).toBeVisible({ timeout: 15_000 });
 
     const proj = testInfo.project.name;
     const surfaces: [string, string][] = [

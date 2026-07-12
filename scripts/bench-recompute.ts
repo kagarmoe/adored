@@ -1,5 +1,5 @@
 /**
- * bench-recompute — ADVISORY sort-recompute regression benchmark.
+ * bench-recompute — sort-recompute regression GATE.
  *
  * Promotes the `seed-load --sort` timing harness into a baseline-comparing
  * benchmark. It seeds a fixed `--items` (default 100) into a fresh LOCAL DB,
@@ -11,25 +11,26 @@
  *
  * TWO MODES:
  *   --update-baseline   run the bench and WRITE stats to bench/recompute-baseline.json
- *   (default: check)    run the bench, PRINT current vs baseline, WARN LOUDLY if
- *                       p95 > 2× baseline.p95
+ *   (default: check)    run the bench, PRINT current vs baseline, WARN at 2×,
+ *                       FAIL (exit 1) at 4× baseline compare p95
  *
- * ============================ ADVISORY, NOT BLOCKING ============================
- * This script ALWAYS EXITS 0 in check mode — it must NEVER fail a PR. The CI job
- * that runs it is non-required (continue-on-error). Local Docker Postgres p95 is
- * NOT Neon prod p95, so an ABSOLUTE latency gate would be pure noise. What this
- * DOES catch is an ALGORITHMIC SHAPE regression: the compare-phase p95 doubling
- * at a fixed item count means the per-recompute cost curve changed (an O(N²) path
- * came back), independent of the absolute machine speed. Re-baseline deliberately
- * (--update-baseline) only when the algorithm legitimately changes.
+ * ============================== BLOCKING, AT 4× ================================
+ * The gate is deliberately GENEROUS. The committed baseline is dev-Mac hardware;
+ * a GitHub runner already measures ~1.5× that p95 from hardware alone, and a
+ * noisy neighbour can add more. A 2× gate would be a flake generator (and a flaky
+ * gate gets disabled, which is worse than no gate). 4× keeps ~2.6× of headroom
+ * over the observed CI ratio while still catching the thing this bench exists for:
+ * an O(N²) path coming back is a multiple-x blowup at N=100, not a 3× one.
+ * The 2× line stays as a printed warning. A bench that cannot RUN also fails —
+ * a broken gate is not a pass.
  * ===============================================================================
  *
  * SAFETY — LOCAL DB ONLY (same guard as seed-load): refuses any non-localhost
  * host. It writes and TRUNCATEs, so it must never touch a remote/prod DB.
  *
  * USAGE:
- *   DATABASE_URL_TEST=postgresql://postgres:test@localhost:5433/app_test \
- *     tsx scripts/bench-recompute.ts [--items=100] [--update-baseline]
+ *   bash e2e/fixtures/test-db.sh up
+ *   tsx scripts/bench-recompute.ts [--items=100] [--update-baseline]
  */
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -51,10 +52,21 @@ import {
 } from "./seed-load-core";
 
 const BASELINE_PATH = join(__dirname, "..", "bench", "recompute-baseline.json");
-// A loose multiplier over the committed baseline. Catches a SHAPE change (p95
-// doubling at fixed N), not micro-noise. See the ADVISORY note above.
-const P95_REGRESSION_MULTIPLIER = 2;
+// Printed-only: a 2× compare p95 is worth a human look, but CI hardware alone
+// already lands ~1.5× over the dev-Mac baseline, so it cannot be the gate.
+const P95_WARN_MULTIPLIER = 2;
+// The gate. See the BLOCKING note above for why it is this loose.
+const P95_FAIL_MULTIPLIER = 4;
 const DEFAULT_ITEMS = 100;
+
+/** Pure gate decision: is the compare-phase p95 a multiple-x regression? */
+export function benchVerdict(
+  current: Stats,
+  baseline: Stats,
+): { ratio: number; failed: boolean } {
+  const ratio = baseline.p95 > 0 ? current.p95 / baseline.p95 : 0;
+  return { ratio, failed: current.p95 > baseline.p95 * P95_FAIL_MULTIPLIER };
+}
 
 interface Baseline {
   // Metadata so a stale baseline is self-describing when someone opens the file.
@@ -126,8 +138,8 @@ async function main(): Promise<void> {
     if (updateBaseline) {
       const baseline: Baseline = {
         description:
-          "ADVISORY sort-recompute baseline. Local Docker Postgres p95 ≠ Neon prod p95; " +
-          "this gate flags an ALGORITHMIC shape regression (compare p95 doubling at fixed " +
+          "Sort-recompute baseline. Local Docker Postgres p95 ≠ Neon prod p95; the CI gate " +
+          "flags an ALGORITHMIC shape regression (compare p95 > 4× this baseline at fixed " +
           "items), not absolute prod latency. Re-baseline only on a deliberate algorithm change.",
         items,
         generatedAt: new Date().toISOString(),
@@ -141,18 +153,16 @@ async function main(): Promise<void> {
       return;
     }
 
-    // ---- check mode (ADVISORY — always exits 0) ----
+    // ---- check mode (GATE) ----
     if (!existsSync(BASELINE_PATH)) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `\nbench-recompute: no baseline at ${BASELINE_PATH} — run with --update-baseline to create one. ` +
-          `(advisory: not failing)`,
+      // A gate with no baseline is not a gate — fail rather than pretend.
+      throw new Error(
+        `no baseline at ${BASELINE_PATH} — run with --update-baseline to create one`,
       );
-      return;
     }
     const baseline = JSON.parse(readFileSync(BASELINE_PATH, "utf8")) as Baseline;
-    const threshold = baseline.compare.p95 * P95_REGRESSION_MULTIPLIER;
-    const ratio = baseline.compare.p95 > 0 ? compare.p95 / baseline.compare.p95 : 0;
+    const { ratio, failed } = benchVerdict(compare, baseline.compare);
+    const failThreshold = baseline.compare.p95 * P95_FAIL_MULTIPLIER;
 
     // eslint-disable-next-line no-console
     console.log(
@@ -163,34 +173,39 @@ async function main(): Promise<void> {
     // eslint-disable-next-line no-console
     console.log(
       `\nCOMPARE p95: current ${compare.p95.toFixed(1)}ms vs baseline ` +
-        `${baseline.compare.p95.toFixed(1)}ms (${ratio.toFixed(2)}×; warn threshold ${P95_REGRESSION_MULTIPLIER}×).`,
+        `${baseline.compare.p95.toFixed(1)}ms (${ratio.toFixed(2)}×; warn ${P95_WARN_MULTIPLIER}×, FAIL ${P95_FAIL_MULTIPLIER}×).`,
     );
 
-    if (compare.p95 > threshold) {
+    if (failed) {
+      throw new Error(
+        `compare-phase p95 REGRESSED ${ratio.toFixed(2)}× over baseline ` +
+          `(${compare.p95.toFixed(1)}ms > ${failThreshold.toFixed(1)}ms = ${P95_FAIL_MULTIPLIER}× baseline). ` +
+          `A multiple-x blowup at a fixed item count is an ALGORITHMIC shape regression ` +
+          `(e.g. an O(N²) path returning) — investigate the algorithm, not the absolute ms. ` +
+          `Re-baseline (--update-baseline) only if the algorithm changed deliberately.`,
+      );
+    }
+    if (ratio > P95_WARN_MULTIPLIER) {
       // eslint-disable-next-line no-console
       console.warn(
-        `\n############################################################\n` +
-          `## ⚠️  ADVISORY: compare-phase p95 REGRESSED ${ratio.toFixed(2)}× over baseline.\n` +
-          `##     current p95 ${compare.p95.toFixed(1)}ms > ${threshold.toFixed(1)}ms (${P95_REGRESSION_MULTIPLIER}× baseline).\n` +
-          `##     This is a SHAPE signal (possible algorithmic regression, e.g. an\n` +
-          `##     O(N²) path). Local Docker p95 ≠ Neon prod p95, so investigate the\n` +
-          `##     ALGORITHM, not the absolute number. NOT failing the build (advisory).\n` +
-          `############################################################`,
+        `\n⚠️  compare p95 is ${ratio.toFixed(2)}× baseline (over the ${P95_WARN_MULTIPLIER}× warn line, ` +
+          `under the ${P95_FAIL_MULTIPLIER}× gate). Worth a look; runner noise can explain some of it.`,
       );
     } else {
       // eslint-disable-next-line no-console
-      console.log(`\nbench-recompute: compare p95 within ${P95_REGRESSION_MULTIPLIER}× of baseline — OK (advisory).`);
+      console.log(`\nbench-recompute: compare p95 within ${P95_WARN_MULTIPLIER}× of baseline — OK.`);
     }
   } finally {
     await client.end({ timeout: 5 });
   }
 }
 
-// ADVISORY: even an unexpected error must not fail the (non-required) CI job.
-// Print it and exit 0 — a broken bench harness is not a merge blocker.
-main()
-  .catch((err) => {
+// Entrypoint only when executed (not when a test imports benchVerdict).
+// A bench that cannot run is a broken gate, not a pass: any error exits 1.
+if (require.main === module) {
+  main().catch((err) => {
     // eslint-disable-next-line no-console
-    console.error("bench-recompute: error (advisory, not failing):", err instanceof Error ? err.message : err);
-  })
-  .finally(() => process.exit(0));
+    console.error("bench-recompute: FAILED —", err);
+    process.exit(1);
+  });
+}
