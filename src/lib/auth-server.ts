@@ -4,7 +4,7 @@ import { magicLink } from "better-auth/plugins/magic-link";
 import { nextCookies } from "better-auth/next-js";
 import { getDb } from "@/lib/db";
 import { sendMagicLink } from "@/lib/email";
-import { env } from "@/lib/env";
+import { env, previewTrustedOrigins } from "@/lib/env";
 import { user, session, account, verification } from "@/lib/db/schema";
 
 // better-auth `auth` instance — the ONLY auth backend now (NextAuth retired in
@@ -64,6 +64,10 @@ export const auth = betterAuth({
   // the src/app/api/auth/[...all] mount — and the Google callback is therefore
   // …/api/auth/callback/google (matches the setup checklist).
   basePath: "/api/auth",
+  // better-auth's default trusted set is exactly [origin(baseURL)]; this ADDS the
+  // preview branch alias so sign-in works on the URL the PR comment links to. It is
+  // [] everywhere but preview — production's trusted set is unchanged. See env.ts.
+  trustedOrigins: previewTrustedOrigins(),
   emailAndPassword: {
     enabled: true,
   },

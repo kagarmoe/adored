@@ -88,6 +88,29 @@ describe("auth-server — better-auth instance", () => {
     expect(mod.auth.options.baseURL).toBe("https://override.example.com");
   });
 
+  it("trusts the preview branch alias, which better-auth would otherwise reject (403 INVALID_ORIGIN)", async () => {
+    // A preview deploy is reachable at TWO hostnames: VERCEL_URL (the immutable
+    // deployment URL, which becomes baseURL) and VERCEL_BRANCH_URL (the branch
+    // alias Vercel's PR comment links to). better-auth trusts only origin(baseURL)
+    // by default, so signing in via the branch alias 403s on the origin check.
+    delete process.env.AUTH_URL;
+    process.env.VERCEL_ENV = "preview";
+    process.env.VERCEL_URL = "adored-abc123-team.vercel.app";
+    process.env.VERCEL_BRANCH_URL = "adored-git-my-branch-team.vercel.app";
+
+    const mod = await import("./auth-server");
+    expect(mod.auth.options.trustedOrigins).toContain("https://adored-git-my-branch-team.vercel.app");
+  });
+
+  it("adds NO trusted origin in production — the trusted set stays exactly origin(AUTH_URL)", async () => {
+    process.env.VERCEL_ENV = "production";
+    process.env.VERCEL_URL = "adored-abc123-team.vercel.app";
+    process.env.VERCEL_BRANCH_URL = "adored-git-main-team.vercel.app";
+
+    const mod = await import("./auth-server");
+    expect(mod.auth.options.trustedOrigins).toEqual([]);
+  });
+
   it("wires the magic-link plugin's sendMagicLink to the email helper", async () => {
     await import("./auth-server");
     const opts = magicLinkOptionsCapture.current;

@@ -36,6 +36,13 @@ const envSchema = z.object({
 
   // Vercel Blob (optional, auto-configured in Vercel)
   BLOB_READ_WRITE_TOKEN: z.string().optional(),
+
+  // Vercel system env, injected per deploy (absent locally). VERCEL_URL is this
+  // deployment's immutable hostname; VERCEL_BRANCH_URL its branch alias. Both are
+  // hostnames only, no scheme. See previewTrustedOrigins().
+  VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
+  VERCEL_URL: z.string().optional(),
+  VERCEL_BRANCH_URL: z.string().optional(),
 });
 
 type EnvConfig = z.infer<typeof envSchema>;
@@ -71,6 +78,9 @@ function validateEnv(): EnvConfig {
       EMAIL_SERVER_PASSWORD: env.EMAIL_SERVER_PASSWORD,
       RESEND_API_KEY: env.RESEND_API_KEY,
       BLOB_READ_WRITE_TOKEN: env.BLOB_READ_WRITE_TOKEN,
+      VERCEL_ENV: env.VERCEL_ENV,
+      VERCEL_URL: env.VERCEL_URL,
+      VERCEL_BRANCH_URL: env.VERCEL_BRANCH_URL,
     });
 
     // Guard against the #62 footgun: VERCEL=1 (e.g. dumped into .env.local by
@@ -110,4 +120,30 @@ export const env = new Proxy({} as EnvConfig, {
 // Validate on module load in production
 if (typeof window === "undefined" && process.env.NODE_ENV === "production") {
   validateEnv();
+}
+
+// Extra origins better-auth must trust ON PREVIEW DEPLOYS ONLY.
+//
+// A preview is reachable at TWO hostnames: the immutable deployment URL
+// (VERCEL_URL — which, with no AUTH_URL set in the Preview env, is what validateEnv()
+// derives AUTH_URL from and thus better-auth's baseURL) and the branch alias
+// (VERCEL_BRANCH_URL — the URL Vercel's PR comment actually links to). better-auth
+// trusts ONLY origin(baseURL) by default, so a sign-in POST from the branch alias
+// fails its origin check with 403 INVALID_ORIGIN. Trusting both hostnames fixes it.
+//
+// THE SECURITY LINE: these are additive in preview and NOWHERE else — in production
+// VERCEL_ENV is "production", this returns [], and the trusted set stays exactly
+// origin(AUTH_URL). Origins are derived only from Vercel's own injected hostnames for
+// THIS deployment, never from a request header and never from a wildcard: better-auth's
+// matchesOriginPattern treats `*`/`?` as wildcards, so a pattern like "*.vercel.app"
+// would trust every Vercel deployment on the internet — including an attacker's own
+// project — turning a malicious callbackURL into account takeover. Hosts carrying those
+// characters are dropped.
+export function previewTrustedOrigins(): string[] {
+  const config = validateEnv();
+  if (config.VERCEL_ENV !== "preview") return [];
+
+  return [config.VERCEL_URL, config.VERCEL_BRANCH_URL]
+    .filter((host): host is string => Boolean(host) && !/[*?]/.test(host as string))
+    .map(host => `https://${host}`);
 }
