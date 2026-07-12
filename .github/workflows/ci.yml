@@ -65,6 +65,13 @@ jobs:
   db-tests:
     name: DB integration tests
     runs-on: ubuntu-latest
+    # Spinning up Postgres + running the whole integration suite proves nothing
+    # about a docs-only change, so gate it on `code` (see the filter). `coverage`
+    # needs this job to SUCCEED, so it skips in lockstep — which is right: a change
+    # that touches no code cannot move the coverage floor. A docs-only PR is then
+    # left with exactly one job, Lint/test/build, which is the point.
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     services:
       postgres:
         image: postgres:16
@@ -170,6 +177,12 @@ jobs:
     outputs:
       ui: ${{ steps.filter.outputs.ui }}
       hot: ${{ steps.filter.outputs.hot }}
+      # Does this change touch anything that can alter runtime or test behaviour?
+      # If not — docs, the governance .md files, the committed graph, beads, agent
+      # config — the DB integration suite has nothing to prove, so it skips (and
+      # `coverage` skips with it, since it needs db-tests to succeed). A docs-only
+      # PR then runs exactly one job: Lint, test, build.
+      code: ${{ steps.filter.outputs.code }}
       # Blast-radius: a change here can't be safely narrowed to one flow, so the
       # e2e job runs the FULL suite (see the "Select e2e specs" step).
       broad: ${{ steps.filter.outputs.broad }}
@@ -217,6 +230,33 @@ jobs:
               - 'scripts/seed-load.ts'
               - 'scripts/seed-load-core.ts'
               - 'scripts/bench-recompute.ts'
+            # Anything that can change runtime or test behaviour. Gates the DB
+            # integration suite (and, transitively, the coverage floor): a change
+            # confined to docs/, graphify-out/, .beads/, .claude/, or the root
+            # *.md governance files cannot affect a DB test, so running the whole
+            # Postgres suite for it is pure cost.
+            #
+            # POSITIVE patterns ONLY, and deliberately a SUPERSET — see the
+            # paths-filter negation note below for why "!" is not an option here.
+            # The failure mode we care about is skipping the suite when it WAS
+            # needed, so anything ambiguous (public/, vercel.json, the workflows
+            # themselves) is listed and simply over-triggers. Root-level globs
+            # ('*.json' etc.) have no slash, so they match only the repo root and
+            # catch every config file (package.json, tsconfig, *.config.*).
+            code:
+              - 'src/**'
+              - 'drizzle/**'
+              - 'e2e/**'
+              - 'scripts/**'
+              - 'bench/**'
+              - 'public/**'
+              - '.github/workflows/**'
+              - '.githooks/**'
+              - '*.json'
+              - '*.ts'
+              - '*.mts'
+              - '*.mjs'
+              - '*.js'
             # Blast-radius paths: shared UI primitives, design tokens, global
             # styles, build/dep config, the e2e harness itself, and broad
             # server/db changes. A change here can affect ANY flow, so we can't
@@ -500,8 +540,14 @@ jobs:
         with:
           node-version: 22
 
-      - name: Download coverage artifact
+      # Absent on a docs-only push: db-tests skips, so `coverage` skips and never
+      # uploads. The assemble step below already no-ops on an empty dir, leaving
+      # the previously published coverage in place — correct, since a docs-only
+      # push didn't change it. Without continue-on-error this download would hard-
+      # fail the dashboard (the e2e download below has always needed the same).
+      - name: Download coverage artifact (absent on docs-only pushes)
         uses: actions/download-artifact@v7
+        continue-on-error: true
         with:
           name: coverage-report
           path: _artifacts/coverage
