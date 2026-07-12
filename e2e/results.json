@@ -18,24 +18,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/abeb9c835277c2497061b67fea35b774258fd31d",
-        "commitHash": "abeb9c835277c2497061b67fea35b774258fd31d",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29183913740"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f0ce6afc7fc8f7b509644947feca5ab54de306f2",
+        "commitHash": "f0ce6afc7fc8f7b509644947feca5ab54de306f2",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29208559367"
       },
       "gitCommit": {
-        "shortHash": "abeb9c8",
-        "hash": "abeb9c835277c2497061b67fea35b774258fd31d",
-        "subject": "fix(results): stop sharing is undoable, not a browser confirm() (u1we) (#327)",
-        "body": "fix(results): stop sharing is undoable, not a browser confirm() (u1we) (#327)\n\nSharePanel handed its only destructive decision to window.confirm() — the one\nplace in the app that defers to browser chrome. It is unstyleable (ignores\nDESIGN.md and both themes), cannot obey TONE.md, and blocks the main thread.\n\nThe bead assumed the fix needed a Dialog primitive the repo doesn't have. It\ndoesn't need one — and it doesn't need a dialog at all.\n\nRevoking a share is a SOFT status flip (ShareController.revokeShare sets\nstatus:\"revoked\"; the row and its token survive), and PATCH already accepts\nstatus:\"active\". So stopping a share is genuinely reversible, and Undo restores\nTHE SAME TOKEN — the link the person already sent works again. That is what makes\nan undo honest here rather than a new-link lie; it is also why no \"are you sure?\"\nis warranted. TONE commitment 4 is unpressured and forgiving: a modal bracing for\na mistake is not this app's voice. The app already answers this shape elsewhere\n(set-aside's inline reveal→confirm, session-undo's persistent Undo notice) — this\nnow matches.\n\nThe Undo notice is persistent and NOT on a timer. A countdown would be exactly the\npressure TONE forbids.\n\nAlso fixes a latent bug found while writing the test: findByResult returns EVERY\nshare for a result, revoked ones included, so after a reload a revoked share still\nrendered with Copy/Preview — offering a link that silently 404s whoever it was\nsent to (viewSharedResult rejects a non-active status). The panel now renders only\nactive shares.\n\nNo new component, no new dependency, no <dialog>. Net: the confirm() is gone and\nthe panel got an undo.\n\nGates (local): lint 0 errors, test:ci 1300, build.\n\n\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "f0ce6af",
+        "hash": "f0ce6afc7fc8f7b509644947feca5ab54de306f2",
+        "subject": "deps: drizzle 0.45, drop legacy-peer-deps, squash drizzle/ to one baseline (#328)",
+        "body": "deps: drizzle 0.45, drop legacy-peer-deps, squash drizzle/ to one baseline (#328)\n\n* docs(spec): dependency hygiene design (purses-mebk)\n\nDisposable data retires the replay landmine, so squash drizzle/ to one\ngenerated baseline instead of translating 17 v5 snapshots. Reset is a\ncommitted fail-closed script, not a hand-run operation.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* docs(spec): fold adversarial review into dependency-hygiene design\n\nThree lenses, two blocking defects each found independently by two\nreviewers:\n- schema.ts is a LOSSY view of the applied schema: memberships_role_check\n  lives only in migration SQL (drizzle 0.30 has no check() API), so a\n  regenerated baseline ships role as free text. Port it first.\n- drizzle's ledger lives in the `drizzle` schema, not `public`. Dropping\n  only public leaves the rows alive; the 2nd reset then no-ops and prints\n  success against an empty database.\nPlus: a destructive script must never read an ambient DATABASE_URL (dotenv\ndoes not override an already-set var), and dropping legacy-peer-deps is a\nresolution change INSIDE the auth stack (better-call moves to zod 4).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* docs(spec): delete backfill-numbers rather than test it (owner)\n\nReview flagged db:backfill-numbers as the one deploy step no gate covers\n(backfillNumbers(db as any) compiles straight through the 0.30->0.45 API\nchange) and proposed running it from db:reset so it gets exercised.\n\nOwner's call is better: the data is disposable, and Session/SortResult\nrepositories already assign `number` at INSERT via allocateWithRetry, so a\nNULL number cannot exist on any DB built from now on. It is a one-shot\nlegacy heal that has been a no-op on every prod deploy since. Delete it --\nthe untested deploy step and its `as any` stop existing.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* docs(spec): cut the ceremony — one migration, final schema, minimal guard\n\nOwner: \"why are we running 17 migrations? We just need the final schema.\"\nCorrect — we ship ONE baseline generated from schema.ts. The 17 only ever\nappeared in a verification diff, and that diff re-proves a fact review\nalready established by enumeration (memberships_role_check is the sole\nobject with no declarative home). Demoted to a one-time local sanity check.\n\nCut: the pg_dump CI gate, the journal content-hash guard (YAGNI until there\nis data worth keeping), and the belt-and-braces half of the db:reset guard.\nKept: porting the CHECK into schema.ts, which is correctness, not caution.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* feat(deps): drizzle 0.45, drop legacy-peer-deps, squash drizzle/ to one baseline\n\n- drizzle-orm 0.30.10 -> ^0.45.2; drizzle-kit 0.20.17 -> ^0.31.6, moved to\n  devDependencies (codegen CLI; the runtime migrator imports drizzle-orm).\n- .npmrc legacy-peer-deps DROPPED. Clean npm install, no ERESOLVE. This also\n  fixes a latent wrong: the flag was feeding better-call zod 3 while it declares\n  a zod ^4 peer. It now nests its own zod 4; app code keeps zod 3.\n- drizzle.config.ts: driver:\"pg\" -> dialect:\"postgresql\"; connectionString -> url.\n- db:generate: the removed generate:pg family -> config-driven `drizzle-kit generate`.\n- Database type widened from `typeof db` to the shared base class PgDatabase<...>.\n  PgTransaction extends PgDatabase, so a tx satisfies it and withTransaction\n  typechecks — 1 file, not the 16-repository DbOrTx ripple the bead predicted.\n- schema.ts: ported memberships_role_check via check() (drizzle 0.30 had no check()\n  API, so it lived ONLY in migration SQL and a regenerated baseline would have\n  silently shipped `role` as free text).\n- schema.ts: removed the duplicate invitations_token_unique index. The column's\n  .unique() already emits a constraint of that name; 0.20 hid the collision behind\n  CREATE UNIQUE INDEX IF NOT EXISTS, 0.31 makes it a fatal 42P07.\n- drizzle/ squashed 17 migrations -> one generated 0000_init (journal v7).\n  Verified: 45/45 constraints, 32/32 indexes, identical column set, all three\n  partial predicates byte-identical vs a DB built from the old 17.\n- Deleted backfill-numbers (script, module, test, npm script, vercel-build step):\n  Session/SortResult repos assign `number` at INSERT, so a NULL number is\n  unreachable on any DB built from now on. One-shot legacy heal, now dead.\n- Added scripts/db-reset.ts: drops public AND drizzle (the ledger lives there, so\n  dropping public alone makes the NEXT reset no-op into an empty DB and report\n  success), then re-migrates. Refuses an ambient DATABASE_URL; echo-back confirm.\n- Pinned sessions_active_unique's predicate by indexdef — the squash re-runs the\n  codegen path that historically ate index predicates.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* fix(deps): unwrap drizzle 0.45's error wrapper in every conflict detector\n\nThe DB suite caught a REAL user-visible regression: 6 failures, all\n\"expected 500 to be 409\".\n\ndrizzle 0.45 WRAPS the driver error. What it throws is a plain Error whose\nmessage is \"Failed query: insert into sessions ...\", with the real\nPostgresError -- carrying `code` and `constraint_name` -- demoted to\n`.cause`. All five conflict detectors read `error.code` at the TOP level, so\nunder 0.45 they silently return false:\n\n  - \"you already have a sort in progress\" (a gentle 409) became a 500.\n  - two MAX+1 allocation retries (slug, number) stopped retrying and would\n    have surfaced a recoverable race as a hard failure.\n\nsrc/lib/db-error-log.ts:32 already read `.code ?? .cause.code` -- the\nLOGGING path knew this; the paths that ACT on the error never did. Replaced\nall five copies with one shared isUniqueViolation(error, constraint) that\nwalks the cause chain and matches constraint_name exactly. 4 unit tests pin\nthe wrapped shape (no DB needed).\n\nAlso, from the architect/security re-review:\n- db-reset: REFUSE A NON-TTY STDIN. The echo-back confirm was not a lock --\n  `echo \"host/db\" | npm run db:reset` satisfied it with zero interaction,\n  which is exactly what a CI job or an agent does when a prompt looks hung.\n  One line; subsumes the CI/VERCEL check and the agent case. Verified.\n- db-reset: GRANT USAGE, CREATE ON SCHEMA public after recreating it -- a\n  fresh `public` carries none of the original grants.\n- schema: dropped the redundant sort_shares_token_unique index. The column's\n  .unique() already emits a constraint; the explicit index differed only in\n  NAME so BOTH existed -- two btrees per share insert for one guarantee.\n  Keeping it \"to match prod\" is void: prod is about to be rebuilt from this\n  baseline. Indexes 32 -> 31; constraints unchanged.\n- Deleted the 0012_reset_elo_drafts replay test: it read that migration off\n  disk to verify its one-shot data DELETEs. The squash removed the file, and\n  a fresh DB has no Elo-era drafts. Its subject no longer exists.\n\nGates: lint 0 errors | test:ci 1304 passed | test:db 650 passed (0 failed)\n| build OK | auth:verify OK. tsc's 96 errors are PRE-EXISTING -- verified\nidentical on main via a clean worktree; tsc is not a gate here.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* docs: sync ARCHITECTURE + README for the drizzle squash (/sync-docs)\n\nARCHITECTURE decision 33: the squash, the verified schema equivalence, the\ntimestamp-only migrator trap, the two facts schema.ts was hiding, drizzle\n0.45's error wrapping (500-vs-409), the auth-stack zod move, and db:reset.\nFlags that migration numbers 0000-0016 cited elsewhere in the doc no longer\nexist as FILES (history is in git; the applied schema is unchanged).\n\nREADME: db:backfill-numbers removed, db:reset documented.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1783840488000
+          "time": 1783889551000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1783840488000
+          "time": 1783889551000
         },
         "branch": "main"
       },
@@ -49,24 +49,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/abeb9c835277c2497061b67fea35b774258fd31d",
-            "commitHash": "abeb9c835277c2497061b67fea35b774258fd31d",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29183913740"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f0ce6afc7fc8f7b509644947feca5ab54de306f2",
+            "commitHash": "f0ce6afc7fc8f7b509644947feca5ab54de306f2",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29208559367"
           },
           "gitCommit": {
-            "shortHash": "abeb9c8",
-            "hash": "abeb9c835277c2497061b67fea35b774258fd31d",
-            "subject": "fix(results): stop sharing is undoable, not a browser confirm() (u1we) (#327)",
-            "body": "fix(results): stop sharing is undoable, not a browser confirm() (u1we) (#327)\n\nSharePanel handed its only destructive decision to window.confirm() — the one\nplace in the app that defers to browser chrome. It is unstyleable (ignores\nDESIGN.md and both themes), cannot obey TONE.md, and blocks the main thread.\n\nThe bead assumed the fix needed a Dialog primitive the repo doesn't have. It\ndoesn't need one — and it doesn't need a dialog at all.\n\nRevoking a share is a SOFT status flip (ShareController.revokeShare sets\nstatus:\"revoked\"; the row and its token survive), and PATCH already accepts\nstatus:\"active\". So stopping a share is genuinely reversible, and Undo restores\nTHE SAME TOKEN — the link the person already sent works again. That is what makes\nan undo honest here rather than a new-link lie; it is also why no \"are you sure?\"\nis warranted. TONE commitment 4 is unpressured and forgiving: a modal bracing for\na mistake is not this app's voice. The app already answers this shape elsewhere\n(set-aside's inline reveal→confirm, session-undo's persistent Undo notice) — this\nnow matches.\n\nThe Undo notice is persistent and NOT on a timer. A countdown would be exactly the\npressure TONE forbids.\n\nAlso fixes a latent bug found while writing the test: findByResult returns EVERY\nshare for a result, revoked ones included, so after a reload a revoked share still\nrendered with Copy/Preview — offering a link that silently 404s whoever it was\nsent to (viewSharedResult rejects a non-active status). The panel now renders only\nactive shares.\n\nNo new component, no new dependency, no <dialog>. Net: the confirm() is gone and\nthe panel got an undo.\n\nGates (local): lint 0 errors, test:ci 1300, build.\n\n\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "f0ce6af",
+            "hash": "f0ce6afc7fc8f7b509644947feca5ab54de306f2",
+            "subject": "deps: drizzle 0.45, drop legacy-peer-deps, squash drizzle/ to one baseline (#328)",
+            "body": "deps: drizzle 0.45, drop legacy-peer-deps, squash drizzle/ to one baseline (#328)\n\n* docs(spec): dependency hygiene design (purses-mebk)\n\nDisposable data retires the replay landmine, so squash drizzle/ to one\ngenerated baseline instead of translating 17 v5 snapshots. Reset is a\ncommitted fail-closed script, not a hand-run operation.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* docs(spec): fold adversarial review into dependency-hygiene design\n\nThree lenses, two blocking defects each found independently by two\nreviewers:\n- schema.ts is a LOSSY view of the applied schema: memberships_role_check\n  lives only in migration SQL (drizzle 0.30 has no check() API), so a\n  regenerated baseline ships role as free text. Port it first.\n- drizzle's ledger lives in the `drizzle` schema, not `public`. Dropping\n  only public leaves the rows alive; the 2nd reset then no-ops and prints\n  success against an empty database.\nPlus: a destructive script must never read an ambient DATABASE_URL (dotenv\ndoes not override an already-set var), and dropping legacy-peer-deps is a\nresolution change INSIDE the auth stack (better-call moves to zod 4).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* docs(spec): delete backfill-numbers rather than test it (owner)\n\nReview flagged db:backfill-numbers as the one deploy step no gate covers\n(backfillNumbers(db as any) compiles straight through the 0.30->0.45 API\nchange) and proposed running it from db:reset so it gets exercised.\n\nOwner's call is better: the data is disposable, and Session/SortResult\nrepositories already assign `number` at INSERT via allocateWithRetry, so a\nNULL number cannot exist on any DB built from now on. It is a one-shot\nlegacy heal that has been a no-op on every prod deploy since. Delete it --\nthe untested deploy step and its `as any` stop existing.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* docs(spec): cut the ceremony — one migration, final schema, minimal guard\n\nOwner: \"why are we running 17 migrations? We just need the final schema.\"\nCorrect — we ship ONE baseline generated from schema.ts. The 17 only ever\nappeared in a verification diff, and that diff re-proves a fact review\nalready established by enumeration (memberships_role_check is the sole\nobject with no declarative home). Demoted to a one-time local sanity check.\n\nCut: the pg_dump CI gate, the journal content-hash guard (YAGNI until there\nis data worth keeping), and the belt-and-braces half of the db:reset guard.\nKept: porting the CHECK into schema.ts, which is correctness, not caution.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* feat(deps): drizzle 0.45, drop legacy-peer-deps, squash drizzle/ to one baseline\n\n- drizzle-orm 0.30.10 -> ^0.45.2; drizzle-kit 0.20.17 -> ^0.31.6, moved to\n  devDependencies (codegen CLI; the runtime migrator imports drizzle-orm).\n- .npmrc legacy-peer-deps DROPPED. Clean npm install, no ERESOLVE. This also\n  fixes a latent wrong: the flag was feeding better-call zod 3 while it declares\n  a zod ^4 peer. It now nests its own zod 4; app code keeps zod 3.\n- drizzle.config.ts: driver:\"pg\" -> dialect:\"postgresql\"; connectionString -> url.\n- db:generate: the removed generate:pg family -> config-driven `drizzle-kit generate`.\n- Database type widened from `typeof db` to the shared base class PgDatabase<...>.\n  PgTransaction extends PgDatabase, so a tx satisfies it and withTransaction\n  typechecks — 1 file, not the 16-repository DbOrTx ripple the bead predicted.\n- schema.ts: ported memberships_role_check via check() (drizzle 0.30 had no check()\n  API, so it lived ONLY in migration SQL and a regenerated baseline would have\n  silently shipped `role` as free text).\n- schema.ts: removed the duplicate invitations_token_unique index. The column's\n  .unique() already emits a constraint of that name; 0.20 hid the collision behind\n  CREATE UNIQUE INDEX IF NOT EXISTS, 0.31 makes it a fatal 42P07.\n- drizzle/ squashed 17 migrations -> one generated 0000_init (journal v7).\n  Verified: 45/45 constraints, 32/32 indexes, identical column set, all three\n  partial predicates byte-identical vs a DB built from the old 17.\n- Deleted backfill-numbers (script, module, test, npm script, vercel-build step):\n  Session/SortResult repos assign `number` at INSERT, so a NULL number is\n  unreachable on any DB built from now on. One-shot legacy heal, now dead.\n- Added scripts/db-reset.ts: drops public AND drizzle (the ledger lives there, so\n  dropping public alone makes the NEXT reset no-op into an empty DB and report\n  success), then re-migrates. Refuses an ambient DATABASE_URL; echo-back confirm.\n- Pinned sessions_active_unique's predicate by indexdef — the squash re-runs the\n  codegen path that historically ate index predicates.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* fix(deps): unwrap drizzle 0.45's error wrapper in every conflict detector\n\nThe DB suite caught a REAL user-visible regression: 6 failures, all\n\"expected 500 to be 409\".\n\ndrizzle 0.45 WRAPS the driver error. What it throws is a plain Error whose\nmessage is \"Failed query: insert into sessions ...\", with the real\nPostgresError -- carrying `code` and `constraint_name` -- demoted to\n`.cause`. All five conflict detectors read `error.code` at the TOP level, so\nunder 0.45 they silently return false:\n\n  - \"you already have a sort in progress\" (a gentle 409) became a 500.\n  - two MAX+1 allocation retries (slug, number) stopped retrying and would\n    have surfaced a recoverable race as a hard failure.\n\nsrc/lib/db-error-log.ts:32 already read `.code ?? .cause.code` -- the\nLOGGING path knew this; the paths that ACT on the error never did. Replaced\nall five copies with one shared isUniqueViolation(error, constraint) that\nwalks the cause chain and matches constraint_name exactly. 4 unit tests pin\nthe wrapped shape (no DB needed).\n\nAlso, from the architect/security re-review:\n- db-reset: REFUSE A NON-TTY STDIN. The echo-back confirm was not a lock --\n  `echo \"host/db\" | npm run db:reset` satisfied it with zero interaction,\n  which is exactly what a CI job or an agent does when a prompt looks hung.\n  One line; subsumes the CI/VERCEL check and the agent case. Verified.\n- db-reset: GRANT USAGE, CREATE ON SCHEMA public after recreating it -- a\n  fresh `public` carries none of the original grants.\n- schema: dropped the redundant sort_shares_token_unique index. The column's\n  .unique() already emits a constraint; the explicit index differed only in\n  NAME so BOTH existed -- two btrees per share insert for one guarantee.\n  Keeping it \"to match prod\" is void: prod is about to be rebuilt from this\n  baseline. Indexes 32 -> 31; constraints unchanged.\n- Deleted the 0012_reset_elo_drafts replay test: it read that migration off\n  disk to verify its one-shot data DELETEs. The squash removed the file, and\n  a fresh DB has no Elo-era drafts. Its subject no longer exists.\n\nGates: lint 0 errors | test:ci 1304 passed | test:db 650 passed (0 failed)\n| build OK | auth:verify OK. tsc's 96 errors are PRE-EXISTING -- verified\nidentical on main via a clean worktree; tsc is not a gate here.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* docs: sync ARCHITECTURE + README for the drizzle squash (/sync-docs)\n\nARCHITECTURE decision 33: the squash, the verified schema equivalence, the\ntimestamp-only migrator trap, the two facts schema.ts was hiding, drizzle\n0.45's error wrapping (500-vs-409), the auth-stack zod move, and db:reset.\nFlags that migration numbers 0000-0016 cited elsewhere in the doc no longer\nexist as FILES (history is in git; the applied schema is unchanged).\n\nREADME: db:backfill-numbers removed, db:reset documented.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783840488000
+              "time": 1783889551000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783840488000
+              "time": 1783889551000
             },
             "branch": "main"
           },
@@ -87,24 +87,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/abeb9c835277c2497061b67fea35b774258fd31d",
-            "commitHash": "abeb9c835277c2497061b67fea35b774258fd31d",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29183913740"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f0ce6afc7fc8f7b509644947feca5ab54de306f2",
+            "commitHash": "f0ce6afc7fc8f7b509644947feca5ab54de306f2",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29208559367"
           },
           "gitCommit": {
-            "shortHash": "abeb9c8",
-            "hash": "abeb9c835277c2497061b67fea35b774258fd31d",
-            "subject": "fix(results): stop sharing is undoable, not a browser confirm() (u1we) (#327)",
-            "body": "fix(results): stop sharing is undoable, not a browser confirm() (u1we) (#327)\n\nSharePanel handed its only destructive decision to window.confirm() — the one\nplace in the app that defers to browser chrome. It is unstyleable (ignores\nDESIGN.md and both themes), cannot obey TONE.md, and blocks the main thread.\n\nThe bead assumed the fix needed a Dialog primitive the repo doesn't have. It\ndoesn't need one — and it doesn't need a dialog at all.\n\nRevoking a share is a SOFT status flip (ShareController.revokeShare sets\nstatus:\"revoked\"; the row and its token survive), and PATCH already accepts\nstatus:\"active\". So stopping a share is genuinely reversible, and Undo restores\nTHE SAME TOKEN — the link the person already sent works again. That is what makes\nan undo honest here rather than a new-link lie; it is also why no \"are you sure?\"\nis warranted. TONE commitment 4 is unpressured and forgiving: a modal bracing for\na mistake is not this app's voice. The app already answers this shape elsewhere\n(set-aside's inline reveal→confirm, session-undo's persistent Undo notice) — this\nnow matches.\n\nThe Undo notice is persistent and NOT on a timer. A countdown would be exactly the\npressure TONE forbids.\n\nAlso fixes a latent bug found while writing the test: findByResult returns EVERY\nshare for a result, revoked ones included, so after a reload a revoked share still\nrendered with Copy/Preview — offering a link that silently 404s whoever it was\nsent to (viewSharedResult rejects a non-active status). The panel now renders only\nactive shares.\n\nNo new component, no new dependency, no <dialog>. Net: the confirm() is gone and\nthe panel got an undo.\n\nGates (local): lint 0 errors, test:ci 1300, build.\n\n\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "f0ce6af",
+            "hash": "f0ce6afc7fc8f7b509644947feca5ab54de306f2",
+            "subject": "deps: drizzle 0.45, drop legacy-peer-deps, squash drizzle/ to one baseline (#328)",
+            "body": "deps: drizzle 0.45, drop legacy-peer-deps, squash drizzle/ to one baseline (#328)\n\n* docs(spec): dependency hygiene design (purses-mebk)\n\nDisposable data retires the replay landmine, so squash drizzle/ to one\ngenerated baseline instead of translating 17 v5 snapshots. Reset is a\ncommitted fail-closed script, not a hand-run operation.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* docs(spec): fold adversarial review into dependency-hygiene design\n\nThree lenses, two blocking defects each found independently by two\nreviewers:\n- schema.ts is a LOSSY view of the applied schema: memberships_role_check\n  lives only in migration SQL (drizzle 0.30 has no check() API), so a\n  regenerated baseline ships role as free text. Port it first.\n- drizzle's ledger lives in the `drizzle` schema, not `public`. Dropping\n  only public leaves the rows alive; the 2nd reset then no-ops and prints\n  success against an empty database.\nPlus: a destructive script must never read an ambient DATABASE_URL (dotenv\ndoes not override an already-set var), and dropping legacy-peer-deps is a\nresolution change INSIDE the auth stack (better-call moves to zod 4).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* docs(spec): delete backfill-numbers rather than test it (owner)\n\nReview flagged db:backfill-numbers as the one deploy step no gate covers\n(backfillNumbers(db as any) compiles straight through the 0.30->0.45 API\nchange) and proposed running it from db:reset so it gets exercised.\n\nOwner's call is better: the data is disposable, and Session/SortResult\nrepositories already assign `number` at INSERT via allocateWithRetry, so a\nNULL number cannot exist on any DB built from now on. It is a one-shot\nlegacy heal that has been a no-op on every prod deploy since. Delete it --\nthe untested deploy step and its `as any` stop existing.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* docs(spec): cut the ceremony — one migration, final schema, minimal guard\n\nOwner: \"why are we running 17 migrations? We just need the final schema.\"\nCorrect — we ship ONE baseline generated from schema.ts. The 17 only ever\nappeared in a verification diff, and that diff re-proves a fact review\nalready established by enumeration (memberships_role_check is the sole\nobject with no declarative home). Demoted to a one-time local sanity check.\n\nCut: the pg_dump CI gate, the journal content-hash guard (YAGNI until there\nis data worth keeping), and the belt-and-braces half of the db:reset guard.\nKept: porting the CHECK into schema.ts, which is correctness, not caution.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* feat(deps): drizzle 0.45, drop legacy-peer-deps, squash drizzle/ to one baseline\n\n- drizzle-orm 0.30.10 -> ^0.45.2; drizzle-kit 0.20.17 -> ^0.31.6, moved to\n  devDependencies (codegen CLI; the runtime migrator imports drizzle-orm).\n- .npmrc legacy-peer-deps DROPPED. Clean npm install, no ERESOLVE. This also\n  fixes a latent wrong: the flag was feeding better-call zod 3 while it declares\n  a zod ^4 peer. It now nests its own zod 4; app code keeps zod 3.\n- drizzle.config.ts: driver:\"pg\" -> dialect:\"postgresql\"; connectionString -> url.\n- db:generate: the removed generate:pg family -> config-driven `drizzle-kit generate`.\n- Database type widened from `typeof db` to the shared base class PgDatabase<...>.\n  PgTransaction extends PgDatabase, so a tx satisfies it and withTransaction\n  typechecks — 1 file, not the 16-repository DbOrTx ripple the bead predicted.\n- schema.ts: ported memberships_role_check via check() (drizzle 0.30 had no check()\n  API, so it lived ONLY in migration SQL and a regenerated baseline would have\n  silently shipped `role` as free text).\n- schema.ts: removed the duplicate invitations_token_unique index. The column's\n  .unique() already emits a constraint of that name; 0.20 hid the collision behind\n  CREATE UNIQUE INDEX IF NOT EXISTS, 0.31 makes it a fatal 42P07.\n- drizzle/ squashed 17 migrations -> one generated 0000_init (journal v7).\n  Verified: 45/45 constraints, 32/32 indexes, identical column set, all three\n  partial predicates byte-identical vs a DB built from the old 17.\n- Deleted backfill-numbers (script, module, test, npm script, vercel-build step):\n  Session/SortResult repos assign `number` at INSERT, so a NULL number is\n  unreachable on any DB built from now on. One-shot legacy heal, now dead.\n- Added scripts/db-reset.ts: drops public AND drizzle (the ledger lives there, so\n  dropping public alone makes the NEXT reset no-op into an empty DB and report\n  success), then re-migrates. Refuses an ambient DATABASE_URL; echo-back confirm.\n- Pinned sessions_active_unique's predicate by indexdef — the squash re-runs the\n  codegen path that historically ate index predicates.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* fix(deps): unwrap drizzle 0.45's error wrapper in every conflict detector\n\nThe DB suite caught a REAL user-visible regression: 6 failures, all\n\"expected 500 to be 409\".\n\ndrizzle 0.45 WRAPS the driver error. What it throws is a plain Error whose\nmessage is \"Failed query: insert into sessions ...\", with the real\nPostgresError -- carrying `code` and `constraint_name` -- demoted to\n`.cause`. All five conflict detectors read `error.code` at the TOP level, so\nunder 0.45 they silently return false:\n\n  - \"you already have a sort in progress\" (a gentle 409) became a 500.\n  - two MAX+1 allocation retries (slug, number) stopped retrying and would\n    have surfaced a recoverable race as a hard failure.\n\nsrc/lib/db-error-log.ts:32 already read `.code ?? .cause.code` -- the\nLOGGING path knew this; the paths that ACT on the error never did. Replaced\nall five copies with one shared isUniqueViolation(error, constraint) that\nwalks the cause chain and matches constraint_name exactly. 4 unit tests pin\nthe wrapped shape (no DB needed).\n\nAlso, from the architect/security re-review:\n- db-reset: REFUSE A NON-TTY STDIN. The echo-back confirm was not a lock --\n  `echo \"host/db\" | npm run db:reset` satisfied it with zero interaction,\n  which is exactly what a CI job or an agent does when a prompt looks hung.\n  One line; subsumes the CI/VERCEL check and the agent case. Verified.\n- db-reset: GRANT USAGE, CREATE ON SCHEMA public after recreating it -- a\n  fresh `public` carries none of the original grants.\n- schema: dropped the redundant sort_shares_token_unique index. The column's\n  .unique() already emits a constraint; the explicit index differed only in\n  NAME so BOTH existed -- two btrees per share insert for one guarantee.\n  Keeping it \"to match prod\" is void: prod is about to be rebuilt from this\n  baseline. Indexes 32 -> 31; constraints unchanged.\n- Deleted the 0012_reset_elo_drafts replay test: it read that migration off\n  disk to verify its one-shot data DELETEs. The squash removed the file, and\n  a fresh DB has no Elo-era drafts. Its subject no longer exists.\n\nGates: lint 0 errors | test:ci 1304 passed | test:db 650 passed (0 failed)\n| build OK | auth:verify OK. tsc's 96 errors are PRE-EXISTING -- verified\nidentical on main via a clean worktree; tsc is not a gate here.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* docs: sync ARCHITECTURE + README for the drizzle squash (/sync-docs)\n\nARCHITECTURE decision 33: the squash, the verified schema equivalence, the\ntimestamp-only migrator trap, the two facts schema.ts was hiding, drizzle\n0.45's error wrapping (500-vs-409), the auth-stack zod move, and db:reset.\nFlags that migration numbers 0000-0016 cited elsewhere in the doc no longer\nexist as FILES (history is in git; the applied schema is unchanged).\n\nREADME: db:backfill-numbers removed, db:reset documented.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783840488000
+              "time": 1783889551000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783840488000
+              "time": 1783889551000
             },
             "branch": "main"
           },
@@ -187,12 +187,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 425,
+                  "duration": 343,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:17:37.677Z",
+                  "startTime": "2026-07-12T20:55:19.736Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -229,7 +229,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 18195,
+                  "duration": 13709,
                   "errors": [],
                   "stdout": [
                     {
@@ -259,7 +259,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:17:38.818Z",
+                  "startTime": "2026-07-12T20:55:20.602Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -288,7 +288,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 16448,
+                  "duration": 12445,
                   "errors": [],
                   "stdout": [
                     {
@@ -318,7 +318,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:17:57.802Z",
+                  "startTime": "2026-07-12T20:55:34.876Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -347,7 +347,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4276,
+                  "duration": 2246,
                   "errors": [],
                   "stdout": [
                     {
@@ -359,7 +359,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:18:14.269Z",
+                  "startTime": "2026-07-12T20:55:47.337Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -388,7 +388,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6479,
+                  "duration": 2265,
                   "errors": [],
                   "stdout": [
                     {
@@ -400,7 +400,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:18:18.565Z",
+                  "startTime": "2026-07-12T20:55:49.604Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -436,77 +436,18 @@
                 {
                   "workerIndex": 1,
                   "parallelIndex": 0,
-                  "status": "failed",
-                  "duration": 11551,
-                  "error": {
-                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/collections\\/e2e-workspace-pool-only-col_01kxak22jymcmrpxvnvt2axfe9\\/pool$/\u001b[39m\nReceived string:  \u001b[31m\"http://127.0.0.1:3100/collections/e2e-workspace-pool-only-col_01kxak22jymcmrpxvnvt2axfe9\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    14 × unexpected value \"http://127.0.0.1:3100/collections/e2e-workspace-pool-only-col_01kxak22jymcmrpxvnvt2axfe9\"\u001b[22m\n",
-                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/collections\\/e2e-workspace-pool-only-col_01kxak22jymcmrpxvnvt2axfe9\\/pool$/\u001b[39m\nReceived string:  \u001b[31m\"http://127.0.0.1:3100/collections/e2e-workspace-pool-only-col_01kxak22jymcmrpxvnvt2axfe9\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    14 × unexpected value \"http://127.0.0.1:3100/collections/e2e-workspace-pool-only-col_01kxak22jymcmrpxvnvt2axfe9\"\u001b[22m\n\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts:40:22",
-                    "location": {
-                      "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts",
-                      "column": 22,
-                      "line": 40
-                    },
-                    "snippet": "\u001b[0m \u001b[90m 38 |\u001b[39m   \u001b[90m// Real browser navigation — prove the link actually reaches /pool, not just its href.\u001b[39m\n \u001b[90m 39 |\u001b[39m   \u001b[36mawait\u001b[39m makeItems\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 40 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL(\u001b[36mnew\u001b[39m \u001b[33mRegExp\u001b[39m(\u001b[32m`/collections/${poolOnly.slug}/pool$`\u001b[39m))\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 41 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 42 |\u001b[39m\n \u001b[90m 43 |\u001b[39m test(\u001b[32m\"both: Photo pool renders before Items, with the item preview shown\"\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
-                  },
-                  "errors": [
-                    {
-                      "location": {
-                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts",
-                        "column": 22,
-                        "line": 40
-                      },
-                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mpage\u001b[39m\u001b[2m).\u001b[22mtoHaveURL\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nExpected pattern: \u001b[32m/\\/collections\\/e2e-workspace-pool-only-col_01kxak22jymcmrpxvnvt2axfe9\\/pool$/\u001b[39m\nReceived string:  \u001b[31m\"http://127.0.0.1:3100/collections/e2e-workspace-pool-only-col_01kxak22jymcmrpxvnvt2axfe9\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toHaveURL\" with timeout 5000ms\u001b[22m\n\u001b[2m    14 × unexpected value \"http://127.0.0.1:3100/collections/e2e-workspace-pool-only-col_01kxak22jymcmrpxvnvt2axfe9\"\u001b[22m\n\n\n  38 |   // Real browser navigation — prove the link actually reaches /pool, not just its href.\n  39 |   await makeItems.click();\n> 40 |   await expect(page).toHaveURL(new RegExp(`/collections/${poolOnly.slug}/pool$`));\n     |                      ^\n  41 | });\n  42 |\n  43 | test(\"both: Photo pool renders before Items, with the item preview shown\", async ({ page }) => {\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts:40:22"
-                    }
-                  ],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-07-12T07:18:25.104Z",
-                  "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "screenshot",
-                      "contentType": "image/png",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-337e6-ke-items-routes-to-the-pool-tablet/test-failed-1.png"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-337e6-ke-items-routes-to-the-pool-tablet/error-context.md"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-337e6-ke-items-routes-to-the-pool-tablet/error-context.md"
-                    }
-                  ],
-                  "errorLocation": {
-                    "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts",
-                    "column": 22,
-                    "line": 40
-                  }
-                },
-                {
-                  "workerIndex": 2,
-                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3273,
+                  "duration": 1562,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
-                  "retry": 1,
-                  "startTime": "2026-07-12T07:19:09.284Z",
+                  "retry": 0,
+                  "startTime": "2026-07-12T20:55:51.978Z",
                   "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "trace",
-                      "contentType": "application/zip",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-337e6-ke-items-routes-to-the-pool-tablet-retry1/trace.zip"
-                    }
-                  ]
+                  "attachments": []
                 }
               ],
-              "status": "flaky"
+              "status": "expected"
             }
           ],
           "id": "8459740f6655c8183518-9cc62fddf7c1e16375db",
@@ -527,15 +468,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2576,
+                  "duration": 1007,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:19:13.005Z",
+                  "startTime": "2026-07-12T20:55:53.578Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -561,15 +502,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2431,
+                  "duration": 1056,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:19:15.629Z",
+                  "startTime": "2026-07-12T20:55:54.601Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -595,15 +536,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1342,
+                  "duration": 812,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:19:18.093Z",
+                  "startTime": "2026-07-12T20:55:55.675Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -629,15 +570,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1366,
+                  "duration": 874,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:19:19.475Z",
+                  "startTime": "2026-07-12T20:55:56.500Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -671,15 +612,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2243,
+                  "duration": 1394,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:19:21.248Z",
+                  "startTime": "2026-07-12T20:55:57.427Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -705,15 +646,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2902,
+                  "duration": 1604,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:19:23.533Z",
+                  "startTime": "2026-07-12T20:55:58.887Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -747,15 +688,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2612,
+                  "duration": 1251,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:19:26.500Z",
+                  "startTime": "2026-07-12T20:56:00.513Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -781,15 +722,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4221,
+                  "duration": 1194,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:19:29.182Z",
+                  "startTime": "2026-07-12T20:56:01.813Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -815,15 +756,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4980,
+                  "duration": 952,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:19:33.438Z",
+                  "startTime": "2026-07-12T20:56:03.023Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -864,15 +805,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2002,
+                      "duration": 963,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:19:39.349Z",
+                      "startTime": "2026-07-12T20:56:03.994Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -898,15 +839,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3042,
+                      "duration": 1200,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:19:46.822Z",
+                      "startTime": "2026-07-12T20:56:05.023Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -932,15 +873,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1317,
+                      "duration": 1096,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:19:49.899Z",
+                      "startTime": "2026-07-12T20:56:06.242Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -983,15 +924,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5297,
+                      "duration": 2972,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:19:52.004Z",
+                      "startTime": "2026-07-12T20:56:07.366Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1017,15 +958,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3092,
+                      "duration": 1885,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:19:57.326Z",
+                      "startTime": "2026-07-12T20:56:10.359Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1068,15 +1009,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2347,
+                      "duration": 1323,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:00.460Z",
+                      "startTime": "2026-07-12T20:56:12.279Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1119,15 +1060,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3075,
+                      "duration": 1528,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:02.912Z",
+                      "startTime": "2026-07-12T20:56:13.661Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1170,15 +1111,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1368,
+                      "duration": 761,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:06.114Z",
+                      "startTime": "2026-07-12T20:56:15.256Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1204,15 +1145,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1603,
+                      "duration": 989,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:07.570Z",
+                      "startTime": "2026-07-12T20:56:16.067Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1255,15 +1196,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5398,
+                      "duration": 3328,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:09.209Z",
+                      "startTime": "2026-07-12T20:56:17.112Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1289,15 +1230,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5017,
+                      "duration": 3419,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:14.703Z",
+                      "startTime": "2026-07-12T20:56:20.482Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1340,15 +1281,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1948,
+                      "duration": 1326,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:19.801Z",
+                      "startTime": "2026-07-12T20:56:23.932Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1374,15 +1315,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2569,
+                      "duration": 1707,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:21.853Z",
+                      "startTime": "2026-07-12T20:56:25.336Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1425,15 +1366,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 844,
+                      "duration": 619,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:24.474Z",
+                      "startTime": "2026-07-12T20:56:27.068Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1459,15 +1400,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 472,
+                      "duration": 308,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:25.331Z",
+                      "startTime": "2026-07-12T20:56:27.697Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1493,15 +1434,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 461,
+                      "duration": 263,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:25.816Z",
+                      "startTime": "2026-07-12T20:56:28.011Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1537,15 +1478,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1042,
+                  "duration": 758,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:20:26.312Z",
+                  "startTime": "2026-07-12T20:56:28.296Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1571,15 +1512,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1246,
+                  "duration": 1014,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:20:27.420Z",
+                  "startTime": "2026-07-12T20:56:29.090Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1613,15 +1554,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1108,
+                  "duration": 830,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:20:28.715Z",
+                  "startTime": "2026-07-12T20:56:30.138Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1647,15 +1588,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1249,
+                  "duration": 954,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:20:29.905Z",
+                  "startTime": "2026-07-12T20:56:31.012Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1681,20 +1622,71 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1503,
-                  "errors": [],
+                  "status": "timedOut",
+                  "duration": 30229,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts",
+                        "column": 10,
+                        "line": 81
+                      },
+                      "message": "Error: page.waitForResponse: Test timeout of 30000ms exceeded.\n\n  79 |   await page.getByLabel(\"Invite by email\").fill(email);\n  80 |   await Promise.all([\n> 81 |     page.waitForResponse(\n     |          ^\n  82 |       (r) =>\n  83 |         r.url().includes(`/api/collections/${collectionId}/invitations`) &&\n  84 |         r.request().method() === \"POST\",\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts:81:10"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:20:31.177Z",
+                  "startTime": "2026-07-12T20:56:31.997Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/error-context.md"
+                    }
+                  ]
+                },
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1441,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 1,
+                  "startTime": "2026-07-12T20:57:03.034Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/trace.zip"
+                    }
+                  ]
                 }
               ],
-              "status": "expected"
+              "status": "flaky"
             }
           ],
           "id": "01480a904f937bb0a1f8-16a0057158965d3a7188",
@@ -1733,12 +1725,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3195,
+                      "duration": 2315,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:32.729Z",
+                      "startTime": "2026-07-12T20:57:04.741Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1767,12 +1759,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2767,
+                      "duration": 2005,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:36.033Z",
+                      "startTime": "2026-07-12T20:57:07.145Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1801,12 +1793,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1631,
+                      "duration": 1219,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:38.829Z",
+                      "startTime": "2026-07-12T20:57:09.167Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1852,12 +1844,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 9850,
+                      "duration": 9438,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:40.491Z",
+                      "startTime": "2026-07-12T20:57:10.408Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1886,12 +1878,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1475,
+                      "duration": 1097,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:50.396Z",
+                      "startTime": "2026-07-12T20:57:19.903Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1930,12 +1922,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2653,
+                  "duration": 1377,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:20:51.901Z",
+                  "startTime": "2026-07-12T20:57:21.020Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1979,12 +1971,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1529,
+                      "duration": 1147,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:20:54.656Z",
+                      "startTime": "2026-07-12T20:57:22.416Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2030,16 +2022,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3400,
+                      "duration": 1916,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [
-                        {
-                          "text": "[db_slow] {\"op\":\"materialize_result\",\"ms\":1096.9577729999874,\"collectionId\":\"col_01kxak71m6nn3b2d2aj1fkgkf6\",\"curatorId\":\"2RsK1JGrddSltfRvmiYpbnRfJX6wqXJm\"}\n"
-                        }
-                      ],
+                      "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:21:07.957Z",
+                      "startTime": "2026-07-12T20:57:23.694Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2085,12 +2073,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1609,
+                      "duration": 994,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:21:22.979Z",
+                      "startTime": "2026-07-12T20:57:25.738Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2136,12 +2124,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3990,
+                      "duration": 2116,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:21:24.707Z",
+                      "startTime": "2026-07-12T20:57:26.846Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2170,12 +2158,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3918,
+                      "duration": 2344,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:21:28.731Z",
+                      "startTime": "2026-07-12T20:57:29.008Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2221,12 +2209,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4353,
+                      "duration": 1710,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:21:32.717Z",
+                      "startTime": "2026-07-12T20:57:31.371Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2272,12 +2260,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2681,
+                      "duration": 1516,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:21:37.603Z",
+                      "startTime": "2026-07-12T20:57:33.133Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2316,12 +2304,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1197,
+                  "duration": 788,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:21:41.255Z",
+                  "startTime": "2026-07-12T20:57:34.693Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2350,12 +2338,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1329,
+                  "duration": 723,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:21:42.488Z",
+                  "startTime": "2026-07-12T20:57:35.495Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2384,12 +2372,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1358,
+                  "duration": 785,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:21:43.845Z",
+                  "startTime": "2026-07-12T20:57:36.229Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2433,12 +2421,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1670,
+                      "duration": 1141,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:21:45.306Z",
+                      "startTime": "2026-07-12T20:57:37.030Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2484,12 +2472,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1754,
+                      "duration": 1071,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:21:48.053Z",
+                      "startTime": "2026-07-12T20:57:38.221Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2518,12 +2506,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2402,
+                      "duration": 1361,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:21:50.591Z",
+                      "startTime": "2026-07-12T20:57:39.360Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2552,12 +2540,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1942,
+                      "duration": 1256,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:21:53.053Z",
+                      "startTime": "2026-07-12T20:57:40.747Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2594,12 +2582,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 6612,
+                      "duration": 3257,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:21:55.026Z",
+                      "startTime": "2026-07-12T20:57:42.024Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2628,12 +2616,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2117,
+                      "duration": 2034,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:22:01.982Z",
+                      "startTime": "2026-07-12T20:57:45.325Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2670,12 +2658,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1498,
+                      "duration": 1028,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:22:04.120Z",
+                      "startTime": "2026-07-12T20:57:47.373Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2704,12 +2692,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1331,
+                      "duration": 647,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:22:05.635Z",
+                      "startTime": "2026-07-12T20:57:48.420Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2755,12 +2743,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3491,
+                      "duration": 2370,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:22:07.011Z",
+                      "startTime": "2026-07-12T20:57:49.094Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2789,12 +2777,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3853,
+                      "duration": 4089,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T07:22:10.736Z",
+                      "startTime": "2026-07-12T20:57:52.179Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2833,12 +2821,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4049,
+                  "duration": 3007,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:22:14.655Z",
+                  "startTime": "2026-07-12T20:57:56.289Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2867,12 +2855,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3509,
+                  "duration": 2666,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:22:18.731Z",
+                  "startTime": "2026-07-12T20:57:59.311Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2901,12 +2889,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2800,
+                  "duration": 2498,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T07:22:22.283Z",
+                  "startTime": "2026-07-12T20:58:01.987Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2924,8 +2912,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-07-12T07:16:15.656Z",
-    "duration": 395612.679,
+    "startTime": "2026-07-12T20:54:10.977Z",
+    "duration": 299712.799,
     "expected": 64,
     "skipped": 0,
     "unexpected": 0,
