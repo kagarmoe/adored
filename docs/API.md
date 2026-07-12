@@ -25,7 +25,7 @@ Authentication is *who you are*; authorization is *what you may touch*. The mode
 - **Resource wrappers** `requireApiItemCapability(db, itemId, userId, op, {includeDeleted?})` and `requireApiInvitationCapability(db, invitationId, userId, op)` resolve the resource → its `collectionId` → delegate, returning the resolved entity. Item resolution is `findById` by default (soft-deleted → `404`); lifecycle ops (`restore`/`purge`/`remove-from-sorts`) pass `includeDeleted:true`.
 - **`requireApiCollectionAccess`** / **`requireApiCollectionOwner`** are thin wrappers over `requireApiCapability` (`collection:read` / `collection:manage`) — behavior-identical (member-or-owner / owner-only).
 - **`requireApiResultAccess(db, resultId, userId)`** — for `sort-results`: collection gate on `result.collectionId` **plus** `result.curatorId === userId` (curator-private). **Sessions** use an inline `authorizeSession` of the same shape.
-- **Child routes** (`members/[mid]`, `items/[rid]`, `shares/[sid]`, item-photo routes) also enforce **belongs-to-parent**: resolve the child and return **`404`** if `child.parentId !== pathId`. Prevents IDOR-via-path-id.
+- **Child routes** (`members/[mid]`, `items/[rid]`, `shares/[sid]`, item-photo routes) also enforce **belongs-to-parent**: resolve the child and return **`404`** if `child.parentId !== pathId`. Prevents IDOR-via-path-id. On the collection-scoped item/photo routes this resolution happens **after** the capability gate (`purses-ct0`) — the parent `collectionId` is in the URL, so a caller who fails authz never learns whether the child exists.
 
 Path params at the API layer are **always ULIDs**, never slugs (slugs are client-side nav). Handlers narrow a guard result with `instanceof NextResponse` and otherwise proceed with the resolved entity.
 
@@ -44,7 +44,9 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 | `413` | Payload too large (photo upload over the size limit) |
 | `500` | Unhandled server error |
 
-**403-vs-404:** absence is reported `404` before membership is evaluated; a resource that exists but is off-limits is `403`. A `404` can mean "not visible to you," not only "no such id."
+**403-vs-404:** a resource that exists but is off-limits is `403`. A `404` can mean "not visible to you," not only "no such id."
+
+**Ordering — authz before existence.** `404` precedes the membership check **only for the collection itself** (`requireApiCapability`: absent → `404`, exists-but-no-role → `403`), which is a deliberate, long-standing convention. For everything *below* the collection (items, photos), the gate runs **first**: a non-curator gets `403` whether or not the child exists (`purses-ct0`). So a stranger can still probe whether a *collection* id exists — but never what is inside one.
 
 **Validation & state errors are consistent (pv9 PR2):** every body-parsing route maps a failed Zod `.parse` (and malformed JSON) to **`400`** — not `500` — via the shared `errorResponse` helper (`src/server/api/http-errors.ts`), which also maps typed state/uniqueness errors (`DeleteResultStateError`/`SupersedeStateError`/`FinalizeStateError`/`CurrentSessionExistsError`) to **`409`** and `UnauthorizedError` to **`401`**. Authz guards still return their `401`/`403`/`404` **before** the parse.
 
@@ -205,24 +207,24 @@ Authenticated. **Body** → `createCollection`; also creates the caller's **owne
 `getSession` + `requireApiCollectionAccess` (member-or-owner). `GET` → `Item[]`. `POST` body → `201 Item`. `400` invalid JSON; `401`/`403`/`404`.
 
 ### `PATCH /api/collections/[id]/items/[itemId]`
-`getSession` + **belongs-to-parent** (`item.collectionId !== id` → `404`) + `requireApiCapability("items:write")` (**curator** — any member; the old `canEditMetadata` flag is inert). **Body:** `{ name?, brand?, style?, color?, material?, category?, notes? }` (all nullable). Returns updated `Item`. `400` invalid input; `401`/`403`/`404`.
+`getSession` + `requireApiCapability("items:write")` (**curator** — any member; the old `canEditMetadata` flag is inert), resolved **before** **belongs-to-parent** (`item.collectionId !== id` → `404`) — authz precedes existence (`purses-ct0`). **Body:** `{ name?, brand?, style?, color?, material?, category?, notes? }` (all nullable). Returns updated `Item`. `400` invalid input; `401`/`403`/`404`.
 
 ## item photos
 
 ### `POST /api/collections/[id]/items/[itemId]/photos`
-`getSession` + belongs-to-parent (`404`) + `requireApiCapability("photos:write")` (**curator**; the old `canAddPhotos` flag is inert). **Body:** `multipart/form-data` with `file` (must be `image/*`). Stores to Vercel Blob (private). **Returns** `201 Photo`. `400` no file / not an image; `413` over `MAX_UPLOAD_BYTES`; `401`/`403`/`404`.
+`getSession` + `requireApiCapability("photos:write")` (**curator**; the old `canAddPhotos` flag is inert), resolved **before** belongs-to-parent (`404`) — authz precedes existence (`purses-ct0`). **Body:** `multipart/form-data` with `file` (must be `image/*`). Stores to Vercel Blob (private). **Returns** `201 Photo`. `400` no file / not an image; `413` over `MAX_UPLOAD_BYTES`; `401`/`403`/`404`.
 
 ### `DELETE /api/collections/[id]/items/[itemId]/photos/[photoId]`
-`getSession` + belongs-to-parent (`404`) + `requireApiCapability("photos:write")` (**curator**; the old `canDeletePhotos` flag is inert); also `photo.itemId` must match (`404`). Deletes blob + row, then best-effort sweeps the photo's persisted resized variants (`variants/<collectionId>/<photoId>/`). `200 { success: true }`. `400` on failure; `401`/`403`/`404`.
+`getSession` + `requireApiCapability("photos:write")` (**curator**; the old `canDeletePhotos` flag is inert), resolved **before** belongs-to-parent (`404`) — authz precedes existence (`purses-ct0`); also `photo.itemId` must match (`404`). Deletes blob + row, then best-effort sweeps the photo's persisted resized variants (`variants/<collectionId>/<photoId>/`). `200 { success: true }`. `400` on failure; `401`/`403`/`404`.
 
 ### `GET /api/collections/[id]/items/[itemId]/photos/[photoId]/file`
-`getSession` + belongs-to-parent (`404`) + (member or owner) → `403`. Then delegates to `servePhotoFile` (`src/lib/photo-serving.ts`). Optional `?w=` selects a server-resized variant (allowlist `160|320|640|1280`; other/invalid → `400`); omitted → the full-resolution original streamed verbatim. Resized variants are EXIF auto-oriented `image/webp`; originals keep their stored `Content-Type`. Caching: `Cache-Control: private, max-age=300, must-revalidate` + a strong variant `ETag` (`"photoId:w|orig:updatedAtMs"`) compared **app-side** (the client `If-None-Match` is **not** forwarded to Vercel Blob) → `304`. Source over `RESIZE_MAX_SOURCE_BYTES` (25 MB) or excess decoded pixels → `400`; blob missing → `404`; processing failure → generic `500`; `401`. `runtime = "nodejs"` (sharp). `next/image` keeps `unoptimized` (private blobs + cookie auth). Resized variants are **persisted** to Blob (`variants/<collectionId>/<photoId>/w<w>-v<v>.webp`, resize-once-globally) and served on a HIT without re-decoding; the variant store is best-effort (a get/put failure falls back to on-the-fly resize).
+`getSession` + `requireApiCapability("items:read")` (**curator**) → `403`, resolved **before** belongs-to-parent (`404`) — authz precedes existence, so a non-member cannot distinguish "this photo is in that collection" from "it isn't" (the `purses-ct0` existence oracle, closed). Then delegates to `servePhotoFile` (`src/lib/photo-serving.ts`). Optional `?w=` selects a server-resized variant (allowlist `160|320|640|1280`; other/invalid → `400`); omitted → the full-resolution original streamed verbatim. Resized variants are EXIF auto-oriented `image/webp`; originals keep their stored `Content-Type`. Caching: `Cache-Control: private, max-age=300, must-revalidate` + a strong variant `ETag` (`"photoId:w|orig:updatedAtMs"`) compared **app-side** (the client `If-None-Match` is **not** forwarded to Vercel Blob) → `304`. Source over `RESIZE_MAX_SOURCE_BYTES` (25 MB) or excess decoded pixels → `400`; blob missing → `404`; processing failure → generic `500`; `401`. `runtime = "nodejs"` (sharp). `next/image` keeps `unoptimized` (private blobs + cookie auth). Resized variants are **persisted** to Blob (`variants/<collectionId>/<photoId>/w<w>-v<v>.webp`, resize-once-globally) and served on a HIT without re-decoding; the variant store is best-effort (a get/put failure falls back to on-the-fly resize).
 
 ### `PATCH /api/collections/[id]/items/[itemId]/photos/[photoId]`
-Rotate a photo (persisted, non-destructive). **Body:** `{ rotation: 0|90|180|270 }` (absolute clockwise degrees). `getSession` + belongs-to-parent (`404`) resolved **before** the permission check, then `requireApiCapability("photos:write")` (**curator**; the old `canAddPhotos` flag is inert). Validates `rotation` ∈ the set (else `400`, incl. bad/missing JSON); `PhotoRepository.update` runs only after authz+validation pass. `200 { rotation, updatedAt }` (the new `updatedAt` cache-busts the image URL). `401`. Applied at serve time by `servePhotoFile` (`.rotate()` EXIF then `.rotate(rotation)`); the blob is never rewritten.
+Rotate a photo (persisted, non-destructive). **Body:** `{ rotation: 0|90|180|270 }` (absolute clockwise degrees). `getSession` + `requireApiCapability("photos:write")` (**curator**; the old `canAddPhotos` flag is inert) resolved **before** belongs-to-parent (`404`) — authz precedes existence (`purses-ct0`). Validates `rotation` ∈ the set (else `400`, incl. bad/missing JSON); `PhotoRepository.update` runs only after authz+validation pass. `200 { rotation, updatedAt }` (the new `updatedAt` cache-busts the image URL). `401`. Applied at serve time by `servePhotoFile` (`.rotate()` EXIF then `.rotate(rotation)`); the blob is never rewritten.
 
 ### `POST /api/collections/[id]/items/[itemId]/photos/[photoId]/set-hero`
-`getSession` + belongs-to-parent (`404`) + `requireApiCollectionAccess` (`403`/`404`). Sets the item's hero photo. `200 { success: true }`. `400` on failure; `401`.
+`getSession` + `requireApiCapability("photos:write")` (**curator**) resolved **before** belongs-to-parent (`404`) — authz precedes existence (`purses-ct0`). Sets the item's hero photo. `200 { success: true }`. `400` on failure; `401`.
 
 ## pool & photos
 
@@ -235,7 +237,7 @@ Group pooled photos into item(s). **Body:** `{ photoIds: string[] (1..MAX_GROUP_
 Lists pooled photos. **Returns** `{ photos: [{ id, filename }] }`. (The bulk uploader polls this until async-recorded rows appear.) `401`/`403`/`404`.
 
 ### `GET /api/collections/[id]/pool/photos/[photoId]/file`
-A **pooled** photo (must be this collection's and unassigned — `itemId === null`, else `404`). Same serving contract as the item `/file` route above (delegates to `servePhotoFile`): optional `?w=` resize allowlist, EXIF auto-orient → webp, `private, max-age=300, must-revalidate` + app-side variant `ETag`/`304`, decode-bomb guards, generic `500`, `runtime = "nodejs"`. `401`/`403`.
+A **pooled** photo (must be this collection's and unassigned — `itemId === null`, else `404`). Like the item `/file` route, `requireApiCapability("items:read")` (**curator**) resolves **before** the photo lookup, so the `404` is only ever reachable by a caller who already has access (`purses-ct0`). Same serving contract as the item `/file` route above (delegates to `servePhotoFile`): optional `?w=` resize allowlist, EXIF auto-orient → webp, `private, max-age=300, must-revalidate` + app-side variant `ETag`/`304`, decode-bomb guards, generic `500`, `runtime = "nodejs"`. `401`/`403`.
 
 ### `POST /api/collections/[id]/pool/upload`
 Client-direct upload via `@vercel/blob` `handleUpload`. `onBeforeGenerateToken` authorizes (`canAddPhotos` or owner; `401`/`404`/`403`) and signs a token; `onUploadCompleted` (no session — trusts the signed token) records the pooled `Photo`. **Body:** the Vercel Blob `HandleUploadBody`. Allowed types `POOL_ALLOWED_CONTENT_TYPES`, max `POOL_MAX_BYTES`. Returns the `handleUpload` JSON; `500` on unexpected failure.
@@ -382,5 +384,22 @@ The `0007` DROP of the inert flag columns shipped as the second deploy of `purse
 **Lockdown backstop shipped (pv9 PR5, `purses-o03`):** `src/lib/db/route-authz-enumeration.integration.test.ts` walks every `route.ts`, exercises each collection-scoped/curator-private route+method as a **stranger** and asserts `403`/`404` (never `200`/leaky `500`), and asserts **filesystem-exhaustiveness** — a new route in neither the `PUBLIC_OR_SELF` allowlist nor the stranger set fails CI. (Also fixed: `POST /api/sort-results/[id]/shares` now authorizes before parsing the body.)
 
 **Page-enumeration backstop shipped (`purses-j9qf` / `purses-6fk`):** the symmetric guard for Server Component **pages** now exists — `src/lib/db/page-authz-enumeration.integration.test.ts` filesystem-walks every `src/app/collections/**/page.tsx`, invokes each collection-scoped page as an authenticated **stranger** and asserts it **redirects** to `/collections` or `/login` (no protected render), and asserts the same **filesystem-exhaustiveness**: a new page in neither the `PUBLIC_PAGES` allowlist (`collections`, `collections/new` — self-scoped) nor the stranger set fails CI. Companion guards: `capabilities.test.ts` now pins the exact required role for **all 14** `CAPABILITIES` operations (a wrong value or a new op with no assertion reddens CI), and `bespoke-guard-consistency.integration.test.ts` pins the full absent→`404` / stranger→`403·404` / member-not-curator→`403` invariant for the two curator-private guards (`requireApiResultAccess`, inline `authorizeSession`). Regression-proofing only — no allow/deny outcome changed.
+
+**Item/photo existence oracle closed (`purses-ct0`):** every collection-scoped item/photo route resolved the item/photo (`404`) *before* the capability gate (`403`), letting an authenticated non-curator distinguish "this item/photo is in that collection" from "it isn't". Because `collectionId` is in the URL, none of them need the item to decide access, so `requireApiCapability` is now hoisted **above** the existence checks on all of them:
+
+| Route | Verb |
+|---|---|
+| `…/items/[itemId]/photos/[photoId]/file` | `GET` |
+| `…/pool/photos/[photoId]/file` | `GET` |
+| `…/items/[itemId]/photos/[photoId]` | `PATCH`, `DELETE` |
+| `…/items/[itemId]/photos/[photoId]/set-hero` | `POST` |
+| `…/items/[itemId]/photos` | `POST` |
+| `…/items/[itemId]` | `PATCH` |
+
+Fixing `GET /file` alone would have been theater — the same bit was readable via `PATCH` on the same `photoId`. A non-curator now gets an identical `403` whether or not the item/photo exists. Pinned by `file-route-authz.integration.test.ts` (a real vs. nonexistent photo are *indistinguishable* to a stranger, on the reads **and** the write verbs).
+
+**Scope, stated honestly.** Two adjacent oracles are *not* closed by this:
+- **Collection existence** still leaks, by the documented convention above — `requireApiCapability` answers `404` for an absent collection and `403` for one the caller can't touch. So the identical-`403` guarantee holds *given the collection exists*; a caller guessing a collection id still learns whether it does.
+- **Top-level `/api/items/**`** — `requireApiItemCapability` receives a bare `itemId` and *must* resolve it to learn which collection to authorize against, so it cannot use this ordering without changing its response contract. (This is a consequence of the `purses-3al` fix, not a regression of it — `purses-3al` itself is closed and was a different class: those routes were `requireAuth`-only.)
 
 Implemented (formerly no-op stubs): `POST /api/items/[id]/purge` is a real owner-only hard-delete cascade with a `409`-in-result guard, alongside owner-only `POST /api/items/[id]/remove-from-sorts` — **purses-u3p** resolved for item purge. **`POST /api/collections/[id]/purge`** is a real owner-only whole-collection cascade purge (name-confirm + `collection.purge` audit). The former sort-results no-op-success stubs — `DELETE /api/sort-results/[id]`, `DELETE /api/sort-results/[id]/items/[rid]`, and the empty `GET …/shares` listing — are also implemented.

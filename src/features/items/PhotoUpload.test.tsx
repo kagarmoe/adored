@@ -102,11 +102,29 @@ describe("PhotoUpload", () => {
     fireEvent.change(fileInput(), { target: { files: [jpeg()] } });
     fireEvent.click(await screen.findByRole("button", { name: /upload photo/i }));
 
-    // PINNED a11y gap (purses-orsx): the error is shown as plain text in a Card,
-    // with no role="alert"/aria-live — so it is NOT announced to screen readers.
-    // We assert the visible text only; do not fix in this test-only PR.
-    await waitFor(() => expect(screen.getByText("Storage is full")).toBeInTheDocument());
+    // purses-orsx: the failure must land in an assertive live region, or it is
+    // silent to AT users (WCAG 2.1 AA, SC 4.1.3 Status Messages).
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Storage is full");
     expect(reload).not.toHaveBeenCalled();
+  });
+
+  it("re-announces a REPEATED identical rejection (the alert node is replaced, not reused)", async () => {
+    // purses-orsx: setError(null) + setError(msg) batch into one commit, so a second
+    // identical rejection renders byte-identical text — React mutates no DOM node and
+    // role="alert" never re-fires, leaving the second attempt silent. The alert is keyed
+    // on a nonce, so each rejection mounts a FRESH alert node. Pin the node identity:
+    // asserting on the text alone would pass even with the bug present.
+    render(<PhotoUpload itemId="item_1" collectionId="coll_1" />);
+    const pdf = () => new File([new Uint8Array([1])], "receipt.pdf", { type: "application/pdf" });
+
+    fireEvent.change(fileInput(), { target: { files: [pdf()] } });
+    const first = await screen.findByRole("alert");
+    expect(first).toHaveTextContent("Please select an image file");
+
+    fireEvent.change(fileInput(), { target: { files: [pdf()] } });
+    await waitFor(() => expect(screen.getByRole("alert")).not.toBe(first));
+    expect(screen.getByRole("alert")).toHaveTextContent("Please select an image file");
   });
 
   it("rejects a non-image selection up front (no convert, no fetch)", async () => {

@@ -23,6 +23,12 @@ export async function PATCH(
   const itemCtrl = ItemController.fromDb(db);
 
   try {
+    // Authz before existence (purses-ct0): the collection is in the URL, so a
+    // non-curator never learns whether the item/photo exists.
+    // photos:write = curator — any curator may rotate photos (full-curator model).
+    const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
+    if (access instanceof NextResponse) return access;
+
     const item = await itemCtrl.getItem(params.itemId);
     if (!item || item.collectionId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -31,10 +37,6 @@ export async function PATCH(
     if (!photo || photo.itemId !== params.itemId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-
-    // photos:write = curator — any curator may rotate photos (full-curator model).
-    const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
-    if (access instanceof NextResponse) return access;
 
     let rotation: unknown;
     try {
@@ -70,16 +72,17 @@ export async function DELETE(
   const itemCtrl = ItemController.fromDb(db);
 
   try {
+    // Authz before existence (purses-ct0) — see PATCH above.
+    // photos:write = curator — any curator may delete photos (full-curator model).
+    // Curator-level by owner decision; attributed via audit (purses-opir/wfgj).
+    const access = await requireApiCapability(db, params.id, actorId, "photos:write");
+    if (access instanceof NextResponse) return access;
+
     // Verify item belongs to collection (belongs-to-parent).
     const item = await itemCtrl.getItem(params.itemId);
     if (!item || item.collectionId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-
-    // photos:write = curator — any curator may delete photos (full-curator model).
-    // Curator-level by owner decision; attributed via audit (purses-opir/wfgj).
-    const access = await requireApiCapability(db, params.id, actorId, "photos:write");
-    if (access instanceof NextResponse) return access;
 
     const photo = await photoCtrl.findById(params.photoId);
     if (!photo || photo.itemId !== params.itemId) {

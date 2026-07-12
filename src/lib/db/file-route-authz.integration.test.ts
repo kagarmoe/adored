@@ -18,6 +18,13 @@ vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
 // Route imported via the @/ alias (literal [id]/[itemId]/... are real dirs).
 import { GET } from "@/app/api/collections/[id]/items/[itemId]/photos/[photoId]/file/route";
+import { GET as GET_POOL } from "@/app/api/collections/[id]/pool/photos/[photoId]/file/route";
+import {
+  PATCH as PATCH_PHOTO,
+  DELETE as DELETE_PHOTO,
+} from "@/app/api/collections/[id]/items/[itemId]/photos/[photoId]/route";
+import { POST as SET_HERO } from "@/app/api/collections/[id]/items/[itemId]/photos/[photoId]/set-hero/route";
+import { PATCH as PATCH_ITEM } from "@/app/api/collections/[id]/items/[itemId]/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -43,6 +50,10 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
       mimeType: "image/jpeg", fileSize: 1, uploadedBy: ownerId, isHero: true,
     });
     photoId = photo.id;
+    // Clear call history per test: without this the "never serves bytes" assertions
+    // read calls accumulated from the earlier 200-status tests, and only pass by
+    // accident of declaration order.
+    mockBlobGet.mockClear();
     mockBlobGet.mockResolvedValue({ statusCode: 200, stream: "bytes", blob: { contentType: "image/jpeg" } });
   });
 
@@ -94,6 +105,95 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
     mockGetSession.mockResolvedValue({ user: { id: memberId } });
     const res = await GET(req() as any, { params: { id: collectionId, itemId, photoId } });
     expect(res.status).toBe(200);
+  });
+
+  // ── No existence oracle for a stranger (purses-ct0) ────────────────────────
+  // A non-member must not be able to tell "this photo exists in that collection"
+  // from "it doesn't". Both must answer identically, because authz is decided
+  // BEFORE existence — the route knows the collectionId from the URL, so it never
+  // needs to resolve the item to know the caller has no business here.
+  describe("stranger (non-member) gets no existence oracle", () => {
+    beforeEach(async () => {
+      const strangerId = await seedUserRow("file-stranger");
+      mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+    });
+
+    it("item /file: a real photo and a nonexistent one are indistinguishable", async () => {
+      const real = await GET(req() as any, { params: { id: collectionId, itemId, photoId } });
+      const fake = await GET(req() as any, {
+        params: { id: collectionId, itemId: "item_does_not_exist", photoId: "photo_does_not_exist" },
+      });
+
+      expect(real.status).toBe(403);
+      expect(fake.status).toBe(real.status);
+      expect(mockBlobGet).not.toHaveBeenCalled();
+    });
+
+    it("pool /file: a real pooled photo and a nonexistent one are indistinguishable", async () => {
+      const pooled = await new PhotoRepository(getTestDb().db).create({
+        itemId: null, collectionId, blobKey: "pk", filename: "pk.jpg",
+        mimeType: "image/jpeg", fileSize: 1, uploadedBy: ownerId, isHero: false,
+      });
+
+      const real = await GET_POOL(req() as any, {
+        params: { id: collectionId, photoId: pooled.id },
+      });
+      const fake = await GET_POOL(req() as any, {
+        params: { id: collectionId, photoId: "photo_does_not_exist" },
+      });
+
+      expect(real.status).toBe(403);
+      expect(fake.status).toBe(real.status);
+      expect(mockBlobGet).not.toHaveBeenCalled();
+    });
+
+    // GET /file was only ever half the surface: the SAME photoId is reachable by the
+    // write verbs, which leaked the identical bit until they were reordered too.
+    // Without this, closing /file alone is security theater — an attacker just uses PATCH.
+    it("the write verbs on the same photo/item leak nothing either", async () => {
+      const patchBody = () =>
+        new Request("http://localhost/x", {
+          method: "PATCH",
+          body: JSON.stringify({ rotation: 90 }),
+          headers: { "content-type": "application/json" },
+        });
+
+      const cases: [string, () => Promise<Response>, () => Promise<Response>][] = [
+        [
+          "PATCH photo (rotate)",
+          () => PATCH_PHOTO(patchBody() as any, { params: { id: collectionId, itemId, photoId } }),
+          () => PATCH_PHOTO(patchBody() as any, {
+            params: { id: collectionId, itemId: "nope", photoId: "nope" },
+          }),
+        ],
+        [
+          "DELETE photo",
+          () => DELETE_PHOTO(req() as any, { params: { id: collectionId, itemId, photoId } }),
+          () => DELETE_PHOTO(req() as any, {
+            params: { id: collectionId, itemId: "nope", photoId: "nope" },
+          }),
+        ],
+        [
+          "POST set-hero",
+          () => SET_HERO(req() as any, { params: { id: collectionId, itemId, photoId } }),
+          () => SET_HERO(req() as any, {
+            params: { id: collectionId, itemId: "nope", photoId: "nope" },
+          }),
+        ],
+        [
+          "PATCH item",
+          () => PATCH_ITEM(patchBody() as any, { params: { id: collectionId, itemId } }),
+          () => PATCH_ITEM(patchBody() as any, { params: { id: collectionId, itemId: "nope" } }),
+        ],
+      ];
+
+      for (const [label, real, fake] of cases) {
+        const r = await real();
+        const f = await fake();
+        expect(r.status, `${label}: stranger must be forbidden, not told it exists`).toBe(403);
+        expect(f.status, `${label}: real vs nonexistent must be indistinguishable`).toBe(r.status);
+      }
+    });
   });
 
 });

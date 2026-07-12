@@ -13,6 +13,13 @@ export async function POST(
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const db = getDb();
+
+  // Authz before existence (purses-ct0): the collection is in the URL, so a
+  // non-curator never learns whether the item/photo exists.
+  // photos:write = curator — any curator may set hero (full-curator model).
+  const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
+  if (access instanceof NextResponse) return access;
+
   const item = await ItemController.fromDb(db).getItem(params.itemId);
   if (!item || item.collectionId !== params.id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -22,10 +29,6 @@ export async function POST(
   if (!photo || photo.itemId !== params.itemId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-
-  // photos:write = curator — any curator may set hero (full-curator model).
-  const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
-  if (access instanceof NextResponse) return access;
 
   try {
     await photoCtrl.setHero(params.photoId, params.itemId);

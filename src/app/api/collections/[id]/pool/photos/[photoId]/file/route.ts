@@ -20,15 +20,17 @@ export async function GET(
   const db = getDb();
 
   try {
+    // Authz BEFORE existence (purses-ct0) — see the item /file route for the rationale:
+    // resolving the photo first would let a non-member distinguish 404 from 403.
+    // items:read = curator — any curator may view pool photo files (full-curator model).
+    const access = await requireApiCapability(db, params.id, session.user.id, "items:read");
+    if (access instanceof NextResponse) return access;
+
     const photo = await PhotoController.fromDb(db).findById(params.photoId);
     // Only this collection's pooled (unassigned) photos are served here.
     if (!photo || photo.collectionId !== params.id || photo.itemId !== null) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-
-    // items:read = curator — any curator may view pool photo files (full-curator model).
-    const access = await requireApiCapability(db, params.id, session.user.id, "items:read");
-    if (access instanceof NextResponse) return access;
 
     return servePhotoFile(
       {

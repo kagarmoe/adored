@@ -406,6 +406,10 @@ describeDb("pool routes (route -> repo -> DB)", () => {
   // ===================== GET pool/photos/[photoId]/file ==================
   describe("GET pool/photos/[photoId]/file", () => {
     beforeEach(() => {
+      // Clear call history per test: vitest has no global clearMocks here, so the
+      // "never serves bytes" assertions below would otherwise read calls accumulated
+      // from the byte-serving tests and pass only by accident of declaration order.
+      mockBlobGet.mockClear();
       // orig-passthrough (no ?w=) for a rotation-0 photo streams this verbatim.
       mockBlobGet.mockResolvedValue({
         statusCode: 200,

@@ -182,10 +182,19 @@ test.describe("session detail → See what you love most → results", () => {
     await roundEndRefresh;
 
     // 2. Move to compare and choose one card (tapping a card IS the choice).
-    await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
-    await expect(
-      page.getByRole("heading", { name: "Which do you love more?" }),
-    ).toBeVisible();
+    // Retried, not fired once (purses-pw52): awaiting the RSC response proves the
+    // network settled, not that the client router did, so the still-committing
+    // round-end refresh can abort the goto as a competing navigation to /triage.
+    // Bounded tight — the heading is asserted INSIDE the retry, so a gate that really
+    // kept redirecting still fails, and a latency regression fails fast rather than
+    // being absorbed. The product-side race itself is purses-hzwj.
+    await expect(async () => {
+      await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
+      await expect(
+        page.getByRole("heading", { name: "Which do you love more?" }),
+      ).toBeVisible({ timeout: 3_000 });
+    }).toPass({ timeout: 10_000 });
+
     await page.getByRole("button", { name: /^Choose / }).first().click();
 
     // 3. Return to the session detail (the breadcrumb's "Session" target).

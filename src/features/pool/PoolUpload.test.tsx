@@ -42,6 +42,37 @@ afterEach(() => {
 });
 
 describe("PoolUpload", () => {
+  // ── a11y live region (purses-orsx) ────────────────────────────────────────
+  // The region must be MOUNTED BEFORE it has anything to say. A region that is born
+  // holding its content is the classic silent-live-region bug: assistive tech only
+  // announces mutations to a region it was already observing. jsdom cannot verify
+  // that anything is spoken, but it CAN pin the structural precondition — and this
+  // assertion is exactly what a conditionally-rendered region fails.
+  it("mounts an EMPTY live region before any file is picked", () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(countResponse(0)));
+    render(<PoolUpload collectionId="coll_9" />);
+
+    const status = screen.getByRole("status");
+    expect(status).toBeInTheDocument();
+    expect(status).toHaveTextContent("");
+  });
+
+  it("drop-only-unsupported-files: the skip is announced, not silent", async () => {
+    // The path with NO upload at all (accepted.length === 0, so the component goes
+    // quiet immediately). Pre-fix this mounted the region together with its text and
+    // never mutated again — the person was told nothing at all.
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(countResponse(0)));
+    const { container } = render(<PoolUpload collectionId="coll_9" />);
+    const pdf = new File([new Uint8Array([1])], "receipt.pdf", { type: "application/pdf" });
+
+    await act(async () => {
+      fireEvent.change(fileInput(container), { target: { files: [pdf] } });
+    });
+
+    expect(upload).not.toHaveBeenCalled();
+    expect(screen.getByRole("status")).toHaveTextContent("1 photo couldn't be added.");
+  });
+
   it("multi-file: uploads each accepted file privately, polls until rows land, then refreshes", async () => {
     // baseline = 0, then post-upload count = 2 (>= baseline + 2 succeeded) so the
     // first poll tick satisfies waitForPooledRows and refresh fires.
@@ -114,10 +145,16 @@ describe("PoolUpload", () => {
       });
 
       expect(upload).toHaveBeenCalledTimes(1);
-      // PINNED a11y gap (purses-orsx): the per-file error reason renders as plain
-      // status text with no aria-live region, so the failure is not announced to
-      // screen readers. We assert the visible text only; not fixed (test-only PR).
-      expect(screen.getByText(/token denied/i)).toBeInTheDocument();
+      // purses-orsx: the batch outcome is announced as ONE summary sentence in the
+      // live region — not the raw thrown message, and not the per-file list (a live
+      // region around the list would re-announce every filename on every transition,
+      // because role="status" is implicitly aria-atomic).
+      expect(screen.getByRole("status")).toHaveTextContent("1 photo couldn't be added.");
+
+      // The machine-register throw ("token denied") must NOT reach the user — the
+      // person-side sentence does. The list keeps its list semantics for browsing.
+      expect(screen.queryByText(/token denied/i)).not.toBeInTheDocument();
+      expect(screen.getByRole("list")).toHaveTextContent(/didn't make it/i);
       // succeeded === 0, so waitForPooledRows/refresh never run.
       expect(refresh).not.toHaveBeenCalled();
     } finally {

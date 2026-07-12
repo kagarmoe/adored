@@ -29,8 +29,7 @@ let slug = "";
 let membersSlug = "";
 let resultNumber = 0;
 let finalizedResultNumber = 0;
-let triageSlug = "";
-let triageSessionNumber = 0;
+let ownerId = "";
 let waitingSlug = "";
 let waitingSessionNumber = 0;
 let setAsideSlug = "";
@@ -39,16 +38,12 @@ let workspacePoolFirstSlug = "";
 let workspaceItemsFirstSlug = "";
 
 test.beforeAll(async () => {
-  const ownerId = await seedBaseline();
+  ownerId = await seedBaseline();
   ({ slug, resultNumber, finalizedResultNumber } = await seedSortScenario(ownerId));
   // A collection with real owner + curator membership rows so the members shot
   // shows the RoleBadge (the baseline seed inserts collections without them).
   ({ slug: membersSlug } = await seedMembersScenario(ownerId));
 
-  // Epic C PR1: an UNTRIAGED journey so the triage shot shows the focused item,
-  // the four tiers, and the quiet "Not yet" defer action below the hairline.
-  ({ slug: triageSlug, sessionNumber: triageSessionNumber } =
-    await seedJourneyScenario(ownerId, 3));
 
   // Epic C PR1: the patient-waiting state. A 2-item journey where item A is
   // already triaged (a preference row) and item B is deferred — so the ONLY
@@ -116,6 +111,14 @@ test.beforeAll(async () => {
 
 for (const theme of ["light", "dark"] as const) {
   test(`capture ${theme}`, async ({ page }, testInfo) => {
+    // Seeded PER TEST, not in beforeAll (purses-z23h): the usage-round recap block below
+    // ANSWERS every queued item, draining the queue. A seed shared across the light and
+    // dark runs left the second one with an empty queue (no "Quick pace", no usage round
+    // on the hub, then a timeout). beforeAll would not fix it either — it does not re-run
+    // on a Playwright retry, so a retried attempt would re-consume the drained queue.
+    const { slug: triageSlug, sessionNumber: triageSessionNumber } =
+      await seedJourneyScenario(ownerId, 3);
+
     // theme-script.tsx reads localStorage 'pi-theme' before paint — set it first.
     await page.addInitScript((t) => {
       try {

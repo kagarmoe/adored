@@ -20,6 +20,28 @@ interface TrackedFile {
   error?: string;
 }
 
+// The screen-reader announcement for a batch (purses-orsx). ONE coarse sentence,
+// rewritten in place — never the per-file list. `role="status"` is implicitly
+// aria-atomic, so the region is re-read IN FULL on every change: a live region
+// wrapped around the N-row list would re-announce all N filenames on all ~3N
+// status transitions. The visible list keeps the per-file detail (and its list
+// semantics) for browsing; this says only what changed at the batch level.
+function uploadSummary(files: TrackedFile[]): string {
+  if (files.length === 0) return "";
+  const photos = (n: number) => `${n} ${n === 1 ? "photo" : "photos"}`;
+
+  const settled = (f: TrackedFile) =>
+    f.status === "done" || f.status === "error" || f.status === "skipped";
+  if (!files.every(settled)) return `Adding ${photos(files.length)}…`;
+
+  const added = files.filter((f) => f.status === "done").length;
+  const missed = files.length - added;
+  const parts: string[] = [];
+  if (added > 0) parts.push(`${photos(added)} added`);
+  if (missed > 0) parts.push(`${photos(missed)} couldn't be added`);
+  return `${parts.join(", ")}.`;
+}
+
 const POLL_INTERVAL_MS = 1200;
 const POLL_TIMEOUT_MS = 15000;
 const FALLBACK_DELAY_MS = 2500;
@@ -120,10 +142,11 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
         update(t.key, { status: "done" });
         succeeded += 1;
       } catch (err) {
-        update(t.key, {
-          status: "error",
-          error: err instanceof Error ? err.message : "Upload failed",
-        });
+        // The thrown message is machine-register ("Vercel Blob: Failed to retrieve the
+        // client token") and is now SPOKEN, not just shown — keep the raw text for the
+        // console and give the person a sentence from their side (TONE).
+        console.error("pool upload failed", err);
+        update(t.key, { status: "error", error: "This one didn't make it — you can try again." });
       }
     }
 
@@ -189,6 +212,14 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
           Add as many as you like — you can name and group them later.
         </p>
       </div>
+
+      {/* Mounted for the component's whole life, NOT gated on files.length (purses-orsx):
+          a live region must already exist when its text changes, or AT never observes the
+          mutation. Born-with-content regions are the classic silent-live-region bug — and
+          the drop-only-unsupported-files path never mutates again after mount. */}
+      <p role="status" className="sr-only">
+        {uploadSummary(files)}
+      </p>
 
       {files.length > 0 && (
         <Card padding="md">

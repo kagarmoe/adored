@@ -21,6 +21,14 @@ export async function GET(
   const db = getDb();
 
   try {
+    // Authz BEFORE existence (purses-ct0): the collection is known from the URL, so a
+    // caller with no access is turned away without ever learning whether the item or
+    // photo exists. Resolving first would leak that (404 "not here" vs 403 "here, but
+    // not yours") — an existence oracle for a non-member.
+    // items:read = curator — any curator may view photo files (full-curator model).
+    const access = await requireApiCapability(db, params.id, session.user.id, "items:read");
+    if (access instanceof NextResponse) return access;
+
     const item = await ItemController.fromDb(db).getItem(params.itemId);
     if (!item || item.collectionId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -30,10 +38,6 @@ export async function GET(
     if (!photo || photo.itemId !== params.itemId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-
-    // items:read = curator — any curator may view photo files (full-curator model).
-    const access = await requireApiCapability(db, params.id, session.user.id, "items:read");
-    if (access instanceof NextResponse) return access;
 
     return servePhotoFile(
       {
