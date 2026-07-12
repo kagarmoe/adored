@@ -109,12 +109,7 @@ it). `DROP SCHEMA public CASCADE` alone leaves the 17 rows **alive**, and then:
 A reset script that empties the DB and reports success is worse than no script.
 → `DROP SCHEMA IF EXISTS public CASCADE; DROP SCHEMA IF EXISTS drizzle CASCADE; CREATE SCHEMA public;`
 
-**It runs `db:migrate` AND `db:backfill-numbers`** — exactly `vercel-build`'s DB half. This closes
-the one deploy step **no gate exercises**: `scripts/backfill-session-result-numbers.ts` is the only
-caller of `drizzle(client)` with no schema arg, and it does `backfillNumbers(db as any)` — the `as
-any` compiles straight through the 0.30→0.45 change. Today we'd discover a break on the prod deploy,
-*right after dropping prod's schema*. Making reset run it means "reset `development` first" genuinely
-rehearses the deploy path instead of half of it.
+**It runs `db:migrate`** — which, after decision 3a, is the whole of `vercel-build`'s DB half.
 
 **Guard — fail closed. `dotenv` does NOT override an already-set env var**, so a stray exported
 `DATABASE_URL` silently wins over `.env.local`. With a destructive payload that cuts both ways:
@@ -135,6 +130,30 @@ nothing to count). So:
 Note: `db-reset.ts` must **not** call `migrate(getDb(), …)` — `getDb()` returns the widened base
 type (decision 4), which won't typecheck against `migrate()`. Shell out to `npm run db:migrate` or
 construct a local `drizzle()`.
+
+### 3a. DELETE `backfill-numbers` — don't test dead code, remove it (owner, 2026-07-12)
+
+Adversarial review flagged `db:backfill-numbers` as the one deploy step **no gate exercises**:
+`scripts/backfill-session-result-numbers.ts` is the only caller of `drizzle(client)` with no schema
+arg, and it does `backfillNumbers(db as any)` — that `as any` compiles straight through the
+0.30→0.45 API change. We would discover a break on the prod deploy, *right after dropping prod's
+schema*. The reviewer's fix was to make `db:reset` run it, so it finally gets exercised.
+
+**The owner's fix is better: delete it.** `backfillTable` only touches rows `WHERE number IS NULL`
+(`backfill-numbers.ts:19`), but `SessionRepository` and `SortResultRepository` assign `number` at
+INSERT via `allocateWithRetry` (MAX+1, retry on the unique violation). So on any DB built from now
+on, **a NULL `number` cannot exist**. It is a one-shot legacy data migration that healed rows
+created *before* the numbering feature — and it has been a no-op on every prod deploy since.
+
+Wipe the data and it is dead code, permanently. Remove:
+
+- the `db:backfill-numbers` step from `vercel-build` (→ `vercel-build` = `db:migrate && next build`)
+- the `db:backfill-numbers` npm script
+- `scripts/backfill-session-result-numbers.ts`
+- `src/lib/db/backfill-numbers.ts` + `backfill-numbers.integration.test.ts`
+
+This **dissolves the finding rather than testing around it** — the untested deploy step, and its
+`as any`, stop existing. The only honest fix for an untested deploy step is for it not to be there.
 
 ### 4. Widen the `Database` type — 1 file
 
@@ -177,7 +196,8 @@ existing test file — no new spec file, no journal-parsing helper.
 3. Squash `drizzle/` to one generated `0000_init`; **`pg_dump --schema-only` diff as the gate** (2)
 4. Drop `legacy-peer-deps=true` from `.npmrc`
 5. `scripts/db-reset.ts` + `npm run db:reset` (3)
-6. `sessions_active_unique` `indexdef` assertion (2); journal content-hash guard (5)
+6. **Delete `backfill-numbers`** — script, module, test, npm script, and its `vercel-build` step (3a)
+7. `sessions_active_unique` `indexdef` assertion (2); journal content-hash guard (5)
 
 | Confirmed break | Fix |
 |---|---|
@@ -224,7 +244,7 @@ the recovery tool is the very script whose guard we just (correctly) made hard t
 So: **prove the install on a preview before prod is ever touched.**
 
 1. Gates green locally (incl. the `pg_dump` diff).
-2. **Reset `development`** with the new script (drop + migrate + backfill).
+2. **Reset `development`** with the new script (drop + migrate).
    ⚠️ Must happen **before pushing the branch** — otherwise the first preview build runs the new
    baseline against an un-reset dev DB and dies on `relation "user" already exists`.
    ⚠️ **Land this with no other branches open.** Preview deploys migrate the *shared* `development`
@@ -235,7 +255,7 @@ So: **prove the install on a preview before prod is ever touched.**
    before `vercel-build`) and that migrate no-ops cleanly. This is the full rehearsal against a
    throwaway target — prod is never the first time we run it.
 4. CI green (incl. `auth:verify` + e2e sign-in).
-5. **Reset prod** (drop + migrate + backfill in one command — seconds, not a build cycle).
+5. **Reset prod** (drop + migrate in one command — seconds, not a build cycle).
 6. Merge. The deploy's `db:migrate` finds the `0000` row present → no-op → build succeeds.
 
 Prod serves 500s between (5) and (6) completing. With disposable data on a pre-launch app that is
@@ -247,7 +267,9 @@ acceptable — stated plainly rather than sprung.
 - `drizzle/` is one v7 migration, generated by the new kit.
 - **`pg_dump --schema-only` diff (old 17 vs new baseline) is empty** — the real proof.
 - `memberships_role_check` survives; all three partial-index predicates pinned by `indexdef`.
-- `npm run db:reset` is committed, drops **both** schemas, runs migrate + backfill, refuses an
-  ambient `DATABASE_URL`, refuses prod without explicit authorization, and refuses to run in CI.
+- `npm run db:reset` is committed, drops **both** schemas, runs migrate, refuses an ambient
+  `DATABASE_URL`, refuses prod without explicit authorization, and refuses to run in CI.
+- `backfill-numbers` is gone — script, module, test, npm script, and its `vercel-build` step.
+  `vercel-build` = `db:migrate && next build`.
 - Gates green: `lint`, `test:ci`, `build`, `auth:verify`, `test:db`, e2e.
 - No exact pin survives without a recorded justification.
