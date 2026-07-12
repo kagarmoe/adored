@@ -44,9 +44,6 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Auth wiring check
-        run: npm run auth:verify
-
       - name: Unit tests (coverage → blob)
         run: npm run test:ci -- --coverage --reporter=blob --outputFile=.vitest-reports/blob-unit.json
 
@@ -119,6 +116,15 @@ jobs:
 
       - name: Apply schema
         run: npm run db:migrate
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/app_test
+
+      # auth:verify queries the live auth tables (user/account/session/verification),
+      # so it needs this job's migrated Postgres — the DB-less `gate` job cannot run
+      # it (src/lib/db.ts throws at import without DATABASE_URL; local runs only pass
+      # via .env.local). Verified: DATABASE_URL alone suffices.
+      - name: Auth wiring check
+        run: npm run auth:verify
         env:
           DATABASE_URL: postgresql://postgres:test@localhost:5432/app_test
 
