@@ -184,15 +184,19 @@ genuinely fails in test, exactly as it would in prod.
 
 ### Scope (measured)
 
-**39 test files** pass a bare `params: {` object; **34** are `src/lib/db/*.integration.test.ts`. The 34
-owner-happy-path suites asserting `200` are the **real backstop** — a missed `await` 404s instead of
-200 — so they must get the same treatment or they too become oracles that cannot fail.
+**39 route-invoking test files** pass a bare `params: {` object — **36** are
+`src/lib/db/*.integration.test.ts` plus 3 `route.test.ts` (as landed in PR 1; an earlier
+draft said 34). The owner-happy-path suites asserting `2xx` are the **real backstop** — a
+missed `await` 404s instead of 200. (12 further `page.test.tsx` files migrate with the
+pages in the Next-16 PR.)
 
 Also tighten `importHandler`'s ctx type (line 591) so `params` is a Promise type. **But note `tsc` is
 not a gate here** (see §6), so the type alone enforces nothing at CI time — the **runtime** assertion is
-what protects you. Keep the sanity floors (line 746 `discovered >= 40`, line 790 `stranger >= 50`), bump
-to exact actuals, and assert the **exact** discovered route count pre/post migration — it must be
-identical.
+what protects you. **The count floors (line 746 `>= 40`, line 790 `>= 50`) stay UNTOUCHED** —
+an earlier draft said "bump to exact actuals"; the spec's round-2 review demoted exact
+counts to PR-body evidence (a sorted key-set diff, re-run at the Next-16 PR), because a
+same-file literal snapshot forces no independent scrutiny. Follow the spec, not this
+paragraph's history.
 
 **Good news: the regex extractor is safe.** `methodsFromRoute` (lines 101–124) keys on the **export
 form** (`export async function GET(`), which async-params doesn't touch. Discovery keeps seeing all 49

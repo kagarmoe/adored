@@ -30,16 +30,18 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
-
+      # Runs BEFORE npm ci so the lockfile is vetted before any lifecycle script
+      # executes. Scans package-lock.json only; needs no node_modules.
       - name: Supply-chain scan (osv-scanner)
         run: |
-          curl -sSfL -o /tmp/osv-scanner https://github.com/google/osv-scanner/releases/download/v2.4.0/osv-scanner_linux_amd64
+          curl -sSfL --retry 3 -o /tmp/osv-scanner https://github.com/google/osv-scanner/releases/download/v2.4.0/osv-scanner_linux_amd64
           echo "15314940c10d26af9c6649f150b8a47c1262e8fc7e17b1d1029b0e479e8ed8a0  /tmp/osv-scanner" | sha256sum -c -
           chmod +x /tmp/osv-scanner
           /tmp/osv-scanner scan source -L package-lock.json
         # ponytail: version+hash pinned by hand; bump deliberately with the epic's release-age rule
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Lint
         run: npm run lint
