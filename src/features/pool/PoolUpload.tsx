@@ -192,7 +192,9 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
 
       {files.length > 0 && (
         <Card padding="md">
-          <ul className="space-y-1 text-sm">
+          {/* Polite, not assertive (purses-orsx): the list is mounted for the whole run, so
+              each file's status mutation announces in place — a batch must not interrupt per file. */}
+          <ul role="status" aria-live="polite" className="space-y-1 text-sm">
             {files.map((f) => (
               <li key={f.key} className="flex items-center justify-between gap-2">
                 <span className="truncate text-ink-soft">{f.name}</span>

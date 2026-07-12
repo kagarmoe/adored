@@ -180,8 +180,9 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
         )}
       </div>
 
+      {/* Assertive: a failed upload is a single blocking failure the user must hear (purses-orsx). */}
       {error && (
-        <Card padding="md" className="bg-error-soft border border-error-soft">
+        <Card role="alert" padding="md" className="bg-error-soft border border-error-soft">
           <p className="text-error-deep text-sm">{error}</p>
         </Card>
       )}

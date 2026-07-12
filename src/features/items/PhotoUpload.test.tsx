@@ -102,10 +102,10 @@ describe("PhotoUpload", () => {
     fireEvent.change(fileInput(), { target: { files: [jpeg()] } });
     fireEvent.click(await screen.findByRole("button", { name: /upload photo/i }));
 
-    // PINNED a11y gap (purses-orsx): the error is shown as plain text in a Card,
-    // with no role="alert"/aria-live — so it is NOT announced to screen readers.
-    // We assert the visible text only; do not fix in this test-only PR.
-    await waitFor(() => expect(screen.getByText("Storage is full")).toBeInTheDocument());
+    // purses-orsx: the failure must land in an assertive live region, or it is
+    // silent to AT users (WCAG 2.1 AA, SC 4.1.3 Status Messages).
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Storage is full");
     expect(reload).not.toHaveBeenCalled();
   });
 

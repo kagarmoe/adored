@@ -114,10 +114,14 @@ describe("PoolUpload", () => {
       });
 
       expect(upload).toHaveBeenCalledTimes(1);
-      // PINNED a11y gap (purses-orsx): the per-file error reason renders as plain
-      // status text with no aria-live region, so the failure is not announced to
-      // screen readers. We assert the visible text only; not fixed (test-only PR).
-      expect(screen.getByText(/token denied/i)).toBeInTheDocument();
+      // purses-orsx: per-file status transitions (incl. the failure reason) must sit
+      // inside a polite live region, or they are silent to AT users (WCAG 2.1 AA,
+      // SC 4.1.3). Polite, not assertive: a batch upload must not interrupt on every
+      // file. The region is mounted for the whole run, so in-place status mutations
+      // ("uploading…" → the error) are what actually get announced.
+      const status = screen.getByRole("status");
+      expect(status).toHaveAttribute("aria-live", "polite");
+      expect(status).toHaveTextContent(/token denied/i);
       // succeeded === 0, so waitForPooledRows/refresh never run.
       expect(refresh).not.toHaveBeenCalled();
     } finally {
