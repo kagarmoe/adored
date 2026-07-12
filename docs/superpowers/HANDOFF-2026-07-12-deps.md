@@ -1,24 +1,42 @@
 # Handoff — dependency work, 2026-07-12
 
-Read this, then `bd show purses-9oxh` and its children. Everything below is verified against
-real code or a real run; nothing here is assumed.
+## 0. READ THIS FIRST: how to use this document
+
+**This document is a set of LEADS, not a set of FACTS.** An earlier version of it was wrong in two
+places, and both were load-bearing: it told the reader to close an epic that had three open children,
+and it described a fix for `9oxh.3` that would have 404'd every dynamic route in production. An agent
+who trusted it and acted would have shipped both.
+
+The sources of truth are, and this document is none of them:
+
+- **`CLAUDE.md`** — the contract. Workflow gates, git discipline, the agent profile, the definition of
+  done. Read it *before* forming a plan, not after someone catches you.
+- **`bd show <id>`** — whether work is actually done. This doc *summarizes* the beads and therefore
+  drifts from them.
+- **`graphify query "<question>"`** — ground truth about the code. Query it before you form a theory
+  about how something works.
+
+Verify anything here against those three before you act on it. A summary that agrees with itself is
+not evidence.
 
 ---
 
-## 1. STOP: there is an OPEN, UNMERGED PR
+## 1. PR #329 — MERGED. Do not re-do it.
 
-**PR #329 — `chore/unpin-deps`.** Pushed, CI was still running when the session ended, **not merged**.
+**Merged 2026-07-12 as `f0781ab1d`** (squash; branch deleted). All gates green in CI.
 
 - Unpins the last seven exact pins; sets `@types/react` / `@types/react-dom` to `^18` to match the
   React **18.3.1** runtime (they were `^19` — a major ahead of what actually runs).
-- All gates passed **locally**: lint 0 errors · test:ci 1304 · test:db 650 · build ✓ · auth:verify ✓.
-- **First action: check it, merge it.** `gh pr checks 329` → `gh pr merge 329 --squash --delete-branch`.
-- Then `bd close purses-mebk` (the epic — its PR is this one).
 
-**Do not start the Next work on a branch cut before #329 lands.** It rewrites `package-lock.json`.
+### ⚠️ DO NOT close `purses-mebk`
 
-Note: `git checkout main` may fail with *"'main' is already used by worktree"* — a review agent left a
-worktree at `/private/tmp/baseline-main`. `git worktree remove /private/tmp/baseline-main --force`.
+The previous version of this doc said *"then `bd close purses-mebk`."* **That is wrong.** `mebk` has
+**three open children** (`mebk.1`, `mebk.2`, `mebk.3` — listed in §7). `CLAUDE.md` is explicit:
+
+> An epic is not complete until all follow-up beads are complete.
+
+Closing it because "its PR merged" is exactly the premature-close this repo has been bitten by before.
+Run `bd show purses-mebk` and look at the children before you touch its status.
 
 ---
 
@@ -28,25 +46,24 @@ worktree at `/private/tmp/baseline-main`. `git worktree remove /private/tmp/base
 
 - `drizzle-orm` → 0.45.2; `drizzle-kit` → 0.31 (**devDependencies** — it is a codegen CLI).
 - **`legacy-peer-deps` is GONE.** `.npmrc` is deleted. The drizzle pins were the only thing forcing it.
+  Do **not** re-add it when vite 7→8 surfaces a peer conflict in `9oxh.7` — fix the actual conflicting
+  pin. (Memory `vercel-analytics-legacy-peer-deps` has been corrected to say so.)
 - **`drizzle/` is now ONE generated `0000_init`** (journal v7). The 17 old migrations are gone from
-  disk — that history is in git. Migration numbers cited in `docs/ARCHITECTURE.md` (`0005`, `0006`,
-  `0007`, …) **no longer exist as files.**
-- **Both Neon branches were reset** and re-derived from the new baseline. Production is live on it
-  (verified: a bogus sign-in returns `401 INVALID_EMAIL_OR_PASSWORD`, so the DB is reachable and the
-  schema is correct — a broken schema would 500).
+  disk — that history is in git. Migration numbers cited anywhere (`0005`, `0006`, `0007`, …)
+  **no longer exist as files.**
+- **Both Neon branches were reset** and re-derived from the new baseline. Production is live on it.
 
 ### Three latent bugs it exposed — these are the flavour of what to expect
 
 1. **drizzle 0.45 WRAPS driver errors.** It throws a plain `Error` (`"Failed query: …"`) with the real
    `PostgresError` — carrying `code` and `constraint_name` — demoted to **`.cause`**. All five conflict
    detectors read `error.code` at the *top level*, so they silently returned `false`: a session-slot
-   collision stopped being a gentle **409** and became a **500**, and two MAX+1 allocation retries
-   stopped retrying. Fixed with `src/server/repositories/pg-conflict.ts` `isUniqueViolation()`, which
-   walks the cause chain. **Anything inspecting a Postgres error must unwrap `.cause`.**
+   collision stopped being a gentle **409** and became a **500**. Fixed via
+   `src/server/repositories/pg-conflict.ts` `isUniqueViolation()`, which walks the cause chain.
+   **Anything inspecting a Postgres error must unwrap `.cause`.**
 2. **`schema.ts` was a LOSSY view of the applied schema.** `memberships_role_check` existed **only in
-   migration SQL** (drizzle 0.30 had no `check()` API), so a naive regeneration would have shipped
-   `memberships.role` as **free text** and quietly dissolved the authz role model. Now declared via
-   `check()`.
+   migration SQL**, so a naive regeneration would have shipped `memberships.role` as **free text** and
+   quietly dissolved the authz role model. Now declared via `check()`.
 3. **A duplicate unique index hidden for a year.** `invitations.token` was declared unique **twice
    under the same name**; drizzle-kit 0.20 emitted `CREATE UNIQUE INDEX IF NOT EXISTS`, so the
    duplicate silently no-op'd. 0.31 drops the `IF NOT EXISTS` → fatal `42P07`.
@@ -64,14 +81,16 @@ applies nothing, prints success, and hands you an **empty database with a green 
 re-migrates.
 
 **It refuses a non-TTY stdin — so neither an agent nor `!` in Claude Code can run it.** That is
-deliberate: an echo-back prompt alone is not a lock (`echo "host/db" | npm run db:reset` satisfies it,
-which is exactly what a CI job or an agent does when a prompt looks hung). **The owner must run it in a
-real terminal.** Do not add a `--force`/`--confirm` flag to make it scriptable — that is the footgun,
-not a fix. See memory `db-reset-requires-a-real-terminal-and-that`.
+deliberate: an echo-back prompt alone is not a lock. **The owner must run it in a real terminal.**
+Do not add a `--force`/`--confirm` flag to make it scriptable — that is the footgun, not a fix.
+See memory `db-reset-requires-a-real-terminal-and-that`.
 
-Neon: `development` = host `ep-old-meadow-…` (local dev **and all preview deploys**). **Production's
-host is NOT recorded** — an old memory claimed `ep-empty-mode`; that is stale and I repeated it as fact
-and was wrong. Get it from the Vercel dashboard (Settings → Environment Variables → `DATABASE_URL`,
+**Neon hostnames — do not assert one from memory.** `development` = host `ep-old-meadow-…` (local dev
+**and all preview deploys**). **Production's host is NOT recorded anywhere, and you must not guess it.**
+An old memory claimed `ep-empty-mode`; that was stale, was repeated as fact in front of the owner, and
+was wrong. (Memory `prod-migration-requires-explicit-db-url` has been corrected — it was still carrying
+the stale hostname even after `neon-db-setup` was fixed. Two memories disagreed; the grep hit the wrong
+one first.) Get it from the Vercel dashboard (Settings → Environment Variables → `DATABASE_URL`,
 Production scope) or Neon's `main` branch. `vercel env pull --environment=production` is blocked by the
 safety classifier, correctly.
 
@@ -83,8 +102,7 @@ safety classifier, correctly.
 ## 4. The work: `purses-9oxh` — "Get on latest: every major dep"
 
 Owner (2026-07-12): *"LETS GET OURSELVES ON LATEST"*, *"CHECK ALL THE MAJOR DEPS"*. Scope is **every**
-outdated major. **Do not present a menu and ask which ones — do them.** (I did that and was rightly
-told off.)
+outdated major. **Do not present a menu and ask which ones — do them.**
 
 Measured 2026-07-12 (`npm outdated`, on the tree *after* #328 + #329):
 
@@ -112,7 +130,7 @@ which is what lets Next and React be separate steps.
 
 | bead | | why here |
 |---|---|---|
-| **9oxh.3** P0 | **Harden the route-test oracle** | **DO FIRST.** Lands green on Next 14. Without it the Next migration is *unverifiable*. |
+| **9oxh.3** P0 | **Harden the route-test oracle** | **DO FIRST.** Without it the Next migration is *unverifiable*. **Its plan on this bead was WRONG — see §5.** |
 | **9oxh.1** P1 | Node version truth | Everything type-checks against it. |
 | **9oxh.4** P1 | Next 14 → 16, **holding React 18** | blocked by .3 and .1 |
 | **9oxh.2** P1 | React 18 → 19 | blocked by .4 |
@@ -120,32 +138,65 @@ which is what lets Next and React be separate steps.
 | **9oxh.6** P2 | tailwind 3 → 4 | independent; it's the design system — visual-regression risk |
 | **9oxh.7** P3 | tooling batch (TS 7, ESLint 10, Vite 8, …) | blocked by .4 (eslint-config-next coupling) |
 
-`bd ready` shows **9oxh.3, 9oxh.1, 9oxh.5, 9oxh.6** as startable now.
-
 ---
 
-## 5. THE most important thing in this handoff
+## 5. THE most important thing in this handoff — and the earlier version of it was WRONG
 
-**`9oxh.3` is not bookkeeping. Read it before you touch Next.**
+**`9oxh.3` is not bookkeeping. Read the bead (`bd show purses-9oxh.3`), which has been corrected.**
+
+### The trap it defuses
 
 `src/lib/db/route-authz-enumeration.integration.test.ts:767` invokes handlers with `params` as a
 **plain object**. After the Next 15 async-params migration a route does `const { id } = await params` —
 and **`await` on a plain object resolves to itself**. So the test keeps passing whether or not the route
-was correctly migrated.
+was correctly migrated. A route whose *type* was flipped to `Promise<…>` but which still reads
+`params.id` synchronously would, in production, read `.id` off a Promise → `undefined` → the guard
+receives `undefined` as the collection id → 403/404 instead of 200. **The stranger-403 assertion still
+goes green.** Green CI, dead app: every legitimate owner request 404s.
 
-Concretely: a route whose *type* was flipped to `Promise<…>` but which still reads `params.id`
-synchronously would, in production, read `.id` off a Promise → `undefined` → the guard receives
-`undefined` as the collection id → 403/404 instead of 200. **The stranger-403 assertion still goes
-green.** Green CI, dead app: every legitimate owner request 404s.
+### ⚠️ The fix this doc originally prescribed would have BROKEN PRODUCTION
 
-The regex *extractor* is safe (it keys on the **export form**, `export async function GET(`, which
-async-params doesn't touch). It is the **handler invocation** that silently degrades into an oracle
-that cannot fail.
+The earlier version said: *"wrap the call sites in `Promise.resolve(params)`; it lands green on Next 14."*
+**It does not.** Routes today read `params.id` **synchronously** (check
+`src/app/api/collections/[id]/route.ts` — no `await`). Handing those routes a real Promise makes them
+read `.id` off a Promise → `undefined` → **every dynamic route 404s.** Following that instruction alone
+breaks the app.
 
-Fix: `Promise.resolve(params)` at every call site (~46 files; 34 are `src/lib/db/*.integration.test.ts`),
-tighten `importHandler`'s ctx type so `tsc` enforces it, and assert the **exact** discovered route count
-pre/post migration. The 34 owner-happy-path suites asserting `200` are the real backstop — a missed
-`await` 404s instead of 200 — so they must get the same treatment or they too become unfalsifiable.
+### The corrected design — ONE atomic change, both halves in the same PR
+
+- **(a) Migrate the ROUTES** to async params: `{ params }: { params: Promise<{ id: string }> }` plus
+  `const { id } = await params`.
+- **(b) Harden the TEST ORACLE**: pass `Promise.resolve(params)` at every handler call site.
+
+**Verified enabler:** `npm run build` on **Next 14.2.35 builds clean** with the `Promise<{id}>` params
+signature (confirmed by an actual build, 2026-07-12 — not inferred). Next 14 does not reject it, and at
+runtime Next 14 passes a plain object, which `await` resolves to itself. So (a)+(b) land **together on
+Next 14**, all gates green, *before* the Next bump. See memory `next14-accepts-promise-params`.
+
+**Why both halves or neither:**
+
+- **(b) alone** → routes still read `params.id` synchronously → `undefined` → mass 404s.
+- **(a) alone** → tests still pass a plain object → `await plainObject` no-ops → the oracle **cannot
+  fail** and proves nothing.
+
+Only both together make the oracle falsifiable: a route that flipped its type but kept a sync read now
+genuinely fails in test, exactly as it would in prod.
+
+### Scope (measured)
+
+**39 test files** pass a bare `params: {` object; **34** are `src/lib/db/*.integration.test.ts`. The 34
+owner-happy-path suites asserting `200` are the **real backstop** — a missed `await` 404s instead of
+200 — so they must get the same treatment or they too become oracles that cannot fail.
+
+Also tighten `importHandler`'s ctx type (line 591) so `params` is a Promise type. **But note `tsc` is
+not a gate here** (see §6), so the type alone enforces nothing at CI time — the **runtime** assertion is
+what protects you. Keep the sanity floors (line 746 `discovered >= 40`, line 790 `stranger >= 50`), bump
+to exact actuals, and assert the **exact** discovered route count pre/post migration — it must be
+identical.
+
+**Good news: the regex extractor is safe.** `methodsFromRoute` (lines 101–124) keys on the **export
+form** (`export async function GET(`), which async-params doesn't touch. Discovery keeps seeing all 49
+route files. It is the **handler invocation** that silently degrades.
 
 This codebase has been fooled by exactly this class of bug before: better-auth's
 `export const { GET, POST } = toNextJsHandler(auth)` made the **entire auth surface invisible** to that
@@ -154,20 +205,22 @@ an empty set is a false green.
 
 ---
 
-## 6. Working agreements learned the hard way this session
+## 6. Working agreements learned the hard way
 
+- **Sources before theory.** See §0. This is the one that actually cost time this weekend.
 - **One PR at a time.** No stacked PRs (memory `one-pr-at-a-time`).
 - **CI costs money through July** (memory `ci-cost-restraint-july-2026`). Reproduce locally; don't
-  force-push to re-trigger. Use `npx vercel redeploy <url>` to rebuild without burning a CI matrix.
-- **Don't ask for approval on things you can decide.** The owner's repeated correction all session was
-  that I was adding ceremony and asking permission instead of doing the work.
-- **Don't assert from memory.** I claimed a prod DB hostname from a stale note and was wrong in front of
-  the owner. Check, then speak.
+  force-push to re-trigger. Note **auto-merge is disabled on this repo** (`gh pr merge --auto` fails) —
+  poll the checks instead.
+- **Conservative agent profile is the default** (`CLAUDE.md`): do not commit, push, or merge without
+  explicit authority. A handoff doc telling you to merge is **not** that authority — the owner is.
+- **Don't assert from memory.** A stale note claimed a prod DB hostname and it was wrong in front of the
+  owner. Check, then speak.
 - **`tsc` is not a gate here** — not in `package.json`, not in CI, not in the pre-push hook. It carries
   **96 pre-existing errors** (verified identical on `main` via a clean worktree). `npm run build` is the
   typechecking gate. Don't panic at the number; don't chase it to zero inside another bead.
 
-## 7. Open follow-ups from the drizzle epic (`purses-mebk`)
+## 7. Open follow-ups from the drizzle epic (`purses-mebk`) — these keep the epic OPEN
 
 - `mebk.1` — pin migration content hashes. **Before the first real user.** A re-baseline is invisible to
   every gate: a regenerated `drizzle/` still builds a perfect schema from empty, so CI goes **green** and
