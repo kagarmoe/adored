@@ -81,9 +81,9 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
         <div className="space-y-4">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="text-ink">Share this result</h3>
+              <h3 className="text-ink">Show someone what you love</h3>
               <p className="text-sm text-ink-soft mt-1">
-                Create a shareable link for anyone to view this result without logging in.
+                A link they can open straight away — no account, no signing in.
               </p>
             </div>
             <Button onClick={handleCreateShare} disabled={loading}>
@@ -129,7 +129,7 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
                       variant="danger"
                       onClick={() => handleRevokeShare(share.id)}
                     >
-                      Revoke
+                      Stop sharing
                     </Button>
                   </div>
                   {share.expiresAt && (
@@ -144,7 +144,7 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
 
           {shares.length === 0 && (
             <p className="text-sm text-ink-soft text-center py-4">
-              No active share links yet
+              Nothing shared yet — whenever you&apos;d like to, make a link.
             </p>
           )}
         </div>
