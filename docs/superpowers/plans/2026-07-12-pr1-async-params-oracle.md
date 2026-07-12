@@ -348,14 +348,23 @@ Then add the CI step to the gate job, after `npm ci` (measured cost ~10s):
 ```yaml
       - name: Supply-chain scan (osv-scanner)
         run: |
-          curl -sSfL -o /usr/local/bin/osv-scanner https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64
-          chmod +x /usr/local/bin/osv-scanner
-          osv-scanner scan source -L package-lock.json
+          curl -sSfL -o /tmp/osv-scanner https://github.com/google/osv-scanner/releases/download/v2.4.0/osv-scanner_linux_amd64
+          echo "15314940c10d26af9c6649f150b8a47c1262e8fc7e17b1d1029b0e479e8ed8a0  /tmp/osv-scanner" | sha256sum -c -
+          chmod +x /tmp/osv-scanner
+          /tmp/osv-scanner scan source -L package-lock.json
+        # ponytail: version+hash pinned by hand; bump deliberately with the epic's release-age rule
 ```
+
+(As executed: version-pinned + checksummed — downloading `latest` unverified in CI is
+the attack class this step exists to catch. Hash verified against the release's
+`osv-scanner_SHA256SUMS` AND an independent local download.)
 
 Verify locally that the toml silences exactly the 16 baseline findings: `osv-scanner scan source -L package-lock.json` → exit 0.
 
-- [ ] **Step 8: Workflow lints clean:** `npx --yes actionlint .github/workflows/ci.yml` → no errors (actionlint runs via npx, nothing installed).
+- [ ] **Step 8: Workflow lints clean.** NOTE (found in execution): the npm `actionlint`
+  package is a binary-less stub — `npx actionlint` cannot run it. Use the official
+  release binary (or `brew install actionlint`): `actionlint .github/workflows/ci.yml`
+  → exit 0. Executed with v1.7.12, no findings.
 - [ ] **Step 9: Commit** — `ci: auth:verify gate; osv-scanner + reasoned ignores; webkit-only install, playwright+next caches, job timeouts`
 
 ### Task 8: Whole-branch gates, evidence assembly, single push + PR
