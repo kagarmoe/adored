@@ -2,157 +2,252 @@
 
 **Bead:** `purses-mebk` (epic) → `purses-c3je` (drizzle) + unpin + types
 **Date:** 2026-07-12
-**Status:** design, pending review
+**Status:** design — revised after adversarial review (3 lenses: data, architect+security, craftsman+QA)
 
 ## Purpose
 
 One causal chain, not three chores. The exact `drizzle-orm` / `drizzle-kit` pins conflict
 with `better-auth`'s peers, which forced `legacy-peer-deps=true` into `.npmrc` — and that
-flag suppresses peer resolution for the **whole tree**. Unpinning while the flag is still on
-is theater: you widen the ranges while the thing that ignores range conflicts stays on.
-
-So: upgrade drizzle → drop the flag → unpin → the `@types/react` mismatch becomes visible.
+flag suppresses peer resolution for the **whole tree**.
 
 Policy driving this (owner, 2026-07-11): do not pin without a reason; every surviving pin
-carries a recorded justification. An audit found none of the nine pins had one — all entered
-in a single scaffold commit (`7502432af`) whose message states no constraint.
+carries a recorded justification. An audit found none of the nine had one — all entered in a
+single scaffold commit (`7502432af`) whose message states no constraint.
 
 ## The governing fact
 
-**All database data is disposable** (owner, 2026-07-12) — prod (Neon `main`) and
-`development` alike. This is what makes the design below possible, and it is the single
-assumption the whole plan rests on. If it stops being true, this design must be revisited.
+**All database data is disposable** (owner, 2026-07-12) — prod (Neon `main`) and `development`
+alike. This is the single assumption the plan rests on. If it stops being true, revisit.
 
-### What that retires
+It downgrades the worst case from **data loss** to **a failed deploy**. The migrator's
+already-applied test (`drizzle-orm/pg-core/dialect.js:56`) compares only timestamps —
+`Number(lastDbMigration.created_at) < migration.folderMillis` — reading the newest applied row.
+The `hash` column is written on insert and **never read back**.
 
-The bead's headline danger was a **silent replay against live prod**. `vercel-build` runs
-`db:migrate` on every deploy, and the migrator's already-applied test
-(`drizzle-orm/pg-core/dialect.js:56`) is:
+## What adversarial review changed
 
-```js
-if (!lastDbMigration || Number(lastDbMigration.created_at) < migration.folderMillis) {
-```
+The first draft had two blocking defects (each found independently by two reviewers) and one
+critical one. They are corrected below. Recording them so the reasoning isn't re-derived:
 
-It reads only the newest applied row and compares **timestamps**. The `hash` column is
-written on insert and *never read back for comparison*. So the journal's `when` values are
-the only thing preventing a re-baselined `drizzle/` from replaying the entire schema history.
-
-With disposable data, the worst case downgrades from **data loss** to **a failed deploy**
-(the replay aborts on `CREATE TABLE "user" already exists`). Recoverable, not catastrophic.
+1. **`schema.ts` is a LOSSY representation of the applied schema.** The first draft claimed a
+   regenerated baseline is "by construction consistent with `schema.ts` — no drift possible."
+   True, and substantively wrong: consistency with `schema.ts` was never the invariant that
+   matters. Consistency with the **applied database** is. Anything in the migration history
+   that `schema.ts` cannot express is invisible to `drizzle-kit generate` and is silently
+   discarded by a squash. → Decisions 1a, 2.
+2. **Drizzle's ledger is not in `public`.** → Decision 3.
+3. **A destructive script must never read an ambient `DATABASE_URL`.** → Decision 3.
 
 ## Decisions
 
-### 1. Squash `drizzle/` to a single baseline — do not carry the history
+### 1. Squash `drizzle/` to a single baseline
 
-The fiddly part of this upgrade was never the version bump; it was translating **17 hand-carried
-v5 snapshots to v7** via `drizzle-kit up`, then diff-proving all 17 `when` values survived
-byte-identical. That dance exists *purely* to protect data we don't care about.
+Delete `drizzle/`; let the **new** drizzle-kit generate one `0000_init` natively in v7. No
+v5→v7 translation of 17 snapshots, no `when` values to preserve byte-identically. That dance
+existed purely to protect data we don't care about.
 
-Instead: delete `drizzle/`, let the **new** drizzle-kit generate one clean `0000_init` natively
-in v7. No translation, no legacy format, nothing to preserve. Seventeen fragile snapshots
-become one file the current tool wrote itself, which is *by construction* consistent with
-`schema.ts` — no drift possible.
+Rejected: `drizzle-kit up` in place — more work, and the translation is the step most likely to
+go subtly wrong.
 
-Rejected: `drizzle-kit up` in place. More work, and the translation step is the one most likely
-to go subtly wrong.
+### 1a. Port the orphaned CHECK constraint FIRST — before generating anything
 
-### 2. The proof already exists — do not build a verification harness
+`drizzle/0006_authz_role_check.sql:7` adds:
 
-`e2e/fixtures/test-db.sh:64` builds the test schema by running `npm run db:migrate` — the
-**real migrator, against `drizzle/`, from an empty database**, on every run.
+```sql
+ALTER TABLE memberships ADD CONSTRAINT memberships_role_check CHECK (role IN ('owner','curator'));
+```
 
-So the DB-integration suite and the E2E suite each construct their schema from scratch out of
-the squashed baseline. A green `test:db` + `test:e2e` **is** the end-to-end proof that the new
-baseline builds a working schema the app runs against. No bespoke rehearsal, no prod restore.
+`schema.ts:430` declares **no check** — and could not: drizzle-orm 0.30 has no `check()` API.
+A baseline regenerated from `schema.ts` therefore ships `memberships.role` as **free text**,
+silently deleting an authz-adjacent integrity guard from every DB built from it.
 
-### 3. The reset is declarative and committed — not a hand-run operation
+drizzle-orm ≥0.36 has `check()`. **Port it into `schema.ts` before regenerating.** This is the
+one object in the entire history with no declarative home — everything else (partial indexes,
+ADD COLUMNs) is either in `schema.ts` already or irrelevant on an empty DB (data-migration
+UPDATEs/DELETEs).
+
+`src/lib/db/role-constraint.integration.test.ts` asserts the 23514 rejection and runs in CI
+from an empty DB, so omitting this turns **CI red, not prod silent**. That test failing is the
+**correct signal, not a flake to route around.**
+
+### 2. Prove the baseline with a schema diff — the test suite is a necessary but INCOMPLETE oracle
+
+`e2e/fixtures/test-db.sh:64`, `ci.yml:99` (db-tests) and `ci.yml:510` (bench) all build their
+schema with the **real migrator from an empty DB**. That is genuine from-zero exercise of the
+baseline, and PR 1 trips both the `code` and `ui` path filters, so both gates fire.
+
+But it proves "the app runs against whatever the baseline creates" — **not** "the baseline equals
+the schema we have today." The missing CHECK is caught only because someone happened to write a
+test for it; a lost `sessions_active_unique` predicate would **not** be caught. The suite is an
+accidental oracle.
+
+**The real gate:** `pg_dump --schema-only` of a DB migrated from the current 17, diffed against
+one built from the new `0000_init`. Any non-empty diff (beyond formatting) is a lost schema fact.
+
+**Also pin `sessions_active_unique`'s predicate.** `binary-insertion-ranking.integration.test.ts:90`
+already asserts `pg_indexes.indexdef` contains the predicate for the other two partial indexes;
+`sessions_active_unique` has no such assertion. A partial unique is **behaviorally
+indistinguishable** from an unconditional one in the direction that matters (an unconditional
+unique still rejects a second active session, so the conflict tests stay green while the
+"terminal sessions free the slot" guarantee is quietly lost). Only an `indexdef` assertion is honest.
+
+### 3. `db:reset` — declarative, fail-closed, and it drops BOTH schemas
 
 Per owner directive (2026-07-12): configuration needed in dev belongs in **declarative form**.
+A reset is not "drop things and hope"; it is **re-derive the database from the declared schema**.
 
-A reset is not "drop things and hope"; it is **re-derive the database from the declared
-schema** — the same path `test-db.sh` already takes from empty, pointed at a long-lived DB.
+`scripts/db-reset.ts` + `npm run db:reset`. Thin (~40 lines incl. guard); no arg-parsing framework.
 
-`npm run db:reset` (`scripts/db-reset.ts`): drop the public schema, re-run `db:migrate`.
-One operation for dev, preview, and prod. It **fails closed**, following the precedent already
-set by `scripts/seed-load-core.ts` `resolveLocalUrl()` (refuses any non-localhost host) and
-`scripts/blob-orphans.ts` `deleteRefusal()` (aborts when the deletion looks too big):
+**It drops `drizzle` too.** The ledger lives at `drizzle.__drizzle_migrations`
+(`dialect.js:40` defaults `migrationsSchema` to `"drizzle"`; `scripts/migrate.ts` never overrides
+it). `DROP SCHEMA public CASCADE` alone leaves the 17 rows **alive**, and then:
 
-- Refuses unless the target is explicitly acknowledged.
-- Refuses the **production** host unless separately and explicitly authorized — pointing it at
-  prod must require proving intent, not merely remembering to be careful.
+- 1st reset happens to work — the new baseline's `when` is newer than the last old entry. *Luck of the clock.*
+- 2nd reset onward: `created_at == folderMillis`, so `<` is **false** → migrator applies **nothing**,
+  prints `✅ Migrations completed successfully`, exits 0 — **an empty database with a green light.**
 
-The guard is the point. A destructive script whose safety depends on the operator being careful
-is not safe.
+A reset script that empties the DB and reports success is worse than no script.
+→ `DROP SCHEMA IF EXISTS public CASCADE; DROP SCHEMA IF EXISTS drizzle CASCADE; CREATE SCHEMA public;`
 
-### 4. Widen the `Database` type — 1 file, not 16
+**It runs `db:migrate` AND `db:backfill-numbers`** — exactly `vercel-build`'s DB half. This closes
+the one deploy step **no gate exercises**: `scripts/backfill-session-result-numbers.ts` is the only
+caller of `drizzle(client)` with no schema arg, and it does `backfillNumbers(db as any)` — the `as
+any` compiles straight through the 0.30→0.45 change. Today we'd discover a break on the prod deploy,
+*right after dropping prod's schema*. Making reset run it means "reset `development` first" genuinely
+rehearses the deploy path instead of half of it.
 
-The bead predicted 0.45's tightened transaction generics would ripple through
-`src/lib/transactions.ts` + 16 repositories via a new `DbOrTx` union ("budget a day, not an hour").
+**Guard — fail closed. `dotenv` does NOT override an already-set env var**, so a stray exported
+`DATABASE_URL` silently wins over `.env.local`. With a destructive payload that cuts both ways:
+reset "dev" and drop **prod**; or drop **dev**, believe prod is done, merge, serve 500s.
 
-That is **false**. `PgTransaction extends PgDatabase` — a transaction *is-a* database in drizzle's
-own hierarchy. `src/lib/db.ts:28` currently declares `export type Database = typeof db`, a
-*concrete* `PostgresJsDatabase`, which is why `withTransaction`'s `async (tx: Database)` breaks.
+Neither existing precedent covers this: `seed-load-core.ts resolveLocalUrl()` whitelists localhost
+(we must hit remote DBs); `blob-orphans.ts deleteRefusal()` counts results (a schema drop has
+nothing to count). So:
 
-Widening that one alias to the shared base class — `PgDatabase<PostgresJsQueryResultHKT, typeof schema>`
-— satisfies both the root db and a `tx`, and all 41 consumers keep compiling untouched. Nothing
-in the codebase reads `$client` or any root-only member, which is *why* the base class suffices.
+- **Never read a bare `DATABASE_URL`.** Require an explicit target (`--database-url`, or `--target
+  dev|prod` → distinctly-named vars). An ambient var is a **hard refusal**.
+- **Echo-back confirmation, not a boolean flag.** Print the resolved `host/database`; require it
+  typed back exactly. A `--force` flag is re-runnable from shell history against the wrong target;
+  an echoed host is not.
+- **Separate prod gate:** `ALLOW_PROD_RESET=1` *plus* the confirm token.
+- **Refuse when `CI` or `VERCEL` is set.** Unreachable from any build.
 
-### 5. Journal guard — a checked-in invariant
+Note: `db-reset.ts` must **not** call `migrate(getDb(), …)` — `getDb()` returns the widened base
+type (decision 4), which won't typecheck against `migrate()`. Shell out to `npm run db:migrate` or
+construct a local `drizzle()`.
 
-Once squashed, the underlying footgun still exists for the future: `drizzle/` is a file tree with
-no integrity check, and the migrator compares only timestamps. Today that is harmless because the
-data is worthless. The moment there is a real user, a casual `drizzle-kit generate` re-baseline
-silently arms the same replay.
+### 4. Widen the `Database` type — 1 file
 
-A test pins the journal's `(tag, when)` pairs, so a future re-baseline turns **CI red** instead of
-failing a prod deploy. Cheap, permanent, and declarative — the invariant lives in the repo rather
-than in a bead nobody reads.
+The bead predicted 0.45's generics would ripple through `transactions.ts` + 16 repositories via a
+`DbOrTx` union ("budget a day"). **False.** Verified against the drizzle-orm 0.45.2 tarball:
+`PgDatabase` is public API (`pg-core/index.d.ts:4`); `PostgresJsDatabase extends PgDatabase`
+(`postgres-js/driver.d.ts:6`); `PgTransaction extends PgDatabase` (`pg-core/session.d.ts:49`);
+the `TSchema` defaults line up.
+
+`src/lib/db.ts:28` declares `export type Database = typeof db` — a *concrete* `PostgresJsDatabase`
+— which is why `withTransaction`'s `async (tx: Database)` breaks. Widen that one alias to
+`PgDatabase<PostgresJsQueryResultHKT, typeof schema>`; all ~41 consumers keep compiling.
+
+**Precise reason (the first draft got this wrong):** it works because of the **class hierarchy plus
+matching generic defaults**. "Nothing reads `$client`" is why there is no *fallout* — a different
+claim. Stated sloppily, a future reader "simplifies" the alias and breaks it.
+
+`PgDatabase` carries a `protected authToken`, so object-literal mocks typed as `Database` are
+impossible. Today's mocks all use `as unknown as Database` and survive; `satisfies Database` will
+not work. One comment to that effect.
+
+### 5. Journal guard — pin content hashes, not just `(tag, when)`
+
+A re-baseline is **invisible to every existing gate**: a regenerated `drizzle/` still builds a
+perfect schema from empty, so `test:db` and e2e go **green** and only the prod deploy goes red.
+That green-CI/red-prod asymmetry is exactly what a pinned invariant exists to catch.
+
+`(tag, when)` alone catches a re-baseline but **not an edit to an already-applied `.sql` file**
+(content changes, `when` unchanged, migrate no-ops, `drizzle/` silently diverges from the deployed
+schema). Equally cheap: pin a **content hash per migration file**. ≤10 lines, folded into an
+existing test file — no new spec file, no journal-parsing helper.
 
 ## Scope
 
-### PR 1 — the drizzle upgrade (causally inseparable; `npm ci` breaks if split)
+### PR 1 — the drizzle upgrade (inseparable; `npm ci` breaks if split)
 
-1. `drizzle-orm 0.30.10 → ^0.45`, `drizzle-kit 0.20.17 → ^0.31`
-2. Squash `drizzle/` to a single generated `0000_init`
-3. Drop `legacy-peer-deps=true` from `.npmrc`
-4. `scripts/db-reset.ts` + `npm run db:reset` (declarative, fail-closed)
-5. Journal guard test
+1. Port `memberships_role_check` into `schema.ts` via `check()` — **before** regenerating (1a)
+2. `drizzle-orm 0.30.10 → ^0.45`; `drizzle-kit 0.20.17 → ^0.31`, moved to **devDependencies**
+   (it is a codegen CLI; the runtime migrator imports from `drizzle-orm`, never the kit)
+3. Squash `drizzle/` to one generated `0000_init`; **`pg_dump --schema-only` diff as the gate** (2)
+4. Drop `legacy-peer-deps=true` from `.npmrc`
+5. `scripts/db-reset.ts` + `npm run db:reset` (3)
+6. `sessions_active_unique` `indexdef` assertion (2); journal content-hash guard (5)
 
-Confirmed breaks:
-
-| Break | Fix |
+| Confirmed break | Fix |
 |---|---|
 | `drizzle.config.ts` — `driver: "pg"` removed | `dialect: "postgresql"`; `dbCredentials.connectionString` → `.url` |
-| `db:generate` — `generate:pg` family removed in 0.21 | config-driven `drizzle-kit generate` |
-| `withTransaction` passes `tx` as a concrete `Database` | widen the alias to `PgDatabase<…>` (decision 4) |
-| `drizzle-kit` sits in `dependencies` | move to `devDependencies` — it is a codegen CLI; the runtime migrator imports from `drizzle-orm`, never the kit |
+| `db:generate` — the `generate:pg` family removed in 0.21 | config-driven `drizzle-kit generate` |
+| `withTransaction` passes `tx` as a concrete `Database` | widen the alias (4) |
+| `memberships_role_check` has no declarative home | `check()` in `schema.ts` (1a) |
 
-### PR 2 — hygiene, once peer resolution is honest again
+**Auth-stack resolution change — must be stated, not buried.** Dropping the flag re-hoists the
+better-auth subtree: `better-call` moves from root to nested, and the zod it resolves goes from
+root **`zod@3.23.8`** to sibling **`zod@4.4.3`**. `better-call` declares
+`peerDependencies: { zod: "^4.0.0" }` — the flag has been making it run against a major it declares
+incompatible. Scope-checked: `better-call` imports zod only in its OpenAPI module, so the
+request-validation hot path is not zod-driven and this is **not** a direct authz weakening. Also
+newly nested: 8 `@better-auth/*` packages + `jose`. New at root from drizzle-kit 0.31: `preact`,
+`object-hash`, `@drizzle-team/brocli`; esbuild `0.19 → 0.25` across ~26 platform packages.
 
-Unpin the seven; `@types/react` / `@types/react-dom` `^19` → `^18` to match the React 18.3.1
-runtime. Grouped because neither can be *meaningfully verified* until PR 1 removes the resolver
-override.
+→ PR 1's gates therefore include an **un-mocked auth exercise** (`auth:verify` + an e2e sign-in),
+not just a typecheck. → The **lockfile diff gets reviewed**, deliberately. "Just the npm fix" is
+how a supply-chain change sneaks through.
 
-Per the recorded audit, unpinning is near-inert: `^18.3.1` resolves bit-identically, `^14.2.35`
-cannot reach Next 15, `^3.4.1` cannot reach the Tailwind 4 rewrite. Only `zod` moves
-(3.23.8 → 3.25.76), and `^` still cannot pull zod 4.
+### PR 2 — hygiene
 
-## Sequencing and the one residual risk
+Unpin the seven; `@types/react` / `@types/react-dom` `^19` → `^18` (they sit a major ahead of the
+React 18.3.1 runtime — the actual React inconsistency in this repo).
 
-The risk is no longer data — it is a **deploy-ordering window**. Migrations run at *build* time
-while the previous deployment stays live, so a reset prod serves 500s until the new build
-finishes (~2–3 min). Acceptable for a pre-launch app with disposable data; stated plainly rather
-than sprung.
+**Rationale corrected:** PR 2 has **no hidden dependency** on PR 1 beyond ordering — a flag-off
+resolve with all seven pins still in place resolves cleanly. The real reason to sequence is simply
+that PR 1 regenerates the lock anyway. (The first draft claimed unpinning "cannot be meaningfully
+verified" until the flag is gone. Not true. Fixed.)
 
-1. Land PR 1's code; gates green (`test:db` + e2e prove the baseline from scratch).
-2. Reset `development` first; confirm a preview deploy comes up clean. This **rehearses the exact
-   prod operation against a throwaway target** — prod is never the first time we run it.
-3. Reset prod; merge deploy rebuilds it.
+Per the audit, unpinning is near-inert: `^18.3.1` resolves bit-identically; `^14.2.35` cannot reach
+Next 15; `^3.4.1` cannot reach the Tailwind 4 rewrite. Only **zod** moves (3.23.8 → 3.25.76), and
+`^` still cannot reach zod 4. 3.25.x is additive (ships `zod/v4` as a subpath; the classic v3
+surface is unchanged); our zod use is confined to four `src/server/api/*.ts` files and three route
+handlers, none crossing better-auth's zod-4 copy. **No boundary weakening.**
+
+## Sequencing
+
+The residual risk is not data — it is that **`npm install` runs before `vercel-build`**. The fatal
+case is prod reset → merge → **ERESOLVE at install** → migrate never runs → prod has no schema, and
+the recovery tool is the very script whose guard we just (correctly) made hard to fire.
+
+So: **prove the install on a preview before prod is ever touched.**
+
+1. Gates green locally (incl. the `pg_dump` diff).
+2. **Reset `development`** with the new script (drop + migrate + backfill).
+   ⚠️ Must happen **before pushing the branch** — otherwise the first preview build runs the new
+   baseline against an un-reset dev DB and dies on `relation "user" already exists`.
+   ⚠️ **Land this with no other branches open.** Preview deploys migrate the *shared* `development`
+   DB; once it is reset, any other open branch (old 17-entry journal) sees the newer baseline row,
+   **no-ops its migrate**, and boots against a schema it never applied — failing at *runtime*, not
+   migrate time. We currently have no other branches open.
+3. Push. The preview build **proves Vercel's `npm ci` resolves without the flag** (the install runs
+   before `vercel-build`) and that migrate no-ops cleanly. This is the full rehearsal against a
+   throwaway target — prod is never the first time we run it.
+4. CI green (incl. `auth:verify` + e2e sign-in).
+5. **Reset prod** (drop + migrate + backfill in one command — seconds, not a build cycle).
+6. Merge. The deploy's `db:migrate` finds the `0000` row present → no-op → build succeeds.
+
+Prod serves 500s between (5) and (6) completing. With disposable data on a pre-launch app that is
+acceptable — stated plainly rather than sprung.
 
 ## Success criteria
 
-- `.npmrc` has no `legacy-peer-deps`; a clean `rm -rf node_modules && npm ci` succeeds.
-- `drizzle/` is one migration, generated by the new kit, in v7.
-- `npm run db:reset` exists, is committed, and refuses prod without explicit authorization.
+- `.npmrc` has no `legacy-peer-deps`; `rm -rf node_modules && npm ci` succeeds clean.
+- `drizzle/` is one v7 migration, generated by the new kit.
+- **`pg_dump --schema-only` diff (old 17 vs new baseline) is empty** — the real proof.
+- `memberships_role_check` survives; all three partial-index predicates pinned by `indexdef`.
+- `npm run db:reset` is committed, drops **both** schemas, runs migrate + backfill, refuses an
+  ambient `DATABASE_URL`, refuses prod without explicit authorization, and refuses to run in CI.
 - Gates green: `lint`, `test:ci`, `build`, `auth:verify`, `test:db`, e2e.
 - No exact pin survives without a recorded justification.
