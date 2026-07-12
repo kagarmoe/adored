@@ -152,7 +152,7 @@ describeDb("purge serializes against recompute on the writers' advisory lock —
       new Request(`http://localhost/api/collections/${collectionId}/preferences/recalculate`, {
         method: "POST",
       }) as never,
-      { params: { id: collectionId } },
+      { params: Promise.resolve({ id: collectionId }) },
     ).then((r) => {
       settled = true;
       return r;

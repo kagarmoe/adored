@@ -94,7 +94,7 @@ describeDb("recompute never resurrects a purged item (route -> service -> DB) â€
           decision: { itemId: item.id, result },
           clientKey: `triage-${item.id}`,
         }) as any,
-        { params: { id: sortSession.id } } as any,
+        { params: Promise.resolve({ id: sortSession.id }) } as any,
       );
       expect(res.status).toBe(201);
     }
@@ -125,7 +125,7 @@ describeDb("recompute never resurrects a purged item (route -> service -> DB) â€
         decision: { itemAId: itemB.id, itemBId: itemC.id, result: "item_a" },
         clientKey: "compare-bc",
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201);
 

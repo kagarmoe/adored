@@ -63,14 +63,14 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
 
   it("401s an unauthenticated caller — never serves bytes", async () => {
     mockGetSession.mockResolvedValue(null);
-    const res = await GET(req() as any, { params: { id: collectionId, itemId, photoId } });
+    const res = await GET(req() as any, { params: Promise.resolve({ id: collectionId, itemId, photoId }) });
     expect(res.status).toBe(401);
     expect(mockBlobGet).not.toHaveBeenCalled();
   });
 
   it("404s when the collection segment is a slug, not the owning ULID", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    const res = await GET(req() as any, { params: { id: "summer-bags", itemId, photoId } });
+    const res = await GET(req() as any, { params: Promise.resolve({ id: "summer-bags", itemId, photoId }) });
     expect(res.status).toBe(404);
   });
 
@@ -84,14 +84,14 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
       mimeType: "image/jpeg", fileSize: 1, uploadedBy: ownerId, isHero: false,
     });
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    const res = await GET(req() as any, { params: { id: collectionId, itemId, photoId: otherPhoto.id } });
+    const res = await GET(req() as any, { params: Promise.resolve({ id: collectionId, itemId, photoId: otherPhoto.id }) });
     expect(res.status).toBe(404);
     expect(mockBlobGet).not.toHaveBeenCalled();
   });
 
   it("200s for the owner with the correct collection.id", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    const res = await GET(req() as any, { params: { id: collectionId, itemId, photoId } });
+    const res = await GET(req() as any, { params: Promise.resolve({ id: collectionId, itemId, photoId }) });
     expect(res.status).toBe(200);
   });
 
@@ -103,7 +103,7 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
       collectionId, userId: memberId, role: "curator",
     });
     mockGetSession.mockResolvedValue({ user: { id: memberId } });
-    const res = await GET(req() as any, { params: { id: collectionId, itemId, photoId } });
+    const res = await GET(req() as any, { params: Promise.resolve({ id: collectionId, itemId, photoId }) });
     expect(res.status).toBe(200);
   });
 
@@ -119,9 +119,9 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
     });
 
     it("item /file: a real photo and a nonexistent one are indistinguishable", async () => {
-      const real = await GET(req() as any, { params: { id: collectionId, itemId, photoId } });
+      const real = await GET(req() as any, { params: Promise.resolve({ id: collectionId, itemId, photoId }) });
       const fake = await GET(req() as any, {
-        params: { id: collectionId, itemId: "item_does_not_exist", photoId: "photo_does_not_exist" },
+        params: Promise.resolve({ id: collectionId, itemId: "item_does_not_exist", photoId: "photo_does_not_exist" }),
       });
 
       expect(real.status).toBe(403);
@@ -136,10 +136,10 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
       });
 
       const real = await GET_POOL(req() as any, {
-        params: { id: collectionId, photoId: pooled.id },
+        params: Promise.resolve({ id: collectionId, photoId: pooled.id }),
       });
       const fake = await GET_POOL(req() as any, {
-        params: { id: collectionId, photoId: "photo_does_not_exist" },
+        params: Promise.resolve({ id: collectionId, photoId: "photo_does_not_exist" }),
       });
 
       expect(real.status).toBe(403);
@@ -161,29 +161,29 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
       const cases: [string, () => Promise<Response>, () => Promise<Response>][] = [
         [
           "PATCH photo (rotate)",
-          () => PATCH_PHOTO(patchBody() as any, { params: { id: collectionId, itemId, photoId } }),
+          () => PATCH_PHOTO(patchBody() as any, { params: Promise.resolve({ id: collectionId, itemId, photoId }) }),
           () => PATCH_PHOTO(patchBody() as any, {
-            params: { id: collectionId, itemId: "nope", photoId: "nope" },
+            params: Promise.resolve({ id: collectionId, itemId: "nope", photoId: "nope" }),
           }),
         ],
         [
           "DELETE photo",
-          () => DELETE_PHOTO(req() as any, { params: { id: collectionId, itemId, photoId } }),
+          () => DELETE_PHOTO(req() as any, { params: Promise.resolve({ id: collectionId, itemId, photoId }) }),
           () => DELETE_PHOTO(req() as any, {
-            params: { id: collectionId, itemId: "nope", photoId: "nope" },
+            params: Promise.resolve({ id: collectionId, itemId: "nope", photoId: "nope" }),
           }),
         ],
         [
           "POST set-hero",
-          () => SET_HERO(req() as any, { params: { id: collectionId, itemId, photoId } }),
+          () => SET_HERO(req() as any, { params: Promise.resolve({ id: collectionId, itemId, photoId }) }),
           () => SET_HERO(req() as any, {
-            params: { id: collectionId, itemId: "nope", photoId: "nope" },
+            params: Promise.resolve({ id: collectionId, itemId: "nope", photoId: "nope" }),
           }),
         ],
         [
           "PATCH item",
-          () => PATCH_ITEM(patchBody() as any, { params: { id: collectionId, itemId } }),
-          () => PATCH_ITEM(patchBody() as any, { params: { id: collectionId, itemId: "nope" } }),
+          () => PATCH_ITEM(patchBody() as any, { params: Promise.resolve({ id: collectionId, itemId }) }),
+          () => PATCH_ITEM(patchBody() as any, { params: Promise.resolve({ id: collectionId, itemId: "nope" }) }),
         ],
       ];
 

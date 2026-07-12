@@ -77,13 +77,13 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
     it("401s an unauthenticated caller", async () => {
       const collectionId = await seedBareCollection(ownerId);
       mockGetSession.mockResolvedValue(null);
-      const res = await listItems(jsonReq("GET") as any, { params: { id: collectionId } } as any);
+      const res = await listItems(jsonReq("GET") as any, { params: Promise.resolve({ id: collectionId }) } as any);
       expect(res.status).toBe(401);
     });
 
     it("404s an absent collection id", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await listItems(jsonReq("GET") as any, { params: { id: "col-absent" } } as any);
+      const res = await listItems(jsonReq("GET") as any, { params: Promise.resolve({ id: "col-absent" }) } as any);
       expect(res.status).toBe(404);
     });
 
@@ -97,7 +97,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       const b = await repo.create({ collectionId, name: "Item B" });
 
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await listItems(jsonReq("GET") as any, { params: { id: collectionId } } as any);
+      const res = await listItems(jsonReq("GET") as any, { params: Promise.resolve({ id: collectionId }) } as any);
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body).toHaveLength(2);
@@ -111,7 +111,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       const collectionId = await seedBareCollection(ownerId);
       mockGetSession.mockResolvedValue(null);
       const res = await createItem(jsonReq("POST", { name: "x" }) as any, {
-        params: { id: collectionId },
+        params: Promise.resolve({ id: collectionId }),
       } as any);
       expect(res.status).toBe(401);
       // Non-vacuous: a real collection existed to create into; nothing was created.
@@ -124,7 +124,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       const strangerId = await seedUserRow("stranger");
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
       const res = await createItem(jsonReq("POST", { name: "x" }) as any, {
-        params: { id: collectionId },
+        params: Promise.resolve({ id: collectionId }),
       } as any);
       expect(res.status).toBe(403);
       expect(await new ItemRepository(db).findByCollection(collectionId)).toHaveLength(0);
@@ -133,7 +133,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
     it("404s an absent collection id", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await createItem(jsonReq("POST", { name: "x" }) as any, {
-        params: { id: "col-absent" },
+        params: Promise.resolve({ id: "col-absent" }),
       } as any);
       expect(res.status).toBe(404);
     });
@@ -146,7 +146,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       expect(await new ItemRepository(db).findByCollection(collectionId)).toHaveLength(0);
 
       const res = await createItem(jsonReq("POST", { brand: "no name here" }) as any, {
-        params: { id: collectionId },
+        params: Promise.resolve({ id: collectionId }),
       } as any);
       expect(res.status).toBe(400);
 
@@ -163,7 +163,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
 
       const res = await createItem(
         jsonReq("POST", { name: "Cherished Tote", brand: "Coach", color: "tan" }) as any,
-        { params: { id: collectionId } } as any,
+        { params: Promise.resolve({ id: collectionId }) } as any,
       );
       expect(res.status).toBe(201);
       const body = await res.json();
@@ -187,7 +187,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       const collectionId = await seedBareCollection(ownerId);
       const item = await new ItemRepository(db).create({ collectionId, name: "Bag" });
       mockGetSession.mockResolvedValue(null);
-      const res = await getItem(jsonReq("GET") as any, { params: { id: item.id } } as any);
+      const res = await getItem(jsonReq("GET") as any, { params: Promise.resolve({ id: item.id }) } as any);
       expect(res.status).toBe(401);
     });
 
@@ -196,7 +196,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       // null for an absent/soft-deleted item, which the route maps to 404. Pair the
       // absent case with a present case (below) so this is non-vacuous.
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await getItem(jsonReq("GET") as any, { params: { id: "item-absent" } } as any);
+      const res = await getItem(jsonReq("GET") as any, { params: Promise.resolve({ id: "item-absent" }) } as any);
       expect(res.status).toBe(404);
     });
 
@@ -205,7 +205,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       const collectionId = await seedBareCollection(ownerId);
       const item = await new ItemRepository(db).create({ collectionId, name: "Bag" });
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await getItem(jsonReq("GET") as any, { params: { id: item.id } } as any);
+      const res = await getItem(jsonReq("GET") as any, { params: Promise.resolve({ id: item.id }) } as any);
       expect(res.status).toBe(200);
       expect(await res.json()).toMatchObject({ id: item.id, name: "Bag" });
     });
@@ -219,7 +219,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       const strangerId = await seedUserRow("stranger");
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
 
-      const res = await getItem(jsonReq("GET") as any, { params: { id: item.id } } as any);
+      const res = await getItem(jsonReq("GET") as any, { params: Promise.resolve({ id: item.id }) } as any);
       expect(res.status).toBe(403);
       // The item is untouched and still readable by the owner.
       expect(await new ItemRepository(db).findById(item.id)).not.toBeNull();
@@ -234,7 +234,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       mockGetSession.mockResolvedValue(null);
 
       const res = await patchItem(jsonReq("PATCH", { name: "Hacked" }) as any, {
-        params: { id: item.id },
+        params: Promise.resolve({ id: item.id }),
       } as any);
       expect(res.status).toBe(401);
       // Present-before pairing: the name is untouched.
@@ -251,7 +251,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       expect((await new ItemRepository(db).findById(item.id))!.name).toBe("Original");
 
       const res = await patchItem(jsonReq("PATCH", { name: "Renamed", brand: "Gucci" }) as any, {
-        params: { id: item.id },
+        params: Promise.resolve({ id: item.id }),
       } as any);
       expect(res.status).toBe(200);
 
@@ -270,7 +270,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
 
       const res = await patchItem(jsonReq("PATCH", { name: "StrangerEdited" }) as any, {
-        params: { id: item.id },
+        params: Promise.resolve({ id: item.id }),
       } as any);
       expect(res.status).toBe(403);
       // The name is untouched — the stranger's edit did not persist.
@@ -287,7 +287,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
 
       const story = "To my niece, who always borrowed it.";
       const res = await patchItem(jsonReq("PATCH", { story }) as any, {
-        params: { id: item.id },
+        params: Promise.resolve({ id: item.id }),
       } as any);
       expect(res.status).toBe(200);
 
@@ -304,7 +304,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       expect((await new ItemRepository(db).findById(item.id))!.story).toBeNull();
 
       const res = await patchItem(jsonReq("PATCH", { story: "x".repeat(2001) }) as any, {
-        params: { id: item.id },
+        params: Promise.resolve({ id: item.id }),
       } as any);
       expect(res.status).toBe(400);
       // Unchanged — validation fired before any write.
@@ -322,7 +322,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       expect((await new ItemRepository(db).findById(item.id))!.name).toBe("Original");
 
       const res = await patchItem(jsonReq("PATCH", { name: "" }) as any, {
-        params: { id: item.id },
+        params: Promise.resolve({ id: item.id }),
       } as any);
       expect(res.status).toBe(400);
       // The name is unchanged — validation fired before any write.
@@ -337,7 +337,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       const item = await new ItemRepository(db).create({ collectionId, name: "Keep" });
       mockGetSession.mockResolvedValue(null);
 
-      const res = await deleteItem(jsonReq("DELETE") as any, { params: { id: item.id } } as any);
+      const res = await deleteItem(jsonReq("DELETE") as any, { params: Promise.resolve({ id: item.id }) } as any);
       expect(res.status).toBe(401);
       // Present-before pairing: still resolvable (not soft-deleted).
       expect(await new ItemRepository(db).findById(item.id)).not.toBeNull();
@@ -352,7 +352,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       // Present before.
       expect(await new ItemRepository(db).findById(item.id)).not.toBeNull();
 
-      const res = await deleteItem(jsonReq("DELETE") as any, { params: { id: item.id } } as any);
+      const res = await deleteItem(jsonReq("DELETE") as any, { params: Promise.resolve({ id: item.id }) } as any);
       expect(res.status).toBe(200);
 
       // Gone after (findById filters soft-deleted rows).
@@ -371,7 +371,7 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       // Present before.
       expect(await new ItemRepository(db).findById(item.id)).not.toBeNull();
 
-      const res = await deleteItem(jsonReq("DELETE") as any, { params: { id: item.id } } as any);
+      const res = await deleteItem(jsonReq("DELETE") as any, { params: Promise.resolve({ id: item.id }) } as any);
       expect(res.status).toBe(403);
       // Still present — the stranger's delete did not take effect.
       expect(await new ItemRepository(db).findById(item.id)).not.toBeNull();

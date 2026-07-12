@@ -80,7 +80,7 @@ describeDb("GET /api/shared-results/[token] (public route)", () => {
     mockGetSession.mockResolvedValue(null);
 
     const res = await sharedResultsGet(makeRequest("GET") as any, {
-      params: { token },
+      params: Promise.resolve({ token }),
     });
 
     expect(res.status).toBe(200);
@@ -97,7 +97,7 @@ describeDb("GET /api/shared-results/[token] (public route)", () => {
     mockGetSession.mockResolvedValue(null);
 
     const res = await sharedResultsGet(makeRequest("GET") as any, {
-      params: { token: "tok-does-not-exist" },
+      params: Promise.resolve({ token: "tok-does-not-exist" }),
     });
 
     expect(res.status).toBe(404);
@@ -125,7 +125,7 @@ describeDb("GET /api/shared-results/[token] (public route)", () => {
     mockGetSession.mockResolvedValue(null);
 
     const res = await sharedResultsGet(makeRequest("GET") as any, {
-      params: { token },
+      params: Promise.resolve({ token }),
     });
 
     expect(res.status).toBe(404);
@@ -146,7 +146,7 @@ describeDb("GET /api/shared-results/[token] (public route)", () => {
     mockGetSession.mockResolvedValue(null);
 
     const res = await sharedResultsGet(makeRequest("GET") as any, {
-      params: { token },
+      params: Promise.resolve({ token }),
     });
 
     expect(res.status).toBe(200);

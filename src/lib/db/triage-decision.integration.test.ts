@@ -94,7 +94,7 @@ describeDb("triage decision flow (route -> DB) — purses-t9l", () => {
 
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await POST(decisionReq({ type: "triage", decision: { itemId, result: "top" } }) as any, {
-      params: { id: sessionId },
+      params: Promise.resolve({ id: sessionId }),
     });
 
     // Route status
@@ -142,7 +142,7 @@ describeDb("triage decision flow (route -> DB) — purses-t9l", () => {
     // The MEMBER attempts to triage the OWNER's session — forbidden by the rule.
     mockGetSession.mockResolvedValue({ user: { id: memberId } });
     const res = await POST(decisionReq({ type: "triage", decision: { itemId, result: "top" } }) as any, {
-      params: { id: sessionId },
+      params: Promise.resolve({ id: sessionId }),
     });
 
     expect(res.status).toBe(403);
@@ -165,7 +165,7 @@ describeDb("triage decision flow (route -> DB) — purses-t9l", () => {
 
     mockGetSession.mockResolvedValue({ user: { id: memberId } });
     const res = await POST(decisionReq({ type: "triage", decision: { itemId, result: "high" } }) as any, {
-      params: { id: memberSession.id },
+      params: Promise.resolve({ id: memberSession.id }),
     });
 
     expect(res.status).toBe(201);
@@ -191,7 +191,7 @@ describeDb("triage decision flow (route -> DB) — purses-t9l", () => {
     mockGetSession.mockResolvedValue(null);
 
     const res = await POST(decisionReq({ type: "triage", decision: { itemId, result: "top" } }) as any, {
-      params: { id: sessionId },
+      params: Promise.resolve({ id: sessionId }),
     });
     expect(res.status).toBe(401);
 
@@ -202,7 +202,7 @@ describeDb("triage decision flow (route -> DB) — purses-t9l", () => {
   it("E) 404s an absent session id — and writes nothing", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await POST(decisionReq({ type: "triage", decision: { foo: "bar" } }) as any, {
-      params: { id: "sess-absent" },
+      params: Promise.resolve({ id: "sess-absent" }),
     });
     expect(res.status).toBe(404);
   });
@@ -215,7 +215,7 @@ describeDb("triage decision flow (route -> DB) — purses-t9l", () => {
 
     // A triage decision with no `decision` object fails the boundary Zod schema →
     // 400 BEFORE the transaction (it used to reach the NOT NULL insert and 500).
-    const res = await POST(decisionReq({ type: "triage" }) as any, { params: { id: sessionId } });
+    const res = await POST(decisionReq({ type: "triage" }) as any, { params: Promise.resolve({ id: sessionId }) });
     expect(res.status).toBe(400);
 
     // Nothing persisted — rejected before any write.

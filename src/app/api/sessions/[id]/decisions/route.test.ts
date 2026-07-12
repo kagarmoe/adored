@@ -84,7 +84,7 @@ describe("decisions route — DB failure observability", () => {
     mockWithTransaction.mockRejectedValue(boom);
 
     const res = await POST(req({ type: "triage", decision: { itemId: "itm_1", result: "top" } }), {
-      params: { id: SESSION },
+      params: Promise.resolve({ id: SESSION }),
     });
 
     expect(res.status).toBe(500);
@@ -98,7 +98,7 @@ describe("decisions route — DB failure observability", () => {
     mockWithTransaction.mockResolvedValue({ event: { id: "event_1" }, isNew: false });
 
     await POST(req({ type: "triage", decision: { itemId: "itm_1", result: "top" }, clientKey: "k1" }), {
-      params: { id: SESSION },
+      params: Promise.resolve({ id: SESSION }),
     });
 
     const opts = mockWithTransaction.mock.calls[0][2];
@@ -115,7 +115,7 @@ describe("decisions route — analytics client lifecycle (purses-icut)", () => {
     mockWithTransaction.mockResolvedValue({ event: { id: "event_1" }, isNew: true });
 
     const res = await POST(req({ type: "triage", decision: { itemId: "itm_1", result: "top" } }), {
-      params: { id: SESSION },
+      params: Promise.resolve({ id: SESSION }),
     });
 
     expect(res.status).toBe(201);

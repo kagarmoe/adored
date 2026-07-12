@@ -140,7 +140,7 @@ describeDb("POST /api/items/[id]/purge (route -> service -> DB) — purses-u3p",
     const itemId = await seedItemWithChildren();
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-    const res = await purge(purgeReq({ confirm: "PURGE" }) as any, { params: { id: itemId } });
+    const res = await purge(purgeReq({ confirm: "PURGE" }) as any, { params: Promise.resolve({ id: itemId }) });
     expect(res.status).toBe(200);
 
     // HARD-delete proof: gone even when NOT filtering deletedAt.
@@ -170,7 +170,7 @@ describeDb("POST /api/items/[id]/purge (route -> service -> DB) — purses-u3p",
     expect(await dispositionRowCount(itemId)).toBe(1); // non-vacuous BEFORE
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-    const res = await purge(purgeReq({ confirm: "PURGE" }) as any, { params: { id: itemId } });
+    const res = await purge(purgeReq({ confirm: "PURGE" }) as any, { params: Promise.resolve({ id: itemId }) });
     expect(res.status).toBe(200);
 
     expect(await new ItemRepository(db).findByIdIncludingDeleted(itemId)).toBeNull();
@@ -189,7 +189,7 @@ describeDb("POST /api/items/[id]/purge (route -> service -> DB) — purses-u3p",
     });
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-    const res = await purge(purgeReq({ confirm: "PURGE" }) as any, { params: { id: itemId } });
+    const res = await purge(purgeReq({ confirm: "PURGE" }) as any, { params: Promise.resolve({ id: itemId }) });
     expect(res.status).toBe(409);
 
     // Everything survives.
@@ -205,7 +205,7 @@ describeDb("POST /api/items/[id]/purge (route -> service -> DB) — purses-u3p",
     const memberId = await addMember();
     mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
-    const res = await purge(purgeReq({ confirm: "PURGE" }) as any, { params: { id: itemId } });
+    const res = await purge(purgeReq({ confirm: "PURGE" }) as any, { params: Promise.resolve({ id: itemId }) });
     expect(res.status).toBe(403);
     expect(await new ItemRepository(db).findByIdIncludingDeleted(itemId)).not.toBeNull();
     expect(mockBlobDel).not.toHaveBeenCalled();
@@ -213,7 +213,7 @@ describeDb("POST /api/items/[id]/purge (route -> service -> DB) — purses-u3p",
 
   it("(d) 404 for an absent item id", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    const res = await purge(purgeReq({ confirm: "PURGE" }) as any, { params: { id: "item_does_not_exist" } });
+    const res = await purge(purgeReq({ confirm: "PURGE" }) as any, { params: Promise.resolve({ id: "item_does_not_exist" }) });
     expect(res.status).toBe(404);
   });
 
@@ -227,7 +227,7 @@ describeDb("POST /api/items/[id]/purge (route -> service -> DB) — purses-u3p",
     const badReq = new Request("http://localhost/api/items/x/purge", {
       method: "POST", headers: { "content-type": "application/json" }, body: "{ not json",
     });
-    const res = await purge(badReq as any, { params: { id: itemId } });
+    const res = await purge(badReq as any, { params: Promise.resolve({ id: itemId }) });
     expect(res.status).toBe(403);
     expect(await new ItemRepository(db).findByIdIncludingDeleted(itemId)).not.toBeNull();
   });
@@ -237,7 +237,7 @@ describeDb("POST /api/items/[id]/purge (route -> service -> DB) — purses-u3p",
     const itemId = await seedItemWithChildren();
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-    const res = await purge(purgeReq({}) as any, { params: { id: itemId } });
+    const res = await purge(purgeReq({}) as any, { params: Promise.resolve({ id: itemId }) });
     expect(res.status).toBe(400);
     expect(await new ItemRepository(db).findByIdIncludingDeleted(itemId)).not.toBeNull();
     expect(await photoRowCount(itemId)).toBe(3);
@@ -255,7 +255,7 @@ describeDb("POST /api/items/[id]/purge (route -> service -> DB) — purses-u3p",
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     mockBlobDel.mockRejectedValue(new Error("blob store unreachable"));
 
-    const res = await purge(purgeReq({ confirm: "PURGE" }) as any, { params: { id: itemId } });
+    const res = await purge(purgeReq({ confirm: "PURGE" }) as any, { params: Promise.resolve({ id: itemId }) });
     expect(res.status).toBe(200);
 
     // The destructive DB work committed despite the blob failure.

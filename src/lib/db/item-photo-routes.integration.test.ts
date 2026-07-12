@@ -85,9 +85,9 @@ function jsonReq(method: string, body?: unknown): Request {
   });
 }
 
-const itemCtx = (id: string, itemId: string) => ({ params: { id, itemId } }) as any;
+const itemCtx = (id: string, itemId: string) => ({ params: Promise.resolve({ id, itemId }) }) as any;
 const photoCtx = (id: string, itemId: string, photoId: string) =>
-  ({ params: { id, itemId, photoId } }) as any;
+  ({ params: Promise.resolve({ id, itemId, photoId }) }) as any;
 
 describeDb("item-photo routes (route -> repo -> DB)", () => {
   let ownerId: string;
@@ -658,7 +658,7 @@ describeDb("purses-wfgj: audit attribution for item soft-delete and photo delete
 
     const res = await deleteItem(
       new Request(`http://localhost/api/items/${itemAId}`, { method: "DELETE" }) as any,
-      { params: { id: itemAId } },
+      { params: Promise.resolve({ id: itemAId }) },
     );
     expect(res.status).toBe(200);
 
@@ -682,7 +682,7 @@ describeDb("purses-wfgj: audit attribution for item soft-delete and photo delete
 
     const res = await deleteItem(
       new Request(`http://localhost/api/items/${itemAId}`, { method: "DELETE" }) as any,
-      { params: { id: itemAId } },
+      { params: Promise.resolve({ id: itemAId }) },
     );
     expect(res.status).toBe(200);
 
@@ -702,7 +702,7 @@ describeDb("purses-wfgj: audit attribution for item soft-delete and photo delete
 
     const res = await deletePhoto(
       jsonReq("DELETE") as any,
-      { params: { id: collectionId, itemId: itemAId, photoId: photo.id } } as any,
+      { params: Promise.resolve({ id: collectionId, itemId: itemAId, photoId: photo.id }) } as any,
     );
     expect(res.status).toBe(200);
 
@@ -728,7 +728,7 @@ describeDb("purses-wfgj: audit attribution for item soft-delete and photo delete
 
     const res = await deletePhoto(
       jsonReq("DELETE") as any,
-      { params: { id: collectionId, itemId: itemAId, photoId: photo.id } } as any,
+      { params: Promise.resolve({ id: collectionId, itemId: itemAId, photoId: photo.id }) } as any,
     );
     expect(res.status).toBe(200);
 

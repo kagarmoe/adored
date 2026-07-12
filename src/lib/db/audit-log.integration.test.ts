@@ -217,7 +217,7 @@ describeDb("item purge -> audit_log (route -> service -> DB) — purses-ite", ()
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ confirm: "PURGE", actorId: "ATTACKER" }),
       }) as any,
-      { params: { id: itemId } },
+      { params: Promise.resolve({ id: itemId }) },
     );
     expect(res.status).toBe(200);
 
@@ -252,7 +252,7 @@ describeDb("item purge -> audit_log (route -> service -> DB) — purses-ite", ()
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ confirm: "PURGE" }),
       }) as any,
-      { params: { id: itemId } },
+      { params: Promise.resolve({ id: itemId }) },
     );
     expect(res.status).toBe(500); // the throw propagates
 
@@ -343,7 +343,7 @@ describeDb("GET /api/collections/[id]/audit (owner-only) — purses-ite", () => 
 
   it("owner gets the collection's entries, newest-first", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    const res = await auditRoute(auditReq(collectionId), { params: { id: collectionId } });
+    const res = await auditRoute(auditReq(collectionId), { params: Promise.resolve({ id: collectionId }) });
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toHaveLength(2);
@@ -357,7 +357,7 @@ describeDb("GET /api/collections/[id]/audit (owner-only) — purses-ite", () => 
 
   it("non-owner member -> 403 (membership is not enough to read the trail)", async () => {
     mockGetSession.mockResolvedValue({ user: { id: memberId } });
-    const res = await auditRoute(auditReq(collectionId), { params: { id: collectionId } });
+    const res = await auditRoute(auditReq(collectionId), { params: Promise.resolve({ id: collectionId }) });
     expect(res.status).toBe(403);
   });
 
@@ -365,19 +365,19 @@ describeDb("GET /api/collections/[id]/audit (owner-only) — purses-ite", () => 
     mockGetSession.mockResolvedValue({ user: { id: strangerId } });
     // The collection EXISTS but the stranger is neither member nor owner: 403.
     expect(
-      (await auditRoute(auditReq(collectionId), { params: { id: collectionId } })).status,
+      (await auditRoute(auditReq(collectionId), { params: Promise.resolve({ id: collectionId }) })).status,
     ).toBe(403);
     // Absent collection: 404 from the gate BEFORE any ownership check (existence
     // oracle — a missing id and a forbidden id give different answers, but the gate
     // checks existence first so a stranger can't probe ownership of a real id).
     expect(
-      (await auditRoute(auditReq("col-absent"), { params: { id: "col-absent" } })).status,
+      (await auditRoute(auditReq("col-absent"), { params: Promise.resolve({ id: "col-absent" }) })).status,
     ).toBe(404);
   });
 
   it("empty collection -> 200 []", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    const res = await auditRoute(auditReq(emptyCollectionId), { params: { id: emptyCollectionId } });
+    const res = await auditRoute(auditReq(emptyCollectionId), { params: Promise.resolve({ id: emptyCollectionId }) });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual([]);
   });
@@ -385,7 +385,7 @@ describeDb("GET /api/collections/[id]/audit (owner-only) — purses-ite", () => 
   it("?limit=abc/-5/99999 all return a bounded, non-error result (clamped, never 500)", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     for (const q of ["abc", "-5", "99999"]) {
-      const res = await auditRoute(auditReq(collectionId, q), { params: { id: collectionId } });
+      const res = await auditRoute(auditReq(collectionId, q), { params: Promise.resolve({ id: collectionId }) });
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(Array.isArray(body)).toBe(true);
@@ -395,7 +395,7 @@ describeDb("GET /api/collections/[id]/audit (owner-only) — purses-ite", () => 
 
   it("401 when unauthenticated (no session)", async () => {
     mockGetSession.mockResolvedValue(null);
-    const res = await auditRoute(auditReq(collectionId), { params: { id: collectionId } });
+    const res = await auditRoute(auditReq(collectionId), { params: Promise.resolve({ id: collectionId }) });
     expect(res.status).toBe(401);
   });
 });

@@ -75,7 +75,7 @@ describeDb("POST /api/sessions/[id]/restore slot collision -> 409 (4bhh restore-
     const b = await repo.create({ collectionId, curatorId: ownerId });
 
     const res = await restoreSessionRoute(jsonReq("POST") as any, {
-      params: { id: a.id },
+      params: Promise.resolve({ id: a.id }),
     } as any);
     expect(res.status).toBe(409); // was a raw 500 before the slot-aware restore
     const body = await res.json();
@@ -104,7 +104,7 @@ describeDb("POST /api/sessions/[id]/restore slot collision -> 409 (4bhh restore-
     expect(await repo.findById(a.id)).toBeNull(); // gone from the active view
 
     const res = await restoreSessionRoute(jsonReq("POST") as any, {
-      params: { id: a.id },
+      params: Promise.resolve({ id: a.id }),
     } as any);
     expect(res.status).toBe(200);
     const body = await res.json();

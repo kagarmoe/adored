@@ -105,13 +105,13 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       await seedInvitation(collectionId);
       mockGetSession.mockResolvedValue(null);
 
-      const res = await GET(jsonReq("GET") as any, { params: { id: collectionId } } as any);
+      const res = await GET(jsonReq("GET") as any, { params: Promise.resolve({ id: collectionId }) } as any);
       expect(res.status).toBe(401);
     });
 
     it("404s an absent collection id", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await GET(jsonReq("GET") as any, { params: { id: "col-absent" } } as any);
+      const res = await GET(jsonReq("GET") as any, { params: Promise.resolve({ id: "col-absent" }) } as any);
       expect(res.status).toBe(404);
     });
 
@@ -122,7 +122,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       const strangerId = await seedUserRow("stranger");
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
 
-      const res = await GET(jsonReq("GET") as any, { params: { id: collectionId } } as any);
+      const res = await GET(jsonReq("GET") as any, { params: Promise.resolve({ id: collectionId }) } as any);
       expect(res.status).toBe(403);
     });
 
@@ -134,7 +134,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       await seedInvitation(otherCollectionId, "other@adored.test");
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-      const res = await GET(jsonReq("GET") as any, { params: { id: collectionId } } as any);
+      const res = await GET(jsonReq("GET") as any, { params: Promise.resolve({ id: collectionId }) } as any);
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body).toHaveLength(1);
@@ -149,7 +149,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       const memberId = await addMember(collectionId);
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
-      const res = await GET(jsonReq("GET") as any, { params: { id: collectionId } } as any);
+      const res = await GET(jsonReq("GET") as any, { params: Promise.resolve({ id: collectionId }) } as any);
       expect(res.status).toBe(403);
     });
   });
@@ -164,7 +164,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       mockGetSession.mockResolvedValue(null);
 
       const res = await POST(jsonReq("POST", { email: "x@adored.test" }) as any, {
-        params: { id: collectionId },
+        params: Promise.resolve({ id: collectionId }),
       } as any);
       expect(res.status).toBe(401);
       // Non-vacuous: a real collection it could have created an invitation in.
@@ -175,7 +175,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       const { db } = getTestDb();
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await POST(jsonReq("POST", { email: "x@adored.test" }) as any, {
-        params: { id: "col-absent" },
+        params: Promise.resolve({ id: "col-absent" }),
       } as any);
       expect(res.status).toBe(404);
       expect(await new InvitationRepository(db).findByCollection("col-absent")).toHaveLength(0);
@@ -188,7 +188,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       mockGetSession.mockResolvedValue({ user: { id: strangerId } });
 
       const res = await POST(jsonReq("POST", { email: "x@adored.test" }) as any, {
-        params: { id: collectionId },
+        params: Promise.resolve({ id: collectionId }),
       } as any);
       expect(res.status).toBe(403);
       // The collection exists but no invitation was created in it.
@@ -205,7 +205,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
         headers: { "content-type": "application/json" },
         body: "not-json{{{",
       });
-      const res = await POST(req as any, { params: { id: collectionId } } as any);
+      const res = await POST(req as any, { params: Promise.resolve({ id: collectionId }) } as any);
       expect(res.status).toBe(400);
       const errBody = await res.json();
       expect(errBody.error).toMatch(/invalid json/i);
@@ -222,7 +222,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
 
       const res = await POST(
         jsonReq("POST", { email: "newinvitee@adored.test" }) as any,
-        { params: { id: collectionId } } as any,
+        { params: Promise.resolve({ id: collectionId }) } as any,
       );
       expect(res.status).toBe(201);
       const body = await res.json();
@@ -247,7 +247,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
       const res = await POST(jsonReq("POST", { email: "gap@adored.test" }) as any, {
-        params: { id: collectionId },
+        params: Promise.resolve({ id: collectionId }),
       } as any);
       expect(res.status).toBe(403);
       // State: no invitation was created.
@@ -262,7 +262,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
       const res = await POST(jsonReq("POST", { email: "flagged@adored.test" }) as any, {
-        params: { id: collectionId },
+        params: Promise.resolve({ id: collectionId }),
       } as any);
       expect(res.status).toBe(403);
       expect(await new InvitationRepository(db).findByCollection(collectionId)).toHaveLength(0);
@@ -274,7 +274,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
       const res = await POST(jsonReq("POST", { canSort: true }) as any, {
-        params: { id: collectionId },
+        params: Promise.resolve({ id: collectionId }),
       } as any);
       expect(res.status).toBe(400);
       expect(await new InvitationRepository(db).findByCollection(collectionId)).toHaveLength(0);
@@ -286,7 +286,7 @@ describeDb("collection invitations routes (route -> repo -> DB)", () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
       const res = await POST(jsonReq("POST", { email: "not-an-email" }) as any, {
-        params: { id: collectionId },
+        params: Promise.resolve({ id: collectionId }),
       } as any);
       expect(res.status).toBe(400);
       expect(await new InvitationRepository(db).findByCollection(collectionId)).toHaveLength(0);

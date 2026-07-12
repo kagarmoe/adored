@@ -100,7 +100,7 @@ describeDb("POST /api/sessions/[id]/restore (route -> repo -> DB) — purses-t9l
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
     const res = await restoreSessionRoute(jsonReq("POST") as any, {
-      params: { id: sessionId },
+      params: Promise.resolve({ id: sessionId }),
     } as any);
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -124,7 +124,7 @@ describeDb("POST /api/sessions/[id]/restore (route -> repo -> DB) — purses-t9l
     mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
     const res = await restoreSessionRoute(jsonReq("POST") as any, {
-      params: { id: sessionId },
+      params: Promise.resolve({ id: sessionId }),
     } as any);
     expect(res.status).toBe(403);
 
@@ -144,7 +144,7 @@ describeDb("POST /api/sessions/[id]/restore (route -> repo -> DB) — purses-t9l
     mockGetSession.mockResolvedValue({ user: { id: strangerId } });
 
     const res = await restoreSessionRoute(jsonReq("POST") as any, {
-      params: { id: sessionId },
+      params: Promise.resolve({ id: sessionId }),
     } as any);
     expect([403, 404]).toContain(res.status);
 
@@ -157,7 +157,7 @@ describeDb("POST /api/sessions/[id]/restore (route -> repo -> DB) — purses-t9l
   it("404s an absent session id", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await restoreSessionRoute(jsonReq("POST") as any, {
-      params: { id: "sess-absent" },
+      params: Promise.resolve({ id: "sess-absent" }),
     } as any);
     expect(res.status).toBe(404);
   });
@@ -170,7 +170,7 @@ describeDb("POST /api/sessions/[id]/restore (route -> repo -> DB) — purses-t9l
     mockGetSession.mockResolvedValue(null);
 
     const res = await restoreSessionRoute(jsonReq("POST") as any, {
-      params: { id: sessionId },
+      params: Promise.resolve({ id: sessionId }),
     } as any);
     expect(res.status).toBe(401);
 

@@ -59,7 +59,7 @@ function jsonReq(method: string, body?: unknown): Request {
   });
 }
 
-const ctx = (id: string, mid: string) => ({ params: { id, mid } }) as any;
+const ctx = (id: string, mid: string) => ({ params: Promise.resolve({ id, mid }) }) as any;
 
 describeDb("member-management route (route -> repo -> DB)", () => {
   let ownerId: string;

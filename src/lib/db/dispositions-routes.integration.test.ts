@@ -85,7 +85,7 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
 
     const res = await postDisposition(
       postReq(collectionId, { itemId: item.id, disposition: "deferred" }) as any,
-      { params: { id: collectionId } } as any,
+      { params: Promise.resolve({ id: collectionId }) } as any,
     );
     expect(res.status).toBe(201);
     const body = await res.json();
@@ -123,7 +123,7 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
 
     const res = await postDisposition(
       postReq(collA, { itemId: itemB.id, disposition: "deferred" }) as any,
-      { params: { id: collA } } as any,
+      { params: Promise.resolve({ id: collA }) } as any,
     );
     // No cross-tenant access: 403 (capability gate) — never a 2xx, never a 500.
     expect([403, 404]).toContain(res.status);
@@ -149,7 +149,7 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await postDisposition(
       postReq(collA2, { itemId: itemA.id, disposition: "deferred" }) as any,
-      { params: { id: collA2 } } as any,
+      { params: Promise.resolve({ id: collA2 }) } as any,
     );
     expect(res.status).toBe(404);
 
@@ -179,7 +179,7 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await postDisposition(
       postReq(collectionId, { itemId: item.id, disposition: "set_aside" }) as any,
-      { params: { id: collectionId } } as any,
+      { params: Promise.resolve({ id: collectionId }) } as any,
     );
     expect(res.status).toBe(409);
 
@@ -197,14 +197,14 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
     // Absent itemId → 400 (guard before any DB work).
     const resNoItem = await postDisposition(
       postReq(collectionId, { disposition: "deferred" }) as any,
-      { params: { id: collectionId } } as any,
+      { params: Promise.resolve({ id: collectionId }) } as any,
     );
     expect(resNoItem.status).toBe(400);
 
     // Invalid disposition enum → 400 (Zod inside setDisposition).
     const resBadEnum = await postDisposition(
       postReq(collectionId, { itemId: item.id, disposition: "bin_it" }) as any,
-      { params: { id: collectionId } } as any,
+      { params: Promise.resolve({ id: collectionId }) } as any,
     );
     expect(resBadEnum.status).toBe(400);
 
@@ -228,7 +228,7 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const setRes = await postDisposition(
       postReq(collectionId, { itemId: item.id, disposition: "deferred" }) as any,
-      { params: { id: collectionId } } as any,
+      { params: Promise.resolve({ id: collectionId }) } as any,
     );
     expect(setRes.status).toBe(201);
 
@@ -241,7 +241,7 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
     mockGetSession.mockResolvedValue({ user: { id: curatorB } });
     const delRes = await deleteDisposition(
       deleteReq(collectionId, item.id) as any,
-      { params: { id: collectionId, itemId: item.id } } as any,
+      { params: Promise.resolve({ id: collectionId, itemId: item.id }) } as any,
     );
     expect(delRes.status).toBe(200); // idempotent — B had no row, deletes nothing
 
@@ -252,7 +252,7 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
 
     // B's GET on the collection's dispositions returns only B's rows — A's are not leaked.
     const bListRes = await listDispositions(getReq(collectionId) as any, {
-      params: { id: collectionId },
+      params: Promise.resolve({ id: collectionId }),
     } as any);
     expect(bListRes.status).toBe(200);
     const bList = await bListRes.json();
@@ -262,7 +262,7 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
     // A's own GET sees A's one row (proves the scoping is per-curator, not vacuously empty).
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const aListRes = await listDispositions(getReq(collectionId) as any, {
-      params: { id: collectionId },
+      params: Promise.resolve({ id: collectionId }),
     } as any);
     expect(aListRes.status).toBe(200);
     const aList = await aListRes.json();
@@ -283,13 +283,13 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     await postDisposition(
       postReq(collectionId, { itemId: item.id, disposition: "deferred" }) as any,
-      { params: { id: collectionId } } as any,
+      { params: Promise.resolve({ id: collectionId }) } as any,
     );
     // B's disposition (different row, same item).
     mockGetSession.mockResolvedValue({ user: { id: curatorB } });
     await postDisposition(
       postReq(collectionId, { itemId: item.id, disposition: "set_aside" }) as any,
-      { params: { id: collectionId } } as any,
+      { params: Promise.resolve({ id: collectionId }) } as any,
     );
     expect(await dispRepo.findByItem(item.id, ownerId)).not.toBeNull();
     expect(await dispRepo.findByItem(item.id, curatorB)).not.toBeNull();
@@ -297,7 +297,7 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
     // B deletes their own → 200, only B's row gone.
     const delRes = await deleteDisposition(
       deleteReq(collectionId, item.id) as any,
-      { params: { id: collectionId, itemId: item.id } } as any,
+      { params: Promise.resolve({ id: collectionId, itemId: item.id }) } as any,
     );
     expect(delRes.status).toBe(200);
     expect(await dispRepo.findByItem(item.id, curatorB)).toBeNull();
@@ -313,7 +313,7 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
 
     const res = await deleteDisposition(
       deleteReq(collectionId, item.id) as any,
-      { params: { id: collectionId, itemId: item.id } } as any,
+      { params: Promise.resolve({ id: collectionId, itemId: item.id }) } as any,
     );
     expect(res.status).toBe(200);
   });
@@ -330,7 +330,7 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     await postDisposition(
       postReq(collA, { itemId: itemA.id, disposition: "deferred" }) as any,
-      { params: { id: collA } } as any,
+      { params: Promise.resolve({ id: collA }) } as any,
     );
 
     // DELETE itemA but with collB as the URL id → 404 (item.collectionId !== params.id).
@@ -338,7 +338,7 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
     //  IS owner, so the gate passes; the collectionId mismatch is what produces 404.)
     const res = await deleteDisposition(
       deleteReq(collB, itemA.id) as any,
-      { params: { id: collB, itemId: itemA.id } } as any,
+      { params: Promise.resolve({ id: collB, itemId: itemA.id }) } as any,
     );
     expect(res.status).toBe(404);
 
@@ -355,18 +355,18 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
 
     const postRes = await postDisposition(
       postReq(collectionId, { itemId: item.id, disposition: "deferred" }) as any,
-      { params: { id: collectionId } } as any,
+      { params: Promise.resolve({ id: collectionId }) } as any,
     );
     expect(postRes.status).toBe(401);
 
     const getRes = await listDispositions(getReq(collectionId) as any, {
-      params: { id: collectionId },
+      params: Promise.resolve({ id: collectionId }),
     } as any);
     expect(getRes.status).toBe(401);
 
     const delRes = await deleteDisposition(
       deleteReq(collectionId, item.id) as any,
-      { params: { id: collectionId, itemId: item.id } } as any,
+      { params: Promise.resolve({ id: collectionId, itemId: item.id }) } as any,
     );
     expect(delRes.status).toBe(401);
 
@@ -386,20 +386,20 @@ describeDb("disposition routes (route -> DispositionController -> repo -> DB)", 
 
     await postDisposition(
       postReq(collectionId, { itemId: itemA.id, disposition: "deferred" }) as any,
-      { params: { id: collectionId } } as any,
+      { params: Promise.resolve({ id: collectionId }) } as any,
     );
     await postDisposition(
       postReq(collectionId, { itemId: itemB.id, disposition: "set_aside" }) as any,
-      { params: { id: collectionId } } as any,
+      { params: Promise.resolve({ id: collectionId }) } as any,
     );
 
     const allRes = await listDispositions(getReq(collectionId) as any, {
-      params: { id: collectionId },
+      params: Promise.resolve({ id: collectionId }),
     } as any);
     expect((await allRes.json())).toHaveLength(2);
 
     const filteredRes = await listDispositions(getReq(collectionId, "set_aside") as any, {
-      params: { id: collectionId },
+      params: Promise.resolve({ id: collectionId }),
     } as any);
     expect(filteredRes.status).toBe(200);
     const filtered = await filteredRes.json();

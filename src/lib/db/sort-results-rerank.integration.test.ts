@@ -91,7 +91,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
     const res = await reorderItems(
       patchReq({ order: [{ rid: items[0].id, manualRank: 99 }] }) as any,
-      { params: { id: resultId } },
+      { params: Promise.resolve({ id: resultId }) },
     );
     expect(res.status).toBe(403);
     expect((await new SortResultItemRepository(db).findById(items[0].id))!.manualRank).toBeNull();
@@ -103,7 +103,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     mockGetSession.mockResolvedValue({ user: { id: memberId } });
     const res = await reorderItems(
       patchReq({ order: [{ rid: items[0].id, manualRank: 99 }] }) as any,
-      { params: { id: resultId } },
+      { params: Promise.resolve({ id: resultId }) },
     );
     expect(res.status).toBe(403);
   });
@@ -114,7 +114,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await reorderItems(
       patchReq({ order: [{ rid: items[0].id, manualRank: 99 }] }) as any,
-      { params: { id: resultId } },
+      { params: Promise.resolve({ id: resultId }) },
     );
     expect(res.status).toBe(409);
     expect((await new SortResultItemRepository(db).findById(items[0].id))!.manualRank).toBeNull();
@@ -131,7 +131,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
         { rid: items[1].id, manualRank: 2, manualBucket: null },
         { rid: items[2].id, manualRank: 1, manualBucket: null },
       ] }) as any,
-      { params: { id: resultId } },
+      { params: Promise.resolve({ id: resultId }) },
     );
     expect(res.status).toBe(200);
     const repo = new SortResultItemRepository(db);
@@ -156,7 +156,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
         { rid: items[1].id, manualRank: 2, manualBucket: null },
         { rid: items[2].id, manualRank: 3, manualBucket: "low" }, // hand-moved to Onward
       ] }) as any,
-      { params: { id: resultId } },
+      { params: Promise.resolve({ id: resultId }) },
     );
     expect(res.status).toBe(200);
     const repo = new SortResultItemRepository(db);
@@ -181,7 +181,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
         { rid: items[1].id, manualRank: 2, manualBucket: null },
         { rid: items[2].id, manualRank: 3, manualBucket: null }, // back to its computed side
       ] }) as any,
-      { params: { id: resultId } },
+      { params: Promise.resolve({ id: resultId }) },
     );
     expect(res.status).toBe(200);
     expect((await repo.findById(items[2].id))!.manualBucket).toBeNull();
@@ -193,7 +193,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await reorderItems(
       patchReq({ order: [{ rid: items[0].id, manualRank: 1 }] }) as any, // no manualBucket
-      { params: { id: resultId } },
+      { params: Promise.resolve({ id: resultId }) },
     );
     expect(res.status).toBe(400);
     expect((await new SortResultItemRepository(db).findById(items[0].id))!.manualRank).toBeNull();
@@ -211,7 +211,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
         { rid: items[1].id, manualRank: 2, manualBucket: null },
         { rid: "sri_not_in_this_result", manualRank: 1, manualBucket: null },
       ] }) as any,
-      { params: { id: resultId } },
+      { params: Promise.resolve({ id: resultId }) },
     );
     expect(res.status).toBe(404);
     const repo = new SortResultItemRepository(db);
@@ -237,7 +237,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
         { rid: items[0].id, manualRank: 3, manualBucket: null },
         { rid: foreign.id, manualRank: 1, manualBucket: null },
       ] }) as any,
-      { params: { id: resultId } },
+      { params: Promise.resolve({ id: resultId }) },
     );
     expect(res.status).toBe(404);
     const repo = new SortResultItemRepository(db);
@@ -252,7 +252,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await reorderItems(
       patchReq({ order: [{ rid: items[0].id, manualBucket: null }] }) as any, // manualRank missing
-      { params: { id: resultId } },
+      { params: Promise.resolve({ id: resultId }) },
     );
     expect(res.status).toBe(400);
     expect((await new SortResultItemRepository(db).findById(items[0].id))!.manualRank).toBeNull();
@@ -269,7 +269,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
         { rid: items[0].id, manualRank: 1, manualBucket: null },
         { rid: items[0].id, manualRank: 2, manualBucket: null },
       ] }) as any,
-      { params: { id: resultId } },
+      { params: Promise.resolve({ id: resultId }) },
     );
     expect(res.status).toBe(400);
     expect((await new SortResultItemRepository(db).findById(items[0].id))!.manualRank).toBeNull();
@@ -311,7 +311,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     const repo = new SortResultItemRepository(db);
     for (const it of items) await repo.update(it.id, { manualRank: 99, manualBucket: "top" });
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    const res = await resetItems(deleteReq() as any, { params: { id: resultId } });
+    const res = await resetItems(deleteReq() as any, { params: Promise.resolve({ id: resultId }) });
     expect(res.status).toBe(200);
     for (const it of items) {
       const after = await repo.findById(it.id);
@@ -326,7 +326,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     const repo = new SortResultItemRepository(db);
     await repo.update(items[0].id, { manualRank: 99, manualBucket: "top" });
     mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
-    const res = await resetItems(deleteReq() as any, { params: { id: resultId } });
+    const res = await resetItems(deleteReq() as any, { params: Promise.resolve({ id: resultId }) });
     expect(res.status).toBe(403);
     expect((await repo.findById(items[0].id))!.manualRank).toBe(99);
   });
@@ -334,7 +334,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
   it("DELETE 409s a FINALIZED result (reset is a draft activity)", async () => {
     const { resultId } = await seedResultWithItems(ownerId, ownerId, { status: "finalized" });
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    const res = await resetItems(deleteReq() as any, { params: { id: resultId } });
+    const res = await resetItems(deleteReq() as any, { params: Promise.resolve({ id: resultId }) });
     expect(res.status).toBe(409);
   });
 });

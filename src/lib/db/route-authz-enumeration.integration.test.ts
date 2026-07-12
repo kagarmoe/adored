@@ -764,7 +764,7 @@ describeDb(
         try {
           const handler = await importHandler(REPO_ROOT, tc.file, tc.method);
           const req = makeReq(tc.method, tc.urlPath, tc.body, tc.searchParams);
-          res = await handler(req, { params: tc.params });
+          res = await handler(req, { params: Promise.resolve(tc.params) });
         } catch (err) {
           failures.push(
             `  ${tc.key}  [${tc.urlPath}] — handler threw instead of returning a response: ${err}`,

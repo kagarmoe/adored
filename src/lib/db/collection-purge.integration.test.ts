@@ -310,7 +310,7 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
     ).not.toBeNull();
 
     const res = await purge(purgeReq({ confirm: seed.name }) as any, {
-      params: { id: seed.collectionId },
+      params: Promise.resolve({ id: seed.collectionId }),
     });
     expect(res.status).toBe(200);
 
@@ -371,7 +371,7 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
 
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await purge(purgeReq({ confirm: seed.name }) as any, {
-      params: { id: seed.collectionId },
+      params: Promise.resolve({ id: seed.collectionId }),
     });
     expect(res.status).toBe(200);
 
@@ -398,7 +398,7 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
       .mockRejectedValueOnce(new Error("boom"));
 
     const res = await purge(purgeReq({ confirm: seed.name }) as any, {
-      params: { id: seed.collectionId },
+      params: Promise.resolve({ id: seed.collectionId }),
     });
     expect(res.status).toBe(500); // the throw propagates
 
@@ -422,7 +422,7 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
     mockGetSession.mockResolvedValue({ user: { id: seed.memberId } });
 
     const res = await purge(purgeReq({ confirm: seed.name }) as any, {
-      params: { id: seed.collectionId },
+      params: Promise.resolve({ id: seed.collectionId }),
     });
     expect(res.status).toBe(403);
 
@@ -436,7 +436,7 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
   it("(4b) absent collection id -> 404", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await purge(purgeReq({ confirm: "anything" }) as any, {
-      params: { id: "col-absent" },
+      params: Promise.resolve({ id: "col-absent" }),
     });
     expect(res.status).toBe(404);
     expect(mockBlobDel).not.toHaveBeenCalled();
@@ -449,7 +449,7 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
 
     const before = await allCounts(seed.collectionId);
     const res = await purge(purgeReq({ confirm: "wrong" }) as any, {
-      params: { id: seed.collectionId },
+      params: Promise.resolve({ id: seed.collectionId }),
     });
     expect(res.status).toBe(400);
 
@@ -468,7 +468,7 @@ describeDb("POST /api/collections/[id]/purge (route -> service -> DB) — purgeC
     // A non-owner gets 403 even with a wrong confirm — the authz gate runs BEFORE
     // body parsing, so a member can't probe the collection's name via a 400.
     const res = await purge(purgeReq({ confirm: "wrong" }) as any, {
-      params: { id: seed.collectionId },
+      params: Promise.resolve({ id: seed.collectionId }),
     });
     expect(res.status).toBe(403);
     expect(

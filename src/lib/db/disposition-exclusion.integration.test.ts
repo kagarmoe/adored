@@ -74,7 +74,7 @@ describeDb("disposed item is excluded from the REAL compare path and preferences
     for (const id of [itemA.id, itemB.id]) {
       const res = await postDecision(
         triageReq(sortSession.id, id, "top") as any,
-        { params: { id: sortSession.id } } as any,
+        { params: Promise.resolve({ id: sortSession.id }) } as any,
       );
       expect(res.status).toBe(201);
     }

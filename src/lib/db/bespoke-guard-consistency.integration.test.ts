@@ -125,7 +125,7 @@ describeDb("bespoke curator-private guards — consistency (purses-j9qf Task 3)"
     const call = (userId: string, sessionId: string) => {
       mockGetSession.mockResolvedValue({ user: { id: userId } });
       const req = new NextRequest(`http://localhost/api/sessions/${sessionId}`);
-      return getSessionRoute(req, { params: { id: sessionId } });
+      return getSessionRoute(req, { params: Promise.resolve({ id: sessionId }) });
     };
 
     // absent session → 404.
