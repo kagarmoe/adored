@@ -22,15 +22,17 @@ export async function POST(
   const db = getDb();
 
   try {
+    // Authz before existence (purses-ct0): the collection is in the URL, so a
+    // non-curator never learns whether the item exists.
+    // photos:write = curator — any curator may add photos (full-curator model).
+    const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
+    if (access instanceof NextResponse) return access;
+
     // Verify item belongs to collection (belongs-to-parent).
     const item = await ItemController.fromDb(db).getItem(params.itemId);
     if (!item || item.collectionId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-
-    // photos:write = curator — any curator may add photos (full-curator model).
-    const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
-    if (access instanceof NextResponse) return access;
 
     const formData = await req.formData();
     const file = formData.get("file") as File;

@@ -17,15 +17,17 @@ export async function PATCH(
   const db = getDb();
 
   try {
+    // Authz before existence (purses-ct0): the collection is in the URL, so a
+    // non-curator never learns whether the item exists.
+    // items:write = curator — any curator may edit metadata (full-curator model).
+    const access = await requireApiCapability(db, params.id, session.user.id, "items:write");
+    if (access instanceof NextResponse) return access;
+
     // Verify item belongs to collection (belongs-to-parent).
     const item = await ItemController.fromDb(db).getItem(params.itemId);
     if (!item || item.collectionId !== params.id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-
-    // items:write = curator — any curator may edit metadata (full-curator model).
-    const access = await requireApiCapability(db, params.id, session.user.id, "items:write");
-    if (access instanceof NextResponse) return access;
 
     const body = await req.json();
     const updated = await ItemController.fromDb(db).updateItem(params.itemId, body);
