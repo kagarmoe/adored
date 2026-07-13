@@ -80,6 +80,10 @@ export default defineConfig({
       // cookie that round-trips over http. Real https Vercel deploys are
       // unaffected.
       VERCEL: "",
+      // Choose not to send, explicitly. Without this the suite would throw on
+      // any invite/magic-link send (no Resend key here) — which is the POINT:
+      // a missing key must never silently no-op (purses-3i5s).
+      EMAIL_TRANSPORT: "noop",
     },
   },
 });

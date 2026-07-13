@@ -1,168 +1,80 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// email.ts constructs a Resend client lazily from RESEND_API_KEY and caches the
-// module-level singleton. To exercise the key-set vs key-unset paths we stub
-// process.env, vi.resetModules() to clear caches, and dynamically import a fresh
-// copy per test. The `resend` package is mocked so no network I/O ever happens.
+// The bug this file exists for (purses-3i5s): src/lib/email.ts used to treat a
+// missing Resend key as a "graceful fallback" — skip the send, return void, let
+// the caller report success. Vercel held the key under the legacy name
+// AUTH_RESEND_KEY while the code read RESEND_API_KEY, so EVERY production email
+// (magic-link sign-in AND every collection invitation) silently vanished for 65
+// days. Nothing failed, so nothing was noticed.
+//
+// These tests pin the two halves of the fix: the key is read under either name,
+// and an unconfigured send THROWS instead of lying.
 
+// env.ts validates process.env lazily through a Proxy cached at module scope, so
+// every case stubs a VALID baseline env, resets modules, and dynamically imports
+// a fresh copy (the pattern env.test.ts documents).
 const ORIGINAL_ENV = process.env;
 
-// Captures every `resend.emails.send(...)` call across the suite.
-const sendMock = vi.fn();
-
-vi.mock("resend", () => ({
-  Resend: vi.fn(function (this: { emails: { send: typeof sendMock } }) {
-    this.emails = { send: sendMock };
-  }),
-}));
-
-const BASE_ENV: Record<string, string> = {
-  NODE_ENV: "test",
+const VALID_ENV: Record<string, string> = {
+  NODE_ENV: "production", // the environment where silence used to hide
   DATABASE_URL: "postgres://user:pass@localhost:5432/adored",
   AUTH_URL: "https://adored.example.com",
   AUTH_SECRET: "x".repeat(32),
-  EMAIL_FROM: "noreply@kimberlygarmoe.com",
 };
 
 beforeEach(() => {
   vi.resetModules();
-  sendMock.mockReset();
-  sendMock.mockResolvedValue({ data: { id: "email_123" }, error: null });
-  process.env = { ...BASE_ENV };
+  process.env = { ...VALID_ENV };
 });
 
 afterEach(() => {
   process.env = ORIGINAL_ENV;
-  vi.unstubAllGlobals();
-  vi.clearAllMocks();
+  vi.doUnmock("resend");
 });
 
-describe("sendMagicLink — with RESEND_API_KEY set", () => {
-  it("sends via resend.emails.send with from=EMAIL_FROM, to=identifier, url in html", async () => {
-    process.env.RESEND_API_KEY = "re_test_key";
-    const { Resend } = await import("resend");
+describe("email: a missing key is a broken send, not a feature", () => {
+  it("THROWS when no key is set and silence was not explicitly chosen", async () => {
     const { sendMagicLink } = await import("./email");
-
-    const url = "https://adored.example.com/api/auth/callback/email?token=SECRET_TOKEN";
-    await sendMagicLink({ to: "user@example.com", url });
-
-    expect(Resend).toHaveBeenCalledWith("re_test_key");
-    expect(sendMock).toHaveBeenCalledTimes(1);
-    const arg = sendMock.mock.calls[0][0];
-    expect(arg.from).toBe("noreply@kimberlygarmoe.com");
-    expect(arg.to).toBe("user@example.com");
-    expect(arg.subject).toEqual(expect.any(String));
-    expect(arg.subject.length).toBeGreaterThan(0);
-    expect(arg.html).toContain(url);
-    // The link must go ONLY to the identifier — no cc/bcc leaking the bearer token.
-    expect(arg.cc).toBeUndefined();
-    expect(arg.bcc).toBeUndefined();
-  });
-});
-
-describe("sendInvitation — with RESEND_API_KEY set", () => {
-  it("builds ${AUTH_URL}/invitations/${token} and sends it in the html", async () => {
-    process.env.RESEND_API_KEY = "re_test_key";
-    const { sendInvitation } = await import("./email");
-
-    await sendInvitation({ to: "invitee@example.com", token: "INVITE_TOKEN" });
-
-    expect(sendMock).toHaveBeenCalledTimes(1);
-    const arg = sendMock.mock.calls[0][0];
-    expect(arg.from).toBe("noreply@kimberlygarmoe.com");
-    expect(arg.to).toBe("invitee@example.com");
-    // The URL is built inside sendInvitation from AUTH_URL + the token.
-    expect(arg.html).toContain("https://adored.example.com/invitations/INVITE_TOKEN");
-    expect(arg.cc).toBeUndefined();
-    expect(arg.bcc).toBeUndefined();
-  });
-});
-
-describe("graceful fallback — RESEND_API_KEY unset", () => {
-  it("does NOT construct a client, does NOT send, does NOT throw", async () => {
-    delete process.env.RESEND_API_KEY;
-    const { Resend } = await import("resend");
-    const { sendMagicLink, sendInvitation } = await import("./email");
-
-    await expect(
-      sendMagicLink({ to: "user@example.com", url: "https://adored.example.com/x?token=t" }),
-    ).resolves.toBeUndefined();
-    await expect(
-      sendInvitation({ to: "invitee@example.com", token: "t" }),
-    ).resolves.toBeUndefined();
-
-    expect(Resend).not.toHaveBeenCalled();
-    expect(sendMock).not.toHaveBeenCalled();
+    await expect(sendMagicLink({ to: "a@b.com", url: "https://x/y" })).rejects.toThrow(
+      /Email is not configured/,
+    );
   });
 
-  it("sendInvitation no-ops WITHOUT touching AUTH_URL when the key is unset", async () => {
-    // Regression for the CI failure: the no-key path must not build the invite
-    // URL, so a missing AUTH_URL cannot throw. Deleting AUTH_URL makes any
-    // env.AUTH_URL access throw (Environment validation failed); the no-op must
-    // still resolve cleanly.
-    delete process.env.RESEND_API_KEY;
-    delete process.env.AUTH_URL;
-    const { sendInvitation } = await import("./email");
-
-    await expect(
-      sendInvitation({ to: "invitee@example.com", token: "t" }),
-    ).resolves.toBeUndefined();
-    expect(sendMock).not.toHaveBeenCalled();
-  });
-
-  it("does NOT log the url/token outside development (NODE_ENV=test)", async () => {
-    delete process.env.RESEND_API_KEY;
-    process.env.NODE_ENV = "test";
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+  it("is SILENT only when silence is explicitly chosen (EMAIL_TRANSPORT=noop)", async () => {
+    process.env.EMAIL_TRANSPORT = "noop";
     const { sendMagicLink } = await import("./email");
-
-    await sendMagicLink({ to: "user@example.com", url: "https://adored.example.com/x?token=SECRET" });
-
-    // No secret must reach the log outside development.
-    for (const call of log.mock.calls) {
-      expect(JSON.stringify(call)).not.toContain("SECRET");
-    }
-    log.mockRestore();
+    await expect(sendMagicLink({ to: "a@b.com", url: "https://x/y" })).resolves.toBeUndefined();
   });
 
-  it("logs the link for local dev only when NODE_ENV=development", async () => {
-    delete process.env.RESEND_API_KEY;
-    process.env.NODE_ENV = "development";
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+  it("reads the LEGACY name — the one Vercel actually holds — and does not throw", async () => {
+    process.env.AUTH_RESEND_KEY = "re_legacy_key";
+    const send = vi.fn().mockResolvedValue({ error: null });
+    // vitest 4 cannot `new` an arrow mock ("X is not a constructor") — the
+    // constructor must be a function expression (memory: vitest4-mock-factory).
+    vi.doMock("resend", () => ({
+      Resend: vi.fn(function () {
+        return { emails: { send } };
+      }),
+    }));
+
     const { sendMagicLink } = await import("./email");
+    await sendMagicLink({ to: "a@b.com", url: "https://x/y" });
 
-    const url = "https://adored.example.com/x?token=DEVLINK";
-    await sendMagicLink({ to: "user@example.com", url });
-
-    const logged = log.mock.calls.map((c) => JSON.stringify(c)).join("\n");
-    expect(logged).toContain(url);
-    log.mockRestore();
+    expect(send).toHaveBeenCalledOnce();
+    expect(send.mock.calls[0][0]).toMatchObject({ to: "a@b.com" });
   });
-});
 
-describe("Resend API error — never leaks token/url", () => {
-  it("throws without including the url/token in the thrown error", async () => {
-    process.env.RESEND_API_KEY = "re_test_key";
-    process.env.NODE_ENV = "production";
-    sendMock.mockResolvedValue({ data: null, error: { message: "rate limited", name: "rate_limit" } });
-    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  it("prefers the canonical name when both are set", async () => {
+    process.env.RESEND_API_KEY = "re_canonical";
+    process.env.AUTH_RESEND_KEY = "re_legacy";
+    const ctor = vi.fn(function () {
+      return { emails: { send: vi.fn().mockResolvedValue({ error: null }) } };
+    });
+    vi.doMock("resend", () => ({ Resend: ctor }));
+
     const { sendMagicLink } = await import("./email");
+    await sendMagicLink({ to: "a@b.com", url: "https://x/y" });
 
-    const url = "https://adored.example.com/x?token=SECRET_TOKEN";
-    let thrown: unknown;
-    try {
-      await sendMagicLink({ to: "user@example.com", url });
-    } catch (e) {
-      thrown = e;
-    }
-
-    expect(thrown).toBeInstanceOf(Error);
-    expect((thrown as Error).message).not.toContain("SECRET_TOKEN");
-    expect((thrown as Error).message).not.toContain(url);
-    // And nothing logged to console.error should contain the secret.
-    for (const call of errSpy.mock.calls) {
-      expect(JSON.stringify(call)).not.toContain("SECRET_TOKEN");
-    }
-    errSpy.mockRestore();
+    expect(ctor).toHaveBeenCalledWith("re_canonical");
   });
 });

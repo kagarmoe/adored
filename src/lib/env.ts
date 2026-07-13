@@ -30,9 +30,23 @@ const envSchema = z.object({
   EMAIL_SERVER_PORT: z.coerce.number().default(1025),
   EMAIL_SERVER_USER: z.string().optional(),
   EMAIL_SERVER_PASSWORD: z.string().optional(),
-  // Resend API key — optional so a missing key is valid (email.ts no-ops the
-  // send rather than throwing). Set in the deploy env for real sends.
+  // Resend API key. Optional at the SCHEMA level because `next build` must not
+  // need it — but a missing key at SEND time now THROWS (src/lib/email.ts).
+  // Silence is opt-in via EMAIL_TRANSPORT=noop, never the default: a silent
+  // no-op here hid a 65-day production outage of magic-link sign-in AND every
+  // collection invitation (purses-3i5s).
   RESEND_API_KEY: z.string().optional(),
+
+  // Legacy name. Vercel still holds the key as AUTH_RESEND_KEY (an Auth.js
+  // convention left over from the NextAuth -> better-auth migration), while the
+  // code was renamed to RESEND_API_KEY — which is precisely how the key went
+  // missing in production. Accept both so the fix needs no dashboard step; set
+  // RESEND_API_KEY and delete AUTH_RESEND_KEY when convenient.
+  AUTH_RESEND_KEY: z.string().optional(),
+
+  // The ONLY way to legitimately not send email. Explicit, so a missing key can
+  // never masquerade as a deliberate choice. e2e sets this; production must not.
+  EMAIL_TRANSPORT: z.enum(["noop"]).optional(),
 
   // Vercel Blob (optional, auto-configured in Vercel)
   BLOB_READ_WRITE_TOKEN: z.string().optional(),

@@ -93,6 +93,29 @@ async function verifyAuthSetup() {
     console.log("❌ Test 5: User creation failed:", (e as Error).message);
   }
 
+  // Test 6: can we actually SEND? A key that is merely absent used to no-op the
+  // send silently — which hid a 65-day production outage of magic-link sign-in
+  // and every collection invitation (purses-3i5s). This check is the one that
+  // would have caught it on day one. It asserts the key RESOLVES; it does not
+  // send anything.
+  totalTests++;
+  const emailTransport = process.env.EMAIL_TRANSPORT;
+  const resendKey = process.env.RESEND_API_KEY ?? process.env.AUTH_RESEND_KEY;
+  if (emailTransport === "noop") {
+    console.log("✅ Test 6: email deliberately disabled (EMAIL_TRANSPORT=noop)");
+    passedTests++;
+  } else if (resendKey) {
+    const which = process.env.RESEND_API_KEY ? "RESEND_API_KEY" : "AUTH_RESEND_KEY (legacy name)";
+    console.log(`✅ Test 6: Resend key present via ${which} — magic-link + invitations can send`);
+    passedTests++;
+  } else {
+    console.log(
+      "❌ Test 6: NO Resend key (neither RESEND_API_KEY nor AUTH_RESEND_KEY) and " +
+        "EMAIL_TRANSPORT is not 'noop' — magic-link sign-in and every collection " +
+        "invitation will THROW on send. This is the check that was missing.",
+    );
+  }
+
   console.log(
     `\n📊 Results: ${passedTests}/${totalTests} tests passed\n`
   );
