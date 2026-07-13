@@ -22,7 +22,6 @@
     "screenshots": "playwright test --config=playwright.screenshots.config.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
-    "db:backfill-slugs": "tsx scripts/backfill-collection-slugs.ts",
     "auth:verify": "tsx -r ./scripts/load-env.js scripts/verify-auth.ts",
     "seed:load": "tsx scripts/seed-load.ts",
     "bench:recompute": "tsx scripts/bench-recompute.ts",
@@ -72,9 +71,15 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.2.9",
     "jsdom": "^29.1.1",
-    "postcss": "^8.4.0",
+    "postcss": "^8.5.18",
     "typescript": "^6.0.3",
     "vite": "^8.1.0",
     "vitest": "^4.1.9"
+  },
+  "overrides": {
+    "postcss": "$postcss",
+    "@esbuild-kit/core-utils": {
+      "esbuild": "0.25.12"
+    }
   }
 }
