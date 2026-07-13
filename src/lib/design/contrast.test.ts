@@ -39,12 +39,24 @@ function strict(vars: ThemeTokens): ThemeTokens {
   });
 }
 
-const light = strict(scopeVars(/:root\s*\{([^}]*)\}/));
+const lightScope = scopeVars(/:root\s*\{([^}]*)\}/);
+const darkScope = scopeVars(/\[data-theme="dark"\]\s*\{([^}]*)\}/);
+
+const light = strict(lightScope);
 // Dark inherits the way CSS does: a var undeclared in [data-theme="dark"]
 // falls back to its :root value.
-const dark = strict({
-  ...scopeVars(/:root\s*\{([^}]*)\}/),
-  ...scopeVars(/\[data-theme="dark"\]\s*\{([^}]*)\}/),
+const dark = strict({ ...lightScope, ...darkScope });
+
+// Parser-honesty guard (QA review, purses-9oxh.6): the light→dark spread makes
+// a dark var the PARSER failed to read (nested brace truncating the block, a
+// value the hex regex can't match like oklch()/var(), a second dark block)
+// silently assert its LIGHT value — a false green strict() cannot catch,
+// because the key exists. Today the dark block redeclares every light token,
+// so key-set parity converts all of those failure modes into hard failures.
+it("dark scope redeclares every light token (parser-honesty guard)", () => {
+  const lightKeys = Object.keys(lightScope).sort();
+  const darkKeys = Object.keys(darkScope).sort();
+  expect(darkKeys).toEqual(lightKeys);
 });
 
 // [foreground, background, minRatio, label]
@@ -57,6 +69,10 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     [t.primaryInk, t.primary, 4.5, "primary-ink on primary"],
     [t.primary, t.ground, 4.5, "primary text/link on ground"],
     [t.primary, t.surface, 3.0, "primary border on surface"],
+    // a:hover recolors live link text to primary-hover (globals.css) — a real
+    // text role that had no guard (QA review, purses-9oxh.6).
+    [t.primaryHover, t.ground, 4.5, "primary-hover link text on ground"],
+    [t.primaryHover, t.surface, 4.5, "primary-hover link text on surface"],
     [t.sparkInk, t.spark, 4.5, "text on spark"],
     [t.ink, t.contentSoft, 4.5, "ink on content-soft (chips/cards)"],
     [t.ink, t.contentMid, 4.5, "ink on content-mid (Not yet banner + paused badge)"],
