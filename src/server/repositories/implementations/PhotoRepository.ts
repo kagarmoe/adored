@@ -376,7 +376,7 @@ export class PhotoRepository {
     return rows.length;
   }
 
-  private mapToPhoto(row: any): Photo {
+  private mapToPhoto(row: typeof photosTable.$inferSelect): Photo {
     return {
       id: row.id,
       itemId: row.itemId,

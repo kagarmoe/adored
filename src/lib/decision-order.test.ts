@@ -39,6 +39,13 @@ describe("compareByCreatedAtThenId", () => {
     expect(sign(compareByCreatedAtThenId(ev("event_a", 5), ev("event_b", 5)))).toBe(-1);
     expect(sign(compareByCreatedAtThenId(ev("event_a", 5), ev("event_a", 5)))).toBe(0);
   });
+  it("ulid ids are lexicographically time-ordered (the tie-break's chronology contract)", () => {
+    // Deterministic via explicit seedTimes — a ulid major changing its
+    // encoding/alphabet breaks monotonicity here before it corrupts replay
+    // (generateId's suffix is a ulid; ranking replay ties on id).
+    expect(ulid(1_000_000) < ulid(2_000_000)).toBe(true);
+    expect(ulid(2_000_000) < ulid(3_000_000)).toBe(true);
+  });
   it("property: sign-equal with BOTH old comparators on the realistic corpus (F10)", () => {
     const items = corpus(300);
     for (let i = 0; i < items.length; i++) {

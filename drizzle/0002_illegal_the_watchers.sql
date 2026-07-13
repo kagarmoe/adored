@@ -1,0 +1,1 @@
+ALTER TABLE "photos" ALTER COLUMN "is_hero" SET NOT NULL;

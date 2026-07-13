@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { getRoundBox, type RoundBox } from "@/lib/round-preference";
+import { useDeviceValue } from "@/lib/useDeviceValue";
 import type { MovedDecision } from "@/lib/what-moved";
 import { RoundShell } from "./RoundShell";
 import { RoundTimer } from "./RoundTimer";
@@ -29,6 +30,9 @@ interface RoundSurfaceProps {
 
 const MINUTE_MS = 60_000;
 
+const boxToMs = (box: RoundBox): number | null => (box === "none" ? null : box * MINUTE_MS);
+const storedBoxMs = (): number | null => boxToMs(getRoundBox());
+
 /**
  * A thin client wrapper that gives a server-rendered triage/compare screen its round
  * chrome: the step indicator + soft timer (RoundShell + RoundTimer) around the
@@ -47,20 +51,19 @@ export function RoundSurface({
   queueEmpty = false,
 }: RoundSurfaceProps) {
   const router = useRouter();
-  // The round's clock is client-owned and fixed at mount; reading getRoundBox() here
-  // (not at module load) keeps it after hydration where localStorage is available.
-  const startedAtRef = useRef<number>(Date.now());
-  const [boxMs, setBoxMs] = useState<number | null>(null);
+  // The round's clock is client-owned and fixed at mount (a lazy initializer — Date.now()
+  // is impure, so it must not be called on every render).
+  const [startedAtMs] = useState(() => Date.now());
+  // The stored box is device-local: no timer through SSR/hydration, then the real box
+  // right after mount (useDeviceValue). A mid-round switch overrides it.
+  const stored = useDeviceValue<number | null>(storedBoxMs, null);
+  const [chosenBoxMs, setChosenBoxMs] = useState<{ ms: number | null } | null>(null);
+  const boxMs = chosenBoxMs === null ? stored : chosenBoxMs.ms;
   const [expired, setExpired] = useState(false);
-
-  useEffect(() => {
-    const box = getRoundBox();
-    setBoxMs(box === "none" ? null : box * MINUTE_MS);
-  }, []);
 
   // Mid-round length switch (parent D2): re-arm boxMs against the UNCHANGED start —
   // "none" drops the countdown, a shorter box expires at the next tick.
-  const onBoxChange = (box: RoundBox) => setBoxMs(box === "none" ? null : box * MINUTE_MS);
+  const onBoxChange = (box: RoundBox) => setChosenBoxMs({ ms: boxToMs(box) });
 
   // The round ends on the timer expiring OR the server handing us an empty queue —
   // either way the recap replaces the content and both paths terminate the round.
@@ -70,7 +73,7 @@ export function RoundSurface({
     <div className="flex items-start gap-3">
       <div className="min-w-0 flex-1">
         <RoundTimer
-          startedAtMs={startedAtRef.current}
+          startedAtMs={startedAtMs}
           boxMs={boxMs}
           onExpire={() => setExpired(true)}
           roundLabel={roundLabel}
@@ -90,7 +93,7 @@ export function RoundSurface({
       onPause={() => router.push(hubHref)}
     >
       {ended ? (
-        <WhatMoved decisions={decisions} windowStartMs={startedAtRef.current} hubHref={hubHref} />
+        <WhatMoved decisions={decisions} windowStartMs={startedAtMs} hubHref={hubHref} />
       ) : (
         children
       )}

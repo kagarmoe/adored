@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { invitationsTable } from "@/lib/db/schema";
-import type { Invitation } from "@/types";
+import type { Invitation, InvitationStatus } from "@/types";
 import { generateId } from "@/lib/id";
 
 export class InvitationRepository {
@@ -101,13 +101,13 @@ export class InvitationRepository {
     return rows.length;
   }
 
-  private mapToInvitation(row: any): Invitation {
+  private mapToInvitation(row: typeof invitationsTable.$inferSelect): Invitation {
     return {
       id: row.id,
       collectionId: row.collectionId,
       email: row.email,
       token: row.token,
-      status: row.status as "pending" | "accepted" | "revoked",
+      status: row.status as InvitationStatus,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       acceptedAt: row.acceptedAt,

@@ -165,7 +165,17 @@ test.describe("decision queue — crash & unload recovery", () => {
     await batchResp;
 
     // The pagehide drain acked and removed the entry — the queue is empty.
-    expect(await pendingItemIdOrder(page)).toBeNull();
+    //
+    // Polled, not read once: waitForResponse resolves the instant Playwright's
+    // network layer sees the response, but the client clears the queue strictly
+    // LATER — await res.json(), then resolveAck, then removeEntries' localStorage
+    // write, all inside the flush Web Lock. Reading localStorage the moment the
+    // response lands races that tail (it lost once under full-suite load). The
+    // queue emptying IS the app's completion signal, so poll on it; the assertion
+    // is unchanged — the entry must go, and a stuck queue still fails.
+    await expect
+      .poll(() => pendingItemIdOrder(page), { message: "pagehide drain empties the pending queue" })
+      .toBeNull();
 
     // And it truly reached the DB: on reload the usage answer is now usage-known, so
     // the server-derived seed counts it ("1 answered so far") — not just fired, but

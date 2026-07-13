@@ -15,7 +15,10 @@ const eslintConfig = [
   // Build output / generated files. Flat config only auto-ignores node_modules
   // and .git.
   {
-    ignores: ['.next/**', 'out/**', 'build/**', 'coverage/**', 'next-env.d.ts'],
+    // .claude/** holds agent worktrees with their own stale node_modules —
+    // ESLint 10 sweeps them under `eslint .` and crashes on old
+    // @rushstack/eslint-patch copies (and CI would lint code it isn't gating).
+    ignores: ['.next/**', 'out/**', 'build/**', 'coverage/**', 'next-env.d.ts', '.claude/**'],
   },
 
   // ESLint 9 defaults reportUnusedDisableDirectives to "warn"; eslintrc (and
@@ -42,24 +45,6 @@ const eslintConfig = [
     files: TS_FILES,
     rules: {
       '@next/next/no-html-link-for-pages': 'off',
-    },
-  },
-
-  // eslint-config-next@16 (eslint-plugin-react-hooks@7) newly enables the
-  // React Compiler lint rules as errors; the previous gate (eslint-config-next
-  // @14 via FlatCompat) only ran rules-of-hooks + exhaustive-deps. Three of
-  // the new rules fire on ~25 pre-existing call sites (setState inside an
-  // effect, Date.now()/refs read during render) that the Next 16 config
-  // migration must not rewrite. Keep exactly those three off until the
-  // findings are fixed and they can be re-enabled (owned by purses-9oxh.8 —
-  // fix the 25 sites, then DELETE this block); every other new compiler
-  // rule stays active — the codebase already passes them.
-  {
-    files: TS_FILES,
-    rules: {
-      'react-hooks/set-state-in-effect': 'off',
-      'react-hooks/purity': 'off',
-      'react-hooks/refs': 'off',
     },
   },
 

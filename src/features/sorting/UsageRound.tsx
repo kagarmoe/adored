@@ -25,6 +25,7 @@ import { RoundLengthChooser } from "./RoundLengthChooser";
 import { WhatMoved } from "./WhatMoved";
 import { STUMBLE_LINE, useOptimisticRound } from "./useOptimisticRound";
 import { PendingNotices } from "./pendingNotices";
+import { useDeviceValue } from "@/lib/useDeviceValue";
 import {
   getUsagePace,
   setUsagePace,
@@ -99,7 +100,9 @@ export function UsageRound({
 }: UsageRoundProps) {
   const router = useRouter();
 
-  const seedRef = useRef(usageKnownSeed);
+  // Round-local snapshot (F20). A never-updated state cell IS the mount snapshot, and —
+  // unlike a ref — the answered-count cue may read it while rendering.
+  const [seed] = useState(usageKnownSeed);
   const [entries, setEntries] = useState<UsageRoundQueueEntry[]>(queue);
   const [handled, setHandled] = useState<ReadonlySet<string>>(new Set());
   const [newlyAnswered, setNewlyAnswered] = useState<ReadonlySet<string>>(new Set());
@@ -107,16 +110,16 @@ export function UsageRound({
   // and a crash forgetting it is by design, parent D7).
   const passesRef = useRef(new Map<string, number>());
 
-  // Quick pacing (spec §3.5, parent D2). Pace is device-global but read at MOUNT in
-  // an effect (never at first render) so SSR and hydration agree on Relaxed — the
-  // getRoundBox pattern. Relaxed is the default, ever.
-  const [pace, setPace] = useState<UsagePace>("relaxed");
+  // Quick pacing (spec §3.5, parent D2). Pace is device-global, so SSR and the hydration
+  // render agree on Relaxed and the stored pace lands right after mount (useDeviceValue —
+  // the getRoundBox pattern). The toggle's own choice overrides the stored one, so a
+  // failed persist (private mode) still flips the pace in memory. Relaxed is the default, ever.
+  const storedPace = useDeviceValue<UsagePace>(getUsagePace, "relaxed");
+  const [chosenPace, setChosenPace] = useState<UsagePace | null>(null);
+  const pace = chosenPace ?? storedPace;
   const [showQuickIntro, setShowQuickIntro] = useState(false); // first-Quick education (UX-4)
   const [beatSuspended, setBeatSuspended] = useState(false); // focus on chrome holds the beat
   const [nowAnnounce, setNowAnnounce] = useState(""); // role=status advance announcement (c)
-  useEffect(() => {
-    setPace(getUsagePace());
-  }, []);
 
   // Focus targets and the advance intent that drives the Quick focus/announce move.
   const rootRef = useRef<HTMLDivElement>(null); // the whole round surface (incl. RoundShell chrome)
@@ -211,11 +214,15 @@ export function UsageRound({
 
   // Latest queue head + pass fn behind refs so the beat effect can arm without
   // listing render-scoped closures in its deps (which would reset the beat every
-  // render). Updated every render.
+  // render). Refreshed after EVERY commit — never during render — and declared above
+  // their two readers (the beat's timeout, which fires seconds later, and the
+  // announce/focus effect, which runs after this one in the same commit).
   const currentRef = useRef(current);
-  currentRef.current = current;
   const passRef = useRef(pass);
-  passRef.current = pass;
+  useEffect(() => {
+    currentRef.current = current;
+    passRef.current = pass;
+  });
 
   // Skip tap: a manual advance in Quick moves focus + announces, exactly like an
   // answer; the write-nothing pass itself is unchanged.
@@ -229,7 +236,7 @@ export function UsageRound({
   // in THIS commit and marks it seen so later rounds skip it.
   function toggleQuick() {
     const next: UsagePace = pace === "quick" ? "relaxed" : "quick";
-    setPace(next);
+    setChosenPace(next);
     setUsagePace(next);
     if (next === "quick" && !hasSeenQuickIntro()) {
       markQuickIntroSeen();
@@ -322,7 +329,7 @@ export function UsageRound({
 
   // Ceiling-free cue (F20): seed + this round's answered set. Ticks on the tap,
   // never on a pass or the flush.
-  const answered = seedRef.current + newlyAnswered.size;
+  const answered = seed + newlyAnswered.size;
 
   const roundOver = shown === undefined || expired;
   const timer = (
@@ -411,11 +418,16 @@ export function UsageRound({
             )}
           </div>
 
-          {round.stumble && (
-            <p role="status" className="text-sm text-ink-soft">
-              {STUMBLE_LINE}
-            </p>
-          )}
+          {/* Persistently mounted, fixed-height: (1) a role=status region that
+              appears WITH its text is not reliably announced — AT only reads
+              mutations to a region it was already observing (see the live-region
+              memory / SC 4.1.3); (2) conditionally rendering it SHIFTED the card
+              and the answer buttons below it when `stumble` toggled — content
+              jumping under a finger in a tap-first product, and the cause of an
+              intermittent e2e click landing on the card image (purses-q228). */}
+          <p role="status" className="min-h-5 text-sm text-ink-soft">
+            {round.stumble ? STUMBLE_LINE : ""}
+          </p>
 
           {/* (d) The card swap — CSS transition only, with motion-reduce:transition-none
               (the house pattern). Reduced motion cannot suppress the beat: the advance

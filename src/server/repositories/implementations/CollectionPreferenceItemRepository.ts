@@ -1,7 +1,7 @@
 import { eq, and, sql } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { preferencesTable } from "@/lib/db/schema";
-import type { CollectionPreferenceItem } from "@/types";
+import type { CollectionPreferenceItem, RankBucket } from "@/types";
 import { generateId } from "@/lib/id";
 
 export class CollectionPreferenceItemRepository {
@@ -72,14 +72,17 @@ export class CollectionPreferenceItemRepository {
   }
 
   async update(id: string, data: Partial<CollectionPreferenceItem>): Promise<CollectionPreferenceItem> {
-    const updateData: any = { ...data };
-    if (data.score !== undefined) {
-      updateData.score = data.score.toString();
-    }
-    if (data.confidence !== undefined) {
-      updateData.confidence = data.confidence.toString();
-    }
-    updateData.updatedAt = new Date();
+    // score/confidence are `numeric` columns: drizzle reads AND writes them as
+    // strings, while the domain type carries them as numbers. Destructure them out
+    // so the rest of the patch can be spread under the real row type — a bare
+    // `{...data}` is not assignable, which is exactly what the old `any` hid.
+    const { score, confidence, ...rest } = data;
+    const updateData: Partial<typeof preferencesTable.$inferInsert> = {
+      ...rest,
+      ...(score !== undefined && { score: score.toString() }),
+      ...(confidence !== undefined && { confidence: confidence.toString() }),
+      updatedAt: new Date(),
+    };
 
     const [pref] = await this.db
       .update(preferencesTable)
@@ -192,7 +195,7 @@ export class CollectionPreferenceItemRepository {
     await this.db.delete(preferencesTable).where(eq(preferencesTable.curatorId, curatorId));
   }
 
-  private mapToPreference(row: any): CollectionPreferenceItem {
+  private mapToPreference(row: typeof preferencesTable.$inferSelect): CollectionPreferenceItem {
     return {
       id: row.id,
       collectionId: row.collectionId,
@@ -200,9 +203,9 @@ export class CollectionPreferenceItemRepository {
       itemId: row.itemId,
       score: parseFloat(row.score),
       confidence: parseFloat(row.confidence),
-      rankBucket: row.rankBucket as "top" | "high" | "medium" | "low",
+      rankBucket: row.rankBucket as RankBucket,
       comparisonCount: row.comparisonCount,
-      orderRank: row.orderRank ?? null,
+      orderRank: row.orderRank,
       lastSeen: row.lastSeen,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

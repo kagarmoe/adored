@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { RecommendedRoundCard } from "./RecommendedRoundCard";
+import { useDeviceValue } from "@/lib/useDeviceValue";
 import { hasUsageRoundRan } from "@/lib/usage-round-prefs";
 import type { NextRound } from "@/lib/next-round";
 
@@ -24,7 +24,7 @@ interface RecommendedRoundProps {
  * `primary` on the server and first client render, then — after hydration — reads the
  * device-local anti-nagging flag and swaps to `whenUsageDemoted` if THIS (curator,
  * session) already ran a usage round. Same read-device-state-after-hydration pattern
- * as RoundLengthChooser's mount effect.
+ * as RoundLengthChooser (`useDeviceValue`).
  *
  * The swap is a plain same-slot re-render: no transition/animation, zero layout shift.
  * The pre-hydration wrong-card window on a demoted hub is an accepted trade-off (§7.2) —
@@ -36,13 +36,7 @@ export function RecommendedRound({
   curatorId,
   sessionId,
 }: RecommendedRoundProps) {
-  const [demoted, setDemoted] = useState(false);
-
-  useEffect(() => {
-    if (whenUsageDemoted && hasUsageRoundRan(curatorId, sessionId)) {
-      setDemoted(true);
-    }
-  }, [whenUsageDemoted, curatorId, sessionId]);
+  const demoted = useDeviceValue(() => hasUsageRoundRan(curatorId, sessionId), false);
 
   const shown = demoted && whenUsageDemoted ? whenUsageDemoted : primary;
   return <RecommendedRoundCard round={shown.round} href={shown.href} />;

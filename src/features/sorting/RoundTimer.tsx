@@ -34,9 +34,13 @@ export function RoundTimer({ startedAtMs, boxMs, onExpire, roundLabel }: RoundTi
   const reducedMotion = useReducedMotion();
   const [now, setNow] = useState(() => Date.now());
   const firedRef = useRef(false);
-  // Keep the latest onExpire without re-arming the interval each render.
+  // Keep the latest onExpire without re-arming the interval each render. Written after
+  // commit (never during render), and declared before the tick effect so the interval
+  // is always armed against the freshest callback.
   const onExpireRef = useRef(onExpire);
-  onExpireRef.current = onExpire;
+  useEffect(() => {
+    onExpireRef.current = onExpire;
+  });
 
   useEffect(() => {
     // No timer: no clock, no countdown, no expiry.

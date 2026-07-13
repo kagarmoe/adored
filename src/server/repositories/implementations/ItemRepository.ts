@@ -178,7 +178,7 @@ export class ItemRepository {
     return rows.length;
   }
 
-  private mapToItem(row: any): Item {
+  private mapToItem(row: typeof itemsTable.$inferSelect): Item {
     return {
       id: row.id,
       collectionId: row.collectionId,

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import { getRoundBox, setRoundBox, ROUND_BOX_OPTIONS, DEFAULT_ROUND_BOX, type RoundBox } from "@/lib/round-preference";
+import { useDeviceValue } from "@/lib/useDeviceValue";
 
 interface RoundLengthChooserProps {
   /** Fires with the newly chosen box so the LIVE round re-arms its clock against
@@ -16,19 +17,18 @@ interface RoundLengthChooserProps {
  * "No timer" is a first-class peer in the same list, never a hidden mode.
  */
 export function RoundLengthChooser({ onChange }: RoundLengthChooserProps) {
-  // Seed to a stable literal so SSR and the first client render agree (getRoundBox
-  // reads localStorage → would mismatch on hydration); reconcile to the real stored
-  // box in a mount effect, matching the sibling clock (RoundSurface/useOptimisticRound).
-  const [value, setValue] = useState<RoundBox>(DEFAULT_ROUND_BOX);
-
-  useEffect(() => {
-    setValue(getRoundBox());
-  }, []);
+  // SSR and the first client render show the stable literal (getRoundBox reads
+  // localStorage → would mismatch on hydration); the real stored box lands right after
+  // mount, matching the sibling clock (RoundSurface/useOptimisticRound). The person's
+  // own choice overrides the stored one — a failed persist must not snap the select back.
+  const stored = useDeviceValue<RoundBox>(getRoundBox, DEFAULT_ROUND_BOX);
+  const [chosen, setChosen] = useState<RoundBox | null>(null);
+  const value = chosen ?? stored;
 
   function handleChange(event: ChangeEvent<HTMLSelectElement>) {
     const raw = event.target.value;
     const box: RoundBox = raw === "none" ? "none" : (Number(raw) as RoundBox);
-    setValue(box);
+    setChosen(box);
     setRoundBox(box); // persist for the next round…
     onChange(box); // …and re-arm this round's clock now
   }

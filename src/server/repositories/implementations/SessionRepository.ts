@@ -1,7 +1,7 @@
 import { eq, and, isNull, inArray, sql } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { sessionsTable } from "@/lib/db/schema";
-import type { Session } from "@/types";
+import type { Session, SessionStatus } from "@/types";
 import { generateId } from "@/lib/id";
 import { allocateWithRetry } from "../allocateWithRetry";
 import { isUniqueViolation } from "../pg-conflict";
@@ -228,13 +228,13 @@ export class SessionRepository {
     await this.db.delete(sessionsTable).where(eq(sessionsTable.curatorId, curatorId));
   }
 
-  private mapToSession(row: any): Session {
+  private mapToSession(row: typeof sessionsTable.$inferSelect): Session {
     return {
       id: row.id,
       collectionId: row.collectionId,
       curatorId: row.curatorId,
-      number: row.number ?? null,
-      status: row.status as "active" | "paused" | "completed" | "abandoned" | "deleted",
+      number: row.number,
+      status: row.status as SessionStatus,
       goal: row.goal,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

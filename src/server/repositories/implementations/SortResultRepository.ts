@@ -1,7 +1,7 @@
 import { eq, and, sql } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { sortResultsTable } from "@/lib/db/schema";
-import type { SortResult } from "@/types";
+import type { SortResult, SortResultStatus } from "@/types";
 import { generateId } from "@/lib/id";
 import { allocateWithRetry } from "../allocateWithRetry";
 import { isUniqueViolation } from "../pg-conflict";
@@ -160,13 +160,13 @@ export class SortResultRepository {
     await this.db.delete(sortResultsTable).where(eq(sortResultsTable.curatorId, curatorId));
   }
 
-  private mapToResult(row: any): SortResult {
+  private mapToResult(row: typeof sortResultsTable.$inferSelect): SortResult {
     return {
       id: row.id,
       collectionId: row.collectionId,
       curatorId: row.curatorId,
-      number: row.number ?? null,
-      status: row.status as "draft" | "finalized",
+      number: row.number,
+      status: row.status as SortResultStatus,
       name: row.name,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

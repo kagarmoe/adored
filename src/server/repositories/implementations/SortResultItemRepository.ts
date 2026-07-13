@@ -1,7 +1,7 @@
 import { eq, and, inArray, count } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { sortResultItemsTable, sortResultsTable } from "@/lib/db/schema";
-import type { SortResultItem } from "@/types";
+import type { SortResultItem, RankBucket, UsageResult } from "@/types";
 import { generateId } from "@/lib/id";
 
 export class SortResultItemRepository {
@@ -165,16 +165,16 @@ export class SortResultItemRepository {
     return row?.n ?? 0;
   }
 
-  private mapToResultItem(row: any): SortResultItem {
+  private mapToResultItem(row: typeof sortResultItemsTable.$inferSelect): SortResultItem {
     return {
       id: row.id,
       sortResultId: row.sortResultId,
       itemId: row.itemId,
       computedRank: row.computedRank,
-      computedBucket: row.computedBucket,
+      computedBucket: row.computedBucket as RankBucket,
       manualRank: row.manualRank,
-      manualBucket: row.manualBucket,
-      usage: row.usage ?? null,
+      manualBucket: row.manualBucket as RankBucket | null,
+      usage: row.usage as UsageResult | null,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

@@ -8,6 +8,20 @@
       "when": 1783846521936,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783915760701,
+      "tag": "0001_clumsy_ser_duncan",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783916664341,
+      "tag": "0002_illegal_the_watchers",
+      "breakpoints": true
     }
   ]
 }
