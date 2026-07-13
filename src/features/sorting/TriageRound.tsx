@@ -66,8 +66,9 @@ export function TriageRound({
   const router = useRouter();
 
   // Round-local snapshot: mid-round prop updates (e.g. a legacy affordance's
-  // refresh) never double-count the seed (F20).
-  const seedRef = useRef(decidedSeed);
+  // refresh) never double-count the seed (F20). A never-updated state cell IS the
+  // mount snapshot, and — unlike a ref — the count may read it while rendering.
+  const [seed] = useState(decidedSeed);
   const [entries, setEntries] = useState<TriageRoundQueueEntry[]>(queue);
   const [handled, setHandled] = useState<ReadonlySet<string>>(new Set());
   const [newlyDecided, setNewlyDecided] = useState<ReadonlySet<string>>(new Set());
@@ -193,7 +194,7 @@ export function TriageRound({
 
   // Ceiling-free cue (F20): seed + this round's tap set. Ticks on the tap,
   // never on the flush; dispositions don't count.
-  const decided = seedRef.current + newlyDecided.size;
+  const decided = seed + newlyDecided.size;
 
   const roundOver = shown === undefined || expired;
   const timer = (

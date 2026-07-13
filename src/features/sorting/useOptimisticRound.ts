@@ -3,10 +3,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { dedupeDecisionsLatestWins, type MovedDecision } from "@/lib/what-moved";
 import { getRoundBox, type RoundBox } from "@/lib/round-preference";
+import { useDeviceValue } from "@/lib/useDeviceValue";
 import { enqueue, newClientKey, removeQueued, type PendingEntry, type QueueKey } from "./decisionQueue";
 import { awaitAck, isInFlight, triggerFlush, useDecisionFlusher, type AckOutcome } from "./decisionFlusher";
 
 const MINUTE_MS = 60_000;
+
+const boxToMs = (box: RoundBox): number | null => (box === "none" ? null : box * MINUTE_MS);
+const storedBoxMs = (): number | null => boxToMs(getRoundBox());
+
 // TONE register — a gentle stumble, never "error"/"failed" (matches the
 // provider's existing line).
 export const STUMBLE_LINE = "That didn't go through — give it another try in a moment.";
@@ -106,13 +111,15 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
   useDecisionFlusher(key); // 5-pending / 4 s / pagehide triggers — the only wiring here
 
   // Round-local snapshot: mid-round prop updates (e.g. a legacy affordance's
-  // refresh) never perturb the round (F20).
-  const serverLogRef = useRef(serverLog);
+  // refresh) never perturb the round (F20). A never-updated state cell IS the
+  // mount snapshot, and — unlike a ref — the recap may read it while rendering.
+  const [serverLogAtMount] = useState(serverLog);
   const initialQueueEmptyRef = useRef(initialQueueEmpty);
   // This round's tap log — pending, in-flight AND already-acked entries alike,
   // so the recap can never undercount what the person actually moved (F5). It
-  // doubles as the revisit history: the tail is what "Back" re-presents.
-  const roundLogRef = useRef<
+  // doubles as the revisit history: the tail is what "Back" re-presents. State,
+  // not a ref: `recapDecisions` and `canGoBack` are rendered from it.
+  const [roundLog, setRoundLog] = useState<
     Array<{ clientKey: string; itemId: string; label: string; moved: MovedDecision }>
   >([]);
   // Ack outcomes recorded as they land, so "Back" can tell a standing answer
@@ -122,9 +129,14 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
   // re-presented with its standing choice selected.
   const [revisit, setRevisit] = useState<RevisitState | null>(null);
 
-  // The round's clock is client-owned and fixed at mount (RoundSurface's pattern).
-  const startedAtRef = useRef(Date.now());
-  const [boxMs, setBoxMs] = useState<number | null>(null);
+  // The round's clock is client-owned and fixed at mount (RoundSurface's pattern) —
+  // a lazy initializer, since Date.now() must not be called on every render.
+  const [startedAtMs] = useState(() => Date.now());
+  // The stored box is device-local: no timer through SSR/hydration, then the real box
+  // right after mount (useDeviceValue). A mid-round switch overrides it.
+  const storedBox = useDeviceValue<number | null>(storedBoxMs, null);
+  const [chosenBoxMs, setChosenBoxMs] = useState<{ ms: number | null } | null>(null);
+  const boxMs = chosenBoxMs === null ? storedBox : chosenBoxMs.ms;
   const [expired, setExpired] = useState(false);
   const [frozen, setFrozen] = useState<{ decisions: MovedDecision[]; endedAtMs: number } | null>(null);
   const [stumble, setStumble] = useState(false);
@@ -138,16 +150,11 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
     setFrozen(null);
   }, []);
 
-  useEffect(() => {
-    const box = getRoundBox();
-    setBoxMs(box === "none" ? null : box * MINUTE_MS);
-  }, []);
-
   // Mid-round length switch (parent D2): recompute the box against the UNCHANGED
   // start — RoundTimer's effect re-arms on the boxMs prop, so "none" drops the
   // countdown and a box shorter than the elapsed time expires at the next tick.
   const onBoxChange = useCallback((box: RoundBox) => {
-    setBoxMs(box === "none" ? null : box * MINUTE_MS);
+    setChosenBoxMs({ ms: boxToMs(box) });
   }, []);
 
   const ended = expired || queueExhausted;
@@ -160,7 +167,7 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
     // log. The round-end flush proceeds BEHIND it; the recap never re-renders
     // from server data (prevents the double-count window).
     setFrozen({
-      decisions: [...serverLogRef.current, ...roundLogRef.current.map((e) => e.moved)],
+      decisions: [...serverLogAtMount, ...roundLog.map((e) => e.moved)],
       endedAtMs: Date.now(),
     });
     // A round that never was (mounted onto an empty queue) has nothing to flush.
@@ -175,7 +182,9 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
     // `experimental.staleTimes: { dynamic: 0 }` in next.config.mjs, which races
     // nothing.
     void triggerFlush(key);
-  }, [ended, key]);
+    // `roundLog`/`serverLogAtMount` are read, not watched: the end sequence is
+    // one-shot (endSequenceRan), so a later log change can never re-freeze the recap.
+  }, [ended, key, roundLog, serverLogAtMount]);
 
   async function submitDecision(itemId: string, decision: D): Promise<boolean> {
     if (busyRef.current) return false;
@@ -211,12 +220,15 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
       } else {
         void awaitAck(key, clientKey).then((o) => outcomesRef.current.set(clientKey, o));
       }
-      roundLogRef.current.push({
-        clientKey,
-        itemId,
-        label: labelFor(itemId, decision),
-        moved: toMoved(decision, Date.parse(enqueuedAt)),
-      });
+      setRoundLog((prev) => [
+        ...prev,
+        {
+          clientKey,
+          itemId,
+          label: labelFor(itemId, decision),
+          moved: toMoved(decision, Date.parse(enqueuedAt)),
+        },
+      ]);
       setRevisit(null); // a superseding answer resumes the round
       return true;
     } finally {
@@ -231,13 +243,13 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
   // is the reconciliation).
   function goBack(): RepresentFresh | null {
     if (revisit !== null) return null;
-    const last = roundLogRef.current[roundLogRef.current.length - 1];
+    const last = roundLog[roundLog.length - 1];
     if (last === undefined) return null;
     const outcome = outcomesRef.current.get(last.clientKey);
     if (outcome?.status === "rejected") return null;
     if (outcome === undefined && !isInFlight(key, last.clientKey) && removeQueued(key, last.clientKey)) {
       // The answer never left the device: remove it, re-present fresh (F20 decrement).
-      roundLogRef.current.pop();
+      setRoundLog((prev) => prev.slice(0, -1));
       return { itemId: last.itemId };
     }
     setRevisit({ itemId: last.itemId, clientKey: last.clientKey, label: last.label });
@@ -246,7 +258,7 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
 
   return {
     key,
-    startedAtMs: startedAtRef.current,
+    startedAtMs,
     boxMs,
     expired,
     onExpire: () => setExpired(true),
@@ -255,15 +267,15 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
     // holds a second entry for any item answered, flushed, then changed via
     // Back-as-revisit — one physical item must never show in two outcome lines.
     recapDecisions: dedupeDecisionsLatestWins(
-      frozen?.decisions ?? [...serverLogRef.current, ...roundLogRef.current.map((e) => e.moved)],
+      frozen?.decisions ?? [...serverLogAtMount, ...roundLog.map((e) => e.moved)],
     ),
     recapNowMs: frozen?.endedAtMs,
-    windowStartMs: startedAtRef.current,
+    windowStartMs: startedAtMs,
     reopenRound,
     stumble,
     submitDecision,
     revisit,
-    canGoBack: revisit === null && roundLogRef.current.length > 0,
+    canGoBack: revisit === null && roundLog.length > 0,
     goBack,
     clearRevisit: () => setRevisit(null),
   };

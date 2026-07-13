@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import {
   whatMoved,
   inYourLifeLine,
@@ -42,7 +43,10 @@ function lines(summary: WhatMovedSummary): string[] {
  * score or a remaining count. aria-live so it's announced when it replaces the round.
  */
 export function WhatMoved({ decisions, windowStartMs, nowMs, hubHref }: WhatMovedProps) {
-  const summary = whatMoved(decisions, windowStartMs, nowMs ?? Date.now());
+  // The recap is a still photograph: when the caller hands no window end, it closes at
+  // the moment this mounts (a lazy initializer — Date.now() is impure, never a render read).
+  const [mountedAtMs] = useState(() => Date.now());
+  const summary = whatMoved(decisions, windowStartMs, nowMs ?? mountedAtMs);
   const items = lines(summary);
 
   return (
