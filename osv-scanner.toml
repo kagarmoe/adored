@@ -1,65 +1,9 @@
 # Reasoned ignores only — each entry names the bead that deletes it. Baseline 2026-07-12.
 
 [[IgnoredVulns]]
-id = "GHSA-36qx-fr4f-26g5"
-reason = "next@14 advisory; fixed by the Next 16 bump (purses-9oxh.4), which deletes this entry"
-
-[[IgnoredVulns]]
-id = "GHSA-3g8h-86w9-wvmq"
-reason = "next@14 advisory; fixed by the Next 16 bump (purses-9oxh.4), which deletes this entry"
-
-[[IgnoredVulns]]
-id = "GHSA-3x4c-7xq6-9pq8"
-reason = "next@14 advisory; fixed by the Next 16 bump (purses-9oxh.4), which deletes this entry"
-
-[[IgnoredVulns]]
-id = "GHSA-8h8q-6873-q5fj"
-reason = "next@14 advisory; fixed by the Next 16 bump (purses-9oxh.4), which deletes this entry"
-
-[[IgnoredVulns]]
-id = "GHSA-9g9p-9gw9-jx7f"
-reason = "next@14 advisory; fixed by the Next 16 bump (purses-9oxh.4), which deletes this entry"
-
-[[IgnoredVulns]]
-id = "GHSA-c4j6-fc7j-m34r"
-reason = "next@14 advisory; fixed by the Next 16 bump (purses-9oxh.4), which deletes this entry"
-
-[[IgnoredVulns]]
-id = "GHSA-ffhc-5mcf-pf4q"
-reason = "next@14 advisory; fixed by the Next 16 bump (purses-9oxh.4), which deletes this entry"
-
-[[IgnoredVulns]]
-id = "GHSA-ggv3-7p47-pfv8"
-reason = "next@14 advisory; fixed by the Next 16 bump (purses-9oxh.4), which deletes this entry"
-
-[[IgnoredVulns]]
-id = "GHSA-gx5p-jg67-6x7h"
-reason = "next@14 advisory; fixed by the Next 16 bump (purses-9oxh.4), which deletes this entry"
-
-[[IgnoredVulns]]
-id = "GHSA-h25m-26qc-wcjf"
-reason = "next@14 advisory; fixed by the Next 16 bump (purses-9oxh.4), which deletes this entry"
-
-[[IgnoredVulns]]
-id = "GHSA-h64f-5h5j-jqjh"
-reason = "next@14 advisory; fixed by the Next 16 bump (purses-9oxh.4), which deletes this entry"
-
-[[IgnoredVulns]]
-id = "GHSA-q4gf-8mx6-v5v3"
-reason = "next@14 advisory; fixed by the Next 16 bump (purses-9oxh.4), which deletes this entry"
-
-[[IgnoredVulns]]
-id = "GHSA-vfv6-92ff-j949"
-reason = "next@14 advisory; fixed by the Next 16 bump (purses-9oxh.4), which deletes this entry"
-
-[[IgnoredVulns]]
-id = "GHSA-wfc6-r584-vfw7"
-reason = "next@14 advisory; fixed by the Next 16 bump (purses-9oxh.4), which deletes this entry"
+id = "GHSA-67mh-4wv8-2f99"
+reason = "esbuild@0.18.20 dev-only, under drizzle-kit's deprecated @esbuild-kit chain; never in the runtime bundle; revisit in purses-9oxh.7"
 
 [[IgnoredVulns]]
 id = "GHSA-qx2v-qp2m-jg93"
-reason = "postcss@8.4.31 pinned inside next@14; erased by the Next 16 bump (purses-9oxh.4)"
-
-[[IgnoredVulns]]
-id = "GHSA-67mh-4wv8-2f99"
-reason = "esbuild@0.18.20 dev-only, under drizzle-kit's deprecated @esbuild-kit chain; never in the runtime bundle; revisit in purses-9oxh.7"
+reason = "postcss@8.4.31 pinned INSIDE next@16.2.9 itself (npm ls postcss) — the epic spec's 'erased by the Next 16 bump' premise was false. Build-time CSS processing, not runtime-exposed. Owned by purses-9oxh.9: re-test on every next bump; do not npm-override next's internal pin."
