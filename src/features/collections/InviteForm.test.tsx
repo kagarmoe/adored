@@ -71,6 +71,23 @@ describe("InviteForm", () => {
     expect(screen.queryByText("Invitation sent successfully!")).not.toBeInTheDocument();
   });
 
+  it("an email the native guard accepts but zod rejects renders the inline error — no fetch (regression: zod 4 removed ZodError.errors)", async () => {
+    // "a@b" satisfies the browser's type=email check (no typeMismatch), so
+    // handleSubmit runs and the zod .email() backstop fires. The catch must
+    // surface the schema's message — under zod 4, reading err.errors[0] threw
+    // a TypeError inside the catch and the form died silently (purses-9oxh.5).
+    (fetch as any).mockResolvedValue({ ok: true, json: async () => ({}) });
+
+    render(<InviteForm collectionId="coll_01ULID" />);
+    fireEvent.change(emailField(), { target: { value: "a@b" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
+
+    expect(emailField().validity.typeMismatch).toBe(false);
+    await waitFor(() => expect(screen.getByText("Invalid email address")).toBeInTheDocument());
+    expect(fetch).not.toHaveBeenCalled();
+    expect(screen.queryByText("Invitation sent successfully!")).not.toBeInTheDocument();
+  });
+
   it("announces a sent invitation via role=status", async () => {
     (fetch as any).mockResolvedValue({ ok: true, status: 201, json: async () => ({}) });
 

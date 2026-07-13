@@ -101,6 +101,50 @@ describe("env validation — failure", () => {
 
     expect(() => env.DATABASE_URL).toThrow(/DATABASE_URL must be a valid URL/);
   });
+
+  it("throws when AUTH_URL is not a valid URL", async () => {
+    process.env.AUTH_URL = "not-a-url";
+    const { env } = await import("./env");
+
+    expect(() => env.AUTH_URL).toThrow(/AUTH_URL must be a valid URL/);
+  });
+
+  it("throws when EMAIL_FROM is present but not a valid email (default only covers absence)", async () => {
+    process.env.EMAIL_FROM = "not-an-email";
+    const { env } = await import("./env");
+
+    expect(() => env.EMAIL_FROM).toThrow(/EMAIL_FROM must be a valid email/);
+  });
+
+  it("throws on a NODE_ENV outside the enum (default only covers absence)", async () => {
+    process.env.NODE_ENV = "staging";
+    const { env } = await import("./env");
+
+    expect(() => env.NODE_ENV).toThrow(/Environment validation failed/);
+    expect(() => env.NODE_ENV).toThrow(/NODE_ENV/);
+  });
+
+  it("throws on a VERCEL_ENV outside the enum (optional only covers absence)", async () => {
+    process.env.VERCEL_ENV = "canary";
+    const { env } = await import("./env");
+
+    expect(() => env.VERCEL_ENV).toThrow(/Environment validation failed/);
+    expect(() => env.VERCEL_ENV).toThrow(/VERCEL_ENV/);
+  });
+
+  it("throws when AUTH_SECRET is the empty string — empty must not satisfy min(32)", async () => {
+    process.env.AUTH_SECRET = "";
+    const { env } = await import("./env");
+
+    expect(() => env.AUTH_SECRET).toThrow(/at least 32 characters/);
+  });
+
+  it("throws when DATABASE_URL is the empty string — empty must not satisfy url()", async () => {
+    process.env.DATABASE_URL = "";
+    const { env } = await import("./env");
+
+    expect(() => env.DATABASE_URL).toThrow(/DATABASE_URL must be a valid URL/);
+  });
 });
 
 describe("previewTrustedOrigins", () => {
