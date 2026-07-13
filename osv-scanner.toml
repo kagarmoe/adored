@@ -2,7 +2,7 @@
 
 [[IgnoredVulns]]
 id = "GHSA-67mh-4wv8-2f99"
-reason = "esbuild@0.18.20 dev-only, under drizzle-kit's deprecated @esbuild-kit chain; never in the runtime bundle; revisit in purses-9oxh.7"
+reason = "esbuild@0.18.20 dev-only, under drizzle-kit's deprecated @esbuild-kit chain; never in the runtime bundle. REVISITED in purses-9oxh.7 (2026-07-13): still pinned upstream after the vite-8 bump — re-test on every drizzle-kit bump"
 
 [[IgnoredVulns]]
 id = "GHSA-qx2v-qp2m-jg93"

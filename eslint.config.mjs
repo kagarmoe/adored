@@ -15,7 +15,10 @@ const eslintConfig = [
   // Build output / generated files. Flat config only auto-ignores node_modules
   // and .git.
   {
-    ignores: ['.next/**', 'out/**', 'build/**', 'coverage/**', 'next-env.d.ts'],
+    // .claude/** holds agent worktrees with their own stale node_modules —
+    // ESLint 10 sweeps them under `eslint .` and crashes on old
+    // @rushstack/eslint-patch copies (and CI would lint code it isn't gating).
+    ignores: ['.next/**', 'out/**', 'build/**', 'coverage/**', 'next-env.d.ts', '.claude/**'],
   },
 
   // ESLint 9 defaults reportUnusedDisableDirectives to "warn"; eslintrc (and
