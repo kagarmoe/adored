@@ -18,24 +18,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/79552ae06369cab521cd38a48663340ef4478bea",
-        "commitHash": "79552ae06369cab521cd38a48663340ef4478bea",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29219043221"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/167c5b934ab7b8060cc1b5b5f0c9d086c82b04d9",
+        "commitHash": "167c5b934ab7b8060cc1b5b5f0c9d086c82b04d9",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29219958855"
       },
       "gitCommit": {
-        "shortHash": "79552ae",
-        "hash": "79552ae06369cab521cd38a48663340ef4478bea",
-        "subject": "feat: React 18 → 19.2.7 — zero app-code fallout, one root-caused test fix (purses-9oxh.2) (#332)",
-        "body": "feat: React 18 → 19.2.7 — zero app-code fallout, one root-caused test fix (purses-9oxh.2) (#332)\n\n* feat(deps): React 18.3.1 -> 19.2.7; @types/react* back to ^19 (purses-9oxh.2)\n\nAll four packages clear the 14-day quarantine (react 41d). Fallout scout:\nzero defaultProps/legacy-ReactDOM/test-utils/no-arg-useRef; forwardRef\n(6 UI files) still supported in 19 — left untouched per YAGNI. One test\nregression, root-caused: React 19 no longer flushes the trailing\nbusy=false commit inside RerankPanel's fetch waitFor, so the a11y\nfocus-retention assertion ran before the restore effect; the assertion\nnow waits itself. Proven non-vacuous by mutation: removing the restore\neffect's focus() reds the test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: ARCHITECTURE decision 37 — React 19 bump; graph refresh\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "167c5b9",
+        "hash": "167c5b934ab7b8060cc1b5b5f0c9d086c82b04d9",
+        "subject": "feat: zod 3 → 4.4.3 — pins-first flip, 107-probe zero-loosening proof, forms .errors fix (purses-9oxh.5) (#333)",
+        "body": "feat: zod 3 → 4.4.3 — pins-first flip, 107-probe zero-loosening proof, forms .errors fix (purses-9oxh.5) (#333)\n\n* test(zod): pin reject behavior before the v4 flip — env matrix extended, flatten pin de-tautologized, error.issues rename\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(deps): zod 3.25.76 -> 4.4.3 (purses-9oxh.5) — the validation boundary\n\n4.4.3 is 69 days old (quarantine PASS). The flip against the pre-landed\nreject pins: ALL rejects still reject (extended env matrix incl. empty\nstrings + bad enums, 6 new rows; 19-file surface green). The literal\nflatten pin fired exactly as designed — the delta is message TEXT only,\nstructure identical; accepted deliberately (details is dev-facing, no\nclient renders it, API.md documents no strings) and the pin re-armed\nwith zod 4's literals. error.flatten() still works in 4.4 (deprecated);\nthe pin catches its eventual removal. error.errors -> .issues landed\npre-flip. better-auth's nested zod dedupes to root.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(forms): ZodError.errors -> .issues in the three client forms + regression test\n\nSecurity review BLOCK, upheld: zod 4 removed ZodError.errors (not an\nalias), so all three forms' catch blocks threw TypeError and died\nsilently on a zod rejection — production-reachable via InviteForm with\n\"a@b\" (passes native type=email, rejected by .email()). Fixed to\n.issues[0].message and pinned with a regression test proven RED against\nthe committed .errors code (mutation-verified). The review's 107\ndifferential probes (side-by-side zod 3 vs 4) found ZERO acceptance\nloosening across the entire 19-file boundary — v4 only tightened\n(Infinity, unsafe ints).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1783908764000
+          "time": 1783910354000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1783908764000
+          "time": 1783910354000
         },
         "branch": "main"
       },
@@ -49,24 +49,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/79552ae06369cab521cd38a48663340ef4478bea",
-            "commitHash": "79552ae06369cab521cd38a48663340ef4478bea",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29219043221"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/167c5b934ab7b8060cc1b5b5f0c9d086c82b04d9",
+            "commitHash": "167c5b934ab7b8060cc1b5b5f0c9d086c82b04d9",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29219958855"
           },
           "gitCommit": {
-            "shortHash": "79552ae",
-            "hash": "79552ae06369cab521cd38a48663340ef4478bea",
-            "subject": "feat: React 18 → 19.2.7 — zero app-code fallout, one root-caused test fix (purses-9oxh.2) (#332)",
-            "body": "feat: React 18 → 19.2.7 — zero app-code fallout, one root-caused test fix (purses-9oxh.2) (#332)\n\n* feat(deps): React 18.3.1 -> 19.2.7; @types/react* back to ^19 (purses-9oxh.2)\n\nAll four packages clear the 14-day quarantine (react 41d). Fallout scout:\nzero defaultProps/legacy-ReactDOM/test-utils/no-arg-useRef; forwardRef\n(6 UI files) still supported in 19 — left untouched per YAGNI. One test\nregression, root-caused: React 19 no longer flushes the trailing\nbusy=false commit inside RerankPanel's fetch waitFor, so the a11y\nfocus-retention assertion ran before the restore effect; the assertion\nnow waits itself. Proven non-vacuous by mutation: removing the restore\neffect's focus() reds the test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: ARCHITECTURE decision 37 — React 19 bump; graph refresh\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "167c5b9",
+            "hash": "167c5b934ab7b8060cc1b5b5f0c9d086c82b04d9",
+            "subject": "feat: zod 3 → 4.4.3 — pins-first flip, 107-probe zero-loosening proof, forms .errors fix (purses-9oxh.5) (#333)",
+            "body": "feat: zod 3 → 4.4.3 — pins-first flip, 107-probe zero-loosening proof, forms .errors fix (purses-9oxh.5) (#333)\n\n* test(zod): pin reject behavior before the v4 flip — env matrix extended, flatten pin de-tautologized, error.issues rename\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(deps): zod 3.25.76 -> 4.4.3 (purses-9oxh.5) — the validation boundary\n\n4.4.3 is 69 days old (quarantine PASS). The flip against the pre-landed\nreject pins: ALL rejects still reject (extended env matrix incl. empty\nstrings + bad enums, 6 new rows; 19-file surface green). The literal\nflatten pin fired exactly as designed — the delta is message TEXT only,\nstructure identical; accepted deliberately (details is dev-facing, no\nclient renders it, API.md documents no strings) and the pin re-armed\nwith zod 4's literals. error.flatten() still works in 4.4 (deprecated);\nthe pin catches its eventual removal. error.errors -> .issues landed\npre-flip. better-auth's nested zod dedupes to root.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(forms): ZodError.errors -> .issues in the three client forms + regression test\n\nSecurity review BLOCK, upheld: zod 4 removed ZodError.errors (not an\nalias), so all three forms' catch blocks threw TypeError and died\nsilently on a zod rejection — production-reachable via InviteForm with\n\"a@b\" (passes native type=email, rejected by .email()). Fixed to\n.issues[0].message and pinned with a regression test proven RED against\nthe committed .errors code (mutation-verified). The review's 107\ndifferential probes (side-by-side zod 3 vs 4) found ZERO acceptance\nloosening across the entire 19-file boundary — v4 only tightened\n(Infinity, unsafe ints).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783908764000
+              "time": 1783910354000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783908764000
+              "time": 1783910354000
             },
             "branch": "main"
           },
@@ -87,24 +87,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/79552ae06369cab521cd38a48663340ef4478bea",
-            "commitHash": "79552ae06369cab521cd38a48663340ef4478bea",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29219043221"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/167c5b934ab7b8060cc1b5b5f0c9d086c82b04d9",
+            "commitHash": "167c5b934ab7b8060cc1b5b5f0c9d086c82b04d9",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29219958855"
           },
           "gitCommit": {
-            "shortHash": "79552ae",
-            "hash": "79552ae06369cab521cd38a48663340ef4478bea",
-            "subject": "feat: React 18 → 19.2.7 — zero app-code fallout, one root-caused test fix (purses-9oxh.2) (#332)",
-            "body": "feat: React 18 → 19.2.7 — zero app-code fallout, one root-caused test fix (purses-9oxh.2) (#332)\n\n* feat(deps): React 18.3.1 -> 19.2.7; @types/react* back to ^19 (purses-9oxh.2)\n\nAll four packages clear the 14-day quarantine (react 41d). Fallout scout:\nzero defaultProps/legacy-ReactDOM/test-utils/no-arg-useRef; forwardRef\n(6 UI files) still supported in 19 — left untouched per YAGNI. One test\nregression, root-caused: React 19 no longer flushes the trailing\nbusy=false commit inside RerankPanel's fetch waitFor, so the a11y\nfocus-retention assertion ran before the restore effect; the assertion\nnow waits itself. Proven non-vacuous by mutation: removing the restore\neffect's focus() reds the test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: ARCHITECTURE decision 37 — React 19 bump; graph refresh\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "167c5b9",
+            "hash": "167c5b934ab7b8060cc1b5b5f0c9d086c82b04d9",
+            "subject": "feat: zod 3 → 4.4.3 — pins-first flip, 107-probe zero-loosening proof, forms .errors fix (purses-9oxh.5) (#333)",
+            "body": "feat: zod 3 → 4.4.3 — pins-first flip, 107-probe zero-loosening proof, forms .errors fix (purses-9oxh.5) (#333)\n\n* test(zod): pin reject behavior before the v4 flip — env matrix extended, flatten pin de-tautologized, error.issues rename\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(deps): zod 3.25.76 -> 4.4.3 (purses-9oxh.5) — the validation boundary\n\n4.4.3 is 69 days old (quarantine PASS). The flip against the pre-landed\nreject pins: ALL rejects still reject (extended env matrix incl. empty\nstrings + bad enums, 6 new rows; 19-file surface green). The literal\nflatten pin fired exactly as designed — the delta is message TEXT only,\nstructure identical; accepted deliberately (details is dev-facing, no\nclient renders it, API.md documents no strings) and the pin re-armed\nwith zod 4's literals. error.flatten() still works in 4.4 (deprecated);\nthe pin catches its eventual removal. error.errors -> .issues landed\npre-flip. better-auth's nested zod dedupes to root.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(forms): ZodError.errors -> .issues in the three client forms + regression test\n\nSecurity review BLOCK, upheld: zod 4 removed ZodError.errors (not an\nalias), so all three forms' catch blocks threw TypeError and died\nsilently on a zod rejection — production-reachable via InviteForm with\n\"a@b\" (passes native type=email, rejected by .email()). Fixed to\n.issues[0].message and pinned with a regression test proven RED against\nthe committed .errors code (mutation-verified). The review's 107\ndifferential probes (side-by-side zod 3 vs 4) found ZERO acceptance\nloosening across the entire 19-file boundary — v4 only tightened\n(Infinity, unsafe ints).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783908764000
+              "time": 1783910354000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783908764000
+              "time": 1783910354000
             },
             "branch": "main"
           },
@@ -187,12 +187,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 289,
+                  "duration": 354,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:14:59.303Z",
+                  "startTime": "2026-07-13T02:41:37.391Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -229,7 +229,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 34319,
+                  "duration": 25600,
                   "errors": [],
                   "stdout": [
                     {
@@ -259,7 +259,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:15:00.334Z",
+                  "startTime": "2026-07-13T02:41:38.478Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -288,7 +288,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 17152,
+                  "duration": 16985,
                   "errors": [],
                   "stdout": [
                     {
@@ -318,7 +318,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:15:35.843Z",
+                  "startTime": "2026-07-13T02:42:05.381Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -347,7 +347,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2890,
+                  "duration": 3152,
                   "errors": [],
                   "stdout": [
                     {
@@ -359,7 +359,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:15:53.022Z",
+                  "startTime": "2026-07-13T02:42:22.390Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -388,7 +388,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2883,
+                  "duration": 2993,
                   "errors": [],
                   "stdout": [
                     {
@@ -400,7 +400,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:15:55.929Z",
+                  "startTime": "2026-07-13T02:42:25.564Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -437,12 +437,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2055,
+                  "duration": 2341,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:15:58.843Z",
+                  "startTime": "2026-07-13T02:42:28.583Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -470,18 +470,77 @@
                 {
                   "workerIndex": 1,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1405,
-                  "errors": [],
+                  "status": "failed",
+                  "duration": 1931,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mnull\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mnull\u001b[39m\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts:54:23",
+                    "location": {
+                      "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts",
+                      "column": 23,
+                      "line": 54
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 52 |\u001b[39m   \u001b[36mconst\u001b[39m poolBox \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m poolHeading\u001b[33m.\u001b[39mboundingBox()\u001b[33m;\u001b[39m\n \u001b[90m 53 |\u001b[39m   \u001b[36mconst\u001b[39m itemsBox \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m itemsHeading\u001b[33m.\u001b[39mboundingBox()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 54 |\u001b[39m   expect(poolBox)\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoBeNull()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 55 |\u001b[39m   expect(itemsBox)\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoBeNull()\u001b[33m;\u001b[39m\n \u001b[90m 56 |\u001b[39m   expect(poolBox\u001b[33m!\u001b[39m\u001b[33m.\u001b[39my)\u001b[33m.\u001b[39mtoBeLessThan(itemsBox\u001b[33m!\u001b[39m\u001b[33m.\u001b[39my)\u001b[33m;\u001b[39m\n \u001b[90m 57 |\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts",
+                        "column": 23,
+                        "line": 54
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mnull\u001b[39m\n\n  52 |   const poolBox = await poolHeading.boundingBox();\n  53 |   const itemsBox = await itemsHeading.boundingBox();\n> 54 |   expect(poolBox).not.toBeNull();\n     |                       ^\n  55 |   expect(itemsBox).not.toBeNull();\n  56 |   expect(poolBox!.y).toBeLessThan(itemsBox!.y);\n  57 |\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts:54:23"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:16:00.951Z",
+                  "startTime": "2026-07-13T02:42:30.998Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-bc142-with-the-item-preview-shown-tablet/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-bc142-with-the-item-preview-shown-tablet/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-bc142-with-the-item-preview-shown-tablet/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts",
+                    "column": 23,
+                    "line": 54
+                  }
+                },
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2758,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 1,
+                  "startTime": "2026-07-13T02:43:04.294Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-bc142-with-the-item-preview-shown-tablet-retry1/trace.zip"
+                    }
+                  ]
                 }
               ],
-              "status": "expected"
+              "status": "flaky"
             }
           ],
           "id": "8459740f6655c8183518-2b373200665c8b3bee19",
@@ -502,15 +561,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1785,
+                  "duration": 3688,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:16:02.377Z",
+                  "startTime": "2026-07-13T02:43:07.438Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -536,15 +595,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1038,
+                  "duration": 2246,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:16:04.190Z",
+                  "startTime": "2026-07-13T02:43:11.184Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -570,15 +629,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1134,
+                  "duration": 2163,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:16:05.250Z",
+                  "startTime": "2026-07-13T02:43:13.465Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -612,15 +671,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1972,
+                  "duration": 3768,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:16:06.449Z",
+                  "startTime": "2026-07-13T02:43:16.477Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -646,15 +705,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2218,
+                  "duration": 3533,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:16:08.485Z",
+                  "startTime": "2026-07-13T02:43:21.148Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -688,15 +747,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1665,
+                  "duration": 2150,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:16:10.736Z",
+                  "startTime": "2026-07-13T02:43:24.744Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -722,15 +781,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1612,
+                  "duration": 2088,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:16:12.467Z",
+                  "startTime": "2026-07-13T02:43:26.944Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -756,15 +815,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1459,
+                  "duration": 2789,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:16:14.107Z",
+                  "startTime": "2026-07-13T02:43:29.054Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -805,15 +864,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1214,
+                      "duration": 2592,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:16:15.603Z",
+                      "startTime": "2026-07-13T02:43:32.030Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -839,15 +898,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2584,
+                      "duration": 8516,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:16:16.902Z",
+                      "startTime": "2026-07-13T02:43:37.207Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -873,15 +932,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2257,
+                      "duration": 2214,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:16:19.529Z",
+                      "startTime": "2026-07-13T02:43:45.742Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -924,15 +983,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 10950,
+                      "duration": 6179,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:16:21.827Z",
+                      "startTime": "2026-07-13T02:43:48.042Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -958,15 +1017,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 9366,
+                      "duration": 3477,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:16:32.803Z",
+                      "startTime": "2026-07-13T02:43:54.260Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1009,15 +1068,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2351,
+                      "duration": 3447,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:16:42.436Z",
+                      "startTime": "2026-07-13T02:43:57.797Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1060,15 +1119,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2955,
+                      "duration": 2598,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:16:46.490Z",
+                      "startTime": "2026-07-13T02:44:01.489Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1111,15 +1170,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1569,
+                      "duration": 1529,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:16:49.600Z",
+                      "startTime": "2026-07-13T02:44:04.296Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1145,15 +1204,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1203,
+                      "duration": 2581,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:16:51.247Z",
+                      "startTime": "2026-07-13T02:44:05.974Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1196,15 +1255,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4603,
+                      "duration": 6202,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:16:52.525Z",
+                      "startTime": "2026-07-13T02:44:08.734Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1230,15 +1289,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5914,
+                      "duration": 6151,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:16:57.457Z",
+                      "startTime": "2026-07-13T02:44:15.320Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1281,15 +1340,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2494,
+                      "duration": 3356,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:17:03.450Z",
+                      "startTime": "2026-07-13T02:44:21.550Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1315,15 +1374,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3055,
+                      "duration": 3505,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:17:06.182Z",
+                      "startTime": "2026-07-13T02:44:25.034Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1366,15 +1425,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1353,
+                      "duration": 1169,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:17:09.291Z",
+                      "startTime": "2026-07-13T02:44:28.588Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1400,15 +1459,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 555,
+                      "duration": 490,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:17:10.658Z",
+                      "startTime": "2026-07-13T02:44:29.768Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1434,15 +1493,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 587,
+                      "duration": 449,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:17:11.221Z",
+                      "startTime": "2026-07-13T02:44:30.266Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1478,15 +1537,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1350,
+                  "duration": 1385,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:17:11.877Z",
+                  "startTime": "2026-07-13T02:44:30.773Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1512,15 +1571,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1966,
+                  "duration": 2450,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:17:13.297Z",
+                  "startTime": "2026-07-13T02:44:32.239Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1554,15 +1613,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1476,
+                  "duration": 1781,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:17:15.294Z",
+                  "startTime": "2026-07-13T02:44:34.768Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1588,15 +1647,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1290,
+                  "duration": 2083,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:17:16.858Z",
+                  "startTime": "2026-07-13T02:44:36.711Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1622,20 +1681,115 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 2355,
-                  "errors": [],
+                  "status": "timedOut",
+                  "duration": 30301,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts",
+                        "column": 10,
+                        "line": 81
+                      },
+                      "message": "Error: page.waitForResponse: Test timeout of 30000ms exceeded.\n\n  79 |   await page.getByLabel(\"Invite by email\").fill(email);\n  80 |   await Promise.all([\n> 81 |     page.waitForResponse(\n     |          ^\n  82 |       (r) =>\n  83 |         r.url().includes(`/api/collections/${collectionId}/invitations`) &&\n  84 |         r.request().method() === \"POST\",\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts:81:10"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:17:18.168Z",
+                  "startTime": "2026-07-13T02:44:38.824Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/error-context.md"
+                    }
+                  ]
+                },
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 30420,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts",
+                        "column": 10,
+                        "line": 81
+                      },
+                      "message": "Error: page.waitForResponse: Test timeout of 30000ms exceeded.\n\n  79 |   await page.getByLabel(\"Invite by email\").fill(email);\n  80 |   await Promise.all([\n> 81 |     page.waitForResponse(\n     |          ^\n  82 |       (r) =>\n  83 |         r.url().includes(`/api/collections/${collectionId}/invitations`) &&\n  84 |         r.request().method() === \"POST\",\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts:81:10"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 1,
+                  "startTime": "2026-07-13T02:45:10.395Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/trace.zip"
+                    }
+                  ]
+                },
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1683,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 2,
+                  "startTime": "2026-07-13T02:45:42.150Z",
                   "annotations": [],
                   "attachments": []
                 }
               ],
-              "status": "expected"
+              "status": "flaky"
             }
           ],
           "id": "01480a904f937bb0a1f8-16a0057158965d3a7188",
@@ -1671,15 +1825,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 9868,
+                      "duration": 3606,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:17:20.738Z",
+                      "startTime": "2026-07-13T02:45:44.109Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1705,15 +1859,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 7234,
+                      "duration": 3046,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:17:31.168Z",
+                      "startTime": "2026-07-13T02:45:47.824Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1739,15 +1893,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2334,
+                      "duration": 1578,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:17:38.438Z",
+                      "startTime": "2026-07-13T02:45:50.886Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1790,15 +1944,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 11393,
+                      "duration": 10091,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:17:40.930Z",
+                      "startTime": "2026-07-13T02:45:52.502Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1824,15 +1978,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1504,
+                      "duration": 1387,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:17:53.148Z",
+                      "startTime": "2026-07-13T02:46:02.677Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1868,15 +2022,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2313,
+                  "duration": 1946,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:17:54.678Z",
+                  "startTime": "2026-07-13T02:46:04.098Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1917,15 +2071,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1552,
+                      "duration": 1348,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:17:57.035Z",
+                      "startTime": "2026-07-13T02:46:06.071Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1968,15 +2122,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3458,
+                      "duration": 2955,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:17:58.837Z",
+                      "startTime": "2026-07-13T02:46:07.562Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2019,15 +2173,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1612,
+                      "duration": 1292,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:18:02.575Z",
+                      "startTime": "2026-07-13T02:46:10.644Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2070,15 +2224,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4006,
+                      "duration": 3233,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:18:04.384Z",
+                      "startTime": "2026-07-13T02:46:12.058Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2104,15 +2258,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4220,
+                      "duration": 3166,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:18:08.438Z",
+                      "startTime": "2026-07-13T02:46:15.326Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2155,15 +2309,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3279,
+                      "duration": 2454,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:18:12.728Z",
+                      "startTime": "2026-07-13T02:46:18.518Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2206,15 +2360,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2303,
+                      "duration": 2412,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:18:16.185Z",
+                      "startTime": "2026-07-13T02:46:21.048Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2250,15 +2404,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 908,
+                  "duration": 1153,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:18:18.554Z",
+                  "startTime": "2026-07-13T02:46:23.536Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2284,15 +2438,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 971,
+                  "duration": 1009,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:18:19.487Z",
+                  "startTime": "2026-07-13T02:46:24.702Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2318,15 +2472,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1080,
+                  "duration": 1078,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:18:20.478Z",
+                  "startTime": "2026-07-13T02:46:25.728Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2367,15 +2521,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1481,
+                      "duration": 1343,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:18:21.578Z",
+                      "startTime": "2026-07-13T02:46:26.828Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2418,15 +2572,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1429,
+                      "duration": 2183,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:18:23.121Z",
+                      "startTime": "2026-07-13T02:46:28.227Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2452,15 +2606,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1859,
+                      "duration": 2551,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:18:24.619Z",
+                      "startTime": "2026-07-13T02:46:30.483Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2486,15 +2640,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2572,
+                      "duration": 2471,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:18:26.501Z",
+                      "startTime": "2026-07-13T02:46:33.060Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2528,15 +2682,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 13104,
+                      "duration": 10302,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:18:29.106Z",
+                      "startTime": "2026-07-13T02:46:35.569Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2562,15 +2716,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2882,
+                      "duration": 2637,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:18:49.702Z",
+                      "startTime": "2026-07-13T02:46:46.557Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2604,15 +2758,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1457,
+                      "duration": 1070,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:18:52.620Z",
+                      "startTime": "2026-07-13T02:46:49.244Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2638,15 +2792,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1251,
+                      "duration": 1292,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:18:54.120Z",
+                      "startTime": "2026-07-13T02:46:50.330Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2689,15 +2843,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3587,
+                      "duration": 4691,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:18:56.292Z",
+                      "startTime": "2026-07-13T02:46:51.682Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2723,15 +2877,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3846,
+                      "duration": 4685,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T02:19:00.253Z",
+                      "startTime": "2026-07-13T02:46:56.943Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2767,15 +2921,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3985,
+                  "duration": 3263,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:19:04.146Z",
+                  "startTime": "2026-07-13T02:47:01.654Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2801,15 +2955,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3767,
+                  "duration": 4099,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:19:08.154Z",
+                  "startTime": "2026-07-13T02:47:04.940Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2835,15 +2989,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 4,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2654,
+                  "duration": 2882,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T02:19:11.970Z",
+                  "startTime": "2026-07-13T02:47:09.063Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2861,11 +3015,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-07-13T02:14:02.213Z",
-    "duration": 323812.72500000003,
-    "expected": 65,
+    "startTime": "2026-07-13T02:40:34.747Z",
+    "duration": 411229.35500000004,
+    "expected": 63,
     "skipped": 0,
     "unexpected": 0,
-    "flaky": 0
+    "flaky": 2
   }
 }
