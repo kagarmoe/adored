@@ -11,17 +11,18 @@ import { Card, CardImage, EmptyState } from "@/components/ui";
 import { BringBackControl } from "@/features/sorting/BringBackControl";
 
 interface SetAsidePageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function SetAsidePage({ params }: SetAsidePageProps) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
 
   const db = getDb();
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  const collection = await requireCollectionAccess(db, id, session.user.id);
 
   // The page's data path: the curator's set-aside dispositions, the matching
   // item details, and each item's cover photo. Curator-scoped + disposition-
@@ -98,7 +99,7 @@ export default async function SetAsidePage({ params }: SetAsidePageProps) {
                         {item.name ?? "This one"}
                       </span>
                       {/* ULID (collection.id), never the slug — the dispositions
-                          API asserts item.collectionId === params.id. */}
+                          API asserts item.collectionId matches the route id. */}
                       <BringBackControl collectionId={collection.id} itemId={item.id} />
                     </div>
                   </Card>

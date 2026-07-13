@@ -18,19 +18,20 @@ import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
 import Link from "next/link";
 
 interface SessionPageProps {
-  params: { id: string; sessionNumber: string };
+  params: Promise<{ id: string; sessionNumber: string }>;
 }
 
 export default async function SortSessionPage({ params }: SessionPageProps) {
+  const { id, sessionNumber: sessionNumberParam } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
 
   const db = getDb();
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  const collection = await requireCollectionAccess(db, id, session.user.id);
 
-  const sessionNumber = Number(params.sessionNumber);
+  const sessionNumber = Number(sessionNumberParam);
   const [items, sortSession] = await Promise.all([
     ItemController.fromDb(db).listItems(collection.id),
     sessionNumber > 0 && Number.isInteger(sessionNumber)
@@ -39,7 +40,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
   ]);
 
   // #196 integrity guard — kept verbatim; redundant with the resolver but defends
-  // against any future resolver change. Never compare against params.id.
+  // against any future resolver change. Never compare against the route id param.
   if (!sortSession || sortSession.collectionId !== collection.id) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }

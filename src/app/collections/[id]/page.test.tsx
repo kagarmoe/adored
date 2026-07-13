@@ -103,7 +103,16 @@ function makeSession(number: number): Session {
 beforeEach(() => {
   vi.clearAllMocks();
   mockGetSession.mockResolvedValue({ user: { id: "u1" } });
-  mockRequireAccess.mockResolvedValue(makeCollection());
+  // Arg-sensitive on purpose: the page must pass the AWAITED route param to the
+  // guard. A sync-params regression (reading .id off the Promise) feeds this
+  // mock `undefined` and reds the whole file — the unit tier's only non-vacuous
+  // async-params oracle (Next's own .next/types validator collapses to `any`).
+  mockRequireAccess.mockImplementation((_db, id) => {
+    if (id !== "summer-bags") {
+      throw new Error(`requireCollectionAccess received ${String(id)} — expected the awaited route param`);
+    }
+    return Promise.resolve(makeCollection());
+  });
   photoRepo.findPoolByCollection.mockResolvedValue([]);
   photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map());
   itemRepo.findByCollection.mockResolvedValue([]);
@@ -111,7 +120,7 @@ beforeEach(() => {
 });
 
 async function renderPage() {
-  const ui = await CollectionPage({ params: { id: "summer-bags" } });
+  const ui = await CollectionPage({ params: Promise.resolve({ id: "summer-bags" }) });
   return render(ui);
 }
 
@@ -268,7 +277,7 @@ describe("owner utilities visibility and access gating", () => {
     // requireCollectionAccess redirects (throws) for a collection the user can't reach.
     mockRequireAccess.mockRejectedValue(new Error("NEXT_REDIRECT"));
 
-    await expect(CollectionPage({ params: { id: "summer-bags" } })).rejects.toThrow();
+    await expect(CollectionPage({ params: Promise.resolve({ id: "summer-bags" }) })).rejects.toThrow();
 
     // Access-before-query invariant (spec §7): no preview ran.
     expect(photoRepo.findPoolByCollection).not.toHaveBeenCalled();

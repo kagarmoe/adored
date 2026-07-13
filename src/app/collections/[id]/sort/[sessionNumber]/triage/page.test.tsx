@@ -46,18 +46,18 @@ beforeEach(() => {
 describe("TriagePage integrity guard", () => {
   it("redirects (and halts) when the resolved session belongs to a different collection", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_x", collectionId: "coll_OTHER", number: 1, status: "active", curatorId: "u1" });
-    await expect(TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } })).rejects.toThrow("REDIRECT");
+    await expect(TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
   });
 
   it("redirects (and halts) when the user is not the session's curator — independent sort (purses-t9l)", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_x", collectionId: "coll_01ABCDEF", number: 1, status: "active", curatorId: "someone_else" });
-    await expect(TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } })).rejects.toThrow("REDIRECT");
+    await expect(TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
   });
 });
 
 describe("TriagePage hero image", () => {
   it("renders the current item's hero image using collection.id (ULID), not the slug", async () => {
-    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     const img = await screen.findByRole("img", { name: "Bag" });
     expect(img.getAttribute("src")).toContain("coll_01ABCDEF");
@@ -68,7 +68,7 @@ describe("TriagePage hero image", () => {
 
   it("shows the initial (no img) when the item has no cover", async () => {
     photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map());
-    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
     expect(screen.getByText("B")).toBeInTheDocument();
@@ -77,21 +77,21 @@ describe("TriagePage hero image", () => {
 
 describe("TriagePage person-side copy & affordances", () => {
   it("uses a person-side prompt, not a machine-side bucket instruction", async () => {
-    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     expect(screen.getByRole("heading", { name: /how do you feel about this one\?/i })).toBeInTheDocument();
     expect(screen.queryByText(/assign the current item to a preference bucket/i)).not.toBeInTheDocument();
   });
 
   it("renders the 'Not yet' defer control wired to collection.id (ULID), not the slug", async () => {
-    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     // The control is a client island; assert it rendered with its accessible label.
     expect(screen.getByRole("button", { name: /not yet/i })).toBeInTheDocument();
   });
 
   it("renders the 'Not mine' set-aside control as a second quiet escape", async () => {
-    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     // The set-aside island sits beside "Not yet"; assert its accessible label.
     expect(screen.getByRole("button", { name: /not mine/i })).toBeInTheDocument();
@@ -105,7 +105,7 @@ describe("TriagePage ceiling-free progress (TONE 1 & 4)", () => {
       ITEM,
       { id: "item_done", collectionId: "coll_01ABCDEF", number: 8, name: "Done", brand: null, status: "active" },
     ]);
-    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     const { container } = render(ui);
     // Counts what was decided, never what's left — and never "X of Y".
     expect(screen.getByText(/1 decided so far/i)).toBeInTheDocument();
@@ -128,7 +128,7 @@ describe("TriagePage ceiling-free progress (TONE 1 & 4)", () => {
   });
 
   it("omits the cue entirely before the first decision (no '0 decided')", async () => {
-    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     expect(screen.queryByText(/decided so far/i)).not.toBeInTheDocument();
   });
@@ -141,7 +141,7 @@ describe("TriagePage round queue (Epic P)", () => {
       { id: "item_2", collectionId: "coll_01ABCDEF", number: 8, name: "Tote", brand: null, status: "active" },
       { id: "item_3", collectionId: "coll_01ABCDEF", number: 9, name: "Clutch", brand: null, status: "active" },
     ]);
-    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     expect(photoRepo.findCoverPhotosByItemIds).toHaveBeenCalledTimes(1);
     expect(photoRepo.findCoverPhotosByItemIds).toHaveBeenCalledWith(["item_1", "item_2", "item_3"]);
@@ -155,7 +155,7 @@ describe("TriagePage round queue (Epic P)", () => {
       ITEM,
       { id: "item_2", collectionId: "coll_01ABCDEF", number: 8, name: "Tote", brand: null, status: "active" },
     ]);
-    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     expect(photoRepo.findCoverPhotosByItemIds).toHaveBeenCalledWith(["item_2", "item_1"]);
     // The active item leads; no patient-waiting banner while it does.
@@ -165,7 +165,7 @@ describe("TriagePage round queue (Epic P)", () => {
 
 describe("TriagePage round chrome (Epic 4c)", () => {
   it("wraps the triage content in the round shell (step 1 of 4) while keeping the decision UI", async () => {
-    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     // The round shell's step indicator is present and on step 1.
     expect(screen.getByRole("list", { name: /round progress: step 1 of 4/i })).toBeInTheDocument();
@@ -180,7 +180,7 @@ describe("TriagePage patient-waiting skin (showingDeferred)", () => {
     dispRepo.findByCollectionAndCurator.mockResolvedValue([
       { itemId: "item_1", disposition: "deferred" },
     ]);
-    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     expect(screen.getByText(/ready when you are/i)).toBeInTheDocument();
     // a11y (whole-branch review, fix B): the banner is persistent VISUAL CONTEXT
@@ -205,7 +205,7 @@ describe("TriagePage patient-waiting skin (showingDeferred)", () => {
       ITEM,
       { id: "item_deferred", collectionId: "coll_01ABCDEF", number: 9, name: "Later", brand: null, status: "active" },
     ]);
-    const ui = await TriagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     expect(screen.queryByText(/ready when you are/i)).not.toBeInTheDocument();
   });

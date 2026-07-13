@@ -16,10 +16,11 @@ import { quietLink } from "@/lib/design/quiet-link";
 import Link from "next/link";
 
 interface CollectionPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function CollectionPage({ params }: CollectionPageProps) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
@@ -28,7 +29,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   const db = getDb();
   // Access is enforced BEFORE any preview query — a thrown redirect here means the
   // Promise.all below never runs, so pool/item data is unreachable without access.
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  const collection = await requireCollectionAccess(db, id, session.user.id);
 
   // The two bounded previews (and this user's own sessions for the Continue
   // affordance) in one round-trip. Adaptive state derives from preview row

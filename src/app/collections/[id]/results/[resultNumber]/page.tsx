@@ -19,19 +19,20 @@ import type { UsageAnswer } from "@/lib/derive-usage";
 import Link from "next/link";
 
 interface ResultDetailPageProps {
-  params: { id: string; resultNumber: string };
+  params: Promise<{ id: string; resultNumber: string }>;
 }
 
 export default async function ResultDetailPage({ params }: ResultDetailPageProps) {
+  const { id, resultNumber: resultNumberParam } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
 
   const db = getDb();
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  const collection = await requireCollectionAccess(db, id, session.user.id);
 
-  const resultNumber = Number(params.resultNumber);
+  const resultNumber = Number(resultNumberParam);
   const result =
     resultNumber > 0 && Number.isInteger(resultNumber)
       ? await ResultController.fromDb(db).getByCollectionAndNumber(collection.id, resultNumber)

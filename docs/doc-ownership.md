@@ -10,7 +10,7 @@ deliberately, never auto-synced. An over-broad or stale entry is a `--no-verify`
 <!-- ownership:start -->
 src/lib/env.ts :: README.md, docs/ARCHITECTURE.md
 src/lib/auth.ts :: README.md, docs/ARCHITECTURE.md
-src/middleware.ts :: docs/ARCHITECTURE.md
+src/proxy.ts :: docs/ARCHITECTURE.md
 src/lib/db/schema.ts :: README.md, docs/ARCHITECTURE.md, docs/purseinator_app_infra_spec.md
 drizzle/ :: docs/ARCHITECTURE.md
 src/server/dal/ :: docs/ARCHITECTURE.md, docs/API.md

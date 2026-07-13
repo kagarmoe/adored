@@ -14,10 +14,11 @@ import { shouldShowWelcome } from "@/features/onboarding/gate";
 import Link from "next/link";
 
 interface CollectionsPageProps {
-  searchParams?: { status?: string };
+  searchParams?: Promise<{ status?: string }>;
 }
 
-export default async function CollectionsPage({ searchParams }: CollectionsPageProps) {
+export default async function CollectionsPage(props: CollectionsPageProps) {
+  const searchParams = await props.searchParams;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
@@ -33,7 +34,7 @@ export default async function CollectionsPage({ searchParams }: CollectionsPageP
   // not dismissed -> redirect to /welcome BEFORE rendering, so a first-run user
   // never sees the collections chrome flash. Dismissal is a cookie so the server
   // can read it here; no DB, no client cover needed.
-  const dismissed = cookies().get(DISMISS_KEY)?.value === "1";
+  const dismissed = (await cookies()).get(DISMISS_KEY)?.value === "1";
   if (shouldShowWelcome(collections.length, dismissed)) {
     redirect("/welcome");
   }

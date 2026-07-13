@@ -8,18 +8,19 @@ import { ItemEditForm } from "@/features/items/ItemEditForm";
 import { itemDisplayName } from "@/lib/items";
 
 interface ItemEditPageProps {
-  params: { id: string; itemNumber: string };
+  params: Promise<{ id: string; itemNumber: string }>;
 }
 
 export default async function ItemEditPage({ params }: ItemEditPageProps) {
+  const { id, itemNumber } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
 
   const db = getDb();
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
-  const number = Number(params.itemNumber);
+  const collection = await requireCollectionAccess(db, id, session.user.id);
+  const number = Number(itemNumber);
   const item =
     number > 0 && Number.isInteger(number)
       ? await ItemController.fromDb(db).getByCollectionAndNumber(collection.id, number)

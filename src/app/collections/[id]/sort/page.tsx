@@ -10,17 +10,18 @@ import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
 import Link from "next/link";
 
 interface SortPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function SortPage({ params }: SortPageProps) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
 
   const db = getDb();
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  const collection = await requireCollectionAccess(db, id, session.user.id);
 
   // purses-t9l: each user sorts independently — show only this user's own sessions.
   const sessions = await SessionController.fromDb(db).listByCollectionAndCurator(collection.id, session.user.id);

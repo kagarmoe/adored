@@ -28,7 +28,7 @@ describe("FinalizePage resolution + guard", () => {
   it("passes the result ULID + number to the form on the happy path", async () => {
     resultRepo.findByCollectionAndNumber.mockResolvedValue({ id: "res_1", collectionId: "coll_REAL", number: 2, curatorId: "u1", name: "R" });
     const { render } = await import("@testing-library/react");
-    const ui = await FinalizePage({ params: { id: "summer-bags", resultNumber: "2" } });
+    const ui = await FinalizePage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "2" }) });
     render(ui);
     const { screen } = await import("@testing-library/react");
     expect(screen.getByTestId("form").getAttribute("data-resultid")).toBe("res_1");
@@ -36,10 +36,10 @@ describe("FinalizePage resolution + guard", () => {
   });
   it("redirects when the curator is not the requester (guard survives)", async () => {
     resultRepo.findByCollectionAndNumber.mockResolvedValue({ id: "res_1", collectionId: "coll_REAL", number: 2, curatorId: "someone_else", name: "R" });
-    await expect(FinalizePage({ params: { id: "summer-bags", resultNumber: "2" } })).rejects.toThrow("REDIRECT");
+    await expect(FinalizePage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "2" }) })).rejects.toThrow("REDIRECT");
   });
   it("redirects on a non-numeric segment without hitting the repo", async () => {
-    await expect(FinalizePage({ params: { id: "summer-bags", resultNumber: "x" } })).rejects.toThrow("REDIRECT");
+    await expect(FinalizePage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "x" }) })).rejects.toThrow("REDIRECT");
     expect(resultRepo.findByCollectionAndNumber).not.toHaveBeenCalled();
   });
 });

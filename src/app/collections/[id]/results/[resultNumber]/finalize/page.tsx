@@ -7,19 +7,20 @@ import { AppLayout } from "@/components/layout";
 import { FinalizeResultForm } from "@/features/results/FinalizeResultForm";
 
 interface FinalizePageProps {
-  params: { id: string; resultNumber: string };
+  params: Promise<{ id: string; resultNumber: string }>;
 }
 
 export default async function FinalizePage({ params }: FinalizePageProps) {
+  const { id, resultNumber: resultNumberParam } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
 
   const db = getDb();
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  const collection = await requireCollectionAccess(db, id, session.user.id);
 
-  const resultNumber = Number(params.resultNumber);
+  const resultNumber = Number(resultNumberParam);
   const result =
     resultNumber > 0 && Number.isInteger(resultNumber)
       ? await ResultController.fromDb(db).getByCollectionAndNumber(collection.id, resultNumber)

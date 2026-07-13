@@ -262,9 +262,9 @@ describeDb(
         let outcome: string;
         try {
           const mod = (await import(/* @vite-ignore */ tc.importPath)) as {
-            default: (props: { params: Record<string, string> }) => Promise<unknown>;
+            default: (props: { params: Promise<Record<string, string>> }) => Promise<unknown>;
           };
-          await mod.default({ params: tc.params });
+          await mod.default({ params: Promise.resolve(tc.params) });
           outcome = "RESOLVED (returned a render instead of redirecting)";
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);

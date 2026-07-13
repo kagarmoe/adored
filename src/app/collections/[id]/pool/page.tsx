@@ -10,17 +10,18 @@ import { PoolUpload } from "@/features/pool/PoolUpload";
 import { PoolPhotoGrid } from "@/features/pool/PoolPhotoGrid";
 
 interface PoolPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function PoolPage({ params }: PoolPageProps) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
 
   const db = getDb();
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  const collection = await requireCollectionAccess(db, id, session.user.id);
   const pool = await PhotoController.fromDb(db).findPoolByCollection(collection.id);
 
   // Existing items feed the "Move to…" chooser's destination list, mirroring the

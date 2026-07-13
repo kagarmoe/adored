@@ -65,20 +65,20 @@ function usageEvt(id: string, itemId: string, result: "uses" | "not_uses" = "use
 describe("SessionDetailPage resolution + integrity guard", () => {
   it("redirects when the resolved session belongs to a different collection (guard survives)", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "s1", collectionId: "coll_OTHER", number: 1, status: "active", curatorId: "u1" });
-    await expect(SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } })).rejects.toThrow("REDIRECT");
+    await expect(SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
     expect(redirectMock).toHaveBeenCalled();
   });
   it("redirects when no session has that number", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue(null);
-    await expect(SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "9" } })).rejects.toThrow("REDIRECT");
+    await expect(SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "9" }) })).rejects.toThrow("REDIRECT");
   });
   it("redirects on a non-numeric segment without hitting the repo", async () => {
-    await expect(SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "abc" } })).rejects.toThrow("REDIRECT");
+    await expect(SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "abc" }) })).rejects.toThrow("REDIRECT");
     expect(sessionRepo.findByCollectionAndNumber).not.toHaveBeenCalled();
   });
   it("renders when the session belongs to the resolved collection", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "s1", collectionId: "coll_REAL", number: 1, status: "active", curatorId: "u1" });
-    const ui = await SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     expect(redirectMock).not.toHaveBeenCalled();
     // Hub consumes the shared teaching copy — a hub-side fork of this string fails here.
@@ -86,7 +86,7 @@ describe("SessionDetailPage resolution + integrity guard", () => {
   });
   it("redirects when the user is not the session's curator — independent sort (purses-t9l)", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "s1", collectionId: "coll_REAL", number: 1, status: "active", curatorId: "someone_else" });
-    await expect(SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } })).rejects.toThrow("REDIRECT");
+    await expect(SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
   });
 });
 
@@ -108,7 +108,7 @@ describe("SessionDetailPage — recommended next round + no count/denominator de
     itemRepo.findByCollection.mockResolvedValue([makeItem("a", 1), makeItem("b", 2)]);
     prefRepo.findByCollection.mockResolvedValue([]); // nothing triaged yet
 
-    render(await SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } }));
+    render(await SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) }));
 
     expect(screen.getByText("Quick triage")).toBeInTheDocument();
     const cta = screen.getByRole("link", { name: /start triage/i });
@@ -124,7 +124,7 @@ describe("SessionDetailPage — recommended next round + no count/denominator de
     // Usage answered for both (curator log) → usage falls through; no comparison yet → a pair pends.
     decisionRepo.findBySession.mockResolvedValue([usageEvt("u1", "a"), usageEvt("u2", "b")]);
 
-    render(await SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } }));
+    render(await SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) }));
 
     expect(screen.getByText("Refine the top tier")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Refine" })).toHaveAttribute("href", "/collections/summer-bags/sort/1/compare");
@@ -141,7 +141,7 @@ describe("SessionDetailPage — recommended next round + no count/denominator de
       { id: "d1", sessionId: "s1", type: "pairwise_compare", decision: { itemAId: "a", itemBId: "b", result: "item_a" }, createdAt: new Date(10) },
     ]);
 
-    render(await SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } }));
+    render(await SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) }));
 
     expect(screen.getByRole("link", { name: /see results/i })).toHaveAttribute("href", "/collections/summer-bags/results");
   });
@@ -159,7 +159,7 @@ describe("SessionDetailPage — usage in the grid, one-read log, dual return", (
   it("shows a third usage-round card between Triage and Compare, linking to /usage", async () => {
     itemRepo.findByCollection.mockResolvedValue([makeItem("a", 1)]); // untriaged → triage is the suggestion; grid always shows all three arcs
 
-    render(await SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } }));
+    render(await SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) }));
 
     const usageHeading = screen.getByText(ROUND_COPY.usage.name);
     expect(usageHeading.closest("a")).toHaveAttribute("href", "/collections/summer-bags/sort/1/usage");
@@ -175,7 +175,7 @@ describe("SessionDetailPage — usage in the grid, one-read log, dual return", (
   it("does ONE curator-log read (listForCurator), never an extra per-session listBySession", async () => {
     itemRepo.findByCollection.mockResolvedValue([makeItem("a", 1)]);
 
-    await SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    await SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
 
     expect(sessionRepo.findByCollectionAndCurator).toHaveBeenCalledTimes(1);
     expect(sessionRepo.findByCollectionAndCurator).toHaveBeenCalledWith("coll_REAL", "u1");
@@ -199,7 +199,7 @@ describe("SessionDetailPage — usage in the grid, one-read log, dual return", (
           ]),
     );
 
-    render(await SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } }));
+    render(await SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) }));
 
     const decisions = analyticsProps.current.decisions as Array<{ id: string; sessionId: string }>;
     expect(decisions.every((e) => e.sessionId === "s1")).toBe(true);
@@ -212,7 +212,7 @@ describe("SessionDetailPage — usage in the grid, one-read log, dual return", (
     prefRepo.findByCollection.mockResolvedValue([topPref("a", "top"), topPref("b", "high")]);
     decisionRepo.findBySession.mockResolvedValue([]); // usage unknown → usage is primary, so a demoted twin exists
 
-    render(await SessionDetailPage({ params: { id: "summer-bags", sessionNumber: "1" } }));
+    render(await SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) }));
 
     expect(recommendedProps.current.primary.round.kind).toBe("usage");
     expect(recommendedProps.current.primary.href).toBe("/collections/summer-bags/sort/1/usage");

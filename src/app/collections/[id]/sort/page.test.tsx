@@ -29,7 +29,7 @@ beforeEach(() => {
 
 describe("SortPage session links", () => {
   it("links sessions by number (never the ULID)", async () => {
-    const ui = await SortPage({ params: { id: "summer-bags" } });
+    const ui = await SortPage({ params: Promise.resolve({ id: "summer-bags" }) });
     render(ui);
     const links = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
     expect(links).toContain("/collections/summer-bags/sort/3");
@@ -42,7 +42,7 @@ describe("SortPage session links", () => {
     sessionRepo.findByCollectionAndCurator.mockResolvedValue([
       { id: "sess_active", number: 4, curatorId: "u1", goal: "Discover", status: "active", createdAt: new Date("2026-01-04") },
     ]);
-    const ui = await SortPage({ params: { id: "summer-bags" } });
+    const ui = await SortPage({ params: Promise.resolve({ id: "summer-bags" }) });
     render(ui);
     const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href") ?? "");
     expect(hrefs.filter((h) => h === "/collections/summer-bags/sort/4").length).toBeGreaterThanOrEqual(1);
@@ -53,7 +53,7 @@ describe("SortPage session links", () => {
     sessionRepo.findByCollectionAndCurator.mockResolvedValue([
       { id: "sess_paused", number: 5, curatorId: "u1", goal: "Discover", status: "paused", createdAt: new Date("2026-01-05") },
     ]);
-    const ui = await SortPage({ params: { id: "summer-bags" } });
+    const ui = await SortPage({ params: Promise.resolve({ id: "summer-bags" }) });
     render(ui);
     expect(screen.getByText(/your sort is safe — pick up where you left off/i)).toBeInTheDocument();
     // Resume is a button (ResumeControl), not a link — it PATCHes status:active then navigates.
@@ -65,7 +65,7 @@ describe("SortPage session links", () => {
     sessionRepo.findByCollectionAndCurator.mockResolvedValue([
       { id: "sess_paused", number: 5, curatorId: "u1", goal: "Discover", status: "paused", createdAt: new Date("2026-01-05") },
     ]);
-    const ui = await SortPage({ params: { id: "summer-bags" } });
+    const ui = await SortPage({ params: Promise.resolve({ id: "summer-bags" }) });
     render(ui);
     const newSessionHrefs = screen
       .getAllByRole("link")
@@ -77,7 +77,7 @@ describe("SortPage session links", () => {
 
   it("offers New Session when NO current session exists (only completed history)", async () => {
     // default mock: a single completed session — nothing open.
-    const ui = await SortPage({ params: { id: "summer-bags" } });
+    const ui = await SortPage({ params: Promise.resolve({ id: "summer-bags" }) });
     render(ui);
     const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href") ?? "");
     expect(hrefs).toContain("/collections/summer-bags/sort/new");

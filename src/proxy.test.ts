@@ -11,7 +11,7 @@ const getSessionCookie = vi.fn();
 vi.mock("better-auth/cookies", () => ({ getSessionCookie }));
 
 async function run(pathname: string) {
-  const mod = await import("./middleware");
+  const mod = await import("./proxy");
   const req = new NextRequest(new URL(`https://adored.example.com${pathname}`));
   return mod.default(req);
 }

@@ -63,7 +63,7 @@ beforeEach(() => {
   membershipRepo.findByUser.mockResolvedValue(null); // owner by default (COLLECTION.ownerId === u1)
 });
 
-const renderPage = async () => render(await ItemDetailPage({ params: { id: "summer-bags", itemNumber: "7" } }));
+const renderPage = async () => render(await ItemDetailPage({ params: Promise.resolve({ id: "summer-bags", itemNumber: "7" }) }));
 
 describe("ItemDetailPage redesign (carousel + info card)", () => {
   it("renders the photo carousel and the Details card with a contextual edit link", async () => {

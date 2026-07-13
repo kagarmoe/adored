@@ -99,7 +99,7 @@ Next.js is opinionated. Follow its conventions, not workarounds:
 4. **API Routes for mutations** — All POST/PATCH/DELETE via `src/app/api/` routes, no direct DB calls from client
 5. **Native fetch()** — No SWR/React Query; use `fetch()` with error handling
 6. **NextAuth v4 integration** — Follow canonical patterns: DrizzleAdapter, JWT strategy, session callbacks
-7. **Middleware for route protection** — Guard routes in `src/middleware.ts`, not API guards
+7. **Proxy for route protection** — optimistic login redirect in `src/proxy.ts` (Next 16 convention; was middleware.ts); real authz lives in the DAL guards
 8. **Suspense for async UI** — Stream loading states with React Suspense
 9. **No hardcoded secrets** — All config via `process.env.*` with validation at module load
 10. **TypeScript strict mode** — All inference errors resolved, no `any`
@@ -175,7 +175,7 @@ matches what changed:
 
 | Lens → engine | Invoke when the change touches… | Typical paths |
 |---|---|---|
-| **Security** → `vibe-security` | auth, access control, user input, secrets, API surface | `src/app/api/**`, `src/middleware.ts`, `**/*auth*` |
+| **Security** → `vibe-security` | auth, access control, user input, secrets, API surface | `src/app/api/**`, `src/proxy.ts`, `**/*auth*` |
 | **Data/Persistence** → `postgres-review` | schema, migrations, queries, indexes | `src/lib/db/**`, `drizzle/**`, `*.sql` |
 | **Architect** → `system-design-review` | cross-layer seams, concurrency, idempotency, silent failures, type design | service/repo/route wiring |
 | **Craftsman** → `ponytail` | any non-trivial logic (simplicity / YAGNI) | `**/*.ts`, `**/*.tsx` |

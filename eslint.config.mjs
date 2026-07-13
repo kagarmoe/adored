@@ -1,12 +1,9 @@
-import { FlatCompat } from '@eslint/eslintrc';
+import next from 'eslint-config-next';
 
-// Flat config (ESLint 9). eslint-config-next still ships a legacy (eslintrc)
-// shareable config, so we bridge it through FlatCompat — the standard adapter.
-// This replaces the former .eslintrc.js (extends: ['next'] + the src/app
-// repository import-boundary override, purses-25ca).
-const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname,
-});
+// Flat config (ESLint 9). eslint-config-next@16 ships a native flat-config
+// array (no FlatCompat bridge needed). This replaces the former .eslintrc.js
+// (extends: ['next'] + the src/app repository import-boundary override,
+// purses-25ca).
 
 // Match the former `eslint . --ext .ts,.tsx`: only TypeScript sources are
 // linted. `--ext` is gone in flat config, so we scope every config object to
@@ -30,16 +27,39 @@ const eslintConfig = [
     },
   },
 
-  // eslint-config-next's `next` shareable config (react, react-hooks,
-  // @next/next, jsx-a11y, import, TS parser, resolvers) via the legacy bridge,
-  // scoped to TS/TSX to match the former --ext.
-  ...compat.extends('next').map((config) => ({ ...config, files: TS_FILES })),
+  // eslint-config-next@16's native flat-config array: the `next` base config
+  // (react, react-hooks, @next/next, jsx-a11y, import), the `next/typescript`
+  // parser setup, and a trailing global-ignores object. Scope the rule-bearing
+  // configs to TS/TSX to match the former --ext; the ignores object must pass
+  // through untouched (adding `files` to a global-ignores object would demote
+  // it to a scoped no-op and un-ignore .next/ etc.).
+  ...next.map((config) =>
+    config.ignores ? config : { ...config, files: TS_FILES },
+  ),
 
   // Project rule override (formerly the top-level `rules` block).
   {
     files: TS_FILES,
     rules: {
       '@next/next/no-html-link-for-pages': 'off',
+    },
+  },
+
+  // eslint-config-next@16 (eslint-plugin-react-hooks@7) newly enables the
+  // React Compiler lint rules as errors; the previous gate (eslint-config-next
+  // @14 via FlatCompat) only ran rules-of-hooks + exhaustive-deps. Three of
+  // the new rules fire on ~25 pre-existing call sites (setState inside an
+  // effect, Date.now()/refs read during render) that the Next 16 config
+  // migration must not rewrite. Keep exactly those three off until the
+  // findings are fixed and they can be re-enabled (owned by purses-9oxh.8 —
+  // fix the 25 sites, then DELETE this block); every other new compiler
+  // rule stays active — the codebase already passes them.
+  {
+    files: TS_FILES,
+    rules: {
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/purity': 'off',
+      'react-hooks/refs': 'off',
     },
   },
 

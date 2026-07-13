@@ -7,10 +7,11 @@ import { CollectionForm } from "@/features/collections/CollectionForm";
 import { DeleteCollectionSection } from "@/features/collections/DeleteCollectionSection";
 
 interface EditPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function EditCollectionPage({ params }: EditPageProps) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
@@ -18,7 +19,7 @@ export default async function EditCollectionPage({ params }: EditPageProps) {
 
   const db = getDb();
   // Owner-only page: edit settings and delete are collection:manage operations.
-  const collection = await requireCollectionOwnerPage(db, params.id, session.user.id);
+  const collection = await requireCollectionOwnerPage(db, id, session.user.id);
 
   return (
     <AppLayout

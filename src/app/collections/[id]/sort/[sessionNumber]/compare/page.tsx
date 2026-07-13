@@ -20,19 +20,20 @@ import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 
 interface ComparePageProps {
-  params: { id: string; sessionNumber: string };
+  params: Promise<{ id: string; sessionNumber: string }>;
 }
 
 export default async function ComparePage({ params }: ComparePageProps) {
+  const { id, sessionNumber: sessionNumberParam } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
 
   const db = getDb();
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  const collection = await requireCollectionAccess(db, id, session.user.id);
 
-  const sessionNumber = Number(params.sessionNumber);
+  const sessionNumber = Number(sessionNumberParam);
   const sortSession =
     sessionNumber > 0 && Number.isInteger(sessionNumber)
       ? await SessionController.fromDb(db).getByCollectionAndNumber(collection.id, sessionNumber)

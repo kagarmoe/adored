@@ -22,7 +22,7 @@ export const config = {
 // SESSIONLESS_POST_ROUTES allowlist (Vercel Blob's upload-completion callback,
 // which self-verifies its Blob-signed payload) is preserved via
 // isRequestAuthorized, exactly as under the old withAuth.
-export default function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const hasCookie = getSessionCookie(request) !== null;
   if (isRequestAuthorized(request.nextUrl.pathname, hasCookie)) {
     return NextResponse.next();

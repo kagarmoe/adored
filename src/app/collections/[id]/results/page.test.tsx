@@ -93,7 +93,7 @@ describe("Decide Standing — live most-loved", () => {
   });
 
   it("hero names the orderRank #1 top-bucket item (== what you love most)", async () => {
-    const ui = await ResultsPage({ params: { id: "summer-bags" } });
+    const ui = await ResultsPage({ params: Promise.resolve({ id: "summer-bags" }) });
     render(ui);
     const hero = screen.getByText("What you love most").closest("a")!;
     expect(hero).toHaveTextContent("Alpha");
@@ -101,12 +101,12 @@ describe("Decide Standing — live most-loved", () => {
   });
 
   it("reads live preferences for the session curator, not a snapshot", async () => {
-    await ResultsPage({ params: { id: "summer-bags" } });
+    await ResultsPage({ params: Promise.resolve({ id: "summer-bags" }) });
     expect(preferenceController.listItemPreferences).toHaveBeenCalledWith("coll_01ABC", "u1");
   });
 
   it("keeps the low bucket out of the ranking and in the Onward section", async () => {
-    const ui = await ResultsPage({ params: { id: "summer-bags" } });
+    const ui = await ResultsPage({ params: Promise.resolve({ id: "summer-bags" }) });
     render(ui);
     const onward = screen.getByRole("heading", { name: /where these go next/i }).closest("section")!;
     expect(within(onward).getByText("Delta")).toBeInTheDocument();
@@ -121,7 +121,7 @@ describe("Decide Standing — set aside", () => {
     dispositionController.listDispositions.mockResolvedValue([
       { id: "d1", collectionId: COLLECTION.id, curatorId: "u1", itemId: "s", disposition: "set_aside" },
     ]);
-    const ui = await ResultsPage({ params: { id: "summer-bags" } });
+    const ui = await ResultsPage({ params: Promise.resolve({ id: "summer-bags" }) });
     render(ui);
     const setAside = screen.getByRole("heading", { name: /set aside|waiting/i }).closest("section")!;
     expect(within(setAside).getByText("Set One")).toBeInTheDocument();
@@ -132,7 +132,7 @@ describe("Decide Standing — empty", () => {
   it("shows a gentle person-side empty state, never an empty count", async () => {
     preferenceController.listItemPreferences.mockResolvedValue([]);
     itemController.listItems.mockResolvedValue([]);
-    const ui = await ResultsPage({ params: { id: "summer-bags" } });
+    const ui = await ResultsPage({ params: Promise.resolve({ id: "summer-bags" }) });
     render(ui);
     // Match the ACTUAL rendered copy, which uses a curly apostrophe (&rsquo;) — a
     // straight-apostrophe alternative silently never matches (purses-z7ea).
@@ -158,7 +158,7 @@ describe("Decide Standing — usage chip (Epic S1)", () => {
   });
 
   it("issues the curator usage read (listForCurator), curator-scoped", async () => {
-    await ResultsPage({ params: { id: "summer-bags" } });
+    await ResultsPage({ params: Promise.resolve({ id: "summer-bags" }) });
     expect(decisionController.listForCurator).toHaveBeenCalledWith("coll_01ABC", "u1");
   });
 
@@ -167,7 +167,7 @@ describe("Decide Standing — usage chip (Epic S1)", () => {
       usageEvent("ev_b", "b", "uses"),
       usageEvent("ev_d", "d", "not_uses"),
     ]);
-    const ui = await ResultsPage({ params: { id: "summer-bags" } });
+    const ui = await ResultsPage({ params: Promise.resolve({ id: "summer-bags" }) });
     render(ui);
 
     const inLife = screen.getByText("In your life");
@@ -181,7 +181,7 @@ describe("Decide Standing — usage chip (Epic S1)", () => {
       usageEvent("ev_b", "b", "uses"),
       usageEvent("ev_d", "d", "not_uses"),
     ]);
-    const ui = await ResultsPage({ params: { id: "summer-bags" } });
+    const ui = await ResultsPage({ params: Promise.resolve({ id: "summer-bags" }) });
     render(ui);
 
     const charlieCard = screen.getByText("Charlie").closest(".isolate")!;
@@ -196,7 +196,7 @@ describe("Decide Standing — usage chip (Epic S1)", () => {
       usageEvent("ev_SECRET_LEAK", "b", "uses"),
       usageEvent("ev_ANOTHER_LEAK", "d", "not_uses"),
     ]);
-    const ui = await ResultsPage({ params: { id: "summer-bags" } });
+    const ui = await ResultsPage({ params: Promise.resolve({ id: "summer-bags" }) });
     const { container } = render(ui);
     // The chip Map is the only usage payload; the event ids / sessionIds must
     // not appear anywhere in the rendered markup.
@@ -218,7 +218,7 @@ describe("Decide Standing — usage-only collection (F5 gate)", () => {
       usageEvent("ev_a", "a", "uses"),
       usageEvent("ev_b", "b", "not_uses"),
     ]);
-    const ui = await ResultsPage({ params: { id: "summer-bags" } });
+    const ui = await ResultsPage({ params: Promise.resolve({ id: "summer-bags" }) });
     render(ui);
 
     // NOT the gentle empty state.
@@ -236,7 +236,7 @@ describe("Decide Standing — usage-only collection (F5 gate)", () => {
     preferenceController.listItemPreferences.mockResolvedValue([]);
     itemController.listItems.mockResolvedValue([item("a", 1, "Alpha")]);
     decisionController.listForCurator.mockResolvedValue([]);
-    const ui = await ResultsPage({ params: { id: "summer-bags" } });
+    const ui = await ResultsPage({ params: Promise.resolve({ id: "summer-bags" }) });
     render(ui);
     expect(screen.getByText("Nothing to see yet — and that’s fine.")).toBeInTheDocument();
     expect(screen.queryByText("In your life")).toBeNull();
