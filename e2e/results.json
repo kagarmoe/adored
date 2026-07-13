@@ -18,24 +18,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f59a6bd74e1fdc7ab5f1f6e2eaeb94ae566a4fb1",
-        "commitHash": "f59a6bd74e1fdc7ab5f1f6e2eaeb94ae566a4fb1",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29218234275"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/79552ae06369cab521cd38a48663340ef4478bea",
+        "commitHash": "79552ae06369cab521cd38a48663340ef4478bea",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29219043221"
       },
       "gitCommit": {
-        "shortHash": "f59a6bd",
-        "hash": "f59a6bd74e1fdc7ab5f1f6e2eaeb94ae566a4fb1",
-        "subject": "feat: Next 14 → 16.2.9 (quarantine-selected), React held at 18 — pages async, middleware→proxy (purses-9oxh.4) (#331)",
-        "body": "feat: Next 14 → 16.2.9 (quarantine-selected), React held at 18 — pages async, middleware→proxy (purses-9oxh.4) (#331)\n\n* docs(plan): PR 3 — Next 14→16 holding React 18, from measured surface (purses-9oxh.4)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* chore(deps): next 16.2.9 + eslint-config-next 16.2.9 (quarantine-selected)\n\n16.2.10 is 11 days old — inside the 14-day release-age quarantine (spec,\nsupply-chain hygiene); 16.2.9 (33d) carries every known-advisory fix.\nClean npm ci, no ERESOLVE, React held at 18.3.1. Rides: tsconfig jsx →\nreact-jsx (written by next build, mandatory in 16) and turbopack.root\npinned (a stray $HOME lockfile made root inference pick the wrong dir).\nBuild red at this commit by design: the sync-cookies + page-params\nworklist lands in the next two commits.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(pages): async params + searchParams + awaited cookies across 29 pages (codemod + hand-fixes)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(pages): page tests pass Promise params — page oracle falsifiable (12 files + enumeration)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat: middleware.ts -> proxy.ts (Next 16 convention)\n\nLogic and matcher byte-identical; export renamed middleware -> proxy.\nBuild manifest shows \"ƒ Proxy (Middleware)\", deprecation warning gone.\nSiblings updated: proxy.test.ts import, ci.yml auth paths-filter,\ndoc-ownership map. src/lib/middleware-auth.ts keeps its name — it is a\nhelper, not the convention file.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(test): middleware-auth.test.ts imports the matcher from @/proxy\n\nTask 4's stale-reference grep excluded .test. files — the filter hid this\nimport. Caught by Task 5's gate run.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* chore(config): Next 16 config cleanup — native flat eslint, drop @eslint/eslintrc, osv ignores healed\n\nexperimental.staleTimes (16's default) and the removed eslint key deleted;\nFlatCompat bridge replaced with eslint-config-next@16's native flat array\n(TS_FILES scoping preserved; the global-ignores object passes through).\nThree react-hooks@7 compiler rules disabled with 25 flagged sites filed as\npurses-9oxh.8. 14 next@14 osv ignores deleted; the postcss entry RESTORED\nwith a corrected reason — next@16.2.9 still pins postcss@8.4.31 internally\n(spec premise false; owned by purses-9oxh.9).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs+test: fold PR-3 whole-branch review (Security CLEAN, QA+Architect CONCERNS)\n\nConvergent fixes: items page test wraps searchParams in Promise.resolve\n(branch-introduced TS2322 the gates cannot see); eslint disable block\nnames its owning bead purses-9oxh.8. QA's surviving mutation earned the\nreal fix: an arg-sensitive guard mock in the representative page test —\nthe unit tier's only non-vacuous async-params oracle, since Next's\n.next/types validator collapses to `any` (proven by tsc probe).\nARCHITECTURE: decision 36 (bump + proxy rename + the decision-35 postcss\ncorrection); stale middleware lines fixed in the living sections, left\nintact in decision 26's historical record. CLAUDE.md: proxy convention.\nGraph updated (--force: middleware.ts nodes removed).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "79552ae",
+        "hash": "79552ae06369cab521cd38a48663340ef4478bea",
+        "subject": "feat: React 18 → 19.2.7 — zero app-code fallout, one root-caused test fix (purses-9oxh.2) (#332)",
+        "body": "feat: React 18 → 19.2.7 — zero app-code fallout, one root-caused test fix (purses-9oxh.2) (#332)\n\n* feat(deps): React 18.3.1 -> 19.2.7; @types/react* back to ^19 (purses-9oxh.2)\n\nAll four packages clear the 14-day quarantine (react 41d). Fallout scout:\nzero defaultProps/legacy-ReactDOM/test-utils/no-arg-useRef; forwardRef\n(6 UI files) still supported in 19 — left untouched per YAGNI. One test\nregression, root-caused: React 19 no longer flushes the trailing\nbusy=false commit inside RerankPanel's fetch waitFor, so the a11y\nfocus-retention assertion ran before the restore effect; the assertion\nnow waits itself. Proven non-vacuous by mutation: removing the restore\neffect's focus() reds the test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: ARCHITECTURE decision 37 — React 19 bump; graph refresh\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1783907420000
+          "time": 1783908764000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1783907420000
+          "time": 1783908764000
         },
         "branch": "main"
       },
@@ -49,24 +49,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f59a6bd74e1fdc7ab5f1f6e2eaeb94ae566a4fb1",
-            "commitHash": "f59a6bd74e1fdc7ab5f1f6e2eaeb94ae566a4fb1",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29218234275"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/79552ae06369cab521cd38a48663340ef4478bea",
+            "commitHash": "79552ae06369cab521cd38a48663340ef4478bea",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29219043221"
           },
           "gitCommit": {
-            "shortHash": "f59a6bd",
-            "hash": "f59a6bd74e1fdc7ab5f1f6e2eaeb94ae566a4fb1",
-            "subject": "feat: Next 14 → 16.2.9 (quarantine-selected), React held at 18 — pages async, middleware→proxy (purses-9oxh.4) (#331)",
-            "body": "feat: Next 14 → 16.2.9 (quarantine-selected), React held at 18 — pages async, middleware→proxy (purses-9oxh.4) (#331)\n\n* docs(plan): PR 3 — Next 14→16 holding React 18, from measured surface (purses-9oxh.4)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* chore(deps): next 16.2.9 + eslint-config-next 16.2.9 (quarantine-selected)\n\n16.2.10 is 11 days old — inside the 14-day release-age quarantine (spec,\nsupply-chain hygiene); 16.2.9 (33d) carries every known-advisory fix.\nClean npm ci, no ERESOLVE, React held at 18.3.1. Rides: tsconfig jsx →\nreact-jsx (written by next build, mandatory in 16) and turbopack.root\npinned (a stray $HOME lockfile made root inference pick the wrong dir).\nBuild red at this commit by design: the sync-cookies + page-params\nworklist lands in the next two commits.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(pages): async params + searchParams + awaited cookies across 29 pages (codemod + hand-fixes)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(pages): page tests pass Promise params — page oracle falsifiable (12 files + enumeration)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat: middleware.ts -> proxy.ts (Next 16 convention)\n\nLogic and matcher byte-identical; export renamed middleware -> proxy.\nBuild manifest shows \"ƒ Proxy (Middleware)\", deprecation warning gone.\nSiblings updated: proxy.test.ts import, ci.yml auth paths-filter,\ndoc-ownership map. src/lib/middleware-auth.ts keeps its name — it is a\nhelper, not the convention file.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(test): middleware-auth.test.ts imports the matcher from @/proxy\n\nTask 4's stale-reference grep excluded .test. files — the filter hid this\nimport. Caught by Task 5's gate run.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* chore(config): Next 16 config cleanup — native flat eslint, drop @eslint/eslintrc, osv ignores healed\n\nexperimental.staleTimes (16's default) and the removed eslint key deleted;\nFlatCompat bridge replaced with eslint-config-next@16's native flat array\n(TS_FILES scoping preserved; the global-ignores object passes through).\nThree react-hooks@7 compiler rules disabled with 25 flagged sites filed as\npurses-9oxh.8. 14 next@14 osv ignores deleted; the postcss entry RESTORED\nwith a corrected reason — next@16.2.9 still pins postcss@8.4.31 internally\n(spec premise false; owned by purses-9oxh.9).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs+test: fold PR-3 whole-branch review (Security CLEAN, QA+Architect CONCERNS)\n\nConvergent fixes: items page test wraps searchParams in Promise.resolve\n(branch-introduced TS2322 the gates cannot see); eslint disable block\nnames its owning bead purses-9oxh.8. QA's surviving mutation earned the\nreal fix: an arg-sensitive guard mock in the representative page test —\nthe unit tier's only non-vacuous async-params oracle, since Next's\n.next/types validator collapses to `any` (proven by tsc probe).\nARCHITECTURE: decision 36 (bump + proxy rename + the decision-35 postcss\ncorrection); stale middleware lines fixed in the living sections, left\nintact in decision 26's historical record. CLAUDE.md: proxy convention.\nGraph updated (--force: middleware.ts nodes removed).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "79552ae",
+            "hash": "79552ae06369cab521cd38a48663340ef4478bea",
+            "subject": "feat: React 18 → 19.2.7 — zero app-code fallout, one root-caused test fix (purses-9oxh.2) (#332)",
+            "body": "feat: React 18 → 19.2.7 — zero app-code fallout, one root-caused test fix (purses-9oxh.2) (#332)\n\n* feat(deps): React 18.3.1 -> 19.2.7; @types/react* back to ^19 (purses-9oxh.2)\n\nAll four packages clear the 14-day quarantine (react 41d). Fallout scout:\nzero defaultProps/legacy-ReactDOM/test-utils/no-arg-useRef; forwardRef\n(6 UI files) still supported in 19 — left untouched per YAGNI. One test\nregression, root-caused: React 19 no longer flushes the trailing\nbusy=false commit inside RerankPanel's fetch waitFor, so the a11y\nfocus-retention assertion ran before the restore effect; the assertion\nnow waits itself. Proven non-vacuous by mutation: removing the restore\neffect's focus() reds the test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: ARCHITECTURE decision 37 — React 19 bump; graph refresh\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783907420000
+              "time": 1783908764000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783907420000
+              "time": 1783908764000
             },
             "branch": "main"
           },
@@ -87,24 +87,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f59a6bd74e1fdc7ab5f1f6e2eaeb94ae566a4fb1",
-            "commitHash": "f59a6bd74e1fdc7ab5f1f6e2eaeb94ae566a4fb1",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29218234275"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/79552ae06369cab521cd38a48663340ef4478bea",
+            "commitHash": "79552ae06369cab521cd38a48663340ef4478bea",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29219043221"
           },
           "gitCommit": {
-            "shortHash": "f59a6bd",
-            "hash": "f59a6bd74e1fdc7ab5f1f6e2eaeb94ae566a4fb1",
-            "subject": "feat: Next 14 → 16.2.9 (quarantine-selected), React held at 18 — pages async, middleware→proxy (purses-9oxh.4) (#331)",
-            "body": "feat: Next 14 → 16.2.9 (quarantine-selected), React held at 18 — pages async, middleware→proxy (purses-9oxh.4) (#331)\n\n* docs(plan): PR 3 — Next 14→16 holding React 18, from measured surface (purses-9oxh.4)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* chore(deps): next 16.2.9 + eslint-config-next 16.2.9 (quarantine-selected)\n\n16.2.10 is 11 days old — inside the 14-day release-age quarantine (spec,\nsupply-chain hygiene); 16.2.9 (33d) carries every known-advisory fix.\nClean npm ci, no ERESOLVE, React held at 18.3.1. Rides: tsconfig jsx →\nreact-jsx (written by next build, mandatory in 16) and turbopack.root\npinned (a stray $HOME lockfile made root inference pick the wrong dir).\nBuild red at this commit by design: the sync-cookies + page-params\nworklist lands in the next two commits.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(pages): async params + searchParams + awaited cookies across 29 pages (codemod + hand-fixes)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(pages): page tests pass Promise params — page oracle falsifiable (12 files + enumeration)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat: middleware.ts -> proxy.ts (Next 16 convention)\n\nLogic and matcher byte-identical; export renamed middleware -> proxy.\nBuild manifest shows \"ƒ Proxy (Middleware)\", deprecation warning gone.\nSiblings updated: proxy.test.ts import, ci.yml auth paths-filter,\ndoc-ownership map. src/lib/middleware-auth.ts keeps its name — it is a\nhelper, not the convention file.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(test): middleware-auth.test.ts imports the matcher from @/proxy\n\nTask 4's stale-reference grep excluded .test. files — the filter hid this\nimport. Caught by Task 5's gate run.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* chore(config): Next 16 config cleanup — native flat eslint, drop @eslint/eslintrc, osv ignores healed\n\nexperimental.staleTimes (16's default) and the removed eslint key deleted;\nFlatCompat bridge replaced with eslint-config-next@16's native flat array\n(TS_FILES scoping preserved; the global-ignores object passes through).\nThree react-hooks@7 compiler rules disabled with 25 flagged sites filed as\npurses-9oxh.8. 14 next@14 osv ignores deleted; the postcss entry RESTORED\nwith a corrected reason — next@16.2.9 still pins postcss@8.4.31 internally\n(spec premise false; owned by purses-9oxh.9).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs+test: fold PR-3 whole-branch review (Security CLEAN, QA+Architect CONCERNS)\n\nConvergent fixes: items page test wraps searchParams in Promise.resolve\n(branch-introduced TS2322 the gates cannot see); eslint disable block\nnames its owning bead purses-9oxh.8. QA's surviving mutation earned the\nreal fix: an arg-sensitive guard mock in the representative page test —\nthe unit tier's only non-vacuous async-params oracle, since Next's\n.next/types validator collapses to `any` (proven by tsc probe).\nARCHITECTURE: decision 36 (bump + proxy rename + the decision-35 postcss\ncorrection); stale middleware lines fixed in the living sections, left\nintact in decision 26's historical record. CLAUDE.md: proxy convention.\nGraph updated (--force: middleware.ts nodes removed).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "79552ae",
+            "hash": "79552ae06369cab521cd38a48663340ef4478bea",
+            "subject": "feat: React 18 → 19.2.7 — zero app-code fallout, one root-caused test fix (purses-9oxh.2) (#332)",
+            "body": "feat: React 18 → 19.2.7 — zero app-code fallout, one root-caused test fix (purses-9oxh.2) (#332)\n\n* feat(deps): React 18.3.1 -> 19.2.7; @types/react* back to ^19 (purses-9oxh.2)\n\nAll four packages clear the 14-day quarantine (react 41d). Fallout scout:\nzero defaultProps/legacy-ReactDOM/test-utils/no-arg-useRef; forwardRef\n(6 UI files) still supported in 19 — left untouched per YAGNI. One test\nregression, root-caused: React 19 no longer flushes the trailing\nbusy=false commit inside RerankPanel's fetch waitFor, so the a11y\nfocus-retention assertion ran before the restore effect; the assertion\nnow waits itself. Proven non-vacuous by mutation: removing the restore\neffect's focus() reds the test.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: ARCHITECTURE decision 37 — React 19 bump; graph refresh\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783907420000
+              "time": 1783908764000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783907420000
+              "time": 1783908764000
             },
             "branch": "main"
           },
@@ -187,12 +187,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 290,
+                  "duration": 289,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:52:34.726Z",
+                  "startTime": "2026-07-13T02:14:59.303Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -229,7 +229,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 22678,
+                  "duration": 34319,
                   "errors": [],
                   "stdout": [
                     {
@@ -259,7 +259,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:52:35.696Z",
+                  "startTime": "2026-07-13T02:15:00.334Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -288,7 +288,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 15778,
+                  "duration": 17152,
                   "errors": [],
                   "stdout": [
                     {
@@ -318,7 +318,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:52:59.653Z",
+                  "startTime": "2026-07-13T02:15:35.843Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -347,7 +347,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2943,
+                  "duration": 2890,
                   "errors": [],
                   "stdout": [
                     {
@@ -359,7 +359,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:53:15.447Z",
+                  "startTime": "2026-07-13T02:15:53.022Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -388,7 +388,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2650,
+                  "duration": 2883,
                   "errors": [],
                   "stdout": [
                     {
@@ -400,7 +400,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:53:18.411Z",
+                  "startTime": "2026-07-13T02:15:55.929Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -437,12 +437,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2131,
+                  "duration": 2055,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:53:21.092Z",
+                  "startTime": "2026-07-13T02:15:58.843Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -471,12 +471,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1383,
+                  "duration": 1405,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:53:23.273Z",
+                  "startTime": "2026-07-13T02:16:00.951Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -505,12 +505,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1755,
+                  "duration": 1785,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:53:24.674Z",
+                  "startTime": "2026-07-13T02:16:02.377Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -539,12 +539,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1059,
+                  "duration": 1038,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:53:26.459Z",
+                  "startTime": "2026-07-13T02:16:04.190Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -573,12 +573,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1196,
+                  "duration": 1134,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:53:27.567Z",
+                  "startTime": "2026-07-13T02:16:05.250Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -615,12 +615,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1827,
+                  "duration": 1972,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:53:28.833Z",
+                  "startTime": "2026-07-13T02:16:06.449Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -649,12 +649,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2120,
+                  "duration": 2218,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:53:30.741Z",
+                  "startTime": "2026-07-13T02:16:08.485Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -691,12 +691,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1615,
+                  "duration": 1665,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:53:32.884Z",
+                  "startTime": "2026-07-13T02:16:10.736Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -725,12 +725,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1559,
+                  "duration": 1612,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:53:34.528Z",
+                  "startTime": "2026-07-13T02:16:12.467Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -759,12 +759,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2068,
+                  "duration": 1459,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:53:36.115Z",
+                  "startTime": "2026-07-13T02:16:14.107Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -808,16 +808,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3334,
+                      "duration": 1214,
                       "errors": [],
                       "stdout": [],
-                      "stderr": [
-                        {
-                          "text": "[db_slow] {\"op\":\"materialize_result\",\"ms\":1144.446020000003,\"collectionId\":\"col_01kxcjw3dwn0f015yh7fa64es0\",\"curatorId\":\"tNdkJfvvVRcelOCLEIMY7sIO706X3h4x\"}\n"
-                        }
-                      ],
+                      "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:53:38.227Z",
+                      "startTime": "2026-07-13T02:16:15.603Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -846,12 +842,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2353,
+                      "duration": 2584,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:53:54.226Z",
+                      "startTime": "2026-07-13T02:16:16.902Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -880,12 +876,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1215,
+                      "duration": 2257,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:53:56.615Z",
+                      "startTime": "2026-07-13T02:16:19.529Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -931,12 +927,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 7404,
+                      "duration": 10950,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:53:57.992Z",
+                      "startTime": "2026-07-13T02:16:21.827Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -965,12 +961,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3226,
+                      "duration": 9366,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:54:05.412Z",
+                      "startTime": "2026-07-13T02:16:32.803Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1016,12 +1012,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2843,
+                      "duration": 2351,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:54:08.771Z",
+                      "startTime": "2026-07-13T02:16:42.436Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1067,12 +1063,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2264,
+                      "duration": 2955,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:54:11.795Z",
+                      "startTime": "2026-07-13T02:16:46.490Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1118,12 +1114,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1271,
+                      "duration": 1569,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:54:14.208Z",
+                      "startTime": "2026-07-13T02:16:49.600Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1152,12 +1148,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1496,
+                      "duration": 1203,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:54:15.549Z",
+                      "startTime": "2026-07-13T02:16:51.247Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1203,12 +1199,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4686,
+                      "duration": 4603,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:54:17.099Z",
+                      "startTime": "2026-07-13T02:16:52.525Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1237,12 +1233,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5538,
+                      "duration": 5914,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:54:21.875Z",
+                      "startTime": "2026-07-13T02:16:57.457Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1288,12 +1284,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2910,
+                      "duration": 2494,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:54:27.736Z",
+                      "startTime": "2026-07-13T02:17:03.450Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1322,12 +1318,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3214,
+                      "duration": 3055,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:54:30.875Z",
+                      "startTime": "2026-07-13T02:17:06.182Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1373,12 +1369,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 7708,
+                      "duration": 1353,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:54:35.053Z",
+                      "startTime": "2026-07-13T02:17:09.291Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1407,12 +1403,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2019,
+                      "duration": 555,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:54:42.772Z",
+                      "startTime": "2026-07-13T02:17:10.658Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1441,12 +1437,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2454,
+                      "duration": 587,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:54:44.798Z",
+                      "startTime": "2026-07-13T02:17:11.221Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1485,12 +1481,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1506,
+                  "duration": 1350,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:54:47.389Z",
+                  "startTime": "2026-07-13T02:17:11.877Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1519,12 +1515,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1900,
+                  "duration": 1966,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:54:49.626Z",
+                  "startTime": "2026-07-13T02:17:13.297Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1561,12 +1557,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1688,
+                  "duration": 1476,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:54:51.791Z",
+                  "startTime": "2026-07-13T02:17:15.294Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1595,12 +1591,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2320,
+                  "duration": 1290,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:54:55.701Z",
+                  "startTime": "2026-07-13T02:17:16.858Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1628,69 +1624,18 @@
                 {
                   "workerIndex": 1,
                   "parallelIndex": 0,
-                  "status": "timedOut",
-                  "duration": 30337,
-                  "error": {
-                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                  },
-                  "errors": [
-                    {
-                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                    },
-                    {
-                      "location": {
-                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts",
-                        "column": 10,
-                        "line": 81
-                      },
-                      "message": "Error: page.waitForResponse: Test timeout of 30000ms exceeded.\n\n  79 |   await page.getByLabel(\"Invite by email\").fill(email);\n  80 |   await Promise.all([\n> 81 |     page.waitForResponse(\n     |          ^\n  82 |       (r) =>\n  83 |         r.url().includes(`/api/collections/${collectionId}/invitations`) &&\n  84 |         r.request().method() === \"POST\",\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts:81:10"
-                    }
-                  ],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-07-13T01:54:58.061Z",
-                  "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "screenshot",
-                      "contentType": "image/png",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/test-failed-1.png"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/error-context.md"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/error-context.md"
-                    }
-                  ]
-                },
-                {
-                  "workerIndex": 2,
-                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2039,
+                  "duration": 2355,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
-                  "retry": 1,
-                  "startTime": "2026-07-13T01:55:29.557Z",
+                  "retry": 0,
+                  "startTime": "2026-07-13T02:17:18.168Z",
                   "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "trace",
-                      "contentType": "application/zip",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/trace.zip"
-                    }
-                  ]
+                  "attachments": []
                 }
               ],
-              "status": "flaky"
+              "status": "expected"
             }
           ],
           "id": "01480a904f937bb0a1f8-16a0057158965d3a7188",
@@ -1726,15 +1671,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3712,
+                      "duration": 9868,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:55:31.943Z",
+                      "startTime": "2026-07-13T02:17:20.738Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1760,15 +1705,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3063,
+                      "duration": 7234,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:55:35.782Z",
+                      "startTime": "2026-07-13T02:17:31.168Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1794,15 +1739,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2491,
+                      "duration": 2334,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:55:38.869Z",
+                      "startTime": "2026-07-13T02:17:38.438Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1845,15 +1790,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 12784,
+                      "duration": 11393,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:55:41.403Z",
+                      "startTime": "2026-07-13T02:17:40.930Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1879,15 +1824,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2199,
+                      "duration": 1504,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:55:55.659Z",
+                      "startTime": "2026-07-13T02:17:53.148Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1923,15 +1868,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4299,
+                  "duration": 2313,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:55:59.352Z",
+                  "startTime": "2026-07-13T02:17:54.678Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1972,15 +1917,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1438,
+                      "duration": 1552,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:05.695Z",
+                      "startTime": "2026-07-13T02:17:57.035Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2023,15 +1968,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3415,
+                      "duration": 3458,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:08.889Z",
+                      "startTime": "2026-07-13T02:17:58.837Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2074,15 +2019,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1467,
+                      "duration": 1612,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:13.004Z",
+                      "startTime": "2026-07-13T02:18:02.575Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2125,15 +2070,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3939,
+                      "duration": 4006,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:14.708Z",
+                      "startTime": "2026-07-13T02:18:04.384Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2159,15 +2104,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3557,
+                      "duration": 4220,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:18.681Z",
+                      "startTime": "2026-07-13T02:18:08.438Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2210,15 +2155,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2710,
+                      "duration": 3279,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:22.296Z",
+                      "startTime": "2026-07-13T02:18:12.728Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2261,15 +2206,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2729,
+                      "duration": 2303,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:25.196Z",
+                      "startTime": "2026-07-13T02:18:16.185Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2305,15 +2250,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1313,
+                  "duration": 908,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:56:28.092Z",
+                  "startTime": "2026-07-13T02:18:18.554Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2339,15 +2284,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1092,
+                  "duration": 971,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:56:29.420Z",
+                  "startTime": "2026-07-13T02:18:19.487Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2373,15 +2318,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1649,
+                  "duration": 1080,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:56:30.527Z",
+                  "startTime": "2026-07-13T02:18:20.478Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2422,15 +2367,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1662,
+                      "duration": 1481,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:32.210Z",
+                      "startTime": "2026-07-13T02:18:21.578Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2473,15 +2418,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1978,
+                      "duration": 1429,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:33.969Z",
+                      "startTime": "2026-07-13T02:18:23.121Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2507,15 +2452,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2205,
+                      "duration": 1859,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:36.021Z",
+                      "startTime": "2026-07-13T02:18:24.619Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2541,15 +2486,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1599,
+                      "duration": 2572,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:38.263Z",
+                      "startTime": "2026-07-13T02:18:26.501Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2583,15 +2528,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4349,
+                      "duration": 13104,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:39.877Z",
+                      "startTime": "2026-07-13T02:18:29.106Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2617,15 +2562,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1740,
+                      "duration": 2882,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:44.284Z",
+                      "startTime": "2026-07-13T02:18:49.702Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2659,15 +2604,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1020,
+                      "duration": 1457,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:46.038Z",
+                      "startTime": "2026-07-13T02:18:52.620Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2693,15 +2638,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 978,
+                      "duration": 1251,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:47.076Z",
+                      "startTime": "2026-07-13T02:18:54.120Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2744,15 +2689,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2835,
+                      "duration": 3587,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:48.081Z",
+                      "startTime": "2026-07-13T02:18:56.292Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2778,15 +2723,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3313,
+                      "duration": 3846,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T01:56:50.986Z",
+                      "startTime": "2026-07-13T02:19:00.253Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2822,15 +2767,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2934,
+                  "duration": 3985,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:56:54.327Z",
+                  "startTime": "2026-07-13T02:19:04.146Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2856,15 +2801,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3991,
+                  "duration": 3767,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:56:57.279Z",
+                  "startTime": "2026-07-13T02:19:08.154Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2890,15 +2835,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2123,
+                  "duration": 2654,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T01:57:01.296Z",
+                  "startTime": "2026-07-13T02:19:11.970Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2916,11 +2861,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-07-13T01:51:38.654Z",
-    "duration": 325097.953,
-    "expected": 64,
+    "startTime": "2026-07-13T02:14:02.213Z",
+    "duration": 323812.72500000003,
+    "expected": 65,
     "skipped": 0,
     "unexpected": 0,
-    "flaky": 1
+    "flaky": 0
   }
 }
