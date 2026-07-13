@@ -1037,7 +1037,7 @@ export const account = pgTable(
     id: text("id").primaryKey(),
     userId: text("user_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id, {</span> onDelete: "cascade" }),
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id, {</span> onDelete: "cascade" }),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
     accessToken: text("access_token"),
@@ -1061,7 +1061,7 @@ export const session = pgTable(
     id: text("id").primaryKey(),
     userId: text("user_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id, {</span> onDelete: "cascade" }),
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id, {</span> onDelete: "cascade" }),
     token: text("token").notNull().unique(),
     expiresAt: timestamp("expires_at").notNull(),
     ipAddress: text("ip_address"),
@@ -1096,7 +1096,7 @@ export const collectionsTable = pgTable(
     id: text("id").primaryKey(),
     ownerId: text("owner_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id)</span>,
     name: text("name").notNull(),
     slug: text("slug"),
     description: text("description"),
@@ -1118,7 +1118,7 @@ export const itemsTable = pgTable(
     id: text("id").primaryKey(),
     collectionId: text("collection_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
     name: text("name"),
     brand: text("brand"),
     style: text("style"),
@@ -1152,16 +1152,16 @@ export const photosTable = pgTable(
   "photos",
   {
     id: text("id").primaryKey(),
-    itemId: text("item_id").references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >i</span>temsTable.id)</span>,
+    itemId: text("item_id").<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >i</span>temsTable.id)</span>,
     collectionId: text("collection_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
     blobKey: text("blob_key").notNull(),
     filename: text("filename").notNull(),
     mimeType: text("mime_type").notNull(),
     fileSize: integer("file_size"),
     uploadedBy: text("uploaded_by").notNull(),
-    isHero: boolean("is_hero").default(false),
+    isHero: boolean("is_hero").notNull().default(false),
     rotation: integer("rotation").default(0).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -1182,11 +1182,11 @@ export const sessionsTable = pgTable(
     id: text("id").primaryKey(),
     collectionId: text("collection_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
     curatorId: text("curator_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id)</span>,
-    number: integer("number"),
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id)</span>,
+    number: integer("number").notNull(),
     status: text("status").default("active").notNull(),
     goal: text("goal"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -1219,7 +1219,7 @@ export const decisionEventsTable = pgTable(
     id: text("id").primaryKey(),
     sessionId: text("session_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >s</span>essionsTable.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >s</span>essionsTable.id)</span>,
     type: text("type").notNull(),
     decision: jsonb("decision").notNull(),
     clientKey: text("client_key"),
@@ -1266,13 +1266,13 @@ export const preferencesTable = pgTable(
     id: text("id").primaryKey(),
     collectionId: text("collection_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
     curatorId: text("curator_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id)</span>,
     itemId: text("item_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >i</span>temsTable.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >i</span>temsTable.id)</span>,
     score: numeric("score", { precision: 10, scale: 4 }).notNull(),
     confidence: numeric("confidence", { precision: 10, scale: 4 }).notNull(),
     rankBucket: text("rank_bucket").notNull(),
@@ -1304,13 +1304,13 @@ export const itemDispositionsTable = pgTable(
     id: text("id").primaryKey(),
     collectionId: text("collection_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
     curatorId: text("curator_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id)</span>,
     itemId: text("item_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >i</span>temsTable.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >i</span>temsTable.id)</span>,
     disposition: text("disposition").notNull(), // 'set_aside' | 'deferred'
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -1334,11 +1334,11 @@ export const sortResultsTable = pgTable(
     id: text("id").primaryKey(),
     collectionId: text("collection_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
     curatorId: text("curator_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id)</span>,
-    number: integer("number"),
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id)</span>,
+    number: integer("number").notNull(),
     status: text("status").default("draft").notNull(),
     name: text("name").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -1362,10 +1362,10 @@ export const sortResultItemsTable = pgTable(
     id: text("id").primaryKey(),
     sortResultId: text("sort_result_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >s</span>ortResultsTable.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >s</span>ortResultsTable.id)</span>,
     itemId: text("item_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >i</span>temsTable.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >i</span>temsTable.id)</span>,
     computedRank: integer("computed_rank").notNull(),
     computedBucket: text("computed_bucket").notNull(),
     manualRank: integer("manual_rank"),
@@ -1390,7 +1390,7 @@ export const sortResultSharesTable = pgTable(
     id: text("id").primaryKey(),
     sortResultId: text("sort_result_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >s</span>ortResultsTable.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >s</span>ortResultsTable.id)</span>,
     shareToken: text("share_token").notNull().unique(),
     status: text("status").default("active").notNull(),
     expiresAt: timestamp("expires_at"),
@@ -1415,7 +1415,7 @@ export const invitationsTable = pgTable(
     id: text("id").primaryKey(),
     collectionId: text("collection_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
     email: text("email").notNull(),
     token: text("token").notNull().unique(),
     status: text("status").default("pending").notNull(),
@@ -1441,10 +1441,10 @@ export const membershipsTable = pgTable(
     id: text("id").primaryKey(),
     collectionId: text("collection_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >c</span>ollectionsTable.id)</span>,
     userId: text("user_id")
       .notNull()
-      .references(<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id)</span>,
+      .<span class="fstat-no" title="function not covered" >references(() =&gt; <span class="cstat-no" title="statement not covered" >u</span>ser.id)</span>,
     role: text("role").default("curator").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -1468,7 +1468,7 @@ export const membershipsTable = pgTable(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-13T03:53:43.786Z
+                at 2026-07-13T05:05:32.873Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

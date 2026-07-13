@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">3.84% </span>
+                <span class="strong">7.4% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>1/26</span>
+                <span class='fraction'>2/27</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">4.16% </span>
+                <span class="strong">8% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>1/24</span>
+                <span class='fraction'>2/25</span>
             </div>
         
             
@@ -154,7 +154,7 @@
 <a name='L89'></a><a href='#L89'>89</a>
 <a name='L90'></a><a href='#L90'>90</a>
 <a name='L91'></a><a href='#L91'>91</a>
-<a name='L92'></a><a href='#L92'>92</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L92'></a><a href='#L92'>92</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -266,9 +266,9 @@ interface CollectionFormProps {
 &nbsp;
 export function <span class="fstat-no" title="function not covered" >CollectionForm({</span> collection, mode }: CollectionFormProps) {
   const <span class="cstat-no" title="statement not covered" >router = useRouter();</span>
-  const [loading, setLoading<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
-  const [error, setError<span class="cstat-no" title="statement not covered" >] = useState("");</span>
-  const [formData, setFormData<span class="cstat-no" title="statement not covered" >] = useState({</span>
+  const [loading, <span class="cstat-no" title="statement not covered" >setLoading] = useState(false);</span>
+  const [error, <span class="cstat-no" title="statement not covered" >setError] = useState("");</span>
+  const [formData, <span class="cstat-no" title="statement not covered" >setFormData] = useState({</span>
     name: collection?.name || "",
     description: collection?.description || "",
   });
@@ -284,7 +284,7 @@ export function <span class="fstat-no" title="function not covered" >CollectionF
 <span class="cstat-no" title="statement not covered" >      if (mode === "create") {</span>
         const result = <span class="cstat-no" title="statement not covered" >await apiPost&lt;Collection&gt;("/api/collections", validated);</span>
 <span class="cstat-no" title="statement not covered" >        router.push(`/collections/${result.slug ?? result.id}`);</span>
-<span class="cstat-no" title="statement not covered" >      } else if (collection) {</span>
+      } else <span class="cstat-no" title="statement not covered" >if (collection) {</span>
         const result = <span class="cstat-no" title="statement not covered" >await apiPatch&lt;Collection&gt;(`/api/collections/${collection.id}`, validated);</span>
 <span class="cstat-no" title="statement not covered" >        router.push(`/collections/${result.slug ?? result.id}`);</span>
       }
@@ -307,7 +307,7 @@ export function <span class="fstat-no" title="function not covered" >CollectionF
         label="Collection name"
         required
         value={formData.name}
-        onChange={<span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >setFormData(<span class="fstat-no" title="function not covered" >(p</span>rev) =&gt; (<span class="cstat-no" title="statement not covered" >{ ...prev, name: e.target.value }))</span>}</span>
+<span class="fstat-no" title="function not covered" >        onChange={(e</span>) =&gt; <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >setFormData((p</span>rev) =&gt; (<span class="cstat-no" title="statement not covered" >{ ...prev, name: e.target.value }))</span>}</span>
         disabled={loading}
       /&gt;
 &nbsp;
@@ -315,7 +315,7 @@ export function <span class="fstat-no" title="function not covered" >CollectionF
         label="Description"
         placeholder="What is this collection about?"
         value={formData.description}
-        onChange={<span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >setFormData(<span class="fstat-no" title="function not covered" >(p</span>rev) =&gt; (<span class="cstat-no" title="statement not covered" >{ ...prev, description: e.target.value }))</span>}</span>
+<span class="fstat-no" title="function not covered" >        onChange={(e</span>) =&gt; <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >setFormData((p</span>rev) =&gt; (<span class="cstat-no" title="statement not covered" >{ ...prev, description: e.target.value }))</span>}</span>
         disabled={loading}
         rows={4}
       /&gt;
@@ -327,7 +327,7 @@ export function <span class="fstat-no" title="function not covered" >CollectionF
         &lt;Button
           variant="secondary"
           type="button"
-          onClick={<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >r</span>outer.back()}</span>
+<span class="fstat-no" title="function not covered" >          onClick={() =&gt; <span class="cstat-no" title="statement not covered" >r</span>outer.back()}</span>
           disabled={loading}
         &gt;
           Cancel
@@ -343,7 +343,7 @@ export function <span class="fstat-no" title="function not covered" >CollectionF
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-13T03:53:43.786Z
+                at 2026-07-13T05:05:32.873Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

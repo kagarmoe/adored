@@ -453,12 +453,12 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
   // #196 integrity guard — kept verbatim; redundant with the resolver but defends
   // against any future resolver change. Never compare against the route id param.
   if (!sortSession || sortSession.collectionId !== collection.id) {
-    redirect(`/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}</span>/sort`);
+    redirect(`/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}/</span>sort`);
   }
 &nbsp;
   // purses-t9l: each user sorts independently — only the session's curator may open it.
   if (sortSession.curatorId !== session.user.id) {
-    redirect(`/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}</span>/sort`);
+    redirect(`/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}/</span>sort`);
   }
 &nbsp;
   const [preferences, curatorDecisions, dispositions] = await Promise.all([
@@ -483,14 +483,14 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
   // device-local anti-nagging swap needs. Reuses the same selectTriageItem /
   // selectUsageQueue / selectNextPair the rounds use, so it can never disagree with
   // what a round would actually show (TONE: a suggestion, not a tally).
-  const dispositionByItemId = new Map(dispositions.map(<span class="fstat-no" title="function not covered" >(d</span>) =&gt; <span class="cstat-no" title="statement not covered" >[d.itemId, d.disposition])</span>);
+  const dispositionByItemId = new Map(dispositions.<span class="fstat-no" title="function not covered" >map((d</span>) =&gt; <span class="cstat-no" title="statement not covered" >[d.itemId, d.disposition])</span>);
   const { primary, whenUsageDemoted } = recommendNextRound({
     items,
     preferences,
     curatorDecisions,
     dispositionByItemId,
   });
-  const collectionHref = `/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}</span>`;
+  const collectionHref = `/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}`;</span>
   const hrefFor = (round: NextRound): string =&gt; {
     switch (round.kind) {
       case "triage":
@@ -508,8 +508,8 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
     &lt;AppLayout
       breadcrumbs={[
         { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}</span>` },
-        { label: "Sort", href: `/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}</span>/sort` },
+        { label: collection.name, href: `/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}` }</span>,
+        { label: "Sort", href: `/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}/</span>sort` },
         { label: "Session" },
       ]}
     &gt;
@@ -535,7 +535,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
         /&gt;
 &nbsp;
         &lt;div className="grid gap-4 md:grid-cols-3"&gt;
-          &lt;Link href={`/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}</span>/sort/${sortSession.number}/triage`}&gt;
+          &lt;Link href={`/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}/</span>sort/${sortSession.number}/triage`}&gt;
             &lt;Card interactive padding="lg"&gt;
               &lt;h2 className="text-lg text-ink"&gt;{ROUND_COPY.triage.name}&lt;/h2&gt;
               &lt;p className="mt-2 text-sm text-ink-soft"&gt;{ROUND_COPY.triage.explainer}&lt;/p&gt;
@@ -544,7 +544,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
               &lt;/div&gt;
             &lt;/Card&gt;
           &lt;/Link&gt;
-          &lt;Link href={`/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}</span>/sort/${sortSession.number}/usage`}&gt;
+          &lt;Link href={`/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}/</span>sort/${sortSession.number}/usage`}&gt;
             &lt;Card interactive padding="lg"&gt;
               &lt;h2 className="text-lg text-ink"&gt;{ROUND_COPY.usage.name}&lt;/h2&gt;
               &lt;p className="mt-2 text-sm text-ink-soft"&gt;{ROUND_COPY.usage.explainer}&lt;/p&gt;
@@ -553,7 +553,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
               &lt;/div&gt;
             &lt;/Card&gt;
           &lt;/Link&gt;
-          &lt;Link href={`/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}</span>/sort/${sortSession.number}/compare`}&gt;
+          &lt;Link href={`/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}/</span>sort/${sortSession.number}/compare`}&gt;
             &lt;Card interactive padding="lg"&gt;
               &lt;h2 className="text-lg text-ink"&gt;{ROUND_COPY.compare.name}&lt;/h2&gt;
               &lt;p className="mt-2 text-sm text-ink-soft"&gt;{ROUND_COPY.compare.explainer}&lt;/p&gt;
@@ -589,7 +589,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-13T03:53:43.786Z
+                at 2026-07-13T05:05:32.873Z
             </div>
         <script src="../../../../../../prettify.js"></script>
         <script>

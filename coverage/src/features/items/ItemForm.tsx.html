@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">72.22% </span>
+                <span class="strong">72.97% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>26/36</span>
+                <span class='fraction'>27/37</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">79.31% </span>
+                <span class="strong">80% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>23/29</span>
+                <span class='fraction'>24/30</span>
             </div>
         
             
@@ -201,7 +201,7 @@
 <a name='L136'></a><a href='#L136'>136</a>
 <a name='L137'></a><a href='#L137'>137</a>
 <a name='L138'></a><a href='#L138'>138</a>
-<a name='L139'></a><a href='#L139'>139</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L139'></a><a href='#L139'>139</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -390,7 +390,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
         const result = await apiPost&lt;Item&gt;(`/api/collections/${collectionId}/items`, validated);
         // The server assigns a catalog number; the page URL uses that human-readable number.
         router.push(`/collections/${collectionId}/items/${result.number}`);
-      <span class="missing-if-branch" title="else path not taken" >E</span>} else if (item) {
+      } else <span class="missing-if-branch" title="else path not taken" >E</span>if (item) {
         // PATCH targets the stable ULID; the page URL uses the human-readable catalog number.
         await apiPatch(`/api/collections/${collectionId}/items/${item.id}`, validated);
         router.push(`/collections/${collectionId}/items/${item.number}`);
@@ -428,7 +428,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
       &lt;Input
         label="Style"
         value={formData.style}
-        onChange={<span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >setFormData(<span class="fstat-no" title="function not covered" >(p</span>rev) =&gt; (<span class="cstat-no" title="statement not covered" >{ ...prev, style: e.target.value }))</span>}</span>
+<span class="fstat-no" title="function not covered" >        onChange={(e</span>) =&gt; <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >setFormData((p</span>rev) =&gt; (<span class="cstat-no" title="statement not covered" >{ ...prev, style: e.target.value }))</span>}</span>
         disabled={loading}
       /&gt;
 &nbsp;
@@ -442,21 +442,21 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
       &lt;Input
         label="Material"
         value={formData.material}
-        onChange={<span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >setFormData(<span class="fstat-no" title="function not covered" >(p</span>rev) =&gt; (<span class="cstat-no" title="statement not covered" >{ ...prev, material: e.target.value }))</span>}</span>
+<span class="fstat-no" title="function not covered" >        onChange={(e</span>) =&gt; <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >setFormData((p</span>rev) =&gt; (<span class="cstat-no" title="statement not covered" >{ ...prev, material: e.target.value }))</span>}</span>
         disabled={loading}
       /&gt;
 &nbsp;
       &lt;Input
         label="Category"
         value={formData.category}
-        onChange={<span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >setFormData(<span class="fstat-no" title="function not covered" >(p</span>rev) =&gt; (<span class="cstat-no" title="statement not covered" >{ ...prev, category: e.target.value }))</span>}</span>
+<span class="fstat-no" title="function not covered" >        onChange={(e</span>) =&gt; <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >setFormData((p</span>rev) =&gt; (<span class="cstat-no" title="statement not covered" >{ ...prev, category: e.target.value }))</span>}</span>
         disabled={loading}
       /&gt;
 &nbsp;
       &lt;Textarea
         label="Notes"
         value={formData.notes}
-        onChange={<span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >setFormData(<span class="fstat-no" title="function not covered" >(p</span>rev) =&gt; (<span class="cstat-no" title="statement not covered" >{ ...prev, notes: e.target.value }))</span>}</span>
+<span class="fstat-no" title="function not covered" >        onChange={(e</span>) =&gt; <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >setFormData((p</span>rev) =&gt; (<span class="cstat-no" title="statement not covered" >{ ...prev, notes: e.target.value }))</span>}</span>
         disabled={loading}
         rows={4}
       /&gt;
@@ -468,7 +468,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
         &lt;Button
           variant="secondary"
           type="button"
-          onClick={<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >r</span>outer.back()}</span>
+<span class="fstat-no" title="function not covered" >          onClick={() =&gt; <span class="cstat-no" title="statement not covered" >r</span>outer.back()}</span>
           disabled={loading}
         &gt;
           Cancel
@@ -484,7 +484,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-13T03:53:43.786Z
+                at 2026-07-13T05:05:32.873Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

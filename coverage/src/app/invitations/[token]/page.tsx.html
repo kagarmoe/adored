@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/33</span>
+                <span class='fraction'>0/34</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/32</span>
+                <span class='fraction'>0/33</span>
             </div>
         
             
@@ -167,7 +167,7 @@
 <a name='L102'></a><a href='#L102'>102</a>
 <a name='L103'></a><a href='#L103'>103</a>
 <a name='L104'></a><a href='#L104'>104</a>
-<a name='L105'></a><a href='#L105'>105</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L105'></a><a href='#L105'>105</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -271,7 +271,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">"use client";
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >"</span>use client";
 &nbsp;
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
@@ -284,15 +284,15 @@ interface InvitationPageProps {
 }
 &nbsp;
 export default function <span class="fstat-no" title="function not covered" >InvitationPage({</span> params }: InvitationPageProps) {
-  const { token <span class="cstat-no" title="statement not covered" >} = use(params);</span>
+  const { <span class="cstat-no" title="statement not covered" >token } = use(params);</span>
   const <span class="cstat-no" title="statement not covered" >router = useRouter();</span>
-  const [invitation, setInvitation<span class="cstat-no" title="statement not covered" >] = useState&lt;Invitation | null&gt;(null);</span>
-  const [collection, setCollection<span class="cstat-no" title="statement not covered" >] = useState&lt;Collection | null&gt;(null);</span>
-  const [loading, setLoading<span class="cstat-no" title="statement not covered" >] = useState(true);</span>
-  const [error, setError<span class="cstat-no" title="statement not covered" >] = useState("");</span>
-  const [accepting, setAccepting<span class="cstat-no" title="statement not covered" >] = useState(false);</span>
+  const [invitation, <span class="cstat-no" title="statement not covered" >setInvitation] = useState&lt;Invitation | null&gt;(null);</span>
+  const [collection, <span class="cstat-no" title="statement not covered" >setCollection] = useState&lt;Collection | null&gt;(null);</span>
+  const [loading, <span class="cstat-no" title="statement not covered" >setLoading] = useState(true);</span>
+  const [error, <span class="cstat-no" title="statement not covered" >setError] = useState("");</span>
+  const [accepting, <span class="cstat-no" title="statement not covered" >setAccepting] = useState(false);</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  useEffect(<span class="fstat-no" title="function not covered" >() =&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >  useEffect(() =&gt; {</span></span>
     const fetchInvitation = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async () =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
         const inviteData = <span class="cstat-no" title="statement not covered" >await apiGet&lt;Invitation&gt;(`/api/invitations/accept?token=${token}`);</span>
@@ -367,7 +367,7 @@ export default function <span class="fstat-no" title="function not covered" >Inv
           &lt;Button fullWidth onClick={handleAccept} disabled={accepting}&gt;
             {accepting ? "Accepting..." : "Accept invitation"}
           &lt;/Button&gt;
-          &lt;Button variant="secondary" fullWidth onClick={<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >r</span>outer.push("/")}&gt;</span>
+          &lt;Button variant="secondary" fullWidth <span class="fstat-no" title="function not covered" >onClick={() =&gt; <span class="cstat-no" title="statement not covered" >r</span>outer.push("/")}&gt;</span>
             Decline
           &lt;/Button&gt;
         &lt;/div&gt;
@@ -382,7 +382,7 @@ export default function <span class="fstat-no" title="function not covered" >Inv
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-13T03:53:43.786Z
+                at 2026-07-13T05:05:32.873Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

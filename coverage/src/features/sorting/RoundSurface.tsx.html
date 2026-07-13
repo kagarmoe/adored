@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">93.33% </span>
+                <span class="strong">95% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>14/15</span>
+                <span class='fraction'>19/20</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">90.9% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>10/11</span>
+                <span class='fraction'>11/11</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">85.71% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>4/5</span>
+                <span class='fraction'>6/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">92.85% </span>
+                <span class="strong">93.75% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>13/14</span>
+                <span class='fraction'>15/16</span>
             </div>
         
             
@@ -162,7 +162,11 @@
 <a name='L97'></a><a href='#L97'>97</a>
 <a name='L98'></a><a href='#L98'>98</a>
 <a name='L99'></a><a href='#L99'>99</a>
-<a name='L100'></a><a href='#L100'>100</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -193,6 +197,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">36x</span>
+<span class="cline-any cline-yes">34x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -210,28 +216,28 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">20x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">20x</span>
-<span class="cline-any cline-yes">20x</span>
-<span class="cline-any cline-yes">20x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">20x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">20x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">20x</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">20x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -245,7 +251,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">20x</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -264,8 +270,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">"use client";
 &nbsp;
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { getRoundBox, type RoundBox } from "@/lib/round-preference";
+import { useDeviceValue } from "@/lib/useDeviceValue";
 import type { MovedDecision } from "@/lib/what-moved";
 import { RoundShell } from "./RoundShell";
 import { RoundTimer } from "./RoundTimer";
@@ -292,6 +299,9 @@ interface RoundSurfaceProps {
 &nbsp;
 const MINUTE_MS = 60_000;
 &nbsp;
+const boxToMs = (box: RoundBox): number | null =&gt; (box === "none" ? null : box * MINUTE_MS);
+const storedBoxMs = (): number | null =&gt; boxToMs(getRoundBox());
+&nbsp;
 /**
  * A thin client wrapper that gives a server-rendered triage/compare screen its round
  * chrome: the step indicator + soft timer (RoundShell + RoundTimer) around the
@@ -310,20 +320,19 @@ export function RoundSurface({
   queueEmpty = false,
 }: RoundSurfaceProps) {
   const router = useRouter();
-  // The round's clock is client-owned and fixed at mount; reading getRoundBox() here
-  // (not at module load) keeps it after hydration where localStorage is available.
-  const startedAtRef = useRef&lt;number&gt;(Date.now());
-  const [boxMs, setBoxMs] = useState&lt;number | null&gt;(null);
+  // The round's clock is client-owned and fixed at mount (a lazy initializer — Date.now()
+  // is impure, so it must not be called on every render).
+  const [startedAtMs] = useState(() =&gt; Date.now());
+  // The stored box is device-local: no timer through SSR/hydration, then the real box
+  // right after mount (useDeviceValue). A mid-round switch overrides it.
+  const stored = useDeviceValue&lt;number | null&gt;(storedBoxMs, null);
+  const [chosenBoxMs, setChosenBoxMs] = useState&lt;{ ms: number | null } | null&gt;(null);
+  const boxMs = chosenBoxMs === null ? stored : chosenBoxMs.ms;
   const [expired, setExpired] = useState(false);
-&nbsp;
-  useEffect(() =&gt; {
-    const box = getRoundBox();
-    setBoxMs(box === "none" ? <span class="branch-0 cbranch-no" title="branch not covered" >null : b</span>ox * MINUTE_MS);
-  }, []);
 &nbsp;
   // Mid-round length switch (parent D2): re-arm boxMs against the UNCHANGED start —
   // "none" drops the countdown, a shorter box expires at the next tick.
-  const onBoxChange = (box: RoundBox) =&gt; setBoxMs(box === "none" ? null : box * MINUTE_MS);
+  const onBoxChange = (box: RoundBox) =&gt; setChosenBoxMs({ ms: boxToMs(box) });
 &nbsp;
   // The round ends on the timer expiring OR the server handing us an empty queue —
   // either way the recap replaces the content and both paths terminate the round.
@@ -333,7 +342,7 @@ export function RoundSurface({
     &lt;div className="flex items-start gap-3"&gt;
       &lt;div className="min-w-0 flex-1"&gt;
         &lt;RoundTimer
-          startedAtMs={startedAtRef.current}
+          startedAtMs={startedAtMs}
           boxMs={boxMs}
           onExpire={() =&gt; setExpired(true)}
           roundLabel={roundLabel}
@@ -350,10 +359,10 @@ export function RoundSurface({
       totalSteps={totalSteps}
       roundLabel={roundLabel}
       timer={timer}
-      onPause={<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >r</span>outer.push(hubHref)}</span>
+<span class="fstat-no" title="function not covered" >      onPause={() =&gt; <span class="cstat-no" title="statement not covered" >r</span>outer.push(hubHref)}</span>
     &gt;
       {ended ? (
-        &lt;WhatMoved decisions={decisions} windowStartMs={startedAtRef.current} hubHref={hubHref} /&gt;
+        &lt;WhatMoved decisions={decisions} windowStartMs={startedAtMs} hubHref={hubHref} /&gt;
       ) : (
         children
       )}
@@ -367,7 +376,7 @@ export function RoundSurface({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-13T03:53:43.786Z
+                at 2026-07-13T05:05:32.873Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

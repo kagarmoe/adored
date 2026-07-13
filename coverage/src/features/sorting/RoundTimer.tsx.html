@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>30/30</span>
+                <span class='fraction'>32/32</span>
             </div>
         
             
@@ -39,14 +39,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>6/6</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>27/27</span>
+                <span class='fraction'>29/29</span>
             </div>
         
             
@@ -159,7 +159,11 @@
 <a name='L94'></a><a href='#L94'>94</a>
 <a name='L95'></a><a href='#L95'>95</a>
 <a name='L96'></a><a href='#L96'>96</a>
-<a name='L97'></a><a href='#L97'>97</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -192,16 +196,20 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">495x</span>
-<span class="cline-any cline-yes">495x</span>
-<span class="cline-any cline-yes">495x</span>
+<span class="cline-any cline-yes">402x</span>
+<span class="cline-any cline-yes">402x</span>
+<span class="cline-any cline-yes">402x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">495x</span>
-<span class="cline-any cline-yes">495x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">495x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">200x</span>
+<span class="cline-any cline-yes">402x</span>
+<span class="cline-any cline-yes">402x</span>
+<span class="cline-any cline-yes">387x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">402x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">107x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">104x</span>
@@ -218,17 +226,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">495x</span>
-<span class="cline-any cline-yes">98x</span>
+<span class="cline-any cline-yes">402x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">397x</span>
 <span class="cline-any cline-yes">397x</span>
-<span class="cline-any cline-yes">495x</span>
-<span class="cline-any cline-yes">495x</span>
-<span class="cline-any cline-yes">495x</span>
+<span class="cline-any cline-yes">402x</span>
+<span class="cline-any cline-yes">402x</span>
+<span class="cline-any cline-yes">402x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">495x</span>
+<span class="cline-any cline-yes">402x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -291,9 +299,13 @@ export function RoundTimer({ startedAtMs, boxMs, onExpire, roundLabel }: RoundTi
   const reducedMotion = useReducedMotion();
   const [now, setNow] = useState(() =&gt; Date.now());
   const firedRef = useRef(false);
-  // Keep the latest onExpire without re-arming the interval each render.
+  // Keep the latest onExpire without re-arming the interval each render. Written after
+  // commit (never during render), and declared before the tick effect so the interval
+  // is always armed against the freshest callback.
   const onExpireRef = useRef(onExpire);
-  onExpireRef.current = onExpire;
+  useEffect(() =&gt; {
+    onExpireRef.current = onExpire;
+  });
 &nbsp;
   useEffect(() =&gt; {
     // No timer: no clock, no countdown, no expiry.
@@ -358,7 +370,7 @@ export function RoundTimer({ startedAtMs, boxMs, onExpire, roundLabel }: RoundTi
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-13T03:53:43.786Z
+                at 2026-07-13T05:05:32.873Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

@@ -1,7 +1,7 @@
 {
   "config": {
     "argv": [
-      "/opt/hostedtoolcache/node/22.23.1/x64/bin/node",
+      "/opt/hostedtoolcache/node/24.18.0/x64/bin/node",
       "/home/runner/work/purseinator-app/purseinator-app/node_modules/.bin/playwright",
       "test"
     ],
@@ -18,24 +18,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/4687405bb05f388cc70a36c88e00ea6a9de7b14a",
-        "commitHash": "4687405bb05f388cc70a36c88e00ea6a9de7b14a",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29222448456"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
+        "commitHash": "5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29225223090"
       },
       "gitCommit": {
-        "shortHash": "4687405",
-        "hash": "4687405bb05f388cc70a36c88e00ea6a9de7b14a",
-        "subject": "feat: tailwind 3.4 → 4.3.1 — cascade root cause fixed, AA gate reads the palette live (purses-9oxh.6) (#334)",
-        "body": "feat: tailwind 3.4 → 4.3.1 — cascade root cause fixed, AA gate reads the palette live (purses-9oxh.6) (#334)\n\n* test(design): AA contrast gate reads globals.css directly — mirror drift class killed (purses-9oxh.6)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(design): tailwind 3.4 -> 4.3.1 via the official upgrade tool (purses-9oxh.6)\n\nQuarantine-selected: 4.3.2 is 13 days old (one day inside the window);\n4.3.1 (30d) pinned in the lockfile for tailwindcss + @tailwindcss/postcss\n(the tool installs latest — pinned back deliberately). tailwind.config.ts\ndissolves into globals.css @theme; the dark variant survives as\n@custom-variant dark with :where() — zero specificity, source-order\nsemantics preserved (the tailwind-dark-selector-override trap checked\nand clear). autoprefixer removed (v4 built-in); postcss.config.mjs is\nthe single @tailwindcss/postcss plugin. 34 template files migrated by\nthe tool; v4 border-color compat layer included. Build green.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(design): app element rules into @layer base — the v4 cascade root cause\n\nUnder v3, utilities were UNLAYERED and beat the app's own `* {margin:0;\npadding:0}` reset and `a {color}` rules by specificity. v4 layers\nutilities, and ANY unlayered rule beats ANY layered one — so the reset\nsteamrolled every spacing utility and the anchor rule inked link-button\nlabels teal-on-teal (invisible). Diagnosed via in-capture computed-style\nprobes (h-11/max-w applied; px-4/mx-auto/text-white lost on the same\nelements). Fix per the v4 upgrade guide: element rules wrapped in\n@layer base; author CLASS rules (.prose-measure) deliberately stay\nunlayered, preserving their v3 source-order power over utilities.\nPost-fix pixel diff vs the tailwind-3 baseline (58 tablet shots, both\nthemes): 6 identical; every residual is (a) the translucent header's\ncolor-mix-vs-rgba compositing under backdrop-blur or (b) <=32px rhythm\ndrift — masks in the PR. axe green both themes.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(design): fold QA review — dark parser-honesty parity guard + primary-hover pairings\n\nThe light→dark spread let an unparseable dark var silently assert its\nlight value (false green strict() can't see). Key-set parity converts\ntruncation/oklch/second-block failures into hard reds. Plus the one\nunguarded live text role (a:hover primary-hover) gets real pairings.\n46 → 51 tests, all green.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
+        "shortHash": "5054ba3",
+        "hash": "5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
+        "subject": "feat: tooling batch + every remaining epic follow-up — zero suppressions, zero known vulns (purses-9oxh.7 + 9 more) (#335)",
+        "body": "feat: tooling batch + every remaining epic follow-up — zero suppressions, zero known vulns (purses-9oxh.7 + 9 more) (#335)\n\n* feat(deps): tooling batch — TS 6, Vite 8, ulid 3, dotenv 17, @types/node 24; Node truth aligned (purses-9oxh.7 + .1)\n\ntypescript 6.0.3 (tsc baseline 97 -> 97, zero new errors), vite 8.1.0 +\nplugin-react 6.0.3, dotenv 17.4.2, ulid 3.0.2 with its lexicographic\nordering PINNED (decision-order.test.ts, seed-time deterministic —\nranking replay ties on id). Node truth from the authoritative source:\nVercel project nodeVersion 24.x; .nvmrc + all 7 CI jobs 22 -> 24;\nengines was already right; @types/node ^20 -> ^24.13.2. All picks\nquarantine-selected. TWO recorded holds, bead-owned: TS 7\n(typescript-eslint <6.1.0 peer cap) and ESLint 10 (purses-9oxh.11 —\neslint-config-next@16's nested eslint-plugin-react calls the removed\ncontext.getFilename; peers said >=9, runtime said no). .claude/**\nadded to eslint ignores (stale worktree node_modules crash vector).\nARCHITECTURE decision 38; osv esbuild ignore revisited and re-pointed.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(db): NOT NULL the columns the code already guarantees; kill row:any at the mapper boundary\n\npurses-mebk.2 + purses-22rp, and the second found the third:\n- sessions.number, sort_results.number -> NOT NULL (both allocated at INSERT;\n  a NULL was already unreachable). Empty DB = a metadata-only ALTER, which is\n  exactly why the bead said do it now.\n- photos.is_hero -> NOT NULL. Found by removing `row: any`: the column was\n  `boolean | null` while Photo.isHero promised `boolean` — the SAME laundering\n  the number columns had. `any` at the DB boundary defeats the guarantee the\n  NOT NULL work exists to buy.\n- Every repository mapper now takes `typeof <table>.$inferSelect` instead of\n  `any`. That surfaced: a numeric/string write mismatch on score+confidence\n  (drizzle reads AND writes numeric as string), dead `?? null` coalesces on\n  columns that were never null, and union narrowings the `any` was silently\n  supplying. Proven to bite: flipping a domain field's nullability now fails\n  the build where it used to compile in silence.\n- purses-mebk.1: scripts/migration-hashes.test.ts pins the SHA-256 of every\n  committed migration. drizzle's migrator compares only the journal timestamp\n  and NEVER reads the hash back, so an edited/re-baselined migration replays\n  silently — green CI, red prod deploy. Mutation-proven: one changed byte reds it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(react): re-enable the react-hooks compiler rules — 25 sites fixed, zero suppressions\n\npurses-9oxh.8. The eslint-config-next@16 bump enabled react-hooks@7's\ncompiler rules (set-state-in-effect, purity, refs) as errors; the tailwind PR\nparked them behind a temporary disable block. Block deleted, every site fixed\non its merits — no eslint-disable comments anywhere:\n- device-local reads in mount effects -> useSyncExternalStore (src/lib/useDeviceValue.ts);\n  useReducedMotion rewritten on it, since a media query genuinely IS an external store\n- Date.now() during render -> useState lazy initializer (a mount-fixed clock,\n  which is what the code always meant)\n- refs read/written during render -> state snapshots, or moved into effects\n  declared above their readers so commit order is unchanged\n\nPlus purses-q228, which turned out to be two bugs, not one flake:\n- the spec waited on page.waitForResponse (resolves when Playwright's network\n  layer sees the response) while the app clears the queue strictly later, after\n  a second async body read inside a web lock. Now polls the real signal.\n- the stumble line rendered CONDITIONALLY above the card, shifting the answer\n  buttons under the user's finger — the intercepting-<img> click failure. It was\n  also a role=status region mounted with its content, which AT never announces.\n  Now persistently mounted at fixed height: a11y fix, UX fix, flake fix.\nVerified 5/5 consecutive full-spec runs (and 10/10 repeat-each on the pagehide test).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(deps): both osv advisories FIXED, not ignored — osv-scanner.toml deleted\n\npurses-9oxh.9 + the esbuild ignore. The repo now carries ZERO suppressions and\nZERO known vulnerabilities; the ignore file is gone entirely.\n- postcss 8.4.31 (pinned inside next@16, GHSA-qx2v-qp2m-jg93): overrides\n  {\"postcss\": \"$postcss\"} + direct dep ^8.5.18. npm REJECTS a bare override that\n  conflicts with a direct dependency — the $name reference form is the correct\n  one. Tree now resolves to a single postcss 8.5.18.\n- esbuild 0.18.20 (GHSA-67mh-4wv8-2f99): dragged in by @esbuild-kit/core-utils,\n  which is DEPRECATED (\"Merged into tsx\", last published 2023-09) and which\n  drizzle-kit STILL depends on at its latest version — no upgrade escapes it.\n  Scoped override to 0.25.12, the version drizzle-kit already uses at top level.\n  Proven, not hoped: `npm run db:generate` runs clean against it.\n- scripts/overrides.test.ts is the tripwire: it FAILS if drizzle-kit ever drops\n  @esbuild-kit (delete the override then, don't carry it forever) or if either\n  override stops applying. An override with no reason left is a silent lie.\n- purses-9oxh.10: @theme -> @theme inline; the tool's border-color compat shim\n  deleted (zero bare borders exist). purses-mebk.3: dead db:backfill-slugs\n  script + README line deleted.\nARCHITECTURE decisions 38-39.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(e2e): poll the queue's real completion signal, not the network response (purses-q228)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* chore: graphify update at PR boundary\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: sync the living docs to the new state (decisions 35 superseded, 40 added)\n\n/sync-docs pass the PR was missing:\n- ARCHITECTURE 35 asserted a committed osv-scanner.toml as current; the file\n  is deleted (39 supersedes). Marked, not silently rewritten.\n- DEPLOYMENT said findings are ignored 'only via the committed toml' — there\n  is no toml and no suppressions now, so ANY finding is a real finding.\n- NEW decision 40: the NOT NULL columns + row:any removal had no entry at all.\n  They are one finding, not two — photos.is_hero was FOUND by removing the any.\n\ndocs/superpowers/** deliberately untouched: specs, plans and the handoff are\nfrozen historical records; rewriting them would falsify the account.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: DATABASE.md — this repo's DB conventions as they are today (purses-06a, purses-vg8w)\n\npurses-06a asked for a PROJECT-SPECIFIC reference (a prior attempt was\nrejected as generic filler). Current state, not history: PK/ULID convention\nand its load-bearing lexicographic ordering, soft-delete and the\nfindByIdIncludingDeleted purge rule, the catalog-number unique indexes, the\npartial unique indexes and the every-writer-into-the-slot rule, the CHECK\nconstraint, FK cascade vs no-cascade vs no-FK-by-design (audit_log), and\nwhich columns are NOT NULL vs nullable and why. Migration section is a\nWORKFLOW, with the three traps that actually bite: dotenv silently targets\ndev; vercel-build auto-migrates prod at build time (⇒ expand/contract for\ndestructive DDL); the migrator never reads the recorded hash back (⇒\nscripts/migration-hashes.test.ts). The decision history stays in\nARCHITECTURE's log — this page does not repeat it.\n\npurses-vg8w resolved: DEPLOYMENT.md claimed the e2e Postgres uses a\nworktree-derived slot/port and that CI no longer pins DATABASE_URL_TEST.\nBOTH false — test-db.sh:20-22 hardcodes pi-e2e-db/:5433 and ci.yml:482 pins\nit. The doc described an unshipped design; the code was right. Fixed the\ndoc, and distinguished the e2e container from db-tests' :5432 service.\n\nDeliberately NOT written: an ERD/data dictionary (it would be a\nhand-maintained duplicate of schema.ts that rots), and Neon backup product\ndetail that isn't verifiable from the repo. Omitted rather than invented.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1783914451000
+          "time": 1783918778000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1783914451000
+          "time": 1783918778000
         },
         "branch": "main"
       },
@@ -49,24 +49,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/4687405bb05f388cc70a36c88e00ea6a9de7b14a",
-            "commitHash": "4687405bb05f388cc70a36c88e00ea6a9de7b14a",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29222448456"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
+            "commitHash": "5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29225223090"
           },
           "gitCommit": {
-            "shortHash": "4687405",
-            "hash": "4687405bb05f388cc70a36c88e00ea6a9de7b14a",
-            "subject": "feat: tailwind 3.4 → 4.3.1 — cascade root cause fixed, AA gate reads the palette live (purses-9oxh.6) (#334)",
-            "body": "feat: tailwind 3.4 → 4.3.1 — cascade root cause fixed, AA gate reads the palette live (purses-9oxh.6) (#334)\n\n* test(design): AA contrast gate reads globals.css directly — mirror drift class killed (purses-9oxh.6)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(design): tailwind 3.4 -> 4.3.1 via the official upgrade tool (purses-9oxh.6)\n\nQuarantine-selected: 4.3.2 is 13 days old (one day inside the window);\n4.3.1 (30d) pinned in the lockfile for tailwindcss + @tailwindcss/postcss\n(the tool installs latest — pinned back deliberately). tailwind.config.ts\ndissolves into globals.css @theme; the dark variant survives as\n@custom-variant dark with :where() — zero specificity, source-order\nsemantics preserved (the tailwind-dark-selector-override trap checked\nand clear). autoprefixer removed (v4 built-in); postcss.config.mjs is\nthe single @tailwindcss/postcss plugin. 34 template files migrated by\nthe tool; v4 border-color compat layer included. Build green.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(design): app element rules into @layer base — the v4 cascade root cause\n\nUnder v3, utilities were UNLAYERED and beat the app's own `* {margin:0;\npadding:0}` reset and `a {color}` rules by specificity. v4 layers\nutilities, and ANY unlayered rule beats ANY layered one — so the reset\nsteamrolled every spacing utility and the anchor rule inked link-button\nlabels teal-on-teal (invisible). Diagnosed via in-capture computed-style\nprobes (h-11/max-w applied; px-4/mx-auto/text-white lost on the same\nelements). Fix per the v4 upgrade guide: element rules wrapped in\n@layer base; author CLASS rules (.prose-measure) deliberately stay\nunlayered, preserving their v3 source-order power over utilities.\nPost-fix pixel diff vs the tailwind-3 baseline (58 tablet shots, both\nthemes): 6 identical; every residual is (a) the translucent header's\ncolor-mix-vs-rgba compositing under backdrop-blur or (b) <=32px rhythm\ndrift — masks in the PR. axe green both themes.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(design): fold QA review — dark parser-honesty parity guard + primary-hover pairings\n\nThe light→dark spread let an unparseable dark var silently assert its\nlight value (false green strict() can't see). Key-set parity converts\ntruncation/oklch/second-block failures into hard reds. Plus the one\nunguarded live text role (a:hover primary-hover) gets real pairings.\n46 → 51 tests, all green.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
+            "shortHash": "5054ba3",
+            "hash": "5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
+            "subject": "feat: tooling batch + every remaining epic follow-up — zero suppressions, zero known vulns (purses-9oxh.7 + 9 more) (#335)",
+            "body": "feat: tooling batch + every remaining epic follow-up — zero suppressions, zero known vulns (purses-9oxh.7 + 9 more) (#335)\n\n* feat(deps): tooling batch — TS 6, Vite 8, ulid 3, dotenv 17, @types/node 24; Node truth aligned (purses-9oxh.7 + .1)\n\ntypescript 6.0.3 (tsc baseline 97 -> 97, zero new errors), vite 8.1.0 +\nplugin-react 6.0.3, dotenv 17.4.2, ulid 3.0.2 with its lexicographic\nordering PINNED (decision-order.test.ts, seed-time deterministic —\nranking replay ties on id). Node truth from the authoritative source:\nVercel project nodeVersion 24.x; .nvmrc + all 7 CI jobs 22 -> 24;\nengines was already right; @types/node ^20 -> ^24.13.2. All picks\nquarantine-selected. TWO recorded holds, bead-owned: TS 7\n(typescript-eslint <6.1.0 peer cap) and ESLint 10 (purses-9oxh.11 —\neslint-config-next@16's nested eslint-plugin-react calls the removed\ncontext.getFilename; peers said >=9, runtime said no). .claude/**\nadded to eslint ignores (stale worktree node_modules crash vector).\nARCHITECTURE decision 38; osv esbuild ignore revisited and re-pointed.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(db): NOT NULL the columns the code already guarantees; kill row:any at the mapper boundary\n\npurses-mebk.2 + purses-22rp, and the second found the third:\n- sessions.number, sort_results.number -> NOT NULL (both allocated at INSERT;\n  a NULL was already unreachable). Empty DB = a metadata-only ALTER, which is\n  exactly why the bead said do it now.\n- photos.is_hero -> NOT NULL. Found by removing `row: any`: the column was\n  `boolean | null` while Photo.isHero promised `boolean` — the SAME laundering\n  the number columns had. `any` at the DB boundary defeats the guarantee the\n  NOT NULL work exists to buy.\n- Every repository mapper now takes `typeof <table>.$inferSelect` instead of\n  `any`. That surfaced: a numeric/string write mismatch on score+confidence\n  (drizzle reads AND writes numeric as string), dead `?? null` coalesces on\n  columns that were never null, and union narrowings the `any` was silently\n  supplying. Proven to bite: flipping a domain field's nullability now fails\n  the build where it used to compile in silence.\n- purses-mebk.1: scripts/migration-hashes.test.ts pins the SHA-256 of every\n  committed migration. drizzle's migrator compares only the journal timestamp\n  and NEVER reads the hash back, so an edited/re-baselined migration replays\n  silently — green CI, red prod deploy. Mutation-proven: one changed byte reds it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(react): re-enable the react-hooks compiler rules — 25 sites fixed, zero suppressions\n\npurses-9oxh.8. The eslint-config-next@16 bump enabled react-hooks@7's\ncompiler rules (set-state-in-effect, purity, refs) as errors; the tailwind PR\nparked them behind a temporary disable block. Block deleted, every site fixed\non its merits — no eslint-disable comments anywhere:\n- device-local reads in mount effects -> useSyncExternalStore (src/lib/useDeviceValue.ts);\n  useReducedMotion rewritten on it, since a media query genuinely IS an external store\n- Date.now() during render -> useState lazy initializer (a mount-fixed clock,\n  which is what the code always meant)\n- refs read/written during render -> state snapshots, or moved into effects\n  declared above their readers so commit order is unchanged\n\nPlus purses-q228, which turned out to be two bugs, not one flake:\n- the spec waited on page.waitForResponse (resolves when Playwright's network\n  layer sees the response) while the app clears the queue strictly later, after\n  a second async body read inside a web lock. Now polls the real signal.\n- the stumble line rendered CONDITIONALLY above the card, shifting the answer\n  buttons under the user's finger — the intercepting-<img> click failure. It was\n  also a role=status region mounted with its content, which AT never announces.\n  Now persistently mounted at fixed height: a11y fix, UX fix, flake fix.\nVerified 5/5 consecutive full-spec runs (and 10/10 repeat-each on the pagehide test).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(deps): both osv advisories FIXED, not ignored — osv-scanner.toml deleted\n\npurses-9oxh.9 + the esbuild ignore. The repo now carries ZERO suppressions and\nZERO known vulnerabilities; the ignore file is gone entirely.\n- postcss 8.4.31 (pinned inside next@16, GHSA-qx2v-qp2m-jg93): overrides\n  {\"postcss\": \"$postcss\"} + direct dep ^8.5.18. npm REJECTS a bare override that\n  conflicts with a direct dependency — the $name reference form is the correct\n  one. Tree now resolves to a single postcss 8.5.18.\n- esbuild 0.18.20 (GHSA-67mh-4wv8-2f99): dragged in by @esbuild-kit/core-utils,\n  which is DEPRECATED (\"Merged into tsx\", last published 2023-09) and which\n  drizzle-kit STILL depends on at its latest version — no upgrade escapes it.\n  Scoped override to 0.25.12, the version drizzle-kit already uses at top level.\n  Proven, not hoped: `npm run db:generate` runs clean against it.\n- scripts/overrides.test.ts is the tripwire: it FAILS if drizzle-kit ever drops\n  @esbuild-kit (delete the override then, don't carry it forever) or if either\n  override stops applying. An override with no reason left is a silent lie.\n- purses-9oxh.10: @theme -> @theme inline; the tool's border-color compat shim\n  deleted (zero bare borders exist). purses-mebk.3: dead db:backfill-slugs\n  script + README line deleted.\nARCHITECTURE decisions 38-39.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(e2e): poll the queue's real completion signal, not the network response (purses-q228)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* chore: graphify update at PR boundary\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: sync the living docs to the new state (decisions 35 superseded, 40 added)\n\n/sync-docs pass the PR was missing:\n- ARCHITECTURE 35 asserted a committed osv-scanner.toml as current; the file\n  is deleted (39 supersedes). Marked, not silently rewritten.\n- DEPLOYMENT said findings are ignored 'only via the committed toml' — there\n  is no toml and no suppressions now, so ANY finding is a real finding.\n- NEW decision 40: the NOT NULL columns + row:any removal had no entry at all.\n  They are one finding, not two — photos.is_hero was FOUND by removing the any.\n\ndocs/superpowers/** deliberately untouched: specs, plans and the handoff are\nfrozen historical records; rewriting them would falsify the account.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: DATABASE.md — this repo's DB conventions as they are today (purses-06a, purses-vg8w)\n\npurses-06a asked for a PROJECT-SPECIFIC reference (a prior attempt was\nrejected as generic filler). Current state, not history: PK/ULID convention\nand its load-bearing lexicographic ordering, soft-delete and the\nfindByIdIncludingDeleted purge rule, the catalog-number unique indexes, the\npartial unique indexes and the every-writer-into-the-slot rule, the CHECK\nconstraint, FK cascade vs no-cascade vs no-FK-by-design (audit_log), and\nwhich columns are NOT NULL vs nullable and why. Migration section is a\nWORKFLOW, with the three traps that actually bite: dotenv silently targets\ndev; vercel-build auto-migrates prod at build time (⇒ expand/contract for\ndestructive DDL); the migrator never reads the recorded hash back (⇒\nscripts/migration-hashes.test.ts). The decision history stays in\nARCHITECTURE's log — this page does not repeat it.\n\npurses-vg8w resolved: DEPLOYMENT.md claimed the e2e Postgres uses a\nworktree-derived slot/port and that CI no longer pins DATABASE_URL_TEST.\nBOTH false — test-db.sh:20-22 hardcodes pi-e2e-db/:5433 and ci.yml:482 pins\nit. The doc described an unshipped design; the code was right. Fixed the\ndoc, and distinguished the e2e container from db-tests' :5432 service.\n\nDeliberately NOT written: an ERD/data dictionary (it would be a\nhand-maintained duplicate of schema.ts that rots), and Neon backup product\ndetail that isn't verifiable from the repo. Omitted rather than invented.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783914451000
+              "time": 1783918778000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783914451000
+              "time": 1783918778000
             },
             "branch": "main"
           },
@@ -87,24 +87,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/4687405bb05f388cc70a36c88e00ea6a9de7b14a",
-            "commitHash": "4687405bb05f388cc70a36c88e00ea6a9de7b14a",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29222448456"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
+            "commitHash": "5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29225223090"
           },
           "gitCommit": {
-            "shortHash": "4687405",
-            "hash": "4687405bb05f388cc70a36c88e00ea6a9de7b14a",
-            "subject": "feat: tailwind 3.4 → 4.3.1 — cascade root cause fixed, AA gate reads the palette live (purses-9oxh.6) (#334)",
-            "body": "feat: tailwind 3.4 → 4.3.1 — cascade root cause fixed, AA gate reads the palette live (purses-9oxh.6) (#334)\n\n* test(design): AA contrast gate reads globals.css directly — mirror drift class killed (purses-9oxh.6)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(design): tailwind 3.4 -> 4.3.1 via the official upgrade tool (purses-9oxh.6)\n\nQuarantine-selected: 4.3.2 is 13 days old (one day inside the window);\n4.3.1 (30d) pinned in the lockfile for tailwindcss + @tailwindcss/postcss\n(the tool installs latest — pinned back deliberately). tailwind.config.ts\ndissolves into globals.css @theme; the dark variant survives as\n@custom-variant dark with :where() — zero specificity, source-order\nsemantics preserved (the tailwind-dark-selector-override trap checked\nand clear). autoprefixer removed (v4 built-in); postcss.config.mjs is\nthe single @tailwindcss/postcss plugin. 34 template files migrated by\nthe tool; v4 border-color compat layer included. Build green.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(design): app element rules into @layer base — the v4 cascade root cause\n\nUnder v3, utilities were UNLAYERED and beat the app's own `* {margin:0;\npadding:0}` reset and `a {color}` rules by specificity. v4 layers\nutilities, and ANY unlayered rule beats ANY layered one — so the reset\nsteamrolled every spacing utility and the anchor rule inked link-button\nlabels teal-on-teal (invisible). Diagnosed via in-capture computed-style\nprobes (h-11/max-w applied; px-4/mx-auto/text-white lost on the same\nelements). Fix per the v4 upgrade guide: element rules wrapped in\n@layer base; author CLASS rules (.prose-measure) deliberately stay\nunlayered, preserving their v3 source-order power over utilities.\nPost-fix pixel diff vs the tailwind-3 baseline (58 tablet shots, both\nthemes): 6 identical; every residual is (a) the translucent header's\ncolor-mix-vs-rgba compositing under backdrop-blur or (b) <=32px rhythm\ndrift — masks in the PR. axe green both themes.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(design): fold QA review — dark parser-honesty parity guard + primary-hover pairings\n\nThe light→dark spread let an unparseable dark var silently assert its\nlight value (false green strict() can't see). Key-set parity converts\ntruncation/oklch/second-block failures into hard reds. Plus the one\nunguarded live text role (a:hover primary-hover) gets real pairings.\n46 → 51 tests, all green.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Fable 5 <noreply@anthropic.com>",
+            "shortHash": "5054ba3",
+            "hash": "5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
+            "subject": "feat: tooling batch + every remaining epic follow-up — zero suppressions, zero known vulns (purses-9oxh.7 + 9 more) (#335)",
+            "body": "feat: tooling batch + every remaining epic follow-up — zero suppressions, zero known vulns (purses-9oxh.7 + 9 more) (#335)\n\n* feat(deps): tooling batch — TS 6, Vite 8, ulid 3, dotenv 17, @types/node 24; Node truth aligned (purses-9oxh.7 + .1)\n\ntypescript 6.0.3 (tsc baseline 97 -> 97, zero new errors), vite 8.1.0 +\nplugin-react 6.0.3, dotenv 17.4.2, ulid 3.0.2 with its lexicographic\nordering PINNED (decision-order.test.ts, seed-time deterministic —\nranking replay ties on id). Node truth from the authoritative source:\nVercel project nodeVersion 24.x; .nvmrc + all 7 CI jobs 22 -> 24;\nengines was already right; @types/node ^20 -> ^24.13.2. All picks\nquarantine-selected. TWO recorded holds, bead-owned: TS 7\n(typescript-eslint <6.1.0 peer cap) and ESLint 10 (purses-9oxh.11 —\neslint-config-next@16's nested eslint-plugin-react calls the removed\ncontext.getFilename; peers said >=9, runtime said no). .claude/**\nadded to eslint ignores (stale worktree node_modules crash vector).\nARCHITECTURE decision 38; osv esbuild ignore revisited and re-pointed.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(db): NOT NULL the columns the code already guarantees; kill row:any at the mapper boundary\n\npurses-mebk.2 + purses-22rp, and the second found the third:\n- sessions.number, sort_results.number -> NOT NULL (both allocated at INSERT;\n  a NULL was already unreachable). Empty DB = a metadata-only ALTER, which is\n  exactly why the bead said do it now.\n- photos.is_hero -> NOT NULL. Found by removing `row: any`: the column was\n  `boolean | null` while Photo.isHero promised `boolean` — the SAME laundering\n  the number columns had. `any` at the DB boundary defeats the guarantee the\n  NOT NULL work exists to buy.\n- Every repository mapper now takes `typeof <table>.$inferSelect` instead of\n  `any`. That surfaced: a numeric/string write mismatch on score+confidence\n  (drizzle reads AND writes numeric as string), dead `?? null` coalesces on\n  columns that were never null, and union narrowings the `any` was silently\n  supplying. Proven to bite: flipping a domain field's nullability now fails\n  the build where it used to compile in silence.\n- purses-mebk.1: scripts/migration-hashes.test.ts pins the SHA-256 of every\n  committed migration. drizzle's migrator compares only the journal timestamp\n  and NEVER reads the hash back, so an edited/re-baselined migration replays\n  silently — green CI, red prod deploy. Mutation-proven: one changed byte reds it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(react): re-enable the react-hooks compiler rules — 25 sites fixed, zero suppressions\n\npurses-9oxh.8. The eslint-config-next@16 bump enabled react-hooks@7's\ncompiler rules (set-state-in-effect, purity, refs) as errors; the tailwind PR\nparked them behind a temporary disable block. Block deleted, every site fixed\non its merits — no eslint-disable comments anywhere:\n- device-local reads in mount effects -> useSyncExternalStore (src/lib/useDeviceValue.ts);\n  useReducedMotion rewritten on it, since a media query genuinely IS an external store\n- Date.now() during render -> useState lazy initializer (a mount-fixed clock,\n  which is what the code always meant)\n- refs read/written during render -> state snapshots, or moved into effects\n  declared above their readers so commit order is unchanged\n\nPlus purses-q228, which turned out to be two bugs, not one flake:\n- the spec waited on page.waitForResponse (resolves when Playwright's network\n  layer sees the response) while the app clears the queue strictly later, after\n  a second async body read inside a web lock. Now polls the real signal.\n- the stumble line rendered CONDITIONALLY above the card, shifting the answer\n  buttons under the user's finger — the intercepting-<img> click failure. It was\n  also a role=status region mounted with its content, which AT never announces.\n  Now persistently mounted at fixed height: a11y fix, UX fix, flake fix.\nVerified 5/5 consecutive full-spec runs (and 10/10 repeat-each on the pagehide test).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(deps): both osv advisories FIXED, not ignored — osv-scanner.toml deleted\n\npurses-9oxh.9 + the esbuild ignore. The repo now carries ZERO suppressions and\nZERO known vulnerabilities; the ignore file is gone entirely.\n- postcss 8.4.31 (pinned inside next@16, GHSA-qx2v-qp2m-jg93): overrides\n  {\"postcss\": \"$postcss\"} + direct dep ^8.5.18. npm REJECTS a bare override that\n  conflicts with a direct dependency — the $name reference form is the correct\n  one. Tree now resolves to a single postcss 8.5.18.\n- esbuild 0.18.20 (GHSA-67mh-4wv8-2f99): dragged in by @esbuild-kit/core-utils,\n  which is DEPRECATED (\"Merged into tsx\", last published 2023-09) and which\n  drizzle-kit STILL depends on at its latest version — no upgrade escapes it.\n  Scoped override to 0.25.12, the version drizzle-kit already uses at top level.\n  Proven, not hoped: `npm run db:generate` runs clean against it.\n- scripts/overrides.test.ts is the tripwire: it FAILS if drizzle-kit ever drops\n  @esbuild-kit (delete the override then, don't carry it forever) or if either\n  override stops applying. An override with no reason left is a silent lie.\n- purses-9oxh.10: @theme -> @theme inline; the tool's border-color compat shim\n  deleted (zero bare borders exist). purses-mebk.3: dead db:backfill-slugs\n  script + README line deleted.\nARCHITECTURE decisions 38-39.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(e2e): poll the queue's real completion signal, not the network response (purses-q228)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* chore: graphify update at PR boundary\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: sync the living docs to the new state (decisions 35 superseded, 40 added)\n\n/sync-docs pass the PR was missing:\n- ARCHITECTURE 35 asserted a committed osv-scanner.toml as current; the file\n  is deleted (39 supersedes). Marked, not silently rewritten.\n- DEPLOYMENT said findings are ignored 'only via the committed toml' — there\n  is no toml and no suppressions now, so ANY finding is a real finding.\n- NEW decision 40: the NOT NULL columns + row:any removal had no entry at all.\n  They are one finding, not two — photos.is_hero was FOUND by removing the any.\n\ndocs/superpowers/** deliberately untouched: specs, plans and the handoff are\nfrozen historical records; rewriting them would falsify the account.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: DATABASE.md — this repo's DB conventions as they are today (purses-06a, purses-vg8w)\n\npurses-06a asked for a PROJECT-SPECIFIC reference (a prior attempt was\nrejected as generic filler). Current state, not history: PK/ULID convention\nand its load-bearing lexicographic ordering, soft-delete and the\nfindByIdIncludingDeleted purge rule, the catalog-number unique indexes, the\npartial unique indexes and the every-writer-into-the-slot rule, the CHECK\nconstraint, FK cascade vs no-cascade vs no-FK-by-design (audit_log), and\nwhich columns are NOT NULL vs nullable and why. Migration section is a\nWORKFLOW, with the three traps that actually bite: dotenv silently targets\ndev; vercel-build auto-migrates prod at build time (⇒ expand/contract for\ndestructive DDL); the migrator never reads the recorded hash back (⇒\nscripts/migration-hashes.test.ts). The decision history stays in\nARCHITECTURE's log — this page does not repeat it.\n\npurses-vg8w resolved: DEPLOYMENT.md claimed the e2e Postgres uses a\nworktree-derived slot/port and that CI no longer pins DATABASE_URL_TEST.\nBOTH false — test-db.sh:20-22 hardcodes pi-e2e-db/:5433 and ci.yml:482 pins\nit. The doc described an unshipped design; the code was right. Fixed the\ndoc, and distinguished the e2e container from db-tests' :5432 service.\n\nDeliberately NOT written: an ERD/data dictionary (it would be a\nhand-maintained duplicate of schema.ts that rots), and Neon backup product\ndetail that isn't verifiable from the repo. Omitted rather than invented.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783914451000
+              "time": 1783918778000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783914451000
+              "time": 1783918778000
             },
             "branch": "main"
           },
@@ -187,12 +187,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 295,
+                  "duration": 270,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:49:56.678Z",
+                  "startTime": "2026-07-13T05:01:49.593Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -229,7 +229,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 25704,
+                  "duration": 25180,
                   "errors": [],
                   "stdout": [
                     {
@@ -259,7 +259,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:49:57.688Z",
+                  "startTime": "2026-07-13T05:01:50.581Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -288,7 +288,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 17253,
+                  "duration": 15546,
                   "errors": [],
                   "stdout": [
                     {
@@ -318,7 +318,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:50:24.687Z",
+                  "startTime": "2026-07-13T05:02:16.936Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -347,7 +347,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2998,
+                  "duration": 3058,
                   "errors": [],
                   "stdout": [
                     {
@@ -359,7 +359,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:50:41.992Z",
+                  "startTime": "2026-07-13T05:02:32.499Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -388,7 +388,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2777,
+                  "duration": 2648,
                   "errors": [],
                   "stdout": [
                     {
@@ -400,7 +400,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:50:45.028Z",
+                  "startTime": "2026-07-13T05:02:35.573Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -437,12 +437,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2276,
+                  "duration": 2153,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:50:47.839Z",
+                  "startTime": "2026-07-13T05:02:38.247Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -471,7 +471,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "failed",
-                  "duration": 1481,
+                  "duration": 1437,
                   "error": {
                     "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mnull\u001b[39m",
                     "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mnull\u001b[39m\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts:54:23",
@@ -495,7 +495,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:50:50.191Z",
+                  "startTime": "2026-07-13T05:02:40.461Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -524,12 +524,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1848,
+                  "duration": 1651,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 1,
-                  "startTime": "2026-07-13T03:50:52.703Z",
+                  "startTime": "2026-07-13T05:02:42.924Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -564,12 +564,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1548,
+                  "duration": 1348,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:50:54.810Z",
+                  "startTime": "2026-07-13T05:02:44.824Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -598,12 +598,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1037,
+                  "duration": 1034,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:50:56.381Z",
+                  "startTime": "2026-07-13T05:02:46.200Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -632,12 +632,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1165,
+                  "duration": 1109,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:50:57.449Z",
+                  "startTime": "2026-07-13T05:02:47.259Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -674,12 +674,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2032,
+                  "duration": 1901,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:50:58.696Z",
+                  "startTime": "2026-07-13T05:02:48.467Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -708,12 +708,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2268,
+                  "duration": 2027,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:51:00.789Z",
+                  "startTime": "2026-07-13T05:02:50.427Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -750,12 +750,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1608,
+                  "duration": 1517,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:51:03.093Z",
+                  "startTime": "2026-07-13T05:02:52.487Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -784,12 +784,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1574,
+                  "duration": 1638,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:51:04.742Z",
+                  "startTime": "2026-07-13T05:02:54.057Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -818,12 +818,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1546,
+                  "duration": 1269,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:51:06.343Z",
+                  "startTime": "2026-07-13T05:02:55.724Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -867,12 +867,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1340,
+                      "duration": 1183,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:07.928Z",
+                      "startTime": "2026-07-13T05:02:57.028Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -901,12 +901,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1570,
+                      "duration": 1452,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:09.411Z",
+                      "startTime": "2026-07-13T05:02:58.314Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -935,12 +935,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 936,
+                      "duration": 879,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:11.006Z",
+                      "startTime": "2026-07-13T05:02:59.790Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -986,12 +986,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4017,
+                      "duration": 3843,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:11.973Z",
+                      "startTime": "2026-07-13T05:03:00.700Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1020,12 +1020,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2452,
+                      "duration": 2257,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:16.011Z",
+                      "startTime": "2026-07-13T05:03:04.564Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1071,12 +1071,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2140,
+                      "duration": 1951,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:18.486Z",
+                      "startTime": "2026-07-13T05:03:06.850Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1122,12 +1122,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2164,
+                      "duration": 1930,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:20.705Z",
+                      "startTime": "2026-07-13T05:03:08.943Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1173,12 +1173,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1162,
+                      "duration": 1107,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:22.951Z",
+                      "startTime": "2026-07-13T05:03:10.939Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1207,12 +1207,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1259,
+                      "duration": 1241,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:24.182Z",
+                      "startTime": "2026-07-13T05:03:12.105Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1258,12 +1258,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4101,
+                      "duration": 4471,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:25.469Z",
+                      "startTime": "2026-07-13T05:03:13.419Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1292,12 +1292,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4485,
+                      "duration": 3898,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:29.649Z",
+                      "startTime": "2026-07-13T05:03:17.938Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1343,12 +1343,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1728,
+                      "duration": 1779,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:34.181Z",
+                      "startTime": "2026-07-13T05:03:21.858Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1377,12 +1377,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2427,
+                      "duration": 2160,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:35.962Z",
+                      "startTime": "2026-07-13T05:03:23.688Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1428,12 +1428,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 636,
+                      "duration": 852,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:38.413Z",
+                      "startTime": "2026-07-13T05:03:25.915Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1462,12 +1462,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 359,
+                      "duration": 303,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:39.062Z",
+                      "startTime": "2026-07-13T05:03:26.803Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1496,12 +1496,12 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 323,
+                      "duration": 286,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:51:39.438Z",
+                      "startTime": "2026-07-13T05:03:27.113Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1540,12 +1540,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1052,
+                  "duration": 1048,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:51:39.784Z",
+                  "startTime": "2026-07-13T05:03:27.419Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1574,12 +1574,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1454,
+                  "duration": 1264,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:51:40.885Z",
+                  "startTime": "2026-07-13T05:03:28.502Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1616,12 +1616,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1156,
+                  "duration": 1132,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:51:42.381Z",
+                  "startTime": "2026-07-13T05:03:29.786Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1650,12 +1650,12 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1349,
+                  "duration": 1755,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:51:43.609Z",
+                  "startTime": "2026-07-13T05:03:30.969Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1684,7 +1684,7 @@
                   "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "timedOut",
-                  "duration": 30286,
+                  "duration": 30492,
                   "error": {
                     "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                     "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -1705,7 +1705,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:51:44.979Z",
+                  "startTime": "2026-07-13T05:03:32.760Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -1729,12 +1729,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2086,
+                  "duration": 1999,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 1,
-                  "startTime": "2026-07-13T03:52:16.291Z",
+                  "startTime": "2026-07-13T05:04:30.004Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -1784,12 +1784,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3408,
+                      "duration": 3362,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:52:18.699Z",
+                      "startTime": "2026-07-13T05:04:32.343Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1818,12 +1818,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3213,
+                      "duration": 6940,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:52:22.243Z",
+                      "startTime": "2026-07-13T05:04:35.832Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1852,12 +1852,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1714,
+                      "duration": 2298,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:52:25.470Z",
+                      "startTime": "2026-07-13T05:04:42.802Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1903,12 +1903,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 10187,
+                      "duration": 12285,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:52:27.228Z",
+                      "startTime": "2026-07-13T05:04:46.342Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1937,12 +1937,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1452,
+                      "duration": 4277,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:52:37.486Z",
+                      "startTime": "2026-07-13T05:04:59.491Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1981,12 +1981,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1904,
+                  "duration": 4275,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:52:38.968Z",
+                  "startTime": "2026-07-13T05:05:04.675Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2030,12 +2030,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1405,
+                      "duration": 1627,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:52:40.902Z",
+                      "startTime": "2026-07-13T05:05:09.338Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2081,12 +2081,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3156,
+                      "duration": 4248,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:52:42.435Z",
+                      "startTime": "2026-07-13T05:05:14.080Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2132,12 +2132,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1321,
+                      "duration": 1597,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:52:45.717Z",
+                      "startTime": "2026-07-13T05:05:20.279Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2183,12 +2183,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3346,
+                      "duration": 5266,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:52:47.145Z",
+                      "startTime": "2026-07-13T05:05:24.692Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2217,12 +2217,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3303,
+                      "duration": 4759,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:52:50.515Z",
+                      "startTime": "2026-07-13T05:05:29.996Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2268,12 +2268,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2508,
+                      "duration": 3432,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:52:53.861Z",
+                      "startTime": "2026-07-13T05:05:34.832Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2319,12 +2319,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2448,
+                      "duration": 3502,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:52:56.440Z",
+                      "startTime": "2026-07-13T05:05:39.183Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2363,12 +2363,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 960,
+                  "duration": 1531,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:52:58.968Z",
+                  "startTime": "2026-07-13T05:05:43.394Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2397,12 +2397,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1053,
+                  "duration": 1991,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:52:59.949Z",
+                  "startTime": "2026-07-13T05:05:44.968Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2431,12 +2431,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1060,
+                  "duration": 1746,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:53:01.020Z",
+                  "startTime": "2026-07-13T05:05:46.977Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2480,12 +2480,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1462,
+                      "duration": 3581,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:53:02.100Z",
+                      "startTime": "2026-07-13T05:05:48.778Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2531,12 +2531,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1696,
+                      "duration": 1884,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:53:03.626Z",
+                      "startTime": "2026-07-13T05:05:52.539Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2565,12 +2565,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1707,
+                      "duration": 2360,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:53:05.389Z",
+                      "startTime": "2026-07-13T05:05:54.618Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2599,12 +2599,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1583,
+                      "duration": 1695,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:53:07.135Z",
+                      "startTime": "2026-07-13T05:05:57.003Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2641,12 +2641,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4472,
+                      "duration": 5059,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:53:08.749Z",
+                      "startTime": "2026-07-13T05:05:58.718Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2675,12 +2675,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1727,
+                      "duration": 3664,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:53:13.281Z",
+                      "startTime": "2026-07-13T05:06:03.876Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2717,12 +2717,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1068,
+                      "duration": 1491,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:53:15.038Z",
+                      "startTime": "2026-07-13T05:06:07.563Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2751,12 +2751,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1138,
+                      "duration": 1010,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:53:16.124Z",
+                      "startTime": "2026-07-13T05:06:09.071Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2802,12 +2802,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3089,
+                      "duration": 3934,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:53:17.282Z",
+                      "startTime": "2026-07-13T05:06:10.189Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2836,12 +2836,12 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3306,
+                      "duration": 4595,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T03:53:20.446Z",
+                      "startTime": "2026-07-13T05:06:14.897Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2880,12 +2880,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2866,
+                  "duration": 3836,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:53:23.782Z",
+                  "startTime": "2026-07-13T05:06:19.928Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2914,12 +2914,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2848,
+                  "duration": 4735,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:53:26.674Z",
+                  "startTime": "2026-07-13T05:06:23.778Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2948,12 +2948,12 @@
                   "workerIndex": 3,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2292,
+                  "duration": 3118,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T03:53:29.552Z",
+                  "startTime": "2026-07-13T05:06:28.531Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2971,8 +2971,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-07-13T03:48:53.507Z",
-    "duration": 278713.82300000003,
+    "startTime": "2026-07-13T05:00:56.851Z",
+    "duration": 357167.70999999996,
     "expected": 63,
     "skipped": 0,
     "unexpected": 0,
