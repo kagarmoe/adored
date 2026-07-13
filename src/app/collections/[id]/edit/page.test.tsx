@@ -31,7 +31,7 @@ beforeEach(() => {
 describe("EditCollectionPage — owner-only gate (requireCollectionOwnerPage)", () => {
   it("renders the edit form and delete section for the owner", async () => {
     mockRequireAccess.mockResolvedValue({ id: "c1", slug: "s", name: "C", ownerId: "u1" });
-    render(await EditCollectionPage({ params: { id: "s" } }));
+    render(await EditCollectionPage({ params: Promise.resolve({ id: "s" }) }));
     expect(screen.getByTestId("delete-collection-section")).toBeInTheDocument();
   });
 
@@ -40,6 +40,6 @@ describe("EditCollectionPage — owner-only gate (requireCollectionOwnerPage)", 
     mockRequireAccess.mockImplementation(() => {
       throw new Error("REDIRECT");
     });
-    await expect(EditCollectionPage({ params: { id: "s" } })).rejects.toThrow("REDIRECT");
+    await expect(EditCollectionPage({ params: Promise.resolve({ id: "s" }) })).rejects.toThrow("REDIRECT");
   });
 });

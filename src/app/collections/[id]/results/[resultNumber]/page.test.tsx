@@ -52,7 +52,7 @@ beforeEach(() => {
 
 describe("ResultDetailPage hero images (nkp) + resolution", () => {
   it("renders hero + ranked images using collection.id, batch-loaded once", async () => {
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     const hero = await screen.findByRole("img", { name: "Hero Bag" });
     const rest = await screen.findByRole("img", { name: "Rest Bag" });
@@ -65,14 +65,14 @@ describe("ResultDetailPage hero images (nkp) + resolution", () => {
 
   it("redirects when the resolved result belongs to a different collection (guard survives)", async () => {
     resultRepo.findByCollectionAndNumber.mockResolvedValue({ id: "res_x", collectionId: "coll_OTHER", number: 1, name: "X", status: "draft" });
-    await expect(ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } })).rejects.toThrow("REDIRECT");
+    await expect(ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) })).rejects.toThrow("REDIRECT");
   });
   it("redirects when no result has that number", async () => {
     resultRepo.findByCollectionAndNumber.mockResolvedValue(null);
-    await expect(ResultDetailPage({ params: { id: "summer-bags", resultNumber: "5" } })).rejects.toThrow("REDIRECT");
+    await expect(ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "5" }) })).rejects.toThrow("REDIRECT");
   });
   it("redirects on a non-numeric segment without hitting the repo", async () => {
-    await expect(ResultDetailPage({ params: { id: "summer-bags", resultNumber: "abc" } })).rejects.toThrow("REDIRECT");
+    await expect(ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "abc" }) })).rejects.toThrow("REDIRECT");
     expect(resultRepo.findByCollectionAndNumber).not.toHaveBeenCalled();
   });
 });
@@ -82,7 +82,7 @@ describe("ResultDetailPage status badge — person-side wording (qrsr)", () => {
     resultRepo.findByCollectionAndNumber.mockResolvedValue({
       id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "draft", curatorId: "u1",
     });
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     expect(screen.getByText("Still deciding")).toBeInTheDocument();
     expect(screen.queryByText("draft")).toBeNull();
@@ -92,7 +92,7 @@ describe("ResultDetailPage status badge — person-side wording (qrsr)", () => {
     resultRepo.findByCollectionAndNumber.mockResolvedValue({
       id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "finalized", curatorId: "u1",
     });
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     expect(screen.getByText("Saved")).toBeInTheDocument();
     expect(screen.queryByText("finalized")).toBeNull();
@@ -104,7 +104,7 @@ describe("ResultDetailPage SharePanel curator gate (axn)", () => {
     resultRepo.findByCollectionAndNumber.mockResolvedValue({
       id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "finalized", curatorId: "u1",
     });
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     expect(screen.getByRole("heading", { name: /show someone what you love/i })).toBeInTheDocument();
   });
@@ -113,7 +113,7 @@ describe("ResultDetailPage SharePanel curator gate (axn)", () => {
     resultRepo.findByCollectionAndNumber.mockResolvedValue({
       id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "finalized", curatorId: "someone_else",
     });
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     expect(screen.queryByRole("heading", { name: /show someone what you love/i })).toBeNull();
   });
@@ -136,7 +136,7 @@ describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () =
     resultRepo.findByCollectionAndNumber.mockResolvedValue({
       id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "draft", curatorId: "u1",
     });
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     expect(screen.getByRole("button", { name: "Put in order by hand" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Make a revision" })).toBeNull();
@@ -146,7 +146,7 @@ describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () =
     resultRepo.findByCollectionAndNumber.mockResolvedValue({
       id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "finalized", curatorId: "u1",
     });
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     expect(screen.queryByRole("button", { name: "Put in order by hand" })).toBeNull();
     expect(screen.getByRole("button", { name: "Make a revision" })).toBeInTheDocument();
@@ -159,7 +159,7 @@ describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () =
     resultRepo.findByCollectionAndNumber.mockResolvedValue({
       id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "finalized", curatorId: "someone_else",
     });
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     expect(screen.queryByRole("button", { name: "Make a revision" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Put in order by hand" })).toBeNull();
@@ -177,7 +177,7 @@ describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () =
       { id: "ri_rest", itemId: "item_rest", computedRank: 2, manualRank: null, computedBucket: "low", manualBucket: null },
     ]);
     itemRepo.findByCollection.mockResolvedValue([HERO, REST]);
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     fireEvent.click(screen.getByRole("button", { name: "Put in order by hand" }));
     const rows = screen.getAllByTestId("rerank-row");
@@ -210,7 +210,7 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
   });
 
   it("does not render a bold per-tier count tally (no count-shaming)", async () => {
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     // The old design showed a 4-up grid of bold integer counts (one "1" per tier).
     // Epic B removes it: tallying what's in each bucket is count-shaming (TONE #1, #4).
@@ -219,7 +219,7 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
   });
 
   it("keeps the tier labels on the cards/sections (Like/Maybe via badges, Onward in its section)", async () => {
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     const { container } = render(ui);
     // Labels now live on the ItemCard badges (title=) and the Onward section,
     // not on a count grid. The dot badges carry Like/Maybe via their title attribute.
@@ -230,7 +230,7 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
   });
 
   it("labels the lowest tier as 'Onward' (the gentle visible label is present)", async () => {
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     expect(screen.getByText("Onward")).toBeInTheDocument();
     expect(screen.queryByText(/discard/i)).toBeNull();
@@ -241,14 +241,14 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
   // attributes, because the low-tier ItemCard badge carries the label in title=, which
   // queryByText (text nodes only) would miss.
   it("results carry no 'Release' framing — the low tier reads 'Onward' (purses-xca)", async () => {
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     const { container } = render(ui);
     expect(container.querySelector('[title="Release"]')).toBeNull();
     expect(container.innerHTML).not.toContain("Release");
   });
 
   it("gives the rank-1 item the most-loved hero treatment (affirmation peak)", async () => {
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     expect(screen.getByText("What you love most")).toBeInTheDocument();
     // The hero names the single highest-ranked item, not the whole pile.
@@ -260,7 +260,7 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
   });
 
   it("keeps the lowest tier OUT of 'The full ranking' and in a separate Onward section", async () => {
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     const fullRanking = screen.getByRole("heading", { name: /the full ranking/i }).closest("section")!;
     expect(within(fullRanking).getByText("High Bag")).toBeInTheDocument();
@@ -271,7 +271,7 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
   });
 
   it("ends the page on an affirmation beat that re-anchors to the loved set at the top, not the Onward section", async () => {
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     // The close re-anchors to the LOVED set at the TOP (hero/ranking), so the bare
     // demonstrative never binds by proximity to the Onward pile rendered just above
@@ -297,7 +297,7 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
       { id: "ri_low", itemId: "i_low", computedRank: 2, manualRank: null, computedBucket: "low", manualBucket: null },
     ]);
     itemRepo.findByCollection.mockResolvedValue([TOP, LOW]);
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     // The hero is present (the lone loved item)...
     expect(screen.getByText("What you love most")).toBeInTheDocument();
@@ -313,7 +313,7 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
 
   it("shows the gentle empty state (not a broken hero) when the result has no ranked items", async () => {
     resultItemRepo.findByResult.mockResolvedValue([]);
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     expect(screen.getByText(/no ranked items yet/i)).toBeInTheDocument();
     expect(screen.queryByText("What you love most")).toBeNull();
@@ -328,7 +328,7 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
       { id: "ri_low1", itemId: "i_low", computedRank: 1, manualRank: null, computedBucket: "low", manualBucket: null },
     ]);
     itemRepo.findByCollection.mockResolvedValue([{ id: "i_low", collectionId: "coll_01ABCDEF", number: 4, name: "Low Bag", brand: null, status: "active" }]);
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     const { container } = render(ui);
     expect(screen.getByText(/you('ve| have) made your choices|honored|clarity/i)).toBeInTheDocument();
     // Assert against visible copy, not raw HTML: Tailwind utility classes
@@ -352,7 +352,7 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
       { id: "ri_low1", itemId: "i_low", computedRank: 1, manualRank: null, computedBucket: "low", manualBucket: null },
     ]);
     itemRepo.findByCollection.mockResolvedValue([{ id: "i_low", collectionId: "coll_01ABCDEF", number: 4, name: "Low Bag", brand: null, status: "active" }]);
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     // No "love most" claim when nothing was loved...
     expect(screen.queryByText(/love most/i)).toBeNull();
@@ -388,7 +388,7 @@ describe("ResultDetailPage snapshot usage chip (Epic S §3.4)", () => {
       { id: "ri_high", itemId: "i_high", computedRank: 2, manualRank: null, computedBucket: "high", manualBucket: null, usage: "uses" },
       { id: "ri_med", itemId: "i_med", computedRank: 3, manualRank: null, computedBucket: "medium", manualBucket: null, usage: "not_uses" },
     ]);
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     expect(screen.getByText("In your life")).toBeInTheDocument();
     expect(screen.getByText("Resting")).toBeInTheDocument();
@@ -399,7 +399,7 @@ describe("ResultDetailPage snapshot usage chip (Epic S §3.4)", () => {
       { id: "ri_top", itemId: "i_top", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null, usage: null },
       { id: "ri_high", itemId: "i_high", computedRank: 2, manualRank: null, computedBucket: "high", manualBucket: null, usage: null },
     ]);
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     expect(screen.queryByText("In your life")).toBeNull();
     expect(screen.queryByText("Resting")).toBeNull();
@@ -411,7 +411,7 @@ describe("ResultDetailPage snapshot usage chip (Epic S §3.4)", () => {
       { id: "ri_top", itemId: "i_top", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null },
       { id: "ri_high", itemId: "i_high", computedRank: 2, manualRank: null, computedBucket: "high", manualBucket: null },
     ]);
-    const ui = await ResultDetailPage({ params: { id: "summer-bags", resultNumber: "1" } });
+    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     expect(screen.queryByText("In your life")).toBeNull();
     expect(screen.queryByText("Resting")).toBeNull();

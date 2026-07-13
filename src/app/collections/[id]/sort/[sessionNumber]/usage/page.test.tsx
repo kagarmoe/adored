@@ -111,23 +111,23 @@ beforeEach(() => {
 describe("UsagePage guard ladder (mirrors triage/page.tsx)", () => {
   it("redirects to /login when unauthenticated", async () => {
     mockGetSession.mockResolvedValue(null);
-    await expect(UsagePage({ params: { id: "summer-bags", sessionNumber: "1" } })).rejects.toThrow("REDIRECT");
+    await expect(UsagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
   });
 
   it("redirects when the session number is not a positive integer", async () => {
-    await expect(UsagePage({ params: { id: "summer-bags", sessionNumber: "abc" } })).rejects.toThrow("REDIRECT");
+    await expect(UsagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "abc" }) })).rejects.toThrow("REDIRECT");
     // The integrity guard short-circuits the lookup for a bad number.
     expect(sessionRepo.findByCollectionAndNumber).not.toHaveBeenCalled();
   });
 
   it("redirects when the resolved session belongs to a different collection", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_x", collectionId: "coll_OTHER", number: 1, status: "active", curatorId: "u1" });
-    await expect(UsagePage({ params: { id: "summer-bags", sessionNumber: "1" } })).rejects.toThrow("REDIRECT");
+    await expect(UsagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
   });
 
   it("redirects when the user is not the session's curator — independent sort (purses-t9l)", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_x", collectionId: "coll_01ABCDEF", number: 1, status: "active", curatorId: "someone_else" });
-    await expect(UsagePage({ params: { id: "summer-bags", sessionNumber: "1" } })).rejects.toThrow("REDIRECT");
+    await expect(UsagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
   });
 });
 
@@ -146,7 +146,7 @@ describe("UsagePage payload scoping (spec §5, DATA-6)", () => {
       { id: "item_used", collectionId: "coll_01ABCDEF", number: 8, name: "Used", brand: null, status: "active" },
     ]);
 
-    const ui = await UsagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await UsagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
 
     // The recap server-log prop is literally empty.
@@ -163,7 +163,7 @@ describe("UsagePage payload scoping (spec §5, DATA-6)", () => {
 
 describe("UsagePage queue selection", () => {
   it("does ONE curator-log read (listForCurator), not a per-session listBySession sweep", async () => {
-    await UsagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    await UsagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     // listForCurator = findByCollectionAndCurator + one findBySession per curator session.
     expect(sessionRepo.findByCollectionAndCurator).toHaveBeenCalledTimes(1);
     expect(sessionRepo.findByCollectionAndCurator).toHaveBeenCalledWith("coll_01ABCDEF", "u1");
@@ -175,7 +175,7 @@ describe("UsagePage queue selection", () => {
       ITEM,
       { id: "item_used", collectionId: "coll_01ABCDEF", number: 8, name: "Used", brand: null, status: "active" },
     ]);
-    render(await UsagePage({ params: { id: "summer-bags", sessionNumber: "1" } }));
+    render(await UsagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) }));
     expect(usageRoundProps.current.queue.map((e: any) => e.item.id)).toEqual(["item_1"]);
     expect(usageRoundProps.current.usageKnownSeed).toBe(1);
   });
@@ -190,7 +190,7 @@ describe("UsagePage queue selection", () => {
       { id: "item_def", collectionId: "coll_01ABCDEF", number: 8, name: "Deferred", brand: null, status: "active" },
       { id: "item_2", collectionId: "coll_01ABCDEF", number: 9, name: "Tote", brand: null, status: "active" },
     ]);
-    render(await UsagePage({ params: { id: "summer-bags", sessionNumber: "1" } }));
+    render(await UsagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) }));
     expect(usageRoundProps.current.queue.map((e: any) => e.item.id)).toEqual(["item_2"]);
   });
 
@@ -199,7 +199,7 @@ describe("UsagePage queue selection", () => {
       ITEM,
       { id: "item_2", collectionId: "coll_01ABCDEF", number: 8, name: "Tote", brand: null, status: "active" },
     ]);
-    render(await UsagePage({ params: { id: "summer-bags", sessionNumber: "1" } }));
+    render(await UsagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) }));
     expect(photoRepo.findCoverPhotosByItemIds).toHaveBeenCalledTimes(1);
     expect(photoRepo.findCoverPhotosByItemIds).toHaveBeenCalledWith(["item_1", "item_2"]);
     const withCover = usageRoundProps.current.queue.find((e: any) => e.item.id === "item_1");
@@ -212,28 +212,28 @@ describe("UsagePage queue selection", () => {
 
 describe("UsagePage layout & wrap", () => {
   it("wraps the round in PendingDecisionsGate", async () => {
-    const ui = await UsagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await UsagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     const gate = screen.getByTestId("pending-gate");
     expect(within(gate).getByTestId("usage-round")).toBeInTheDocument();
   });
 
   it("puts TakeABreakControl in the layout actions", async () => {
-    const ui = await UsagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await UsagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     const actions = screen.getByTestId("actions");
     expect(within(actions).getByTestId("take-a-break")).toBeInTheDocument();
   });
 
   it("does NOT mount any TriageUndoProvider / TriageUndoNotice (no set-aside/defer on usage)", async () => {
-    const ui = await UsagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await UsagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     expect(screen.queryByTestId("triage-undo-provider")).not.toBeInTheDocument();
     expect(screen.queryByTestId("triage-undo-notice")).not.toBeInTheDocument();
   });
 
   it("renders the round's breadcrumb (Session hub → this round)", async () => {
-    const ui = await UsagePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await UsagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     const crumbs = screen.getByTestId("breadcrumbs");
     expect(within(crumbs).getByText("Session")).toBeInTheDocument();

@@ -59,7 +59,7 @@ beforeEach(() => {
 
 describe("ComparePage hero images", () => {
   it("renders both items' hero images using collection.id, batch-loaded once", async () => {
-    const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     const a = await screen.findByRole("img", { name: "Bag A" });
     const b = await screen.findByRole("img", { name: "Bag B" });
@@ -80,7 +80,7 @@ describe("ComparePage disposition exclusion (Epic C PR1)", () => {
       { itemId: "item_b", disposition: "deferred", collectionId: "coll_01ABCDEF", curatorId: "u1" },
     ]);
 
-    const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
 
     expect(screen.getByText("All comparisons complete")).toBeInTheDocument();
@@ -111,7 +111,7 @@ describe("ComparePage gentle progress text (Epic 0 Task 8 regression)", () => {
       },
     ]);
 
-    const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
 
     expect(screen.getByText(/comparison(s)? made so far/)).toBeInTheDocument();
@@ -141,7 +141,7 @@ describe("ComparePage gentle progress text (Epic 0 Task 8 regression)", () => {
       },
     ]);
 
-    const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
 
     expect(screen.getByText("All comparisons complete")).toBeInTheDocument();
@@ -152,7 +152,7 @@ describe("ComparePage gentle progress text (Epic 0 Task 8 regression)", () => {
   it("omits the progress text at the zero state (no comparisons yet)", async () => {
     // Default beforeEach: two items, no decisions. A pair is offered, but with
     // zero comparisons made the gentle count must not appear.
-    const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
 
     expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
@@ -162,7 +162,7 @@ describe("ComparePage gentle progress text (Epic 0 Task 8 regression)", () => {
 
 describe("ComparePage round chrome + copy (Epic 4c)", () => {
   it("wraps the compare content in the round shell (step 3 of 4 — usage is now step 2)", async () => {
-    const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     expect(screen.getByRole("list", { name: /round progress: step 3 of 4/i })).toBeInTheDocument();
     // The live pair still renders inside the shell.
@@ -170,7 +170,7 @@ describe("ComparePage round chrome + copy (Epic 4c)", () => {
   });
 
   it("uses the TONE.md love-framing copy", async () => {
-    const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
     expect(screen.getByRole("heading", { name: /which do you love more\?/i })).toBeInTheDocument();
     expect(screen.getByText(/tap the one you love more/i)).toBeInTheDocument();
@@ -184,7 +184,7 @@ describe("ComparePage curator-wide compare selection (§7.3)", () => {
   it("reads the curator log once via listForCurator — no per-session listBySession short-cut", async () => {
     sessionRepo.findByCollectionAndCurator.mockResolvedValue([{ id: "sess_1" }]);
 
-    await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
 
     // listForCurator = findByCollectionAndCurator(collectionId, curatorId) + one
     // findBySession per curator session. A stray direct listBySession would make
@@ -213,7 +213,7 @@ describe("ComparePage curator-wide compare selection (§7.3)", () => {
         : Promise.resolve([]),
     );
 
-    const ui = await ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } });
+    const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
 
     // Selection read the curator-wide log → A↔B already ordered → no pair to offer.
@@ -230,11 +230,11 @@ describe("ComparePage curator-wide compare selection (§7.3)", () => {
 describe("ComparePage integrity guard", () => {
   it("redirects (and halts) when the resolved session belongs to a different collection", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_x", collectionId: "coll_OTHER", number: 1, status: "active", curatorId: "u1" });
-    await expect(ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } })).rejects.toThrow("REDIRECT");
+    await expect(ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
   });
 
   it("redirects (and halts) when the user is not the session's curator — independent sort (purses-t9l)", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_x", collectionId: "coll_01ABCDEF", number: 1, status: "active", curatorId: "someone_else" });
-    await expect(ComparePage({ params: { id: "summer-bags", sessionNumber: "1" } })).rejects.toThrow("REDIRECT");
+    await expect(ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
   });
 });

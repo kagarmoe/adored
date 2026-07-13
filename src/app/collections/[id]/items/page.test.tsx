@@ -75,7 +75,7 @@ beforeEach(() => {
 });
 
 async function renderPage(searchParams?: { status?: string; unnamed?: string }) {
-  const ui = await ItemsPage({ params: { id: "summer-bags" }, searchParams });
+  const ui = await ItemsPage({ params: Promise.resolve({ id: "summer-bags" }), searchParams });
   return render(ui);
 }
 
