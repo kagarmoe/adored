@@ -51,7 +51,8 @@ const eslintConfig = [
   // the new rules fire on ~25 pre-existing call sites (setState inside an
   // effect, Date.now()/refs read during render) that the Next 16 config
   // migration must not rewrite. Keep exactly those three off until the
-  // findings are fixed and they can be re-enabled; every other new compiler
+  // findings are fixed and they can be re-enabled (owned by purses-9oxh.8 —
+  // fix the 25 sites, then DELETE this block); every other new compiler
   // rule stays active — the codebase already passes them.
   {
     files: TS_FILES,

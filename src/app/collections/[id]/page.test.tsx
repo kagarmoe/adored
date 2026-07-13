@@ -103,7 +103,16 @@ function makeSession(number: number): Session {
 beforeEach(() => {
   vi.clearAllMocks();
   mockGetSession.mockResolvedValue({ user: { id: "u1" } });
-  mockRequireAccess.mockResolvedValue(makeCollection());
+  // Arg-sensitive on purpose: the page must pass the AWAITED route param to the
+  // guard. A sync-params regression (reading .id off the Promise) feeds this
+  // mock `undefined` and reds the whole file — the unit tier's only non-vacuous
+  // async-params oracle (Next's own .next/types validator collapses to `any`).
+  mockRequireAccess.mockImplementation((_db, id) => {
+    if (id !== "summer-bags") {
+      throw new Error(`requireCollectionAccess received ${String(id)} — expected the awaited route param`);
+    }
+    return Promise.resolve(makeCollection());
+  });
   photoRepo.findPoolByCollection.mockResolvedValue([]);
   photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map());
   itemRepo.findByCollection.mockResolvedValue([]);
