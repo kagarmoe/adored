@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { isRequestAuthorized } from "./middleware-auth";
-import { config } from "@/middleware";
+import { config } from "@/proxy";
 
 // The matcher's negative-lookahead is the actual mechanism that makes a path
 // "public": paths it excludes never invoke withAuth, so they are never
