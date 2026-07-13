@@ -67,14 +67,17 @@ describe("errorResponse", () => {
     expect(res.status).toBe(400);
     const b = (await body(res)) as { error: string; details: unknown };
     expect(b.error).toBe("Invalid input");
-    // Literal pin of the 400-body `details` contract as zod 3 emits it today
-    // (asserting against err.flatten() would auto-adapt across zod majors and
-    // hide the wire-format change). EXPECTED to fail at the zod-4 flip — that
-    // failure forces a deliberate decision about the 400-body contract.
+    // Literal pin of the 400-body `details` contract (asserting against
+    // err.flatten() would auto-adapt across zod majors and hide wire-format
+    // changes). It fired at the zod 3→4 flip exactly as designed; the delta
+    // was message TEXT only, structure identical — accepted deliberately
+    // (details is developer-facing; no client renders it, see docs/API.md
+    // error-bodies section). These are zod 4's literal strings; the pin stays
+    // armed against the next format change.
     expect(b.details).toEqual({
       formErrors: [],
       fieldErrors: {
-        name: ["String must contain at least 1 character(s)"],
+        name: ["Too small: expected string to have >=1 characters"],
       },
     });
   });
