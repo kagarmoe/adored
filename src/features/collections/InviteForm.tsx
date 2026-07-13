@@ -41,7 +41,7 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
       onSuccess?.();
     } catch (err: any) {
       if (err instanceof z.ZodError) {
-        setError(err.errors[0].message);
+        setError(err.issues[0].message);
       } else {
         setError(err?.message || "Failed to send invitation");
       }
