@@ -1,9 +1,0 @@
-# Reasoned ignores only — each entry names the bead that deletes it. Baseline 2026-07-12.
-
-[[IgnoredVulns]]
-id = "GHSA-67mh-4wv8-2f99"
-reason = "esbuild@0.18.20 dev-only, under drizzle-kit's deprecated @esbuild-kit chain; never in the runtime bundle. REVISITED in purses-9oxh.7 (2026-07-13): still pinned upstream after the vite-8 bump — re-test on every drizzle-kit bump"
-
-[[IgnoredVulns]]
-id = "GHSA-qx2v-qp2m-jg93"
-reason = "postcss@8.4.31 pinned INSIDE next@16.2.9 itself (npm ls postcss) — the epic spec's 'erased by the Next 16 bump' premise was false. Build-time CSS processing, not runtime-exposed. Owned by purses-9oxh.9: re-test on every next bump; do not npm-override next's internal pin."

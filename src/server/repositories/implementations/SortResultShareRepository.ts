@@ -1,7 +1,7 @@
 import { eq, inArray } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { sortResultSharesTable, sortResultsTable } from "@/lib/db/schema";
-import type { SortResultShare } from "@/types";
+import type { SortResultShare, ShareStatus } from "@/types";
 import { generateId } from "@/lib/id";
 
 export class SortResultShareRepository {
@@ -93,12 +93,12 @@ export class SortResultShareRepository {
     );
   }
 
-  private mapToShare(row: any): SortResultShare {
+  private mapToShare(row: typeof sortResultSharesTable.$inferSelect): SortResultShare {
     return {
       id: row.id,
       sortResultId: row.sortResultId,
       shareToken: row.shareToken,
-      status: row.status as "active" | "revoked",
+      status: row.status as ShareStatus,
       expiresAt: row.expiresAt,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

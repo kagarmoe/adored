@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { membershipsTable, user } from "@/lib/db/schema";
-import type { CollectionMembership } from "@/types";
+import type { CollectionMembership, MembershipRole } from "@/types";
 import { generateId } from "@/lib/id";
 
 export class MembershipRepository {
@@ -126,12 +126,12 @@ export class MembershipRepository {
     await this.db.delete(membershipsTable).where(eq(membershipsTable.userId, userId));
   }
 
-  private mapToMembership(row: any): CollectionMembership {
+  private mapToMembership(row: typeof membershipsTable.$inferSelect): CollectionMembership {
     return {
       id: row.id,
       collectionId: row.collectionId,
       userId: row.userId,
-      role: row.role || "curator",
+      role: row.role as MembershipRole,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

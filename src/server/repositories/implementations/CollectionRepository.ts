@@ -1,7 +1,7 @@
 import { eq, isNull, and, or, ne, exists } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { collectionsTable, membershipsTable } from "@/lib/db/schema";
-import type { Collection } from "@/types";
+import type { Collection, CollectionStatus } from "@/types";
 import { slugifyName, RESERVED_COLLECTION_SLUGS } from "@/lib/collections/slug";
 import { allocateWithRetry } from "../allocateWithRetry";
 import { isUniqueViolation } from "../pg-conflict";
@@ -181,14 +181,14 @@ export class CollectionRepository {
     }
   }
 
-  private mapToCollection(row: any): Collection {
+  private mapToCollection(row: typeof collectionsTable.$inferSelect): Collection {
     return {
       id: row.id,
       ownerId: row.ownerId,
       name: row.name,
-      slug: row.slug ?? null,
+      slug: row.slug,
       description: row.description,
-      status: row.status,
+      status: row.status as CollectionStatus,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       deletedAt: row.deletedAt,

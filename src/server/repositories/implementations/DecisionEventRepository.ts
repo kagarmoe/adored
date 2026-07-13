@@ -77,7 +77,7 @@ export class DecisionEventRepository {
     );
   }
 
-  private mapToDecisionEvent(row: any): DecisionEvent {
+  private mapToDecisionEvent(row: typeof decisionEventsTable.$inferSelect): DecisionEvent {
     return {
       id: row.id,
       sessionId: row.sessionId,

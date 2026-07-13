@@ -164,7 +164,7 @@ export const photosTable = pgTable(
     mimeType: text("mime_type").notNull(),
     fileSize: integer("file_size"),
     uploadedBy: text("uploaded_by").notNull(),
-    isHero: boolean("is_hero").default(false),
+    isHero: boolean("is_hero").notNull().default(false),
     rotation: integer("rotation").default(0).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -189,7 +189,7 @@ export const sessionsTable = pgTable(
     curatorId: text("curator_id")
       .notNull()
       .references(() => user.id),
-    number: integer("number"),
+    number: integer("number").notNull(),
     status: text("status").default("active").notNull(),
     goal: text("goal"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -341,7 +341,7 @@ export const sortResultsTable = pgTable(
     curatorId: text("curator_id")
       .notNull()
       .references(() => user.id),
-    number: integer("number"),
+    number: integer("number").notNull(),
     status: text("status").default("draft").notNull(),
     name: text("name").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
