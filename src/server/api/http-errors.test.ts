@@ -67,7 +67,16 @@ describe("errorResponse", () => {
     expect(res.status).toBe(400);
     const b = (await body(res)) as { error: string; details: unknown };
     expect(b.error).toBe("Invalid input");
-    expect(b.details).toEqual(err.flatten());
+    // Literal pin of the 400-body `details` contract as zod 3 emits it today
+    // (asserting against err.flatten() would auto-adapt across zod majors and
+    // hide the wire-format change). EXPECTED to fail at the zod-4 flip — that
+    // failure forces a deliberate decision about the 400-body contract.
+    expect(b.details).toEqual({
+      formErrors: [],
+      fieldErrors: {
+        name: ["String must contain at least 1 character(s)"],
+      },
+    });
   });
 
   it("maps DeleteResultStateError → 409 with the error message", async () => {
