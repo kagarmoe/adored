@@ -239,123 +239,134 @@
   --shadow-card-hover: var(--shadow-raised);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html,
-body {
-  height: 100%;
-}
-
-body {
-  font-family: var(--font-body);
-  font-size: 1.0625rem; /* 17px — unhurried, 40+-friendly reading */
-  background: var(--color-ground);
-  color: var(--color-ink);
-  line-height: 1.55;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  font-kerning: normal;
-  font-optical-sizing: auto;
-}
-
 /*
- * Type scale (see DESIGN.md). Playfair Display for display moments; Inter for
- * everything functional. Headings are neutral ink — never teal.
+ * App base styles. Under tailwind v4, utilities live in @layer utilities and
+ * ANY unlayered rule beats ANY layered one — so these element rules must sit
+ * in @layer base (below utilities) to preserve the v3 cascade, where .px-4
+ * beat the universal reset by specificity. Unlayered author CLASS rules (like
+ * .prose-measure below) deliberately stay outside: they beat utilities in v3
+ * by source order and keep that power unlayered. (purses-9oxh.6 root cause.)
  */
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-display);
-  color: var(--color-ink);
-  text-wrap: balance;
-}
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 
-h1 {
-  font-size: 2.25rem;
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.01em;
-}
+  html,
+  body {
+    height: 100%;
+  }
 
-h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.005em;
-}
+  body {
+    font-family: var(--font-body);
+    font-size: 1.0625rem; /* 17px — unhurried, 40+-friendly reading */
+    background: var(--color-ground);
+    color: var(--color-ink);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-kerning: normal;
+    font-optical-sizing: auto;
+  }
 
-h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  line-height: 1.25;
-}
+  /*
+   * Type scale (see DESIGN.md). Playfair Display for display moments; Inter for
+   * everything functional. Headings are neutral ink — never teal.
+   */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    color: var(--color-ink);
+    text-wrap: balance;
+  }
 
-/* Functional title role uses the body sans, not the serif */
-h4 {
-  font-family: var(--font-body);
-  font-size: 1.1875rem;
-  font-weight: 600;
-  line-height: 1.35;
-}
+  h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
 
-p {
-  text-wrap: pretty;
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.005em;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  /* Functional title role uses the body sans, not the serif */
+  h4 {
+    font-family: var(--font-body);
+    font-size: 1.1875rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    color: var(--color-primary);
+    text-underline-offset: 2px;
+    transition: color var(--duration-state) var(--ease-gentle);
+  }
+
+  a:hover {
+    color: var(--color-primary-hover);
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+  }
+
+  ::placeholder {
+    color: var(--color-ink-soft);
+    opacity: 1;
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: var(--color-ink);
+    -webkit-box-shadow: 0 0 0 100px var(--color-surface) inset;
+    box-shadow: 0 0 0 100px var(--color-surface) inset;
+    caret-color: var(--color-ink);
+    transition: background-color 100000s ease-in-out 0s;
+  }
+
+  ::selection {
+    background: var(--color-primary);
+    color: var(--color-primary-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
 
 .prose-measure {
   max-width: 68ch;
 }
 
-a {
-  color: var(--color-primary);
-  text-underline-offset: 2px;
-  transition: color var(--duration-state) var(--ease-gentle);
-}
-
-a:hover {
-  color: var(--color-primary-hover);
-}
-
-button,
-input,
-textarea,
-select {
-  font-family: inherit;
-}
-
-::placeholder {
-  color: var(--color-ink-soft);
-  opacity: 1;
-}
-
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-textarea:-webkit-autofill,
-select:-webkit-autofill {
-  -webkit-text-fill-color: var(--color-ink);
-  -webkit-box-shadow: 0 0 0 100px var(--color-surface) inset;
-  box-shadow: 0 0 0 100px var(--color-surface) inset;
-  caret-color: var(--color-ink);
-  transition: background-color 100000s ease-in-out 0s;
-}
-
-::selection {
-  background: var(--color-primary);
-  color: var(--color-primary-ink);
-}
-
-:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
 
 /* Reduced motion is not optional (PRODUCT.md a11y) */
 @media (prefers-reduced-motion: reduce) {
