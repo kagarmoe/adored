@@ -168,7 +168,7 @@ export function PhotoGallery({
                 aria-pressed={isSelected}
                 aria-label="Select photo"
                 onClick={() => toggleSelect(photo.id)}
-                className={`block aspect-square w-full relative outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                className={`block aspect-square w-full relative outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${
                   isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-surface" : ""
                 }`}
               >
@@ -182,7 +182,7 @@ export function PhotoGallery({
                 {isSelected && (
                   <span
                     aria-hidden
-                    className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-sm text-primary-ink shadow"
+                    className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-sm text-primary-ink shadow-sm"
                   >
                     ✓
                   </span>
@@ -192,7 +192,7 @@ export function PhotoGallery({
               {photo.isHero && (
                 <span
                   aria-hidden
-                  className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-ink shadow pointer-events-none"
+                  className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-ink shadow-sm pointer-events-none"
                 >
                   Hero
                 </span>

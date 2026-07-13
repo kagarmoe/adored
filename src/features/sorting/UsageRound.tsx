@@ -378,7 +378,7 @@ export function UsageRound({
               type="button"
               onClick={toggleQuick}
               aria-pressed={pace === "quick"}
-              className="inline-flex h-11 items-center rounded-control border border-hairline px-3 text-sm text-ink-soft transition-colors hover:text-ink aria-pressed:border-ink aria-pressed:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+              className="inline-flex h-11 items-center rounded-control border border-hairline px-3 text-sm text-ink-soft transition-colors hover:text-ink aria-pressed:border-ink aria-pressed:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
             >
               {QUICK_PACE_LABEL}
             </button>
@@ -403,7 +403,7 @@ export function UsageRound({
                 <button
                   type="button"
                   onClick={goBack}
-                  className="inline-flex h-11 items-center gap-1 rounded-control text-sm text-ink-soft transition-colors hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+                  className="inline-flex h-11 items-center gap-1 rounded-control text-sm text-ink-soft transition-colors hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
                 >
                   <span aria-hidden>←</span> Back
                 </button>

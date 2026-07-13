@@ -30,7 +30,7 @@ export function WelcomeHandoff({ onExplore }: WelcomeHandoffProps) {
       <button
         type="button"
         onClick={onExplore}
-        className="h-11 px-4 text-ink-soft underline focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-control"
+        className="h-11 px-4 text-ink-soft underline focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-control"
       >
         I&rsquo;ll explore on my own.
       </button>

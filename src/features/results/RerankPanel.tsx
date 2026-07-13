@@ -340,7 +340,7 @@ export function RerankPanel({ resultId, collectionId, status, rows, lovedCount, 
                     >
                       ⠿
                     </span>
-                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded bg-content-soft">
+                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-sm bg-content-soft">
                       <CardImage src={row.coverUrl} alt="" fallback={<span aria-hidden />} />
                     </div>
                     <span className="flex-1 truncate text-ink">{row.name}</span>
@@ -355,7 +355,7 @@ export function RerankPanel({ resultId, collectionId, status, rows, lovedCount, 
                         if (el) buttonRefs.current.set(`${row.rid}:up`, el);
                         else buttonRefs.current.delete(`${row.rid}:up`);
                       }}
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-ink hover:bg-content-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-ink hover:bg-content-soft focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <span aria-hidden>↑</span>
                     </button>
@@ -368,7 +368,7 @@ export function RerankPanel({ resultId, collectionId, status, rows, lovedCount, 
                         if (el) buttonRefs.current.set(`${row.rid}:down`, el);
                         else buttonRefs.current.delete(`${row.rid}:down`);
                       }}
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-ink hover:bg-content-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-ink hover:bg-content-soft focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <span aria-hidden>↓</span>
                     </button>

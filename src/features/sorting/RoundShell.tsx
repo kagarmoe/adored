@@ -56,7 +56,7 @@ export function RoundShell({ step, totalSteps, roundLabel, timer, onPause, child
             <button
               type="button"
               onClick={onPause}
-              className="inline-flex h-11 items-center rounded-control px-3 text-sm text-ink-soft transition-colors hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+              className="inline-flex h-11 items-center rounded-control px-3 text-sm text-ink-soft transition-colors hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
             >
               Pause
             </button>
@@ -70,7 +70,7 @@ export function RoundShell({ step, totalSteps, roundLabel, timer, onPause, child
             </p>
             <h2 className="text-ink">{roundLabel}</h2>
           </div>
-          {timer && <div className="min-w-[10rem] flex-1 sm:max-w-xs">{timer}</div>}
+          {timer && <div className="min-w-40 flex-1 sm:max-w-xs">{timer}</div>}
         </div>
       </header>
 

@@ -17,7 +17,7 @@ export function MostLovedHero({ item, collectionId, heroPhotoUrl }: MostLovedHer
       <Card interactive padding="none" className="overflow-hidden">
         <div className="flex flex-col md:flex-row">
           {/* The photograph is the loudest thing on screen. */}
-          <div className="relative aspect-[4/3] md:aspect-auto md:w-2/5 md:self-stretch bg-content-soft flex items-center justify-center overflow-hidden">
+          <div className="relative aspect-4/3 md:aspect-auto md:w-2/5 md:self-stretch bg-content-soft flex items-center justify-center overflow-hidden">
             <CardImage
               src={heroPhotoUrl}
               alt={itemDisplayName(item)}

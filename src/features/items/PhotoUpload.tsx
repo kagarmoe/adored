@@ -153,7 +153,7 @@ export function PhotoUpload({ itemId, collectionId }: PhotoUploadProps) {
             <img
               src={preview}
               alt="Preview"
-              className="max-h-64 mx-auto rounded"
+              className="max-h-64 mx-auto rounded-sm"
             />
             {selectedFile && (
               <p className="text-sm text-ink-soft">
