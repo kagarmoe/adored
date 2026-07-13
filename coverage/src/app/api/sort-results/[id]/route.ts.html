@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">93.75% </span>
+                <span class="strong">94.28% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>30/32</span>
+                <span class='fraction'>33/35</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">93.1% </span>
+                <span class="strong">93.75% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>27/29</span>
+                <span class='fraction'>30/32</span>
             </div>
         
             
@@ -128,7 +128,10 @@
 <a name='L63'></a><a href='#L63'>63</a>
 <a name='L64'></a><a href='#L64'>64</a>
 <a name='L65'></a><a href='#L65'>65</a>
-<a name='L66'></a><a href='#L66'>66</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -140,6 +143,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -156,6 +160,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">6x</span>
@@ -179,6 +184,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
@@ -203,14 +209,15 @@ import { errorResponse } from "@/server/api/http-errors";
 &nbsp;
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise&lt;{ id: string }&gt; }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
-    const result = await ResultController.fromDb(db).getResult(params.id);
+    const result = await ResultController.fromDb(db).getResult(id);
     return NextResponse.json(result);
   } catch (error) {
 <span class="cstat-no" title="statement not covered" >    return errorResponse(error);</span>
@@ -219,13 +226,14 @@ export async function GET(
 &nbsp;
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise&lt;{ id: string }&gt; }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const body = await request.json();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
     if (access.status === "finalized") {
       return NextResponse.json(
@@ -233,7 +241,7 @@ export async function PATCH(
         { status: 409 },
       );
     }
-    const result = await ResultController.fromDb(db).updateResult(params.id, body);
+    const result = await ResultController.fromDb(db).updateResult(id, body);
     return NextResponse.json(result);
   } catch (error) {
     return errorResponse(error);
@@ -242,14 +250,15 @@ export async function PATCH(
 &nbsp;
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise&lt;{ id: string }&gt; }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
-    const deleted = await SortResultService.fromDb(db).deleteResult(params.id);
+    const deleted = await SortResultService.fromDb(db).deleteResult(id);
     <span class="missing-if-branch" title="if path not taken" >I</span>if (!deleted) {
 <span class="cstat-no" title="statement not covered" >      return NextResponse.json({ error: "Not found" }, { status: 404 });</span>
     }
@@ -265,7 +274,7 @@ export async function DELETE(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-12T21:43:57.826Z
+                at 2026-07-13T00:33:23.745Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

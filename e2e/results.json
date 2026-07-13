@@ -18,24 +18,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f0781ab1d9b6a3245831556d54f6f024dbc6061e",
-        "commitHash": "f0781ab1d9b6a3245831556d54f6f024dbc6061e",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29210023228"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/1220aa914aee6432f31fd8cd95361f8585e07e15",
+        "commitHash": "1220aa914aee6432f31fd8cd95361f8585e07e15",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29215355173"
       },
       "gitCommit": {
-        "shortHash": "f0781ab",
-        "hash": "f0781ab1d9b6a3245831556d54f6f024dbc6061e",
-        "subject": "chore(deps): unpin the seven; align @types/react with the React 18 runtime (#329)",
-        "body": "chore(deps): unpin the seven; align @types/react with the React 18 runtime (#329)\n\n* chore(deps): unpin the seven, align @types/react with the React 18 runtime\n\nNo exact pin survives. Per the owner's policy (2026-07-11): do not pin\nwithout a reason; every surviving pin carries a recorded justification. An\naudit found NONE of the nine had one -- all entered in a single scaffold\ncommit (7502432af) whose message states no constraint. They were superstition.\n\nWhat a caret ACTUALLY installs (measured on a clean install, not predicted):\n\n  react / react-dom  18.3.1  -> 18.3.1   BIT-IDENTICAL (^18 cannot reach 19)\n  next               14.2.35 -> 14.2.35  identical (^14 cannot reach 15)\n  tailwindcss        3.4.1   -> 3.4.19   patches (^3.4 cannot reach the v4 rewrite)\n  postgres           3.4.4   -> 3.4.9    patches\n  class-variance-... 0.7.0   -> 0.7.1    cosmetic (^0.x never crosses to 0.8)\n  zod                3.23.8  -> 3.25.76  the ONLY real move (^ cannot reach zod 4)\n\nSo six of the seven pins were protecting nothing at all -- they only froze\nout patch fixes while LOOKING like a safety measure.\n\nThe real inconsistency the pins were hiding: @types/react and\n@types/react-dom sat at ^19, a MAJOR ahead of the React 18.3.1 runtime. Now\n^18 (18.3.31 / 18.3.7), matching what actually runs.\n\nzod 3.25.x is additive -- it ships the v4 codebase under the zod/v4 subpath\nwhile the root import stays v3-compatible. Our zod use is confined to four\nsrc/server/api/*.ts files and three route handlers; none cross better-auth's\nown (nested) zod 4 copy. No input boundary weakens.\n\nReact 19 is UNREACHABLE here: next 14.2.35 peer-requires react ^18.2.0. That\nneeds Next 15 (async params/searchParams/cookies/headers -- 42 route handlers\n+ 23 pages) and is filed as its own epic, deliberately not smuggled in here.\n\nGates: lint 0 errors | test:ci 1304 | test:db 650 | build OK | auth:verify OK\n| clean npm ci, no ERESOLVE, no .npmrc.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* docs: handoff for the dependency work (purses-9oxh)\n\nCaptures what shipped (#328 drizzle + squashed baseline, live in prod), what\nis still OPEN (#329, unmerged), and the one finding that decides whether the\nNext 16 migration is safe: the route-test harness passes `params` as a plain\nobject, and `await` on a plain object is a no-op — so after async-params it\nwould pass whether or not a route was correctly migrated. Green CI, dead app.\nHarden the oracle first (purses-9oxh.3).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "1220aa9",
+        "hash": "1220aa914aee6432f31fd8cd95361f8585e07e15",
+        "subject": "feat: async route params + falsifiable test oracle, atomically on Next 14 (purses-9oxh.3) (#330)",
+        "body": "feat: async route params + falsifiable test oracle, atomically on Next 14 (purses-9oxh.3) (#330)\n\n* docs: correct the deps handoff — it was wrong in two load-bearing places\n\nThe handoff told the next agent to close purses-mebk (which has three open\nchildren, forbidden by CLAUDE.md's definition of done) and prescribed a fix\nfor 9oxh.3 that would 404 every dynamic route in production: routes read\nparams.id synchronously, so handing them a real Promise yields undefined.\n\n- §0 (new): this doc is leads, not facts. CLAUDE.md / bd show / graphify are\n  the sources of truth; verify against them before acting.\n- §1: #329 is merged. Do NOT close purses-mebk — three children still open.\n- §5: the corrected 9oxh.3 design. Route async-params migration and oracle\n  hardening are ONE atomic change — (b) alone mass-404s, (a) alone leaves an\n  oracle that cannot fail. Next 14.2.35 builds clean with a Promise params\n  signature (verified by an actual build), so both land before the Next bump.\n- §3/§6: drop the stale prod Neon hostname; note auto-merge is disabled and\n  that Conservative profile means a doc cannot authorize a merge.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: design spec for epic purses-9oxh (get on latest, every major dep)\n\nSeven serial PRs: oracle+routes atomic (.3), Node truth (.1), Next 14->16\nholding React 18 (.4), React 19 (.2), zod 4 (.5), tailwind 4 (.6), tooling\n(.7). Verification-first: full-surface build proof for async params, exact\nroute-count oracle, rejects-still-reject for zod, screenshot+axe for tailwind.\n\nCorrects PR #329's false zod-scope claim: the surface is 19 non-test files\n(incl. env.ts at module load and three client forms), not 7. Bead 9oxh.5\nupdated to match.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs(spec): fold adversarial review round 1 into the deps-latest epic spec\n\nThree personas (QA/Test, Architect, Security), all CONCERNS, no BLOCK.\nFalsifiability re-attributed to owner-2xx suites + e2e + PR-3 typegen (the\nstranger enum accepts 404 and cannot fail on a params mistake). Oracle\nintegrity upgraded to key-set snapshot + frozen allowlist/predicate +\ndiff-shape rule + test-side exhaustiveness gate. Surface corrected 39->51\nfiles; page oracle routed to PR 3; middleware->proxy added; auth:verify\nfound running nowhere automatically (PR 1 adds it to CI); TS 7 re-scoped\nto 6.0.x on the typescript-eslint peer wall; revertability corrected to\nLIFO; zod pins named as net-new plus one tautological pin to convert.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs(spec): fold ponytail/YAGNI review round 2 — 6 PRs, demote one-time checks\n\nKey-set snapshot and test-side exhaustiveness gate demoted from permanent\ntests to PR-body evidence re-run at PR 3; 19-file zod inventory test demoted\nto PR-body grep; client-form zod pins cut (server mirrors are the guard);\nPR 2 (Node truth) folded into PR 7 saving a CI run (owner confirmed the\nJuly restraint). Reversed one demotion against the artifacts: ulid ordering\nassertion stays permanent — compareByCreatedAtThenId() ties decision\nordering on id. All round-1 authz protections retained.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs(spec): CI cost tuning rides PR 1's ci.yml touch\n\nDrop chromium from the Playwright install (dead since #312's single-viewport\nstrategy), cache playwright browsers and .next/cache, timeout-minutes on\nevery job (360-min default is a ~$3 hang risk). One-viewport PR e2e was\nproposed and withdrawn — #312 already shipped it; the stale e2e-harness-shape\nmemory has been corrected.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs(plan): PR 1 implementation plan — async params + oracle (purses-9oxh.3)\n\nBuilt from workflow-measured inputs (21 agents): 42 dynamic routes in 3\ngroups, 39 test files / ~354 call sites to flip, owner-2xx coverage\nverified COMPLETE (77 pairs, 0 gaps), exact ci.yml anchors. Green at\nevery commit: routes first (await no-ops on Next 14), then the test\nflip is the falsifiable oracle moment.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: supply-chain hygiene policy (owner-approved) into spec + PR 1 plan\n\n14-day release-age quarantine (CVE-patch exception), npm audit signatures\nper dep PR, osv-scanner local (2.4s measured) + gate-job CI step (~10s)\nwith a committed osv-scanner.toml of reasoned, bead-linked ignores only.\nBaseline scan: 16 findings — 14 next@14 advisories (max CVSS 8.6) +\npostcss-under-next (both erased by the Next 16 PR) + 1 dev-only esbuild\nunder drizzle-kit. ignore-scripts proposed, not adopted — recorded.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(routes): async params across collections/** (23 files, purses-9oxh.3)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(routes): async params across items/invitations/sessions/shared-results (11 files)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(routes): async params across sort-results/** (8 files) — route surface complete (42/42)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(oracle): route-invoking tests pass Promise params — migration now falsifiable (39 files)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(oracle): importHandler ctx type requires Promise params\n\nKey-set diff vs pre-migration capture: IDENTICAL (66 stranger keys,\n13 allowlist literals). Full DB tier green post-tighten.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* ci: auth:verify gate; osv-scanner (pinned+checksummed) with reasoned ignores; webkit-only install, playwright+next caches, job timeouts\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs(plan): record as-executed corrections — pinned osv-scanner binary, actionlint npx stub\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* ci: move auth:verify into db-tests — the gate job has no database\n\nQA whole-branch review F1 (blocker): verify-auth.ts queries live auth\ntables via getDb(); src/lib/db.ts throws at import without DATABASE_URL,\nso the step passed locally only via .env.local and would red every PR in\nCI. db-tests has the migrated Postgres service; DATABASE_URL alone\nsuffices (verified against the :5433 test container with a minimal env).\nAlso fixes the docs-only-PR case: db-tests is gated on the code filter.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs+ci: fold Architect whole-branch review\n\nosv-scanner step moves ABOVE npm ci (vet the lockfile before any lifecycle\nscript runs) + curl --retry 3. Handoff corrected: 36 (not 34) integration\ntest files, and the count floors stay untouched per the spec's round-2\ndemotion — the handoff's \"bump to exact actuals\" paragraph was stale\nagainst the spec it defers to.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: sync governance docs — decisions 34+35, CI gate notes, async-params convention\n\nARCHITECTURE: decision 34 (async params atomic with falsifiable oracle,\nmutation-proven) and 35 (supply-chain hygiene: quarantine + pinned\nosv-scanner + reasoned bead-linked ignores). DEPLOYMENT: the two new CI\ngates documented (scan-before-npm-ci; auth:verify lives in db-tests, not\ngate). API.md: async-params convention for new routes and their tests.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* chore: graphify update at PR boundary\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1783892327000
+          "time": 1783902407000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1783892327000
+          "time": 1783902407000
         },
         "branch": "main"
       },
@@ -49,24 +49,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f0781ab1d9b6a3245831556d54f6f024dbc6061e",
-            "commitHash": "f0781ab1d9b6a3245831556d54f6f024dbc6061e",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29210023228"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/1220aa914aee6432f31fd8cd95361f8585e07e15",
+            "commitHash": "1220aa914aee6432f31fd8cd95361f8585e07e15",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29215355173"
           },
           "gitCommit": {
-            "shortHash": "f0781ab",
-            "hash": "f0781ab1d9b6a3245831556d54f6f024dbc6061e",
-            "subject": "chore(deps): unpin the seven; align @types/react with the React 18 runtime (#329)",
-            "body": "chore(deps): unpin the seven; align @types/react with the React 18 runtime (#329)\n\n* chore(deps): unpin the seven, align @types/react with the React 18 runtime\n\nNo exact pin survives. Per the owner's policy (2026-07-11): do not pin\nwithout a reason; every surviving pin carries a recorded justification. An\naudit found NONE of the nine had one -- all entered in a single scaffold\ncommit (7502432af) whose message states no constraint. They were superstition.\n\nWhat a caret ACTUALLY installs (measured on a clean install, not predicted):\n\n  react / react-dom  18.3.1  -> 18.3.1   BIT-IDENTICAL (^18 cannot reach 19)\n  next               14.2.35 -> 14.2.35  identical (^14 cannot reach 15)\n  tailwindcss        3.4.1   -> 3.4.19   patches (^3.4 cannot reach the v4 rewrite)\n  postgres           3.4.4   -> 3.4.9    patches\n  class-variance-... 0.7.0   -> 0.7.1    cosmetic (^0.x never crosses to 0.8)\n  zod                3.23.8  -> 3.25.76  the ONLY real move (^ cannot reach zod 4)\n\nSo six of the seven pins were protecting nothing at all -- they only froze\nout patch fixes while LOOKING like a safety measure.\n\nThe real inconsistency the pins were hiding: @types/react and\n@types/react-dom sat at ^19, a MAJOR ahead of the React 18.3.1 runtime. Now\n^18 (18.3.31 / 18.3.7), matching what actually runs.\n\nzod 3.25.x is additive -- it ships the v4 codebase under the zod/v4 subpath\nwhile the root import stays v3-compatible. Our zod use is confined to four\nsrc/server/api/*.ts files and three route handlers; none cross better-auth's\nown (nested) zod 4 copy. No input boundary weakens.\n\nReact 19 is UNREACHABLE here: next 14.2.35 peer-requires react ^18.2.0. That\nneeds Next 15 (async params/searchParams/cookies/headers -- 42 route handlers\n+ 23 pages) and is filed as its own epic, deliberately not smuggled in here.\n\nGates: lint 0 errors | test:ci 1304 | test:db 650 | build OK | auth:verify OK\n| clean npm ci, no ERESOLVE, no .npmrc.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* docs: handoff for the dependency work (purses-9oxh)\n\nCaptures what shipped (#328 drizzle + squashed baseline, live in prod), what\nis still OPEN (#329, unmerged), and the one finding that decides whether the\nNext 16 migration is safe: the route-test harness passes `params` as a plain\nobject, and `await` on a plain object is a no-op — so after async-params it\nwould pass whether or not a route was correctly migrated. Green CI, dead app.\nHarden the oracle first (purses-9oxh.3).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "1220aa9",
+            "hash": "1220aa914aee6432f31fd8cd95361f8585e07e15",
+            "subject": "feat: async route params + falsifiable test oracle, atomically on Next 14 (purses-9oxh.3) (#330)",
+            "body": "feat: async route params + falsifiable test oracle, atomically on Next 14 (purses-9oxh.3) (#330)\n\n* docs: correct the deps handoff — it was wrong in two load-bearing places\n\nThe handoff told the next agent to close purses-mebk (which has three open\nchildren, forbidden by CLAUDE.md's definition of done) and prescribed a fix\nfor 9oxh.3 that would 404 every dynamic route in production: routes read\nparams.id synchronously, so handing them a real Promise yields undefined.\n\n- §0 (new): this doc is leads, not facts. CLAUDE.md / bd show / graphify are\n  the sources of truth; verify against them before acting.\n- §1: #329 is merged. Do NOT close purses-mebk — three children still open.\n- §5: the corrected 9oxh.3 design. Route async-params migration and oracle\n  hardening are ONE atomic change — (b) alone mass-404s, (a) alone leaves an\n  oracle that cannot fail. Next 14.2.35 builds clean with a Promise params\n  signature (verified by an actual build), so both land before the Next bump.\n- §3/§6: drop the stale prod Neon hostname; note auto-merge is disabled and\n  that Conservative profile means a doc cannot authorize a merge.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: design spec for epic purses-9oxh (get on latest, every major dep)\n\nSeven serial PRs: oracle+routes atomic (.3), Node truth (.1), Next 14->16\nholding React 18 (.4), React 19 (.2), zod 4 (.5), tailwind 4 (.6), tooling\n(.7). Verification-first: full-surface build proof for async params, exact\nroute-count oracle, rejects-still-reject for zod, screenshot+axe for tailwind.\n\nCorrects PR #329's false zod-scope claim: the surface is 19 non-test files\n(incl. env.ts at module load and three client forms), not 7. Bead 9oxh.5\nupdated to match.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs(spec): fold adversarial review round 1 into the deps-latest epic spec\n\nThree personas (QA/Test, Architect, Security), all CONCERNS, no BLOCK.\nFalsifiability re-attributed to owner-2xx suites + e2e + PR-3 typegen (the\nstranger enum accepts 404 and cannot fail on a params mistake). Oracle\nintegrity upgraded to key-set snapshot + frozen allowlist/predicate +\ndiff-shape rule + test-side exhaustiveness gate. Surface corrected 39->51\nfiles; page oracle routed to PR 3; middleware->proxy added; auth:verify\nfound running nowhere automatically (PR 1 adds it to CI); TS 7 re-scoped\nto 6.0.x on the typescript-eslint peer wall; revertability corrected to\nLIFO; zod pins named as net-new plus one tautological pin to convert.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs(spec): fold ponytail/YAGNI review round 2 — 6 PRs, demote one-time checks\n\nKey-set snapshot and test-side exhaustiveness gate demoted from permanent\ntests to PR-body evidence re-run at PR 3; 19-file zod inventory test demoted\nto PR-body grep; client-form zod pins cut (server mirrors are the guard);\nPR 2 (Node truth) folded into PR 7 saving a CI run (owner confirmed the\nJuly restraint). Reversed one demotion against the artifacts: ulid ordering\nassertion stays permanent — compareByCreatedAtThenId() ties decision\nordering on id. All round-1 authz protections retained.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs(spec): CI cost tuning rides PR 1's ci.yml touch\n\nDrop chromium from the Playwright install (dead since #312's single-viewport\nstrategy), cache playwright browsers and .next/cache, timeout-minutes on\nevery job (360-min default is a ~$3 hang risk). One-viewport PR e2e was\nproposed and withdrawn — #312 already shipped it; the stale e2e-harness-shape\nmemory has been corrected.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs(plan): PR 1 implementation plan — async params + oracle (purses-9oxh.3)\n\nBuilt from workflow-measured inputs (21 agents): 42 dynamic routes in 3\ngroups, 39 test files / ~354 call sites to flip, owner-2xx coverage\nverified COMPLETE (77 pairs, 0 gaps), exact ci.yml anchors. Green at\nevery commit: routes first (await no-ops on Next 14), then the test\nflip is the falsifiable oracle moment.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: supply-chain hygiene policy (owner-approved) into spec + PR 1 plan\n\n14-day release-age quarantine (CVE-patch exception), npm audit signatures\nper dep PR, osv-scanner local (2.4s measured) + gate-job CI step (~10s)\nwith a committed osv-scanner.toml of reasoned, bead-linked ignores only.\nBaseline scan: 16 findings — 14 next@14 advisories (max CVSS 8.6) +\npostcss-under-next (both erased by the Next 16 PR) + 1 dev-only esbuild\nunder drizzle-kit. ignore-scripts proposed, not adopted — recorded.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(routes): async params across collections/** (23 files, purses-9oxh.3)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(routes): async params across items/invitations/sessions/shared-results (11 files)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(routes): async params across sort-results/** (8 files) — route surface complete (42/42)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(oracle): route-invoking tests pass Promise params — migration now falsifiable (39 files)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(oracle): importHandler ctx type requires Promise params\n\nKey-set diff vs pre-migration capture: IDENTICAL (66 stranger keys,\n13 allowlist literals). Full DB tier green post-tighten.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* ci: auth:verify gate; osv-scanner (pinned+checksummed) with reasoned ignores; webkit-only install, playwright+next caches, job timeouts\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs(plan): record as-executed corrections — pinned osv-scanner binary, actionlint npx stub\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* ci: move auth:verify into db-tests — the gate job has no database\n\nQA whole-branch review F1 (blocker): verify-auth.ts queries live auth\ntables via getDb(); src/lib/db.ts throws at import without DATABASE_URL,\nso the step passed locally only via .env.local and would red every PR in\nCI. db-tests has the migrated Postgres service; DATABASE_URL alone\nsuffices (verified against the :5433 test container with a minimal env).\nAlso fixes the docs-only-PR case: db-tests is gated on the code filter.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs+ci: fold Architect whole-branch review\n\nosv-scanner step moves ABOVE npm ci (vet the lockfile before any lifecycle\nscript runs) + curl --retry 3. Handoff corrected: 36 (not 34) integration\ntest files, and the count floors stay untouched per the spec's round-2\ndemotion — the handoff's \"bump to exact actuals\" paragraph was stale\nagainst the spec it defers to.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: sync governance docs — decisions 34+35, CI gate notes, async-params convention\n\nARCHITECTURE: decision 34 (async params atomic with falsifiable oracle,\nmutation-proven) and 35 (supply-chain hygiene: quarantine + pinned\nosv-scanner + reasoned bead-linked ignores). DEPLOYMENT: the two new CI\ngates documented (scan-before-npm-ci; auth:verify lives in db-tests, not\ngate). API.md: async-params convention for new routes and their tests.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* chore: graphify update at PR boundary\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783892327000
+              "time": 1783902407000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783892327000
+              "time": 1783902407000
             },
             "branch": "main"
           },
@@ -87,24 +87,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/f0781ab1d9b6a3245831556d54f6f024dbc6061e",
-            "commitHash": "f0781ab1d9b6a3245831556d54f6f024dbc6061e",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29210023228"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/1220aa914aee6432f31fd8cd95361f8585e07e15",
+            "commitHash": "1220aa914aee6432f31fd8cd95361f8585e07e15",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29215355173"
           },
           "gitCommit": {
-            "shortHash": "f0781ab",
-            "hash": "f0781ab1d9b6a3245831556d54f6f024dbc6061e",
-            "subject": "chore(deps): unpin the seven; align @types/react with the React 18 runtime (#329)",
-            "body": "chore(deps): unpin the seven; align @types/react with the React 18 runtime (#329)\n\n* chore(deps): unpin the seven, align @types/react with the React 18 runtime\n\nNo exact pin survives. Per the owner's policy (2026-07-11): do not pin\nwithout a reason; every surviving pin carries a recorded justification. An\naudit found NONE of the nine had one -- all entered in a single scaffold\ncommit (7502432af) whose message states no constraint. They were superstition.\n\nWhat a caret ACTUALLY installs (measured on a clean install, not predicted):\n\n  react / react-dom  18.3.1  -> 18.3.1   BIT-IDENTICAL (^18 cannot reach 19)\n  next               14.2.35 -> 14.2.35  identical (^14 cannot reach 15)\n  tailwindcss        3.4.1   -> 3.4.19   patches (^3.4 cannot reach the v4 rewrite)\n  postgres           3.4.4   -> 3.4.9    patches\n  class-variance-... 0.7.0   -> 0.7.1    cosmetic (^0.x never crosses to 0.8)\n  zod                3.23.8  -> 3.25.76  the ONLY real move (^ cannot reach zod 4)\n\nSo six of the seven pins were protecting nothing at all -- they only froze\nout patch fixes while LOOKING like a safety measure.\n\nThe real inconsistency the pins were hiding: @types/react and\n@types/react-dom sat at ^19, a MAJOR ahead of the React 18.3.1 runtime. Now\n^18 (18.3.31 / 18.3.7), matching what actually runs.\n\nzod 3.25.x is additive -- it ships the v4 codebase under the zod/v4 subpath\nwhile the root import stays v3-compatible. Our zod use is confined to four\nsrc/server/api/*.ts files and three route handlers; none cross better-auth's\nown (nested) zod 4 copy. No input boundary weakens.\n\nReact 19 is UNREACHABLE here: next 14.2.35 peer-requires react ^18.2.0. That\nneeds Next 15 (async params/searchParams/cookies/headers -- 42 route handlers\n+ 23 pages) and is filed as its own epic, deliberately not smuggled in here.\n\nGates: lint 0 errors | test:ci 1304 | test:db 650 | build OK | auth:verify OK\n| clean npm ci, no ERESOLVE, no .npmrc.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n* docs: handoff for the dependency work (purses-9oxh)\n\nCaptures what shipped (#328 drizzle + squashed baseline, live in prod), what\nis still OPEN (#329, unmerged), and the one finding that decides whether the\nNext 16 migration is safe: the route-test harness passes `params` as a plain\nobject, and `await` on a plain object is a no-op — so after async-params it\nwould pass whether or not a route was correctly migrated. Green CI, dead app.\nHarden the oracle first (purses-9oxh.3).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01K8sHMdAX2XpyuCacTHnDYv\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "1220aa9",
+            "hash": "1220aa914aee6432f31fd8cd95361f8585e07e15",
+            "subject": "feat: async route params + falsifiable test oracle, atomically on Next 14 (purses-9oxh.3) (#330)",
+            "body": "feat: async route params + falsifiable test oracle, atomically on Next 14 (purses-9oxh.3) (#330)\n\n* docs: correct the deps handoff — it was wrong in two load-bearing places\n\nThe handoff told the next agent to close purses-mebk (which has three open\nchildren, forbidden by CLAUDE.md's definition of done) and prescribed a fix\nfor 9oxh.3 that would 404 every dynamic route in production: routes read\nparams.id synchronously, so handing them a real Promise yields undefined.\n\n- §0 (new): this doc is leads, not facts. CLAUDE.md / bd show / graphify are\n  the sources of truth; verify against them before acting.\n- §1: #329 is merged. Do NOT close purses-mebk — three children still open.\n- §5: the corrected 9oxh.3 design. Route async-params migration and oracle\n  hardening are ONE atomic change — (b) alone mass-404s, (a) alone leaves an\n  oracle that cannot fail. Next 14.2.35 builds clean with a Promise params\n  signature (verified by an actual build), so both land before the Next bump.\n- §3/§6: drop the stale prod Neon hostname; note auto-merge is disabled and\n  that Conservative profile means a doc cannot authorize a merge.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: design spec for epic purses-9oxh (get on latest, every major dep)\n\nSeven serial PRs: oracle+routes atomic (.3), Node truth (.1), Next 14->16\nholding React 18 (.4), React 19 (.2), zod 4 (.5), tailwind 4 (.6), tooling\n(.7). Verification-first: full-surface build proof for async params, exact\nroute-count oracle, rejects-still-reject for zod, screenshot+axe for tailwind.\n\nCorrects PR #329's false zod-scope claim: the surface is 19 non-test files\n(incl. env.ts at module load and three client forms), not 7. Bead 9oxh.5\nupdated to match.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs(spec): fold adversarial review round 1 into the deps-latest epic spec\n\nThree personas (QA/Test, Architect, Security), all CONCERNS, no BLOCK.\nFalsifiability re-attributed to owner-2xx suites + e2e + PR-3 typegen (the\nstranger enum accepts 404 and cannot fail on a params mistake). Oracle\nintegrity upgraded to key-set snapshot + frozen allowlist/predicate +\ndiff-shape rule + test-side exhaustiveness gate. Surface corrected 39->51\nfiles; page oracle routed to PR 3; middleware->proxy added; auth:verify\nfound running nowhere automatically (PR 1 adds it to CI); TS 7 re-scoped\nto 6.0.x on the typescript-eslint peer wall; revertability corrected to\nLIFO; zod pins named as net-new plus one tautological pin to convert.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs(spec): fold ponytail/YAGNI review round 2 — 6 PRs, demote one-time checks\n\nKey-set snapshot and test-side exhaustiveness gate demoted from permanent\ntests to PR-body evidence re-run at PR 3; 19-file zod inventory test demoted\nto PR-body grep; client-form zod pins cut (server mirrors are the guard);\nPR 2 (Node truth) folded into PR 7 saving a CI run (owner confirmed the\nJuly restraint). Reversed one demotion against the artifacts: ulid ordering\nassertion stays permanent — compareByCreatedAtThenId() ties decision\nordering on id. All round-1 authz protections retained.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs(spec): CI cost tuning rides PR 1's ci.yml touch\n\nDrop chromium from the Playwright install (dead since #312's single-viewport\nstrategy), cache playwright browsers and .next/cache, timeout-minutes on\nevery job (360-min default is a ~$3 hang risk). One-viewport PR e2e was\nproposed and withdrawn — #312 already shipped it; the stale e2e-harness-shape\nmemory has been corrected.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs(plan): PR 1 implementation plan — async params + oracle (purses-9oxh.3)\n\nBuilt from workflow-measured inputs (21 agents): 42 dynamic routes in 3\ngroups, 39 test files / ~354 call sites to flip, owner-2xx coverage\nverified COMPLETE (77 pairs, 0 gaps), exact ci.yml anchors. Green at\nevery commit: routes first (await no-ops on Next 14), then the test\nflip is the falsifiable oracle moment.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: supply-chain hygiene policy (owner-approved) into spec + PR 1 plan\n\n14-day release-age quarantine (CVE-patch exception), npm audit signatures\nper dep PR, osv-scanner local (2.4s measured) + gate-job CI step (~10s)\nwith a committed osv-scanner.toml of reasoned, bead-linked ignores only.\nBaseline scan: 16 findings — 14 next@14 advisories (max CVSS 8.6) +\npostcss-under-next (both erased by the Next 16 PR) + 1 dev-only esbuild\nunder drizzle-kit. ignore-scripts proposed, not adopted — recorded.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(routes): async params across collections/** (23 files, purses-9oxh.3)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(routes): async params across items/invitations/sessions/shared-results (11 files)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(routes): async params across sort-results/** (8 files) — route surface complete (42/42)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(oracle): route-invoking tests pass Promise params — migration now falsifiable (39 files)\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(oracle): importHandler ctx type requires Promise params\n\nKey-set diff vs pre-migration capture: IDENTICAL (66 stranger keys,\n13 allowlist literals). Full DB tier green post-tighten.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* ci: auth:verify gate; osv-scanner (pinned+checksummed) with reasoned ignores; webkit-only install, playwright+next caches, job timeouts\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs(plan): record as-executed corrections — pinned osv-scanner binary, actionlint npx stub\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* ci: move auth:verify into db-tests — the gate job has no database\n\nQA whole-branch review F1 (blocker): verify-auth.ts queries live auth\ntables via getDb(); src/lib/db.ts throws at import without DATABASE_URL,\nso the step passed locally only via .env.local and would red every PR in\nCI. db-tests has the migrated Postgres service; DATABASE_URL alone\nsuffices (verified against the :5433 test container with a minimal env).\nAlso fixes the docs-only-PR case: db-tests is gated on the code filter.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs+ci: fold Architect whole-branch review\n\nosv-scanner step moves ABOVE npm ci (vet the lockfile before any lifecycle\nscript runs) + curl --retry 3. Handoff corrected: 36 (not 34) integration\ntest files, and the count floors stay untouched per the spec's round-2\ndemotion — the handoff's \"bump to exact actuals\" paragraph was stale\nagainst the spec it defers to.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: sync governance docs — decisions 34+35, CI gate notes, async-params convention\n\nARCHITECTURE: decision 34 (async params atomic with falsifiable oracle,\nmutation-proven) and 35 (supply-chain hygiene: quarantine + pinned\nosv-scanner + reasoned bead-linked ignores). DEPLOYMENT: the two new CI\ngates documented (scan-before-npm-ci; auth:verify lives in db-tests, not\ngate). API.md: async-params convention for new routes and their tests.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* chore: graphify update at PR boundary\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783892327000
+              "time": 1783902407000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783892327000
+              "time": 1783902407000
             },
             "branch": "main"
           },
@@ -187,12 +187,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 538,
+                  "duration": 471,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:41:49.953Z",
+                  "startTime": "2026-07-13T00:29:35.502Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -229,7 +229,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 14685,
+                  "duration": 18220,
                   "errors": [],
                   "stdout": [
                     {
@@ -259,7 +259,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:41:51.108Z",
+                  "startTime": "2026-07-13T00:29:36.691Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -288,7 +288,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 12580,
+                  "duration": 16702,
                   "errors": [],
                   "stdout": [
                     {
@@ -318,7 +318,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:42:06.572Z",
+                  "startTime": "2026-07-13T00:29:55.641Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -347,7 +347,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2327,
+                  "duration": 3105,
                   "errors": [],
                   "stdout": [
                     {
@@ -359,7 +359,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:42:19.180Z",
+                  "startTime": "2026-07-13T00:30:12.357Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -388,7 +388,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2347,
+                  "duration": 3118,
                   "errors": [],
                   "stdout": [
                     {
@@ -400,7 +400,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:42:21.528Z",
+                  "startTime": "2026-07-13T00:30:15.486Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -437,12 +437,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1671,
+                  "duration": 2280,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:42:23.895Z",
+                  "startTime": "2026-07-13T00:30:18.631Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -471,12 +471,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1075,
+                  "duration": 1525,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:42:25.625Z",
+                  "startTime": "2026-07-13T00:30:20.989Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -505,12 +505,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1186,
+                  "duration": 1733,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:42:26.711Z",
+                  "startTime": "2026-07-13T00:30:22.538Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -539,12 +539,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 795,
+                  "duration": 1137,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:42:27.915Z",
+                  "startTime": "2026-07-13T00:30:24.292Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -573,12 +573,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 896,
+                  "duration": 1221,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:42:28.736Z",
+                  "startTime": "2026-07-13T00:30:25.446Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -615,12 +615,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1481,
+                  "duration": 3333,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:42:29.685Z",
+                  "startTime": "2026-07-13T00:30:26.746Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -649,12 +649,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1708,
+                  "duration": 3579,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:42:31.229Z",
+                  "startTime": "2026-07-13T00:30:30.148Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -691,12 +691,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1166,
+                  "duration": 2751,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:42:33.063Z",
+                  "startTime": "2026-07-13T00:30:33.846Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -725,12 +725,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1297,
+                  "duration": 3056,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:42:34.252Z",
+                  "startTime": "2026-07-13T00:30:36.689Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -759,12 +759,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1106,
+                  "duration": 3007,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:42:35.568Z",
+                  "startTime": "2026-07-13T00:30:39.804Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -808,12 +808,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1744,
+                      "duration": 1601,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:42:36.696Z",
+                      "startTime": "2026-07-13T00:30:43.264Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -842,12 +842,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2028,
+                      "duration": 2866,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:42:38.515Z",
+                      "startTime": "2026-07-13T00:30:49.967Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -876,12 +876,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1076,
+                      "duration": 1887,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:42:40.558Z",
+                      "startTime": "2026-07-13T00:30:52.860Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -927,12 +927,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4505,
+                      "duration": 6718,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:42:41.690Z",
+                      "startTime": "2026-07-13T00:30:54.813Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -961,12 +961,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3715,
+                      "duration": 4544,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:42:46.221Z",
+                      "startTime": "2026-07-13T00:31:01.556Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1012,12 +1012,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2814,
+                      "duration": 2597,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:42:50.033Z",
+                      "startTime": "2026-07-13T00:31:06.226Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1063,12 +1063,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1520,
+                      "duration": 2615,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:42:53.175Z",
+                      "startTime": "2026-07-13T00:31:08.930Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1114,12 +1114,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 883,
+                      "duration": 1440,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:42:55.130Z",
+                      "startTime": "2026-07-13T00:31:11.672Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1148,12 +1148,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1207,
+                      "duration": 1718,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:42:56.178Z",
+                      "startTime": "2026-07-13T00:31:13.215Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1199,12 +1199,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4736,
+                      "duration": 5762,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:42:57.461Z",
+                      "startTime": "2026-07-13T00:31:15.033Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1233,12 +1233,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3783,
+                      "duration": 5553,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:43:02.580Z",
+                      "startTime": "2026-07-13T00:31:20.954Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1284,12 +1284,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1833,
+                      "duration": 2462,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:43:06.608Z",
+                      "startTime": "2026-07-13T00:31:26.562Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1318,12 +1318,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1925,
+                      "duration": 2342,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:43:09.994Z",
+                      "startTime": "2026-07-13T00:31:29.121Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1369,12 +1369,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5279,
+                      "duration": 796,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:43:12.056Z",
+                      "startTime": "2026-07-13T00:31:31.504Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1403,12 +1403,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3030,
+                      "duration": 383,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:43:17.350Z",
+                      "startTime": "2026-07-13T00:31:32.323Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1437,12 +1437,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1273,
+                      "duration": 325,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:43:20.388Z",
+                      "startTime": "2026-07-13T00:31:32.717Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1481,12 +1481,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1297,
+                  "duration": 1156,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:43:21.762Z",
+                  "startTime": "2026-07-13T00:31:33.073Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1515,12 +1515,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1238,
+                  "duration": 1393,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:43:23.516Z",
+                  "startTime": "2026-07-13T00:31:34.277Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1557,12 +1557,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 984,
+                  "duration": 1222,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:43:24.865Z",
+                  "startTime": "2026-07-13T00:31:35.701Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1591,12 +1591,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1059,
+                  "duration": 1312,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:43:25.909Z",
+                  "startTime": "2026-07-13T00:31:36.976Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1625,12 +1625,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1653,
+                  "duration": 1805,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:43:26.991Z",
+                  "startTime": "2026-07-13T00:31:38.314Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1674,12 +1674,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 6094,
+                      "duration": 3421,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:43:28.938Z",
+                      "startTime": "2026-07-13T00:31:40.188Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1708,12 +1708,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 7795,
+                      "duration": 2888,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:43:38.299Z",
+                      "startTime": "2026-07-13T00:31:43.699Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1742,12 +1742,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1312,
+                      "duration": 1738,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:43:46.137Z",
+                      "startTime": "2026-07-13T00:31:46.612Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1793,12 +1793,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 9760,
+                      "duration": 10020,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:43:48.578Z",
+                      "startTime": "2026-07-13T00:31:48.390Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1827,12 +1827,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1219,
+                      "duration": 1588,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:01.209Z",
+                      "startTime": "2026-07-13T00:31:58.479Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1871,12 +1871,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1313,
+                  "duration": 1930,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:44:02.489Z",
+                  "startTime": "2026-07-13T00:32:00.107Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1920,12 +1920,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1171,
+                      "duration": 1296,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:03.833Z",
+                      "startTime": "2026-07-13T00:32:02.064Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1971,12 +1971,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2119,
+                      "duration": 2716,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:05.147Z",
+                      "startTime": "2026-07-13T00:32:03.486Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2022,12 +2022,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 970,
+                      "duration": 1417,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:07.374Z",
+                      "startTime": "2026-07-13T00:32:06.336Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2073,12 +2073,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2304,
+                      "duration": 2927,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:08.422Z",
+                      "startTime": "2026-07-13T00:32:07.862Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2107,12 +2107,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4375,
+                      "duration": 3101,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:10.746Z",
+                      "startTime": "2026-07-13T00:32:10.812Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2158,12 +2158,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2393,
+                      "duration": 2494,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:15.382Z",
+                      "startTime": "2026-07-13T00:32:13.953Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2209,12 +2209,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2595,
+                      "duration": 2147,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:18.022Z",
+                      "startTime": "2026-07-13T00:32:16.529Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2253,12 +2253,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 882,
+                  "duration": 1076,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:44:21.009Z",
+                  "startTime": "2026-07-13T00:32:18.745Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2287,12 +2287,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 769,
+                  "duration": 967,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:44:21.905Z",
+                  "startTime": "2026-07-13T00:32:19.841Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2321,12 +2321,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1103,
+                  "duration": 1052,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:44:22.691Z",
+                  "startTime": "2026-07-13T00:32:20.825Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2370,12 +2370,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1162,
+                      "duration": 1272,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:24.087Z",
+                      "startTime": "2026-07-13T00:32:21.895Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2421,12 +2421,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1218,
+                      "duration": 1518,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:25.664Z",
+                      "startTime": "2026-07-13T00:32:23.232Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2455,12 +2455,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1642,
+                      "duration": 1903,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:27.086Z",
+                      "startTime": "2026-07-13T00:32:24.807Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2489,12 +2489,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1585,
+                      "duration": 1751,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:28.753Z",
+                      "startTime": "2026-07-13T00:32:26.738Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2531,12 +2531,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5062,
+                      "duration": 4722,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:30.363Z",
+                      "startTime": "2026-07-13T00:32:28.522Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2565,12 +2565,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1687,
+                      "duration": 2825,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:37.891Z",
+                      "startTime": "2026-07-13T00:32:33.314Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2607,12 +2607,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 917,
+                      "duration": 1746,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:39.592Z",
+                      "startTime": "2026-07-13T00:32:36.158Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2641,12 +2641,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 932,
+                      "duration": 1204,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:40.518Z",
+                      "startTime": "2026-07-13T00:32:37.956Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2692,12 +2692,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3221,
+                      "duration": 5149,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:41.672Z",
+                      "startTime": "2026-07-13T00:32:39.666Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2726,12 +2726,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 6220,
+                      "duration": 14863,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-12T21:44:45.234Z",
+                      "startTime": "2026-07-13T00:32:47.790Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2770,12 +2770,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4368,
+                  "duration": 3609,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:44:51.578Z",
+                  "startTime": "2026-07-13T00:33:03.120Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2804,12 +2804,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 6726,
+                  "duration": 3560,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:44:55.970Z",
+                  "startTime": "2026-07-13T00:33:06.745Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2838,12 +2838,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3677,
+                  "duration": 2545,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-12T21:45:02.710Z",
+                  "startTime": "2026-07-13T00:33:10.321Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2861,8 +2861,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-07-12T21:40:33.802Z",
-    "duration": 289148.86199999996,
+    "startTime": "2026-07-13T00:28:07.373Z",
+    "duration": 325564.07399999996,
     "expected": 65,
     "skipped": 0,
     "unexpected": 0,

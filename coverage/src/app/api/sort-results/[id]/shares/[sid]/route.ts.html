@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.73% </span>
+                <span class="strong">95.12% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>36/38</span>
+                <span class='fraction'>39/41</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.28% </span>
+                <span class="strong">94.73% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>33/35</span>
+                <span class='fraction'>36/38</span>
             </div>
         
             
@@ -131,7 +131,10 @@
 <a name='L66'></a><a href='#L66'>66</a>
 <a name='L67'></a><a href='#L67'>67</a>
 <a name='L68'></a><a href='#L68'>68</a>
-<a name='L69'></a><a href='#L69'>69</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -142,6 +145,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -164,6 +168,7 @@
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -183,6 +188,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -208,14 +214,15 @@ import { errorResponse } from "@/server/api/http-errors";
 &nbsp;
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string; sid: string } }
+  { params }: { params: Promise&lt;{ id: string; sid: string }&gt; }
 ) {
   try {
+    const { id, sid } = await params;
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
-    const share = await ShareController.fromDb(db).getByIdForResult(params.sid, params.id);
+    const share = await ShareController.fromDb(db).getByIdForResult(sid, id);
     if (!share) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
@@ -227,20 +234,21 @@ export async function GET(
 &nbsp;
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; sid: string } }
+  { params }: { params: Promise&lt;{ id: string; sid: string }&gt; }
 ) {
   try {
+    const { id, sid } = await params;
     const user = await requireAuth();
     const body = await request.json();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
     const ctrl = ShareController.fromDb(db);
-    const existing = await ctrl.getByIdForResult(params.sid, params.id);
+    const existing = await ctrl.getByIdForResult(sid, id);
     if (!existing) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    const share = await ctrl.updateShare(params.sid, body);
+    const share = await ctrl.updateShare(sid, body);
     return NextResponse.json(share);
   } catch (error) {
     return errorResponse(error);
@@ -249,19 +257,20 @@ export async function PATCH(
 &nbsp;
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string; sid: string } }
+  { params }: { params: Promise&lt;{ id: string; sid: string }&gt; }
 ) {
   try {
+    const { id, sid } = await params;
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
     const ctrl = ShareController.fromDb(db);
-    const existing = await ctrl.getByIdForResult(params.sid, params.id);
+    const existing = await ctrl.getByIdForResult(sid, id);
     if (!existing) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    await ctrl.revokeShare(params.sid);
+    await ctrl.revokeShare(sid);
     return NextResponse.json({ message: "Share revoked" });
   } catch (error) {
 <span class="cstat-no" title="statement not covered" >    return errorResponse(error);</span>
@@ -274,7 +283,7 @@ export async function DELETE(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-12T21:43:57.826Z
+                at 2026-07-13T00:33:23.745Z
             </div>
         <script src="../../../../../../../prettify.js"></script>
         <script>

@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">95.74% </span>
+                <span class="strong">95.91% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>45/47</span>
+                <span class='fraction'>47/49</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">95.55% </span>
+                <span class="strong">95.74% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>43/45</span>
+                <span class='fraction'>45/47</span>
             </div>
         
             
@@ -175,7 +175,9 @@
 <a name='L110'></a><a href='#L110'>110</a>
 <a name='L111'></a><a href='#L111'>111</a>
 <a name='L112'></a><a href='#L112'>112</a>
-<a name='L113'></a><a href='#L113'>113</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -200,6 +202,7 @@
 <span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -249,6 +252,7 @@
 <span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -301,7 +305,7 @@ import { errorResponse } from "@/server/api/http-errors";
 // Rotate a photo (persisted, non-destructive). photos:write = curator (full-curator model).
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string; itemId: string; photoId: string } }
+  { params }: { params: Promise&lt;{ id: string; itemId: string; photoId: string }&gt; }
 ) {
   const session = await getSession();
   if (!session?.user) {
@@ -313,18 +317,19 @@ export async function PATCH(
   const itemCtrl = ItemController.fromDb(db);
 &nbsp;
   try {
+    const { id, itemId, photoId } = await params;
     // Authz before existence (purses-ct0): the collection is in the URL, so a
     // non-curator never learns whether the item/photo exists.
     // photos:write = curator — any curator may rotate photos (full-curator model).
-    const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
+    const access = await requireApiCapability(db, id, session.user.id, "photos:write");
     if (access instanceof NextResponse) return access;
 &nbsp;
-    const item = await itemCtrl.getItem(params.itemId);
-    if (!item || item.collectionId !== params.id) {
+    const item = await itemCtrl.getItem(itemId);
+    if (!item || item.collectionId !== id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    const photo = await photoCtrl.findById(params.photoId);
-    if (!photo || photo.itemId !== params.itemId) {
+    const photo = await photoCtrl.findById(photoId);
+    if (!photo || photo.itemId !== itemId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 &nbsp;
@@ -338,7 +343,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid rotation" }, { status: 400 });
     }
 &nbsp;
-    const updated = await photoCtrl.update(params.photoId, { rotation: rotation as number });
+    const updated = await photoCtrl.update(photoId, { rotation: rotation as number });
     return NextResponse.json({ rotation: updated.rotation, updatedAt: updated.updatedAt });
   } catch {
 <span class="cstat-no" title="statement not covered" >    return NextResponse.json({ error: "Rotate failed" }, { status: 500 });</span>
@@ -347,7 +352,7 @@ export async function PATCH(
 &nbsp;
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string; itemId: string; photoId: string } }
+  { params }: { params: Promise&lt;{ id: string; itemId: string; photoId: string }&gt; }
 ) {
   const session = await getSession();
   if (!session?.user) {
@@ -362,20 +367,21 @@ export async function DELETE(
   const itemCtrl = ItemController.fromDb(db);
 &nbsp;
   try {
+    const { id, itemId, photoId } = await params;
     // Authz before existence (purses-ct0) — see PATCH above.
     // photos:write = curator — any curator may delete photos (full-curator model).
     // Curator-level by owner decision; attributed via audit (purses-opir/wfgj).
-    const access = await requireApiCapability(db, params.id, actorId, "photos:write");
+    const access = await requireApiCapability(db, id, actorId, "photos:write");
     if (access instanceof NextResponse) return access;
 &nbsp;
     // Verify item belongs to collection (belongs-to-parent).
-    const item = await itemCtrl.getItem(params.itemId);
-    if (!item || item.collectionId !== params.id) {
+    const item = await itemCtrl.getItem(itemId);
+    if (!item || item.collectionId !== id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 &nbsp;
-    const photo = await photoCtrl.findById(params.photoId);
-    if (!photo || photo.itemId !== params.itemId) {
+    const photo = await photoCtrl.findById(photoId);
+    if (!photo || photo.itemId !== itemId) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 &nbsp;
@@ -390,7 +396,7 @@ export async function DELETE(
     if (photo.blobKey.startsWith("http")) {
       await del(photo.blobKey);
     }
-    await deleteVariants(variantPrefix(params.id, params.photoId)).catch(<span class="fstat-no" title="function not covered" >() =&gt; {</span>});
+    await deleteVariants(variantPrefix(id, photoId)).catch(<span class="fstat-no" title="function not covered" >() =&gt; {</span>});
 &nbsp;
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -406,7 +412,7 @@ export async function DELETE(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-12T21:43:57.826Z
+                at 2026-07-13T00:33:23.745Z
             </div>
         <script src="../../../../../../../../../prettify.js"></script>
         <script>
