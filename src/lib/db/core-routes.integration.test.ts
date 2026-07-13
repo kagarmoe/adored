@@ -184,7 +184,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       mockGetSession.mockResolvedValue(null);
       const res = await collectionGet(
         nextReq("GET", "http://localhost/api/collections/any"),
-        { params: { id: "any" } },
+        { params: Promise.resolve({ id: "any" }) },
       );
       expect(res.status).toBe(401);
     });
@@ -196,7 +196,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await collectionGet(
         nextReq("GET", "http://localhost/api/collections/col-absent"),
-        { params: { id: "col-absent" } },
+        { params: Promise.resolve({ id: "col-absent" }) },
       );
       expect(res.status).toBe(404);
     });
@@ -207,7 +207,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       mockGetSession.mockResolvedValue({ user: { id: seed.memberId } });
       const res = await collectionGet(
         nextReq("GET", `http://localhost/api/collections/${seed.collectionId}`),
-        { params: { id: seed.collectionId } },
+        { params: Promise.resolve({ id: seed.collectionId }) },
       );
       expect(res.status).toBe(200);
       const body = await res.json();
@@ -227,7 +227,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
         nextReq("PATCH", `http://localhost/api/collections/${seed.collectionId}`, {
           name: "Updated",
         }),
-        { params: { id: seed.collectionId } },
+        { params: Promise.resolve({ id: seed.collectionId }) },
       );
       expect(res.status).toBe(401);
     });
@@ -239,7 +239,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
         nextReq("PATCH", `http://localhost/api/collections/${seed.collectionId}`, {
           name: "Renamed Collection",
         }),
-        { params: { id: seed.collectionId } },
+        { params: Promise.resolve({ id: seed.collectionId }) },
       );
       expect(res.status).toBe(200);
       const body = await res.json();
@@ -260,7 +260,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
         nextReq("PATCH", `http://localhost/api/collections/${seed.collectionId}`, {
           name: "Member Attempted Rename",
         }),
-        { params: { id: seed.collectionId } },
+        { params: Promise.resolve({ id: seed.collectionId }) },
       );
       expect(res.status).toBe(403);
     });
@@ -278,7 +278,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
         nextReq("PATCH", `http://localhost/api/collections/${seed.collectionId}`, {
           status: "not-a-status",
         }),
-        { params: { id: seed.collectionId } },
+        { params: Promise.resolve({ id: seed.collectionId }) },
       );
       expect(res.status).toBe(400);
       // Unchanged: name and status are exactly as seeded.
@@ -297,7 +297,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       const seed = await seedFullCollection(ownerId);
       const res = await collectionDelete(
         nextReq("DELETE", `http://localhost/api/collections/${seed.collectionId}`),
-        { params: { id: seed.collectionId } },
+        { params: Promise.resolve({ id: seed.collectionId }) },
       );
       expect(res.status).toBe(401);
     });
@@ -307,7 +307,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       mockGetSession.mockResolvedValue({ user: { id: seed.memberId } });
       const res = await collectionDelete(
         nextReq("DELETE", `http://localhost/api/collections/${seed.collectionId}`),
-        { params: { id: seed.collectionId } },
+        { params: Promise.resolve({ id: seed.collectionId }) },
       );
       expect(res.status).toBe(403);
 
@@ -323,7 +323,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await collectionDelete(
         nextReq("DELETE", `http://localhost/api/collections/${seed.collectionId}`),
-        { params: { id: seed.collectionId } },
+        { params: Promise.resolve({ id: seed.collectionId }) },
       );
       expect(res.status).toBe(200);
       const body = await res.json();
@@ -351,7 +351,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
         nextReq("PATCH", `http://localhost/api/collections/${seed.collectionId}/items/${seed.itemAId}`, {
           name: "Updated Name",
         }),
-        { params: { id: seed.collectionId, itemId: seed.itemAId } },
+        { params: Promise.resolve({ id: seed.collectionId, itemId: seed.itemAId }) },
       );
       expect(res.status).toBe(401);
     });
@@ -376,7 +376,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
         nextReq("PATCH", `http://localhost/api/collections/${seed2.collectionId}/items/${seed.itemAId}`, {
           name: "Wrong Collection Item",
         }),
-        { params: { id: seed2.collectionId, itemId: seed.itemAId } },
+        { params: Promise.resolve({ id: seed2.collectionId, itemId: seed.itemAId }) },
       );
       expect(res.status).toBe(404);
     });
@@ -392,7 +392,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
           brand: "TestBrand",
           color: "Red",
         }),
-        { params: { id: seed.collectionId, itemId: seed.itemBId } },
+        { params: Promise.resolve({ id: seed.collectionId, itemId: seed.itemBId }) },
       );
       expect(res.status).toBe(200);
       const body = await res.json();
@@ -426,7 +426,7 @@ describeDb("Group E — core route integration tests (real DB)", () => {
           name: "Owner Updated",
           notes: "Some notes",
         }),
-        { params: { id: seed.collectionId, itemId: seed.itemAId } },
+        { params: Promise.resolve({ id: seed.collectionId, itemId: seed.itemAId }) },
       );
       expect(res.status).toBe(200);
       const body = await res.json();

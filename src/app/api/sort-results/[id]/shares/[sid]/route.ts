@@ -7,14 +7,15 @@ import { errorResponse } from "@/server/api/http-errors";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string; sid: string } }
+  { params }: { params: Promise<{ id: string; sid: string }> }
 ) {
   try {
+    const { id, sid } = await params;
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
-    const share = await ShareController.fromDb(db).getByIdForResult(params.sid, params.id);
+    const share = await ShareController.fromDb(db).getByIdForResult(sid, id);
     if (!share) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
@@ -26,20 +27,21 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; sid: string } }
+  { params }: { params: Promise<{ id: string; sid: string }> }
 ) {
   try {
+    const { id, sid } = await params;
     const user = await requireAuth();
     const body = await request.json();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
     const ctrl = ShareController.fromDb(db);
-    const existing = await ctrl.getByIdForResult(params.sid, params.id);
+    const existing = await ctrl.getByIdForResult(sid, id);
     if (!existing) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    const share = await ctrl.updateShare(params.sid, body);
+    const share = await ctrl.updateShare(sid, body);
     return NextResponse.json(share);
   } catch (error) {
     return errorResponse(error);
@@ -48,19 +50,20 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string; sid: string } }
+  { params }: { params: Promise<{ id: string; sid: string }> }
 ) {
   try {
+    const { id, sid } = await params;
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
     const ctrl = ShareController.fromDb(db);
-    const existing = await ctrl.getByIdForResult(params.sid, params.id);
+    const existing = await ctrl.getByIdForResult(sid, id);
     if (!existing) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    await ctrl.revokeShare(params.sid);
+    await ctrl.revokeShare(sid);
     return NextResponse.json({ message: "Share revoked" });
   } catch (error) {
     return errorResponse(error);

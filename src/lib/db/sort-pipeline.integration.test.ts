@@ -94,7 +94,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await recordDecision(
       decisionReq({ type: "triage", decision: { itemId, result: "top" } }) as any,
-      { params: { id: sessionId } },
+      { params: Promise.resolve({ id: sessionId }) },
     );
     expect(res.status).toBe(201);
 
@@ -129,7 +129,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     for (const itemId of [itemA.id, itemB.id]) {
       const triageRes = await recordDecision(
         decisionReq({ type: "triage", decision: { itemId, result: "high" } }) as any,
-        { params: { id: session.id } },
+        { params: Promise.resolve({ id: session.id }) },
       );
       expect(triageRes.status).toBe(201);
     }
@@ -140,7 +140,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
         type: "pairwise_compare",
         decision: { itemAId: itemA.id, itemBId: itemB.id, result: "item_a" },
       }) as any,
-      { params: { id: session.id } },
+      { params: Promise.resolve({ id: session.id }) },
     );
     expect(compareRes.status).toBe(201);
 
@@ -363,7 +363,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await deleteResultRoute(new Request(`http://localhost/api/sort-results/${draft.id}`, {
       method: "DELETE",
-    }) as any, { params: { id: draft.id } });
+    }) as any, { params: Promise.resolve({ id: draft.id }) });
     expect(res.status).toBe(200);
 
     // Result row gone AND no orphaned child items left behind.
@@ -425,7 +425,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await deleteResultRoute(new Request(`http://localhost/api/sort-results/${draft.id}`, {
       method: "DELETE",
-    }) as any, { params: { id: draft.id } });
+    }) as any, { params: Promise.resolve({ id: draft.id }) });
     expect(res.status).toBe(409);
 
     // Finalized result must survive a delete attempt.
@@ -452,7 +452,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ name: "Renamed" }),
       }) as any,
-      { params: { id: draft.id } },
+      { params: Promise.resolve({ id: draft.id }) },
     );
     expect(res.status).toBe(409);
 
@@ -477,7 +477,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ name: "" }),
       }) as any,
-      { params: { id: draft.id } },
+      { params: Promise.resolve({ id: draft.id }) },
     );
     expect(res.status).toBe(400);
 
@@ -498,7 +498,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
       new Request(`http://localhost/api/sort-results/${draft.id}/items/${victim.id}`, {
         method: "DELETE",
       }) as any,
-      { params: { id: draft.id, rid: victim.id } },
+      { params: Promise.resolve({ id: draft.id, rid: victim.id }) },
     );
     expect(res.status).toBe(200);
 
@@ -530,7 +530,7 @@ describeDb("sort pipeline (route/service -> DB)", () => {
       new Request(`http://localhost/api/sort-results/${draft.id}/items/${victim.id}`, {
         method: "DELETE",
       }) as any,
-      { params: { id: draft.id, rid: victim.id } },
+      { params: Promise.resolve({ id: draft.id, rid: victim.id }) },
     );
     expect(res.status).toBe(409);
 

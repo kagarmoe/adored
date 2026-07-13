@@ -62,7 +62,7 @@ describeDb(
         const seed = await seedFullCollection(ownerId);
 
         const res = await getItems(makeGetReq(seed.collectionId) as any, {
-          params: { id: seed.collectionId },
+          params: Promise.resolve({ id: seed.collectionId }),
         });
         expect(res.status).toBe(401);
       });
@@ -73,7 +73,7 @@ describeDb(
         mockGetSession.mockResolvedValue({ user: { id: seed.memberId } });
 
         const res = await getItems(makeGetReq(seed.collectionId) as any, {
-          params: { id: seed.collectionId },
+          params: Promise.resolve({ id: seed.collectionId }),
         });
         expect(res.status).toBe(200);
 
@@ -96,7 +96,7 @@ describeDb(
         mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
         const res = await getItems(makeGetReq(seed.collectionId) as any, {
-          params: { id: seed.collectionId },
+          params: Promise.resolve({ id: seed.collectionId }),
         });
         expect(res.status).toBe(200);
         const body = await res.json();
@@ -110,7 +110,7 @@ describeDb(
         mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
         const res = await getItems(makeGetReq("col-absent-xyz") as any, {
-          params: { id: "col-absent-xyz" },
+          params: Promise.resolve({ id: "col-absent-xyz" }),
         });
         expect(res.status).toBe(404);
       });
@@ -125,7 +125,7 @@ describeDb(
         const seed = await seedFullCollection(ownerId);
 
         const res = await recalculate(makePostReq(seed.collectionId) as any, {
-          params: { id: seed.collectionId },
+          params: Promise.resolve({ id: seed.collectionId }),
         });
         expect(res.status).toBe(401);
       });
@@ -144,7 +144,7 @@ describeDb(
         expect(before).toHaveLength(0);
 
         const res = await recalculate(makePostReq(seed.collectionId) as any, {
-          params: { id: seed.collectionId },
+          params: Promise.resolve({ id: seed.collectionId }),
         });
         expect(res.status).toBe(200);
 
@@ -190,7 +190,7 @@ describeDb(
         mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
         const res = await recalculate(makePostReq(seed.collectionId) as any, {
-          params: { id: seed.collectionId },
+          params: Promise.resolve({ id: seed.collectionId }),
         });
         expect(res.status).toBe(200);
 
@@ -209,7 +209,7 @@ describeDb(
 
         // Call again — idempotent UPDATE path (rows already exist)
         const res2 = await recalculate(makePostReq(seed.collectionId) as any, {
-          params: { id: seed.collectionId },
+          params: Promise.resolve({ id: seed.collectionId }),
         });
         expect(res2.status).toBe(200);
         const after2 = await prefRepo.findByCollection(seed.collectionId, ownerId);
@@ -230,7 +230,7 @@ describeDb(
         const prefRepo = new CollectionPreferenceItemRepository(db);
 
         const res = await recalculate(makePostReq(seed.collectionId) as any, {
-          params: { id: seed.collectionId },
+          params: Promise.resolve({ id: seed.collectionId }),
         });
         expect(res.status).toBe(200);
         const body = await res.json();
@@ -255,7 +255,7 @@ describeDb(
         mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
         const res = await recalculate(makePostReq("col-absent-xyz") as any, {
-          params: { id: "col-absent-xyz" },
+          params: Promise.resolve({ id: "col-absent-xyz" }),
         });
         expect(res.status).toBe(404);
       });
@@ -270,7 +270,7 @@ describeDb(
         const prefRepo = new CollectionPreferenceItemRepository(db);
 
         const res = await recalculate(makePostReq(seed.collectionId) as any, {
-          params: { id: seed.collectionId },
+          params: Promise.resolve({ id: seed.collectionId }),
         });
         expect(res.status).toBe(403);
 
@@ -299,7 +299,7 @@ describeDb(
         mockGetSession.mockResolvedValue({ user: { id: seed.memberId } });
 
         const res = await recalculate(makePostReq(seed.collectionId) as any, {
-          params: { id: seed.collectionId },
+          params: Promise.resolve({ id: seed.collectionId }),
         });
         expect(res.status).toBe(200);
         const body = await res.json();

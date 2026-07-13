@@ -39,7 +39,8 @@ function referencesUnknownItem(entry: BatchEntry, liveItemIds: Set<string>): boo
   return !liveItemIds.has(entry.decision.itemId);
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   // Capture once: the `session.user` narrowing above is lost inside the tx closure.
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // Authorize BEFORE any read of the body: the session must belong to a
   // collection the user can access. getSessionOrNull distinguishes absent
   // (→404) from a real DB error (→ propagates, 500).
-  const sortSession = await SessionController.fromDb(db).getSessionOrNull(params.id);
+  const sortSession = await SessionController.fromDb(db).getSessionOrNull(id);
   if (!sortSession) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const access = await requireApiCollectionAccess(db, sortSession.collectionId, userId);
   if (access instanceof NextResponse) return access;
@@ -135,7 +136,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         .from(decisionEventsTable)
         .where(
           and(
-            eq(decisionEventsTable.sessionId, params.id),
+            eq(decisionEventsTable.sessionId, id),
             inArray(
               decisionEventsTable.clientKey,
               entries.map((e) => e.clientKey),
@@ -176,7 +177,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           .insert(decisionEventsTable)
           .values({
             id: nextId(),
-            sessionId: params.id,
+            sessionId: id,
             type: entry.type,
             decision: entry.decision,
             clientKey: entry.clientKey,
@@ -217,7 +218,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return results;
     }, {
       op: "record_decision_batch",
-      ctx: { collectionId: sortSession.collectionId, curatorId: userId, sessionId: params.id },
+      ctx: { collectionId: sortSession.collectionId, curatorId: userId, sessionId: id },
     });
 
     // ONE capture per request — including all-duplicate replays: replay

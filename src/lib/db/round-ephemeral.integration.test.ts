@@ -86,7 +86,7 @@ describeDb("a round is ephemeral: it never spawns a 2nd session or strands a pau
     for (const item of items) {
       const res = await postDecision(
         decisionReq({ type: "triage", decision: { itemId: item.id, result: "top" } }) as any,
-        { params: { id: session.id } },
+        { params: Promise.resolve({ id: session.id }) },
       );
       expect(res.status).toBe(201);
     }

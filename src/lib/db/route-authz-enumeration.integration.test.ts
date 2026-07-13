@@ -588,7 +588,7 @@ async function importHandler(
   repoRoot: string,
   absoluteFile: string,
   method: string,
-): Promise<(req: NextRequest, ctx?: { params: Record<string, string> }) => Promise<Response>> {
+): Promise<(req: NextRequest, ctx?: { params: Promise<Record<string, string>> }) => Promise<Response>> {
   const rel = path.relative(repoRoot, absoluteFile).replace(/\\/g, "/");
   // rel is e.g. "src/app/api/collections/[id]/route.ts"
   // Convert to the @/ alias (tsconfig maps @/ → src/).
@@ -598,7 +598,7 @@ async function importHandler(
   if (typeof fn !== "function") {
     throw new Error(`No export named "${method}" in ${absoluteFile}`);
   }
-  return fn as (req: NextRequest, ctx?: { params: Record<string, string> }) => Promise<Response>;
+  return fn as (req: NextRequest, ctx?: { params: Promise<Record<string, string>> }) => Promise<Response>;
 }
 
 // ── Request factory ───────────────────────────────────────────────────────────
@@ -764,7 +764,7 @@ describeDb(
         try {
           const handler = await importHandler(REPO_ROOT, tc.file, tc.method);
           const req = makeReq(tc.method, tc.urlPath, tc.body, tc.searchParams);
-          res = await handler(req, { params: tc.params });
+          res = await handler(req, { params: Promise.resolve(tc.params) });
         } catch (err) {
           failures.push(
             `  ${tc.key}  [${tc.urlPath}] — handler threw instead of returning a response: ${err}`,

@@ -84,7 +84,7 @@ describeDb("decisions/dispositions hardening (route -> controller -> repo -> DB)
 
     const res = await postDecision(
       decisionReq(sortSession.id, "{ not valid json ]") as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(400);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
@@ -99,7 +99,7 @@ describeDb("decisions/dispositions hardening (route -> controller -> repo -> DB)
 
     const res = await postDecision(
       decisionReq(sortSession.id, { type: "garbage", decision: { itemId: item.id } }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(400);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
@@ -114,7 +114,7 @@ describeDb("decisions/dispositions hardening (route -> controller -> repo -> DB)
 
     const res = await postDecision(
       decisionReq(sortSession.id, { type: "triage", decision: { itemId: item.id, result: "nope" } }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(400);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
@@ -129,7 +129,7 @@ describeDb("decisions/dispositions hardening (route -> controller -> repo -> DB)
 
     const res = await postDecision(
       decisionReq(sortSession.id, { type: "triage", decision: { itemId: item.id, result: "top" } }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(1);
@@ -149,7 +149,7 @@ describeDb("decisions/dispositions hardening (route -> controller -> repo -> DB)
 
     const res = await postDecision(
       decisionReq(sortSession.id, { type: "triage", decision: { itemId: item.id, result: "top" } }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(409);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
@@ -170,7 +170,7 @@ describeDb("decisions/dispositions hardening (route -> controller -> repo -> DB)
 
     const res = await postDecision(
       decisionReq(sortSession.id, { type: "triage", decision: { itemId: item.id, result: "top" } }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201);
     expect(lockSpy).toHaveBeenCalledWith(expect.anything(), collectionId, ownerId);
@@ -196,7 +196,7 @@ describeDb("decisions/dispositions hardening (route -> controller -> repo -> DB)
 
     const res = await postDisposition(
       dispositionReq(collectionId, { itemId: item.id, disposition: "set_aside" }) as any,
-      { params: { id: collectionId } } as any,
+      { params: Promise.resolve({ id: collectionId }) } as any,
     );
     expect(res.status).toBe(409);
     // No disposition row written — the item is disposed XOR triaged, never both.
@@ -213,7 +213,7 @@ describeDb("decisions/dispositions hardening (route -> controller -> repo -> DB)
 
     const res = await postDisposition(
       dispositionReq(collectionId, { itemId: item.id, disposition: "deferred" }) as any,
-      { params: { id: collectionId } } as any,
+      { params: Promise.resolve({ id: collectionId }) } as any,
     );
     expect(res.status).toBe(201);
     expect(lockSpy).toHaveBeenCalledWith(expect.anything(), collectionId, ownerId);
@@ -248,7 +248,7 @@ describeDb("decisions/dispositions hardening (route -> controller -> repo -> DB)
 
     const res = await postDecision(
       decisionReq(sortSession.id, { type: "triage", decision: { itemId: foreignItem.id, result: "top" } }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(400);
     // No decision_events row, no cross-collection preference row, no cleared disposition.
@@ -265,7 +265,7 @@ describeDb("decisions/dispositions hardening (route -> controller -> repo -> DB)
 
     const res = await postDecision(
       decisionReq(sortSession.id, { type: "triage", decision: { itemId: "item_does_not_exist", result: "top" } }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(400);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
@@ -281,7 +281,7 @@ describeDb("decisions/dispositions hardening (route -> controller -> repo -> DB)
 
     const res = await postDecision(
       decisionReq(sortSession.id, { type: "usage", decision: { itemId: foreignItem.id, result: "uses" } }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(400);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
@@ -301,7 +301,7 @@ describeDb("decisions/dispositions hardening (route -> controller -> repo -> DB)
         type: "pairwise_compare",
         decision: { itemAId: liveItem.id, itemBId: foreignItem.id, result: "item_a" },
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(400);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
@@ -316,7 +316,7 @@ describeDb("decisions/dispositions hardening (route -> controller -> repo -> DB)
 
     const res = await postDecision(
       decisionReq(sortSession.id, { type: "usage", decision: { itemId: item.id, result: "uses" } }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(1);
@@ -335,7 +335,7 @@ describeDb("decisions/dispositions hardening (route -> controller -> repo -> DB)
         type: "pairwise_compare",
         decision: { itemAId: itemA.id, itemBId: itemB.id, result: "item_a" },
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(1);

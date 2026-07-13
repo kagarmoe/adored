@@ -63,7 +63,7 @@ describeDb("T1 — client-supplied flags/role stripped (authz flag security)", (
         email: "t1@test.com",
         canManageCollection: true, // unknown field — stripped by schema
       }),
-      { params: { id: collectionId } },
+      { params: Promise.resolve({ id: collectionId }) },
     );
     expect(res.status).toBe(201);
 
@@ -94,7 +94,7 @@ describeDb("T1 — client-supplied flags/role stripped (authz flag security)", (
         canManageCollection: true,
         role: "owner",
       }),
-      { params: { id: collectionId } },
+      { params: Promise.resolve({ id: collectionId }) },
     );
     expect(res.status).toBe(201);
 

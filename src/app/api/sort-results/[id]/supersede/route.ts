@@ -7,14 +7,15 @@ import { requireApiResultAccess } from "@/server/dal/collection-access";
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
-    const result = await SortResultService.fromDb(db).supersedeResult(params.id);
+    const result = await SortResultService.fromDb(db).supersedeResult(id);
     if (!result) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }

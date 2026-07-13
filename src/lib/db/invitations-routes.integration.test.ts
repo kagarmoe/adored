@@ -115,7 +115,7 @@ describeDb("Invitation routes — real DB integration", () => {
 
       const res = await getInvitation(
         makeRequest("GET", `http://localhost/api/invitations/${id}`) as any,
-        { params: { id } },
+        { params: Promise.resolve({ id }) },
       );
       expect(res.status).toBe(401);
     });
@@ -127,7 +127,7 @@ describeDb("Invitation routes — real DB integration", () => {
 
       const res = await getInvitation(
         makeRequest("GET", `http://localhost/api/invitations/${id}`) as any,
-        { params: { id } },
+        { params: Promise.resolve({ id }) },
       );
       expect(res.status).toBe(200);
       const body = await res.json();
@@ -142,7 +142,7 @@ describeDb("Invitation routes — real DB integration", () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await getInvitation(
         makeRequest("GET", "http://localhost/api/invitations/inv-absent") as any,
-        { params: { id: "inv-absent" } },
+        { params: Promise.resolve({ id: "inv-absent" }) },
       );
       expect(res.status).toBe(404);
     });
@@ -160,7 +160,7 @@ describeDb("Invitation routes — real DB integration", () => {
 
       const res = await patchInvitation(
         makeRequest("PATCH", `http://localhost/api/invitations/${id}`, { canSort: false }) as any,
-        { params: { id } },
+        { params: Promise.resolve({ id }) },
       );
       expect(res.status).toBe(401);
     });
@@ -176,7 +176,7 @@ describeDb("Invitation routes — real DB integration", () => {
         headers: { "content-type": "application/json" },
         body: "not-json{{{",
       });
-      const res = await patchInvitation(req as any, { params: { id } });
+      const res = await patchInvitation(req as any, { params: Promise.resolve({ id }) });
       expect(res.status).toBe(400);
       const body = await res.json();
       expect(body.error).toMatch(/invalid json/i);
@@ -194,7 +194,7 @@ describeDb("Invitation routes — real DB integration", () => {
           canSort: false,
           canDeletePhotos: true,
         }) as any,
-        { params: { id } },
+        { params: Promise.resolve({ id }) },
       );
       expect(res.status).toBe(200);
 
@@ -216,7 +216,7 @@ describeDb("Invitation routes — real DB integration", () => {
 
       const res = await patchInvitation(
         makeRequest("PATCH", `http://localhost/api/invitations/${id}`, { canSort: false }) as any,
-        { params: { id } },
+        { params: Promise.resolve({ id }) },
       );
       expect(res.status).toBe(403);
 
@@ -238,7 +238,7 @@ describeDb("Invitation routes — real DB integration", () => {
 
       const res = await patchInvitation(
         makeRequest("PATCH", `http://localhost/api/invitations/${id}`, { canSort: "nope" }) as any,
-        { params: { id } },
+        { params: Promise.resolve({ id }) },
       );
       expect(res.status).toBe(200);
 
@@ -260,7 +260,7 @@ describeDb("Invitation routes — real DB integration", () => {
 
       const res = await deleteInvitation(
         makeRequest("DELETE", `http://localhost/api/invitations/${id}`) as any,
-        { params: { id } },
+        { params: Promise.resolve({ id }) },
       );
       expect(res.status).toBe(401);
     });
@@ -272,7 +272,7 @@ describeDb("Invitation routes — real DB integration", () => {
 
       const res = await deleteInvitation(
         makeRequest("DELETE", `http://localhost/api/invitations/${id}`) as any,
-        { params: { id } },
+        { params: Promise.resolve({ id }) },
       );
       expect(res.status).toBe(200);
       const body = await res.json();
@@ -290,7 +290,7 @@ describeDb("Invitation routes — real DB integration", () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await deleteInvitation(
         makeRequest("DELETE", "http://localhost/api/invitations/inv-absent") as any,
-        { params: { id: "inv-absent" } },
+        { params: Promise.resolve({ id: "inv-absent" }) },
       );
       expect(res.status).toBe(404);
     });
@@ -306,7 +306,7 @@ describeDb("Invitation routes — real DB integration", () => {
 
       const res = await deleteInvitation(
         makeRequest("DELETE", `http://localhost/api/invitations/${id}`) as any,
-        { params: { id } },
+        { params: Promise.resolve({ id }) },
       );
       expect(res.status).toBe(403);
 
@@ -328,7 +328,7 @@ describeDb("Invitation routes — real DB integration", () => {
 
       const res = await resendInvitation(
         makeRequest("POST", `http://localhost/api/invitations/${id}/resend`) as any,
-        { params: { id } },
+        { params: Promise.resolve({ id }) },
       );
       expect(res.status).toBe(401);
     });
@@ -340,7 +340,7 @@ describeDb("Invitation routes — real DB integration", () => {
 
       const res = await resendInvitation(
         makeRequest("POST", `http://localhost/api/invitations/${id}/resend`) as any,
-        { params: { id } },
+        { params: Promise.resolve({ id }) },
       );
       expect(res.status).toBe(200);
       const body = await res.json();
@@ -358,7 +358,7 @@ describeDb("Invitation routes — real DB integration", () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await resendInvitation(
         makeRequest("POST", "http://localhost/api/invitations/inv-absent/resend") as any,
-        { params: { id: "inv-absent" } },
+        { params: Promise.resolve({ id: "inv-absent" }) },
       );
       expect(res.status).toBe(404);
     });

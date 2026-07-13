@@ -65,7 +65,7 @@ describeDb("decisions route — clear-disposition-on-triage (route -> repo -> DB
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await postDecision(
       decisionReq(sortSession.id, { type: "triage", decision: { itemId: item.id, result: "top" } }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201);
 
@@ -92,7 +92,7 @@ describeDb("decisions route — clear-disposition-on-triage (route -> repo -> DB
         type: "pairwise_compare",
         decision: { itemAId: itemA.id, itemBId: itemB.id, result: "item_a" },
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201);
 
@@ -120,7 +120,7 @@ describeDb("decisions route — clear-disposition-on-triage (route -> repo -> DB
     try {
       const res = await postDecision(
         decisionReq(sortSession.id, { type: "triage", decision: { itemId: item.id, result: "top" } }) as any,
-        { params: { id: sortSession.id } } as any,
+        { params: Promise.resolve({ id: sortSession.id }) } as any,
       );
       // The route maps the thrown error to a 500.
       expect(res.status).toBe(500);

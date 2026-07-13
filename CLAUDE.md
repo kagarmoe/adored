@@ -79,7 +79,7 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 
 ## Build & Test
 
-Gates (the pre-push hook mirrors these):
+Gates (CI runs all five; the pre-push hook mirrors lint + test:ci + build):
 
 ```bash
 npm run build         # next build

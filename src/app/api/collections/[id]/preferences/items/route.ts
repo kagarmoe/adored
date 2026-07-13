@@ -7,15 +7,16 @@ import { errorResponse } from "@/server/api/http-errors";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiCollectionAccess(db, params.id, user.id);
+    const access = await requireApiCollectionAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
 
-    const items = await PreferenceController.fromDb(db).listItemPreferences(params.id, user.id);
+    const items = await PreferenceController.fromDb(db).listItemPreferences(id, user.id);
     return NextResponse.json(items);
   } catch (error) {
     return errorResponse(error);

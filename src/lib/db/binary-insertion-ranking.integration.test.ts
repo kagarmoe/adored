@@ -31,7 +31,7 @@ function decisionReq(sessionId: string, body: unknown): Request {
 async function postDecision(sessionId: string, body: unknown): Promise<Response> {
   return (await postDecisionRoute(
     decisionReq(sessionId, body) as never,
-    { params: { id: sessionId } } as never,
+    { params: Promise.resolve({ id: sessionId }) } as never,
   )) as unknown as Response;
 }
 

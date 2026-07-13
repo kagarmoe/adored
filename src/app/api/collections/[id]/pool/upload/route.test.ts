@@ -48,7 +48,7 @@ describe("POST /api/collections/[id]/pool/upload", () => {
 
   it("401 when unauthenticated — no token generated", async () => {
     mockGetSession.mockResolvedValue(null);
-    const res = await POST(makeReq(), { params: { id: "c1" } });
+    const res = await POST(makeReq(), { params: Promise.resolve({ id: "c1" }) });
     expect(res.status).toBe(401);
   });
 
@@ -57,7 +57,7 @@ describe("POST /api/collections/[id]/pool/upload", () => {
     mockRequireApiCapability.mockResolvedValue(
       NextResponse.json({ error: "Forbidden" }, { status: 403 }),
     );
-    const res = await POST(makeReq(), { params: { id: "c1" } });
+    const res = await POST(makeReq(), { params: Promise.resolve({ id: "c1" }) });
     expect(res.status).toBe(403);
   });
 
@@ -66,7 +66,7 @@ describe("POST /api/collections/[id]/pool/upload", () => {
     mockRequireApiCapability.mockResolvedValue(
       NextResponse.json({ error: "Not found" }, { status: 404 }),
     );
-    const res = await POST(makeReq(), { params: { id: "c1" } });
+    const res = await POST(makeReq(), { params: Promise.resolve({ id: "c1" }) });
     expect(res.status).toBe(404);
   });
 
@@ -75,7 +75,7 @@ describe("POST /api/collections/[id]/pool/upload", () => {
     // requireApiCapability returns the collection on success (not a NextResponse)
     mockRequireApiCapability.mockResolvedValue({ id: "c1", ownerId: "u1" });
 
-    const res = await POST(makeReq(), { params: { id: "c1" } });
+    const res = await POST(makeReq(), { params: Promise.resolve({ id: "c1" }) });
     expect(res.status).toBe(200);
     expect(mockHandleUpload).toHaveBeenCalledOnce();
 
@@ -93,7 +93,7 @@ describe("POST /api/collections/[id]/pool/upload", () => {
     // Any curator is allowed — requireApiCapability resolves to the collection.
     mockRequireApiCapability.mockResolvedValue({ id: "c1", ownerId: "u2" });
 
-    const res = await POST(makeReq(), { params: { id: "c1" } });
+    const res = await POST(makeReq(), { params: Promise.resolve({ id: "c1" }) });
     expect(res.status).toBe(200);
     expect(mockHandleUpload).toHaveBeenCalledOnce();
     const body = (await res.json()) as { token: any };

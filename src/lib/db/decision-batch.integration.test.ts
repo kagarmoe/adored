@@ -138,7 +138,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
 
     const res = await postBatch(
       batchReq(sortSession.id, { decisions: [triage(items[0].id, "top")] }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(401);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
@@ -151,7 +151,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
     const unknownSessionId = generateId("session");
     const res = await postBatch(
       batchReq(unknownSessionId, { decisions: [triage(items[0].id, "top")] }) as any,
-      { params: { id: unknownSessionId } } as any,
+      { params: Promise.resolve({ id: unknownSessionId }) } as any,
     );
     expect(res.status).toBe(404);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
@@ -167,7 +167,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
 
     const res = await postBatch(
       batchReq(sortSession.id, { decisions: [triage(items[0].id, "top")] }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(403);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
@@ -183,7 +183,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
 
     const res = await postBatch(
       batchReq(sortSession.id, { decisions: [triage(items[0].id, "top")] }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(409);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
@@ -203,7 +203,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
     const decisions = Array.from({ length: 51 }, () => triage(items[0].id, "top"));
     const res = await postBatch(
       batchReq(sortSession.id, { decisions }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(400);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
@@ -217,7 +217,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
 
     const res = await postBatch(
       streamBatchReq(sortSession.id, 70_000) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(413);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);
@@ -238,7 +238,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
           triage(items[2].id, "medium", keys[2]),
         ],
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201);
     const body = await res.json();
@@ -282,7 +282,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
       batchReq(sortSession.id, {
         decisions: [triage(items[0].id, "high", key), triage(items[0].id, "top", key)],
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201); // never a 500 from the unique index
     const body = await res.json();
@@ -313,7 +313,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
     ];
     const first = await postBatch(
       batchReq(sortSession.id, { decisions }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(first.status).toBe(201);
     const snapshot = await prefsSnapshot(db, collectionId, ownerId);
@@ -324,7 +324,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
     await sleep(5);
     const replay = await postBatch(
       batchReq(sortSession.id, { decisions }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(replay.status).toBe(200);
     const replayBody = await replay.json();
@@ -347,7 +347,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
       batchReq(sortSession.id, {
         decisions: [decisions[0], triage(items[3].id, "medium")],
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(mixed.status).toBe(201);
     const mixedBody = await mixed.json();
@@ -389,7 +389,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
           },
         ],
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201);
     const body = await res.json();
@@ -411,7 +411,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
     await sleep(5);
     const allRejected = await postBatch(
       batchReq(sortSession.id, { decisions: [triage(foreignItem.id, "top")] }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(allRejected.status).toBe(200);
     expect(await prefsSnapshot(db, collectionId, ownerId)).toBe(snapshot);
@@ -433,7 +433,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
     expect(
       (
         await postSingle(singleReq(itemA.id, "low") as any, {
-          params: { id: sortSession.id },
+          params: Promise.resolve({ id: sortSession.id }),
         } as any)
       ).status,
     ).toBe(201);
@@ -441,7 +441,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
       (
         await postBatch(
           batchReq(sortSession.id, { decisions: [triage(itemA.id, "top")] }) as any,
-          { params: { id: sortSession.id } } as any,
+          { params: Promise.resolve({ id: sortSession.id }) } as any,
         )
       ).status,
     ).toBe(201);
@@ -455,14 +455,14 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
       (
         await postBatch(
           batchReq(sortSession.id, { decisions: [triage(itemB.id, "high")] }) as any,
-          { params: { id: sortSession.id } } as any,
+          { params: Promise.resolve({ id: sortSession.id }) } as any,
         )
       ).status,
     ).toBe(201);
     expect(
       (
         await postSingle(singleReq(itemB.id, "medium") as any, {
-          params: { id: sortSession.id },
+          params: Promise.resolve({ id: sortSession.id }),
         } as any)
       ).status,
     ).toBe(201);
@@ -478,7 +478,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
       batchReq(sortSession.id, {
         decisions: [triage(items[0].id, "high"), triage(items[0].id, "top")],
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201);
 
@@ -512,11 +512,11 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
     const sharedKey = ck();
     const first = await postBatch(
       batchReq(sortSession.id, { decisions: [triage(items[0].id, "top", sharedKey)] }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     const second = await postBatch(
       batchReq(otherSession.id, { decisions: [triage(otherItem.id, "top", sharedKey)] }) as any,
-      { params: { id: otherSession.id } } as any,
+      { params: Promise.resolve({ id: otherSession.id }) } as any,
     );
     expect(first.status).toBe(201);
     expect(second.status).toBe(201);
@@ -537,7 +537,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
 
     const res = await postBatch(
       batchReq(sortSession.id, { decisions: [triage(items[0].id, "top")] }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201);
     expect(lockSpy).toHaveBeenCalledWith(expect.anything(), collectionId, ownerId);
@@ -556,7 +556,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
     const dupKey = ck();
     await postBatch(
       batchReq(sortSession.id, { decisions: [triage(items[0].id, "top", dupKey)] }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     phCapture.mockClear();
     phFlush.mockClear();
@@ -570,7 +570,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
           triage(foreignItem.id, "low"),
         ],
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(mixed.status).toBe(201);
     const mixedBody = await mixed.json();
@@ -597,7 +597,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
     phCapture.mockClear();
     const replay = await postBatch(
       batchReq(sortSession.id, { decisions: [triage(items[0].id, "top", dupKey)] }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(replay.status).toBe(200);
     expect(phCapture).toHaveBeenCalledTimes(1);
@@ -638,7 +638,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
       batchReq(sortSession.id, {
         decisions: [triage(items[0].id, "top"), triage(items[1].id, "low")],
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(seedRes.status).toBe(201);
 
@@ -662,7 +662,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
       batchReq(sortSession.id, {
         decisions: [usage(items[0].id, "uses", keys[0]), usage(items[1].id, "not_uses", keys[1])],
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201);
     expect((await res.json()).results).toEqual(keys.map((clientKey) => ({ clientKey, status: "created" })));
@@ -690,7 +690,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
       batchReq(sortSession.id, {
         decisions: [triage(triagedItem.id, "top"), triage(usageItem.id, "low")],
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
 
     // Pre-seed dispositions on BOTH: only the triaged one may be cleared.
@@ -710,7 +710,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
       batchReq(sortSession.id, {
         decisions: [triage(triagedItem.id, "high"), usage(usageItem.id, "uses")],
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201);
     expect((await res.json()).results.map((r: { status: string }) => r.status)).toEqual([
@@ -737,7 +737,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
     const dupKey = ck();
     const firstRes = await postBatch(
       batchReq(sortSession.id, { decisions: [triage(items[0].id, "top", dupKey)] }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(firstRes.status).toBe(201);
     const snapshot = await prefsSnapshot(db, collectionId, ownerId);
@@ -750,7 +750,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
         // Triage entry is a replay (duplicate); the usage entry inserts.
         decisions: [triage(items[0].id, "top", dupKey), usage(items[1].id, "uses", usageKey)],
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201); // ≥1 entry of any type created ⇒ 201
     expect((await res.json()).results).toEqual([
@@ -778,7 +778,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
             triage(items[2].id, "low"),
           ],
         }) as any,
-        { params: { id: sortSession.id } } as any,
+        { params: Promise.resolve({ id: sortSession.id }) } as any,
       );
       if (withUsage) {
         await postBatch(
@@ -789,7 +789,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
               usage(items[2].id, "uses"),
             ],
           }) as any,
-          { params: { id: sortSession.id } } as any,
+          { params: Promise.resolve({ id: sortSession.id }) } as any,
         );
       }
       // Force one more recompute (re-affirm the same buckets, fresh clientKeys).
@@ -803,7 +803,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
             triage(items[2].id, "low"),
           ],
         }) as any,
-        { params: { id: sortSession.id } } as any,
+        { params: Promise.resolve({ id: sortSession.id }) } as any,
       );
       return scoreSnapshot(db, collectionId, ownerId);
     }
@@ -848,7 +848,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
           usage(deletedItem.id, "uses", keys.deleted),
         ],
       }) as any,
-      { params: { id: sortSession.id } } as any,
+      { params: Promise.resolve({ id: sortSession.id }) } as any,
     );
     expect(res.status).toBe(201);
     expect((await res.json()).results).toEqual([
@@ -877,7 +877,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
       batchReq(A.sortSession.id, {
         decisions: [usage(A.items[0].id, "uses"), usage(A.items[0].id, "not_uses")],
       }) as any,
-      { params: { id: A.sortSession.id } } as any,
+      { params: Promise.resolve({ id: A.sortSession.id }) } as any,
     );
     expect(inBatch.status).toBe(201);
     const eventsA = await new DecisionEventRepository(A.db).findBySession(A.sortSession.id);
@@ -890,12 +890,12 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
     const B = await seedSession(1);
     await postBatch(
       batchReq(B.sortSession.id, { decisions: [usage(B.items[0].id, "not_uses")] }) as any,
-      { params: { id: B.sortSession.id } } as any,
+      { params: Promise.resolve({ id: B.sortSession.id }) } as any,
     );
     await sleep(5);
     await postBatch(
       batchReq(B.sortSession.id, { decisions: [usage(B.items[0].id, "uses")] }) as any,
-      { params: { id: B.sortSession.id } } as any,
+      { params: Promise.resolve({ id: B.sortSession.id }) } as any,
     );
     const eventsB = await new DecisionEventRepository(B.db).findBySession(B.sortSession.id);
     expect(eventsB).toHaveLength(2);

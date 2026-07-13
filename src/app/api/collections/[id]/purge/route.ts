@@ -15,13 +15,14 @@ const ConfirmSchema = z.object({ confirm: z.string() });
 // 403/404, never a 400 that leaks the collection's existence or name.
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const db = getDb();
 
-    const collection = await CollectionController.fromDb(db).getIncludingDeleted(params.id);
+    const collection = await CollectionController.fromDb(db).getIncludingDeleted(id);
     if (!collection) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }

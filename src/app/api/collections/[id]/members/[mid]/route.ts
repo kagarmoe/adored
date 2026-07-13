@@ -9,33 +9,35 @@ async function membershipBelongsToCollection(db: ReturnType<typeof getDb>, mid: 
   return (await MemberController.fromDb(db).getByIdForCollection(mid, collectionId)) !== null;
 }
 
-export async function GET(_request: NextRequest, { params }: { params: { id: string; mid: string } }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string; mid: string }> }) {
+  const { id, mid } = await params;
   const session = await getSession();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = getDb();
   // members:read = curator — any curator may read a membership.
-  const access = await requireApiCapability(db, params.id, session.user.id, "members:read");
+  const access = await requireApiCapability(db, id, session.user.id, "members:read");
   if (access instanceof NextResponse) return access;
-  if (!(await membershipBelongsToCollection(db, params.mid, params.id))) {
+  if (!(await membershipBelongsToCollection(db, mid, id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  return NextResponse.json(await MemberController.fromDb(db).getMember(params.mid));
+  return NextResponse.json(await MemberController.fromDb(db).getMember(mid));
 }
 
 // PATCH removed (purses-2wzz): no UI caller; members have no editable fields under
 // the role model (UpdateMemberSchema is empty; repo update writes only updatedAt).
 // Next.js returns 405 automatically for unexported methods.
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string; mid: string } }) {
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string; mid: string }> }) {
+  const { id, mid } = await params;
   const session = await getSession();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = getDb();
-  if (!(await membershipBelongsToCollection(db, params.mid, params.id))) {
+  if (!(await membershipBelongsToCollection(db, mid, id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   // members:manage = owner — only the collection owner may remove members.
-  const access = await requireApiCapability(db, params.id, session.user.id, "members:manage");
+  const access = await requireApiCapability(db, id, session.user.id, "members:manage");
   if (access instanceof NextResponse) return access;
-  await MemberController.fromDb(db).removeMember(params.mid);
+  await MemberController.fromDb(db).removeMember(mid);
   return NextResponse.json({ message: "Member removed" });
 }

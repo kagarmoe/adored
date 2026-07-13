@@ -8,19 +8,20 @@ import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
-    const result = await ResultController.fromDb(db).finalizeResult(params.id);
+    const result = await ResultController.fromDb(db).finalizeResult(id);
     const phClient = getPostHogClient();
     phClient.capture({
       distinctId: user.id,
       event: 'sort_result_finalized',
-      properties: { result_id: params.id },
+      properties: { result_id: id },
     });
     await phClient.flush();
     return NextResponse.json(result);

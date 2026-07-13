@@ -24,21 +24,22 @@ async function assertPhotosWrite(collectionId: string): Promise<string> {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const body = (await req.json()) as HandleUploadBody;
     const jsonResponse = await handleUpload({
       body,
       request: req,
       onBeforeGenerateToken: async () => {
         // User request: cookies present → authorize and capture the uploader.
-        const uploadedBy = await assertPhotosWrite(params.id);
+        const uploadedBy = await assertPhotosWrite(id);
         return {
           allowedContentTypes: [...POOL_ALLOWED_CONTENT_TYPES],
           maximumSizeInBytes: POOL_MAX_BYTES,
           addRandomSuffix: true,
-          tokenPayload: JSON.stringify({ collectionId: params.id, uploadedBy }),
+          tokenPayload: JSON.stringify({ collectionId: id, uploadedBy }),
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {

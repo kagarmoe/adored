@@ -4,11 +4,12 @@ import { getDb } from "@/lib/db";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
+    const { token } = await params;
     const db = getDb();
-    const share = await ShareController.fromDb(db).viewSharedResult(params.token);
+    const share = await ShareController.fromDb(db).viewSharedResult(token);
     return NextResponse.json(share);
   } catch (error) {
     // Public route: never echo the underlying error to an unauthenticated caller

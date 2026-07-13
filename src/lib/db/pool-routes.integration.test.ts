@@ -61,8 +61,8 @@ function jsonReq(body?: unknown): Request {
   });
 }
 
-const colCtx = (id: string) => ({ params: { id } }) as any;
-const photoCtx = (id: string, photoId: string) => ({ params: { id, photoId } }) as any;
+const colCtx = (id: string) => ({ params: Promise.resolve({ id }) }) as any;
+const photoCtx = (id: string, photoId: string) => ({ params: Promise.resolve({ id, photoId }) }) as any;
 
 describeDb("pool routes (route -> repo -> DB)", () => {
   let ownerId: string;

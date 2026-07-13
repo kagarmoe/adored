@@ -5,7 +5,8 @@ import { requireApiItemCapability, requireApiCollectionAccess } from "@/server/d
 import { DispositionController } from "@/server/api/dispositions";
 import { errorResponse } from "@/server/api/http-errors";
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   let body: { itemId?: string; disposition?: string };
@@ -16,25 +17,26 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // Resolve the item, authorize on its collection, then assert it agrees with the URL.
   const item = await requireApiItemCapability(db, body.itemId, session.user.id, "preferences:write");
   if (item instanceof NextResponse) return item;
-  if (item.collectionId !== params.id) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (item.collectionId !== id) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   try {
-    const result = await DispositionController.fromDb(db).setDisposition(params.id, session.user.id, body);
+    const result = await DispositionController.fromDb(db).setDisposition(id, session.user.id, body);
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
     return errorResponse(error);
   }
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = getDb();
-  const access = await requireApiCollectionAccess(db, params.id, session.user.id);
+  const access = await requireApiCollectionAccess(db, id, session.user.id);
   if (access instanceof NextResponse) return access;
   const disp = new URL(req.url).searchParams.get("disposition") ?? undefined;
   const list = await DispositionController.fromDb(db).listDispositions(
-    params.id, session.user.id, disp === "set_aside" || disp === "deferred" ? disp : undefined,
+    id, session.user.id, disp === "set_aside" || disp === "deferred" ? disp : undefined,
   );
   return NextResponse.json(list);
 }

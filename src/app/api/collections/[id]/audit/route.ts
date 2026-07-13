@@ -10,17 +10,18 @@ import { errorResponse } from "@/server/api/http-errors";
 // (API.md §46). The purge trail is the owner's concern; a member must not read it.
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const db = getDb();
 
-    const owned = await requireApiCollectionOwner(db, params.id, user.id);
+    const owned = await requireApiCollectionOwner(db, id, user.id);
     if (owned instanceof NextResponse) return owned; // 404 absent / 403 not owner
 
     const limitParam = request.nextUrl.searchParams.get("limit");
-    const entries = await AuditController.fromDb(db).listByCollection(params.id, {
+    const entries = await AuditController.fromDb(db).listByCollection(id, {
       limit: limitParam == null ? undefined : Number(limitParam),
     });
     return NextResponse.json(entries);

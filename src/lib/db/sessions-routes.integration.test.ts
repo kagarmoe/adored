@@ -153,13 +153,13 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
     it("GET 401s an unauthenticated caller", async () => {
       const { sessionId } = await seedSession(ownerId);
       mockGetSession.mockResolvedValue(null);
-      const res = await getSession(jsonReq("GET") as any, { params: { id: sessionId } } as any);
+      const res = await getSession(jsonReq("GET") as any, { params: Promise.resolve({ id: sessionId }) } as any);
       expect(res.status).toBe(401);
     });
 
     it("GET 404s an absent session id", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await getSession(jsonReq("GET") as any, { params: { id: "sess-absent" } } as any);
+      const res = await getSession(jsonReq("GET") as any, { params: Promise.resolve({ id: "sess-absent" }) } as any);
       expect(res.status).toBe(404);
     });
 
@@ -167,7 +167,7 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
       const { collectionId, sessionId } = await seedSession(ownerId);
       const memberId = await addMember(collectionId);
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
-      const res = await getSession(jsonReq("GET") as any, { params: { id: sessionId } } as any);
+      const res = await getSession(jsonReq("GET") as any, { params: Promise.resolve({ id: sessionId }) } as any);
       expect(res.status).toBe(403);
     });
 
@@ -175,7 +175,7 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
     it("GET 200s for the curator and returns the session", async () => {
       const { sessionId } = await seedSession(ownerId);
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await getSession(jsonReq("GET") as any, { params: { id: sessionId } } as any);
+      const res = await getSession(jsonReq("GET") as any, { params: Promise.resolve({ id: sessionId }) } as any);
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.id).toBe(sessionId);
@@ -205,7 +205,7 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
       // Rejects (error surfaces) — NOT a resolved 404. The masking bug would have
       // swallowed this into NextResponse 404 and the assertion would fail.
       await expect(
-        getSession(jsonReq("GET") as any, { params: { id: sessionId } } as any),
+        getSession(jsonReq("GET") as any, { params: Promise.resolve({ id: sessionId }) } as any),
       ).rejects.toThrow("db down");
       expect(spy).toHaveBeenCalled();
     });
@@ -216,7 +216,7 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
       const { sessionId } = await seedSession(ownerId);
       mockGetSession.mockResolvedValue(null);
       const res = await patchSession(jsonReq("PATCH", { goal: "hacked" }) as any, {
-        params: { id: sessionId },
+        params: Promise.resolve({ id: sessionId }),
       } as any);
       expect(res.status).toBe(401);
       // Present-before pairing: the goal is untouched (still null from create()).
@@ -226,7 +226,7 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
     it("PATCH 404s an absent session id", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await patchSession(jsonReq("PATCH", { goal: "x" }) as any, {
-        params: { id: "sess-absent" },
+        params: Promise.resolve({ id: "sess-absent" }),
       } as any);
       expect(res.status).toBe(404);
     });
@@ -238,7 +238,7 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
       const res = await patchSession(jsonReq("PATCH", { status: "abandoned" }) as any, {
-        params: { id: sessionId },
+        params: Promise.resolve({ id: sessionId }),
       } as any);
       expect(res.status).toBe(403);
       // Unchanged: still active (assert via repo read).
@@ -257,7 +257,7 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
 
       const res = await patchSession(
         jsonReq("PATCH", { status: "completed", goal: "Done sorting" }) as any,
-        { params: { id: sessionId } } as any,
+        { params: Promise.resolve({ id: sessionId }) } as any,
       );
       expect(res.status).toBe(200);
 
@@ -278,7 +278,7 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
 
       const res = await patchSession(
         jsonReq("PATCH", { status: "not-a-status" }) as any,
-        { params: { id: sessionId } } as any,
+        { params: Promise.resolve({ id: sessionId }) } as any,
       );
       expect(res.status).toBe(400);
       // Unchanged: still active.
@@ -291,7 +291,7 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
       const { sessionId } = await seedSession(ownerId);
       mockGetSession.mockResolvedValue(null);
       const res = await deleteSession(jsonReq("DELETE") as any, {
-        params: { id: sessionId },
+        params: Promise.resolve({ id: sessionId }),
       } as any);
       expect(res.status).toBe(401);
       // Present-before pairing: still resolvable (not soft-deleted).
@@ -301,7 +301,7 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
     it("DELETE 404s an absent session id", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await deleteSession(jsonReq("DELETE") as any, {
-        params: { id: "sess-absent" },
+        params: Promise.resolve({ id: "sess-absent" }),
       } as any);
       expect(res.status).toBe(404);
     });
@@ -313,7 +313,7 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
       const res = await deleteSession(jsonReq("DELETE") as any, {
-        params: { id: sessionId },
+        params: Promise.resolve({ id: sessionId }),
       } as any);
       expect(res.status).toBe(403);
       expect(await new SessionRepository(db).findById(sessionId)).not.toBeNull();
@@ -328,7 +328,7 @@ describeDb("sessions routes (route -> repo -> DB) — purses-t9l", () => {
       expect(await new SessionRepository(db).findById(sessionId)).not.toBeNull();
 
       const res = await deleteSession(jsonReq("DELETE") as any, {
-        params: { id: sessionId },
+        params: Promise.resolve({ id: sessionId }),
       } as any);
       expect(res.status).toBe(200);
 

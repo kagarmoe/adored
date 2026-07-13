@@ -25,16 +25,18 @@ async function authorizeSession(db: ReturnType<typeof getDb>, sessionId: string,
   return { sortSession };
 }
 
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = getDb();
-  const guard = await authorizeSession(db, params.id, session.user.id);
+  const guard = await authorizeSession(db, id, session.user.id);
   if (guard instanceof NextResponse) return guard;
   return NextResponse.json(guard.sortSession);
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   let body: unknown;
@@ -44,22 +46,23 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
   const db = getDb();
-  const guard = await authorizeSession(db, params.id, session.user.id);
+  const guard = await authorizeSession(db, id, session.user.id);
   if (guard instanceof NextResponse) return guard;
   try {
-    const result = await SessionController.fromDb(db).updateSession(params.id, body);
+    const result = await SessionController.fromDb(db).updateSession(id, body);
     return NextResponse.json(result);
   } catch (error) {
     return errorResponse(error);
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = getDb();
-  const guard = await authorizeSession(db, params.id, session.user.id);
+  const guard = await authorizeSession(db, id, session.user.id);
   if (guard instanceof NextResponse) return guard;
-  await SessionController.fromDb(db).deleteSession(params.id);
+  await SessionController.fromDb(db).deleteSession(id);
   return NextResponse.json({ message: "Session deleted" });
 }

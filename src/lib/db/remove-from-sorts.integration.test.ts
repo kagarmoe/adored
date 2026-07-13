@@ -119,7 +119,7 @@ describeDb("POST /api/items/[id]/remove-from-sorts (route -> service -> DB) — 
     const finalizedRi = await placeInResult(itemId, "finalized");
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-    const res = await removeFromSorts(removeReq() as any, { params: { id: itemId } });
+    const res = await removeFromSorts(removeReq() as any, { params: Promise.resolve({ id: itemId }) });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ removed: 1, remainingInFinalized: 1 });
 
@@ -134,7 +134,7 @@ describeDb("POST /api/items/[id]/remove-from-sorts (route -> service -> DB) — 
     const draftRi2 = await placeInResult(itemId, "draft");
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-    const res = await removeFromSorts(removeReq() as any, { params: { id: itemId } });
+    const res = await removeFromSorts(removeReq() as any, { params: Promise.resolve({ id: itemId }) });
     expect(res.status).toBe(200);
     const body = (await res.json()) as { removed: number; remainingInFinalized: number };
     expect(body.removed).toBeGreaterThanOrEqual(1);
@@ -151,14 +151,14 @@ describeDb("POST /api/items/[id]/remove-from-sorts (route -> service -> DB) — 
     const memberId = await addMember();
     mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
-    const res = await removeFromSorts(removeReq() as any, { params: { id: itemId } });
+    const res = await removeFromSorts(removeReq() as any, { params: Promise.resolve({ id: itemId }) });
     expect(res.status).toBe(403);
     expect(await resultItemExists(draftRi)).toBe(true); // nothing removed
   });
 
   it("(d) 404 for an absent item id", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    const res = await removeFromSorts(removeReq() as any, { params: { id: "item_does_not_exist" } });
+    const res = await removeFromSorts(removeReq() as any, { params: Promise.resolve({ id: "item_does_not_exist" }) });
     expect(res.status).toBe(404);
   });
 });

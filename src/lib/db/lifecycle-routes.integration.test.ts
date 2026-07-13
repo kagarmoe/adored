@@ -82,7 +82,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       mockGetSession.mockResolvedValue(null);
       const { collectionId } = await seedFullCollection(ownerId);
 
-      const res = await membersGet(getReq(), { params: { id: collectionId } });
+      const res = await membersGet(getReq(), { params: Promise.resolve({ id: collectionId }) });
       expect(res.status).toBe(401);
     });
 
@@ -90,7 +90,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const { collectionId, memberId } = await seedFullCollection(ownerId);
 
-      const res = await membersGet(getReq(), { params: { id: collectionId } });
+      const res = await membersGet(getReq(), { params: Promise.resolve({ id: collectionId }) });
       expect(res.status).toBe(200);
 
       const body = await res.json();
@@ -103,7 +103,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       const { collectionId, memberId } = await seedFullCollection(ownerId);
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
-      const res = await membersGet(getReq(), { params: { id: collectionId } });
+      const res = await membersGet(getReq(), { params: Promise.resolve({ id: collectionId }) });
       expect(res.status).toBe(200);
 
       const body = await res.json();
@@ -115,7 +115,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const collectionId = await seedBareCollection(ownerId);
 
-      const res = await membersGet(getReq(), { params: { id: collectionId } });
+      const res = await membersGet(getReq(), { params: Promise.resolve({ id: collectionId }) });
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body).toEqual([]);
@@ -132,7 +132,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
 
       const res = await membersPost(
         postReq({ userId: strangerId }),
-        { params: { id: collectionId } },
+        { params: Promise.resolve({ id: collectionId }) },
       );
       expect(res.status).toBe(401);
     });
@@ -143,7 +143,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
 
       const res = await membersPost(
         postReq({ userId: strangerId }),
-        { params: { id: collectionId } },
+        { params: Promise.resolve({ id: collectionId }) },
       );
       expect(res.status).toBe(403);
     });
@@ -159,7 +159,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
 
       const res = await membersPost(
         postReq({ userId: newUserId }),
-        { params: { id: collectionId } },
+        { params: Promise.resolve({ id: collectionId }) },
       );
       expect(res.status).toBe(201);
 
@@ -184,7 +184,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
         body: "not-json",
       }) as any;
 
-      const res = await membersPost(badReq, { params: { id: collectionId } });
+      const res = await membersPost(badReq, { params: Promise.resolve({ id: collectionId }) });
       expect(res.status).toBe(400);
     });
 
@@ -193,7 +193,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
 
       const res = await membersPost(
         postReq({ userId: strangerId }),
-        { params: { id: "col-absent" } },
+        { params: Promise.resolve({ id: "col-absent" }) },
       );
       // requireApiCapability → collection not found → 404
       expect(res.status).toBe(404);
@@ -210,7 +210,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
 
       const res = await membersPost(
         postReq({}), // no userId
-        { params: { id: collectionId } },
+        { params: Promise.resolve({ id: collectionId }) },
       );
       expect(res.status).toBe(400);
       // No membership row was created.
@@ -226,7 +226,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       mockGetSession.mockResolvedValue(null);
       const { collectionId } = await seedFullCollection(ownerId);
 
-      const res = await archivePost(postReq(), { params: { id: collectionId } });
+      const res = await archivePost(postReq(), { params: Promise.resolve({ id: collectionId }) });
       expect(res.status).toBe(401);
     });
 
@@ -234,7 +234,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       const { collectionId, memberId } = await seedFullCollection(ownerId);
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
-      const res = await archivePost(postReq(), { params: { id: collectionId } });
+      const res = await archivePost(postReq(), { params: Promise.resolve({ id: collectionId }) });
       expect(res.status).toBe(403);
     });
 
@@ -244,7 +244,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       // a clean 404 (was a 403 from canManageCollection → findById null → not-manager).
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-      const res = await archivePost(postReq(), { params: { id: "col-absent" } });
+      const res = await archivePost(postReq(), { params: Promise.resolve({ id: "col-absent" }) });
       expect(res.status).toBe(404);
     });
 
@@ -257,7 +257,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       const before = await new CollectionRepository(db).findById(collectionId);
       expect(before?.status).toBe("active");
 
-      const res = await archivePost(postReq(), { params: { id: collectionId } });
+      const res = await archivePost(postReq(), { params: Promise.resolve({ id: collectionId }) });
       expect(res.status).toBe(200);
 
       const body = await res.json();
@@ -277,7 +277,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       mockGetSession.mockResolvedValue(null);
       const { collectionId } = await seedFullCollection(ownerId);
 
-      const res = await collectionRestorePost(postReq(), { params: { id: collectionId } });
+      const res = await collectionRestorePost(postReq(), { params: Promise.resolve({ id: collectionId }) });
       expect(res.status).toBe(401);
     });
 
@@ -285,7 +285,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       const { collectionId, memberId } = await seedFullCollection(ownerId);
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
 
-      const res = await collectionRestorePost(postReq(), { params: { id: collectionId } });
+      const res = await collectionRestorePost(postReq(), { params: Promise.resolve({ id: collectionId }) });
       expect(res.status).toBe(403);
     });
 
@@ -295,7 +295,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       // a clean 404 (was a 403 from canManageCollection → findById null → not-manager).
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-      const res = await collectionRestorePost(postReq(), { params: { id: "col-absent" } });
+      const res = await collectionRestorePost(postReq(), { params: Promise.resolve({ id: "col-absent" }) });
       expect(res.status).toBe(404);
     });
 
@@ -309,7 +309,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       const before = await new CollectionRepository(db).findById(collectionId);
       expect(before?.status).toBe("archived");
 
-      const res = await collectionRestorePost(postReq(), { params: { id: collectionId } });
+      const res = await collectionRestorePost(postReq(), { params: Promise.resolve({ id: collectionId }) });
       expect(res.status).toBe(200);
 
       const body = await res.json();
@@ -325,11 +325,11 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       const { db } = getTestDb();
       const { collectionId } = await seedFullCollection(ownerId);
 
-      await archivePost(postReq(), { params: { id: collectionId } });
+      await archivePost(postReq(), { params: Promise.resolve({ id: collectionId }) });
       const archived = await new CollectionRepository(db).findById(collectionId);
       expect(archived?.status).toBe("archived");
 
-      const restoreRes = await collectionRestorePost(postReq(), { params: { id: collectionId } });
+      const restoreRes = await collectionRestorePost(postReq(), { params: Promise.resolve({ id: collectionId }) });
       expect(restoreRes.status).toBe(200);
 
       const restored = await new CollectionRepository(db).findById(collectionId);
@@ -345,7 +345,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       mockGetSession.mockResolvedValue(null);
       const { itemAId } = await seedFullCollection(ownerId);
 
-      const res = await itemRestorePost(postReq(), { params: { id: itemAId } });
+      const res = await itemRestorePost(postReq(), { params: Promise.resolve({ id: itemAId }) });
       expect(res.status).toBe(401);
     });
 
@@ -363,7 +363,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       const deleted = await itemRepo.findByIdIncludingDeleted(item.id);
       expect(deleted?.deletedAt).not.toBeNull();
 
-      const res = await itemRestorePost(postReq(), { params: { id: item.id } });
+      const res = await itemRestorePost(postReq(), { params: Promise.resolve({ id: item.id }) });
       expect(res.status).toBe(200);
 
       const body = await res.json();
@@ -388,7 +388,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       const item = await itemRepo.create({ collectionId, name: "Foreign Item" });
       await itemRepo.softDelete(item.id);
 
-      const res = await itemRestorePost(postReq(), { params: { id: item.id } });
+      const res = await itemRestorePost(postReq(), { params: Promise.resolve({ id: item.id }) });
       expect(res.status).toBe(403);
 
       // Still soft-deleted — the stranger's restore did not take effect.
@@ -402,7 +402,7 @@ describeDb("lifecycle route integration tests — members + archive/restore", ()
       // an absent item is a clean 404 (was a 500 from an UPDATE returning() TypeError).
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-      const res = await itemRestorePost(postReq(), { params: { id: "item-absent" } });
+      const res = await itemRestorePost(postReq(), { params: Promise.resolve({ id: "item-absent" }) });
       expect(res.status).toBe(404);
     });
   });

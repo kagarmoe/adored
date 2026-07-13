@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string; photoId: string } },
+  { params }: { params: Promise<{ id: string; photoId: string }> },
 ) {
   const session = await getSession();
   if (!session?.user) {
@@ -20,15 +20,16 @@ export async function GET(
   const db = getDb();
 
   try {
+    const { id, photoId } = await params;
     // Authz BEFORE existence (purses-ct0) — see the item /file route for the rationale:
     // resolving the photo first would let a non-member distinguish 404 from 403.
     // items:read = curator — any curator may view pool photo files (full-curator model).
-    const access = await requireApiCapability(db, params.id, session.user.id, "items:read");
+    const access = await requireApiCapability(db, id, session.user.id, "items:read");
     if (access instanceof NextResponse) return access;
 
-    const photo = await PhotoController.fromDb(db).findById(params.photoId);
+    const photo = await PhotoController.fromDb(db).findById(photoId);
     // Only this collection's pooled (unassigned) photos are served here.
-    if (!photo || photo.collectionId !== params.id || photo.itemId !== null) {
+    if (!photo || photo.collectionId !== id || photo.itemId !== null) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
@@ -37,7 +38,7 @@ export async function GET(
         blobKey: photo.blobKey,
         mimeType: photo.mimeType,
         photoId: photo.id,
-        collectionId: params.id,
+        collectionId: id,
         updatedAt: photo.updatedAt,
         rotation: photo.rotation,
       },

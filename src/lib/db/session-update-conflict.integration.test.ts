@@ -78,7 +78,7 @@ describeDb("PATCH /api/sessions/[id] slot collision -> 409 (whole-branch review 
 
     // PATCH A back to active -> would collide with B on the partial index.
     const res = await patchSessionRoute(patchReq({ status: "active" }) as any, {
-      params: { id: a.id },
+      params: Promise.resolve({ id: a.id }),
     } as any);
     expect(res.status).toBe(409); // was a raw 500 before the update() catch
     const body = await res.json();
@@ -104,7 +104,7 @@ describeDb("PATCH /api/sessions/[id] slot collision -> 409 (whole-branch review 
     await repo.create({ collectionId, curatorId: ownerId }); // B holds the slot
 
     const res = await patchSessionRoute(patchReq({ status: "paused" }) as any, {
-      params: { id: a.id },
+      params: Promise.resolve({ id: a.id }),
     } as any);
     expect(res.status).toBe(409);
   });
@@ -118,7 +118,7 @@ describeDb("PATCH /api/sessions/[id] slot collision -> 409 (whole-branch review 
 
     const a = await repo.create({ collectionId, curatorId: ownerId });
     const res = await patchSessionRoute(patchReq({ status: "paused" }) as any, {
-      params: { id: a.id },
+      params: Promise.resolve({ id: a.id }),
     } as any);
     expect(res.status).toBe(200);
     const body = await res.json();

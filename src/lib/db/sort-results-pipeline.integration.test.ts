@@ -184,7 +184,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
     it("200s for the curator and returns the result", async () => {
       const { resultId } = await seedPopulatedDraft();
       login(ownerId);
-      const res = await getResult(jsonReq("GET") as any, { params: { id: resultId } } as any);
+      const res = await getResult(jsonReq("GET") as any, { params: Promise.resolve({ id: resultId }) } as any);
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body).toMatchObject({ id: resultId, status: "draft", curatorId: ownerId });
@@ -200,7 +200,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       expect((await new SortResultRepository(db).findById(resultId))!.status).toBe("draft");
 
       login(ownerId);
-      const res = await finalizeResult(jsonReq("POST") as any, { params: { id: resultId } } as any);
+      const res = await finalizeResult(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId }) } as any);
       expect(res.status).toBe(200);
       expect((await res.json()).status).toBe("finalized");
 
@@ -213,10 +213,10 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       const { db } = getTestDb();
       const { resultId } = await seedPopulatedDraft();
       login(ownerId);
-      const first = await finalizeResult(jsonReq("POST") as any, { params: { id: resultId } } as any);
+      const first = await finalizeResult(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId }) } as any);
       expect(first.status).toBe(200);
 
-      const second = await finalizeResult(jsonReq("POST") as any, { params: { id: resultId } } as any);
+      const second = await finalizeResult(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId }) } as any);
       expect(second.status).toBe(409);
       // Still finalized — the state guard fired, nothing changed.
       expect((await new SortResultRepository(db).findById(resultId))!.status).toBe("finalized");
@@ -228,7 +228,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
     it("200s for the curator and returns the result's items in computed-rank order", async () => {
       const { resultId, highItemId, lowItemId } = await seedPopulatedDraft();
       login(ownerId);
-      const res = await listItems(jsonReq("GET") as any, { params: { id: resultId } } as any);
+      const res = await listItems(jsonReq("GET") as any, { params: Promise.resolve({ id: resultId }) } as any);
       expect(res.status).toBe(200);
       const items = (await res.json()) as Array<{ itemId: string; computedRank: number }>;
       expect(items).toHaveLength(2);
@@ -251,7 +251,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       const { resultId } = await seedPopulatedDraft();
       const item = await firstResultItem(resultId);
       login(ownerId);
-      const res = await getItem(jsonReq("GET") as any, { params: { id: resultId, rid: item.id } } as any);
+      const res = await getItem(jsonReq("GET") as any, { params: Promise.resolve({ id: resultId, rid: item.id }) } as any);
       expect(res.status).toBe(200);
       expect(await res.json()).toMatchObject({ id: item.id, sortResultId: resultId });
     });
@@ -267,7 +267,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       login(ownerId);
       const res = await patchItem(
         jsonReq("PATCH", { manualBucket: "low", manualRank: 9 }) as any,
-        { params: { id: resultId, rid: item.id } } as any,
+        { params: Promise.resolve({ id: resultId, rid: item.id }) } as any,
       );
       expect(res.status).toBe(200);
 
@@ -288,7 +288,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       login(ownerId);
       const res = await patchItem(
         jsonReq("PATCH", { manualBucket: "low" }) as any,
-        { params: { id: resultId, rid: item.id } } as any,
+        { params: Promise.resolve({ id: resultId, rid: item.id }) } as any,
       );
       expect(res.status).toBe(409);
       // The item on a finalized result must be unchanged.
@@ -300,7 +300,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       const { resultId } = await seedPopulatedDraft();
       const item = await firstResultItem(resultId);
       login(ownerId);
-      const res = await patchItem(badJsonReq("PATCH") as any, { params: { id: resultId, rid: item.id } } as any);
+      const res = await patchItem(badJsonReq("PATCH") as any, { params: Promise.resolve({ id: resultId, rid: item.id }) } as any);
       expect(res.status).toBe(400);
       expect((await new SortResultItemRepository(db).findById(item.id))!.manualBucket).toBeNull();
     });
@@ -312,7 +312,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       login(ownerId);
       const res = await patchItem(
         jsonReq("PATCH", { manualBucket: "not-a-bucket" }) as any,
-        { params: { id: resultId, rid: item.id } } as any,
+        { params: Promise.resolve({ id: resultId, rid: item.id }) } as any,
       );
       expect(res.status).toBe(400);
       expect((await new SortResultItemRepository(db).findById(item.id))!.manualBucket).toBeNull();
@@ -333,7 +333,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       expect(before!.manualRank).toBe(7);
 
       login(ownerId);
-      const res = await resetItem(jsonReq("POST") as any, { params: { id: resultId, rid: item.id } } as any);
+      const res = await resetItem(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId, rid: item.id }) } as any);
       expect(res.status).toBe(200);
 
       const after = await itemRepo.findById(item.id);
@@ -353,7 +353,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       ).finalizeResult(resultId);
 
       login(ownerId);
-      const res = await resetItem(jsonReq("POST") as any, { params: { id: resultId, rid: item.id } } as any);
+      const res = await resetItem(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId, rid: item.id }) } as any);
       expect(res.status).toBe(409);
       // The override on a finalized result must survive the reset attempt.
       expect((await itemRepo.findById(item.id))!.manualBucket).toBe("low");
@@ -370,7 +370,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       expect(await shareRepo.findByResult(resultId)).toEqual([]);
 
       login(ownerId);
-      const res = await createShare(jsonReq("POST", {}) as any, { params: { id: resultId } } as any);
+      const res = await createShare(jsonReq("POST", {}) as any, { params: Promise.resolve({ id: resultId }) } as any);
       expect(res.status).toBe(201);
       const body = await res.json();
       expect(typeof body.shareToken).toBe("string");
@@ -386,7 +386,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       const { db } = getTestDb();
       const { resultId } = await seedPopulatedDraft();
       login(ownerId);
-      const res = await createShare(badJsonReq("POST") as any, { params: { id: resultId } } as any);
+      const res = await createShare(badJsonReq("POST") as any, { params: Promise.resolve({ id: resultId }) } as any);
       expect(res.status).toBe(400);
       expect(await new SortResultShareRepository(db).findByResult(resultId)).toEqual([]);
     });
@@ -407,7 +407,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
     it("GET 200s and returns the share that belongs to the result", async () => {
       const { resultId, shareId } = await seedResultWithShare();
       login(ownerId);
-      const res = await getShare(jsonReq("GET") as any, { params: { id: resultId, sid: shareId } } as any);
+      const res = await getShare(jsonReq("GET") as any, { params: Promise.resolve({ id: resultId, sid: shareId }) } as any);
       expect(res.status).toBe(200);
       expect(await res.json()).toMatchObject({ id: shareId, sortResultId: resultId, status: "active" });
     });
@@ -420,7 +420,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       login(ownerId);
       const res = await patchShare(
         jsonReq("PATCH", { status: "revoked" }) as any,
-        { params: { id: resultId, sid: shareId } } as any,
+        { params: Promise.resolve({ id: resultId, sid: shareId }) } as any,
       );
       expect(res.status).toBe(200);
       expect((await new SortResultShareRepository(db).findById(shareId))!.status).toBe("revoked");
@@ -430,7 +430,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       const { db } = getTestDb();
       const { resultId, shareId } = await seedResultWithShare();
       login(ownerId);
-      const res = await patchShare(badJsonReq("PATCH") as any, { params: { id: resultId, sid: shareId } } as any);
+      const res = await patchShare(badJsonReq("PATCH") as any, { params: Promise.resolve({ id: resultId, sid: shareId }) } as any);
       expect(res.status).toBe(400);
       expect((await new SortResultShareRepository(db).findById(shareId))!.status).toBe("active");
     });
@@ -441,7 +441,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       expect((await new SortResultShareRepository(db).findById(shareId))!.status).toBe("active");
 
       login(ownerId);
-      const res = await deleteShare(jsonReq("DELETE") as any, { params: { id: resultId, sid: shareId } } as any);
+      const res = await deleteShare(jsonReq("DELETE") as any, { params: Promise.resolve({ id: resultId, sid: shareId }) } as any);
       expect(res.status).toBe(200);
       // DELETE is a soft-revoke (status -> "revoked"), so the row survives, revoked.
       const after = await new SortResultShareRepository(db).findById(shareId);
@@ -466,7 +466,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
     it("401s when unauthenticated", async () => {
       const { resultId } = await seedFinalized();
       mockGetSession.mockResolvedValue(null);
-      const res = await supersede(jsonReq("POST") as any, { params: { id: resultId } } as any);
+      const res = await supersede(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId }) } as any);
       expect(res.status).toBe(401);
     });
 
@@ -475,7 +475,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       const { resultId, collectionId } = await seedFinalized();
       const before = await new SortResultRepository(db).findByCollection(collectionId);
       login("intruder_user");
-      const res = await supersede(jsonReq("POST") as any, { params: { id: resultId } } as any);
+      const res = await supersede(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId }) } as any);
       expect(res.status).toBe(403);
       // No new result was cloned into the collection.
       expect(await new SortResultRepository(db).findByCollection(collectionId)).toHaveLength(before.length);
@@ -483,7 +483,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
 
     it("404s an absent result id", async () => {
       login(ownerId);
-      const res = await supersede(jsonReq("POST") as any, { params: { id: "result_missing" } } as any);
+      const res = await supersede(jsonReq("POST") as any, { params: Promise.resolve({ id: "result_missing" }) } as any);
       expect(res.status).toBe(404);
     });
 
@@ -493,7 +493,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       const { resultId, collectionId } = await seedPopulatedDraft();
       const before = await new SortResultRepository(db).findByCollection(collectionId);
       login(ownerId);
-      const res = await supersede(jsonReq("POST") as any, { params: { id: resultId } } as any);
+      const res = await supersede(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId }) } as any);
       expect(res.status).toBe(409);
       expect(await new SortResultRepository(db).findByCollection(collectionId)).toHaveLength(before.length);
     });
@@ -512,7 +512,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       expect(sourceItemsBefore.length).toBeGreaterThan(0);
 
       login(ownerId);
-      const res = await supersede(jsonReq("POST") as any, { params: { id: resultId } } as any);
+      const res = await supersede(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId }) } as any);
       expect(res.status).toBe(201);
       const revision = await res.json();
       expect(revision.id).not.toBe(resultId);
@@ -589,7 +589,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       expect(created.status).toBe(201);
       const resultId = (await created.json()).id as string;
       const finalized = await finalizeResult(
-        jsonReq("POST") as any, { params: { id: resultId } } as any,
+        jsonReq("POST") as any, { params: Promise.resolve({ id: resultId }) } as any,
       );
       expect(finalized.status).toBe(200);
 
@@ -649,7 +649,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
         .sort((a, b) => a.computedRank - b.computedRank)[0];
       expect(topRow.itemId).toBe(highItemId);
       await sortItemRepo.update(topRow.id, { manualBucket: "low", manualRank: 3 });
-      await finalizeResult(jsonReq("POST") as any, { params: { id: resultId } } as any);
+      await finalizeResult(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId }) } as any);
 
       // Mutate live prefs afterward.
       const lowPref = await prefRepo.findByItem(lowItemId, ownerId);
@@ -724,7 +724,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       login(ownerId);
       const savedRes = await createResult(jsonReq("POST", { collectionId, name: "Saved snapshot" }) as any);
       const savedId = (await savedRes.json()).id as string;
-      await finalizeResult(jsonReq("POST") as any, { params: { id: savedId } } as any);
+      await finalizeResult(jsonReq("POST") as any, { params: Promise.resolve({ id: savedId }) } as any);
       const savedItemsBefore = [...(await sortItemRepo.findByResult(savedId))]
         .sort((a, b) => a.computedRank - b.computedRank)
         .map((i) => i.itemId);
@@ -791,7 +791,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
 
       // Finalize the fresh one; its frozen order is the current Standing.
       const finalized = await finalizeResult(
-        jsonReq("POST") as any, { params: { id: freshId } } as any,
+        jsonReq("POST") as any, { params: Promise.resolve({ id: freshId }) } as any,
       );
       expect(finalized.status).toBe(200);
       const frozen = [...(await sortItemRepo.findByResult(freshId))]

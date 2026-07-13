@@ -8,14 +8,15 @@ import { errorResponse } from "@/server/api/http-errors";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
-    const result = await ResultController.fromDb(db).getResult(params.id);
+    const result = await ResultController.fromDb(db).getResult(id);
     return NextResponse.json(result);
   } catch (error) {
     return errorResponse(error);
@@ -24,13 +25,14 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const body = await request.json();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
     if (access.status === "finalized") {
       return NextResponse.json(
@@ -38,7 +40,7 @@ export async function PATCH(
         { status: 409 },
       );
     }
-    const result = await ResultController.fromDb(db).updateResult(params.id, body);
+    const result = await ResultController.fromDb(db).updateResult(id, body);
     return NextResponse.json(result);
   } catch (error) {
     return errorResponse(error);
@@ -47,14 +49,15 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
-    const deleted = await SortResultService.fromDb(db).deleteResult(params.id);
+    const deleted = await SortResultService.fromDb(db).deleteResult(id);
     if (!deleted) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }

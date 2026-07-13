@@ -15,11 +15,12 @@ import { errorResponse } from "@/server/api/http-errors";
 // gate, so ONLY the curatorId check stops them from restoring someone else's
 // set-aside session. A null lookup is 404 (truly absent); a thrown DB error
 // propagates (-> 500), never masked as 404.
-export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const db = getDb();
-  const sortSession = await SessionController.fromDb(db).getSessionIncludingDeletedOrNull(params.id);
+  const sortSession = await SessionController.fromDb(db).getSessionIncludingDeletedOrNull(id);
   if (!sortSession) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const access = await requireApiCollectionAccess(db, sortSession.collectionId, session.user.id);
   if (access instanceof NextResponse) return access;
@@ -34,7 +35,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   // can raise CurrentSessionExistsError (a newer in-progress session now holds
   // the slot), which errorResponse turns into a gentle 409 instead of a raw 500.
   try {
-    const restored = await SessionController.fromDb(db).restoreSession(params.id);
+    const restored = await SessionController.fromDb(db).restoreSession(id);
     return NextResponse.json(restored);
   } catch (error) {
     return errorResponse(error); // CurrentSessionExistsError -> 409

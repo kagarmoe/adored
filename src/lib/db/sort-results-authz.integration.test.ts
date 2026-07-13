@@ -103,7 +103,7 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       const { db } = getTestDb();
       const { resultId } = await seedResult(ownerId, ownerId);
       mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
-      const res = await patchResult(jsonReq({ name: "HACKED" }) as any, { params: { id: resultId } });
+      const res = await patchResult(jsonReq({ name: "HACKED" }) as any, { params: Promise.resolve({ id: resultId }) });
       expect(res.status).toBe(403);
       expect((await new SortResultRepository(db).findById(resultId))!.name).toBe("R");
     });
@@ -112,7 +112,7 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       const { collectionId, resultId } = await seedResult(ownerId, ownerId);
       const memberId = await addMember(collectionId);
       mockGetSession.mockResolvedValue({ user: { id: memberId } });
-      const res = await patchResult(jsonReq({ name: "X" }) as any, { params: { id: resultId } });
+      const res = await patchResult(jsonReq({ name: "X" }) as any, { params: Promise.resolve({ id: resultId }) });
       expect(res.status).toBe(403);
     });
 
@@ -120,7 +120,7 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       const { db } = getTestDb();
       const { resultId } = await seedResult(ownerId, ownerId);
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await patchResult(jsonReq({ name: "Renamed" }) as any, { params: { id: resultId } });
+      const res = await patchResult(jsonReq({ name: "Renamed" }) as any, { params: Promise.resolve({ id: resultId }) });
       expect(res.status).toBe(200);
       expect((await new SortResultRepository(db).findById(resultId))!.name).toBe("Renamed");
     });
@@ -129,14 +129,14 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       const { db } = getTestDb();
       const { resultId } = await seedResult(ownerId, ownerId);
       mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
-      const res = await finalizeResult(jsonReq() as any, { params: { id: resultId } });
+      const res = await finalizeResult(jsonReq() as any, { params: Promise.resolve({ id: resultId }) });
       expect(res.status).toBe(403);
       expect((await new SortResultRepository(db).findById(resultId))!.status).toBe("draft");
     });
 
     it("GET 404s an absent result", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await getResult(new Request("http://localhost/x") as any, { params: { id: "res_missing" } });
+      const res = await getResult(new Request("http://localhost/x") as any, { params: Promise.resolve({ id: "res_missing" }) });
       expect(res.status).toBe(404);
     });
 
@@ -144,7 +144,7 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       const { db } = getTestDb();
       const { resultId } = await seedResult(ownerId, ownerId);
       mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
-      const res = await deleteResult(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: { id: resultId } });
+      const res = await deleteResult(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: Promise.resolve({ id: resultId }) });
       expect(res.status).toBe(403);
       expect(await new SortResultRepository(db).findById(resultId)).not.toBeNull();
     });
@@ -161,7 +161,7 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       });
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       // Caller can access resultId, but asks for an item under `other.id`.
-      const res = await getItem(new Request("http://localhost/x") as any, { params: { id: resultId, rid: otherItem.id } });
+      const res = await getItem(new Request("http://localhost/x") as any, { params: Promise.resolve({ id: resultId, rid: otherItem.id }) });
       expect(res.status).toBe(404);
     });
 
@@ -183,21 +183,21 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       const req = new Request("http://localhost/x", {
         method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ manualBucket: "top" }),
       });
-      const res = await patchItem(req as any, { params: { id: resultId, rid: foreignItemId } });
+      const res = await patchItem(req as any, { params: Promise.resolve({ id: resultId, rid: foreignItemId }) });
       expect(res.status).toBe(404);
     });
 
     it("items/[rid] DELETE 404s a result-item that belongs to a DIFFERENT result", async () => {
       const { resultId, foreignItemId } = await seedForeignResultItem();
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await deleteItem(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: { id: resultId, rid: foreignItemId } });
+      const res = await deleteItem(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: Promise.resolve({ id: resultId, rid: foreignItemId }) });
       expect(res.status).toBe(404);
     });
 
     it("items/[rid]/reset POST 404s a result-item that belongs to a DIFFERENT result", async () => {
       const { resultId, foreignItemId } = await seedForeignResultItem();
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await resetItem(new Request("http://localhost/x", { method: "POST" }) as any, { params: { id: resultId, rid: foreignItemId } });
+      const res = await resetItem(new Request("http://localhost/x", { method: "POST" }) as any, { params: Promise.resolve({ id: resultId, rid: foreignItemId }) });
       expect(res.status).toBe(404);
     });
 
@@ -210,7 +210,7 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       await new SortResultShareRepository(db).create({ sortResultId: other.id, shareToken: generateId("tok") });
 
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await listShares(new Request("http://localhost/x") as any, { params: { id: resultId } });
+      const res = await listShares(new Request("http://localhost/x") as any, { params: Promise.resolve({ id: resultId }) });
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.map((s: { id: string }) => s.id)).toEqual([mine.id]);
@@ -229,7 +229,7 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
     it("shares/[sid] GET 404s a share that belongs to a DIFFERENT result (IDOR)", async () => {
       const { resultId, foreignShareId } = await seedForeignShare();
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await getShare(new Request("http://localhost/x") as any, { params: { id: resultId, sid: foreignShareId } });
+      const res = await getShare(new Request("http://localhost/x") as any, { params: Promise.resolve({ id: resultId, sid: foreignShareId }) });
       expect(res.status).toBe(404);
     });
 
@@ -239,7 +239,7 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       const req = new Request("http://localhost/x", {
         method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ status: "revoked" }),
       });
-      const res = await patchShare(req as any, { params: { id: resultId, sid: foreignShareId } });
+      const res = await patchShare(req as any, { params: Promise.resolve({ id: resultId, sid: foreignShareId }) });
       expect(res.status).toBe(404);
     });
 
@@ -247,7 +247,7 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       const { resultId, foreignShareId } = await seedForeignShare();
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       // Caller owns `resultId`, tries to revoke a share under `other.id` via the path id.
-      const res = await deleteShare(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: { id: resultId, sid: foreignShareId } });
+      const res = await deleteShare(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: Promise.resolve({ id: resultId, sid: foreignShareId }) });
       expect(res.status).toBe(404);
     });
 

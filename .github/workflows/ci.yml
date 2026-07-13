@@ -21,6 +21,7 @@ jobs:
   gate:
     name: Lint, test, build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
 
@@ -28,6 +29,16 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      # Runs BEFORE npm ci so the lockfile is vetted before any lifecycle script
+      # executes. Scans package-lock.json only; needs no node_modules.
+      - name: Supply-chain scan (osv-scanner)
+        run: |
+          curl -sSfL --retry 3 -o /tmp/osv-scanner https://github.com/google/osv-scanner/releases/download/v2.4.0/osv-scanner_linux_amd64
+          echo "15314940c10d26af9c6649f150b8a47c1262e8fc7e17b1d1029b0e479e8ed8a0  /tmp/osv-scanner" | sha256sum -c -
+          chmod +x /tmp/osv-scanner
+          /tmp/osv-scanner scan source -L package-lock.json
+        # ponytail: version+hash pinned by hand; bump deliberately with the epic's release-age rule
 
       - name: Install dependencies
         run: npm ci
@@ -48,6 +59,14 @@ jobs:
           path: .vitest-reports/blob-unit.json
           retention-days: 7
 
+      - name: Cache Next.js build cache
+        uses: actions/cache@v5
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
+
       - name: Build
         run: npm run build
         env:
@@ -65,6 +84,7 @@ jobs:
   db-tests:
     name: DB integration tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     # Spinning up Postgres + running the whole integration suite proves nothing
     # about a docs-only change, so gate it on `code` (see the filter). `coverage`
     # needs this job to SUCCEED, so it skips in lockstep — which is right: a change
@@ -101,6 +121,15 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:test@localhost:5432/app_test
 
+      # auth:verify queries the live auth tables (user/account/session/verification),
+      # so it needs this job's migrated Postgres — the DB-less `gate` job cannot run
+      # it (src/lib/db.ts throws at import without DATABASE_URL; local runs only pass
+      # via .env.local). Verified: DATABASE_URL alone suffices.
+      - name: Auth wiring check
+        run: npm run auth:verify
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/app_test
+
       - name: DB tests (serial, coverage → blob)
         run: >-
           RUN_DB_TESTS=1 npx vitest run --no-file-parallelism src/lib/db
@@ -123,6 +152,7 @@ jobs:
   coverage:
     name: Merged coverage floor
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: [gate, db-tests]
     if: ${{ !cancelled() && needs.gate.result == 'success' && needs.db-tests.result == 'success' }}
     steps:
@@ -168,6 +198,7 @@ jobs:
   changes:
     name: Detect UI changes
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     # dorny/paths-filter lists the PR's changed files via the GitHub API, which
     # needs pull-requests:read. Scoped to this job so other jobs keep the repo
     # default token permissions.
@@ -346,6 +377,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.ui == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v6
 
@@ -357,9 +389,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # iPad/iPhone devices are WebKit; Desktop Chrome is Chromium — install both.
+      - name: Cache Next.js build cache
+        uses: actions/cache@v5
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+
+      # Tablet (iPad) is WebKit — the only CI viewport since PR #312.
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium webkit
+        run: npx playwright install --with-deps webkit
 
       # Decide which specs to run. FULL suite (specs="") when: merging to main
       # (the safety net), a blast-radius change (broad), or a UI change that
@@ -483,6 +529,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.hot == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     services:
       postgres:
         image: postgres:16
@@ -532,6 +579,7 @@ jobs:
     # dashboard should reflect reality; the floor gates PRs, not publishing.
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && !cancelled() && needs.gate.result == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:

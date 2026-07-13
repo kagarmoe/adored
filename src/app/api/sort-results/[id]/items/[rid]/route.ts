@@ -8,14 +8,15 @@ import { errorResponse } from "@/server/api/http-errors";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string; rid: string } }
+  { params }: { params: Promise<{ id: string; rid: string }> }
 ) {
   try {
+    const { id, rid } = await params;
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
-    const item = await ResultItemController.fromDb(db).getByIdForResult(params.rid, params.id);
+    const item = await ResultItemController.fromDb(db).getByIdForResult(rid, id);
     if (!item) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
@@ -27,13 +28,14 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; rid: string } }
+  { params }: { params: Promise<{ id: string; rid: string }> }
 ) {
   try {
+    const { id, rid } = await params;
     const user = await requireAuth();
     const body = await request.json();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
     if (access.status === "finalized") {
       return NextResponse.json(
@@ -42,11 +44,11 @@ export async function PATCH(
       );
     }
     const ctrl = ResultItemController.fromDb(db);
-    const existing = await ctrl.getByIdForResult(params.rid, params.id);
+    const existing = await ctrl.getByIdForResult(rid, id);
     if (!existing) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    const item = await ctrl.updateResultItem(params.rid, body);
+    const item = await ctrl.updateResultItem(rid, body);
     return NextResponse.json(item);
   } catch (error) {
     return errorResponse(error);
@@ -55,12 +57,13 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string; rid: string } }
+  { params }: { params: Promise<{ id: string; rid: string }> }
 ) {
   try {
+    const { id, rid } = await params;
     const user = await requireAuth();
     const db = getDb();
-    const access = await requireApiResultAccess(db, params.id, user.id);
+    const access = await requireApiResultAccess(db, id, user.id);
     if (access instanceof NextResponse) return access;
     if (access.status === "finalized") {
       return NextResponse.json(
@@ -68,11 +71,11 @@ export async function DELETE(
         { status: 409 },
       );
     }
-    const existing = await ResultItemController.fromDb(db).getByIdForResult(params.rid, params.id);
+    const existing = await ResultItemController.fromDb(db).getByIdForResult(rid, id);
     if (!existing) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    await SortResultService.fromDb(db).deleteResultItem(params.rid);
+    await SortResultService.fromDb(db).deleteResultItem(rid);
     return NextResponse.json({ message: "Item removed from result" });
   } catch (error) {
     return errorResponse(error);

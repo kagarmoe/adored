@@ -27,7 +27,7 @@ describe("GET /api/shared-results/[token]", () => {
   it("does not leak the underlying error message to the public caller", async () => {
     mockViewSharedResult.mockRejectedValue(new Error(INTERNAL));
 
-    const res = await GET({} as never, { params: { token: "tok" } });
+    const res = await GET({} as never, { params: Promise.resolve({ token: "tok" }) });
     const body = await res.json();
 
     expect(res.status).toBe(404);

@@ -13,7 +13,7 @@ export const MAX_SERVER_UPLOAD_BYTES = MAX_UPLOAD_BYTES;
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string; itemId: string } }
+  { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
   const session = await getSession();
   if (!session?.user) {
@@ -23,15 +23,16 @@ export async function POST(
   const db = getDb();
 
   try {
+    const { id, itemId } = await params;
     // Authz before existence (purses-ct0): the collection is in the URL, so a
     // non-curator never learns whether the item exists.
     // photos:write = curator — any curator may add photos (full-curator model).
-    const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
+    const access = await requireApiCapability(db, id, session.user.id, "photos:write");
     if (access instanceof NextResponse) return access;
 
     // Verify item belongs to collection (belongs-to-parent).
-    const item = await ItemController.fromDb(db).getItem(params.itemId);
-    if (!item || item.collectionId !== params.id) {
+    const item = await ItemController.fromDb(db).getItem(itemId);
+    if (!item || item.collectionId !== id) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
@@ -54,7 +55,7 @@ export async function POST(
     }
 
     const buffer = await file.arrayBuffer();
-    const blobPath = `items/${params.itemId}/${generateId("photo")}-${file.name}`;
+    const blobPath = `items/${itemId}/${generateId("photo")}-${file.name}`;
 
     const blob = await put(blobPath, buffer, {
       access: "private",
@@ -62,8 +63,8 @@ export async function POST(
     });
 
     const photo = await PhotoController.fromDb(db).create({
-      itemId: params.itemId,
-      collectionId: params.id,
+      itemId,
+      collectionId: id,
       blobKey: blob.url,
       filename: file.name,
       mimeType: file.type,

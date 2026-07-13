@@ -247,7 +247,7 @@ describeDb("single decisions route accepts usage (route -> controller -> repo ->
 
     const res = await postDecision(
       usageReq(sortSession.id, { type: "usage", decision: { itemId: item.id, result: "uses" } }) as never,
-      { params: { id: sortSession.id } } as never,
+      { params: Promise.resolve({ id: sortSession.id }) } as never,
     );
     expect(res.status).toBe(201);
 
@@ -264,7 +264,7 @@ describeDb("single decisions route accepts usage (route -> controller -> repo ->
     // Seed one triage first so preference rows exist to snapshot.
     const triageRes = await postDecision(
       usageReq(sortSession.id, { type: "triage", decision: { itemId: item.id, result: "top" } }) as never,
-      { params: { id: sortSession.id } } as never,
+      { params: Promise.resolve({ id: sortSession.id }) } as never,
     );
     expect(triageRes.status).toBe(201);
     const snapshot = await prefsSnapshot(db, collectionId, ownerId);
@@ -277,7 +277,7 @@ describeDb("single decisions route accepts usage (route -> controller -> repo ->
     await sleep(5);
     const usageRes = await postDecision(
       usageReq(sortSession.id, { type: "usage", decision: { itemId: item.id, result: "not_uses" } }) as never,
-      { params: { id: sortSession.id } } as never,
+      { params: Promise.resolve({ id: sortSession.id }) } as never,
     );
     expect(usageRes.status).toBe(201);
 
@@ -298,7 +298,7 @@ describeDb("single decisions route accepts usage (route -> controller -> repo ->
 
     const res = await postDecision(
       usageReq(sortSession.id, { type: "usage", decision: { itemId: item.id, result: "uses" } }) as never,
-      { params: { id: sortSession.id } } as never,
+      { params: Promise.resolve({ id: sortSession.id }) } as never,
     );
     expect(res.status).toBe(201);
 
@@ -316,14 +316,14 @@ describeDb("single decisions route accepts usage (route -> controller -> repo ->
 
     const first = await postDecision(
       usageReq(sortSession.id, body) as never,
-      { params: { id: sortSession.id } } as never,
+      { params: Promise.resolve({ id: sortSession.id }) } as never,
     );
     expect(first.status).toBe(201);
     const firstEvent = await first.json();
 
     const replay = await postDecision(
       usageReq(sortSession.id, body) as never,
-      { params: { id: sortSession.id } } as never,
+      { params: Promise.resolve({ id: sortSession.id }) } as never,
     );
     expect(replay.status).toBe(200);
     const replayEvent = await replay.json();
@@ -338,7 +338,7 @@ describeDb("single decisions route accepts usage (route -> controller -> repo ->
 
     const res = await postDecision(
       usageReq(sortSession.id, { type: "usage", decision: { itemId: item.id, result: "sometimes" } }) as never,
-      { params: { id: sortSession.id } } as never,
+      { params: Promise.resolve({ id: sortSession.id }) } as never,
     );
     expect(res.status).toBe(400);
     expect(await new DecisionEventRepository(db).findBySession(sortSession.id)).toHaveLength(0);

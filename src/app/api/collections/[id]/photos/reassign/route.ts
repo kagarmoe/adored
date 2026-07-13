@@ -11,7 +11,8 @@ import { errorResponse } from "@/server/api/http-errors";
 
 // Unified "Move to…": reassigns selected photos to an existing item, a new item,
 // or back to the pool. photos:write = curator (full-curator model).
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -19,7 +20,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
   const db = getDb();
   // photos:write = curator — any curator may reassign photos (full-curator model).
-  const access = await requireApiCapability(db, params.id, session.user.id, "photos:write");
+  const access = await requireApiCapability(db, id, session.user.id, "photos:write");
   if (access instanceof NextResponse) return access;
 
   let body: unknown;
@@ -51,7 +52,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   else return NextResponse.json({ error: "Invalid destination" }, { status: 400 });
 
   try {
-    const result = await ItemService.fromDb(db).reassignPhotos(params.id, photoIds as string[], dest);
+    const result = await ItemService.fromDb(db).reassignPhotos(id, photoIds as string[], dest);
     return NextResponse.json({ number: result.number }, { status: 200 });
   } catch (error) {
     return errorResponse(error);
