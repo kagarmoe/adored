@@ -269,6 +269,10 @@ Each entry is **Decision / Rationale / Status**. Where design and shipped code d
 - *Rationale / correction:* 14 of the 16 osv baseline advisories cleared with the bump and their ignores are deleted. Decision 35's original "both erased" claim was **wrong for postcss** — `next@16.2.9` still pins `postcss@8.4.31` internally — so that ignore is restored with a corrected reason, owned by `purses-9oxh.9` (re-tested on every next bump; no npm-override of a framework-internal pin).
 - *Status:* **Shipped.**
 
+**37. React 18.3.1 → 19.2.7 (`purses-9oxh.2`, 2026-07-13).**
+- *Decision:* `react`/`react-dom` → 19.2.7, `@types/react*` → ^19 (correct only now — see #329's ^18 alignment). All four cleared the 14-day quarantine (41d). Zero app-code changes: no `defaultProps`/legacy-ReactDOM/`test-utils` usage existed; `forwardRef` (6 UI files) still supported in 19, deliberately untouched. One test fix with a root cause: React 19's async `act` no longer flushes a trailing awaited-fetch commit inside a prior `waitFor`, so RerankPanel's §4.3 focus assertion now waits itself (mutation-proven non-vacuous; real-browser behavior unchanged — reviewer-verified).
+- *Status:* **Shipped.**
+
 ### Rename story (PurseInator → Adored)
 
 "PurseInator" was an **explicit placeholder** from the first design doc (2026-05-07). The substantive rename to **Adored** was planned 2026-06-09 and executed 2026-06-10 (#125, commit `26a501b`), scoped across three tiers — display brand (wordmark, footer, titles, copy), technical identifiers (`package.json` name → `adored`, env defaults), and living docs (README/PRODUCT/TONE/DESIGN/CLAUDE). Vercel points `adored.kimberlygarmoe.com` live; email sends from the already-verified apex `noreply@kimberlygarmoe.com` to avoid any Resend/DNS work.
