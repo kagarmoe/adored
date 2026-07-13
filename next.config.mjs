@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
+  // Pin the workspace root: a stray lockfile in a parent dir (e.g. $HOME) makes
+  // Turbopack infer the wrong root and read the wrong node_modules.
+  turbopack: { root: import.meta.dirname },
   experimental: {
     // Every page here is dynamic and person-specific (a sort hub, a round, a
     // result), and a client navigation between them must show what just
