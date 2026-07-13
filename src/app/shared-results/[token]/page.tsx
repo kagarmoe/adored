@@ -8,12 +8,13 @@ import { ItemCard } from "@/features/items/ItemCard";
 import { notFound } from "next/navigation";
 
 interface SharedResultPageProps {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }
 
 export default async function SharedResultPage({ params }: SharedResultPageProps) {
+  const { token } = await params;
   const db = getDb();
-  const share = await ShareController.fromDb(db).findByToken(params.token);
+  const share = await ShareController.fromDb(db).findByToken(token);
 
   if (!share || share.status !== "active" || (share.expiresAt && share.expiresAt < new Date())) {
     notFound();

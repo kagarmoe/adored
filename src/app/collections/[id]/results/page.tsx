@@ -21,7 +21,7 @@ import { itemDisplayName } from "@/lib/items";
 import Link from "next/link";
 
 interface ResultsPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 /**
@@ -31,13 +31,14 @@ interface ResultsPageProps {
  * is what freezes a snapshot; until then this reflects the latest sorting.
  */
 export default async function ResultsPage({ params }: ResultsPageProps) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
 
   const db = getDb();
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  const collection = await requireCollectionAccess(db, id, session.user.id);
   const collectionHref = `/collections/${collection.slug ?? collection.id}`;
 
   // Live read: this curator's own preferences (curator-scoped) + dispositions +
@@ -134,7 +135,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
             // F5: usage answers but no love ranking yet. Show the items with their
             // quiet usage chips rather than the "Start sorting" empty state — a
             // usage-known collection is not empty.
-            <section className="space-y-4">
+            (<section className="space-y-4">
               <div className="space-y-1">
                 <h2 className="font-display text-2xl text-ink">The ones you&rsquo;ve weighed in on</h2>
                 <p className="text-ink-soft">A quiet note on each &mdash; in your life, or resting for now.</p>
@@ -151,10 +152,10 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                   </li>
                 ))}
               </ul>
-            </section>
+            </section>)
           ) : (
             // Gentle, person-side empty state — never a shaming empty count.
-            <section className="space-y-3">
+            (<section className="space-y-3">
               <h2 className="font-display text-2xl text-ink">Nothing to see yet — and that&rsquo;s fine.</h2>
               <p className="text-ink-soft">
                 Once you&rsquo;ve sat with a few, what you love most will settle here, gently.
@@ -164,7 +165,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                   <Button>Start sorting</Button>
                 </Link>
               </div>
-            </section>
+            </section>)
           )}
         </div>
 

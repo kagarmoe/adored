@@ -18,19 +18,20 @@ import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
 import { selectTriageQueue } from "@/lib/triage-selection";
 
 interface TriagePageProps {
-  params: { id: string; sessionNumber: string };
+  params: Promise<{ id: string; sessionNumber: string }>;
 }
 
 export default async function TriagePage({ params }: TriagePageProps) {
+  const { id, sessionNumber: sessionNumberParam } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
 
   const db = getDb();
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  const collection = await requireCollectionAccess(db, id, session.user.id);
 
-  const sessionNumber = Number(params.sessionNumber);
+  const sessionNumber = Number(sessionNumberParam);
   const [items, sortSession, preferences, dispositions] = await Promise.all([
     ItemController.fromDb(db).listItems(collection.id),
     sessionNumber > 0 && Number.isInteger(sessionNumber)

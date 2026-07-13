@@ -14,17 +14,18 @@ import Link from "next/link";
 import { hasName, itemDisplayName } from "@/lib/items";
 
 interface ItemDetailPageProps {
-  params: { id: string; itemNumber: string };
+  params: Promise<{ id: string; itemNumber: string }>;
 }
 
 export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
+  const { id, itemNumber } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
 
   const db = getDb();
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  const collection = await requireCollectionAccess(db, id, session.user.id);
 
   // Show the delete control to any member (owner or curator) — the DELETE API
   // enforces the same photos:write = member-or-owner rule, so this matches the
@@ -33,7 +34,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   const canDeletePhotos =
     collection.ownerId === session.user.id || membership !== null;
 
-  const number = Number(params.itemNumber);
+  const number = Number(itemNumber);
   const item =
     number > 0 && Number.isInteger(number)
       ? await ItemController.fromDb(db).getByCollectionAndNumber(collection.id, number)

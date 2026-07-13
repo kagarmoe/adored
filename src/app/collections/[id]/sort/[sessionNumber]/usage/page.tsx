@@ -16,19 +16,20 @@ import { selectUsageQueue } from "@/lib/usage-selection";
 import { deriveUsage } from "@/lib/derive-usage";
 
 interface UsagePageProps {
-  params: { id: string; sessionNumber: string };
+  params: Promise<{ id: string; sessionNumber: string }>;
 }
 
 export default async function UsagePage({ params }: UsagePageProps) {
+  const { id, sessionNumber: sessionNumberParam } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
 
   const db = getDb();
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  const collection = await requireCollectionAccess(db, id, session.user.id);
 
-  const sessionNumber = Number(params.sessionNumber);
+  const sessionNumber = Number(sessionNumberParam);
   // One decision-log read (spec §3.3/§2.6): the curator's WHOLE cross-session log,
   // consumed SERVER-SIDE ONLY (queue + seed). No listBySession, no preferences read.
   const [items, sortSession, dispositions, curatorEvents] = await Promise.all([

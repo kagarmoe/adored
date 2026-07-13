@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { Button, LoadingSpinner, ErrorMessage } from "@/components/ui";
 import { apiGet, apiPost } from "@/lib/api-client";
 import type { Invitation, Collection } from "@/types";
 
 interface InvitationPageProps {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }
 
 export default function InvitationPage({ params }: InvitationPageProps) {
+  const { token } = use(params);
   const router = useRouter();
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [collection, setCollection] = useState<Collection | null>(null);
@@ -21,7 +22,7 @@ export default function InvitationPage({ params }: InvitationPageProps) {
   useEffect(() => {
     const fetchInvitation = async () => {
       try {
-        const inviteData = await apiGet<Invitation>(`/api/invitations/accept?token=${params.token}`);
+        const inviteData = await apiGet<Invitation>(`/api/invitations/accept?token=${token}`);
         setInvitation(inviteData);
 
         // Fetch collection details
@@ -39,7 +40,7 @@ export default function InvitationPage({ params }: InvitationPageProps) {
     };
 
     fetchInvitation();
-  }, [params.token]);
+  }, [token]);
 
   async function handleAccept() {
     if (!invitation) return;
@@ -47,7 +48,7 @@ export default function InvitationPage({ params }: InvitationPageProps) {
     setError("");
 
     try {
-      await apiPost(`/api/invitations/accept?token=${params.token}`, {});
+      await apiPost(`/api/invitations/accept?token=${token}`, {});
       router.push(`/collections/${invitation.collectionId}`);
     } catch (err: any) {
       setError(err?.message || "Failed to accept invitation");

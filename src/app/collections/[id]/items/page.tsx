@@ -13,18 +13,20 @@ import { filterItems, itemsEmptyState } from "@/lib/items";
 import Link from "next/link";
 
 interface ItemsPageProps {
-  params: { id: string };
-  searchParams?: { status?: string; unnamed?: string };
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ status?: string; unnamed?: string }>;
 }
 
-export default async function ItemsPage({ params, searchParams }: ItemsPageProps) {
+export default async function ItemsPage({ params, searchParams: searchParamsPromise }: ItemsPageProps) {
+  const { id } = await params;
+  const searchParams = await searchParamsPromise;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
 
   const db = getDb();
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  const collection = await requireCollectionAccess(db, id, session.user.id);
 
   const items = await ItemController.fromDb(db).listItems(collection.id);
   const covers = await PhotoController.fromDb(db).findCoverPhotosByItemIds(

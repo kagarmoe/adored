@@ -6,17 +6,18 @@ import { AppLayout } from "@/components/layout";
 import { ItemForm } from "@/features/items/ItemForm";
 
 interface AddItemPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function AddItemPage({ params }: AddItemPageProps) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
 
   const db = getDb();
-  const collection = await requireCollectionAccess(db, params.id, session.user.id);
+  const collection = await requireCollectionAccess(db, id, session.user.id);
 
   return (
     <AppLayout

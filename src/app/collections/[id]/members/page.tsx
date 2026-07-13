@@ -10,10 +10,11 @@ import { MemberList } from "@/features/collections/MemberList";
 import { InviteForm } from "@/features/collections/InviteForm";
 
 interface MembersPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function MembersPage({ params }: MembersPageProps) {
+  const { id } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
@@ -22,7 +23,7 @@ export default async function MembersPage({ params }: MembersPageProps) {
   const db = getDb();
   // Owner-only page: members:manage = owner by role (purses-yqw). The owner gate
   // also covers the invitee-email PII surfaced by the pending rows below.
-  const collection = await requireCollectionOwnerPage(db, params.id, session.user.id);
+  const collection = await requireCollectionOwnerPage(db, id, session.user.id);
 
   const members = await MemberController.fromDb(db).listMembers(collection.id);
   const invitations = await InvitationController.fromDb(db).listByCollection(collection.id);
