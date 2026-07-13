@@ -245,7 +245,7 @@ export function TriageRound({
             <p className="mt-1 text-sm">
               <Link
                 href={setAsideHref}
-                className="text-ink-soft underline underline-offset-2 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-sm"
+                className="text-ink-soft underline underline-offset-2 hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-xs"
               >
                 Set aside
               </Link>
@@ -256,7 +256,7 @@ export function TriageRound({
                 <button
                   type="button"
                   onClick={goBack}
-                  className="inline-flex h-11 items-center gap-1 rounded-control text-sm text-ink-soft transition-colors hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+                  className="inline-flex h-11 items-center gap-1 rounded-control text-sm text-ink-soft transition-colors hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
                 >
                   <span aria-hidden>←</span> Back
                 </button>

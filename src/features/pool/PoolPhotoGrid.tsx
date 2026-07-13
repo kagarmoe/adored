@@ -121,7 +121,7 @@ export function PoolPhotoGrid({
         </p>
       )}
 
-      <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
+      <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(150px,1fr))]">
         {pool.map((p) => {
           const isSelected = selected.includes(p.id);
           return (
@@ -130,7 +130,7 @@ export function PoolPhotoGrid({
               type="button"
               aria-pressed={isSelected}
               onClick={() => toggle(p.id)}
-              className={`relative aspect-square min-h-11 overflow-hidden rounded-lg border-2 bg-surface-raised outline-none transition focus-visible:ring-2 focus-visible:ring-primary ${
+              className={`relative aspect-square min-h-11 overflow-hidden rounded-lg border-2 bg-surface-raised outline-hidden transition focus-visible:ring-2 focus-visible:ring-primary ${
                 isSelected ? "border-primary" : "border-transparent"
               }`}
             >
@@ -144,7 +144,7 @@ export function PoolPhotoGrid({
               {isSelected && (
                 <span
                   aria-hidden
-                  className="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-sm text-primary-ink shadow"
+                  className="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-sm text-primary-ink shadow-sm"
                 >
                   ✓
                 </span>

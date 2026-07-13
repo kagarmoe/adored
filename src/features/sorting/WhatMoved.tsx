@@ -65,7 +65,7 @@ export function WhatMoved({ decisions, windowStartMs, nowMs, hubHref }: WhatMove
       <p>
         <Link
           href={hubHref}
-          className="inline-flex h-11 items-center rounded-control px-4 text-ink underline underline-offset-2 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+          className="inline-flex h-11 items-center rounded-control px-4 text-ink underline underline-offset-2 hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
         >
           Back to your sort
         </Link>

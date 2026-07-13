@@ -23,7 +23,7 @@ export function TriageUndoNotice() {
           <button
             type="button"
             onClick={bringBack}
-            className="font-medium text-primary underline underline-offset-2 hover:text-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-sm"
+            className="font-medium text-primary underline underline-offset-2 hover:text-primary-hover focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-xs"
           >
             Bring back
           </button>

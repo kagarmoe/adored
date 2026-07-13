@@ -68,7 +68,7 @@ export function WalkthroughShell() {
       <div
         ref={wrapperRef}
         tabIndex={-1}
-        className="w-full max-w-2xl focus:outline-none"
+        className="w-full max-w-2xl focus:outline-hidden"
       >
         {beat === "purpose" && <WelcomePurpose onNext={() => goTo("triage")} />}
         {beat === "triage" && (
@@ -98,7 +98,7 @@ export function WalkthroughShell() {
         <button
           type="button"
           onClick={exit}
-          className="h-11 px-4 text-sm text-ink-soft hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-control"
+          className="h-11 px-4 text-sm text-ink-soft hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-control"
         >
           Skip for now
         </button>

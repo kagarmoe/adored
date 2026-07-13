@@ -57,7 +57,7 @@ export function PhotoDeleteControl({
         type="button"
         aria-label="Delete this photo"
         onClick={() => setConfirming(true)}
-        className={`inline-flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-lift ring-1 ring-ink/10 transition-colors hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${className ?? ""}`}
+        className={`inline-flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-lift ring-1 ring-ink/10 transition-colors hover:bg-surface-raised focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${className ?? ""}`}
       >
         <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-5 w-5">
           <path
@@ -76,7 +76,7 @@ export function PhotoDeleteControl({
     <div
       role="group"
       aria-label="Delete this photo"
-      className={`flex max-w-[15rem] flex-col gap-2 rounded-card bg-surface p-3 shadow-lift ring-1 ring-hairline ${className ?? ""}`}
+      className={`flex max-w-60 flex-col gap-2 rounded-card bg-surface p-3 shadow-lift ring-1 ring-hairline ${className ?? ""}`}
     >
       <span className="text-sm text-ink">Delete this photo? This can’t be undone.</span>
       <div className="flex gap-2">

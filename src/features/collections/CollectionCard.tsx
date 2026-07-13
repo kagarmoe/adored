@@ -19,7 +19,7 @@ export function CollectionCard({ collection, coverPhotoUrl, viewerPhoto, hasPool
   return (
     <Card interactive padding="none" className="relative isolate flex h-full flex-col overflow-hidden">
       {/* Cover — the photograph leads. Branded placeholder until a real cover exists. */}
-      <div className="relative flex aspect-[4/3] items-center justify-center bg-content-soft">
+      <div className="relative flex aspect-4/3 items-center justify-center bg-content-soft">
         {coverPhotoUrl ? (
           <Image
             src={coverPhotoUrl}

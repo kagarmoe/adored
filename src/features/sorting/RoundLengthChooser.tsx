@@ -38,7 +38,7 @@ export function RoundLengthChooser({ onChange }: RoundLengthChooserProps) {
       aria-label="Round length"
       value={String(value)}
       onChange={handleChange}
-      className="h-11 rounded-control border border-hairline bg-surface px-3 text-sm text-ink transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+      className="h-11 rounded-control border border-hairline bg-surface px-3 text-sm text-ink transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
     >
       {ROUND_BOX_OPTIONS.map((option) => (
         <option key={String(option.value)} value={String(option.value)}>

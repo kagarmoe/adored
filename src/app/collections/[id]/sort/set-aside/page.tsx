@@ -81,7 +81,7 @@ export default async function SetAsidePage({ params }: SetAsidePageProps) {
                           OR failed cover load — never the browser's broken glyph
                           (gentle by duty of care). unoptimized so auth cookies
                           reach the protected /file route. */}
-                      <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-control">
+                      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-control">
                         <CardImage
                           src={coverUrl}
                           alt=""

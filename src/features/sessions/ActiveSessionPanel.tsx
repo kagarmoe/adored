@@ -133,7 +133,7 @@ export function ActiveSessionPanel({
             type="button"
             onClick={bringBack}
             disabled={busy}
-            className="min-h-11 font-medium text-primary underline underline-offset-2 hover:text-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-sm disabled:opacity-50"
+            className="min-h-11 font-medium text-primary underline underline-offset-2 hover:text-primary-hover focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-xs disabled:opacity-50"
           >
             Undo
           </button>

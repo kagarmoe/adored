@@ -60,7 +60,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <Card padding="lg" className="!p-6">
+      <Card padding="lg" className="p-6!">
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && <ErrorMessage message={error} />}
 
@@ -115,7 +115,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
         {/* Re-open the walkthrough (manual visit — does NOT clear the dismissal flag). */}
         <Link
           href="/welcome"
-          className="inline-flex h-11 items-center rounded-control px-4 text-sm text-primary underline focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+          className="inline-flex h-11 items-center rounded-control px-4 text-sm text-primary underline focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
         >
           How Adored works
         </Link>

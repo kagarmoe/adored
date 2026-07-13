@@ -17,7 +17,7 @@ const SectionHeader = React.forwardRef<HTMLDivElement, SectionHeaderProps>(
         <h2 className="mb-1.5">{title}</h2>
         {description && <p className="text-ink-soft prose-measure">{description}</p>}
       </div>
-      {actions && <div className="flex gap-2 flex-shrink-0">{actions}</div>}
+      {actions && <div className="flex gap-2 shrink-0">{actions}</div>}
     </div>
   )
 );

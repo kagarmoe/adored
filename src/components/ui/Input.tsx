@@ -23,7 +23,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(({ label, error, cl
         className={`
           w-full bg-surface border border-hairline rounded-control px-4 py-3 text-ink
           transition-shadow duration-200 ease-gentle
-          placeholder:text-ink-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
+          placeholder:text-ink-soft focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary
           focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed
           h-12 min-h-12
           ${error ? "border-error focus-visible:ring-error" : ""}

@@ -44,7 +44,7 @@ export function MemberList({ members, pending = [], canManage = false }: MemberL
             {canManage && !isOwner && (
               <button
                 type="button"
-                className="flex h-11 items-center rounded-control px-3 text-sm font-medium text-error-deep hover:bg-error-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error"
+                className="flex h-11 items-center rounded-control px-3 text-sm font-medium text-error-deep hover:bg-error-soft focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-error"
               >
                 Remove
               </button>

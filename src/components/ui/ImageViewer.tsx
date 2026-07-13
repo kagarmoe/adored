@@ -116,7 +116,7 @@ export function ImageViewer({ photo, onClose }: { photo: ViewerPhoto; onClose: (
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={onClose} aria-hidden />
 
       <div
         ref={panelRef}
@@ -124,7 +124,7 @@ export function ImageViewer({ photo, onClose }: { photo: ViewerPhoto; onClose: (
         aria-modal="true"
         aria-label="Photo"
         tabIndex={-1}
-        className="relative z-10 mx-4 flex max-h-[90vh] w-full max-w-3xl flex-col gap-4 rounded-card bg-surface p-4 shadow-raised outline-none"
+        className="relative z-10 mx-4 flex max-h-[90vh] w-full max-w-3xl flex-col gap-4 rounded-card bg-surface p-4 shadow-raised outline-hidden"
       >
         <div
           className="relative flex-1 overflow-hidden rounded-card bg-ground"
@@ -156,7 +156,7 @@ export function ImageViewer({ photo, onClose }: { photo: ViewerPhoto; onClose: (
           <ViewerButton label="Close" onClick={onClose}>✕</ViewerButton>
         </div>
 
-        <p role="status" aria-live="polite" className="min-h-[1.25rem] text-center text-sm text-ink-soft">
+        <p role="status" aria-live="polite" className="min-h-5 text-center text-sm text-ink-soft">
           {status}
         </p>
       </div>
@@ -182,7 +182,7 @@ function ViewerButton({
       aria-label={label}
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex h-11 min-w-11 items-center justify-center rounded-control bg-surface-raised px-3 text-lg text-ink shadow-lift transition-colors hover:bg-ground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40"
+      className="inline-flex h-11 min-w-11 items-center justify-center rounded-control bg-surface-raised px-3 text-lg text-ink shadow-lift transition-colors hover:bg-ground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40"
     >
       {children}
     </button>
