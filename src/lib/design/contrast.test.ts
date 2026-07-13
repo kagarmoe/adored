@@ -1,6 +1,51 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { wcagContrast } from "culori";
-import { light, dark, type ThemeTokens } from "./tokens";
+
+// The AA gate reads src/app/globals.css DIRECTLY — the live stylesheet is the
+// single source of truth. (A hand-maintained TS mirror drifted before and this
+// gate green-lit a stale palette; parsing the real file kills that drift class.)
+const css = readFileSync(new URL("../../app/globals.css", import.meta.url), "utf8");
+
+type ThemeTokens = Record<string, string>;
+
+// Extracts flat `--color-<name>: #hex;` declarations from one selector's block
+// and keys them camelCase (--color-ink-soft -> inkSoft).
+function scopeVars(selector: RegExp): ThemeTokens {
+  const block = css.match(selector);
+  if (!block) throw new Error(`globals.css: scope ${selector} not found`);
+  const vars: ThemeTokens = {};
+  for (const m of block[1].matchAll(
+    /--color-([a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*;/g,
+  )) {
+    const key = m[1].replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase());
+    vars[key] = m[2];
+  }
+  if (Object.keys(vars).length === 0) {
+    throw new Error(`globals.css: no --color-*: #hex vars in scope ${selector}`);
+  }
+  return vars;
+}
+
+// A missing token must fail loudly, never skip a pair silently.
+function strict(vars: ThemeTokens): ThemeTokens {
+  return new Proxy(vars, {
+    get(target, prop: string) {
+      if (!(prop in target)) {
+        throw new Error(`globals.css: no --color var for token "${prop}"`);
+      }
+      return target[prop];
+    },
+  });
+}
+
+const light = strict(scopeVars(/:root\s*\{([^}]*)\}/));
+// Dark inherits the way CSS does: a var undeclared in [data-theme="dark"]
+// falls back to its :root value.
+const dark = strict({
+  ...scopeVars(/:root\s*\{([^}]*)\}/),
+  ...scopeVars(/\[data-theme="dark"\]\s*\{([^}]*)\}/),
+});
 
 // [foreground, background, minRatio, label]
 function pairings(t: ThemeTokens): [string, string, number, string][] {
