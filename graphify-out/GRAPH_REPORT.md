@@ -1,16 +1,16 @@
 # Graph Report - purseinator-app  (2026-07-12)
 
 ## Corpus Check
-- 654 files · ~894,821 words
+- 654 files · ~894,952 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4016 nodes · 9586 edges · 254 communities (220 shown, 34 thin omitted)
+- 4016 nodes · 9586 edges · 252 communities (218 shown, 34 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 231 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `a63620e3`
+- Built from commit: `748fc714`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -227,7 +227,6 @@
 - [[_COMMUNITY_Community 218|Community 218]]
 - [[_COMMUNITY_Community 219|Community 219]]
 - [[_COMMUNITY_Community 220|Community 220]]
-- [[_COMMUNITY_Community 221|Community 221]]
 - [[_COMMUNITY_Community 222|Community 222]]
 - [[_COMMUNITY_Community 223|Community 223]]
 - [[_COMMUNITY_Community 224|Community 224]]
@@ -248,7 +247,6 @@
 - [[_COMMUNITY_Community 241|Community 241]]
 - [[_COMMUNITY_Community 242|Community 242]]
 - [[_COMMUNITY_Community 243|Community 243]]
-- [[_COMMUNITY_Community 244|Community 244]]
 - [[_COMMUNITY_Community 245|Community 245]]
 - [[_COMMUNITY_Community 246|Community 246]]
 - [[_COMMUNITY_Community 247|Community 247]]
@@ -294,7 +292,7 @@
 - **Photo pool integrity flow (no-txn guard + blob client-upload + reassign)** — architecture_photo_pool, architecture_neon_no_txn_guard, architecture_blob_client_upload, architecture_reassign_one_op [INFERRED 0.85]
 - **TONE guardrails realized in deferred-metadata UX** — tone_object_is_story, tone_unpressured_forgiving, architecture_deferred_metadata_guardrails [INFERRED 0.85]
 
-## Communities (254 total, 34 thin omitted)
+## Communities (252 total, 34 thin omitted)
 
 ### Community 0 - "Domain types & barrels"
 Cohesion: 0.09
@@ -325,8 +323,8 @@ Cohesion: 0.09
 Nodes (22): 0. Review folds (changelog), 10. Screenshots (hard rule), 11. Out of scope / deferred, 12. Risks (post-fold), 1. Purpose, 2. Owner decisions (settled 2026-06-23), 3. Decomposition & sequencing, 4.1 RoleBadge — a thin wrapper over EXISTING Badge variants (used by A) (+14 more)
 
 ### Community 8 - "App Router pages"
-Cohesion: 0.08
-Nodes (18): PreferenceExistsError, SetDispositionSchema, describeError(), HttpError, PG_ERROR_FIELDS, { UnauthorizedError }, ReorderResultItemsSchema, UpdateResultItemSchema (+10 more)
+Cohesion: 0.07
+Nodes (23): PreferenceExistsError, SetDispositionSchema, describeError(), HttpError, PG_ERROR_FIELDS, { UnauthorizedError }, CreateSessionSchema, UpdateSessionSchema (+15 more)
 
 ### Community 9 - "Auth & sessions"
 Cohesion: 0.27
@@ -338,11 +336,11 @@ Nodes (24): 0. Review folds (changelog), 10. Out of scope / follow-ups, 11. Risk
 
 ### Community 11 - "ID generation"
 Cohesion: 0.07
-Nodes (37): CollectionForm(), EditCollectionPage(), EditPageProps, ItemEditPage(), ItemEditPageProps, FinalizePage(), FinalizePageProps, { mockGetSession, mockRequireAccess, redirectMock, resultRepo } (+29 more)
+Nodes (38): CollectionForm(), EditCollectionPage(), EditPageProps, ItemEditPage(), ItemEditPageProps, FinalizePage(), FinalizePageProps, { mockGetSession, mockRequireAccess, redirectMock, resultRepo } (+30 more)
 
 ### Community 12 - "PoolUpload.tsx"
-Cohesion: 0.12
-Nodes (48): GET(), errorResponse(), POST(), GET(), GET(), requireApiCollectionOwner(), requireApiItemCapability(), requireApiResultAccess() (+40 more)
+Cohesion: 0.13
+Nodes (43): GET(), errorResponse(), POST(), GET(), GET(), requireApiCollectionAccess(), requireApiCollectionOwner(), requireApiInvitationCapability() (+35 more)
 
 ### Community 13 - "seed.ts"
 Cohesion: 0.15
@@ -521,8 +519,8 @@ Cohesion: 0.09
 Nodes (22): §0 — Corrections to the parent design (verified against code), §1 — Scope, §2.1 Thread the usage fold to the render, §2.2 The chip (TONE item), §2.3 Usage-only collections (F5), §2.4 Test floor (A), §2 — Two-axis Standing: per-item chip (deliverable A, read-side, no migration), §3.1 Migration (additive) (+14 more)
 
 ### Community 58 - "SessionCompleteScreen.tsx"
-Cohesion: 0.11
-Nodes (8): CollectionController, CollectionFormProps, RESERVED_COLLECTION_SLUGS, slugifyName(), CollectionRepository, isSlugConflict(), randomSlug(), Collection
+Cohesion: 0.10
+Nodes (11): CollectionController, CreateCollectionSchema, UpdateCollectionSchema, CollectionFormProps, RESERVED_COLLECTION_SLUGS, slugifyName(), CollectionRepository, isSlugConflict() (+3 more)
 
 ### Community 59 - "CompareChoice.tsx"
 Cohesion: 0.18
@@ -550,7 +548,7 @@ Nodes (18): Adored — Curatorial Collection Sorting App, Architecture, Contribu
 
 ### Community 65 - "PairingService"
 Cohesion: 0.09
-Nodes (27): POST(), { mockGetSession, mockGetDb, mockAccept }, POST(), POST(), classifyDbError(), DbErrorClass, DbErrorContext, logDbError() (+19 more)
+Nodes (27): POST(), { mockGetSession, mockGetDb, mockAccept }, POST(), POST(), GET(), POST(), classifyDbError(), DbErrorClass (+19 more)
 
 ### Community 66 - "POST()"
 Cohesion: 0.11
@@ -874,7 +872,7 @@ Nodes (23): SAMPLE_WIN, buildStanding(), COMPARE_PAIR, CompareOutcome, compareTi
 
 ### Community 169 - "Community 169"
 Cohesion: 0.06
-Nodes (32): collectionSchema, InviteForm(), InviteFormProps, inviteSchema, ItemForm(), itemSchema, back, controlFor() (+24 more)
+Nodes (31): collectionSchema, InviteForm(), InviteFormProps, inviteSchema, ItemForm(), itemSchema, back, controlFor() (+23 more)
 
 ### Community 170 - "Community 170"
 Cohesion: 0.23
@@ -913,8 +911,8 @@ Cohesion: 0.05
 Nodes (45): DeleteCollectionSection(), DeleteCollectionSectionProps, props, push, refresh, ItemPreviewGrid(), CollectionsPage(), PhotoPoolPreview() (+37 more)
 
 ### Community 182 - "Community 182"
-Cohesion: 0.48
-Nodes (5): CAPABILITIES, Operation, resolveEffectiveRole(), Role, roleSatisfies()
+Cohesion: 0.14
+Nodes (19): ReorderResultItemsSchema, UpdateResultItemSchema, requireApiResultAccess(), { mockGetSession }, firstResultItem(), { mockGetSession, UnauthorizedError }, POST(), POST() (+11 more)
 
 ### Community 183 - "Community 183"
 Cohesion: 0.40
@@ -1060,10 +1058,6 @@ Nodes (5): itemRepo(), makeService(), photoRepo(), seedItem(), seedPhoto()
 Cohesion: 0.25
 Nodes (7): Epic S — Implementation Plan (Standing usage chip · snapshot/revision · bulk re-rank + UI), Global constraints, Order, PR S1 — Standing usage chip (deliverable A; read-only, no migration), PR S2 — `sort_result_items.usage` snapshot + revision (deliverable B; migration), PR S3a — Transactional bulk re-rank endpoint (deliverable C backend; F1), PR S3b — Re-rank UI (deliverable C frontend; depends on S3a)
 
-### Community 221 - "Community 221"
-Cohesion: 0.14
-Nodes (17): CreateSessionSchema, UpdateSessionSchema, requireApiCollectionAccess(), requireApiInvitationCapability(), { collectionRepo, membershipRepo }, db, GET(), authorizeSession() (+9 more)
-
 ### Community 222 - "Community 222"
 Cohesion: 0.33
 Nodes (3): COLLECTION, ITEM, {
@@ -1113,17 +1107,13 @@ Nodes (12): BatchEntry, BatchEntrySchema, BatchRequestSchema, BatchResult, Batch
 Cohesion: 0.24
 Nodes (8): UsageOutcome, WelcomeUsage(), WelcomeUsageProps, DecisionControls(), DecisionControlsProps, DecisionSubmit, refresh, TRIAGE_DECISIONS
 
-### Community 244 - "Community 244"
-Cohesion: 0.40
-Nodes (4): DELETE(), GET(), PATCH(), { mockGetSession, mockGetDb, mockGetCurrentUser }
-
 ### Community 246 - "Community 246"
 Cohesion: 0.67
 Nodes (3): `GET /api/collections/[id]/preferences/items`, `POST /api/collections/[id]/preferences/recalculate`, preferences
 
 ### Community 247 - "Community 247"
-Cohesion: 0.09
-Nodes (36): CreateCollectionSchema, UpdateCollectionSchema, Home(), requireApiCapability(), POST(), GET(), POST(), PATCH() (+28 more)
+Cohesion: 0.08
+Nodes (40): Home(), CAPABILITIES, Operation, resolveEffectiveRole(), Role, roleSatisfies(), requireApiCapability(), { collectionRepo, membershipRepo } (+32 more)
 
 ### Community 248 - "Community 248"
 Cohesion: 0.50
@@ -1145,9 +1135,9 @@ Nodes (3): db, { selectWhere, insertReturning }, valuesSpy
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `getDb()` connect `PoolUpload.tsx` to `PairingService`, `CollectionPreferenceItem`, `Community 164`, `Authorization guards`, `Community 197`, `Community 198`, `App Router pages`, `ID generation`, `Community 239`, `Community 244`, `Community 181`, `Community 150`, `Community 247`, `Community 221`, `Community 158`?**
+- **Why does `getDb()` connect `PoolUpload.tsx` to `PairingService`, `CollectionPreferenceItem`, `Community 164`, `Authorization guards`, `Community 197`, `Community 198`, `App Router pages`, `ID generation`, `Community 239`, `Community 181`, `Community 182`, `Community 247`, `Community 150`, `SessionCompleteScreen.tsx`, `Community 158`?**
   _High betweenness centrality (0.027) - this node is a cross-community bridge._
-- **Why does `Item` connect `layout.tsx` to `Domain types & barrels`, `Sort results & ranking`, `Community 131`, `App Router pages`, `PoolUpload.tsx`, `Community 140`, `User`, `Community 150`, `Button`, `CollectionPreferenceItem`, `Community 164`, `Community 168`, `Community 169`, `Community 175`, `ItemFilters.tsx`, `Community 196`, `Community 197`, `page.test.tsx`, `Community 203`, `Community 204`, `Community 219`, `Community 247`?**
+- **Why does `Item` connect `layout.tsx` to `Domain types & barrels`, `Sort results & ranking`, `Community 131`, `App Router pages`, `Community 140`, `User`, `Community 150`, `Button`, `CollectionPreferenceItem`, `Community 164`, `Community 168`, `Community 169`, `Community 175`, `ItemFilters.tsx`, `Community 182`, `Community 196`, `Community 197`, `page.test.tsx`, `Community 203`, `Community 204`, `Community 219`, `Community 247`?**
   _High betweenness centrality (0.017) - this node is a cross-community bridge._
 - **Why does `ItemDispositionRepository` connect `CollectionPreferenceItem` to `Sort results & ranking`, `App Router pages`, `Community 204`, `getTestDb()`, `MostLovedHero.tsx`, `Community 178`, `Community 216`, `Community 184`?**
   _High betweenness centrality (0.013) - this node is a cross-community bridge._

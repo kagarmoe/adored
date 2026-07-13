@@ -182,8 +182,13 @@ describe("RerankPanel — keyboard move-up / move-down issues the adjacent-swap 
     enterReorder();
     fireEvent.click(screen.getByRole("button", { name: moveDownLabel("Aqua tote") }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    // Aqua is now the 2nd row; focus stayed on its move-down control.
-    expect(screen.getByRole("button", { name: moveDownLabel("Aqua tote") })).toHaveFocus();
+    // Aqua is now the 2nd row; focus lands on its move-down control once the
+    // busy=false commit's restore effect runs. React 19 no longer flushes that
+    // trailing commit inside the fetch waitFor, so the focus assertion must
+    // itself wait — it still fails (timeout) if the restore effect is removed.
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: moveDownLabel("Aqua tote") })).toHaveFocus(),
+    );
   });
 });
 
