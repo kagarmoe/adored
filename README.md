@@ -45,7 +45,9 @@ A full-featured web application for managing collections and sorting items throu
    AUTH_SECRET=$(openssl rand -base64 32)
    EMAIL_FROM=noreply@localhost
    # Optional locally — each degrades gracefully when unset:
-   RESEND_API_KEY=            # transactional email (magic-link + invites); unset → dev logs the link
+   RESEND_API_KEY=            # transactional email (magic-link + invites). Also accepted: AUTH_RESEND_KEY
+   #                           unset → dev logs the link; ANYWHERE ELSE a send now THROWS.
+   # EMAIL_TRANSPORT=noop      # the ONLY way to deliberately not send (e2e/CI). Never in production.
    NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=  # analytics + DB observability; unset → capture is skipped
    ```
 
@@ -116,7 +118,7 @@ A full-featured web application for managing collections and sorting items throu
 
 **Sign In:**
 - Email + password is the primary sign-in; a passwordless magic-link is also available
-- Transactional email is sent via Resend (`src/lib/email.ts`) — set `RESEND_API_KEY` to send for real
+- Transactional email is sent via Resend (`src/lib/email.ts`) — set `RESEND_API_KEY` (or the legacy `AUTH_RESEND_KEY`) to send for real. Without a key a send **throws**: a missing key is a broken send, not a feature.
 - With no key in development, the magic-link / invite URL is logged to the server console so you can click it locally
 
 **Photos:**
@@ -171,7 +173,7 @@ src/
 
 **Authentication:**
 - [better-auth](https://www.better-auth.com/) with **database sessions** (not JWT) — the whole auth surface is one handler at `/api/auth` (`src/app/api/auth/[...all]`)
-- Three sign-in methods: **email + password**, **magic-link** (sending via Resend — `src/lib/email.ts`, set `RESEND_API_KEY`), and **Google** social
+- Three sign-in methods: **email + password**, **magic-link** (sending via Resend — `src/lib/email.ts`, set `RESEND_API_KEY` or the legacy `AUTH_RESEND_KEY`), and **Google** social
 - `src/lib/auth.ts` is a thin read façade returning `{ user: { id, email, name } }`, so the session shape is unchanged for callers; each read is a fresh per-request DB lookup
 - Authorization is enforced at the **DAL capability chokepoint** (`requireApiCapability`), not a client hook — see the Permissions section below
 

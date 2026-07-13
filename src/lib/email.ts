@@ -50,7 +50,17 @@ async function send(args: {
   // not send). This is the ONLY sanctioned no-op path — it requires someone to
   // have set the variable on purpose, so a missing key can never masquerade as
   // a deliberate choice.
-  if (process.env.EMAIL_TRANSPORT === "noop") return;
+  //
+  // Validated strictly: "none"/"off"/"false" are the plausible typos, and under a
+  // loose check they would fall straight past this branch and SEND FOR REAL. A
+  // variable whose only job is to suppress email must never fail open.
+  const transport = process.env.EMAIL_TRANSPORT;
+  if (transport !== undefined && transport !== "" && transport !== "noop") {
+    throw new Error(
+      `EMAIL_TRANSPORT="${transport}" is not a valid value. The only sanctioned value is "noop".`,
+    );
+  }
+  if (transport === "noop") return;
 
   const resend = getClient();
 

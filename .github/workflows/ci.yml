@@ -129,6 +129,10 @@ jobs:
         run: npm run auth:verify
         env:
           DATABASE_URL: postgresql://postgres:test@localhost:5432/app_test
+          # CI deliberately does not send email. Stating it explicitly is the
+          # point of the variable: an ABSENT key must never be mistaken for a
+          # deliberate choice not to send (purses-3i5s).
+          EMAIL_TRANSPORT: noop
 
       - name: DB tests (serial, coverage → blob)
         run: >-
