@@ -1,6 +1,14 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 import { test as setup, expect } from "@playwright/test";
 import { resetDb, closeDb } from "./fixtures/db";
 import { BASELINE_USER } from "./fixtures/seed";
+import {
+  BA,
+  cookieHeader,
+  createBetterAuthUser,
+  createSessionCookieForUser,
+} from "./fixtures/better-auth";
 
 const AUTH_FILE = "e2e/.auth/user.json";
 const BASE_URL = process.env.AUTH_URL ?? "http://127.0.0.1:3100";
@@ -38,49 +46,37 @@ async function step<T>(label: string, fn: () => Promise<T>): Promise<T> {
   }
 }
 
-// Runs once before the viewport projects. Establishes a session via BETTER-AUTH
-// (Cutover Pass 2a) and saves storageState so every other spec starts
-// authenticated. The flow:
+// Runs once before the viewport projects. Establishes a real Better Auth DB
+// session without enabling password auth:
 //
-//   1. resetDb() — clean slate (truncates the canonical better-auth + domain tables).
-//   2. POST /api/auth/sign-up/email — better-auth creates the baseline user
-//      (the canonical `user` row + `account` with a scrypt password) and sets
-//      the `better-auth.session_token` cookie in this request context. That
-//      `user` row IS what the app's domain FKs (collections.ownerId → user.id)
-//      resolve to — no mirroring (Cutover Pass 2b-ii collapsed to one table).
-//   3. Confirm the session via /get-session, then persist storageState.
-//
-// We authenticate via the API rather than driving the /login UI: the login page
-// only works after hydration, which races cold-build CI. The login *UI* itself
-// is covered by the dedicated auth spec, which exercises the real form.
+//   1. resetDb() — clean slate.
+//   2. Insert the canonical user + Google account rows.
+//   3. Insert a Better Auth session row and write its signed session cookie to
+//      Playwright storageState.
+//   4. Confirm /api/auth/get-session accepts that cookie.
 setup("authenticate", async ({ request }) => {
   await step("resetDb", resetDb);
 
-  // better-auth sign-up: creates the canonical user row + lands the session
-  // cookie in this request's jar. Returns the better-auth-generated user id.
-  const signUpRes = await step("better-auth sign-up", () =>
-    request.post(`${BASE_URL}/api/auth/sign-up/email`, {
-      data: {
-        email: BASELINE_USER.email,
-        password: BASELINE_USER.password,
-        name: BASELINE_USER.name,
-      },
-    }),
+  const user = await step("create Google-linked Better Auth user", () =>
+    createBetterAuthUser(BASELINE_USER.email, BASELINE_USER.name),
   );
-  expect(signUpRes.ok(), "better-auth sign-up returned non-2xx").toBeTruthy();
-  const signUpBody = (await signUpRes.json()) as { user?: { id?: string } };
-  const userId = signUpBody.user?.id;
-  expect(userId, "better-auth sign-up returned no user id").toBeTruthy();
+  const sessionCookie = await step("create Better Auth session cookie", () =>
+    createSessionCookieForUser(user.id),
+  );
   await closeDb();
 
-  // Confirm the session is real before saving state. better-auth's get-session
-  // returns { session, user } (or null); assert the user email matches.
   const sessionRes = await step("Session transport", () =>
-    request.get(`${BASE_URL}/api/auth/get-session`),
+    request.get(BA.session, {
+      headers: { Cookie: cookieHeader(sessionCookie) },
+    }),
   );
   expect(sessionRes.ok(), "session request failed").toBeTruthy();
   const session = await sessionRes.json();
   expect(session?.user?.email).toBe(BASELINE_USER.email);
 
-  await request.storageState({ path: AUTH_FILE });
+  await mkdir(dirname(AUTH_FILE), { recursive: true });
+  await writeFile(
+    AUTH_FILE,
+    JSON.stringify({ cookies: [sessionCookie], origins: [] }, null, 2),
+  );
 });

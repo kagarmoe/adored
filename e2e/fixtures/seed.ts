@@ -16,10 +16,10 @@ import { MembershipRepository } from "@/server/repositories/implementations/Memb
 import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 
-// A known user every spec can log in as through better-auth (email+password).
+// A known Google-linked user every spec can authenticate as through a seeded
+// Better Auth session cookie.
 export const BASELINE_USER = {
   email: "e2e@adored.test",
-  password: "e2e-password-123", // ≥ 8 chars (signup rule)
   name: "E2E Tester",
 } as const;
 
@@ -29,8 +29,8 @@ export const BASELINE_USER = {
  *
  * Two callers, one invariant — the returned id must equal the id the app's
  * getSession() reports for the baseline session:
- *  - e2e: auth.setup.ts signs up the baseline user via better-auth FIRST and
- *    mirrors a `user` row with the better-auth-generated id. Every later
+ *  - e2e: auth.setup.ts creates a Google-linked Better Auth user/session FIRST.
+ *    Every later
  *    seedBaseline() call here finds that row by email and returns that same id,
  *    so seeded data is owned by the authenticated session.
  *  - DB integration tests (test:db): no server runs, so no better-auth signup
@@ -436,24 +436,20 @@ export async function seedMembersScenario(ownerId: string): Promise<{
   };
 }
 
-/** Credentials returned for a seeded user, ready to feed `apiContextFor`. */
+/** Seeded user returned for authenticated API contexts. */
 export interface SeededUser {
   id: string;
   email: string;
-  password: string;
 }
 
-const REMOVAL_PASSWORD = "removal-password-123"; // ≥ 8 chars (signup rule)
-
 /**
- * Create a fresh user (unique email, known password) through better-auth so it
- * can be signed in via apiContextFor. Mirrors a legacy `user` row with the same
- * id (createBetterAuthUser) so domain FKs resolve.
+ * Create a fresh Google-linked user so apiContextFor can mint a Better Auth
+ * session without enabling password login.
  */
 async function seedUser(label: string): Promise<SeededUser> {
   const email = `${label}-${generateId("user")}@adored.test`;
-  const id = await createBetterAuthUser(email, REMOVAL_PASSWORD, label);
-  return { id, email, password: REMOVAL_PASSWORD };
+  const created = await createBetterAuthUser(email, label);
+  return { id: created.id, email: created.email };
 }
 
 /**

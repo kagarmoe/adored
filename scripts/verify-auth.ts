@@ -38,16 +38,20 @@ async function verifyAuthSetup() {
     console.log("❌ Test 2: better-auth tables not accessible:", (e as Error).message);
   }
 
-  // Test 3: password storage lives on account (better-auth owns hashing)
+  // Test 3: account table supports OAuth/provider links
   totalTests++;
   try {
-    // The credential password column is on `account`, not `user` — assert it is
-    // selectable so a schema drift (re-adding user.password) is caught here.
-    await db.select({ password: account.password }).from(account).limit(1);
-    console.log("✅ Test 3: credential password column on account (better-auth-owned)");
+    await db
+      .select({
+        providerId: account.providerId,
+        accountId: account.accountId,
+      })
+      .from(account)
+      .limit(1);
+    console.log("✅ Test 3: account provider-link columns accessible");
     passedTests++;
   } catch (e) {
-    console.log("❌ Test 3: account.password not accessible:", (e as Error).message);
+    console.log("❌ Test 3: account provider-link columns not accessible:", (e as Error).message);
   }
 
   // Test 4: ID generation works
@@ -102,8 +106,8 @@ async function verifyAuthSetup() {
     console.log("\n📝 Next steps:");
     console.log("  1. Run 'npm run dev' to start the development server");
     console.log("  2. Visit http://localhost:3000/login");
-    console.log("  3. Test sign up at http://localhost:3000/signup");
-    console.log("  4. For email/magic link: Set up MailHog or configure SMTP");
+    console.log("  3. Configure GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET for Google login");
+    console.log("  4. Configure RESEND_API_KEY only if invitation email should send");
     process.exit(0);
   } else {
     console.log("⚠️  Some tests failed. Please review the errors above.");

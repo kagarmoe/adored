@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { E2E_AUTH_SECRET } from "./e2e/fixtures/auth-env";
 import { TEST_DATABASE_URL } from "./e2e/fixtures/db";
 
 // Viewport strategy (see docs/ARCHITECTURE.md, testing strategy):
@@ -68,7 +69,7 @@ export default defineConfig({
     env: {
       DATABASE_URL: TEST_DATABASE_URL,
       AUTH_URL: BASE_URL,
-      AUTH_SECRET: "e2e-only-secret-at-least-32-characters-long-xx",
+      AUTH_SECRET: E2E_AUTH_SECRET,
       // Neutralize any inherited VERCEL=1 (e.g. from a polluted .env.local).
       // NextAuth decides Secure cookies from two signals: the AUTH_URL/
       // NEXTAUTH_URL scheme AND VERCEL. Here AUTH_URL is http://127.0.0.1, and

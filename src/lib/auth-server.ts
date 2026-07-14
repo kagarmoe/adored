@@ -1,9 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { magicLink } from "better-auth/plugins/magic-link";
 import { nextCookies } from "better-auth/next-js";
 import { getDb } from "@/lib/db";
-import { sendMagicLink } from "@/lib/email";
 import { env, previewTrustedOrigins } from "@/lib/env";
 import { user, session, account, verification } from "@/lib/db/schema";
 
@@ -16,10 +14,10 @@ import { user, session, account, verification } from "@/lib/db/schema";
 //   collapsed the old `user`↔`ba_user` split into this single `user` table:
 //   better-auth OWNS it and every domain FK resolves straight to it — no more
 //   mirroring bridge.
-// - emailAndPassword + Google + magic-link are the three sign-in methods.
-// - Google creds are optional until the user provides them (empty strings keep
-//   the provider registered but inert — the app still boots).
-// - magic-link reuses the existing Resend transport in `src/lib/email.ts`.
+// - Google is the only supported sign-in method for Adored. Email/password,
+//   magic-link, and email verification are intentionally not configured.
+// - Google creds are optional at construction time so local/test builds boot,
+//   but a deployment with empty creds has no usable login path.
 // - nextCookies() MUST be the LAST plugin: plugins wrap each other like
 //   middleware, and the cookie-writer must see the final response to attach the
 //   Set-Cookie that carries the session.
@@ -29,9 +27,10 @@ import { user, session, account, verification } from "@/lib/db/schema";
 // secret can serve both AND preview deploys — which have no explicit AUTH_URL —
 // get env.ts's VERCEL_URL-derived base URL instead of `undefined`.
 // better-auth rate-limits auth requests per-IP and is ON in production builds.
-// The e2e suite runs a production `next start` and drives many sign-up/sign-in
-// calls from a single loopback IP (baseline + per-user authz fixtures), which
-// trips the limiter (429). Disable it only for loopback base URLs — real
+// The e2e suite runs a production `next start` and creates multiple signed
+// session fixtures from a single loopback IP (baseline + per-user authz
+// fixtures), which can trip the limiter (429). Disable it only for loopback
+// base URLs — real
 // deployments (https origin) keep the protection. Host is parsed defensively;
 // a malformed URL leaves rate limiting ON (fail-safe).
 function isLoopbackBaseUrl(): boolean {
@@ -68,9 +67,6 @@ export const auth = betterAuth({
   // preview branch alias so sign-in works on the URL the PR comment links to. It is
   // [] everywhere but preview — production's trusted set is unchanged. See env.ts.
   trustedOrigins: previewTrustedOrigins(),
-  emailAndPassword: {
-    enabled: true,
-  },
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
@@ -78,13 +74,6 @@ export const auth = betterAuth({
     },
   },
   plugins: [
-    magicLink({
-      // better-auth builds the verification URL and hands us { email, url };
-      // forward it to the existing Resend helper (which takes { to, url }).
-      sendMagicLink: async ({ email, url }) => {
-        await sendMagicLink({ to: email, url });
-      },
-    }),
     // Keep nextCookies LAST — see note above.
     nextCookies(),
   ],

@@ -1,7 +1,6 @@
 "use client";
 
 import { createAuthClient } from "better-auth/react";
-import { magicLinkClient } from "better-auth/client/plugins";
 
 // The better-auth browser client. Points at the /api/auth mount that
 // auth-server.ts serves (NextAuth is retired — better-auth owns /api/auth now).
@@ -9,10 +8,9 @@ import { magicLinkClient } from "better-auth/client/plugins";
 // localhost, preview, and prod without an env var — better-auth only needs the
 // origin + basePath.
 //
-// `magicLinkClient` mirrors the server's magicLink() plugin so
-// `authClient.signIn.magicLink` is typed and routed to /api/auth/sign-in/
-// magic-link. There is NO SessionProvider: better-auth's useSession is a hook
-// backed by a nanostore, so the old NextAuth <SessionProvider> wrapper is gone.
+// Adored supports Google login only. There is NO SessionProvider:
+// better-auth's useSession is a hook backed by a nanostore, so the old NextAuth
+// <SessionProvider> wrapper is gone.
 //
 // In the browser we use the live origin. During SSR/prerender there is no
 // window; better-auth's client still parses baseURL as an absolute URL at
@@ -26,9 +24,8 @@ const baseURL =
 
 export const authClient = createAuthClient({
   baseURL,
-  plugins: [magicLinkClient()],
 });
 
 // Thin re-exports so call sites import from one place and never reach for the
 // old NextAuth react client again.
-export const { useSession, signIn, signOut, signUp } = authClient;
+export const { useSession, signIn, signOut } = authClient;

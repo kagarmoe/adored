@@ -7,9 +7,10 @@ export const config = {
     // Protect all routes except these. `tutorial` is the dev-only walkthrough
     // preview; excluding it here just skips the login redirect in dev — the
     // page itself 404s in production, which is the real boundary. `api/auth` is
-    // excluded because better-auth serves its public sign-in/up/session +
+    // excluded because better-auth serves its public Google sign-in/session +
     // OAuth-callback endpoints there and must NOT be 307'd to /login, or the
-    // login/signup/callback POSTs never reach the handler.
+    // login/callback requests never reach the handler. `signup` remains
+    // public only so the legacy URL can redirect to /login.
     "/((?!_next|api/auth|login|signup|shared|tutorial).*)",
   ],
 };

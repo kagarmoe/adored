@@ -130,7 +130,7 @@ for (const theme of THEMES) {
 }
 
 for (const theme of THEMES) {
-  test(`a11y: unauthenticated login/signup — no serious/critical violations (${theme})`, async ({ page, context }, testInfo) => {
+  test(`a11y: unauthenticated login — no serious/critical violations (${theme})`, async ({ page, context }, testInfo) => {
     test.skip(testInfo.project.name !== "tablet", "a11y is viewport-independent; scanned once on tablet");
     // Log out (the project's storageState is signed in) so /login renders the
     // form rather than redirecting to /collections.
@@ -138,11 +138,9 @@ for (const theme of THEMES) {
     await setTheme(page, theme);
 
     const findings: Finding[] = [];
-    for (const [name, url] of [["login", "/login"], ["signup", "/signup"]] as [string, string][]) {
-      await page.goto(url);
-      await page.waitForTimeout(300);
-      findings.push(...(await scan(page, theme, name)));
-    }
+    await page.goto("/login");
+    await page.waitForTimeout(300);
+    findings.push(...(await scan(page, theme, "login")));
     const fail = blocking(findings);
     expect(fail, `serious/critical a11y violations:\n${report(fail)}`).toEqual([]);
   });

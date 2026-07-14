@@ -18,8 +18,8 @@ Release assets + inline `![]()` embeds. Five steps.
 
 Run the app logged-in and screenshot with the Playwright MCP, tablet viewport (e.g. 1024×768), toggling the header light/dark control between shots. Two ways to get a logged-in session with content on screen:
 
-- **Dev server** — `npm run dev` (port 3000; auto-loads `.env.local` → dev Neon). Sign up a fresh user at `/signup` (e.g. `test@example.com` / `testpass123`); a fresh user owns its own collection/items so you control the on-screen state.
-- **Local e2e harness** — bring up the throwaway DB (`bash e2e/fixtures/test-db.sh up`), seed it, run `next start` against it. Baseline user: `e2e@adored.test` / `e2e-password-123` (test DB only). Pooled-photo screenshots need real Blob keys — upload the fixture (`e2e/fixtures/photos/IMG_0428.jpeg`) to Blob and insert photo rows pointing at the returned URLs.
+- **Dev server** — `npm run dev` (port 3000; auto-loads `.env.local` → dev Neon). Use Google login with a seeded/dev collection, or use the local e2e harness below when you need a deterministic signed-in user.
+- **Local e2e harness** — bring up the throwaway DB (`bash e2e/fixtures/test-db.sh up`), seed it, run `next start` against it. Baseline auth is written by `e2e/auth.setup.ts` as a Google-linked Better Auth session for `e2e@adored.test`. Pooled-photo screenshots need real Blob keys — upload the fixture (`e2e/fixtures/photos/IMG_0428.jpeg`) to Blob and insert photo rows pointing at the returned URLs.
 
 Save as descriptive, unique names: `<feature>-<surface>-{light,dark}.png`.
 
