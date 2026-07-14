@@ -94,19 +94,21 @@ export default async function UsagePage({ params }: UsagePageProps) {
           into client state at mount — it must never mount over undrained usage
           answers (conditional mount, never CSS-hide). */}
       <PendingDecisionsGate curatorId={session.user.id}>
-        <UsageRound
-          curatorId={session.user.id}
-          sessionId={sortSession.id}
-          collectionId={collection.id}
-          collectionSlugOrId={slugOrId}
-          queue={queue}
-          // Server-side only: the curator log predates the round window
-          // (whatMoved fixes the window at mount), so it can never contribute a
-          // recap count — never serialized into the RSC payload (DATA-6).
-          decisions={[]}
-          usageKnownSeed={usageByItemId.size}
-          hubHref={hubHref}
-        />
+        <div className="mx-auto w-full max-w-2xl">
+          <UsageRound
+            curatorId={session.user.id}
+            sessionId={sortSession.id}
+            collectionId={collection.id}
+            collectionSlugOrId={slugOrId}
+            queue={queue}
+            // Server-side only: the curator log predates the round window
+            // (whatMoved fixes the window at mount), so it can never contribute a
+            // recap count — never serialized into the RSC payload (DATA-6).
+            decisions={[]}
+            usageKnownSeed={usageByItemId.size}
+            hubHref={hubHref}
+          />
+        </div>
       </PendingDecisionsGate>
     </AppLayout>
   );

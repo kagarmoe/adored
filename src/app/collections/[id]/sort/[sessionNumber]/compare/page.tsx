@@ -169,7 +169,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
               batch-of-1 ack surfaces here, never as an error (spec §3.2/F9). */}
           <PendingNotices />
           <div>
-            <h1 className="text-3xl text-ink">Which do you love more?</h1>
+            <h1 className="text-2xl text-ink sm:text-3xl">Which do you love more?</h1>
             <p className="mt-2 text-ink-soft">{COMPARE_SUBLINE}</p>
           </div>
 

@@ -16,8 +16,8 @@ export default async function CreateCollectionPage() {
         { label: "Create" },
       ]}
     >
-      <div className="max-w-2xl">
-        <h1 className="text-3xl text-ink mb-8">Create collection</h1>
+      <div className="mx-auto w-full max-w-2xl">
+        <h1 className="mb-6 text-2xl text-ink sm:mb-8 sm:text-3xl">Create collection</h1>
         <CollectionForm mode="create" />
       </div>
     </AppLayout>

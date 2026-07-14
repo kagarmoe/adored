@@ -58,7 +58,7 @@ export function RankedResults({ loved, onward, collectionId, coverUrl, usageByIt
       {loved.length > 1 && (
         <section className="space-y-4">
           <h2 className="font-display text-2xl text-ink">The full ranking</h2>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {loved.slice(1).map(({ ri, item }) => {
               const bucket = effectiveBucket(ri);
               return (
@@ -105,7 +105,7 @@ export function RankedResults({ loved, onward, collectionId, coverUrl, usageByIt
             </h2>
             <p className="text-ink-soft">These are ready to move on &mdash; to a new home, or simply on from here.</p>
           </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {onward.map(({ ri, item }) => (
               <ItemCard
                 key={ri.id}

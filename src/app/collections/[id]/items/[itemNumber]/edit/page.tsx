@@ -40,9 +40,9 @@ export default async function ItemEditPage({ params }: ItemEditPageProps) {
         { label: "Edit" },
       ]}
     >
-      <div className="mx-auto max-w-2xl space-y-6">
+      <div className="mx-auto w-full max-w-2xl space-y-6">
         <div>
-          <h1 className="text-3xl text-ink">Edit item</h1>
+          <h1 className="text-2xl text-ink sm:text-3xl">Edit item</h1>
           <p className="mt-2 text-ink-soft">Update item details and metadata</p>
         </div>
 

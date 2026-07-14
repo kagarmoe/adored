@@ -29,8 +29,8 @@ export default async function EditCollectionPage({ params }: EditPageProps) {
         { label: "Edit" },
       ]}
     >
-      <div className="max-w-2xl">
-        <h1 className="text-3xl text-ink mb-8">Edit collection</h1>
+      <div className="mx-auto w-full max-w-2xl">
+        <h1 className="mb-6 text-2xl text-ink sm:mb-8 sm:text-3xl">Edit collection</h1>
         <CollectionForm collection={collection} mode="edit" />
         <DeleteCollectionSection collectionId={collection.id} collectionName={collection.name} />
       </div>

@@ -109,7 +109,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
       <div className="space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-3xl text-ink">{result.name}</h1>
+            <h1 className="text-2xl text-ink sm:text-3xl">{result.name}</h1>
             <div className="mt-3">
               {/* Person-side status, not machine words (TONE #1): a finalized
                   snapshot is one you've "Saved"; a draft is one you're "Still
@@ -120,8 +120,8 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
             </div>
           </div>
           {result.status === "draft" && (
-            <Link href={`/collections/${collection.slug ?? collection.id}/results/${result.number}/finalize`}>
-              <Button>Finalize</Button>
+            <Link href={`/collections/${collection.slug ?? collection.id}/results/${result.number}/finalize`} className="w-full sm:w-auto">
+              <Button className="w-full">Finalize</Button>
             </Link>
           )}
         </div>

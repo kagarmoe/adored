@@ -12,19 +12,19 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-ground">
-      <div className="text-center max-w-2xl">
-        <h1 className="text-5xl font-medium tracking-tight mb-3 text-ink">Adored</h1>
-        <p className="text-xl text-ink-soft mb-8">for the things you love</p>
+    <main className="min-h-[100svh] flex flex-col items-center justify-center bg-ground px-4 py-10 sm:p-6">
+      <div className="max-w-md text-center sm:max-w-2xl">
+        <h1 className="mb-3 text-4xl font-medium tracking-tight text-ink sm:text-5xl">Adored</h1>
+        <p className="mb-6 text-lg text-ink-soft sm:mb-8 sm:text-xl">for the things you love</p>
 
-        <p className="text-lg text-ink mb-8">
+        <p className="mb-8 text-base text-ink sm:text-lg">
           A quiet place to sit with your things, one at a time, and notice what you love. When you&apos;re ready, share the order you arrive at.
         </p>
 
-        <div className="flex gap-4 justify-center">
+        <div className="flex justify-center">
           <Link
             href="/login"
-            className="bg-primary hover:bg-primary-hover text-primary-ink font-semibold py-3 px-8 rounded-lg transition-colors h-12 flex items-center"
+            className="flex h-12 w-full max-w-xs items-center justify-center rounded-lg bg-primary px-8 py-3 font-semibold text-primary-ink transition-colors hover:bg-primary-hover sm:w-auto"
           >
             Sign in
           </Link>

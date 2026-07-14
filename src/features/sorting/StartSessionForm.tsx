@@ -96,9 +96,21 @@ export function StartSessionForm({ collectionId, collectionSlug }: StartSessionF
 
       {error && <p className="text-sm text-error">{error}</p>}
 
-      <div className="flex gap-3">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Starting..." : "Start session"}
+      <div className="flex">
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          aria-label={isSubmitting ? "Starting" : "Start session"}
+          className="w-full sm:w-auto"
+        >
+          {isSubmitting ? (
+            "Starting..."
+          ) : (
+            <>
+              <span className="sm:hidden">Start</span>
+              <span className="hidden sm:inline">Start session</span>
+            </>
+          )}
         </Button>
       </div>
     </form>

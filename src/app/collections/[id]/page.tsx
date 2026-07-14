@@ -83,8 +83,8 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
       ]}
     >
       <div className="space-y-10">
-        <header>
-          <h1 className="text-3xl text-ink">{collection.name}</h1>
+        <header className="max-w-3xl">
+          <h1 className="text-2xl text-ink sm:text-3xl">{collection.name}</h1>
           {collection.description && <p className="mt-2 text-ink-soft">{collection.description}</p>}
           <p className="mt-4 text-sm text-ink-soft">
             Created {new Date(collection.createdAt).toLocaleDateString()}
@@ -129,8 +129,8 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
                 </h2>
                 <p className="mt-1 text-ink-soft">Things gathered here</p>
               </div>
-              <div className="flex flex-col items-start gap-2 sm:items-end">
-                <Link href={poolHref} className={buttonVariants({ variant: leadActionVariant })}>
+              <div className="flex flex-col items-stretch gap-2 sm:items-end">
+                <Link href={poolHref} className={`${buttonVariants({ variant: leadActionVariant })} w-full sm:w-auto`}>
                   Add photos
                 </Link>
                 <div className="flex flex-wrap gap-3">
@@ -185,7 +185,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
         )}
 
         {isOwner && (
-          <nav aria-label="Owner utilities" className="flex flex-wrap gap-3 border-t border-hairline pt-6">
+          <nav aria-label="Owner utilities" className="flex flex-col gap-3 border-t border-hairline pt-6 sm:flex-row sm:flex-wrap">
             <Link href={`${base}/edit`} className={quietLink}>
               Collection settings
             </Link>

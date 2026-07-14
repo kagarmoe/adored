@@ -33,9 +33,10 @@ export function ItemFilters({ activeFilter, unnamed, collectionId }: ItemFilters
         </Link>
       ))}
       <span aria-hidden className="mx-1 h-5 w-px bg-hairline" />
-      <Link href={itemsUrl(collectionId, activeFilter, !unnamed)}>
-        <Button size="sm" variant={unnamed ? "primary" : "secondary"}>
-          Waiting for a name
+      <Link href={itemsUrl(collectionId, activeFilter, !unnamed)} aria-label="Unnamed, waiting for a name">
+        <Button size="sm" variant={unnamed ? "primary" : "secondary"} aria-label="Unnamed, waiting for a name">
+          <span className="sm:hidden">Unnamed</span>
+          <span className="hidden sm:inline">Waiting for a name</span>
         </Button>
       </Link>
     </div>

@@ -61,7 +61,7 @@ describe("PoolActionBar", () => {
         onClear={vi.fn()}
       />,
     );
-    expect(screen.queryByRole("button", { name: /make each its own/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /each photo its own item/i })).not.toBeInTheDocument();
 
     rerender(
       <PoolActionBar
@@ -74,7 +74,7 @@ describe("PoolActionBar", () => {
         onClear={vi.fn()}
       />,
     );
-    expect(screen.getByRole("button", { name: /make each its own/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /each photo its own item/i })).toBeInTheDocument();
   });
 
   it("opens the Move to… chooser listing New item and existing targets", async () => {

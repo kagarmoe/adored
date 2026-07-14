@@ -8,6 +8,7 @@ interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   message?: string;
   action?: {
     label: string;
+    mobileLabel?: string;
     href?: string;
     onClick?: () => void;
   };
@@ -27,12 +28,35 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
       <h3 className="text-lg text-ink mb-2">{heading}</h3>
       {message && <p className="text-ink-soft mb-6 max-w-sm">{message}</p>}
       {action?.href ? (
-        <Link href={action.href} className={buttonVariants({ variant: "primary" })}>
-          {action.label}
+        <Link
+          href={action.href}
+          aria-label={action.mobileLabel ? action.label : undefined}
+          className={`${buttonVariants({ variant: "primary" })} w-full max-w-xs sm:w-auto`}
+        >
+          {action.mobileLabel ? (
+            <>
+              <span className="sm:hidden">{action.mobileLabel}</span>
+              <span className="hidden sm:inline">{action.label}</span>
+            </>
+          ) : (
+            action.label
+          )}
         </Link>
       ) : action ? (
-        <Button variant="primary" onClick={action.onClick}>
-          {action.label}
+        <Button
+          variant="primary"
+          onClick={action.onClick}
+          aria-label={action.mobileLabel ? action.label : undefined}
+          className="w-full max-w-xs sm:w-auto"
+        >
+          {action.mobileLabel ? (
+            <>
+              <span className="sm:hidden">{action.mobileLabel}</span>
+              <span className="hidden sm:inline">{action.label}</span>
+            </>
+          ) : (
+            action.label
+          )}
         </Button>
       ) : null}
     </div>

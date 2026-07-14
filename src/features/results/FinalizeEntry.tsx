@@ -41,8 +41,8 @@ export function FinalizeEntry({ collectionId, collectionSlug }: FinalizeEntryPro
   }
 
   return (
-    <div className="flex flex-col items-start gap-1">
-      <Button type="button" variant="secondary" onClick={handleClick} disabled={loading}>
+    <div className="flex w-full flex-col items-stretch gap-1 sm:w-auto sm:items-start">
+      <Button type="button" variant="secondary" onClick={handleClick} disabled={loading} className="w-full sm:w-auto">
         {loading ? "Getting ready…" : "Finalize"}
       </Button>
       {error && (

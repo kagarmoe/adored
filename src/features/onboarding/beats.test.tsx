@@ -31,12 +31,12 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("WelcomePurpose", () => {
-  it("renders the Playfair hero and the anti-store framing verbatim", () => {
+  it("renders the Playfair hero and the current collection flow framing", () => {
     render(<WelcomePurpose onNext={() => {}} />);
     expect(screen.getByRole("heading", { name: "Rediscover what you love." })).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Adored isn.?t a store\. It.?s a way to notice which of your things you love most, one gentle choice at a time\./
+        /Adored helps you build a collection from photos, make items when you.?re ready, and notice what you love most through short rounds\./
       )
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show me how" })).toBeInTheDocument();
@@ -317,10 +317,10 @@ describe("WelcomeHandoff", () => {
     render(<WelcomeHandoff onExplore={() => {}} />);
     expect(screen.getByRole("heading", { name: "Now, your turn." })).toBeInTheDocument();
     expect(
-      screen.getByText("Start with a few photos of your things.")
+      screen.getByText("Begin with photos. They can wait in the pool until you make items.")
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Sort whenever you like — in short rounds, pausing any time.")
+      screen.getByText("Sort whenever you like, one gentle round at a time.")
     ).toBeInTheDocument();
     const cta = screen.getByRole("link", { name: "Start a collection" });
     expect(cta).toHaveAttribute("href", "/collections/new");

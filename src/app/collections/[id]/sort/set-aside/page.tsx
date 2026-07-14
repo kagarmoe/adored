@@ -51,9 +51,9 @@ export default async function SetAsidePage({ params }: SetAsidePageProps) {
         { label: "Set aside" },
       ]}
     >
-      <div className="mx-auto max-w-xl space-y-6">
+      <div className="mx-auto w-full max-w-xl space-y-6">
         <div>
-          <h1 className="text-3xl text-ink">Set aside</h1>
+          <h1 className="text-2xl text-ink sm:text-3xl">Set aside</h1>
           {/* Person-side framing, no count: these are the ones that weren't yours
               to decide. Bring any back whenever it feels right (TONE.md 1 & 4). */}
           <p className="mt-2 text-sm text-ink-soft">
@@ -76,7 +76,7 @@ export default async function SetAsidePage({ params }: SetAsidePageProps) {
               return (
                 <li key={item.id}>
                   <Card padding="md">
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                       {/* CardImage degrades to the calm ☾ fallback on a missing
                           OR failed cover load — never the browser's broken glyph
                           (gentle by duty of care). unoptimized so auth cookies

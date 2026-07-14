@@ -27,6 +27,14 @@
 
 ## Wireframes
 
+Responsive rule: every web/tablet workspace wireframe has a matching phone view. The phone view is
+the same hierarchy collapsed to one column with 44px+ tap targets, full-width primary actions, and
+quiet secondary links that stay reachable without becoming peer primaries. Phone button text must
+fit inside the button without wrapping or crowding; shorten the label when the surrounding heading
+supplies the object. Example: a tablet/web button `Begin a collection` becomes `Begin` on phone.
+Route-wide page coverage lives in
+[`../specs/2026-07-14-page-phone-layout-coverage.md`](../specs/2026-07-14-page-phone-layout-coverage.md).
+
 ### Pool-first workspace
 
 ```text
@@ -59,6 +67,49 @@ Continue
 
 (`[bracketed]` = one dominant action; bare text = quiet secondary link.)
 
+#### Phone
+
+```text
+/collections/summer-bags
+
+[Breadcrumbs] Collections / Summer bags
+
+Summer bags
+Created Jun 28, 2026
+
+Collection settings
+Members
+
++ Photo pool ------------------+
+| Photos waiting here          |
+| These can become items       |
+| whenever you're ready.       |
+|                              |
+| [thumb] [thumb]              |
+| [thumb] [thumb]              |
+|                              |
+| [Make items]                 |
+| Add more photos              |
++------------------------------+
+
+Items                         View all items
+Things gathered here
+
++-------------+  +-------------+
+| photo       |  | photo       |
+| Item        |  | Item        |
++-------------+  +-------------+
+
++-------------+  +-------------+
+| photo       |  | photo       |
+| Item        |  | Item        |
++-------------+  +-------------+
+
+Continue
+[Resume sorting]
+Results
+```
+
 ### Items-first workspace
 
 ```text
@@ -79,6 +130,40 @@ Things gathered here                          Add item · View all items
 
 Continue
 [Start sorting]  Results
+```
+
+#### Phone
+
+```text
+/collections/summer-bags
+
+[Breadcrumbs] Collections / Summer bags
+
+Summer bags
+Created Jun 28, 2026
+
+Collection settings
+Members
+
+Items
+Things gathered here
+
+[Add photos]
+Add item · View all items
+
++-------------+  +-------------+
+| photo       |  | photo       |
+| Item        |  | Item        |
++-------------+  +-------------+
+
++-------------+  +-------------+
+| photo       |  | photo       |
+| Item        |  | Item        |
++-------------+  +-------------+
+
+Continue
+[Start sorting]
+Results
 ```
 
 ### Navigation map (page-to-page links, not app state; state = `WorkspaceState` union, Task 4)
@@ -197,14 +282,15 @@ Acceptance:
    - items-first links to `/items`;
    - empty state offers one add-photos action;
    - keyboard traversal reaches header, primary section, secondary actions, owner utilities in order.
-3. Add screenshot surfaces for pool-first and items-first in light and dark.
+3. Add screenshot surfaces for pool-first and items-first in light and dark, at tablet and phone
+   viewports.
 4. Run `npx playwright test e2e/adaptive-collection-workspace.spec.ts`.
 5. Run `npm run screenshots` when preparing the PR.
 
 Acceptance:
 
 - Browser flow proves adaptive states.
-- Screenshots exist for UI review.
+- Screenshots exist for UI review at tablet and phone viewports.
 - E2E lives under `e2e/**` so the CI `e2e` job picks it up.
 
 ## Task 7: Optional collection-list pool cue

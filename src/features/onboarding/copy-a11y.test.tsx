@@ -21,21 +21,23 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("purpose journey line", () => {
-  it("renders the quiet three-phrase journey", () => {
+  it("renders the quiet collection journey", () => {
     const { container } = render(<WelcomePurpose onNext={() => {}} />);
     const text = container.textContent ?? "";
-    expect(text).toContain("Gather a few photos of your things.");
+    expect(text).toContain("Add photos to a collection.");
+    expect(text).toContain("Make items when you’re ready.");
     expect(text).toContain("Sort in short rounds.");
-    expect(text).toContain("See where things stand.");
+    expect(text).toContain("See what you love most.");
   });
 
   it("renders the journey as quiet text-ink-soft paragraphs with no icons/arrows", () => {
     const { container } = render(<WelcomePurpose onNext={() => {}} />);
     // Each journey phrase lives in a text-ink-soft <p>; the stack carries no svg/icon.
     for (const phrase of [
-      "Gather a few photos of your things.",
+      "Add photos to a collection.",
+      "Make items when you’re ready.",
       "Sort in short rounds.",
-      "See where things stand.",
+      "See what you love most.",
     ]) {
       const p = Array.from(container.querySelectorAll("p")).find(
         (el) => el.textContent?.trim() === phrase

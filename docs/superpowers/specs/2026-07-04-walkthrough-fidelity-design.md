@@ -74,14 +74,16 @@ compare → standing → handoff) no longer represents the app it introduces:
 
 ### Beat structure
 
-`purpose → triage → compare → standing → refine → handoff` (six beats), linear,
-"Skip for now" on every beat except handoff. All state stays in `WalkthroughShell`
-(client-only).
+`purpose → triage → usage → compare → standing → refine → handoff` (seven
+beats), linear, "Skip for now" on every beat except handoff. All state stays in
+`WalkthroughShell` (client-only).
 
-**1. Purpose** — keep "Rediscover what you love" and the anti-store line. Add the
-journey in three quiet steps (text, not icons-and-arrows): *Gather a few photos of
-your things. Sort in short rounds. See where things stand.* One `Show me how` CTA.
-("Short rounds", not "gentle rounds" — gentleness is shown, not claimed.)
+**1. Purpose** — keep "Rediscover what you love" and orient to the real
+collection model. Body copy: *"Adored helps you build a collection from photos,
+make items when you're ready, and notice what you love most through short
+rounds."* Add the journey in four quiet steps (text, not icons-and-arrows): *Add
+photos to a collection. Make items when you're ready. Sort in short rounds. See
+what you love most.* One `Show me how` CTA.
 
 **2. Triage** — a small kicker composed from the shared round name: **"A Triage
 round"**, with the shared one-line explainer beneath it. The kicker + explainer
@@ -98,12 +100,17 @@ moment — but every control is valid on every item. Unlike real triage, a defer
 item does **not** resurface within the walkthrough: any choice (tier, Not yet,
 Not mine) records and advances, keeping the beat short.
 
-**3. Compare** — kicker **"A Compare round"** + the shared explainer. Renders the
+**3. Usage** — kicker **"A Usage round"** + the shared explainer. Renders the
+real usage controls in local mode: the dominant prompt **"Do you use this?"**,
+the visible choices **"Yes, I use it"** and **"Not these days"**, and the quiet
+pass control **"Skip for now"**. One item, then the walkthrough advances.
+
+**4. Compare** — kicker **"A Compare round"** + the shared explainer. Renders the
 real `CompareChoice` in local mode: two cards, plus the quiet **Tie** and **Skip**
 buttons, with the shared sub-line ("Tap the one you love more. Tie or skip
 whenever you like."). One pair.
 
-**4. Standing** — retitled **"Where things stand"** to match the real results page.
+**5. Standing** — retitled **"Where things stand"** to match the real results page.
 Composition is pinned to mirror `RankedResults`' documented ordering invariant:
 hero labeled **"What you love most"** first, ranked rows beneath, then — only when
 non-empty, and in the real page's subordinate styling (quiet eyebrow headings,
@@ -114,18 +121,18 @@ love most is at the top."** is the beat's *last* content — nothing follows it.
 every item was deferred/set aside (no ranked rows), the hero is omitted and the
 beat closes on the real page's calm variant "You've made your choices." instead.
 
-**5. Refine (new)** — one short beat, after the payoff: the standing is alive, not
+**6. Refine (new)** — one short beat, after the payoff: the standing is alive, not
 a verdict. Two sentences: *"The standing keeps updating as you sort — **Put things
 in order** starts another round whenever you want it truer."* and the single
 forward reference *"When it feels complete, you can finalize it and share it."*
 The button name "Put things in order" is quoted exactly (same-token recognition
 with `results/page.tsx:90`). Continue CTA advances to handoff.
 
-**6. Handoff** — "Now, your turn." Body copy sets the two real expectations:
-*"Start with a few photos of your things."* and *"Sort whenever you like — in
-short rounds, pausing any time."* Primary CTA `Start a collection` →
-`/collections/new`; secondary "I'll explore on my own." (both unchanged; both
-dismiss the walkthrough, as today).
+**7. Handoff** — "Now, your turn." Body copy sets the real expectations:
+*"Begin with photos. They can wait in the pool until you make items."* and *"Sort
+whenever you like, one gentle round at a time."* Primary CTA
+`Start a collection` → `/collections/new`; secondary "I'll explore on my own."
+(both unchanged; both dismiss the walkthrough, as today).
 
 ### Local mode on the real components — a typed union, not stacked optionals
 
@@ -302,7 +309,7 @@ does the same.
 - **Assumed:** the standalone sample-data walkthrough is the right vehicle
   (Approach B, not C). If a guided real first session is wanted instead, this spec
   is the wrong shape — say so before planning proceeds.
-- **Assumed:** six beats, no "session start form" beat (the form explains itself
+- **Assumed:** seven beats, no "session start form" beat (the form explains itself
   in place).
 - **Product question (separate from this work):** should results support *manual*
   reordering (drag), per PRODUCT.md's "drag is permitted for reordering results"?

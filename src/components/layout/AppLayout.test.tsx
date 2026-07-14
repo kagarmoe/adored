@@ -29,3 +29,20 @@ it("dark footer recedes to ground with a hairline divider, not a surface slab", 
   expect(footer?.className).toContain("border-t");
   expect(footer?.className).toContain("border-hairline");
 });
+
+it("stacks page chrome actions on phone and restores the row on tablet", () => {
+  const { container } = render(
+    <AppLayout
+      breadcrumbs={[{ label: "Collections", href: "/collections" }, { label: "Round" }]}
+      actions={<button type="button">Take a break</button>}
+    >
+      <p>content</p>
+    </AppLayout>,
+  );
+
+  const actionWrap = container.querySelector("main div.mb-6");
+  expect(actionWrap).not.toBeNull();
+  expect(actionWrap?.className).toContain("w-full");
+  expect(actionWrap?.className).toContain("sm:w-auto");
+  expect(actionWrap?.className).toContain("sm:justify-end");
+});

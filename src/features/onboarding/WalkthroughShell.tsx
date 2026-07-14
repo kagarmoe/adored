@@ -64,11 +64,11 @@ export function WalkthroughShell() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-10 px-6 py-12">
+    <div className="min-h-[100svh] flex flex-col items-center justify-center gap-8 px-4 py-8 sm:gap-10 sm:px-6 sm:py-12">
       <div
         ref={wrapperRef}
         tabIndex={-1}
-        className="w-full max-w-2xl focus:outline-hidden"
+        className="w-full max-w-md focus:outline-hidden sm:max-w-2xl"
       >
         {beat === "purpose" && <WelcomePurpose onNext={() => goTo("triage")} />}
         {beat === "triage" && (
@@ -98,7 +98,7 @@ export function WalkthroughShell() {
         <button
           type="button"
           onClick={exit}
-          className="h-11 px-4 text-sm text-ink-soft hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-control"
+          className="h-11 w-full max-w-xs rounded-control px-4 text-sm text-ink-soft hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary sm:w-auto"
         >
           Skip for now
         </button>

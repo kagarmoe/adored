@@ -98,7 +98,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
       <div className="space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="font-display text-3xl text-ink">Where things stand</h1>
+            <h1 className="font-display text-2xl text-ink sm:text-3xl">Where things stand</h1>
             {/* Person-side, forward-framed, no count (TONE #1, #4). */}
             <p className="mt-2 text-ink-soft">The clearer this feels, the more it&rsquo;s yours.</p>
             {/* Epic S §4.4 bridge: name live Standing as the always-current picture,
@@ -109,9 +109,12 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           {/* Calm, side-by-side entry points — neither competes. Put-in-order
               leads to the compare round; Finalize keeps it steady for now. */}
           {hasStanding && (
-            <div className="flex flex-wrap items-start gap-3">
-              <Link href={`${collectionHref}/sort`}>
-                <Button variant="secondary">Put things in order</Button>
+            <div className="grid w-full gap-3 sm:w-auto sm:grid-flow-col sm:auto-cols-max">
+              <Link href={`${collectionHref}/sort`} className="min-w-0">
+                <Button variant="secondary" aria-label="Put things in order" className="w-full">
+                  <span className="sm:hidden">Order</span>
+                  <span className="hidden sm:inline">Put things in order</span>
+                </Button>
               </Link>
               <FinalizeEntry
                 collectionId={collection.id}
@@ -140,7 +143,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 <h2 className="font-display text-2xl text-ink">The ones you&rsquo;ve weighed in on</h2>
                 <p className="text-ink-soft">A quiet note on each &mdash; in your life, or resting for now.</p>
               </div>
-              <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+              <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {usageOnlyItems.map((item) => (
                   <li key={item.id}>
                     <ItemCard
@@ -161,8 +164,8 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 Once you&rsquo;ve sat with a few, what you love most will settle here, gently.
               </p>
               <div>
-                <Link href={`${collectionHref}/sort`}>
-                  <Button>Start sorting</Button>
+                <Link href={`${collectionHref}/sort`} className="block w-full sm:w-auto">
+                  <Button className="w-full sm:w-auto">Start sorting</Button>
                 </Link>
               </div>
             </section>)
@@ -180,7 +183,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 The ones that weren&rsquo;t yours to decide. Bring any back whenever you like.
               </p>
             </div>
-            <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {setAsideItems.map((item) => (
                 <li key={item.id}>
                   <Card padding="none" className="overflow-hidden">

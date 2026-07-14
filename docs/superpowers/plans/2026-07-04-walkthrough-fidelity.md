@@ -398,9 +398,9 @@ it("toItem fabricates a complete Item (satisfies the type, fixed dates)", () => 
 - Modify: `src/features/onboarding/WelcomePurpose.tsx`, `WelcomeHandoff.tsx`
 - Modify: `src/features/onboarding/copy-a11y.test.tsx` (and `beats.test.tsx` if it pins these beats' copy)
 
-- [ ] **Step 1: Failing tests** — assert the journey line on Purpose (`Gather a few photos of your things. Sort in short rounds. See where things stand.` — may render as three lines; assert each phrase) and the two handoff expectation lines (`Start with a few photos of your things.`, `Sort whenever you like — in short rounds, pausing any time.`).
+- [ ] **Step 1: Failing tests** — assert the journey line on Purpose (`Add photos to a collection. Make items when you're ready. Sort in short rounds. See what you love most.` — may render as four lines; assert each phrase) and the two handoff expectation lines (`Begin with photos. They can wait in the pool until you make items.`, `Sort whenever you like, one gentle round at a time.`).
 - [ ] **Step 2: Run — FAIL.**
-- [ ] **Step 3: Implement.** Purpose keeps heading + anti-store line + CTA; journey renders as a quiet `<p>` stack (`text-ink-soft`, no icons/arrows). Handoff keeps CTA + explore link + dismissal behavior unchanged.
+- [ ] **Step 3: Implement.** Purpose keeps heading + current collection-flow line + CTA; journey renders as a quiet `<p>` stack (`text-ink-soft`, no icons/arrows). Handoff keeps CTA + explore link + dismissal behavior unchanged.
 - [ ] **Step 4: Run + PASS.**
 - [ ] **Step 5: Commit** — `git commit -m "feat(onboarding): purpose journey line + handoff expectations"`
 
@@ -507,14 +507,14 @@ it("refine beat quotes the real button name and the forward reference", () => {
 
 ---
 
-### Task 11: `WalkthroughShell` — six beats, outcome state, focus, aria-live
+### Task 11: `WalkthroughShell` — seven beats, outcome state, focus, aria-live
 
 **Files:**
 - Modify: `src/features/onboarding/WalkthroughShell.tsx`
 - Modify: `src/features/onboarding/WalkthroughShell.test.tsx` (heading assertions: line 43's "What you love most" → beat title "Where things stand"; keep a hero assertion pinning "What you love most" inside the beat)
 
 **Interfaces:**
-- Consumes: every prior task. `BEAT_ORDER = ["purpose", "triage", "compare", "standing", "refine", "handoff"]`.
+- Consumes: every prior task. `BEAT_ORDER = ["purpose", "triage", "usage", "compare", "standing", "refine", "handoff"]`.
 - Produces: shell state `{ beat, triageIndex, triageOutcomes: Record<string, TriageOutcome>, compareOutcome: CompareOutcome | null }`.
 
 - [ ] **Step 1: Failing tests**
@@ -602,6 +602,6 @@ test("skip for now mid-walkthrough dismisses too", async ({ page }) => { /* same
 
 ## Self-review
 
-- **Spec coverage:** every spec section maps to a task — shared copy (T1), union on four components (T2-T5), guard (T5), typed buildStanding (T6), six beats (T7-T11), a11y contract (T11), e2e with fixture design (T12), TONE-fix hub explainers (T1), refine beat / user's manual-refine request honestly scoped (T10). Gaps: none found.
+- **Spec coverage:** every spec section maps to a task — shared copy (T1), union on four components (T2-T5), guard (T5), typed buildStanding (T6), seven beats (T7-T11), a11y contract (T11), e2e with fixture design (T12), TONE-fix hub explainers (T1), refine beat / user's manual-refine request honestly scoped (T10). Gaps: none found.
 - **Type consistency:** `TriageOutcome`/`CompareOutcome`/`Standing` defined in T6, consumed with the same names in T8-T11; `DecisionSubmit` exported in T2; `submit` prop name uniform across T2-T5.
 - **Placeholder scan:** none — the two "as today" references point at existing code the implementer keeps, not code to invent.

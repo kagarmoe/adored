@@ -58,7 +58,7 @@ export default function InvitationPage({ params }: InvitationPageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-[100svh] flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
@@ -66,7 +66,7 @@ export default function InvitationPage({ params }: InvitationPageProps) {
 
   if (error || !invitation) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-[100svh] flex items-center justify-center p-4">
         <div className="max-w-sm w-full">
           <ErrorMessage message={error || "Invalid invitation"} />
         </div>
@@ -75,8 +75,8 @@ export default function InvitationPage({ params }: InvitationPageProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-ground p-4">
-      <div className="max-w-sm w-full bg-surface rounded-lg shadow-lg p-8">
+    <div className="min-h-[100svh] flex items-center justify-center bg-ground p-4 sm:p-6">
+      <div className="max-w-sm w-full bg-surface rounded-lg shadow-lg p-6 sm:p-8">
         <h1 className="text-2xl text-ink mb-2">You&apos;re invited!</h1>
         <p className="text-ink-soft mb-6">
           You&apos;ve been invited to collaborate on a collection.
@@ -90,9 +90,21 @@ export default function InvitationPage({ params }: InvitationPageProps) {
           )}
         </div>
 
-        <div className="flex gap-3">
-          <Button fullWidth onClick={handleAccept} disabled={accepting}>
-            {accepting ? "Accepting..." : "Accept invitation"}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Button
+            fullWidth
+            onClick={handleAccept}
+            disabled={accepting}
+            aria-label={accepting ? "Accepting" : "Accept invitation"}
+          >
+            {accepting ? (
+              "Accepting..."
+            ) : (
+              <>
+                <span className="sm:hidden">Accept</span>
+                <span className="hidden sm:inline">Accept invitation</span>
+              </>
+            )}
           </Button>
           <Button variant="secondary" fullWidth onClick={() => router.push("/")}>
             Decline

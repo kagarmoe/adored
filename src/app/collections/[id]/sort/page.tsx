@@ -45,13 +45,13 @@ export default async function SortPage({ params }: SortPageProps) {
           renders from stale session/preference data. Empty queue = zero cost. */}
       <PendingDecisionsGate curatorId={session.user.id}>
       <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl text-ink">Sorting sessions</h1>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl text-ink sm:text-3xl">Sorting sessions</h1>
           {/* purses-4bhh: only invite a new session when none is open — starting a
               second while one is active/paused violates sessions_active_unique. */}
           {!currentSession && (
-            <Link href={`${collectionHref}/sort/new`}>
-              <Button>New session</Button>
+            <Link href={`${collectionHref}/sort/new`} className="w-full sm:w-auto">
+              <Button className="w-full">New session</Button>
             </Link>
           )}
         </div>
@@ -72,7 +72,7 @@ export default async function SortPage({ params }: SortPageProps) {
                     : currentSession.goal || "Preference discovery"}
                 </p>
               </div>
-              <div className="flex gap-3">
+              <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto">
                 {currentSession.status === "paused" ? (
                   <ResumeControl
                     curatorId={session.user.id}
@@ -80,12 +80,12 @@ export default async function SortPage({ params }: SortPageProps) {
                     sortHref={`${collectionHref}/sort/${currentSession.number}`}
                   />
                 ) : (
-                  <Link href={`${collectionHref}/sort/${currentSession.number}`}>
-                    <Button>Resume</Button>
+                  <Link href={`${collectionHref}/sort/${currentSession.number}`} className="min-w-0">
+                    <Button className="w-full">Resume</Button>
                   </Link>
                 )}
-                <Link href={`${collectionHref}/sort/${currentSession.number}`}>
-                  <Button variant="secondary">Details</Button>
+                <Link href={`${collectionHref}/sort/${currentSession.number}`} className="min-w-0">
+                  <Button variant="secondary" className="w-full">Details</Button>
                 </Link>
               </div>
             </div>
@@ -98,6 +98,7 @@ export default async function SortPage({ params }: SortPageProps) {
             message="Create a session to start organizing items"
             action={{
               label: "Create session",
+              mobileLabel: "Create",
               href: `${collectionHref}/sort/new`,
             }}
           />
@@ -106,7 +107,7 @@ export default async function SortPage({ params }: SortPageProps) {
             {sessions.map((s) => (
               <Link key={s.id} href={`${collectionHref}/sort/${s.number}`}>
                 <Card interactive padding="md">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h3 className="text-ink">{s.goal}</h3>
                       <div className="mt-2 flex items-center gap-2">

@@ -33,13 +33,13 @@ export default async function SharedResultPage({ params }: SharedResultPageProps
   const sortedResultItems = [...resultItems].sort((a, b) => (a.manualRank ?? a.computedRank) - (b.manualRank ?? b.computedRank));
 
   return (
-    <main className="min-h-screen bg-ground px-4 py-8">
+    <main className="min-h-screen bg-ground px-4 py-6 sm:py-8">
       <div className="mx-auto max-w-6xl space-y-8">
         <div>
           <div className="mb-3">
             <Badge variant="finalized">finalized</Badge>
           </div>
-          <h1 className="text-3xl text-ink">{result.name}</h1>
+          <h1 className="text-2xl text-ink sm:text-3xl">{result.name}</h1>
           <p className="mt-2 text-ink-soft">Shared read-only result</p>
         </div>
 
@@ -47,7 +47,7 @@ export default async function SharedResultPage({ params }: SharedResultPageProps
           {sortedResultItems.length === 0 ? (
             <EmptyState heading="No ranked items" message="This shared result does not contain ranked items yet" />
           ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {sortedResultItems.map((resultItem) => {
                 const item = itemById.get(resultItem.itemId);
                 if (!item) return null;

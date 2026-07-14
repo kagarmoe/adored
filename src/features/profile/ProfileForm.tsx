@@ -83,7 +83,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
             Your name is shown across Adored. You can leave it blank — we&rsquo;ll just use your email.
           </p>
 
-          <Button type="submit" disabled={saving}>
+          <Button type="submit" disabled={saving} className="w-full sm:w-auto">
             {saving ? "Saving…" : "Save changes"}
           </Button>
 
@@ -99,7 +99,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
         </form>
       </Card>
 
-      <div className="flex items-center justify-between gap-4 rounded-control border border-hairline bg-surface px-4 py-3">
+      <div className="flex flex-col items-start gap-3 rounded-control border border-hairline bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-ink">Theme</p>
           <p className="text-sm text-ink-soft">Switch between light and dark.</p>
@@ -107,7 +107,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
         <ThemeToggle />
       </div>
 
-      <div className="flex items-center justify-between gap-4 rounded-control border border-hairline bg-surface px-4 py-3">
+      <div className="flex flex-col items-start gap-3 rounded-control border border-hairline bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-ink">New to Adored?</p>
           <p className="text-sm text-ink-soft">Revisit the quick walkthrough anytime.</p>
@@ -115,9 +115,11 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
         {/* Re-open the walkthrough (manual visit — does NOT clear the dismissal flag). */}
         <Link
           href="/welcome"
-          className="inline-flex h-11 items-center rounded-control px-4 text-sm text-primary underline focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+          aria-label="Walkthrough: how Adored works"
+          className="inline-flex h-11 w-full items-center justify-center rounded-control px-4 text-sm text-primary underline focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary sm:w-auto"
         >
-          How Adored works
+          <span className="sm:hidden">Walkthrough</span>
+          <span className="hidden sm:inline">How Adored works</span>
         </Link>
       </div>
 

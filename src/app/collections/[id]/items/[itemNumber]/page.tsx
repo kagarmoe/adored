@@ -80,9 +80,9 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
       ]}
     >
       <div className="space-y-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl text-ink">{itemDisplayName(item)}</h1>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-2xl text-ink sm:text-3xl">{itemDisplayName(item)}</h1>
             {item.brand && <p className="mt-1 text-ink-soft">{item.brand}</p>}
             {!hasName(item) && (
               <Link
@@ -93,8 +93,8 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
               </Link>
             )}
           </div>
-          <Link href={editHref}>
-            <Button>Edit</Button>
+          <Link href={editHref} className="w-full sm:w-auto">
+            <Button className="w-full">Edit</Button>
           </Link>
         </div>
 
@@ -125,7 +125,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
 
           {/* Details — with a contextual edit affordance (purses-0gv). */}
           <Card padding="lg" className="h-fit">
-            <div className="mb-4 flex items-center justify-between gap-2">
+            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-lg text-ink">Details</h2>
               {hasMetadata && (
                 <Link href={editHref} className="text-sm text-primary underline underline-offset-2">

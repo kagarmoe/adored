@@ -98,30 +98,32 @@ export default async function TriagePage({ params }: TriagePageProps) {
           queue into client state at mount — it must never mount over undrained
           decisions (conditional mount, never CSS-hide). */}
       <PendingDecisionsGate curatorId={session.user.id}>
-      <TriageUndoProvider
-        curatorId={session.user.id}
-        sessionId={sortSession.id}
-        collectionId={collection.id}
-      >
-        {/* The set-aside undo notice lives OUTSIDE the round so it survives BOTH
-            the queue emptying AND the round-end recap — setting aside the LAST
-            item ends the round, but the "Bring back" escape must still be
-            reachable (spec §11; TONE: nothing lost, always undoable). */}
-        <div className="mx-auto max-w-xl">
-          <TriageUndoNotice />
-        </div>
-        <TriageRound
+        <TriageUndoProvider
           curatorId={session.user.id}
           sessionId={sortSession.id}
           collectionId={collection.id}
-          collectionSlugOrId={slugOrId}
-          queue={queue}
-          decisions={decisions}
-          decidedSeed={preferences.length}
-          hubHref={hubHref}
-          setAsideHref={`/collections/${slugOrId}/sort/set-aside`}
-        />
-      </TriageUndoProvider>
+        >
+          <div className="space-y-4 sm:space-y-6">
+            {/* The set-aside undo notice lives OUTSIDE the round so it survives BOTH
+                the queue emptying AND the round-end recap — setting aside the LAST
+                item ends the round, but the "Bring back" escape must still be
+                reachable (spec §11; TONE: nothing lost, always undoable). */}
+            <div className="mx-auto max-w-xl">
+              <TriageUndoNotice />
+            </div>
+            <TriageRound
+              curatorId={session.user.id}
+              sessionId={sortSession.id}
+              collectionId={collection.id}
+              collectionSlugOrId={slugOrId}
+              queue={queue}
+              decisions={decisions}
+              decidedSeed={preferences.length}
+              hubHref={hubHref}
+              setAsideHref={`/collections/${slugOrId}/sort/set-aside`}
+            />
+          </div>
+        </TriageUndoProvider>
       </PendingDecisionsGate>
     </AppLayout>
   );

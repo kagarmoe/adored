@@ -154,6 +154,9 @@ never stored as mutable progress.**
 - **Copy is person-side** (TONE): no counts / denominators / "N to go", no "dashboard", no
   shaming empty states; paused/benign uses `content-mid`, never amber.
 - **Tablet-first, tap-first, no swiping** (drag where it helps); targets ≥ 44px.
+- **Phone coverage:** every `src/app/**/page.tsx` route must have a phone layout contract in
+  [`2026-07-14-page-phone-layout-coverage.md`](2026-07-14-page-phone-layout-coverage.md) before
+  page-level implementation proceeds.
 - **Keep all repo-only features (F)** — restyle, don't regress.
 - **UI PRs ship light + dark screenshots**; run `/sync-docs` + `/graphify --update` before PRs.
 - Branch → PR → squash-merge; never commit to `main`.

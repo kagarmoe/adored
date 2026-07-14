@@ -73,15 +73,30 @@ export function CollectionForm({ collection, mode }: CollectionFormProps) {
         rows={4}
       />
 
-      <div className="flex gap-3">
-        <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : mode === "create" ? "Create collection" : "Save changes"}
+      <div className="grid grid-cols-2 gap-3 sm:flex">
+        <Button
+          type="submit"
+          disabled={loading}
+          aria-label={!loading && mode === "create" ? "Create collection" : undefined}
+          className="w-full sm:w-auto"
+        >
+          {loading ? (
+            "Saving..."
+          ) : mode === "create" ? (
+            <>
+              <span className="sm:hidden">Create</span>
+              <span className="hidden sm:inline">Create collection</span>
+            </>
+          ) : (
+            "Save changes"
+          )}
         </Button>
         <Button
           variant="secondary"
           type="button"
           onClick={() => router.back()}
           disabled={loading}
+          className="w-full sm:w-auto"
         >
           Cancel
         </Button>
