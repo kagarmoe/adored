@@ -9,7 +9,6 @@ import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { SessionController } from "@/server/api/sessions";
 import { PreferenceController } from "@/server/api/preferences";
 import { DispositionController } from "@/server/api/dispositions";
-import { getPostHogClient } from "@/lib/posthog-server";
 import {
   BatchRequestSchema,
   MAX_BATCH_BYTES,
@@ -221,27 +220,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       ctx: { collectionId: sortSession.collectionId, curatorId: userId, sessionId: id },
     });
 
-    // ONE capture per request — including all-duplicate replays: replay
-    // frequency is exactly the recovery-path signal worth observing. Counts
-    // only, never ids (PII discipline).
     const counts = { created: 0, duplicate: 0, rejected: 0 };
     for (const r of results) counts[r.status]++;
-    const phClient = getPostHogClient();
-    phClient.capture({
-      distinctId: userId,
-      event: "sort_decision_batch_recorded",
-      properties: counts,
-    });
-    // flush (NOT shutdown): deliver before the function returns — serverless
-    // can freeze the instance the moment we respond.
-    await phClient.flush();
 
     return NextResponse.json({ results }, { status: counts.created > 0 ? 201 : 200 });
   } catch (error) {
     // The failure is already observed at the withTransaction seam (op:
-    // "record_decision_batch" + ctx), which logs [db_error] + emits
-    // db_action_failed ONCE and rethrows — this catch only maps to a 500 and
-    // never re-logs.
+    // "record_decision_batch" + ctx), which logs [db_error] ONCE and rethrows
+    // — this catch only maps to a 500 and never re-logs.
     // Never echo the error: it carries driver text (purses-hiez).
     return NextResponse.json(
       { error: "Failed to record decisions" },

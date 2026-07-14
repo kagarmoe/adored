@@ -5,8 +5,7 @@ import { env } from "@/lib/env";
 // URL, so the URL is a secret — it goes ONLY to the recipient's send, and is
 // NEVER logged, captured, or echoed anywhere outside NODE_ENV==="development".
 //
-// Graceful fallback (mirrors the PostHog no-token stub in posthog-server.ts):
-// if RESEND_API_KEY is unset we do NOT construct a client and do NOT throw —
+// Graceful fallback: if RESEND_API_KEY is unset we do NOT construct a client and do NOT throw —
 // sends are skipped so CI/tests/local stay green without a key. In development
 // only, we console.log the link so a dev can click it locally.
 

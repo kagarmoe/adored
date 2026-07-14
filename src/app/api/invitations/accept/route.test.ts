@@ -23,9 +23,6 @@ vi.mock("@/server/services/InvitationAcceptService", async (importOriginal) => {
     InvitationAcceptService: { fromDb: () => ({ accept: mockAccept }) },
   };
 });
-vi.mock("@/lib/posthog-server", () => ({
-  getPostHogClient: () => ({ capture: vi.fn(), flush: vi.fn().mockResolvedValue(undefined) }),
-}));
 
 import { POST } from "./route";
 

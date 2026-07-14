@@ -28,17 +28,12 @@ import { loadCuratorDecisionEvents } from "@/server/services/decision-log";
 import { deriveUsage } from "@/lib/derive-usage";
 import type { UsageResult } from "@/types";
 
-const { mockGetSession, phCapture, phFlush } = vi.hoisted(() => ({
+const { mockGetSession } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
-  phCapture: vi.fn(),
-  phFlush: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => mockAuth(mockGetSession));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
-vi.mock("@/lib/posthog-server", () => ({
-  getPostHogClient: () => ({ capture: phCapture, flush: phFlush }),
-}));
 
 import { POST as postDecision } from "@/app/api/sessions/[id]/decisions/route";
 
@@ -186,9 +181,8 @@ describeDb("the curator's decision log (loadCuratorDecisionEvents / listForCurat
 // lock, clientKey idempotency) but usage NEVER recomputes preferences and NEVER
 // clears a disposition — the two invariants that separate usage from triage.
 //
-// Mocks ONLY the true boundaries: auth (drive the curator), getDb (test pool),
-// posthog-server (assert capture without a network). Un-mocked: route ->
-// controller/repo -> pg.
+// Mocks ONLY the true boundaries: auth (drive the curator) and getDb (test
+// pool). Un-mocked: route -> controller/repo -> pg.
 describeDb("single decisions route accepts usage (route -> controller -> repo -> DB)", () => {
   let ownerId: string;
 

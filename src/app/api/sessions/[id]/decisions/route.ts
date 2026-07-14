@@ -10,7 +10,6 @@ import { requireApiCollectionAccess } from "@/server/dal/collection-access";
 import { SessionController } from "@/server/api/sessions";
 import { PreferenceController } from "@/server/api/preferences";
 import { DispositionController } from "@/server/api/dispositions";
-import { getPostHogClient } from "@/lib/posthog-server";
 
 // The recompute-under-lock write path uses node-postgres — pin the Node runtime
 // (not Edge) and give the platform an explicit, generous function cap so a slow
@@ -205,30 +204,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       ctx: { collectionId: sortSession.collectionId, curatorId: userId, sessionId: id },
     });
 
-    // Emit analytics only for a genuinely NEW decision — an idempotent replay
-    // (isNew === false) must not double-count the event.
-    if (isNew) {
-      const phClient = getPostHogClient();
-      phClient.capture({
-        distinctId: userId,
-        event: "sort_decision_recorded",
-        properties: {
-          decision_type: body.type,
-          session_id: id,
-          collection_id: sortSession.collectionId,
-        },
-      });
-      // flush (NOT shutdown): deliver the queued event before the function
-      // returns — serverless can freeze the instance the moment we respond — but
-      // keep the shared singleton open for later captures in the same instance.
-      await phClient.flush();
-    }
     return NextResponse.json(event, { status: isNew ? 201 : 200 });
   } catch (error) {
     // The failure is already observed at the withTransaction seam: it's called
     // with op:"record_decision" + this exact {collectionId, curatorId, sessionId}
-    // ctx, so its catch logs [db_error] + emits db_action_failed ONCE and
-    // rethrows. Logging again here double-counted every failure — so this catch
+    // ctx, so its catch logs [db_error] ONCE and rethrows. Logging again here
+    // double-counted every failure — so this catch
     // only maps the error to a 500 and never re-logs.
     // Never echo the error: it carries driver text (relation/constraint names,
     // sometimes values) — purses-hiez.

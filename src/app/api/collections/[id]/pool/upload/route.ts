@@ -5,7 +5,6 @@ import { getDb } from "@/lib/db";
 import { PhotoController } from "@/server/api/photos";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import { POOL_ALLOWED_CONTENT_TYPES, POOL_MAX_BYTES } from "@/lib/uploads";
-import { getPostHogClient } from "@/lib/posthog-server";
 import { errorResponse, HttpError } from "@/server/api/http-errors";
 
 async function assertPhotosWrite(collectionId: string): Promise<string> {
@@ -59,13 +58,6 @@ export async function POST(
           mimeType: blob.contentType ?? "application/octet-stream",
           fileSize: null,
         });
-        const phClient = getPostHogClient();
-        phClient.capture({
-          distinctId: uploadedBy,
-          event: 'photo_uploaded',
-          properties: { collection_id: collectionId, mime_type: blob.contentType },
-        });
-        await phClient.flush();
       },
     });
     return NextResponse.json(jsonResponse);

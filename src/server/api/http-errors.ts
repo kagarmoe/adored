@@ -105,9 +105,8 @@ export function errorResponse(error: unknown): NextResponse {
   const errorId = crypto.randomUUID();
   const detail = describeError(error);
   // Same greppable-prefix + one-JSON-payload shape as [db_error] (src/lib/db-error-log.ts)
-  // so both are searchable the same way in Vercel runtime logs. No PostHog capture here:
-  // withTransaction already emits db_action_failed exactly once for DB failures, and a
-  // second emit would double-count. This replaces the old console.error 1:1 — the routes
+  // so both are searchable the same way in Vercel runtime logs. This replaces the old
+  // console.error 1:1 — the routes
   // that deliberately don't log (sessions decisions/batch) still log exactly once, here.
   console.error("[api_error]", JSON.stringify({ errorId, error: detail }));
   return NextResponse.json(
