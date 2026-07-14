@@ -1,7 +1,7 @@
 # Graph Report - purseinator-app  (2026-07-13)
 
 ## Corpus Check
-- 655 files · ~900,770 words
+- 655 files · ~900,801 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e6728cb8`
+- Built from commit: `f7b4f1e0`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -244,11 +244,11 @@
 - [[_COMMUNITY_Community 235|Community 235]]
 - [[_COMMUNITY_Community 237|Community 237]]
 - [[_COMMUNITY_Community 238|Community 238]]
+- [[_COMMUNITY_Community 239|Community 239]]
 - [[_COMMUNITY_Community 240|Community 240]]
 - [[_COMMUNITY_Community 245|Community 245]]
 - [[_COMMUNITY_Community 246|Community 246]]
 - [[_COMMUNITY_Community 247|Community 247]]
-- [[_COMMUNITY_Community 250|Community 250]]
 - [[_COMMUNITY_Community 252|Community 252]]
 - [[_COMMUNITY_Community 257|Community 257]]
 - [[_COMMUNITY_Community 258|Community 258]]
@@ -336,8 +336,8 @@ Cohesion: 0.08
 Nodes (24): 0. Review folds (changelog), 10. Out of scope / follow-ups, 11. Risks & residual, 1. Purpose, 2. Owner decisions & settled invariants, 3.1 Event-sourced results; materialized triage queue; **pairing is NOT auto-safe**, 3.2 Session lifecycle exists; two read-path constraints, 3.3 `sessions_active_unique` over-enforces (purses-4bhh — fix OUT OF SCOPE, exposure mitigated here) (+16 more)
 
 ### Community 11 - "ID generation"
-Cohesion: 0.13
-Nodes (10): Engine, FakeLocks, FetchMock, jsonRes(), keyA, loadEngine(), respondCreated(), setAside() (+2 more)
+Cohesion: 0.15
+Nodes (16): ActiveSessionPanel(), SessionSummary, pausedSession, push, refresh, session, drain(), triggerFlush() (+8 more)
 
 ### Community 12 - "PoolUpload.tsx"
 Cohesion: 0.14
@@ -489,7 +489,7 @@ Nodes (17): 1. Schema conventions, 2. Migration workflow, 3. `db:reset` — dest
 
 ### Community 50 - "ItemFilters.tsx"
 Cohesion: 0.06
-Nodes (36): SeeResultsCard(), SeeResultsCardProps, AsyncActionButton(), BringBackControl(), refresh, useDecisionFlusher(), QueueKey, DeferControl() (+28 more)
+Nodes (35): SeeResultsCard(), SeeResultsCardProps, AsyncActionButton(), BringBackControl(), refresh, useDecisionFlusher(), DeferControl(), DeferControlProps (+27 more)
 
 ### Community 51 - "validation.ts"
 Cohesion: 0.10
@@ -584,8 +584,8 @@ Cohesion: 0.25
 Nodes (7): Global Constraints, Item Page Carousel Implementation Plan (sub-project C), Self-review, Task 1: `ItemMetadata` affirming empty state (purses-0gv), Task 2: `ItemPhotoCarousel`, Task 3: Item page restructure + page test, Task 4: e2e
 
 ### Community 78 - "route.test.ts"
-Cohesion: 0.05
-Nodes (51): ActiveSessionPanel(), SessionSummary, pausedSession, push, refresh, session, ackOutcomes, ackWaiters (+43 more)
+Cohesion: 0.06
+Nodes (45): chains, LockCallback, LockManagerLike, loadWithWebLock(), withWebLock(), ackId(), ackOutcomes, ackWaiters (+37 more)
 
 ### Community 79 - "Community 79"
 Cohesion: 0.14
@@ -892,8 +892,8 @@ Cohesion: 0.17
 Nodes (4): withTransaction(), loadCuratorDecisionEvents(), MaterializedItem, SortResultService
 
 ### Community 171 - "Community 171"
-Cohesion: 0.09
-Nodes (40): CompareChoice(), CompareSubmit, Result, FetchMock, item(), refresh, renderChoice(), ackId() (+32 more)
+Cohesion: 0.07
+Nodes (38): preemptBackoff(), Engine, FakeLocks, FetchMock, jsonRes(), keyA, loadEngine(), respondCreated() (+30 more)
 
 ### Community 173 - "Community 173"
 Cohesion: 0.50
@@ -1124,6 +1124,10 @@ Nodes (13): filters, ItemFilters(), ItemFiltersProps, itemsUrl(), ItemsPage(), I
 Cohesion: 0.07
 Nodes (36): DecisionController, CreateSessionSchema, UpdateSessionSchema, deriveUsage(), COMPARE_ROUND, DECIDE_ROUND, NextRound, NextRoundKind (+28 more)
 
+### Community 239 - "Community 239"
+Cohesion: 0.18
+Nodes (8): CompareChoice(), CompareSubmit, Result, FetchMock, item(), refresh, renderChoice(), AckOutcome
+
 ### Community 246 - "Community 246"
 Cohesion: 0.67
 Nodes (3): `GET /api/collections/[id]/preferences/items`, `POST /api/collections/[id]/preferences/recalculate`, preferences
@@ -1131,10 +1135,6 @@ Nodes (3): `GET /api/collections/[id]/preferences/items`, `POST /api/collections
 ### Community 247 - "Community 247"
 Cohesion: 0.06
 Nodes (40): DeleteCollectionSection(), DeleteCollectionSectionProps, props, push, refresh, EditCollectionPage(), EditPageProps, FinalizePage() (+32 more)
-
-### Community 250 - "Community 250"
-Cohesion: 0.29
-Nodes (5): chains, LockCallback, LockManagerLike, loadWithWebLock(), withWebLock()
 
 ### Community 252 - "Community 252"
 Cohesion: 0.29
@@ -1154,7 +1154,7 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `getDb()` connect `PoolUpload.tsx` to `Authorization guards`, `Database / Drizzle schema`, `App Router pages`, `Community 150`, `Button`, `Community 163`, `Community 168`, `layout.tsx`, `Community 180`, `Community 181`, `Community 184`, `SessionCompleteScreen.tsx`, `page.test.tsx`, `Community 214`, `tailwind.config.ts`, `Community 218`, `Community 235`, `Community 237`, `Community 247`?**
   _High betweenness centrality (0.026) - this node is a cross-community bridge._
-- **Why does `Item` connect `layout.tsx` to `Domain types & barrels`, `Sort results & ranking`, `Community 258`, `Authorization guards`, `Community 131`, `getTestDb()`, `User`, `Community 150`, `members.ts`, `Button`, `Community 168`, `Community 169`, `items.ts`, `Community 171`, `ItemFilters.tsx`, `Community 181`, `Community 197`, `route.test.ts`, `Community 217`, `tailwind.config.ts`, `Community 232`, `Community 235`, `Community 237`?**
+- **Why does `Item` connect `layout.tsx` to `Domain types & barrels`, `Sort results & ranking`, `Community 258`, `Authorization guards`, `Community 131`, `getTestDb()`, `User`, `Community 150`, `members.ts`, `Button`, `Community 168`, `Community 169`, `items.ts`, `Community 171`, `ItemFilters.tsx`, `Community 181`, `Community 197`, `Community 217`, `tailwind.config.ts`, `Community 232`, `Community 235`, `Community 237`, `Community 239`?**
   _High betweenness centrality (0.018) - this node is a cross-community bridge._
 - **Why does `ItemDispositionRepository` connect `Community 178` to `Authorization guards`, `CollectionPreferenceItem`, `Collections domain`, `Community 197`, `AppLayout.tsx`, `items.ts`, `Community 140`, `MostLovedHero.tsx`, `Community 215`, `Community 216`?**
   _High betweenness centrality (0.013) - this node is a cross-community bridge._

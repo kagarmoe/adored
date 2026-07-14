@@ -79,7 +79,7 @@ console.error("[api_error]", JSON.stringify({ errorId, error: detail }))
 
 **A few routes keep their own curated `500`/`404` literal** instead of calling `errorResponse` (so they carry **no `errorId`**): `POST …/decisions` (`"Failed to record decision"`) and `…/decisions/batch` (`"Failed to record decisions"` — the failure is already observed and logged once at the `withTransaction` seam), the photo byte-serving routes (`"Photo fetch failed"` / `"Rotate failed"`), and public `GET /api/shared-results/[token]`, which collapses **every** error to a generic `404` (`"That shared result isn't available."`) and logs server-side — an anonymous caller learns nothing.
 
-Route-level PostHog capture has been removed from the API surface; this does not change request/response semantics. DB errors and slow operations remain observable through structured server log lines (`[db_error]` / `[db_slow]`).
+Route-level analytics capture has been removed from the API surface; this does not change request/response semantics. DB errors and slow operations remain observable through structured server log lines (`[db_error]` / `[db_slow]`).
 
 **Validation & state errors are consistent (pv9 PR2):** every body-parsing route maps a failed Zod `.parse` (and malformed JSON) to **`400`** — not `500` — via `errorResponse`. Authz guards still return their `401`/`403`/`404` **before** the parse.
 
