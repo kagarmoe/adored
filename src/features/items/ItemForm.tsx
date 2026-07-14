@@ -120,8 +120,8 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
         rows={4}
       />
 
-      <div className="flex gap-3">
-        <Button type="submit" disabled={loading}>
+      <div className="grid grid-cols-2 gap-3 sm:flex">
+        <Button type="submit" disabled={loading} className="w-full sm:w-auto">
           {loading ? "Saving..." : mode === "create" ? "Add item" : "Save changes"}
         </Button>
         <Button
@@ -129,6 +129,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
           type="button"
           onClick={() => router.back()}
           disabled={loading}
+          className="w-full sm:w-auto"
         >
           Cancel
         </Button>

@@ -4,7 +4,7 @@
 
 **Goal:** Ensure every `page.tsx` route has tablet/web and phone layout coverage, and make `/tutorial` responsive and truthful to the current app model.
 
-**Architecture:** This is a narrow alignment pass. Route coverage lives in one Superpowers spec table keyed by `src/app/**/page.tsx`; `/welcome` and `/tutorial` share `WalkthroughShell`, so layout coverage is owned once by that shell. Tutorial reality alignment is enforced by component tests around the first and final beats.
+**Architecture:** This is a route implementation and tutorial alignment pass. Route coverage lives in one Superpowers spec table keyed by `src/app/**/page.tsx`; rendered route files get explicit responsive structure in code, while redirect-only routes inherit their target. `/welcome` and `/tutorial` share `WalkthroughShell`, so layout coverage is owned once by that shell and framed by both page routes. Tutorial reality alignment is enforced by component tests around the first and final beats.
 
 **Tech Stack:** Next.js App Router, React, TypeScript, Tailwind, Vitest, Testing Library.
 
@@ -152,7 +152,56 @@ Expected: 2 files pass, 32 tests pass.
 
 ---
 
-### Task 3: Review and verification
+### Task 3: Implement page route responsive layouts
+
+**Files:**
+- Modify: rendered `src/app/**/page.tsx` routes
+- Modify: shared layout/form/action components only where they carry route-level phone behavior
+
+**Interfaces:**
+- Consumes: route inventory from Task 1
+- Produces: direct `page.tsx` diffs for every rendered route and phone-safe nested actions
+
+- [ ] **Step 1: Add page-level phone/tablet structure**
+
+For every rendered route, make the responsive behavior visible in the route file:
+
+- phone header stacks, tablet/web header rows
+- phone primary actions full-width where they sit below titles
+- phone grids one column when card text or controls would crowd
+- constrained form columns centered on tablet/web and full-width on phone
+
+Redirect-only `/signup/page.tsx` remains a redirect to `/login`.
+
+- [ ] **Step 2: Shorten phone-visible labels**
+
+Use breakpoint-specific labels where needed:
+
+- `Begin a collection` -> `Begin`
+- `Create collection` -> `Create`
+- `Start session` -> `Start`
+- `Accept invitation` -> `Accept`
+- `Put things in order` -> `Order`
+
+- [ ] **Step 3: Patch shared route-owned shells**
+
+Update shared components that carry page layout across many routes:
+
+- `AppLayout` breadcrumb/action chrome
+- `EmptyState` CTA labels
+- `WalkthroughShell` `/welcome` and `/tutorial` frame
+- nested action bars/forms that would otherwise overflow phone buttons
+
+- [ ] **Step 4: Add focused tests**
+
+Add coverage for:
+
+- phone-short empty-state CTA labels
+- `AppLayout` action row stacking on phone and row restoration on tablet/web
+
+---
+
+### Task 4: Review and verification
 
 **Files:**
 - Modify: `docs/superpowers/specs/2026-07-14-responsive-pages-and-tutorial-design.md`
@@ -198,6 +247,7 @@ Run adversarial review with QA/Test, Craftsman, Graphic Design, and UX lenses. R
 
 - route inventory has 29 rows for 29 page routes
 - every route row has tablet/web and phone coverage
+- every rendered route has a corresponding `src/app/**/page.tsx` implementation diff
 - `/tutorial` points to `WalkthroughShell` for both layouts
 - tutorial copy is reality-aligned and tone-compliant
 - phone labels are shortened where documented

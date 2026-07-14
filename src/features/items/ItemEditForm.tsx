@@ -139,14 +139,15 @@ export function ItemEditForm({ item, collectionId }: ItemEditFormProps) {
           />
         </Card>
 
-        <div className="flex gap-3">
-          <Button type="submit" disabled={loading}>
+        <div className="grid grid-cols-2 gap-3 sm:flex">
+          <Button type="submit" disabled={loading} className="w-full sm:w-auto">
             {loading ? "Saving..." : "Save changes"}
           </Button>
           <Button
             type="button"
             variant="secondary"
             onClick={() => router.back()}
+            className="w-full sm:w-auto"
           >
             Cancel
           </Button>

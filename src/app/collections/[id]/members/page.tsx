@@ -39,7 +39,7 @@ export default async function MembersPage({ params }: MembersPageProps) {
     >
       <div className="space-y-8">
         <div className="space-y-2">
-          <h1 className="text-3xl text-ink">People</h1>
+          <h1 className="text-2xl text-ink sm:text-3xl">People</h1>
           <p className="max-w-2xl text-ink-soft">
             Sharing is an after-the-fact step — invite someone once your list feels ready.
           </p>

@@ -88,18 +88,18 @@ export function PoolActionBar({
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-ink-soft" aria-live="polite">
               {count} selected
             </span>
-            <div className="flex items-center gap-2">
-              <Button type="button" variant="ghost" className="min-h-11" disabled={busy} onClick={onClear}>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+              <Button type="button" variant="ghost" className="min-h-11 w-full sm:w-auto" disabled={busy} onClick={onClear}>
                 Clear
               </Button>
               <Button
                 type="button"
                 variant="secondary"
-                className="min-h-11"
+                className="min-h-11 w-full sm:w-auto"
                 disabled={busy}
                 aria-expanded={open}
                 onClick={() => setOpen((v) => !v)}
@@ -112,15 +112,31 @@ export function PoolActionBar({
                 <Button
                   type="button"
                   variant="secondary"
-                  className="min-h-11"
+                  className="min-h-11 w-full sm:w-auto"
+                  aria-label="Each photo its own item"
                   disabled={busy}
                   onClick={onMakeEach}
                 >
-                  Make each its own
+                  <span className="sm:hidden">Each</span>
+                  <span className="hidden sm:inline">Make each its own</span>
                 </Button>
               )}
-              <Button type="button" variant="primary" className="min-h-11" disabled={busy} onClick={onMakeItem}>
-                {busy ? "Making…" : "Group into an item"}
+              <Button
+                type="button"
+                variant="primary"
+                className="min-h-11 w-full sm:w-auto"
+                disabled={busy}
+                aria-label={busy ? "Making" : "Group into an item"}
+                onClick={onMakeItem}
+              >
+                {busy ? (
+                  "Making…"
+                ) : (
+                  <>
+                    <span className="sm:hidden">Group</span>
+                    <span className="hidden sm:inline">Group into an item</span>
+                  </>
+                )}
               </Button>
             </div>
           </div>

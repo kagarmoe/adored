@@ -172,7 +172,7 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsM
         {announcement}
       </p>
       {/* Tapping a card IS the choice (tap-first). Always two-up: a comparison. */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2">
         {choices.map(({ item, hero, result, key }) => (
           <button
             key={key}

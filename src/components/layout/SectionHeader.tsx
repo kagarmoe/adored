@@ -9,7 +9,7 @@ interface SectionHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 const SectionHeader = React.forwardRef<HTMLDivElement, SectionHeaderProps>(
   ({ title, description, actions, className = "", ...props }, ref) => (
     <div
-      className={`flex items-start justify-between gap-6 mb-6 ${className}`}
+      className={`mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6 ${className}`}
       ref={ref}
       {...props}
     >
@@ -17,7 +17,7 @@ const SectionHeader = React.forwardRef<HTMLDivElement, SectionHeaderProps>(
         <h2 className="mb-1.5">{title}</h2>
         {description && <p className="text-ink-soft prose-measure">{description}</p>}
       </div>
-      {actions && <div className="flex gap-2 shrink-0">{actions}</div>}
+      {actions && <div className="flex w-full shrink-0 flex-wrap gap-2 sm:w-auto">{actions}</div>}
     </div>
   )
 );

@@ -15,8 +15,8 @@ export default async function ProfilePage() {
 
   return (
     <AppLayout breadcrumbs={[{ label: "Profile" }]}>
-      <div className="space-y-8">
-        <h1 className="text-3xl text-ink">Your profile</h1>
+      <div className="mx-auto w-full max-w-2xl space-y-6 sm:space-y-8">
+        <h1 className="text-2xl text-ink sm:text-3xl">Your profile</h1>
         <ProfileForm initialName={user.name ?? null} email={user.email} />
       </div>
     </AppLayout>

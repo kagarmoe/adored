@@ -87,10 +87,10 @@ describe("PoolPhotoGrid selection + grouping", () => {
     render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} />);
 
     await user.click(tile("one"));
-    expect(screen.queryByRole("button", { name: /make each its own/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /each photo its own item/i })).not.toBeInTheDocument();
 
     await user.click(tile("two"));
-    expect(screen.getByRole("button", { name: /make each its own/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /each photo its own item/i })).toBeInTheDocument();
   });
 
   it('"Make each its own" posts mode "each", confirms the count, and removes the tiles', async () => {
@@ -100,7 +100,7 @@ describe("PoolPhotoGrid selection + grouping", () => {
 
     await user.click(tile("one"));
     await user.click(tile("two"));
-    await user.click(screen.getByRole("button", { name: /make each its own/i }));
+    await user.click(screen.getByRole("button", { name: /each photo its own item/i }));
 
     await waitFor(() => expect(fetch).toHaveBeenCalledWith(
       "/api/collections/c1/pool/group",

@@ -107,7 +107,7 @@ describe("/collections/[id]/items owns its status/unnamed query state", () => {
     expect(screen.queryByRole("link", { name: "Tote" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Old clutch" })).not.toBeInTheDocument();
     // the toggle is selected (primary) and, when on, links back to dropping the flag
-    const toggle = screen.getByRole("link", { name: "Waiting for a name" });
+    const toggle = screen.getByRole("link", { name: "Unnamed, waiting for a name" });
     expect(toggle.querySelector("button")?.className).toContain("bg-primary");
     expect(toggle).toHaveAttribute("href", "/collections/summer-bags/items");
   });
@@ -128,7 +128,7 @@ describe("durable /items labels are sentence case (governed allowlist, asserted 
       "href",
       "/collections/summer-bags/items/new",
     );
-    expect(screen.getByRole("link", { name: "Waiting for a name" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Unnamed, waiting for a name" })).toBeInTheDocument();
     // legacy Title Case is gone
     expect(screen.queryByRole("link", { name: "Add Item" })).not.toBeInTheDocument();
   });

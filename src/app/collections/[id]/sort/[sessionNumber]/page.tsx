@@ -107,7 +107,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
       <PendingDecisionsGate curatorId={session.user.id}>
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl text-ink">Sorting session</h1>
+          <h1 className="text-2xl text-ink sm:text-3xl">Sorting session</h1>
           <p className="text-ink-soft mt-2">Goal: {sortSession.goal}</p>
           <div className="mt-3">
             <Badge variant={sortSession.status}>{sortSession.status}</Badge>
@@ -123,7 +123,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
           sessionId={sortSession.id}
         />
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link href={`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}/triage`}>
             <Card interactive padding="lg">
               <h2 className="text-lg text-ink">{ROUND_COPY.triage.name}</h2>

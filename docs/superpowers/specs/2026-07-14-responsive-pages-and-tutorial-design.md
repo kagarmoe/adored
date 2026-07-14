@@ -12,7 +12,7 @@ This session has two deliverables:
 1. Every `src/app/**/page.tsx` route must have an explicit tablet/web view and phone view contract.
 2. `/tutorial` must have tablet/web and phone views, and its copy must describe Adored as it works now: collections begin with photos, photos can wait in the pool, items are made when ready, and the person moves through sorting rounds toward a standing they can finalize and share.
 
-The work is a planning and implementation alignment pass. It does not redesign every page in code. It creates route-by-route responsive contracts, updates the tutorial copy and tests, and updates the walkthrough fidelity spec so future implementation follows the same model.
+The work is a route implementation and tutorial alignment pass. It creates route-by-route responsive contracts, updates the rendered `src/app/**/page.tsx` surfaces, updates the tutorial copy and tests, and updates the walkthrough fidelity spec so future implementation follows the same model.
 
 ## Requirements
 
@@ -24,6 +24,7 @@ The work is a planning and implementation alignment pass. It does not redesign e
 - Pages that delegate fully to a shared shell may point to that shell, but the dependent routes must be named.
 - `/welcome` and `/tutorial` both delegate to `WalkthroughShell`; `/tutorial` remains dev-only and production 404s.
 - The tutorial must mention the real model: collection, photos, pool, items, short rounds, standing/results, finalize/share.
+- Every rendered `src/app/**/page.tsx` route must show its phone/tablet-web responsive contract in code. Redirect-only routes may point to their target page.
 - Tutorial copy stays person-side and gentle: no inventory/catalog language, no shaming metrics, no gamification.
 
 ## Design
@@ -41,6 +42,17 @@ The table must include exactly the 29 files returned by:
 ```bash
 find src/app -name page.tsx | sort
 ```
+
+### Route implementation coverage
+
+The rendered route pages use page-level responsive composition where the current implementation was only tablet/web-shaped:
+
+- Page headers stack on phone and return to rows on tablet/web.
+- Primary actions become full-width on phone where they sit below the title.
+- Card grids use one column on phone, then expand to two or more columns at tablet/web widths.
+- Form pages keep a constrained tablet/web column, with phone spacing and full-width action rows.
+- Shared `AppLayout` owns breadcrumb/action stacking for round pages and other pages that pass route actions through the shell.
+- Long phone button labels use shorter visible copy while tablet/web keeps fuller labels, for example `Begin` on phone and `Begin a collection` on tablet/web.
 
 ### Tutorial layout coverage
 
@@ -68,10 +80,10 @@ An inline adversarial review was run against this scope because the requested Su
 - **Graphic design finding:** the phone rules could allow crowded action labels. Fold: the global rules require shortened phone labels where context supplies the object.
 - **Craftsman finding:** adding separate tutorial layout rules would duplicate `/welcome` because both routes render the same shell. Fold: `/tutorial` points to `WalkthroughShell`, while the shell owns the layout contract.
 - **Product/UX finding:** the old photo-sampler framing did not describe the real app. Fold: tutorial copy now names collections, photos, pool, items, short rounds, standing, finalize/share.
+- **Owner correction:** a documentation-only route inventory did not satisfy the session scope because the PR lacked `src/app/**/page.tsx` changes. Fold: the implementation now changes every rendered page route directly and relies on `/login` for the redirect-only `/signup` route.
 
 ## Out of scope
 
-- Rebuilding every page's responsive implementation in this session.
 - Changing route ownership or auth.
 - Redesigning the tutorial interaction model beyond copy and documented responsive layout.
 - Production-enabling `/tutorial`; it remains dev-only.

@@ -32,12 +32,12 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-ground p-4">
-      <div className="w-full max-w-[420px] bg-surface rounded-card shadow-card p-8">
+    <div className="min-h-[100svh] flex items-center justify-center bg-ground p-4 sm:p-6">
+      <div className="w-full max-w-[420px] bg-surface rounded-card shadow-card p-6 sm:p-8">
         <h1 className="font-display font-bold text-[2rem] tracking-tight text-center text-ink mb-2">
           Adored
         </h1>
-        <p className="text-center text-ink-soft mb-8">
+        <p className="text-center text-ink-soft mb-6 sm:mb-8">
           Find the things you love.
         </p>
 
@@ -60,7 +60,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-[100svh] flex items-center justify-center">
           Loading...
         </div>
       }

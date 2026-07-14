@@ -56,13 +56,14 @@ export default async function CollectionsPage(props: CollectionsPageProps) {
     <AppLayout breadcrumbs={[{ label: "Collections" }]}>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl text-ink">Your collections</h1>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="max-w-2xl">
+            <h1 className="text-2xl text-ink sm:text-3xl">Your collections</h1>
             <p className="text-ink-soft mt-2">The things you&rsquo;re deciding about, gathered in one calm place.</p>
           </div>
-          <Link href="/collections/new" className={`${buttonVariants()} shrink-0`}>
-            New collection
+          <Link href="/collections/new" aria-label="Begin a collection" className={`${buttonVariants()} w-full shrink-0 sm:w-auto`}>
+            <span className="sm:hidden">Begin</span>
+            <span className="hidden sm:inline">New collection</span>
           </Link>
         </div>
 
@@ -75,6 +76,7 @@ export default async function CollectionsPage(props: CollectionsPageProps) {
             message="Begin a collection whenever you’re ready — there’s no rush."
             action={{
               label: "Begin a collection",
+              mobileLabel: "Begin",
               href: "/collections/new",
             }}
           />
@@ -84,7 +86,7 @@ export default async function CollectionsPage(props: CollectionsPageProps) {
             message="Try a different view above."
           />
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] sm:gap-6">
             {filteredCollections.map((collection) => {
               const cover = covers.get(collection.id);
               return (

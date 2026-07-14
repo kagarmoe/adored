@@ -28,9 +28,9 @@ export default async function NewSortSessionPage({ params }: NewSortSessionPageP
         { label: "New session" },
       ]}
     >
-      <div className="max-w-2xl space-y-6">
+      <div className="mx-auto w-full max-w-2xl space-y-6">
         <div>
-          <h1 className="text-3xl text-ink">New sorting session</h1>
+          <h1 className="text-2xl text-ink sm:text-3xl">New sorting session</h1>
           <p className="mt-2 text-ink-soft">Choose the goal, scope, and pace for this pass.</p>
         </div>
         <StartSessionForm collectionId={collection.id} collectionSlug={collection.slug ?? collection.id} />

@@ -10,5 +10,9 @@ export default function TutorialPage() {
   if (process.env.NODE_ENV === "production") {
     notFound();
   }
-  return <WalkthroughShell />;
+  return (
+    <main className="min-h-[100svh] bg-ground">
+      <WalkthroughShell />
+    </main>
+  );
 }

@@ -52,8 +52,8 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
       ]}
     >
       <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl text-ink">{itemDisplayName(item)}</h1>
+        <div className="max-w-3xl">
+          <h1 className="text-2xl text-ink sm:text-3xl">{itemDisplayName(item)}</h1>
           <p className="mt-2 text-ink-soft">Manage photos for this item</p>
         </div>
 

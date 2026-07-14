@@ -65,11 +65,11 @@ export function FinalizeResultForm({ collectionId, resultId, resultNumber, defau
 
       {error && <p className="text-sm text-error">{error}</p>}
 
-      <div className="flex gap-3">
-        <Button type="button" variant="secondary" onClick={() => router.back()}>
+      <div className="grid gap-3 sm:flex">
+        <Button type="button" variant="secondary" onClick={() => router.back()} className="w-full sm:w-auto">
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
           {isSubmitting ? "Finalizing..." : "Finalize"}
         </Button>
       </div>

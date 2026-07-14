@@ -52,19 +52,21 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
       ]}
     >
       <div className="space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-3xl text-ink">Items</h1>
+            <h1 className="text-2xl text-ink sm:text-3xl">Items</h1>
             <p className="text-ink-soft mt-2">
               {items.length} {items.length === 1 ? "item" : "items"} in collection
             </p>
           </div>
-          <div className="flex gap-3">
-            <Link href={`/collections/${collection.slug ?? collection.id}/pool`}>
-              <Button variant="secondary">Add photos</Button>
+          <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto">
+            <Link href={`/collections/${collection.slug ?? collection.id}/pool`} className="min-w-0">
+              <Button variant="secondary" className="w-full">
+                Add photos
+              </Button>
             </Link>
-            <Link href={`/collections/${collection.slug ?? collection.id}/items/new`}>
-              <Button>Add item</Button>
+            <Link href={`/collections/${collection.slug ?? collection.id}/items/new`} className="min-w-0">
+              <Button className="w-full">Add item</Button>
             </Link>
           </div>
         </div>
@@ -82,7 +84,7 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
             }
           />
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {filteredItems.map((item) => {
               const cover = covers.get(item.id);
               return (
