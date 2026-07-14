@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>3/4</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
@@ -116,7 +116,11 @@
 <a name='L51'></a><a href='#L51'>51</a>
 <a name='L52'></a><a href='#L52'>52</a>
 <a name='L53'></a><a href='#L53'>53</a>
-<a name='L54'></a><a href='#L54'>54</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">4x</span>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -133,15 +137,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">32x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -151,7 +153,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">29x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -173,9 +181,11 @@
 &nbsp;
 import { CompareChoice } from "@/features/sorting/CompareChoice";
 import { COMPARE_SUBLINE, ROUND_COPY, WELCOME_ROUND_KICKER } from "@/features/sorting/roundCopy";
-import { COMPARE_PAIR, toItem, type CompareOutcome } from "./sampleData";
+import { toItem, type CompareOutcome, type SampleItem } from "./sampleData";
 &nbsp;
 interface WelcomeCompareProps {
+  left: SampleItem;
+  right: SampleItem;
   /** Reports the typed compare outcome, then advances the walkthrough. */
   onOutcome: (outcome: CompareOutcome) =&gt; void;
 }
@@ -185,9 +195,11 @@ interface WelcomeCompareProps {
 // uses a NEUTRAL round noun (WELCOME_ROUND_KICKER) distinct from the person-side
 // arc names in ROUND_COPY (user decision); the explainer still comes from ROUND_COPY —
 // never two product cards to buy.
-export function WelcomeCompare({ onOutcome }: WelcomeCompareProps) {
-  const [left, right] = COMPARE_PAIR;
-&nbsp;
+export function WelcomeCompare({
+  left,
+  right,
+  onOutcome,
+}: WelcomeCompareProps) {
   return (
     &lt;section className="flex flex-col items-center text-center gap-6"&gt;
       &lt;div className="flex flex-col items-center gap-1"&gt;
@@ -208,7 +220,7 @@ export function WelcomeCompare({ onOutcome }: WelcomeCompareProps) {
                 result === "item_a"
                   ? { kind: "win", winnerId: left.id }
                   : result === "item_b"
-                    ? <span class="branch-0 cbranch-no" title="branch not covered" >{ kind: "win", winnerId: right.id }</span>
+                    ? { kind: "win", winnerId: right.id }
                     : { kind: result },
               ),
           }}
@@ -229,7 +241,7 @@ export function WelcomeCompare({ onOutcome }: WelcomeCompareProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-14T19:09:41.362Z
+                at 2026-07-14T23:22:34.967Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

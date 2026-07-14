@@ -25,28 +25,28 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>14/14</span>
+                <span class='fraction'>24/24</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75% </span>
+                <span class="strong">94.44% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>9/12</span>
+                <span class='fraction'>17/18</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>5/5</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>11/11</span>
+                <span class='fraction'>19/19</span>
             </div>
         
             
@@ -123,7 +123,21 @@
 <a name='L58'></a><a href='#L58'>58</a>
 <a name='L59'></a><a href='#L59'>59</a>
 <a name='L60'></a><a href='#L60'>60</a>
-<a name='L61'></a><a href='#L61'>61</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -153,22 +167,36 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">79x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">69x</span>
+<span class="cline-any cline-yes">71x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">91x</span>
-<span class="cline-any cline-yes">91x</span>
-<span class="cline-any cline-yes">91x</span>
-<span class="cline-any cline-yes">52x</span>
-<span class="cline-any cline-yes">91x</span>
-<span class="cline-any cline-yes">91x</span>
+<span class="cline-any cline-yes">117x</span>
+<span class="cline-any cline-yes">101x</span>
+<span class="cline-any cline-yes">101x</span>
+<span class="cline-any cline-yes">101x</span>
+<span class="cline-any cline-yes">101x</span>
+<span class="cline-any cline-yes">101x</span>
+<span class="cline-any cline-yes">97x</span>
+<span class="cline-any cline-yes">25x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">141x</span>
+<span class="cline-any cline-yes">148x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">26x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -204,31 +232,45 @@ const BUCKET_PRIORITY: Record&lt;RankBucket, number&gt; = {
 };
 &nbsp;
 /**
- * Pure: rank a curator's preferences into computed items. Orders by bucket
- * priority (top&lt;high&lt;medium&lt;low), then orderRank ascending with NULLS LAST, then
- * itemId ascending as a stable tiebreak — 0-based computedRank, computedBucket
- * taken from each preference's rankBucket. A loved (top/high) item never given an
- * orderRank still appears, after the ranked ones in its bucket. No DB. (Does not
+ * Pure: rank a curator's preferences into computed items. Triage-only results
+ * keep the historical bucket-first order. Once Compare has produced any
+ * orderRank, ranked rows sort globally by orderRank so the pairwise order is
+ * visible; unranked rows follow by bucket priority and itemId. No DB. (Does not
  * mutate the input array.)
  */
 export function rankPreferencesToItems(
   preferences: CollectionPreferenceItem[],
 ): MaterializedItem[] {
+  const hasCompareOrder = preferences.some((pref) =&gt; pref.orderRank !== null);
+&nbsp;
   return [...preferences]
     .sort((a, b) =&gt; {
+      if (hasCompareOrder) {
+        const aRank = a.orderRank;
+        const bRank = b.orderRank;
+        const aRanked = aRank !== null;
+        const bRanked = bRank !== null;
+        if (aRanked &amp;&amp; bRanked) {
+          if (aRank !== bRank) return aRank - bRank;
+          return compareItemId(a.itemId, b.itemId);
+        }
+        if (aRanked !== bRanked) return aRanked ? -1 : 1;
+      }
+&nbsp;
       const pa = BUCKET_PRIORITY[a.rankBucket];
       const pb = BUCKET_PRIORITY[b.rankBucket];
       if (pa !== pb) return pa - pb;
-      const ra = a.orderRank ?? Number.POSITIVE_INFINITY;
-      const rb = b.orderRank ?? Number.POSITIVE_INFINITY;
-      if (ra !== rb) return ra - rb;
-      return a.itemId &lt; b.itemId ? -1 : <span class="branch-1 cbranch-no" title="branch not covered" >a.itemId &gt; b.itemId ? 1 : 0;</span>
+      return compareItemId(a.itemId, b.itemId);
     })
     .map((pref, index) =&gt; ({
       itemId: pref.itemId,
       computedRank: index,
       computedBucket: pref.rankBucket,
     }));
+}
+&nbsp;
+function compareItemId(a: string, b: string): number {
+  return a &lt; b ? -1 : a &gt; b ? 1 : <span class="branch-1 cbranch-no" title="branch not covered" >0;</span>
 }
 &nbsp;
 /**
@@ -250,7 +292,7 @@ export function cloneItemsFrom(items: SortResultItem[]): MaterializedItem[] {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-14T19:09:41.362Z
+                at 2026-07-14T23:22:34.967Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
