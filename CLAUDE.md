@@ -89,6 +89,21 @@ npm run auth:verify   # auth wiring check
 npm run test:db       # DB-backed tests (Docker; RUN_DB_TESTS=1)
 ```
 
+**Local pre-PR verification is mandatory.** CI minutes are scarce; CI should confirm local evidence,
+not discover predictable failures. Before opening or updating a PR, run the complete local gate set
+for the branch's blast radius and record the exact commands/results in the PR body or handoff:
+
+- **Every code PR:** `npm run lint`, `npm run test:ci`, and `npm run build`.
+- **Auth/session/proxy/env changes:** also run `npm run auth:verify`.
+- **DB/schema/repository/service/API persistence changes:** also run `npm run test:db`.
+- **UI, page, route-flow, onboarding/tutorial, copy, responsive, or interaction changes:** run the
+  mapped Playwright spec(s) locally, for example
+  `npx playwright test e2e/welcome-walkthrough.spec.ts --project=tablet`.
+- **Broad/unknown UI blast radius:** run `npm run test:e2e` locally instead of relying on CI's
+  selective Playwright mapping.
+- **Phone/responsive changes:** run the mapped Playwright spec with `PW_VIEWPORT=phone` as well as
+  the default tablet project. Add desktop only when the change is desktop-specific.
+
 ## Align with Next.js Opinions (REQUIRED)
 
 Next.js is opinionated. Follow its conventions, not workarounds:
@@ -147,10 +162,16 @@ Generic review rubber-stamps; scale the persona set to what changed (lens→engi
 
 ## PR lifecycle automation
 
-- **Before pushing / opening a PR:** run `/sync-docs` (update the governance docs this branch's
-  changes affect, per `docs/doc-ownership.md`; never PRODUCT/TONE) and `/graphify --update` (refresh
-  the committed graph). The `.githooks/pre-push` doc-sync step soft-blocks a code push whose mapped
-  docs weren't touched — run `/sync-docs`, or `git push --no-verify` if no documented fact moved.
+- **Before pushing / opening a PR:** complete the local pre-PR verification above, run `/sync-docs`
+  (update the governance docs this branch's changes affect, per `docs/doc-ownership.md`; never
+  PRODUCT/TONE), and `/graphify --update` (refresh the committed graph). The `.githooks/pre-push`
+  doc-sync step soft-blocks a code push whose mapped docs weren't touched — run `/sync-docs`, or
+  `git push --no-verify` if no documented fact moved.
+- **Before a UI PR is ready for review:** add inline PR images using
+  [`docs/cookbook/add-images-to-pr.md`](docs/cookbook/add-images-to-pr.md). Include light + dark
+  screenshots for every changed surface. Include phone screenshots when phone/responsive behavior
+  changed. It is acceptable to open a draft PR first to get the PR number required by the release
+  asset workflow, but do not ask for review without the images or an explicit blocker.
 - **Immediately after `gh pr merge` succeeds:** run `/close-out` — close the bead(s), harvest lessons
   → `bd remember` (chat-first), delete this branch's `.git/sdd` scratch.
 - **Hard rule:** never close a bead or delete `.git/sdd` scratch before the merge is confirmed. The
