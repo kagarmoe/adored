@@ -19,14 +19,14 @@ import {
 test.use({ storageState: { cookies: [], origins: [] } });
 
 // Triage item names, in the order the beat asks about them (sampleData:
-// TRIAGE_ITEMS = vase, books, cushion — the not-yours item is third). Asserting
+// TRIAGE_ITEMS = armchair, clock, vase — the not-yours item is third). Asserting
 // the current name is visible before each tap doubles as a re-render barrier:
 // the Love/Like/Not-mine controls are identical across items, so the name is the
 // only signal that the beat actually advanced.
 const TRIAGE = {
-  first: "The glass flower vase",
-  second: "The shelf of well-read books",
-  third: "The kid's microphone cushion", // the "not mine" item
+  first: "The slipcovered armchair",
+  second: "The little red wall clock",
+  third: "The glass flower vase", // the "not mine" item
 } as const;
 
 // Create a fresh Google-linked account and wait for the zero-collection
@@ -47,10 +47,10 @@ async function signInFresh(
   await page.waitForURL(/\/welcome/, { timeout: 15_000 });
 }
 
-// Walk purpose → triage(×3) → usage → compare → standing → refine, stopping ON
-// the handoff beat (its CTA visible, not yet clicked). The intermediate
-// assertions are both the spec's teaching-fidelity checks AND the per-beat sync
-// barriers.
+// Walk purpose → triage(×3) → triage standing → usage(×3) → usage standing →
+// compare → final standing → refine, stopping ON the handoff beat (its CTA
+// visible, not yet clicked). The intermediate assertions are both the spec's
+// teaching-fidelity checks AND the per-beat sync barriers.
 async function walkToHandoff(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Show me how" }).click();
 
@@ -63,9 +63,22 @@ async function walkToHandoff(page: Page): Promise<void> {
   await expect(page.getByText(TRIAGE.third)).toBeVisible();
   await page.getByRole("button", { name: /not mine/i }).click(); // set aside
 
-  // Usage beat — "Do you use this?" A single answer advances to compare.
+  await expect(page.getByRole("heading", { name: "After Triage" })).toBeVisible();
+  await page.getByRole("button", { name: "Continue" }).click();
+
+  // Usage beat — "Do you use this?" asks about the whole sample collection.
   await expect(page.getByRole("heading", { name: "Do you use this?" })).toBeVisible();
+  await expect(page.getByText(TRIAGE.first)).toBeVisible();
   await page.getByRole("button", { name: "Yes, I use it" }).click();
+
+  await expect(page.getByText(TRIAGE.second)).toBeVisible();
+  await page.getByRole("button", { name: "Not these days" }).click();
+
+  await expect(page.getByText(TRIAGE.third)).toBeVisible();
+  await page.getByRole("button", { name: /^Skip for now/ }).click();
+
+  await expect(page.getByRole("heading", { name: "After Usage" })).toBeVisible();
+  await page.getByRole("button", { name: "Continue" }).click();
 
   await page.getByRole("button", { name: "Tie", exact: true }).click();
 
@@ -74,7 +87,7 @@ async function walkToHandoff(page: Page): Promise<void> {
   await expect(page.getByText(/waiting, whenever you want them/i)).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click(); // standing → refine
 
-  await expect(page.getByText(/put things in order/i)).toBeVisible();
+  await expect(page.getByText(/Adjust results/i)).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click(); // refine → handoff
 
   await expect(page.getByRole("link", { name: "Start a collection" })).toBeVisible();
@@ -103,7 +116,7 @@ test("finishing then exploring dismisses for good", async ({ context, page }, te
   await expect(page).toHaveURL(/\/collections$/);
 });
 
-test("skip for now mid-walkthrough dismisses too", async ({ context, page }, testInfo) => {
+test("leave tutorial mid-walkthrough dismisses too", async ({ context, page }, testInfo) => {
   await signInFresh(page, context, testInfo);
 
   // Advance a beat or two, then bail via the persistent quiet escape.
@@ -112,10 +125,11 @@ test("skip for now mid-walkthrough dismisses too", async ({ context, page }, tes
   await page.getByRole("button", { name: "Love" }).click();
   await expect(page.getByText(TRIAGE.second)).toBeVisible();
 
-  await page.getByRole("button", { name: "Skip for now" }).click();
+  await page.getByRole("button", { name: "Leave tutorial" }).click();
   await expect(page).toHaveURL(/\/collections$/);
 
-  // Same dismissal invariant as above, reached via Skip rather than the handoff.
+  // Same dismissal invariant as above, reached via the persistent tutorial exit
+  // rather than the handoff.
   await page.reload();
   await expect(page).toHaveURL(/\/collections$/);
 });
