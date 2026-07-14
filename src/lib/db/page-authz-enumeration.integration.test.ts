@@ -100,9 +100,10 @@ function pagePatternFromFile(filePath: string): string {
 // exhaustiveness check — adding a page forces a categorization decision.
 //
 // NOTE: only pages UNDER src/app/collections/** are discovered here (the guarded
-// surface). Top-level public pages (login, signup, welcome, invitations/[token],
-// shared-results/[token], profile, root) live outside collections/** and so are
-// out of scope for this walk by construction — documented here for the reader.
+// surface). Top-level public pages (login, legacy signup redirect, welcome,
+// invitations/[token], shared-results/[token], profile, root) live outside
+// collections/** and so are out of scope for this walk by construction —
+// documented here for the reader.
 const PUBLIC_PAGES = new Set<string>([
   // Lists the caller's OWN collections only (listCollections(session.user.id));
   // self-scoped, no cross-tenant surface. A stranger sees only their own (empty) list.

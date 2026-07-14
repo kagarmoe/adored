@@ -1,17 +1,15 @@
 import { Resend } from "resend";
 import { env } from "@/lib/env";
 
-// Transactional email via Resend. Two flows: magic-link sign-in and collection
-// invitations. Both links carry a bearer token in the URL, so the URL is a
-// secret — it goes ONLY to the recipient's send, and is NEVER logged, captured,
-// or echoed anywhere outside NODE_ENV==="development".
+// Transactional email via Resend. Invitation links carry a bearer token in the
+// URL, so the URL is a secret — it goes ONLY to the recipient's send, and is
+// NEVER logged, captured, or echoed anywhere outside NODE_ENV==="development".
 //
 // Graceful fallback (mirrors the PostHog no-token stub in posthog-server.ts):
 // if RESEND_API_KEY is unset we do NOT construct a client and do NOT throw —
 // sends are skipped so CI/tests/local stay green without a key. In development
 // only, we console.log the link so a dev can click it locally.
 
-type SendArgs = { to: string; url: string };
 type InvitationArgs = { to: string; token: string };
 
 // Cache the client so we build it once. `null` = key unset (fallback mode).
@@ -65,17 +63,6 @@ async function send(args: {
   }
 }
 
-export async function sendMagicLink({ to, url }: SendArgs): Promise<void> {
-  // NextAuth supplies the url — no env.AUTH_URL access here.
-  await send({
-    to,
-    devLabel: "MAGIC LINK",
-    subject: "Your sign-in link for Adored",
-    buildUrl: () => url,
-    html: magicLinkHtml,
-  });
-}
-
 export async function sendInvitation({ to, token }: InvitationArgs): Promise<void> {
   // Build the invite URL INSIDE the send, after the no-op guard, so a missing
   // RESEND_API_KEY (which no-ops) never forces env.AUTH_URL to be present.
@@ -86,14 +73,6 @@ export async function sendInvitation({ to, token }: InvitationArgs): Promise<voi
     buildUrl: () => `${env.AUTH_URL}/invitations/${token}`,
     html: invitationHtml,
   });
-}
-
-function magicLinkHtml(url: string): string {
-  return `
-    <p>Tap the link below to sign in to Adored. It expires shortly and can be used once.</p>
-    <p><a href="${url}">Sign in to Adored</a></p>
-    <p>If you didn't request this, you can ignore this email.</p>
-  `;
 }
 
 function invitationHtml(url: string): string {

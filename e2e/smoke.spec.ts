@@ -2,8 +2,6 @@ import { test, expect } from "@playwright/test";
 import {
   LOGGED_OUT,
   ROUTE,
-  EMAIL_PLACEHOLDER,
-  PASSWORD_PLACEHOLDER,
   hasHorizontalOverflow,
 } from "./fixtures/ui";
 
@@ -24,7 +22,7 @@ test("/collections redirects to /login when logged out", async ({ page }) => {
   await expect(page).toHaveURL(ROUTE.login);
 });
 
-test("/login renders the email + password fields without overflow", async ({
+test("/login renders the Google-only auth surface without overflow", async ({
   page,
 }) => {
   await page.goto("/login");
@@ -32,18 +30,11 @@ test("/login renders the email + password fields without overflow", async ({
 
   await expect(page.getByRole("heading", { name: "Adored" })).toBeVisible();
   await expect(page.getByText("Find the things you love.")).toBeVisible();
-  await expect(page.getByPlaceholder(EMAIL_PLACEHOLDER)).toBeVisible();
-  await expect(page.getByPlaceholder(PASSWORD_PLACEHOLDER)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Email me a sign-in link" }),
-  ).toBeDisabled();
   await expect(
     page.getByRole("button", { name: "Continue with Google" }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "Create an account" }),
-  ).toHaveAttribute("href", "/signup");
+  await expect(page.getByPlaceholder("you@example.com")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /create an account/i })).toHaveCount(0);
 
   // Nothing overflows the viewport horizontally (behavioral responsiveness
   // check that holds on all three viewports).

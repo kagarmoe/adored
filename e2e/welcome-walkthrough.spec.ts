@@ -1,5 +1,8 @@
-import { test, expect, type Page, type TestInfo } from "@playwright/test";
-import { EMAIL_PLACEHOLDER, PASSWORD_PLACEHOLDER } from "./fixtures/ui";
+import { test, expect, type BrowserContext, type Page, type TestInfo } from "@playwright/test";
+import {
+  createBetterAuthUser,
+  createSessionCookieForUser,
+} from "./fixtures/better-auth";
 
 // The first-run walkthrough, driven end-to-end in a real browser. Every other
 // spec DISARMS the /welcome redirect (auth-navigation.spec sets the dismissal
@@ -7,16 +10,13 @@ import { EMAIL_PLACEHOLDER, PASSWORD_PLACEHOLDER } from "./fixtures/ui";
 // carried into /welcome and all the way through the six beats.
 //
 // Fixture design (fights the suite defaults on purpose):
-//  - Logged OUT: the project storageState is an authed session that would skip
-//    signup and already own collections; clear it so we sign up for real.
+//  - Logged OUT: the project storageState is an authed session; clear it so we
+//    create a fresh zero-collection user.
 //  - A UNIQUE user per project+worker+run: the three device projects share one
-//    Postgres serially, so a fixed email would collide (signup is idempotent /
-//    anti-enumeration, so a collision 201s WITHOUT creating a user and the
-//    walkthrough would never arm). project+worker+timestamp keeps them distinct.
+//    Postgres serially, so a fixed email would collide. project+worker+timestamp
+//    keeps them distinct.
 //  - NO dismissal cookie: the redirect firing is the whole point.
 test.use({ storageState: { cookies: [], origins: [] } });
-
-const PASSWORD = "walkthrough-password-123";
 
 // Triage item names, in the order the beat asks about them (sampleData:
 // TRIAGE_ITEMS = vase, books, cushion — the not-yours item is third). Asserting
@@ -29,28 +29,21 @@ const TRIAGE = {
   third: "The kid's microphone cushion", // the "not mine" item
 } as const;
 
-// Sign up a fresh account and wait for the zero-collection redirect to land on
-// /welcome. Mirrors e2e/auth.spec.ts's signup exactly (better-auth email+pw).
-async function signUpFresh(page: Page, testInfo: TestInfo): Promise<void> {
+// Create a fresh Google-linked account and wait for the zero-collection
+// redirect to land on /welcome.
+async function signInFresh(
+  page: Page,
+  context: BrowserContext,
+  testInfo: TestInfo,
+): Promise<void> {
   const email = `walkthrough-${testInfo.project.name}-${testInfo.workerIndex}-${Date.now()}@example.com`;
+  const user = await createBetterAuthUser(email, "Walkthrough E2E");
+  const sessionCookie = await createSessionCookieForUser(user.id);
+  await context.addCookies([sessionCookie]);
 
-  await page.goto("/signup");
-  const submit = page.getByRole("button", { name: "Create account" });
-  await expect(submit).toBeVisible();
-
-  await page.getByPlaceholder(EMAIL_PLACEHOLDER).fill(email);
-  // Two password fields share the •••••••• placeholder — [0]=Password,
-  // [1]=Confirm.
-  const pw = page.getByPlaceholder(PASSWORD_PLACEHOLDER);
-  await pw.nth(0).fill(PASSWORD);
-  await pw.nth(1).fill(PASSWORD);
-  await Promise.all([
-    page.waitForResponse((r) => r.url().includes("/api/auth/sign-up/email")),
-    submit.click(),
-  ]);
-
-  // signup client pushes to /collections; the collections server component sees
-  // zero collections + no dismissal cookie and redirects on to /welcome.
+  // /collections sees zero collections + no dismissal cookie and redirects on
+  // to /welcome.
+  await page.goto("/collections");
   await page.waitForURL(/\/welcome/, { timeout: 15_000 });
 }
 
@@ -87,8 +80,8 @@ async function walkToHandoff(page: Page): Promise<void> {
   await expect(page.getByRole("link", { name: "Start a collection" })).toBeVisible();
 }
 
-test("zero-collection first login walks through and hands off", async ({ page }, testInfo) => {
-  await signUpFresh(page, testInfo);
+test("zero-collection first login walks through and hands off", async ({ context, page }, testInfo) => {
+  await signInFresh(page, context, testInfo);
   await expect(page).toHaveURL(/\/welcome/);
 
   await walkToHandoff(page);
@@ -97,8 +90,8 @@ test("zero-collection first login walks through and hands off", async ({ page },
   await expect(page).toHaveURL(/\/collections\/new/);
 });
 
-test("finishing then exploring dismisses for good", async ({ page }, testInfo) => {
-  await signUpFresh(page, testInfo);
+test("finishing then exploring dismisses for good", async ({ context, page }, testInfo) => {
+  await signInFresh(page, context, testInfo);
   await walkToHandoff(page);
 
   await page.getByRole("button", { name: /explore on my own/i }).click();
@@ -110,8 +103,8 @@ test("finishing then exploring dismisses for good", async ({ page }, testInfo) =
   await expect(page).toHaveURL(/\/collections$/);
 });
 
-test("skip for now mid-walkthrough dismisses too", async ({ page }, testInfo) => {
-  await signUpFresh(page, testInfo);
+test("skip for now mid-walkthrough dismisses too", async ({ context, page }, testInfo) => {
+  await signInFresh(page, context, testInfo);
 
   // Advance a beat or two, then bail via the persistent quiet escape.
   await page.getByRole("button", { name: "Show me how" }).click();

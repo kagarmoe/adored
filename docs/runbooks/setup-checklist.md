@@ -8,7 +8,8 @@ Env vars are set in **Vercel → Settings → Environment Variables** (per envir
 
 ## 1. Blocking today — shipped features that are dead without these
 
-- [ ] **`RESEND_API_KEY`** — **Live email.** `src/lib/email.ts` silently **no-ops** without it, so magic-link sign-in and collection invitations never send. Get a key at resend.com and set it. The sender domain `kimberlygarmoe.com` is already Resend-verified and `EMAIL_FROM` defaults to `noreply@kimberlygarmoe.com`, so the key is the only missing piece.
+- [ ] **`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`** — **Google login.** Adored supports Google login only. Create a Google Cloud OAuth 2.0 client, set the ID + secret, and register the authorized redirect URIs: `https://adored.kimberlygarmoe.com/api/auth/callback/google` (Production + Preview) and `http://localhost:3000/api/auth/callback/google` (local).
+- [ ] **`RESEND_API_KEY`** — **Invitation email.** `src/lib/email.ts` silently **no-ops** without it, so collection invitations never send. Get a key at resend.com and set it. The sender domain `kimberlygarmoe.com` is already Resend-verified and `EMAIL_FROM` defaults to `noreply@kimberlygarmoe.com`, so the key is the only missing piece.
 - [ ] **`BLOB_READ_WRITE_TOKEN`** — **Photo uploads (local and prod).** The token currently in `.env.local` is rejected (`Access denied` — expired/invalid), so uploads fail. Regenerate it in **Vercel → Storage → Blob**, and set it in **both** the Vercel env and your local `.env.local`. *(A dev-only fallback renders seeded demo images without Blob, but real uploads still need a valid token.)*
 - [ ] **`NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN`** — **All PostHog telemetry** (verify it's set). Without it every capture no-ops silently, which disables the DB observability shipped this cycle — `db_action_failed` (failure rate) and `db_action_slow` (latency > 1s) — as well as product analytics. Confirm the PostHog project token is present in the env.
 
@@ -22,13 +23,12 @@ Env vars are set in **Vercel → Settings → Environment Variables** (per envir
 
 - [ ] **Redeploy prod** after setting any of the §1 vars — env changes apply only on a new deployment (redeploy, or push).
 - [ ] **Restart local dev** (`npm run dev`) after updating `.env.local` (esp. the regenerated Blob token).
-- [ ] **Do not** keep Vercel system vars (e.g. `VERCEL=1`) in `.env.local` — the env guard warns that `VERCEL=1` + an `http://` `AUTH_URL` makes NextAuth write `Secure` cookies the browser drops, silently breaking local auth (every request bounces to `/login`).
+- [ ] **Do not** keep Vercel system vars (e.g. `VERCEL=1`) in `.env.local` — the env guard warns that `VERCEL=1` + an `http://` `AUTH_URL` makes Better Auth write `Secure` cookies the browser drops, silently breaking local auth (every request bounces to `/login`).
 
-## 4. better-auth migration (bead `purses-74tx`) — landing now
+## 4. Better Auth Google login
 
-The cutover ships with `feat/better-auth-migration`: better-auth with **database sessions**, email+password + magic-link (Resend) + Google, one handler at `/api/auth` (`src/app/api/auth/[...all]`). Only **Google** needs operator action to light up (email+password and magic-link work with the existing `AUTH_*`/`RESEND_API_KEY` vars):
+The app uses Better Auth with **database sessions**, Google-only product login, and one handler at `/api/auth` (`src/app/api/auth/[...all]`). Only Google login is supported; email/password, password reset, magic-link login, and auth email verification are intentionally not configured.
 
-- [ ] **Google Cloud OAuth 2.0 client** — create it, get the **client ID + secret** (set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`; unset → the Google button is inert but the app still boots), and register the **authorized redirect URIs**: `https://adored.kimberlygarmoe.com/api/auth/callback/google` (Production + Preview) and `http://localhost:3000/api/auth/callback/google` (local).
 - [ ] **`BETTER_AUTH_SECRET` / `BETTER_AUTH_URL`** are **optional** — better-auth falls back to `AUTH_SECRET` / `AUTH_URL` (already set), so one secret serves both. Set the `BETTER_AUTH_*` pair only if you want a distinct secret/base URL per environment (a base-URL mismatch is the classic `redirect_uri_mismatch`).
 - Settled: **reset** path (migration `0015` wipes + recreates the canonical `user`/`account`/`session`/`verification`, no data migration); the one-time everyone-out is moot with no real users. See `docs/superpowers/specs/2026-07-01-better-auth-migration-design.md` + the plan.
 
@@ -44,9 +44,9 @@ The code from this cycle carries itself: authz hardening (CI page-guard), the DB
 |---|---|---|
 | `DATABASE_URL` | yes (set) | Neon Postgres connection |
 | `AUTH_URL` / `AUTH_SECRET` | yes (set) | better-auth base URL + secret (fallback source for `BETTER_AUTH_*`) |
-| `RESEND_API_KEY` | **needed** | Live email (magic-link + invitations) |
+| `RESEND_API_KEY` | **needed** | Invitation email |
 | `BLOB_READ_WRITE_TOKEN` | **needed (regen)** | Photo uploads |
 | `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | **verify** | Analytics + DB observability |
 | `EMAIL_FROM` | default | Sender (`noreply@kimberlygarmoe.com`) |
 | `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL` | optional | better-auth (`74tx`); falls back to `AUTH_SECRET`/`AUTH_URL` |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | optional | Google sign-in; unset → button inert, app still boots |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | **needed** | Google sign-in; unset → button inert, app still boots |

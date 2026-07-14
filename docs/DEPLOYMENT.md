@@ -107,8 +107,8 @@ vercel logs
 
 # Test authentication
 # 1. Visit https://your-domain.vercel.app/login
-# 2. Try sign up or email sign-in
-# 3. Check Vercel logs for magic link output (development only)
+# 2. Start Google sign-in and confirm the OAuth callback returns to the app
+# 3. Confirm `/signup` redirects to `/login`
 ```
 
 ## Skipping the `gh-pages` reports branch
@@ -313,10 +313,11 @@ git push origin main
 - [ ] Database URL configured and migration run
 - [ ] AUTH_SECRET set and >= 32 characters
 - [ ] AUTH_URL matches production domain (or derived from VERCEL_URL on previews)
-- [ ] Email provider configured (if using transactional emails)
+- [ ] GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET configured
+- [ ] Email provider configured (if sending invitation emails)
 - [ ] Custom domain added (if not using vercel.app domain)
 - [ ] SSL certificate verified
 - [ ] Build logs show no errors or warnings
-- [ ] Auth flow tested (login, signup, password reset)
+- [ ] Auth flow tested (Google login, `/signup` redirect, sign-out)
 - [ ] Photo upload tested
 - [ ] Performance metrics acceptable

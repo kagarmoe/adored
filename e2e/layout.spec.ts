@@ -30,15 +30,18 @@ test("login page fits the viewport and has tap-sized controls", async ({
 
   // Primary controls must be ≥ 44px tall (tablet-first tap target) on touch
   // viewports; desktop is allowed to be the same or larger.
-  const signIn = page.getByRole("button", { name: "Sign in" });
-  const box = await signIn.boundingBox();
-  expect(box, "sign-in button not found").not.toBeNull();
+  const googleSignIn = page.getByRole("button", {
+    name: "Continue with Google",
+  });
+  const box = await googleSignIn.boundingBox();
+  expect(box, "Google sign-in button not found").not.toBeNull();
   if (viewport() !== "desktop") {
     // ≥ 44px tap target. Allow sub-pixel slack: boundingBox returns fractional
     // CSS px under device scaling, so a 44px control can report ~43.6.
-    expect(box!.height, "sign-in button under 44px tap target").toBeGreaterThanOrEqual(
-      43.5,
-    );
+    expect(
+      box!.height,
+      "Google sign-in button under 44px tap target",
+    ).toBeGreaterThanOrEqual(43.5);
   }
 });
 
