@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/20</span>
+                <span class='fraction'>0/22</span>
             </div>
         
             
@@ -167,7 +167,19 @@
 <a name='L102'></a><a href='#L102'>102</a>
 <a name='L103'></a><a href='#L103'>103</a>
 <a name='L104'></a><a href='#L104'>104</a>
-<a name='L105'></a><a href='#L105'>105</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -244,6 +256,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -331,7 +355,7 @@ export default function <span class="fstat-no" title="function not covered" >Inv
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  if (loading) {</span>
 <span class="cstat-no" title="statement not covered" >    return (</span>
-      &lt;div className="min-h-screen flex items-center justify-center"&gt;
+      &lt;div className="min-h-[100svh] flex items-center justify-center"&gt;
         &lt;LoadingSpinner /&gt;
       &lt;/div&gt;
     );
@@ -339,7 +363,7 @@ export default function <span class="fstat-no" title="function not covered" >Inv
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  if (error || !invitation) {</span>
 <span class="cstat-no" title="statement not covered" >    return (</span>
-      &lt;div className="min-h-screen flex items-center justify-center p-4"&gt;
+      &lt;div className="min-h-[100svh] flex items-center justify-center p-4"&gt;
         &lt;div className="max-w-sm w-full"&gt;
           &lt;ErrorMessage message={error || "Invalid invitation"} /&gt;
         &lt;/div&gt;
@@ -348,8 +372,8 @@ export default function <span class="fstat-no" title="function not covered" >Inv
   }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
-    &lt;div className="min-h-screen flex items-center justify-center bg-ground p-4"&gt;
-      &lt;div className="max-w-sm w-full bg-surface rounded-lg shadow-lg p-8"&gt;
+    &lt;div className="min-h-[100svh] flex items-center justify-center bg-ground p-4 sm:p-6"&gt;
+      &lt;div className="max-w-sm w-full bg-surface rounded-lg shadow-lg p-6 sm:p-8"&gt;
         &lt;h1 className="text-2xl text-ink mb-2"&gt;You&amp;apos;re invited!&lt;/h1&gt;
         &lt;p className="text-ink-soft mb-6"&gt;
           You&amp;apos;ve been invited to collaborate on a collection.
@@ -363,9 +387,21 @@ export default function <span class="fstat-no" title="function not covered" >Inv
           )}
         &lt;/div&gt;
 &nbsp;
-        &lt;div className="flex gap-3"&gt;
-          &lt;Button fullWidth onClick={handleAccept} disabled={accepting}&gt;
-            {accepting ? "Accepting..." : "Accept invitation"}
+        &lt;div className="grid gap-3 sm:grid-cols-2"&gt;
+          &lt;Button
+            fullWidth
+            onClick={handleAccept}
+            disabled={accepting}
+            aria-label={accepting ? "Accepting" : "Accept invitation"}
+          &gt;
+            {accepting ? (
+              "Accepting..."
+            ) : (
+              &lt;&gt;
+                &lt;span className="sm:hidden"&gt;Accept&lt;/span&gt;
+                &lt;span className="hidden sm:inline"&gt;Accept invitation&lt;/span&gt;
+              &lt;/&gt;
+            )}
           &lt;/Button&gt;
           &lt;Button variant="secondary" fullWidth <span class="fstat-no" title="function not covered" >onClick={() =&gt; <span class="cstat-no" title="statement not covered" >r</span>outer.push("/")}&gt;</span>
             Decline
@@ -382,7 +418,7 @@ export default function <span class="fstat-no" title="function not covered" >Inv
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-14T06:39:44.691Z
+                at 2026-07-14T19:09:41.362Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

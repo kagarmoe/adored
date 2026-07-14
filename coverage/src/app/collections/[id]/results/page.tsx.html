@@ -275,7 +275,10 @@
 <a name='L210'></a><a href='#L210'>210</a>
 <a name='L211'></a><a href='#L211'>211</a>
 <a name='L212'></a><a href='#L212'>212</a>
-<a name='L213'></a><a href='#L213'>213</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L213'></a><a href='#L213'>213</a>
+<a name='L214'></a><a href='#L214'>214</a>
+<a name='L215'></a><a href='#L215'>215</a>
+<a name='L216'></a><a href='#L216'>216</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -362,6 +365,9 @@
 <span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -587,7 +593,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
       &lt;div className="space-y-8"&gt;
         &lt;div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"&gt;
           &lt;div&gt;
-            &lt;h1 className="font-display text-3xl text-ink"&gt;Where things stand&lt;/h1&gt;
+            &lt;h1 className="font-display text-2xl text-ink sm:text-3xl"&gt;Where things stand&lt;/h1&gt;
             {/* Person-side, forward-framed, no count (TONE #1, #4). */}
             &lt;p className="mt-2 text-ink-soft"&gt;The clearer this feels, the more it&amp;rsquo;s yours.&lt;/p&gt;
             {/* Epic S §4.4 bridge: name live Standing as the always-current picture,
@@ -598,9 +604,12 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           {/* Calm, side-by-side entry points — neither competes. Put-in-order
               leads to the compare round; Finalize keeps it steady for now. */}
           {hasStanding &amp;&amp; (
-            &lt;div className="flex flex-wrap items-start gap-3"&gt;
-              &lt;Link href={`${collectionHref}/sort`}&gt;
-                &lt;Button variant="secondary"&gt;Put things in order&lt;/Button&gt;
+            &lt;div className="grid w-full gap-3 sm:w-auto sm:grid-flow-col sm:auto-cols-max"&gt;
+              &lt;Link href={`${collectionHref}/sort`} className="min-w-0"&gt;
+                &lt;Button variant="secondary" aria-label="Put things in order" className="w-full"&gt;
+                  &lt;span className="sm:hidden"&gt;Order&lt;/span&gt;
+                  &lt;span className="hidden sm:inline"&gt;Put things in order&lt;/span&gt;
+                &lt;/Button&gt;
               &lt;/Link&gt;
               &lt;FinalizeEntry
                 collectionId={collection.id}
@@ -629,7 +638,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 &lt;h2 className="font-display text-2xl text-ink"&gt;The ones you&amp;rsquo;ve weighed in on&lt;/h2&gt;
                 &lt;p className="text-ink-soft"&gt;A quiet note on each &amp;mdash; in your life, or resting for now.&lt;/p&gt;
               &lt;/div&gt;
-              &lt;ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"&gt;
+              &lt;ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"&gt;
                 {usageOnlyItems.map((item) =&gt; (
                   &lt;li key={item.id}&gt;
                     &lt;ItemCard
@@ -650,8 +659,8 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 Once you&amp;rsquo;ve sat with a few, what you love most will settle here, gently.
               &lt;/p&gt;
               &lt;div&gt;
-                &lt;Link href={`${collectionHref}/sort`}&gt;
-                  &lt;Button&gt;Start sorting&lt;/Button&gt;
+                &lt;Link href={`${collectionHref}/sort`} className="block w-full sm:w-auto"&gt;
+                  &lt;Button className="w-full sm:w-auto"&gt;Start sorting&lt;/Button&gt;
                 &lt;/Link&gt;
               &lt;/div&gt;
             &lt;/section&gt;)
@@ -669,7 +678,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 The ones that weren&amp;rsquo;t yours to decide. Bring any back whenever you like.
               &lt;/p&gt;
             &lt;/div&gt;
-            &lt;ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"&gt;
+            &lt;ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"&gt;
               {setAsideItems.map((item) =&gt; (
                 &lt;li key={item.id}&gt;
                   &lt;Card padding="none" className="overflow-hidden"&gt;
@@ -706,7 +715,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-14T06:39:44.691Z
+                at 2026-07-14T19:09:41.362Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">86.66% </span>
+                <span class="strong">88.23% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>13/15</span>
+                <span class='fraction'>15/17</span>
             </div>
         
             
@@ -194,7 +194,23 @@
 <a name='L129'></a><a href='#L129'>129</a>
 <a name='L130'></a><a href='#L130'>130</a>
 <a name='L131'></a><a href='#L131'>131</a>
-<a name='L132'></a><a href='#L132'>132</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">3x</span>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a>
+<a name='L142'></a><a href='#L142'>142</a>
+<a name='L143'></a><a href='#L143'>143</a>
+<a name='L144'></a><a href='#L144'>144</a>
+<a name='L145'></a><a href='#L145'>145</a>
+<a name='L146'></a><a href='#L146'>146</a>
+<a name='L147'></a><a href='#L147'>147</a>
+<a name='L148'></a><a href='#L148'>148</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -325,6 +341,22 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">"use client";
 &nbsp;
 import { useEffect, useState } from "react";
@@ -415,18 +447,18 @@ export function PoolActionBar({
             &lt;/div&gt;
           )}
 &nbsp;
-          &lt;div className="flex items-center justify-between gap-3"&gt;
+          &lt;div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"&gt;
             &lt;span className="text-ink-soft" aria-live="polite"&gt;
               {count} selected
             &lt;/span&gt;
-            &lt;div className="flex items-center gap-2"&gt;
-              &lt;Button type="button" variant="ghost" className="min-h-11" disabled={busy} onClick={onClear}&gt;
+            &lt;div className="grid grid-cols-2 gap-2 sm:flex sm:items-center"&gt;
+              &lt;Button type="button" variant="ghost" className="min-h-11 w-full sm:w-auto" disabled={busy} onClick={onClear}&gt;
                 Clear
               &lt;/Button&gt;
               &lt;Button
                 type="button"
                 variant="secondary"
-                className="min-h-11"
+                className="min-h-11 w-full sm:w-auto"
                 disabled={busy}
                 aria-expanded={open}
                 onClick={() =&gt; setOpen((v) =&gt; !v)}
@@ -439,15 +471,31 @@ export function PoolActionBar({
                 &lt;Button
                   type="button"
                   variant="secondary"
-                  className="min-h-11"
+                  className="min-h-11 w-full sm:w-auto"
+                  aria-label="Each photo its own item"
                   disabled={busy}
                   onClick={onMakeEach}
                 &gt;
-                  Make each its own
+                  &lt;span className="sm:hidden"&gt;Each&lt;/span&gt;
+                  &lt;span className="hidden sm:inline"&gt;Make each its own&lt;/span&gt;
                 &lt;/Button&gt;
               )}
-              &lt;Button type="button" variant="primary" className="min-h-11" disabled={busy} onClick={onMakeItem}&gt;
-                {busy ? "Making…" : "Group into an item"}
+              &lt;Button
+                type="button"
+                variant="primary"
+                className="min-h-11 w-full sm:w-auto"
+                disabled={busy}
+                aria-label={busy ? "Making" : "Group into an item"}
+                onClick={onMakeItem}
+              &gt;
+                {busy ? (
+                  "Making…"
+                ) : (
+                  &lt;&gt;
+                    &lt;span className="sm:hidden"&gt;Group&lt;/span&gt;
+                    &lt;span className="hidden sm:inline"&gt;Group into an item&lt;/span&gt;
+                  &lt;/&gt;
+                )}
               &lt;/Button&gt;
             &lt;/div&gt;
           &lt;/div&gt;
@@ -463,7 +511,7 @@ export function PoolActionBar({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-14T06:39:44.691Z
+                at 2026-07-14T19:09:41.362Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
