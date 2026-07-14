@@ -33,19 +33,12 @@ import { ItemDispositionRepository } from "@/server/repositories/implementations
 import { deriveUsage } from "@/lib/derive-usage";
 import * as txMod from "@/lib/transactions";
 
-const { mockGetSession, phCapture, phFlush } = vi.hoisted(() => ({
+const { mockGetSession } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
-  phCapture: vi.fn(),
-  phFlush: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => mockAuth(mockGetSession));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
-// Third (and last) mocked boundary: analytics — assert the capture contract
-// without a network. Everything between route and pg stays real.
-vi.mock("@/lib/posthog-server", () => ({
-  getPostHogClient: () => ({ capture: phCapture, flush: phFlush }),
-}));
 
 import { POST as postBatch } from "@/app/api/sessions/[id]/decisions/batch/route";
 import { POST as postSingle } from "@/app/api/sessions/[id]/decisions/route";
@@ -541,71 +534,6 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
     );
     expect(res.status).toBe(201);
     expect(lockSpy).toHaveBeenCalledWith(expect.anything(), collectionId, ownerId);
-  });
-
-  it("F15 analytics: exactly one sort_decision_batch_recorded per request, counts match the response, flush awaited; replay emits {0,n,0}", async () => {
-    const { db, items, sortSession } = await seedSession(2);
-    const foreignCollectionId = await seedBareCollection(ownerId);
-    const foreignItem = await new ItemRepository(db).create({
-      collectionId: foreignCollectionId,
-      name: "Foreign bag",
-    });
-    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-
-    // Seed one committed key so the mixed batch has a genuine duplicate.
-    const dupKey = ck();
-    await postBatch(
-      batchReq(sortSession.id, { decisions: [triage(items[0].id, "top", dupKey)] }) as any,
-      { params: Promise.resolve({ id: sortSession.id }) } as any,
-    );
-    phCapture.mockClear();
-    phFlush.mockClear();
-
-    // Mixed batch: 1 created + 1 duplicate + 1 rejected.
-    const mixed = await postBatch(
-      batchReq(sortSession.id, {
-        decisions: [
-          triage(items[1].id, "high"),
-          triage(items[0].id, "top", dupKey),
-          triage(foreignItem.id, "low"),
-        ],
-      }) as any,
-      { params: Promise.resolve({ id: sortSession.id }) } as any,
-    );
-    expect(mixed.status).toBe(201);
-    const mixedBody = await mixed.json();
-    const tally = (status: string) =>
-      mixedBody.results.filter((r: { status: string }) => r.status === status).length;
-
-    expect(phCapture).toHaveBeenCalledTimes(1);
-    const captured = phCapture.mock.calls[0][0];
-    expect(captured.event).toBe("sort_decision_batch_recorded");
-    expect(captured.properties).toEqual({
-      created: tally("created"),
-      duplicate: tally("duplicate"),
-      rejected: tally("rejected"),
-    });
-    expect(captured.properties).toEqual({ created: 1, duplicate: 1, rejected: 1 });
-    // flush() delivered after the capture (serverless can freeze on return).
-    expect(phFlush).toHaveBeenCalledTimes(1);
-    expect(phFlush.mock.invocationCallOrder[0]).toBeGreaterThan(
-      phCapture.mock.invocationCallOrder[0],
-    );
-
-    // Replay of an all-committed batch → still ONE capture, counts {0, n, 0}
-    // (capture fires per request — replay frequency IS the recovery signal).
-    phCapture.mockClear();
-    const replay = await postBatch(
-      batchReq(sortSession.id, { decisions: [triage(items[0].id, "top", dupKey)] }) as any,
-      { params: Promise.resolve({ id: sortSession.id }) } as any,
-    );
-    expect(replay.status).toBe(200);
-    expect(phCapture).toHaveBeenCalledTimes(1);
-    expect(phCapture.mock.calls[0][0].properties).toEqual({
-      created: 0,
-      duplicate: 1,
-      rejected: 0,
-    });
   });
 
   // ══ Task 5 (Epic R): usage rides the batch but is DARK — it never recomputes

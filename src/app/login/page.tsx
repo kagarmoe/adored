@@ -4,7 +4,6 @@ import { Suspense, useState } from "react";
 import { signIn } from "@/lib/auth-client";
 import { useSearchParams } from "next/navigation";
 import { Button, ErrorMessage } from "@/components/ui";
-import posthog from "posthog-js";
 
 function LoginContent() {
   const searchParams = useSearchParams();
@@ -26,7 +25,6 @@ function LoginContent() {
         setLoading(false);
         return;
       }
-      posthog.capture("user_logged_in", { method: "google" });
     } catch {
       setError("Google sign-in is unavailable right now.");
       setLoading(false);

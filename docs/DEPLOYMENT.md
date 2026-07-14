@@ -238,7 +238,7 @@ vercel logs --follow          # then grep for [api_error] or the errorId the use
 
 The log line carries the error's `name`/`message`/`stack`, the recursively-unwrapped `cause` chain (drizzle/postgres wrap the real driver error underneath), and the postgres-js driver fields. It deliberately **omits `query` and `parameters`** — those carry user values (PII). So: get the `errorId` from the caller's response, grep one log line, get the whole error. Do **not** re-add raw error text to the response to make debugging easier — that leak is what this replaced (it reached *unauthenticated* callers via `GET /api/shared-results/[token]`). Contract: [`docs/API.md`](API.md#error-bodies-the-errorresponse-contract); rationale: ARCHITECTURE decision 30.
 
-DB-layer failures log separately under `[db_error]` (`src/lib/db-error-log.ts`) and emit one `db_action_failed` PostHog event — same greppable shape.
+DB-layer failures log separately under `[db_error]` (`src/lib/db-error-log.ts`) with the same greppable JSON shape.
 
 ## Troubleshooting
 

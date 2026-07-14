@@ -3,7 +3,6 @@ import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import posthog from "posthog-js";
 import { ClientKey } from "@/lib/decision-batch-schema";
 import { CompareChoice, COMPARE_ACK_BOUND_MS, COMPARE_SLOW_SAVE_LINE } from "./CompareChoice";
 import { readQueue } from "./decisionQueue";
@@ -13,10 +12,6 @@ import * as queue from "./decisionQueue";
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh }),
-}));
-
-vi.mock("posthog-js", () => ({
-  default: { capture: vi.fn() },
 }));
 
 // Spy-wrap (NOT stub) the seam modules: the component must go through
@@ -209,23 +204,7 @@ describe("CompareChoice submits through the queue as a batch-of-1 (Epic P Task 1
     expect(screen.queryByText("Saving…")).not.toBeInTheDocument();
   });
 
-  it("captures pairwise_decision_made with the exact args after the ack (byte-for-byte guard)", async () => {
-    const user = userEvent.setup();
-    renderChoice();
-
-    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
-
-    await waitFor(() => expect(vi.mocked(posthog.capture)).toHaveBeenCalledTimes(1));
-    expect(vi.mocked(posthog.capture)).toHaveBeenCalledWith("pairwise_decision_made", {
-      result: "item_a",
-      session_id: sessionId,
-      item_a_id: ITEM_A,
-      item_b_id: ITEM_B,
-      comparisons_made: 1,
-    });
-  });
-
-  it("a rejected ack advances (refresh) without a posthog capture — the notice slot explains, not this component", async () => {
+  it("a rejected ack advances (refresh) — the notice slot explains, not this component", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (_url: string, init: RequestInit) => {
@@ -249,7 +228,6 @@ describe("CompareChoice submits through the queue as a batch-of-1 (Epic P Task 1
     await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
 
     await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
-    expect(vi.mocked(posthog.capture)).not.toHaveBeenCalled();
   });
 
   it("an ack delayed past the bound shows the gentle retry line, keeps the entry queued, and a late ack recovers silently (advances)", async () => {
@@ -387,7 +365,7 @@ describe("CompareChoice local mode (walkthrough demo)", () => {
     vi.unstubAllGlobals();
   });
 
-  it("local mode: tap A calls onDecision('item_a') — no fetch, no enqueue, no posthog.capture, cards re-enabled", async () => {
+  it("local mode: tap A calls onDecision('item_a') — no fetch, no enqueue, cards re-enabled", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     const onDecision = vi.fn();
     render(<CompareChoice submit={{ kind: "local", onDecision }} itemA={itemA} itemB={itemB} comparisonsMade={0} />);
@@ -395,7 +373,6 @@ describe("CompareChoice local mode (walkthrough demo)", () => {
     expect(onDecision).toHaveBeenCalledWith("item_a");
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(vi.mocked(queue.enqueue)).not.toHaveBeenCalled(); // local never touches the queue
-    expect(vi.mocked(posthog.capture)).not.toHaveBeenCalled(); // transport batches — a fetch spy alone is blind to capture
     expect(refresh).not.toHaveBeenCalled(); // fourth negative: local never advances the route
     expect(screen.queryByText("Saving…")).not.toBeInTheDocument(); // no pending/busy state
     expect(screen.getByRole("button", { name: /tie/i })).toBeEnabled();

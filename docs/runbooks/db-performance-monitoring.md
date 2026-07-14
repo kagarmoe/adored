@@ -83,12 +83,9 @@ Two tiers — use the right one for the question:
   grep '\[db_error\]' # a DB failure, with pg code + class
   ```
 
-- **Durable aggregate → PostHog.** Beyond Vercel's short retention:
-  - `db_action_failed` — properties `op`/`code`/`class` (failure rate over time).
-  - `db_action_slow` — properties `op` + a bucketed `ms` (slow-op rate over time).
-
-  Runtime logs answer "what just happened to *this* request"; PostHog answers
-  "is the failure/slow rate trending up this week".
+Runtime logs answer "what just happened to this request." Longer retention or
+aggregate trending should live in the Vercel log/observability pipeline rather
+than an in-app analytics SDK.
 
 ## 5. Regression gate (pre-merge, not prod)
 

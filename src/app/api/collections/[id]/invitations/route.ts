@@ -4,7 +4,6 @@ import { getDb } from "@/lib/db";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import { InvitationController } from "@/server/api/invitations";
 import { errorResponse } from "@/server/api/http-errors";
-import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -34,13 +33,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (access instanceof NextResponse) return access;
   try {
     const invitation = await InvitationController.fromDb(db).createInvitation(id, body);
-    const phClient = getPostHogClient();
-    phClient.capture({
-      distinctId: session.user.id,
-      event: 'invitation_sent',
-      properties: { collection_id: id, invitation_id: invitation.id },
-    });
-    await phClient.flush();
     return NextResponse.json(invitation, { status: 201 });
   } catch (error) {
     return errorResponse(error);

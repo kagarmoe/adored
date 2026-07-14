@@ -1,11 +1,8 @@
-import { getPostHogClient } from "@/lib/posthog-server";
-import { scheduleWaitUntil } from "@/lib/wait-until";
-
 // Production DB failure sink. Motivated by the compare-save bug: a transaction
 // rolled back on timeout, the route returned 500, but nothing logged WHY — no
-// server breadcrumb. logDbError OBSERVES a DB failure (structured Vercel log +
-// PostHog event); it never handles or swallows it. The caller still throws/500s
-// exactly as before.
+// server breadcrumb. logDbError OBSERVES a DB failure through structured Vercel
+// logs; it never handles or swallows it. The caller still throws/500s exactly as
+// before.
 
 // The pg error codes we classify. Everything else is "unknown".
 export type DbErrorClass =
@@ -71,18 +68,6 @@ export function logDbError(op: string, ctx: DbErrorContext, error: unknown): voi
       "[db_error]",
       JSON.stringify({ op, code, class: errClass, ...ctx, message, rolledBack }),
     );
-
-    // Durable failure-rate visibility beyond Vercel's short log retention.
-    // Properties are op/code/class ONLY — no ids, no PII.
-    const phClient = getPostHogClient();
-    phClient.capture({
-      distinctId: ctx.curatorId ?? "system",
-      event: "db_action_failed",
-      properties: { op, code, class: errClass },
-    });
-    // Guarantee delivery across a serverless freeze: flush AFTER the response
-    // via waitUntil (no hot-path latency). flush() keeps the singleton alive.
-    scheduleWaitUntil(phClient.flush());
   } catch {
     // Swallow: the logging path is best-effort observation. The caller's error
     // handling (throw / 500) is unaffected.

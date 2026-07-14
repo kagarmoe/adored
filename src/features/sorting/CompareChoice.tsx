@@ -5,9 +5,8 @@ import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
 import { itemDisplayName, itemInitial } from "@/lib/items";
 import { Button, CardImage } from "@/components/ui";
-import posthog from "posthog-js";
 import { enqueue, newClientKey, readQueue, type QueueKey } from "./decisionQueue";
-import { awaitAck, isInFlight, triggerFlush, type AckOutcome } from "./decisionFlusher";
+import { awaitAck, isInFlight, triggerFlush } from "./decisionFlusher";
 
 type Result = "item_a" | "item_b" | "tie" | "skip";
 
@@ -56,19 +55,10 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsM
   // clientKey — settle exactly once per decision.
   const settled = useRef(new Set<string>());
 
-  function settle(clientKey: string, slot: string, result: Result, outcome: AckOutcome) {
+  function settle(clientKey: string, slot: string, result: Result) {
     if (submit.kind !== "session" || settled.current.has(clientKey)) return;
     settled.current.add(clientKey);
     delete clientKeys.current[slot];
-    if (outcome.status !== "rejected") {
-      posthog.capture("pairwise_decision_made", {
-        result,
-        session_id: submit.sessionId,
-        item_a_id: itemA.id,
-        item_b_id: itemB.id,
-        comparisons_made: comparisonsMade + 1,
-      });
-    }
     // A rejected ack still advances — the piece is no longer in the collection,
     // and the notice slot (PendingNotices) explains; this component stays quiet.
     setError(null);
@@ -93,7 +83,7 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsM
 
   async function choose(result: Result, slot: string) {
     if (submit.kind === "local") {
-      submit.onDecision(result); // demo path: no clientKeys, no pending, no posthog, no refresh
+      submit.onDecision(result); // demo path: no clientKeys, no pending, no refresh
       return;
     }
 
@@ -146,7 +136,7 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsM
           setPending(null);
           return; // the pair stays; re-tapping retries with the SAME clientKey
         }
-        settle(clientKey, slot, result, { status: "created" }); // the awaited submit IS the ack
+        settle(clientKey, slot, result); // the awaited submit IS the ack
         return;
       }
     }
@@ -164,10 +154,10 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsM
       // pinned backoff; a later ack recovers silently (advances then).
       setPending(null);
       setError(COMPARE_SLOW_SAVE_LINE);
-      void ack.then((late) => settle(clientKey, slot, result, late));
+      void ack.then(() => settle(clientKey, slot, result));
       return;
     }
-    settle(clientKey, slot, result, outcome);
+    settle(clientKey, slot, result);
   }
 
   const busy = pending !== null;
