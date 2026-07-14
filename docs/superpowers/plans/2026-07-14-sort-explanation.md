@@ -3,9 +3,12 @@
 ## Task 1: Tutorial Copy
 
 1. Add tests that the tutorial purpose beat names Triage, Usage, and Compare.
-2. Add tests that the Standing beat explains the combination model.
-3. Update `WelcomePurpose` and `WelcomeStanding` copy.
-4. Keep existing controls and beat order unchanged.
+2. Add tests that the walkthrough shows a standing after Triage, after Usage, and after Compare.
+3. Update sample data so the same small sample collection participates across the three rounds.
+4. Drive Usage across every sample item, then drive Compare across every pair in the current ranked standing.
+5. Add an interim standing component for the after-Triage and after-Usage beats.
+6. Add a sample hand-order list to the Refine beat so manual re-ranking is shown, not only described.
+7. Update `WelcomePurpose`, `WelcomeStanding`, and walkthrough sequencing.
 
 ## Task 2: In-App Sort Hub Help
 
@@ -25,6 +28,7 @@
 ## Review Notes Folded
 
 - In-app copy must not explain detailed projection mechanics.
-- Tutorial can explain: Triage groups, Usage adds a note, Compare orders.
+- Tutorial should demonstrate the progression: Triage creates the first standing, Usage adds visible notes to that standing, Compare updates order within the same cumulative result.
+- The manual re-ranking tutorial beat needs an actual reorderable list.
 - Modal is acceptable only as an optional help control.
 - Phone labels must stay short enough to fit.

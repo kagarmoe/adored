@@ -9,7 +9,7 @@ import { PhotoController } from "@/server/api/photos";
 import { PreferenceController } from "@/server/api/preferences";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
-import { Button, Card, CardImage } from "@/components/ui";
+import { Button, Card, CardImage, buttonVariants } from "@/components/ui";
 import { RankedResults } from "@/features/results/RankedResults";
 import { FinalizeEntry } from "@/features/results/FinalizeEntry";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
@@ -106,15 +106,17 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 reads as "my order reverted". */}
             <p className="mt-1 text-sm text-ink-soft">{STANDING_CURRENT_FRAMING}</p>
           </div>
-          {/* Calm, side-by-side entry points — neither competes. Put-in-order
-              leads to the compare round; Finalize keeps it steady for now. */}
+          {/* Calm, side-by-side entry points — neither competes. "Continue sorting"
+              returns to rounds; "Adjust results" is reserved for draft hand-order. */}
           {hasStanding && (
             <div className="grid w-full gap-3 sm:w-auto sm:grid-flow-col sm:auto-cols-max">
-              <Link href={`${collectionHref}/sort`} className="min-w-0">
-                <Button variant="secondary" aria-label="Put things in order" className="w-full">
-                  <span className="sm:hidden">Order</span>
-                  <span className="hidden sm:inline">Put things in order</span>
-                </Button>
+              <Link
+                href={`${collectionHref}/sort`}
+                aria-label="Continue sorting"
+                className={`${buttonVariants({ variant: "secondary" })} w-full min-w-0`}
+              >
+                <span className="sm:hidden">Sort</span>
+                <span className="hidden sm:inline">Continue sorting</span>
               </Link>
               <FinalizeEntry
                 collectionId={collection.id}

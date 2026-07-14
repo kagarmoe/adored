@@ -136,7 +136,7 @@ function locate(seq: SeqEntry[], rid: string): { position: number; onward: boole
 /**
  * Epic S S3b + 9v1f.1: the manual re-rank surface on the DRAFT result page.
  *
- * - "Put in order by hand" flips the bucketed composition into ONE ordered list
+ * - "Adjust results" flips the bucketed composition into ONE ordered list
  *   spanning both tiers, with a sentinel marking the Onward boundary (native HTML5
  *   draggable; ≥44px handles; no swiping).
  * - Per-row move-up / move-down buttons are the AA keyboard/AT path (≥44px,

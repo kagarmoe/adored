@@ -12,8 +12,8 @@ export interface SampleItem {
 }
 
 // Five things a person might own — evocative, never shop-like. The names carry
-// a story ("the" + the object), not a catalog SKU. Order is the displayed order:
-// the compare pair leads, then the triage items with the not-yours item third.
+// a story ("the" + the object), not a catalog SKU. The tutorial uses the first
+// three as the sample collection; the others remain available for future beats.
 export const SAMPLE_ITEMS: readonly SampleItem[] = [
   { id: "armchair", name: "The slipcovered armchair", imageSrc: "/onboarding/slipcovered-armchair.webp" },
   { id: "clock", name: "The little red wall clock", imageSrc: "/onboarding/red-wall-clock.webp" },
@@ -22,24 +22,21 @@ export const SAMPLE_ITEMS: readonly SampleItem[] = [
   { id: "cushion", name: "The kid's microphone cushion", imageSrc: "/onboarding/microphone-cushion.webp" },
 ] as const;
 
-// The two items the compare beat pits against each other.
+// The initial pair shown if the tutorial reaches Compare before a dynamic pair
+// is selected. The walkthrough normally derives pairs from the triaged standing.
 export const COMPARE_PAIR: readonly [SampleItem, SampleItem] = [
   SAMPLE_ITEMS[0],
   SAMPLE_ITEMS[1],
 ];
 
-// The single item the usage teaching beat asks "Do you use this?" about. It reuses
-// an existing sample (the compare pair's lead) rather than a new asset, and is
-// deliberately NOT itself a member of SAMPLE_ITEMS beyond that reuse — the usage
-// beat is a pure teaching moment that never perturbs buildStanding's ranking.
-export const USAGE_SAMPLE: SampleItem = COMPARE_PAIR[0];
-
 // The items the triage beat asks about, one at a time.
 export const TRIAGE_ITEMS: readonly SampleItem[] = [
+  SAMPLE_ITEMS[0],
+  SAMPLE_ITEMS[1],
   SAMPLE_ITEMS[2],
-  SAMPLE_ITEMS[3],
-  SAMPLE_ITEMS[4],
 ];
+
+export const USAGE_ITEMS: readonly SampleItem[] = TRIAGE_ITEMS;
 
 interface StandingRow {
   item: SampleItem;
@@ -65,6 +62,12 @@ export type UsageOutcome =
   | { kind: "unused" }
   | { kind: "pass" };
 
+export interface CompareRoundResult {
+  itemAId: string;
+  itemBId: string;
+  outcome: CompareOutcome;
+}
+
 export interface Standing {
   ranked: StandingRow[]; // hero = ranked[0] when non-empty
   deferred: SampleItem[]; // "Ready when you are"
@@ -82,45 +85,51 @@ export const RESULT_TO_TIER: Record<"top" | "high" | "medium" | "low", Tier> = {
 
 const TIER_ORDER: Record<Tier, number> = { love: 0, like: 1, maybe: 2, onward: 3 };
 
-// demo-only mapping (tie→both love, skip→both like) — NOT ScoringService
-// semantics; do not port.
-function compareTier(item: SampleItem, compare: CompareOutcome): Tier {
-  switch (compare.kind) {
-    case "win":
-      return item.id === compare.winnerId ? "love" : "like";
-    case "tie":
-      return "love";
-    case "skip":
-      return "like";
-  }
-}
-
 /**
  * The "earned aha": the ranking reflects the user's taps, not a fixed order.
  *
  * Pure and deterministic over typed outcomes, so illegal states are
- * unrepresentable. The compare pair and triage items are disjoint by
- * construction. `ranked` combines the compare-pair rows (tiered by the compare
- * outcome) with the tiered triage rows, sorted by tier (love > like > maybe >
- * onward); within a tier, rows keep SAMPLE_ITEMS display order. Deferred and
- * set-aside triage items leave the ranking for their own groups. No API, no DB.
+ * unrepresentable. `ranked` starts from the Triage standing, then pairwise
+ * Compare rounds add demo-only wins that can move pieces within the same sample
+ * collection. Deferred and set-aside triage items leave the ranking for their
+ * own groups. No API, no DB.
  */
 export function buildStanding(
-  compare: CompareOutcome,
+  comparisons: CompareRoundResult[],
   triage: Record<string, TriageOutcome>,
 ): Standing {
-  const compareIds = new Set(COMPARE_PAIR.map((i) => i.id));
+  const standing = buildTriageStanding(triage);
+  if (comparisons.length === 0) return standing;
 
+  const triageRank = new Map(standing.ranked.map((row, index) => [row.item.id, index]));
+  const wins = new Map(standing.ranked.map((row) => [row.item.id, 0]));
+
+  for (const comparison of comparisons) {
+    if (comparison.outcome.kind === "skip") continue;
+    if (comparison.outcome.kind === "tie") {
+      wins.set(comparison.itemAId, (wins.get(comparison.itemAId) ?? 0) + 0.5);
+      wins.set(comparison.itemBId, (wins.get(comparison.itemBId) ?? 0) + 0.5);
+      continue;
+    }
+    wins.set(comparison.outcome.winnerId, (wins.get(comparison.outcome.winnerId) ?? 0) + 1);
+  }
+
+  return {
+    ...standing,
+    ranked: [...standing.ranked].sort((a, b) => {
+      const byWins = (wins.get(b.item.id) ?? 0) - (wins.get(a.item.id) ?? 0);
+      if (byWins !== 0) return byWins;
+      return (triageRank.get(a.item.id) ?? 0) - (triageRank.get(b.item.id) ?? 0);
+    }),
+  };
+}
+
+export function buildTriageStanding(triage: Record<string, TriageOutcome>): Standing {
   const ranked: StandingRow[] = [];
   const deferred: SampleItem[] = [];
   const setAside: SampleItem[] = [];
 
-  // Walk in SAMPLE_ITEMS display order so a stable tier sort preserves it.
-  for (const item of SAMPLE_ITEMS) {
-    if (compareIds.has(item.id)) {
-      ranked.push({ item, tier: compareTier(item, compare) });
-      continue;
-    }
+  for (const item of TRIAGE_ITEMS) {
     const outcome = triage[item.id];
     if (!outcome || outcome.kind === "tier") {
       ranked.push({ item, tier: outcome ? outcome.tier : "maybe" });
@@ -131,10 +140,19 @@ export function buildStanding(
     }
   }
 
-  // Stable sort: equal tiers keep the SAMPLE_ITEMS order established above.
   ranked.sort((x, y) => TIER_ORDER[x.tier] - TIER_ORDER[y.tier]);
-
   return { ranked, deferred, setAside };
+}
+
+export function comparePairsFor(standing: Standing): Array<readonly [SampleItem, SampleItem]> {
+  const rankedItems = standing.ranked.map((row) => row.item);
+  const pairs: Array<readonly [SampleItem, SampleItem]> = [];
+  for (let i = 0; i < rankedItems.length; i++) {
+    for (let j = i + 1; j < rankedItems.length; j++) {
+      pairs.push([rankedItems[i], rankedItems[j]]);
+    }
+  }
+  return pairs;
 }
 
 /**

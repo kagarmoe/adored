@@ -112,6 +112,16 @@ describe("Decide Standing — live most-loved", () => {
     expect(within(onward).getByText("Delta")).toBeInTheDocument();
   });
 
+  it("uses Continue sorting for the live Standing sort link, reserving Adjust results for hand-order", async () => {
+    const ui = await ResultsPage({ params: Promise.resolve({ id: "summer-bags" }) });
+    render(ui);
+    expect(screen.getByRole("link", { name: "Continue sorting" })).toHaveAttribute(
+      "href",
+      "/collections/summer-bags/sort",
+    );
+    expect(screen.queryByRole("link", { name: "Adjust results" })).not.toBeInTheDocument();
+  });
+
 });
 
 describe("Decide Standing — set aside", () => {

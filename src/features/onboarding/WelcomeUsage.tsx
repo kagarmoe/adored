@@ -11,9 +11,10 @@ import {
   WELCOME_ROUND_KICKER,
   usageDecisions,
 } from "@/features/sorting/roundCopy";
-import { USAGE_SAMPLE, type UsageOutcome } from "./sampleData";
+import { type SampleItem, type UsageOutcome } from "./sampleData";
 
 interface WelcomeUsageProps {
+  item: SampleItem;
   /** Reports the typed usage outcome, then advances the walkthrough. */
   onOutcome: (outcome: UsageOutcome) => void;
 }
@@ -24,9 +25,7 @@ interface WelcomeUsageProps {
 // person-side arc names in ROUND_COPY (user decision); the explainer still comes
 // from ROUND_COPY. A single tap — Yes, Not these days, or Skip for now — teaches
 // the beat and advances to Compare.
-export function WelcomeUsage({ onOutcome }: WelcomeUsageProps) {
-  const item = USAGE_SAMPLE;
-
+export function WelcomeUsage({ item, onOutcome }: WelcomeUsageProps) {
   return (
     <section className="flex flex-col items-center text-center gap-6">
       <div className="flex flex-col items-center gap-1">

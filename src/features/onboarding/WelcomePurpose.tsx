@@ -6,8 +6,8 @@ interface WelcomePurposeProps {
   onNext: () => void;
 }
 
-// Beat 1 — names the purpose, then orients the real collection flow before any
-// mechanic is taught.
+// Beat 1 — names the purpose, then orients the sample sorting walkthrough before
+// any mechanic is taught.
 export function WelcomePurpose({ onNext }: WelcomePurposeProps) {
   return (
     <section className="flex flex-col items-center text-center gap-6">
@@ -15,16 +15,14 @@ export function WelcomePurpose({ onNext }: WelcomePurposeProps) {
         Rediscover what you love.
       </h1>
       <p className="text-lg text-ink-soft max-w-md">
-        Adored helps you build a collection from photos, make items when
-        you&rsquo;re ready, and notice what you love most through three gentle sorts.
+        In this tutorial, you&rsquo;ll sort a small sample collection through three
+        short rounds.
       </p>
       <div className="flex flex-col gap-1 max-w-md">
-        <p className="text-ink-soft">Add photos to a collection.</p>
-        <p className="text-ink-soft">Make items when you&rsquo;re ready.</p>
-        <p className="text-ink-soft">Triage groups how you feel.</p>
-        <p className="text-ink-soft">Usage notes whether each piece is in your life.</p>
+        <p className="text-ink-soft">Triage groups by how you feel.</p>
+        <p className="text-ink-soft">Usage asks what happens in your life.</p>
         <p className="text-ink-soft">Compare puts pieces in order.</p>
-        <p className="text-ink-soft">See what you love most.</p>
+        <p className="pt-3 text-ink-soft">After each round, you&rsquo;ll see what changed and what you adore.</p>
       </div>
       <Button size="lg" onClick={onNext}>
         Show me how

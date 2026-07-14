@@ -28,13 +28,16 @@ The app should be concise and usable without the tutorial. The tutorial can teac
 
 ### Tutorial
 
-Use the existing beats, but sharpen the framing:
+Use the existing controls, but add visible standings between rounds:
 
-- Purpose beat: name the three rounds and the outcome.
+- Purpose beat: explain that the tutorial sorts a small sample collection and shows what changes after each round.
 - Triage beat: "groups what you love, like, maybe, and what can move onward."
-- Usage beat: "adds whether it is in your life right now. It does not change what you love."
-- Compare beat: "puts pieces in order. You can compare with or without the other rounds."
-- Standing beat: explain the combination: Compare orders, Triage groups, Usage annotates.
+- After Triage: show the first standing from the user's Triage taps.
+- Usage beat: ask the same sample collection, one item at a time, whether each piece is in your life right now.
+- After Usage: show the same standing with usage notes added to each answered piece.
+- Compare beat: generate pairings from the current ranked standing and show progress through the pairs.
+- Standing beat: show the final standing after Compare and call out that Compare folds pair choices back into the same cumulative standing.
+- Refine beat: show a small hand-order list that can be dragged or adjusted with arrow controls, matching the real draft result affordance.
 
 ### App Sort Hub
 
@@ -86,6 +89,7 @@ Decision: Keep it short, readable, and plain. Standard dialog pattern, no extra 
 Tests should prove:
 
 - Tutorial purpose names the current three-round model.
-- Tutorial standing explains how the outputs combine.
+- Tutorial standings show cumulative output after each round.
+- Tutorial refine beat includes a visible hand-order list, not only explanatory copy.
 - Sort hub renders the concise line.
 - Help dialog opens and closes, and says the sorts can stack.

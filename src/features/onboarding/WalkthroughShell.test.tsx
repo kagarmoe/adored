@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { WalkthroughShell } from "./WalkthroughShell";
-import { TRIAGE_ITEMS, COMPARE_PAIR } from "./sampleData";
+import { TRIAGE_ITEMS, USAGE_ITEMS } from "./sampleData";
 import { DISMISS_KEY, dismissWelcome, isWelcomeDismissed } from "./dismissal";
 
 // The exit leaves the onboarding SPA via a full-document navigation
@@ -47,17 +47,39 @@ async function tapTiers(user: ReturnType<typeof userEvent.setup>, label = "Love"
     ).toBeInTheDocument();
     await user.click(screen.getByText(label));
   }
+  expect(screen.getByRole("heading", { name: "After Triage" })).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Continue" }));
 }
 
-// The usage teaching beat now sits between triage and compare. A single tap on any
-// of its affordances advances to compare; the happy path answers "Yes, I use it".
 async function passUsage(user: ReturnType<typeof userEvent.setup>) {
-  expect(screen.getByRole("heading", { name: "Do you use this?" })).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "Yes, I use it" }));
+  for (let i = 0; i < USAGE_ITEMS.length; i++) {
+    expect(screen.getByRole("heading", { name: "Do you use this?" })).toBeInTheDocument();
+    expect(screen.getByText(USAGE_ITEMS[i].name)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Yes, I use it" }));
+  }
+  expect(screen.getByRole("heading", { name: "After Usage" })).toBeInTheDocument();
+  expect(screen.getByText("The Triage order stays. Usage adds a note to each piece.")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Continue" }));
+}
+
+async function passCompare(
+  user: ReturnType<typeof userEvent.setup>,
+  outcome: "first" | "second" | "tie" | "skip" = "first",
+) {
+  for (let i = 0; i < 10 && screen.queryByRole("heading", { name: "Which do you love more?" }); i++) {
+    if (outcome === "tie") {
+      await user.click(screen.getByRole("button", { name: "Tie" }));
+    } else if (outcome === "skip") {
+      await user.click(screen.getByRole("button", { name: "Skip" }));
+    } else {
+      const choices = screen.getAllByRole("button", { name: /^Choose / });
+      await user.click(choices[outcome === "second" ? 1 : 0]);
+    }
+  }
 }
 
 describe("WalkthroughShell", () => {
-  it("full happy path: purpose -> 3 triage taps -> usage -> compare -> standing -> refine -> handoff", async () => {
+  it("full happy path: purpose -> triage -> triage standing -> usage -> usage standing -> compare -> standing -> refine -> handoff", async () => {
     const user = userEvent.setup();
     render(<WalkthroughShell />);
 
@@ -70,17 +92,24 @@ describe("WalkthroughShell", () => {
     // Triage — one item at a time.
     await tapTiers(user);
 
-    // Usage — "Do you use this?" one teaching tap.
+    // Usage — same sample collection, one item at a time, then its standing.
     await passUsage(user);
 
-    // Compare
+    // Compare — several pairs, then the cumulative standing.
     expect(screen.getByRole("heading", { name: "Which do you love more?" })).toBeInTheDocument();
-    await user.click(screen.getByText(COMPARE_PAIR[0].name));
+    expect(screen.queryByText(/Pair 1 of/i)).not.toBeInTheDocument();
+    await passCompare(user, "second");
 
     // Standing — beat title is "Where things stand"; the hero eyebrow keeps the
     // "What you love most" affirmation inside the beat.
     expect(screen.getByRole("heading", { name: "Where things stand" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Compare folds those pair choices into the same standing. Triage groups and Usage notes stay with each piece."
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText("What you love most")).toBeInTheDocument();
+    expect(screen.getByText(TRIAGE_ITEMS[2].name)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     // Refine (new beat)
@@ -97,10 +126,10 @@ describe("WalkthroughShell", () => {
     await user.click(screen.getByRole("button", { name: "Show me how" }));
     await tapTiers(user);
     await passUsage(user);
-    await user.click(screen.getByRole("button", { name: "Tie" }));
+    await passCompare(user, "tie");
     expect(screen.getByRole("heading", { name: "Where things stand" })).toBeInTheDocument();
-    expect(screen.getByText(COMPARE_PAIR[0].name)).toBeInTheDocument();
-    expect(screen.getByText(COMPARE_PAIR[1].name)).toBeInTheDocument();
+    expect(screen.getByText(TRIAGE_ITEMS[0].name)).toBeInTheDocument();
+    expect(screen.getByText(TRIAGE_ITEMS[1].name)).toBeInTheDocument();
   });
 
   it("skip path reaches a standing with both pair items ranked", async () => {
@@ -109,10 +138,10 @@ describe("WalkthroughShell", () => {
     await user.click(screen.getByRole("button", { name: "Show me how" }));
     await tapTiers(user);
     await passUsage(user);
-    await user.click(screen.getByRole("button", { name: "Skip" }));
+    await passCompare(user, "skip");
     expect(screen.getByRole("heading", { name: "Where things stand" })).toBeInTheDocument();
-    expect(screen.getByText(COMPARE_PAIR[0].name)).toBeInTheDocument();
-    expect(screen.getByText(COMPARE_PAIR[1].name)).toBeInTheDocument();
+    expect(screen.getByText(TRIAGE_ITEMS[0].name)).toBeInTheDocument();
+    expect(screen.getByText(TRIAGE_ITEMS[1].name)).toBeInTheDocument();
   });
 
   it("defer path: a deferred item does NOT resurface — 3 choices always reach compare", async () => {
@@ -130,10 +159,12 @@ describe("WalkthroughShell", () => {
     await user.click(screen.getByText("Love"));
     await user.click(screen.getByText("Like"));
 
-    // Exactly three choices land on the usage beat — no fourth triage item.
+    // Exactly three choices land on the triage standing — no fourth triage item.
     expect(
       screen.queryByRole("heading", { name: "How do you feel about this one?" })
     ).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "After Triage" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continue" }));
     await passUsage(user);
 
     // ...and then compare.
@@ -145,12 +176,14 @@ describe("WalkthroughShell", () => {
     render(<WalkthroughShell />);
     await user.click(screen.getByRole("button", { name: "Show me how" }));
 
-    await user.click(screen.getByText("Love")); // item 1 (vase)
-    await user.click(screen.getByText("Love")); // item 2 (books)
-    await user.click(screen.getByText("Not mine")); // item 3 (cushion) — set aside
+    await user.click(screen.getByText("Love")); // item 1
+    await user.click(screen.getByText("Love")); // item 2
+    await user.click(screen.getByText("Not mine")); // item 3 — set aside
+    expect(screen.getByRole("heading", { name: "After Triage" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continue" }));
 
     await passUsage(user); // usage beat -> compare
-    await user.click(screen.getByText(COMPARE_PAIR[0].name));
+    await passCompare(user);
 
     expect(screen.getByRole("heading", { name: "Where things stand" })).toBeInTheDocument();
     expect(screen.getByText("Set aside — waiting, whenever you want them")).toBeInTheDocument();
@@ -159,8 +192,8 @@ describe("WalkthroughShell", () => {
   });
 
   it("all-escapes path: every triage item stepped out, compare skipped, still lands calmly", async () => {
-    // The compare pair is always ranked, so the standing shows the pair plus the
-    // stepped-out groups — no crash, both escape groups render.
+    // When every triage item steps out, Compare has no ranked pairs. The standing
+    // still lands calmly and shows both escape groups.
     const user = userEvent.setup();
     render(<WalkthroughShell />);
     await user.click(screen.getByRole("button", { name: "Show me how" }));
@@ -168,15 +201,15 @@ describe("WalkthroughShell", () => {
     await user.click(screen.getByText("Not yet")); // item 1 deferred
     await user.click(screen.getByText("Not mine")); // item 2 set aside
     await user.click(screen.getByText("Not yet")); // item 3 deferred
+    expect(screen.getByRole("heading", { name: "After Triage" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continue" }));
 
-    await passUsage(user); // usage beat -> compare
-    await user.click(screen.getByRole("button", { name: "Skip" })); // compare skip
+    await passUsage(user); // usage beat -> standing when no ranked items remain
 
     expect(screen.getByRole("heading", { name: "Where things stand" })).toBeInTheDocument();
     expect(screen.getByText("Set aside — waiting, whenever you want them")).toBeInTheDocument();
     expect(screen.getByText("Ready when you are")).toBeInTheDocument();
-    // The pair is still ranked, so the affirmation still anchors the loved top.
-    expect(screen.getByText(COMPARE_PAIR[0].name)).toBeInTheDocument();
+    expect(screen.queryByText("What you love most")).not.toBeInTheDocument();
   });
 
   it("focus moves to the new beat's wrapper on advance", async () => {
@@ -188,6 +221,24 @@ describe("WalkthroughShell", () => {
     // a screen reader re-announces the region rather than staying on the tapped
     // control.
     await user.click(screen.getByText("Love"));
+    expect(document.activeElement).toBe(beatWrapper());
+  });
+
+  it("focus also moves when usage items and compare pairs advance within the same beat", async () => {
+    const user = userEvent.setup();
+    render(<WalkthroughShell />);
+    await user.click(screen.getByRole("button", { name: "Show me how" }));
+    await tapTiers(user);
+
+    await user.click(screen.getByRole("button", { name: "Yes, I use it" }));
+    expect(document.activeElement).toBe(beatWrapper());
+
+    await user.click(screen.getByRole("button", { name: "Yes, I use it" }));
+    await user.click(screen.getByRole("button", { name: "Yes, I use it" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    const choices = screen.getAllByRole("button", { name: /^Choose / });
+    await user.click(choices[0]);
     expect(document.activeElement).toBe(beatWrapper());
   });
 
@@ -229,10 +280,29 @@ describe("WalkthroughShell", () => {
       },
     ],
     [
+      "triageStanding",
+      async (user: ReturnType<typeof userEvent.setup>) => {
+        await user.click(screen.getByRole("button", { name: "Show me how" }));
+        for (let i = 0; i < TRIAGE_ITEMS.length; i++) {
+          await user.click(screen.getByText("Love"));
+        }
+      },
+    ],
+    [
       "usage",
       async (user: ReturnType<typeof userEvent.setup>) => {
         await user.click(screen.getByRole("button", { name: "Show me how" }));
         await tapTiers(user);
+      },
+    ],
+    [
+      "usageStanding",
+      async (user: ReturnType<typeof userEvent.setup>) => {
+        await user.click(screen.getByRole("button", { name: "Show me how" }));
+        await tapTiers(user);
+        for (let i = 0; i < USAGE_ITEMS.length; i++) {
+          await user.click(screen.getByRole("button", { name: "Yes, I use it" }));
+        }
       },
     ],
     [
@@ -249,7 +319,7 @@ describe("WalkthroughShell", () => {
         await user.click(screen.getByRole("button", { name: "Show me how" }));
         await tapTiers(user);
         await passUsage(user);
-        await user.click(screen.getByText(COMPARE_PAIR[0].name));
+        await passCompare(user);
       },
     ],
     [
@@ -258,7 +328,7 @@ describe("WalkthroughShell", () => {
         await user.click(screen.getByRole("button", { name: "Show me how" }));
         await tapTiers(user);
         await passUsage(user);
-        await user.click(screen.getByText(COMPARE_PAIR[0].name));
+        await passCompare(user);
         await user.click(screen.getByRole("button", { name: "Continue" }));
       },
     ],
@@ -285,7 +355,7 @@ describe("WalkthroughShell", () => {
     await user.click(screen.getByRole("button", { name: "Show me how" }));
     await tapTiers(user);
     await passUsage(user);
-    await user.click(screen.getByText(COMPARE_PAIR[0].name));
+    await passCompare(user);
     await user.click(screen.getByRole("button", { name: "Continue" })); // standing -> refine
     await user.click(screen.getByRole("button", { name: "Continue" })); // refine -> handoff
     expect(screen.getByRole("heading", { name: "Now, your turn." })).toBeInTheDocument();
@@ -312,7 +382,7 @@ describe("WalkthroughShell", () => {
     // from the usage pass's longer "Skip for now — it'll come around again").
     expect(screen.getByRole("button", { name: "Leave tutorial" })).toBeInTheDocument();
     await passUsage(user);
-    await user.click(screen.getByText(COMPARE_PAIR[0].name));
+    await passCompare(user);
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
     // Handoff has its own explore affordance — no "Leave tutorial".

@@ -2,16 +2,36 @@
 
 import { useEffect, useRef, useState } from "react";
 import { dismissWelcome } from "./dismissal";
-import { TRIAGE_ITEMS, type CompareOutcome, type TriageOutcome } from "./sampleData";
+import {
+  comparePairsFor,
+  buildTriageStanding,
+  TRIAGE_ITEMS,
+  USAGE_ITEMS,
+  type CompareOutcome,
+  type CompareRoundResult,
+  type SampleItem,
+  type TriageOutcome,
+  type UsageOutcome,
+} from "./sampleData";
 import { WelcomePurpose } from "./WelcomePurpose";
 import { WelcomeTriage } from "./WelcomeTriage";
 import { WelcomeUsage } from "./WelcomeUsage";
 import { WelcomeCompare } from "./WelcomeCompare";
 import { WelcomeStanding } from "./WelcomeStanding";
+import { WelcomeRoundStanding } from "./WelcomeRoundStanding";
 import { WelcomeRefine } from "./WelcomeRefine";
 import { WelcomeHandoff } from "./WelcomeHandoff";
 
-type Beat = "purpose" | "triage" | "usage" | "compare" | "standing" | "refine" | "handoff";
+type Beat =
+  | "purpose"
+  | "triage"
+  | "triageStanding"
+  | "usage"
+  | "usageStanding"
+  | "compare"
+  | "standing"
+  | "refine"
+  | "handoff";
 
 // The walkthrough is client-only state: a step cursor plus the typed outcomes the
 // person taps. No API, no DB — the Standing beat reads these outcomes back.
@@ -19,16 +39,19 @@ export function WalkthroughShell() {
   const [beat, setBeat] = useState<Beat>("purpose");
   const [triageIndex, setTriageIndex] = useState(0);
   const [triageOutcomes, setTriageOutcomes] = useState<Record<string, TriageOutcome>>({});
-  const [compareOutcome, setCompareOutcome] = useState<CompareOutcome | null>(null);
+  const [usageIndex, setUsageIndex] = useState(0);
+  const [usageOutcomes, setUsageOutcomes] = useState<Record<string, UsageOutcome>>({});
+  const [compareIndex, setCompareIndex] = useState(0);
+  const [compareResults, setCompareResults] = useState<CompareRoundResult[]>([]);
 
   // Focus target: on every advance we move focus to the beat's wrapper (not a
   // labeled control) so a screen reader re-announces the region without stealing
-  // a control's focus semantics. Keyed on [beat, triageIndex] so a triage tier
-  // tap (which advances the index within the triage beat) re-focuses too.
+  // a control's focus semantics. Index dependencies cover advances within the
+  // same beat.
   const wrapperRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     wrapperRef.current?.focus();
-  }, [beat, triageIndex]);
+  }, [beat, triageIndex, usageIndex, compareIndex]);
 
   const goTo = (next: Beat) => {
     // Reaching the hand-off = the walkthrough was completed. Remember it so the
@@ -41,17 +64,44 @@ export function WalkthroughShell() {
   const handleTriageOutcome = (itemId: string, outcome: TriageOutcome) => {
     setTriageOutcomes((prev) => ({ ...prev, [itemId]: outcome }));
     // Every outcome — tier, defer, or set-aside — advances by index. The demo
-    // never re-queues, so three taps always reach the usage beat.
+    // never re-queues, so three taps always reach the first standing.
     if (triageIndex + 1 < TRIAGE_ITEMS.length) {
       setTriageIndex((i) => i + 1);
     } else {
-      goTo("usage");
+      goTo("triageStanding");
     }
   };
 
+  const handleUsageOutcome = (outcome: UsageOutcome) => {
+    const item = USAGE_ITEMS[usageIndex];
+    setUsageOutcomes((prev) => ({ ...prev, [item.id]: outcome }));
+    if (usageIndex + 1 < USAGE_ITEMS.length) {
+      setUsageIndex((i) => i + 1);
+    } else {
+      goTo("usageStanding");
+    }
+  };
+
+  const standingAfterTriage = buildTriageStanding(triageOutcomes);
+  const comparePairs = comparePairsFor(standingAfterTriage);
+  const currentComparePair: readonly [SampleItem, SampleItem] | null =
+    comparePairs[compareIndex] ?? null;
+
   const handleCompareOutcome = (outcome: CompareOutcome) => {
-    setCompareOutcome(outcome);
-    goTo("standing");
+    if (!currentComparePair) {
+      goTo("standing");
+      return;
+    }
+    const [left, right] = currentComparePair;
+    setCompareResults((prev) => [
+      ...prev,
+      { itemAId: left.id, itemBId: right.id, outcome },
+    ]);
+    if (compareIndex + 1 < comparePairs.length) {
+      setCompareIndex((i) => i + 1);
+    } else {
+      goTo("standing");
+    }
   };
 
   const exit = () => {
@@ -74,17 +124,36 @@ export function WalkthroughShell() {
         {beat === "triage" && (
           <WelcomeTriage index={triageIndex} onOutcome={handleTriageOutcome} />
         )}
-        {/* Usage is a pure teaching beat — the demo standing doesn't reflect it,
-            so any single tap (Yes / Not these days / Skip for now) advances. */}
-        {beat === "usage" && <WelcomeUsage onOutcome={() => goTo("compare")} />}
-        {beat === "compare" && <WelcomeCompare onOutcome={handleCompareOutcome} />}
-        {/* ponytail: standing is only reachable after a compare tap, so
-            compareOutcome is non-null here; the ?? "skip" fallback keeps the type
-            honest without an assertion. */}
+        {beat === "triageStanding" && (
+          <WelcomeRoundStanding
+            stage="triage"
+            triage={triageOutcomes}
+            onNext={() => goTo("usage")}
+          />
+        )}
+        {beat === "usage" && (
+          <WelcomeUsage item={USAGE_ITEMS[usageIndex]} onOutcome={handleUsageOutcome} />
+        )}
+        {beat === "usageStanding" && (
+          <WelcomeRoundStanding
+            stage="usage"
+            triage={triageOutcomes}
+            usageByItemId={usageOutcomes}
+            onNext={() => goTo(currentComparePair ? "compare" : "standing")}
+          />
+        )}
+        {beat === "compare" && currentComparePair && (
+          <WelcomeCompare
+            left={currentComparePair[0]}
+            right={currentComparePair[1]}
+            onOutcome={handleCompareOutcome}
+          />
+        )}
         {beat === "standing" && (
           <WelcomeStanding
-            compare={compareOutcome ?? { kind: "skip" }}
+            comparisons={compareResults}
             triage={triageOutcomes}
+            usageByItemId={usageOutcomes}
             onNext={() => goTo("refine")}
           />
         )}
