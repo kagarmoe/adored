@@ -16,12 +16,14 @@ export function WelcomePurpose({ onNext }: WelcomePurposeProps) {
       </h1>
       <p className="text-lg text-ink-soft max-w-md">
         Adored helps you build a collection from photos, make items when
-        you&rsquo;re ready, and notice what you love most through short rounds.
+        you&rsquo;re ready, and notice what you love most through three gentle sorts.
       </p>
       <div className="flex flex-col gap-1 max-w-md">
         <p className="text-ink-soft">Add photos to a collection.</p>
         <p className="text-ink-soft">Make items when you&rsquo;re ready.</p>
-        <p className="text-ink-soft">Sort in short rounds.</p>
+        <p className="text-ink-soft">Triage groups how you feel.</p>
+        <p className="text-ink-soft">Usage notes whether each piece is in your life.</p>
+        <p className="text-ink-soft">Compare puts pieces in order.</p>
         <p className="text-ink-soft">See what you love most.</p>
       </div>
       <Button size="lg" onClick={onNext}>

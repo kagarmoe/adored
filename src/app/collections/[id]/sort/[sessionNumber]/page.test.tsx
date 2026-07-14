@@ -2,6 +2,7 @@
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { ROUND_COPY } from "@/features/sorting/roundCopy";
 
 const { mockGetSession, mockRequireAccess, redirectMock, sessionRepo, decisionRepo, itemRepo, prefRepo, dispositionRepo, analyticsProps, recommendedProps } = vi.hoisted(() => ({
@@ -83,6 +84,7 @@ describe("SessionDetailPage resolution + integrity guard", () => {
     expect(redirectMock).not.toHaveBeenCalled();
     // Hub consumes the shared teaching copy — a hub-side fork of this string fails here.
     expect(screen.getByText(ROUND_COPY.triage.explainer)).toBeInTheDocument();
+    expect(screen.getByText("Choose any round. Each one adds another layer.")).toBeInTheDocument();
   });
   it("redirects when the user is not the session's curator — independent sort (purses-t9l)", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "s1", collectionId: "coll_REAL", number: 1, status: "active", curatorId: "someone_else" });
@@ -181,6 +183,24 @@ describe("SessionDetailPage — usage in the grid, one-read log, dual return", (
     const compare = screen.getByText(ROUND_COPY.compare.name);
     expect(triage.compareDocumentPosition(usage) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(usage.compareDocumentPosition(compare) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("opens and dismisses concise sort help without explaining detailed combination mechanics", async () => {
+    const user = userEvent.setup();
+    itemRepo.findByCollection.mockResolvedValue([makeItem("a", 1)]);
+
+    render(await SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) }));
+
+    expect(screen.queryByRole("dialog", { name: "How sorting works" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "How sorting works" }));
+
+    const dialog = screen.getByRole("dialog", { name: "How sorting works" });
+    expect(dialog).toBeInTheDocument();
+    expect(screen.getByText("Use one, two, or all three. Each sort stacks on the others.")).toBeInTheDocument();
+    expect(screen.queryByText(/Triage groups, Usage annotates, Compare orders/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Close sort help" }));
+    expect(screen.queryByRole("dialog", { name: "How sorting works" })).not.toBeInTheDocument();
   });
 
   it("does ONE curator-log read (listForCurator), never an extra per-session listBySession", async () => {

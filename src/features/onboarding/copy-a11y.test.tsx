@@ -26,7 +26,9 @@ describe("purpose journey line", () => {
     const text = container.textContent ?? "";
     expect(text).toContain("Add photos to a collection.");
     expect(text).toContain("Make items when you’re ready.");
-    expect(text).toContain("Sort in short rounds.");
+    expect(text).toContain("Triage groups how you feel.");
+    expect(text).toContain("Usage notes whether each piece is in your life.");
+    expect(text).toContain("Compare puts pieces in order.");
     expect(text).toContain("See what you love most.");
   });
 
@@ -36,7 +38,9 @@ describe("purpose journey line", () => {
     for (const phrase of [
       "Add photos to a collection.",
       "Make items when you’re ready.",
-      "Sort in short rounds.",
+      "Triage groups how you feel.",
+      "Usage notes whether each piece is in your life.",
+      "Compare puts pieces in order.",
       "See what you love most.",
     ]) {
       const p = Array.from(container.querySelectorAll("p")).find(

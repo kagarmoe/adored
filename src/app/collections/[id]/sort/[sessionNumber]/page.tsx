@@ -15,6 +15,7 @@ import { RecommendedRound } from "@/features/sessions/RecommendedRound";
 import { recommendNextRound, type NextRound } from "@/lib/next-round";
 import { ROUND_COPY } from "@/features/sorting/roundCopy";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
+import { SortHelpDialog } from "@/features/sorting/SortHelpDialog";
 import Link from "next/link";
 
 interface SessionPageProps {
@@ -106,12 +107,16 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
           from decision events — drain pending ones before trusting them. */}
       <PendingDecisionsGate curatorId={session.user.id}>
       <div className="space-y-8">
-        <div>
-          <h1 className="text-2xl text-ink sm:text-3xl">Sorting session</h1>
-          <p className="text-ink-soft mt-2">Goal: {sortSession.goal}</p>
-          <div className="mt-3">
-            <Badge variant={sortSession.status}>{sortSession.status}</Badge>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-2xl text-ink sm:text-3xl">Sorting session</h1>
+            <p className="mt-2 text-ink-soft">Choose any round. Each one adds another layer.</p>
+            <p className="mt-1 text-sm text-ink-soft">Goal: {sortSession.goal}</p>
+            <div className="mt-3">
+              <Badge variant={sortSession.status}>{sortSession.status}</Badge>
+            </div>
           </div>
+          <SortHelpDialog />
         </div>
 
         <RecommendedRound

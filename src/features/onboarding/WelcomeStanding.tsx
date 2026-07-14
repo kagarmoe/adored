@@ -37,6 +37,9 @@ export function WelcomeStanding({ compare, triage, onNext }: WelcomeStandingProp
       <h1 id={HEADING_ID} className="font-display text-3xl sm:text-4xl text-ink">
         Where things stand
       </h1>
+      <p className="max-w-md text-ink-soft">
+        Triage makes the groups. Usage adds a quiet note. Compare sets the order.
+      </p>
 
       {/* Most-loved hero: the winner leads under the "What you love most" eyebrow
          (the anti-marketplace reframe — from things you own). */}

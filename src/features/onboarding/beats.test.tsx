@@ -36,9 +36,12 @@ describe("WelcomePurpose", () => {
     expect(screen.getByRole("heading", { name: "Rediscover what you love." })).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Adored helps you build a collection from photos, make items when you.?re ready, and notice what you love most through short rounds\./
+        /Adored helps you build a collection from photos, make items when you.?re ready, and notice what you love most through three gentle sorts\./
       )
     ).toBeInTheDocument();
+    expect(screen.getByText(/Triage groups how you feel/i)).toBeInTheDocument();
+    expect(screen.getByText(/Usage notes whether each piece is in your life/i)).toBeInTheDocument();
+    expect(screen.getByText(/Compare puts pieces in order/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show me how" })).toBeInTheDocument();
   });
 
@@ -233,6 +236,15 @@ describe("WelcomeStanding", () => {
     const section = screen.getByRole("region", { name: /where things stand/i });
     const paras = within(section).getAllByText(/./, { selector: "p, h1, h3, li" });
     expect(paras[paras.length - 1]).toHaveTextContent("What you love most is at the top.");
+  });
+
+  it("explains how the three sorts combine in the tutorial payoff", () => {
+    render(<WelcomeStanding compare={win} triage={{}} onNext={vi.fn()} />);
+    expect(
+      screen.getByText(
+        "Triage makes the groups. Usage adds a quiet note. Compare sets the order."
+      )
+    ).toBeInTheDocument();
   });
 
   it("shows 'Where these go next' for onward-tier items, and omits it when none", () => {
