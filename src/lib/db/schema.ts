@@ -199,10 +199,6 @@ export const sessionsTable = pgTable(
   (table) => ({
     collectionIdx: index("sessions_collection_id_idx").on(table.collectionId),
     curatorIdx: index("sessions_curator_id_idx").on(table.curatorId),
-    // Partial unique: only ONE in-progress session per (collection,curator).
-    // Terminal/soft-deleted rows free the slot. drizzle-kit 0.20.17 (snapshot
-    // v5) cannot serialize this predicate, so migration 0009 is hand-authored;
-    // this .where() records the intended truth.
     activeIdx: uniqueIndex("sessions_active_unique")
       .on(table.collectionId, table.curatorId)
       .where(
