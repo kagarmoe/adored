@@ -18,24 +18,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
-        "commitHash": "5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29225223090"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/e6728cb8d164758941596de8aac59fc16f53376d",
+        "commitHash": "e6728cb8d164758941596de8aac59fc16f53376d",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29307645099"
       },
       "gitCommit": {
-        "shortHash": "5054ba3",
-        "hash": "5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
-        "subject": "feat: tooling batch + every remaining epic follow-up — zero suppressions, zero known vulns (purses-9oxh.7 + 9 more) (#335)",
-        "body": "feat: tooling batch + every remaining epic follow-up — zero suppressions, zero known vulns (purses-9oxh.7 + 9 more) (#335)\n\n* feat(deps): tooling batch — TS 6, Vite 8, ulid 3, dotenv 17, @types/node 24; Node truth aligned (purses-9oxh.7 + .1)\n\ntypescript 6.0.3 (tsc baseline 97 -> 97, zero new errors), vite 8.1.0 +\nplugin-react 6.0.3, dotenv 17.4.2, ulid 3.0.2 with its lexicographic\nordering PINNED (decision-order.test.ts, seed-time deterministic —\nranking replay ties on id). Node truth from the authoritative source:\nVercel project nodeVersion 24.x; .nvmrc + all 7 CI jobs 22 -> 24;\nengines was already right; @types/node ^20 -> ^24.13.2. All picks\nquarantine-selected. TWO recorded holds, bead-owned: TS 7\n(typescript-eslint <6.1.0 peer cap) and ESLint 10 (purses-9oxh.11 —\neslint-config-next@16's nested eslint-plugin-react calls the removed\ncontext.getFilename; peers said >=9, runtime said no). .claude/**\nadded to eslint ignores (stale worktree node_modules crash vector).\nARCHITECTURE decision 38; osv esbuild ignore revisited and re-pointed.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(db): NOT NULL the columns the code already guarantees; kill row:any at the mapper boundary\n\npurses-mebk.2 + purses-22rp, and the second found the third:\n- sessions.number, sort_results.number -> NOT NULL (both allocated at INSERT;\n  a NULL was already unreachable). Empty DB = a metadata-only ALTER, which is\n  exactly why the bead said do it now.\n- photos.is_hero -> NOT NULL. Found by removing `row: any`: the column was\n  `boolean | null` while Photo.isHero promised `boolean` — the SAME laundering\n  the number columns had. `any` at the DB boundary defeats the guarantee the\n  NOT NULL work exists to buy.\n- Every repository mapper now takes `typeof <table>.$inferSelect` instead of\n  `any`. That surfaced: a numeric/string write mismatch on score+confidence\n  (drizzle reads AND writes numeric as string), dead `?? null` coalesces on\n  columns that were never null, and union narrowings the `any` was silently\n  supplying. Proven to bite: flipping a domain field's nullability now fails\n  the build where it used to compile in silence.\n- purses-mebk.1: scripts/migration-hashes.test.ts pins the SHA-256 of every\n  committed migration. drizzle's migrator compares only the journal timestamp\n  and NEVER reads the hash back, so an edited/re-baselined migration replays\n  silently — green CI, red prod deploy. Mutation-proven: one changed byte reds it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(react): re-enable the react-hooks compiler rules — 25 sites fixed, zero suppressions\n\npurses-9oxh.8. The eslint-config-next@16 bump enabled react-hooks@7's\ncompiler rules (set-state-in-effect, purity, refs) as errors; the tailwind PR\nparked them behind a temporary disable block. Block deleted, every site fixed\non its merits — no eslint-disable comments anywhere:\n- device-local reads in mount effects -> useSyncExternalStore (src/lib/useDeviceValue.ts);\n  useReducedMotion rewritten on it, since a media query genuinely IS an external store\n- Date.now() during render -> useState lazy initializer (a mount-fixed clock,\n  which is what the code always meant)\n- refs read/written during render -> state snapshots, or moved into effects\n  declared above their readers so commit order is unchanged\n\nPlus purses-q228, which turned out to be two bugs, not one flake:\n- the spec waited on page.waitForResponse (resolves when Playwright's network\n  layer sees the response) while the app clears the queue strictly later, after\n  a second async body read inside a web lock. Now polls the real signal.\n- the stumble line rendered CONDITIONALLY above the card, shifting the answer\n  buttons under the user's finger — the intercepting-<img> click failure. It was\n  also a role=status region mounted with its content, which AT never announces.\n  Now persistently mounted at fixed height: a11y fix, UX fix, flake fix.\nVerified 5/5 consecutive full-spec runs (and 10/10 repeat-each on the pagehide test).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(deps): both osv advisories FIXED, not ignored — osv-scanner.toml deleted\n\npurses-9oxh.9 + the esbuild ignore. The repo now carries ZERO suppressions and\nZERO known vulnerabilities; the ignore file is gone entirely.\n- postcss 8.4.31 (pinned inside next@16, GHSA-qx2v-qp2m-jg93): overrides\n  {\"postcss\": \"$postcss\"} + direct dep ^8.5.18. npm REJECTS a bare override that\n  conflicts with a direct dependency — the $name reference form is the correct\n  one. Tree now resolves to a single postcss 8.5.18.\n- esbuild 0.18.20 (GHSA-67mh-4wv8-2f99): dragged in by @esbuild-kit/core-utils,\n  which is DEPRECATED (\"Merged into tsx\", last published 2023-09) and which\n  drizzle-kit STILL depends on at its latest version — no upgrade escapes it.\n  Scoped override to 0.25.12, the version drizzle-kit already uses at top level.\n  Proven, not hoped: `npm run db:generate` runs clean against it.\n- scripts/overrides.test.ts is the tripwire: it FAILS if drizzle-kit ever drops\n  @esbuild-kit (delete the override then, don't carry it forever) or if either\n  override stops applying. An override with no reason left is a silent lie.\n- purses-9oxh.10: @theme -> @theme inline; the tool's border-color compat shim\n  deleted (zero bare borders exist). purses-mebk.3: dead db:backfill-slugs\n  script + README line deleted.\nARCHITECTURE decisions 38-39.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(e2e): poll the queue's real completion signal, not the network response (purses-q228)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* chore: graphify update at PR boundary\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: sync the living docs to the new state (decisions 35 superseded, 40 added)\n\n/sync-docs pass the PR was missing:\n- ARCHITECTURE 35 asserted a committed osv-scanner.toml as current; the file\n  is deleted (39 supersedes). Marked, not silently rewritten.\n- DEPLOYMENT said findings are ignored 'only via the committed toml' — there\n  is no toml and no suppressions now, so ANY finding is a real finding.\n- NEW decision 40: the NOT NULL columns + row:any removal had no entry at all.\n  They are one finding, not two — photos.is_hero was FOUND by removing the any.\n\ndocs/superpowers/** deliberately untouched: specs, plans and the handoff are\nfrozen historical records; rewriting them would falsify the account.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: DATABASE.md — this repo's DB conventions as they are today (purses-06a, purses-vg8w)\n\npurses-06a asked for a PROJECT-SPECIFIC reference (a prior attempt was\nrejected as generic filler). Current state, not history: PK/ULID convention\nand its load-bearing lexicographic ordering, soft-delete and the\nfindByIdIncludingDeleted purge rule, the catalog-number unique indexes, the\npartial unique indexes and the every-writer-into-the-slot rule, the CHECK\nconstraint, FK cascade vs no-cascade vs no-FK-by-design (audit_log), and\nwhich columns are NOT NULL vs nullable and why. Migration section is a\nWORKFLOW, with the three traps that actually bite: dotenv silently targets\ndev; vercel-build auto-migrates prod at build time (⇒ expand/contract for\ndestructive DDL); the migrator never reads the recorded hash back (⇒\nscripts/migration-hashes.test.ts). The decision history stays in\nARCHITECTURE's log — this page does not repeat it.\n\npurses-vg8w resolved: DEPLOYMENT.md claimed the e2e Postgres uses a\nworktree-derived slot/port and that CI no longer pins DATABASE_URL_TEST.\nBOTH false — test-db.sh:20-22 hardcodes pi-e2e-db/:5433 and ci.yml:482 pins\nit. The doc described an unshipped design; the code was right. Fixed the\ndoc, and distinguished the e2e container from db-tests' :5432 service.\n\nDeliberately NOT written: an ERD/data dictionary (it would be a\nhand-maintained duplicate of schema.ts that rots), and Neon backup product\ndetail that isn't verifiable from the repo. Omitted rather than invented.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+        "shortHash": "e6728cb",
+        "hash": "e6728cb8d164758941596de8aac59fc16f53376d",
+        "subject": "refactor(auth): standardize on google login (#338)",
+        "body": "refactor(auth): standardize on google login (#338)",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1783918778000
+          "time": 1784005575000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1783918778000
+          "time": 1784005575000
         },
         "branch": "main"
       },
@@ -49,24 +49,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
-            "commitHash": "5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29225223090"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/e6728cb8d164758941596de8aac59fc16f53376d",
+            "commitHash": "e6728cb8d164758941596de8aac59fc16f53376d",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29307645099"
           },
           "gitCommit": {
-            "shortHash": "5054ba3",
-            "hash": "5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
-            "subject": "feat: tooling batch + every remaining epic follow-up — zero suppressions, zero known vulns (purses-9oxh.7 + 9 more) (#335)",
-            "body": "feat: tooling batch + every remaining epic follow-up — zero suppressions, zero known vulns (purses-9oxh.7 + 9 more) (#335)\n\n* feat(deps): tooling batch — TS 6, Vite 8, ulid 3, dotenv 17, @types/node 24; Node truth aligned (purses-9oxh.7 + .1)\n\ntypescript 6.0.3 (tsc baseline 97 -> 97, zero new errors), vite 8.1.0 +\nplugin-react 6.0.3, dotenv 17.4.2, ulid 3.0.2 with its lexicographic\nordering PINNED (decision-order.test.ts, seed-time deterministic —\nranking replay ties on id). Node truth from the authoritative source:\nVercel project nodeVersion 24.x; .nvmrc + all 7 CI jobs 22 -> 24;\nengines was already right; @types/node ^20 -> ^24.13.2. All picks\nquarantine-selected. TWO recorded holds, bead-owned: TS 7\n(typescript-eslint <6.1.0 peer cap) and ESLint 10 (purses-9oxh.11 —\neslint-config-next@16's nested eslint-plugin-react calls the removed\ncontext.getFilename; peers said >=9, runtime said no). .claude/**\nadded to eslint ignores (stale worktree node_modules crash vector).\nARCHITECTURE decision 38; osv esbuild ignore revisited and re-pointed.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(db): NOT NULL the columns the code already guarantees; kill row:any at the mapper boundary\n\npurses-mebk.2 + purses-22rp, and the second found the third:\n- sessions.number, sort_results.number -> NOT NULL (both allocated at INSERT;\n  a NULL was already unreachable). Empty DB = a metadata-only ALTER, which is\n  exactly why the bead said do it now.\n- photos.is_hero -> NOT NULL. Found by removing `row: any`: the column was\n  `boolean | null` while Photo.isHero promised `boolean` — the SAME laundering\n  the number columns had. `any` at the DB boundary defeats the guarantee the\n  NOT NULL work exists to buy.\n- Every repository mapper now takes `typeof <table>.$inferSelect` instead of\n  `any`. That surfaced: a numeric/string write mismatch on score+confidence\n  (drizzle reads AND writes numeric as string), dead `?? null` coalesces on\n  columns that were never null, and union narrowings the `any` was silently\n  supplying. Proven to bite: flipping a domain field's nullability now fails\n  the build where it used to compile in silence.\n- purses-mebk.1: scripts/migration-hashes.test.ts pins the SHA-256 of every\n  committed migration. drizzle's migrator compares only the journal timestamp\n  and NEVER reads the hash back, so an edited/re-baselined migration replays\n  silently — green CI, red prod deploy. Mutation-proven: one changed byte reds it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(react): re-enable the react-hooks compiler rules — 25 sites fixed, zero suppressions\n\npurses-9oxh.8. The eslint-config-next@16 bump enabled react-hooks@7's\ncompiler rules (set-state-in-effect, purity, refs) as errors; the tailwind PR\nparked them behind a temporary disable block. Block deleted, every site fixed\non its merits — no eslint-disable comments anywhere:\n- device-local reads in mount effects -> useSyncExternalStore (src/lib/useDeviceValue.ts);\n  useReducedMotion rewritten on it, since a media query genuinely IS an external store\n- Date.now() during render -> useState lazy initializer (a mount-fixed clock,\n  which is what the code always meant)\n- refs read/written during render -> state snapshots, or moved into effects\n  declared above their readers so commit order is unchanged\n\nPlus purses-q228, which turned out to be two bugs, not one flake:\n- the spec waited on page.waitForResponse (resolves when Playwright's network\n  layer sees the response) while the app clears the queue strictly later, after\n  a second async body read inside a web lock. Now polls the real signal.\n- the stumble line rendered CONDITIONALLY above the card, shifting the answer\n  buttons under the user's finger — the intercepting-<img> click failure. It was\n  also a role=status region mounted with its content, which AT never announces.\n  Now persistently mounted at fixed height: a11y fix, UX fix, flake fix.\nVerified 5/5 consecutive full-spec runs (and 10/10 repeat-each on the pagehide test).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(deps): both osv advisories FIXED, not ignored — osv-scanner.toml deleted\n\npurses-9oxh.9 + the esbuild ignore. The repo now carries ZERO suppressions and\nZERO known vulnerabilities; the ignore file is gone entirely.\n- postcss 8.4.31 (pinned inside next@16, GHSA-qx2v-qp2m-jg93): overrides\n  {\"postcss\": \"$postcss\"} + direct dep ^8.5.18. npm REJECTS a bare override that\n  conflicts with a direct dependency — the $name reference form is the correct\n  one. Tree now resolves to a single postcss 8.5.18.\n- esbuild 0.18.20 (GHSA-67mh-4wv8-2f99): dragged in by @esbuild-kit/core-utils,\n  which is DEPRECATED (\"Merged into tsx\", last published 2023-09) and which\n  drizzle-kit STILL depends on at its latest version — no upgrade escapes it.\n  Scoped override to 0.25.12, the version drizzle-kit already uses at top level.\n  Proven, not hoped: `npm run db:generate` runs clean against it.\n- scripts/overrides.test.ts is the tripwire: it FAILS if drizzle-kit ever drops\n  @esbuild-kit (delete the override then, don't carry it forever) or if either\n  override stops applying. An override with no reason left is a silent lie.\n- purses-9oxh.10: @theme -> @theme inline; the tool's border-color compat shim\n  deleted (zero bare borders exist). purses-mebk.3: dead db:backfill-slugs\n  script + README line deleted.\nARCHITECTURE decisions 38-39.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(e2e): poll the queue's real completion signal, not the network response (purses-q228)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* chore: graphify update at PR boundary\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: sync the living docs to the new state (decisions 35 superseded, 40 added)\n\n/sync-docs pass the PR was missing:\n- ARCHITECTURE 35 asserted a committed osv-scanner.toml as current; the file\n  is deleted (39 supersedes). Marked, not silently rewritten.\n- DEPLOYMENT said findings are ignored 'only via the committed toml' — there\n  is no toml and no suppressions now, so ANY finding is a real finding.\n- NEW decision 40: the NOT NULL columns + row:any removal had no entry at all.\n  They are one finding, not two — photos.is_hero was FOUND by removing the any.\n\ndocs/superpowers/** deliberately untouched: specs, plans and the handoff are\nfrozen historical records; rewriting them would falsify the account.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: DATABASE.md — this repo's DB conventions as they are today (purses-06a, purses-vg8w)\n\npurses-06a asked for a PROJECT-SPECIFIC reference (a prior attempt was\nrejected as generic filler). Current state, not history: PK/ULID convention\nand its load-bearing lexicographic ordering, soft-delete and the\nfindByIdIncludingDeleted purge rule, the catalog-number unique indexes, the\npartial unique indexes and the every-writer-into-the-slot rule, the CHECK\nconstraint, FK cascade vs no-cascade vs no-FK-by-design (audit_log), and\nwhich columns are NOT NULL vs nullable and why. Migration section is a\nWORKFLOW, with the three traps that actually bite: dotenv silently targets\ndev; vercel-build auto-migrates prod at build time (⇒ expand/contract for\ndestructive DDL); the migrator never reads the recorded hash back (⇒\nscripts/migration-hashes.test.ts). The decision history stays in\nARCHITECTURE's log — this page does not repeat it.\n\npurses-vg8w resolved: DEPLOYMENT.md claimed the e2e Postgres uses a\nworktree-derived slot/port and that CI no longer pins DATABASE_URL_TEST.\nBOTH false — test-db.sh:20-22 hardcodes pi-e2e-db/:5433 and ci.yml:482 pins\nit. The doc described an unshipped design; the code was right. Fixed the\ndoc, and distinguished the e2e container from db-tests' :5432 service.\n\nDeliberately NOT written: an ERD/data dictionary (it would be a\nhand-maintained duplicate of schema.ts that rots), and Neon backup product\ndetail that isn't verifiable from the repo. Omitted rather than invented.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "e6728cb",
+            "hash": "e6728cb8d164758941596de8aac59fc16f53376d",
+            "subject": "refactor(auth): standardize on google login (#338)",
+            "body": "refactor(auth): standardize on google login (#338)",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783918778000
+              "time": 1784005575000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783918778000
+              "time": 1784005575000
             },
             "branch": "main"
           },
@@ -87,24 +87,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
-            "commitHash": "5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29225223090"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/e6728cb8d164758941596de8aac59fc16f53376d",
+            "commitHash": "e6728cb8d164758941596de8aac59fc16f53376d",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29307645099"
           },
           "gitCommit": {
-            "shortHash": "5054ba3",
-            "hash": "5054ba306ab8f833480a3d301ecd1ea07d9b0bb2",
-            "subject": "feat: tooling batch + every remaining epic follow-up — zero suppressions, zero known vulns (purses-9oxh.7 + 9 more) (#335)",
-            "body": "feat: tooling batch + every remaining epic follow-up — zero suppressions, zero known vulns (purses-9oxh.7 + 9 more) (#335)\n\n* feat(deps): tooling batch — TS 6, Vite 8, ulid 3, dotenv 17, @types/node 24; Node truth aligned (purses-9oxh.7 + .1)\n\ntypescript 6.0.3 (tsc baseline 97 -> 97, zero new errors), vite 8.1.0 +\nplugin-react 6.0.3, dotenv 17.4.2, ulid 3.0.2 with its lexicographic\nordering PINNED (decision-order.test.ts, seed-time deterministic —\nranking replay ties on id). Node truth from the authoritative source:\nVercel project nodeVersion 24.x; .nvmrc + all 7 CI jobs 22 -> 24;\nengines was already right; @types/node ^20 -> ^24.13.2. All picks\nquarantine-selected. TWO recorded holds, bead-owned: TS 7\n(typescript-eslint <6.1.0 peer cap) and ESLint 10 (purses-9oxh.11 —\neslint-config-next@16's nested eslint-plugin-react calls the removed\ncontext.getFilename; peers said >=9, runtime said no). .claude/**\nadded to eslint ignores (stale worktree node_modules crash vector).\nARCHITECTURE decision 38; osv esbuild ignore revisited and re-pointed.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* feat(db): NOT NULL the columns the code already guarantees; kill row:any at the mapper boundary\n\npurses-mebk.2 + purses-22rp, and the second found the third:\n- sessions.number, sort_results.number -> NOT NULL (both allocated at INSERT;\n  a NULL was already unreachable). Empty DB = a metadata-only ALTER, which is\n  exactly why the bead said do it now.\n- photos.is_hero -> NOT NULL. Found by removing `row: any`: the column was\n  `boolean | null` while Photo.isHero promised `boolean` — the SAME laundering\n  the number columns had. `any` at the DB boundary defeats the guarantee the\n  NOT NULL work exists to buy.\n- Every repository mapper now takes `typeof <table>.$inferSelect` instead of\n  `any`. That surfaced: a numeric/string write mismatch on score+confidence\n  (drizzle reads AND writes numeric as string), dead `?? null` coalesces on\n  columns that were never null, and union narrowings the `any` was silently\n  supplying. Proven to bite: flipping a domain field's nullability now fails\n  the build where it used to compile in silence.\n- purses-mebk.1: scripts/migration-hashes.test.ts pins the SHA-256 of every\n  committed migration. drizzle's migrator compares only the journal timestamp\n  and NEVER reads the hash back, so an edited/re-baselined migration replays\n  silently — green CI, red prod deploy. Mutation-proven: one changed byte reds it.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(react): re-enable the react-hooks compiler rules — 25 sites fixed, zero suppressions\n\npurses-9oxh.8. The eslint-config-next@16 bump enabled react-hooks@7's\ncompiler rules (set-state-in-effect, purity, refs) as errors; the tailwind PR\nparked them behind a temporary disable block. Block deleted, every site fixed\non its merits — no eslint-disable comments anywhere:\n- device-local reads in mount effects -> useSyncExternalStore (src/lib/useDeviceValue.ts);\n  useReducedMotion rewritten on it, since a media query genuinely IS an external store\n- Date.now() during render -> useState lazy initializer (a mount-fixed clock,\n  which is what the code always meant)\n- refs read/written during render -> state snapshots, or moved into effects\n  declared above their readers so commit order is unchanged\n\nPlus purses-q228, which turned out to be two bugs, not one flake:\n- the spec waited on page.waitForResponse (resolves when Playwright's network\n  layer sees the response) while the app clears the queue strictly later, after\n  a second async body read inside a web lock. Now polls the real signal.\n- the stumble line rendered CONDITIONALLY above the card, shifting the answer\n  buttons under the user's finger — the intercepting-<img> click failure. It was\n  also a role=status region mounted with its content, which AT never announces.\n  Now persistently mounted at fixed height: a11y fix, UX fix, flake fix.\nVerified 5/5 consecutive full-spec runs (and 10/10 repeat-each on the pagehide test).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* fix(deps): both osv advisories FIXED, not ignored — osv-scanner.toml deleted\n\npurses-9oxh.9 + the esbuild ignore. The repo now carries ZERO suppressions and\nZERO known vulnerabilities; the ignore file is gone entirely.\n- postcss 8.4.31 (pinned inside next@16, GHSA-qx2v-qp2m-jg93): overrides\n  {\"postcss\": \"$postcss\"} + direct dep ^8.5.18. npm REJECTS a bare override that\n  conflicts with a direct dependency — the $name reference form is the correct\n  one. Tree now resolves to a single postcss 8.5.18.\n- esbuild 0.18.20 (GHSA-67mh-4wv8-2f99): dragged in by @esbuild-kit/core-utils,\n  which is DEPRECATED (\"Merged into tsx\", last published 2023-09) and which\n  drizzle-kit STILL depends on at its latest version — no upgrade escapes it.\n  Scoped override to 0.25.12, the version drizzle-kit already uses at top level.\n  Proven, not hoped: `npm run db:generate` runs clean against it.\n- scripts/overrides.test.ts is the tripwire: it FAILS if drizzle-kit ever drops\n  @esbuild-kit (delete the override then, don't carry it forever) or if either\n  override stops applying. An override with no reason left is a silent lie.\n- purses-9oxh.10: @theme -> @theme inline; the tool's border-color compat shim\n  deleted (zero bare borders exist). purses-mebk.3: dead db:backfill-slugs\n  script + README line deleted.\nARCHITECTURE decisions 38-39.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* test(e2e): poll the queue's real completion signal, not the network response (purses-q228)\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* chore: graphify update at PR boundary\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: sync the living docs to the new state (decisions 35 superseded, 40 added)\n\n/sync-docs pass the PR was missing:\n- ARCHITECTURE 35 asserted a committed osv-scanner.toml as current; the file\n  is deleted (39 supersedes). Marked, not silently rewritten.\n- DEPLOYMENT said findings are ignored 'only via the committed toml' — there\n  is no toml and no suppressions now, so ANY finding is a real finding.\n- NEW decision 40: the NOT NULL columns + row:any removal had no entry at all.\n  They are one finding, not two — photos.is_hero was FOUND by removing the any.\n\ndocs/superpowers/** deliberately untouched: specs, plans and the handoff are\nfrozen historical records; rewriting them would falsify the account.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n* docs: DATABASE.md — this repo's DB conventions as they are today (purses-06a, purses-vg8w)\n\npurses-06a asked for a PROJECT-SPECIFIC reference (a prior attempt was\nrejected as generic filler). Current state, not history: PK/ULID convention\nand its load-bearing lexicographic ordering, soft-delete and the\nfindByIdIncludingDeleted purge rule, the catalog-number unique indexes, the\npartial unique indexes and the every-writer-into-the-slot rule, the CHECK\nconstraint, FK cascade vs no-cascade vs no-FK-by-design (audit_log), and\nwhich columns are NOT NULL vs nullable and why. Migration section is a\nWORKFLOW, with the three traps that actually bite: dotenv silently targets\ndev; vercel-build auto-migrates prod at build time (⇒ expand/contract for\ndestructive DDL); the migrator never reads the recorded hash back (⇒\nscripts/migration-hashes.test.ts). The decision history stays in\nARCHITECTURE's log — this page does not repeat it.\n\npurses-vg8w resolved: DEPLOYMENT.md claimed the e2e Postgres uses a\nworktree-derived slot/port and that CI no longer pins DATABASE_URL_TEST.\nBOTH false — test-db.sh:20-22 hardcodes pi-e2e-db/:5433 and ci.yml:482 pins\nit. The doc described an unshipped design; the code was right. Fixed the\ndoc, and distinguished the e2e container from db-tests' :5432 service.\n\nDeliberately NOT written: an ERD/data dictionary (it would be a\nhand-maintained duplicate of schema.ts that rots), and Neon backup product\ndetail that isn't verifiable from the repo. Omitted rather than invented.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CFBKAkT5Z2b8uamK46Yepa\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+            "shortHash": "e6728cb",
+            "hash": "e6728cb8d164758941596de8aac59fc16f53376d",
+            "subject": "refactor(auth): standardize on google login (#338)",
+            "body": "refactor(auth): standardize on google login (#338)",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1783918778000
+              "time": 1784005575000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1783918778000
+              "time": 1784005575000
             },
             "branch": "main"
           },
@@ -187,12 +187,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 270,
+                  "duration": 192,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:01:49.593Z",
+                  "startTime": "2026-07-14T05:08:33.229Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -202,7 +202,7 @@
           ],
           "id": "17e3fe6f4d9d8bd79c6b-60f085b113a677673906",
           "file": "auth.setup.ts",
-          "line": 56,
+          "line": 57,
           "column": 6
         }
       ]
@@ -229,7 +229,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 25180,
+                  "duration": 20136,
                   "errors": [],
                   "stdout": [
                     {
@@ -259,7 +259,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:01:50.581Z",
+                  "startTime": "2026-07-14T05:08:34.169Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -288,14 +288,14 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 15546,
+                  "duration": 30133,
                   "errors": [],
                   "stdout": [
                     {
                       "text": "[a11y] collections/dark: 21 checks passed, 0 violation(s)\n"
                     },
                     {
-                      "text": "[a11y] collection-workspace/dark: 24 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] collection-workspace/dark: 21 checks passed, 0 violation(s)\n"
                     },
                     {
                       "text": "[a11y] items/dark: 21 checks passed, 0 violation(s)\n"
@@ -318,7 +318,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:02:16.936Z",
+                  "startTime": "2026-07-14T05:08:55.488Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -332,7 +332,7 @@
           "column": 7
         },
         {
-          "title": "a11y: unauthenticated login/signup — no serious/critical violations (light)",
+          "title": "a11y: unauthenticated login — no serious/critical violations (light)",
           "ok": true,
           "tags": [],
           "tests": [
@@ -347,19 +347,16 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3058,
+                  "duration": 2813,
                   "errors": [],
                   "stdout": [
                     {
-                      "text": "[a11y] login/light: 22 checks passed, 0 violation(s)\n"
-                    },
-                    {
-                      "text": "[a11y] signup/light: 23 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] login/light: 17 checks passed, 0 violation(s)\n"
                     }
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:02:32.499Z",
+                  "startTime": "2026-07-14T05:09:25.643Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -367,13 +364,13 @@
               "status": "expected"
             }
           ],
-          "id": "aa3ad05f8c0e05077efb-1a1a26433da99649655d",
+          "id": "aa3ad05f8c0e05077efb-e4dd77b7eeac3ab31464",
           "file": "a11y.spec.ts",
           "line": 133,
           "column": 7
         },
         {
-          "title": "a11y: unauthenticated login/signup — no serious/critical violations (dark)",
+          "title": "a11y: unauthenticated login — no serious/critical violations (dark)",
           "ok": true,
           "tags": [],
           "tests": [
@@ -388,19 +385,16 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2648,
+                  "duration": 1754,
                   "errors": [],
                   "stdout": [
                     {
-                      "text": "[a11y] login/dark: 22 checks passed, 0 violation(s)\n"
-                    },
-                    {
-                      "text": "[a11y] signup/dark: 23 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] login/dark: 17 checks passed, 0 violation(s)\n"
                     }
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:02:35.573Z",
+                  "startTime": "2026-07-14T05:09:28.468Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -408,7 +402,7 @@
               "status": "expected"
             }
           ],
-          "id": "aa3ad05f8c0e05077efb-8868d6b6bbb8cb64f690",
+          "id": "aa3ad05f8c0e05077efb-a92bbce8d7ae6ee22f51",
           "file": "a11y.spec.ts",
           "line": 133,
           "column": 7
@@ -437,12 +431,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2153,
+                  "duration": 2844,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:02:38.247Z",
+                  "startTime": "2026-07-14T05:09:30.280Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -470,77 +464,18 @@
                 {
                   "workerIndex": 1,
                   "parallelIndex": 0,
-                  "status": "failed",
-                  "duration": 1437,
-                  "error": {
-                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mnull\u001b[39m",
-                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mnull\u001b[39m\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts:54:23",
-                    "location": {
-                      "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts",
-                      "column": 23,
-                      "line": 54
-                    },
-                    "snippet": "\u001b[0m \u001b[90m 52 |\u001b[39m   \u001b[36mconst\u001b[39m poolBox \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m poolHeading\u001b[33m.\u001b[39mboundingBox()\u001b[33m;\u001b[39m\n \u001b[90m 53 |\u001b[39m   \u001b[36mconst\u001b[39m itemsBox \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m itemsHeading\u001b[33m.\u001b[39mboundingBox()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 54 |\u001b[39m   expect(poolBox)\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoBeNull()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                       \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 55 |\u001b[39m   expect(itemsBox)\u001b[33m.\u001b[39mnot\u001b[33m.\u001b[39mtoBeNull()\u001b[33m;\u001b[39m\n \u001b[90m 56 |\u001b[39m   expect(poolBox\u001b[33m!\u001b[39m\u001b[33m.\u001b[39my)\u001b[33m.\u001b[39mtoBeLessThan(itemsBox\u001b[33m!\u001b[39m\u001b[33m.\u001b[39my)\u001b[33m;\u001b[39m\n \u001b[90m 57 |\u001b[39m\u001b[0m"
-                  },
-                  "errors": [
-                    {
-                      "location": {
-                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts",
-                        "column": 23,
-                        "line": 54
-                      },
-                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mnull\u001b[39m\n\n  52 |   const poolBox = await poolHeading.boundingBox();\n  53 |   const itemsBox = await itemsHeading.boundingBox();\n> 54 |   expect(poolBox).not.toBeNull();\n     |                       ^\n  55 |   expect(itemsBox).not.toBeNull();\n  56 |   expect(poolBox!.y).toBeLessThan(itemsBox!.y);\n  57 |\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts:54:23"
-                    }
-                  ],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-07-13T05:02:40.461Z",
-                  "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "screenshot",
-                      "contentType": "image/png",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-bc142-with-the-item-preview-shown-tablet/test-failed-1.png"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-bc142-with-the-item-preview-shown-tablet/error-context.md"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-bc142-with-the-item-preview-shown-tablet/error-context.md"
-                    }
-                  ],
-                  "errorLocation": {
-                    "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/adaptive-collection-workspace.spec.ts",
-                    "column": 23,
-                    "line": 54
-                  }
-                },
-                {
-                  "workerIndex": 2,
-                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1651,
+                  "duration": 1476,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
-                  "retry": 1,
-                  "startTime": "2026-07-13T05:02:42.924Z",
+                  "retry": 0,
+                  "startTime": "2026-07-14T05:09:33.246Z",
                   "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "trace",
-                      "contentType": "application/zip",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/adaptive-collection-worksp-bc142-with-the-item-preview-shown-tablet-retry1/trace.zip"
-                    }
-                  ]
+                  "attachments": []
                 }
               ],
-              "status": "flaky"
+              "status": "expected"
             }
           ],
           "id": "8459740f6655c8183518-2b373200665c8b3bee19",
@@ -561,15 +496,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1348,
+                  "duration": 1884,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:02:44.824Z",
+                  "startTime": "2026-07-14T05:09:34.747Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -595,15 +530,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1034,
+                  "duration": 1218,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:02:46.200Z",
+                  "startTime": "2026-07-14T05:09:36.662Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -629,15 +564,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1109,
+                  "duration": 1322,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:02:47.259Z",
+                  "startTime": "2026-07-14T05:09:37.910Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -659,7 +594,7 @@
       "line": 0,
       "specs": [
         {
-          "title": "UI login redirects to /collections and the session survives middleware",
+          "title": "authenticated storageState reaches /collections",
           "ok": true,
           "tags": [],
           "tests": [
@@ -671,15 +606,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1901,
+                  "duration": 1497,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:02:48.467Z",
+                  "startTime": "2026-07-14T05:09:39.352Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -687,13 +622,13 @@
               "status": "expected"
             }
           ],
-          "id": "b1138252f0945470f4d3-ca2e3c643849ce5b5d71",
+          "id": "b1138252f0945470f4d3-8ed9137cfee9fae7bdf1",
           "file": "auth-navigation.spec.ts",
-          "line": 33,
+          "line": 19,
           "column": 5
         },
         {
-          "title": "after UI login, direct navigation to a protected route stays authenticated",
+          "title": "authenticated storageState survives a fresh protected navigation",
           "ok": true,
           "tags": [],
           "tests": [
@@ -705,15 +640,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2027,
+                  "duration": 1934,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:02:50.427Z",
+                  "startTime": "2026-07-14T05:09:40.886Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -721,9 +656,9 @@
               "status": "expected"
             }
           ],
-          "id": "b1138252f0945470f4d3-8480ff2f7a6bd0d4c9b9",
+          "id": "b1138252f0945470f4d3-2cde40aea05e0260d6be",
           "file": "auth-navigation.spec.ts",
-          "line": 45,
+          "line": 25,
           "column": 5
         }
       ]
@@ -735,7 +670,7 @@
       "line": 0,
       "specs": [
         {
-          "title": "login with bad credentials establishes no session and shows an error",
+          "title": "login offers Google only and starts without a session",
           "ok": true,
           "tags": [],
           "tests": [
@@ -747,15 +682,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1517,
+                  "duration": 1276,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:02:52.487Z",
+                  "startTime": "2026-07-14T05:09:42.902Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -763,13 +698,13 @@
               "status": "expected"
             }
           ],
-          "id": "d748ac400d08b85935ef-cb9633d59c79e5c77512",
+          "id": "d748ac400d08b85935ef-fe2ba680abebd63db5e6",
           "file": "auth.spec.ts",
-          "line": 25,
+          "line": 6,
           "column": 5
         },
         {
-          "title": "login with good credentials signs in as that user",
+          "title": "/signup redirects to /login",
           "ok": true,
           "tags": [],
           "tests": [
@@ -781,15 +716,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1638,
+                  "duration": 1066,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:02:54.057Z",
+                  "startTime": "2026-07-14T05:09:44.195Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -797,43 +732,9 @@
               "status": "expected"
             }
           ],
-          "id": "d748ac400d08b85935ef-ddc953d797155f876bad",
+          "id": "d748ac400d08b85935ef-5c11a9bc8d12df6daac2",
           "file": "auth.spec.ts",
-          "line": 39,
-          "column": 5
-        },
-        {
-          "title": "signup creates a fresh account and signs in as that user",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "tablet",
-              "projectName": "tablet",
-              "results": [
-                {
-                  "workerIndex": 2,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1269,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-07-13T05:02:55.724Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "d748ac400d08b85935ef-1bd41243c405b4feb577",
-          "file": "auth.spec.ts",
-          "line": 49,
+          "line": 17,
           "column": 5
         }
       ]
@@ -864,15 +765,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1183,
+                      "duration": 1456,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:02:57.028Z",
+                      "startTime": "2026-07-14T05:09:45.318Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -898,15 +799,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1452,
+                      "duration": 1775,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:02:58.314Z",
+                      "startTime": "2026-07-14T05:09:46.946Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -932,15 +833,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 879,
+                      "duration": 1056,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:02:59.790Z",
+                      "startTime": "2026-07-14T05:09:48.748Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -983,15 +884,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3843,
+                      "duration": 5624,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:03:00.700Z",
+                      "startTime": "2026-07-14T05:09:49.867Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1017,15 +918,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2257,
+                      "duration": 3226,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:03:04.564Z",
+                      "startTime": "2026-07-14T05:09:55.511Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1068,15 +969,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1951,
+                      "duration": 2847,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:03:06.850Z",
+                      "startTime": "2026-07-14T05:09:58.814Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1119,15 +1020,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1930,
+                      "duration": 2107,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:03:08.943Z",
+                      "startTime": "2026-07-14T05:10:01.858Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1170,15 +1071,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1107,
+                      "duration": 1302,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:03:10.939Z",
+                      "startTime": "2026-07-14T05:10:04.226Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1204,15 +1105,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1241,
+                      "duration": 1185,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:03:12.105Z",
+                      "startTime": "2026-07-14T05:10:05.610Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1255,15 +1156,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4471,
+                      "duration": 4447,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:03:13.419Z",
+                      "startTime": "2026-07-14T05:10:06.823Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1289,15 +1190,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3898,
+                      "duration": 4296,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:03:17.938Z",
+                      "startTime": "2026-07-14T05:10:11.335Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1340,15 +1241,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1779,
+                      "duration": 1517,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:03:21.858Z",
+                      "startTime": "2026-07-14T05:10:15.665Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1374,15 +1275,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2160,
+                      "duration": 2249,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:03:23.688Z",
+                      "startTime": "2026-07-14T05:10:17.243Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1425,15 +1326,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 852,
+                      "duration": 210,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:03:25.915Z",
+                      "startTime": "2026-07-14T05:10:19.524Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1459,15 +1360,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 303,
+                      "duration": 129,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:03:26.803Z",
+                      "startTime": "2026-07-14T05:10:19.756Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1493,15 +1394,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 286,
+                      "duration": 63,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:03:27.113Z",
+                      "startTime": "2026-07-14T05:10:19.901Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1537,15 +1438,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1048,
+                  "duration": 778,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:03:27.419Z",
+                  "startTime": "2026-07-14T05:10:19.987Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1571,15 +1472,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1264,
+                  "duration": 1199,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:03:28.502Z",
+                  "startTime": "2026-07-14T05:10:20.799Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1589,7 +1490,7 @@
           ],
           "id": "9f98fd8c8d1538f5ebbb-3d79aa2a02cf6674e064",
           "file": "layout.spec.ts",
-          "line": 45,
+          "line": 48,
           "column": 5
         }
       ]
@@ -1613,15 +1514,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1132,
+                  "duration": 991,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:03:29.786Z",
+                  "startTime": "2026-07-14T05:10:22.023Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1647,15 +1548,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1755,
+                  "duration": 1133,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:03:30.969Z",
+                  "startTime": "2026-07-14T05:10:23.071Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1681,71 +1582,20 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 2,
-                  "parallelIndex": 0,
-                  "status": "timedOut",
-                  "duration": 30492,
-                  "error": {
-                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                  },
-                  "errors": [
-                    {
-                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                    },
-                    {
-                      "location": {
-                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts",
-                        "column": 10,
-                        "line": 81
-                      },
-                      "message": "Error: page.waitForResponse: Test timeout of 30000ms exceeded.\n\n  79 |   await page.getByLabel(\"Invite by email\").fill(email);\n  80 |   await Promise.all([\n> 81 |     page.waitForResponse(\n     |          ^\n  82 |       (r) =>\n  83 |         r.url().includes(`/api/collections/${collectionId}/invitations`) &&\n  84 |         r.request().method() === \"POST\",\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts:81:10"
-                    }
-                  ],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-07-13T05:03:32.760Z",
-                  "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "screenshot",
-                      "contentType": "image/png",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/test-failed-1.png"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/error-context.md"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/error-context.md"
-                    }
-                  ]
-                },
-                {
-                  "workerIndex": 3,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1999,
+                  "duration": 1365,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
-                  "retry": 1,
-                  "startTime": "2026-07-13T05:04:30.004Z",
+                  "retry": 0,
+                  "startTime": "2026-07-14T05:10:24.226Z",
                   "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "trace",
-                      "contentType": "application/zip",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/trace.zip"
-                    }
-                  ]
+                  "attachments": []
                 }
               ],
-              "status": "flaky"
+              "status": "expected"
             }
           ],
           "id": "01480a904f937bb0a1f8-16a0057158965d3a7188",
@@ -1781,15 +1631,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3362,
+                      "duration": 3165,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:04:32.343Z",
+                      "startTime": "2026-07-14T05:10:25.646Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1815,15 +1665,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 6940,
+                      "duration": 2618,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:04:35.832Z",
+                      "startTime": "2026-07-14T05:10:28.897Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1849,15 +1699,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2298,
+                      "duration": 1313,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:04:42.802Z",
+                      "startTime": "2026-07-14T05:10:31.530Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1900,15 +1750,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 12285,
+                      "duration": 9771,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:04:46.342Z",
+                      "startTime": "2026-07-14T05:10:32.876Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1934,15 +1784,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4277,
+                      "duration": 1238,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:04:59.491Z",
+                      "startTime": "2026-07-14T05:10:42.714Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1978,20 +1828,74 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 1,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 4275,
-                  "errors": [],
+                  "status": "failed",
+                  "duration": 16443,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('banner').getByText('Adored E2E d0cfd9ce-4207-4b4e-89ca-0612c67b64de', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('banner').getByText('Adored E2E d0cfd9ce-4207-4b4e-89ca-0612c67b64de', { exact: true })\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('banner').getByText('Adored E2E d0cfd9ce-4207-4b4e-89ca-0612c67b64de', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('banner').getByText('Adored E2E d0cfd9ce-4207-4b4e-89ca-0612c67b64de', { exact: true })\u001b[22m\n\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts:55:5",
+                    "location": {
+                      "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts",
+                      "column": 5,
+                      "line": 55
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 53 |\u001b[39m   \u001b[36mawait\u001b[39m expect(\n \u001b[90m 54 |\u001b[39m     page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"banner\"\u001b[39m)\u001b[33m.\u001b[39mgetByText(uniqueName\u001b[33m,\u001b[39m { exact\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m })\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 55 |\u001b[39m   )\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m15\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 56 |\u001b[39m\n \u001b[90m 57 |\u001b[39m   \u001b[90m// Guard against a false positive where a reload happened: the URL is still\u001b[39m\n \u001b[90m 58 |\u001b[39m   \u001b[90m// /profile and the in-page success status rendered (proves the SPA update\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts",
+                        "column": 5,
+                        "line": 55
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('banner').getByText('Adored E2E d0cfd9ce-4207-4b4e-89ca-0612c67b64de', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('banner').getByText('Adored E2E d0cfd9ce-4207-4b4e-89ca-0612c67b64de', { exact: true })\u001b[22m\n\n\n  53 |   await expect(\n  54 |     page.getByRole(\"banner\").getByText(uniqueName, { exact: true }),\n> 55 |   ).toBeVisible({ timeout: 15_000 });\n     |     ^\n  56 |\n  57 |   // Guard against a false positive where a reload happened: the URL is still\n  58 |   // /profile and the in-page success status rendered (proves the SPA update\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts:55:5"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:05:04.675Z",
+                  "startTime": "2026-07-14T05:10:43.979Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/profile-saving-a-new-displ-0a091-the-header-without-a-reload-tablet/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/profile-saving-a-new-displ-0a091-the-header-without-a-reload-tablet/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts",
+                    "column": 5,
+                    "line": 55
+                  }
+                },
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1823,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 1,
+                  "startTime": "2026-07-14T05:11:01.367Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/profile-saving-a-new-displ-0a091-the-header-without-a-reload-tablet-retry1/trace.zip"
+                    }
+                  ]
                 }
               ],
-              "status": "expected"
+              "status": "flaky"
             }
           ],
           "id": "e8b79b4ee550a37632f1-4dd4a58c47c7d10f604a",
@@ -2027,15 +1931,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1627,
+                      "duration": 1215,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:05:09.338Z",
+                      "startTime": "2026-07-14T05:11:03.484Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2078,15 +1982,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4248,
+                      "duration": 2548,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:05:14.080Z",
+                      "startTime": "2026-07-14T05:11:04.841Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2129,15 +2033,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1597,
+                      "duration": 1152,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:05:20.279Z",
+                      "startTime": "2026-07-14T05:11:07.544Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2180,15 +2084,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5266,
+                      "duration": 3107,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:05:24.692Z",
+                      "startTime": "2026-07-14T05:11:08.800Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2214,15 +2118,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4759,
+                      "duration": 2931,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:05:29.996Z",
+                      "startTime": "2026-07-14T05:11:11.967Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2265,15 +2169,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3432,
+                      "duration": 2162,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:05:34.832Z",
+                      "startTime": "2026-07-14T05:11:14.968Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2316,15 +2220,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3502,
+                      "duration": 2309,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:05:39.183Z",
+                      "startTime": "2026-07-14T05:11:17.194Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2360,15 +2264,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1531,
+                  "duration": 816,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:05:43.394Z",
+                  "startTime": "2026-07-14T05:11:19.570Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2378,7 +2282,7 @@
           ],
           "id": "4219922fea2e2bd3c691-87374521e11ce0354589",
           "file": "smoke.spec.ts",
-          "line": 15,
+          "line": 13,
           "column": 5
         },
         {
@@ -2394,15 +2298,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1991,
+                  "duration": 745,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:05:44.968Z",
+                  "startTime": "2026-07-14T05:11:20.402Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2412,11 +2316,11 @@
           ],
           "id": "4219922fea2e2bd3c691-1fc64d0843f181d20143",
           "file": "smoke.spec.ts",
-          "line": 22,
+          "line": 20,
           "column": 5
         },
         {
-          "title": "/login renders the email + password fields without overflow",
+          "title": "/login renders the Google-only auth surface without overflow",
           "ok": true,
           "tags": [],
           "tests": [
@@ -2428,15 +2332,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1746,
+                  "duration": 799,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:05:46.977Z",
+                  "startTime": "2026-07-14T05:11:21.164Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2444,9 +2348,9 @@
               "status": "expected"
             }
           ],
-          "id": "4219922fea2e2bd3c691-ef5035bf91554b56af59",
+          "id": "4219922fea2e2bd3c691-c16a1b6748451f480f91",
           "file": "smoke.spec.ts",
-          "line": 27,
+          "line": 25,
           "column": 5
         }
       ]
@@ -2477,15 +2381,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3581,
+                      "duration": 1286,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:05:48.778Z",
+                      "startTime": "2026-07-14T05:11:21.988Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2528,15 +2432,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1884,
+                      "duration": 1380,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:05:52.539Z",
+                      "startTime": "2026-07-14T05:11:23.340Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2562,15 +2466,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2360,
+                      "duration": 1707,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:05:54.618Z",
+                      "startTime": "2026-07-14T05:11:24.792Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2596,15 +2500,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1695,
+                      "duration": 1425,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:05:57.003Z",
+                      "startTime": "2026-07-14T05:11:26.531Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2638,15 +2542,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5059,
+                      "duration": 3917,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:05:58.718Z",
+                      "startTime": "2026-07-14T05:11:27.979Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2672,15 +2576,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3664,
+                      "duration": 1409,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:06:03.876Z",
+                      "startTime": "2026-07-14T05:11:31.960Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2714,15 +2618,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1491,
+                      "duration": 1024,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:06:07.563Z",
+                      "startTime": "2026-07-14T05:11:33.397Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2748,15 +2652,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1010,
+                      "duration": 779,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:06:09.071Z",
+                      "startTime": "2026-07-14T05:11:34.435Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2799,15 +2703,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3934,
+                      "duration": 2741,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:06:10.189Z",
+                      "startTime": "2026-07-14T05:11:35.239Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2833,15 +2737,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4595,
+                      "duration": 3058,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-13T05:06:14.897Z",
+                      "startTime": "2026-07-14T05:11:38.048Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2877,15 +2781,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3836,
+                  "duration": 2138,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:06:19.928Z",
+                  "startTime": "2026-07-14T05:11:41.134Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2895,7 +2799,7 @@
           ],
           "id": "daf62efdea02cf6d69a5-4e2f7dfe2469e2717031",
           "file": "welcome-walkthrough.spec.ts",
-          "line": 90,
+          "line": 83,
           "column": 5
         },
         {
@@ -2911,15 +2815,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4735,
+                  "duration": 2061,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:06:23.778Z",
+                  "startTime": "2026-07-14T05:11:43.287Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2929,7 +2833,7 @@
           ],
           "id": "daf62efdea02cf6d69a5-a51788f12e82ad76a36c",
           "file": "welcome-walkthrough.spec.ts",
-          "line": 100,
+          "line": 93,
           "column": 5
         },
         {
@@ -2945,15 +2849,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3118,
+                  "duration": 1476,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-13T05:06:28.531Z",
+                  "startTime": "2026-07-14T05:11:45.363Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2963,7 +2867,7 @@
           ],
           "id": "daf62efdea02cf6d69a5-9aba35093776cd2d1049",
           "file": "welcome-walkthrough.spec.ts",
-          "line": 113,
+          "line": 106,
           "column": 5
         }
       ]
@@ -2971,11 +2875,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-07-13T05:00:56.851Z",
-    "duration": 357167.70999999996,
+    "startTime": "2026-07-14T05:07:38.860Z",
+    "duration": 248302.475,
     "expected": 63,
     "skipped": 0,
     "unexpected": 0,
-    "flaky": 2
+    "flaky": 1
   }
 }
