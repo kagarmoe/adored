@@ -100,7 +100,7 @@ export function WalkthroughShell() {
           onClick={exit}
           className="h-11 w-full max-w-xs rounded-control px-4 text-sm text-ink-soft hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary sm:w-auto"
         >
-          Skip for now
+          Leave tutorial
         </button>
       )}
     </div>

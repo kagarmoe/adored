@@ -19,15 +19,14 @@ import { ItemRepository } from "@/server/repositories/implementations/ItemReposi
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
-import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { PreferenceController } from "@/server/api/preferences";
 import { withTransaction } from "@/lib/transactions";
 import {
   deriveOrder,
-  RANKABLE_BUCKETS,
   toComparisonEvents,
   type RankItem,
 } from "@/lib/insertion-ranking";
+import { selectComparableItems } from "@/lib/compare-selection";
 import type { Database } from "@/lib/db";
 
 const DEMO_DIR = join(__dirname, "..", "e2e", "fixtures", "demo-images");
@@ -231,7 +230,7 @@ export async function timedRecompute(
 
 /**
  * Drive a full sort for one collection and time every recompute:
- *   1. triage each item (record decision + recompute) → all into rankable buckets,
+ *   1. triage each item (record decision + recompute),
  *   2. binary-insertion compare loop: read state, ask deriveOrder for nextPair,
  *      record a decisive pairwise answer, recompute — until fully ordered.
  * Returns the per-phase recompute timings.
@@ -242,13 +241,12 @@ export async function driveSort(
   curatorId: string,
 ): Promise<{ triage: number[]; compare: number[] }> {
   const decisionRepo = new DecisionEventRepository(db);
-  const prefRepo = new CollectionPreferenceItemRepository(db);
   const itemRepo = new ItemRepository(db);
 
   const triage: number[] = [];
   const compare: number[] = [];
 
-  // Triage: alternate top/high so every item is rankable (RANKABLE_BUCKETS).
+  // Triage: alternate top/high to keep the seed close to a typical user flow.
   for (let i = 0; i < c.itemIds.length; i++) {
     const itemId = c.itemIds[i];
     await withTransaction(db, async (tx) => {
@@ -270,16 +268,12 @@ export async function driveSort(
   // Guard against an unexpected non-terminating loop; O(N log N) answers expected.
   const maxSteps = c.itemIds.length * 32 + 16;
   for (let step = 0; step < maxSteps; step++) {
-    const [prefs, items, decisions] = await Promise.all([
-      prefRepo.findByCollection(c.collectionId, curatorId),
+    const [items, decisions] = await Promise.all([
       itemRepo.findByCollection(c.collectionId),
       decisionRepo.findBySession(c.sessionId),
     ]);
-    const rankableIds = new Set(
-      prefs.filter((p) => RANKABLE_BUCKETS.has(p.rankBucket)).map((p) => p.itemId),
-    );
-    const rankItems: RankItem[] = items
-      .filter((i) => rankableIds.has(i.id))
+    const comparableItems = selectComparableItems(items, new Map());
+    const rankItems: RankItem[] = comparableItems
       .map((i) => ({ id: i.id, createdAt: i.createdAt }));
     const { nextPair } = deriveOrder(rankItems, toComparisonEvents(decisions));
     if (!nextPair) break;

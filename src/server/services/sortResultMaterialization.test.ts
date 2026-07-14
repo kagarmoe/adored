@@ -58,21 +58,38 @@ describe("rankPreferencesToItems", () => {
     ]);
   });
 
-  it("orders by bucket then orderRank asc (NULLS LAST); keeps an unranked loved item", () => {
-    // Four loved-or-not prefs sharing scores so the OLD score sort can't order
-    // them; only bucket priority + orderRank produces a deterministic sequence.
-    const out = rankPreferencesToItems([
-      preference({ itemId: "L1", rankBucket: "top", orderRank: 1, score: 0.875 }),
-      preference({ itemId: "L0", rankBucket: "top", orderRank: 0, score: 0.875 }),
-      preference({ itemId: "Lx", rankBucket: "top", orderRank: null, score: 0.875 }), // loved, never ranked
-      preference({ itemId: "M", rankBucket: "medium", orderRank: null, score: 0.375 }),
+  it("keeps bucket-first ordering when no compare order exists", () => {
+    const items = rankPreferencesToItems([
+      preference({ itemId: "mid", rankBucket: "high", orderRank: null }),
+      preference({ itemId: "top", rankBucket: "top", orderRank: null }),
+      preference({ itemId: "low", rankBucket: "low", orderRank: null }),
     ]);
 
-    // top bucket first, ranked 0 then 1, then the unranked loved item (NULLS
-    // LAST) still present, then the medium bucket.
-    expect(out.map((o) => o.itemId)).toEqual(["L0", "L1", "Lx", "M"]);
+    expect(items).toEqual([
+      { itemId: "top", computedRank: 0, computedBucket: "top" },
+      { itemId: "mid", computedRank: 1, computedBucket: "high" },
+      { itemId: "low", computedRank: 2, computedBucket: "low" },
+    ]);
+  });
+
+  it("orders globally by orderRank when compare evidence exists, then falls back to bucket order", () => {
+    const out = rankPreferencesToItems([
+      preference({ itemId: "top-unranked", rankBucket: "top", orderRank: null, score: 0.875 }),
+      preference({ itemId: "medium-first", rankBucket: "medium", orderRank: 0, score: 0.375 }),
+      preference({ itemId: "low-second", rankBucket: "low", orderRank: 1, score: 0.125 }),
+      preference({ itemId: "high-unranked", rankBucket: "high", orderRank: null, score: 0.625 }),
+    ]);
+
+    expect(out.map((o) => o.itemId)).toEqual([
+      "medium-first",
+      "low-second",
+      "top-unranked",
+      "high-unranked",
+    ]);
     expect(out.map((o) => o.computedRank)).toEqual([0, 1, 2, 3]);
-    expect(out.map((o) => o.computedBucket)).toEqual(["top", "top", "top", "medium"]);
+    // Bucket stays as annotation/partition context; Compare order does not
+    // relabel an Onward item as loved.
+    expect(out.map((o) => o.computedBucket)).toEqual(["medium", "low", "top", "high"]);
   });
 
   it("breaks ties on itemId when bucket and orderRank match", () => {

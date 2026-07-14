@@ -4,14 +4,13 @@ import { isRequestAuthorized } from "@/lib/middleware-auth";
 
 export const config = {
   matcher: [
-    // Protect all routes except these. `tutorial` is the dev-only walkthrough
-    // preview; excluding it here just skips the login redirect in dev — the
-    // page itself 404s in production, which is the real boundary. `api/auth` is
+    // Protect all routes except these. `tutorial` is a public walkthrough, and
+    // `onboarding/*` holds the public sample images it renders. `api/auth` is
     // excluded because better-auth serves its public Google sign-in/session +
     // OAuth-callback endpoints there and must NOT be 307'd to /login, or the
     // login/callback requests never reach the handler. `signup` remains
     // public only so the legacy URL can redirect to /login.
-    "/((?!_next|api/auth|login|signup|shared|tutorial).*)",
+    "/((?!_next(?:/|$)|api/auth(?:/|$)|login(?:/|$)|signup(?:/|$)|shared(?:/|$)|tutorial(?:/|$)|onboarding(?:/|$)).*)",
   ],
 };
 

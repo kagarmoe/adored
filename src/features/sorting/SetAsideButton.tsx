@@ -57,8 +57,8 @@ export function SetAsideButton({
       variant="ghost"
       onClick={onClick}
       disabled={busyInSession}
-      title="set aside — not mine to decide"
-      aria-label="Not mine — set aside, not mine to decide"
+      title="Sets it aside"
+      aria-label="Not mine — sets it aside"
     >
       {busyInSession ? "Just a moment…" : "Not mine"}
     </Button>

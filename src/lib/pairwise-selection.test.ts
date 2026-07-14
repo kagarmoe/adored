@@ -36,8 +36,8 @@ function item(id: string, createdAtMs = 0): Item {
   };
 }
 
-// Minimal CollectionPreferenceItem — selectNextPair reads only `itemId` + `rankBucket`
-// (rankable = top/high). `score` is retained for legibility but no longer sorted on.
+// Minimal CollectionPreferenceItem. Compare is item-based; existing preferences
+// are present only to prove they no longer gate pair eligibility.
 function pref(itemId: string, rankBucket: RankBucket = "top"): CollectionPreferenceItem {
   return {
     id: `pref-${itemId}`,
@@ -74,11 +74,10 @@ function compareEvent(
 }
 
 describe("selectNextPair — delegates to the insertion engine (Epic 0 Task 8)", () => {
-  it("returns the engine's nextPair for two top items with no comparison yet", () => {
+  it("returns the engine's nextPair for two items with no triage preferences yet", () => {
     const items = [item("a", 1), item("b", 2)];
-    const prefs = [pref("a"), pref("b")];
 
-    const pair = selectNextPair({ preferences: prefs, items, decisions: [] });
+    const pair = selectNextPair({ preferences: [], items, decisions: [] });
 
     // The engine asks about these two first; assert the selector agrees exactly.
     const rankItems: RankItem[] = items.map((i) => ({ id: i.id, createdAt: i.createdAt }));
@@ -88,13 +87,12 @@ describe("selectNextPair — delegates to the insertion engine (Epic 0 Task 8)",
     expect(pair!.map((i) => i.id)).toEqual(engineNext);
   });
 
-  it("returns null once the engine has fully ordered the rankable set", () => {
+  it("returns null once the engine has fully ordered the comparable set", () => {
     // Two items with one recorded comparison → engine places both, no pending pair.
     const items = [item("a", 1), item("b", 2)];
-    const prefs = [pref("a"), pref("b")];
     const decisions = [compareEvent("d1", "a", "b", "item_a", 10)];
 
-    const pair = selectNextPair({ preferences: prefs, items, decisions });
+    const pair = selectNextPair({ preferences: [], items, decisions });
 
     expect(pair).toBeNull();
   });
@@ -117,24 +115,47 @@ describe("selectNextPair — delegates to the insertion engine (Epic 0 Task 8)",
     expect(pair!.map((i) => i.id)).toEqual(engineNext);
   });
 
-  it("only ranks top/high items — medium/low are never offered", () => {
-    // a(top) + b(high) are rankable; c(medium) + d(low) are not. First pair is a,b.
+  it("does not gate compare by triage bucket: medium/low items are still offered", () => {
     const items = [item("a", 1), item("b", 2), item("c", 3), item("d", 4)];
     const prefs = [pref("a", "top"), pref("b", "high"), pref("c", "medium"), pref("d", "low")];
 
     const pair = selectNextPair({ preferences: prefs, items, decisions: [] });
 
     expect(pair).not.toBeNull();
-    const ids = pair!.map((i) => i.id).sort();
-    expect(ids).toEqual(["a", "b"]);
-    expect(ids).not.toContain("c");
-    expect(ids).not.toContain("d");
+    // The insertion engine sees all four comparable items. It inserts a first,
+    // then asks about b vs a; later medium/low items remain eligible after that.
+    expect(pair!.map((i) => i.id)).toEqual(["b", "a"]);
+  });
+
+  it("usage-only decisions do not block compare eligibility", () => {
+    const items = [item("a", 1), item("b", 2)];
+    const decisions: DecisionEvent[] = [
+      {
+        id: "u1",
+        sessionId: "sess-1",
+        type: "usage",
+        decision: { itemId: "a", result: "uses" },
+        createdAt: new Date(10),
+      },
+      {
+        id: "u2",
+        sessionId: "sess-1",
+        type: "usage",
+        decision: { itemId: "b", result: "not_uses" },
+        createdAt: new Date(11),
+      },
+    ];
+
+    const pair = selectNextPair({ preferences: [], items, decisions });
+
+    expect(pair).not.toBeNull();
+    expect(pair!.map((i) => i.id)).toEqual(["b", "a"]);
   });
 });
 
 describe("selectNextPair — disposition exclusion (Epic C PR1)", () => {
   it("never returns a disposed item (set_aside or deferred) as itemA or itemB", () => {
-    // a, b, c all top; b is deferred and c is set_aside, so only 'a' is rankable.
+    // b is deferred and c is set_aside, so only 'a' is comparable.
     const items = [item("a", 1), item("b", 2), item("c", 3)];
     const prefs = items.map((i) => pref(i.id));
     const disp = new Map<string, Disposition>([
@@ -149,11 +170,11 @@ describe("selectNextPair — disposition exclusion (Epic C PR1)", () => {
       dispositionByItemId: disp,
     });
 
-    // Only one rankable item ('a') → no valid pair.
+    // Only one comparable item ('a') → no valid pair.
     expect(pair).toBeNull();
   });
 
-  it("excludes a disposed item but still pairs the remaining rankable ones", () => {
+  it("excludes a disposed item but still pairs the remaining comparable ones", () => {
     // Three top items; only 'c' is set_aside → 'a' and 'b' remain and must pair.
     const items = [item("a", 1), item("b", 2), item("c", 3)];
     const prefs = items.map((i) => pref(i.id));
@@ -173,7 +194,7 @@ describe("selectNextPair — disposition exclusion (Epic C PR1)", () => {
     expect(ids).not.toContain("c");
   });
 
-  it("control: with no dispositions, rankable items DO still pair (exclusion is not vacuous)", () => {
+  it("control: with no dispositions, comparable items DO still pair (exclusion is not vacuous)", () => {
     // Proves the exclusion test above isn't passing only because selectNextPair
     // always returns null — without dispositions the first two items pair.
     const items = [item("a", 1), item("b", 2), item("c", 3)];

@@ -54,7 +54,7 @@ export function WelcomeUsage({ onOutcome }: WelcomeUsageProps) {
       {/* The demoted-escape slot: a write-nothing pass that still advances the
           teaching beat. Its contract lives in the accessible name (WCAG 2.5.3 —
           the accessible name begins with the visible label). Distinct from the
-          shell's own "Skip for now" exit, which leaves the walkthrough entirely. */}
+          shell's own "Leave tutorial" exit, which leaves the walkthrough entirely. */}
       <div className="w-full border-t border-hairline pt-4 flex flex-col items-center gap-3">
         <Button
           type="button"

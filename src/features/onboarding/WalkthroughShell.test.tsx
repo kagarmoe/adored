@@ -205,18 +205,18 @@ describe("WalkthroughShell", () => {
     ).toBeInTheDocument();
   });
 
-  it("routes to /collections when 'Skip for now' is tapped", async () => {
+  it("routes to /collections when 'Leave tutorial' is tapped", async () => {
     const user = userEvent.setup();
     render(<WalkthroughShell />);
-    await user.click(screen.getByRole("button", { name: "Skip for now" }));
+    await user.click(screen.getByRole("button", { name: "Leave tutorial" }));
     expect(assign).toHaveBeenCalledWith("/collections");
   });
 
-  it("dismisses the walkthrough when 'Skip for now' is tapped", async () => {
+  it("dismisses the walkthrough when 'Leave tutorial' is tapped", async () => {
     const user = userEvent.setup();
     render(<WalkthroughShell />);
     expect(isWelcomeDismissed()).toBe(false);
-    await user.click(screen.getByRole("button", { name: "Skip for now" }));
+    await user.click(screen.getByRole("button", { name: "Leave tutorial" }));
     expect(isWelcomeDismissed()).toBe(true);
   });
 
@@ -263,13 +263,17 @@ describe("WalkthroughShell", () => {
       },
     ],
   ])(
-    "'Skip for now' on the %s beat dismisses and routes to /collections",
+    "the exit action on the %s beat dismisses and routes to /collections",
     async (_beat, advance) => {
       const user = userEvent.setup();
       render(<WalkthroughShell />);
       await advance(user);
       expect(isWelcomeDismissed()).toBe(false);
-      await user.click(screen.getByRole("button", { name: "Skip for now" }));
+      await user.click(
+        screen.getByRole("button", {
+          name: "Leave tutorial",
+        }),
+      );
       expect(assign).toHaveBeenCalledWith("/collections");
       expect(isWelcomeDismissed()).toBe(true);
     }
@@ -297,21 +301,21 @@ describe("WalkthroughShell", () => {
     expect(isWelcomeDismissed()).toBe(true);
   });
 
-  it("keeps 'Skip for now' on every beat before the hand-off but not on it", async () => {
+  it("keeps a walkthrough exit on every beat before the hand-off but not on it", async () => {
     const user = userEvent.setup();
     render(<WalkthroughShell />);
-    expect(screen.getByRole("button", { name: "Skip for now" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Leave tutorial" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Show me how" }));
-    expect(screen.getByRole("button", { name: "Skip for now" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Leave tutorial" })).toBeInTheDocument();
     await tapTiers(user);
-    // Usage beat — the shell's exact "Skip for now" exit is still present (distinct
+    // Usage beat — the shell's exact "Leave tutorial" exit is still present (distinct
     // from the usage pass's longer "Skip for now — it'll come around again").
-    expect(screen.getByRole("button", { name: "Skip for now" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Leave tutorial" })).toBeInTheDocument();
     await passUsage(user);
     await user.click(screen.getByText(COMPARE_PAIR[0].name));
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
-    // Handoff has its own explore affordance — no "Skip for now".
-    expect(screen.queryByRole("button", { name: "Skip for now" })).not.toBeInTheDocument();
+    // Handoff has its own explore affordance — no "Leave tutorial".
+    expect(screen.queryByRole("button", { name: "Leave tutorial" })).not.toBeInTheDocument();
   });
 });

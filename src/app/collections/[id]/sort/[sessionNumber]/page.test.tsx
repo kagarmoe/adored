@@ -115,7 +115,7 @@ describe("SessionDetailPage — recommended next round + no count/denominator de
     expect(cta).toHaveAttribute("href", "/collections/summer-bags/sort/1/triage");
   });
 
-  it("recommends Refine the top tier → compare round when a rankable pair remains", async () => {
+  it("recommends Compare → compare round when a comparable pair remains", async () => {
     itemRepo.findByCollection.mockResolvedValue([makeItem("a", 1), makeItem("b", 2)]);
     prefRepo.findByCollection.mockResolvedValue([
       { id: "p1", collectionId: "coll_REAL", curatorId: "u1", itemId: "a", score: 0.5, confidence: 0.5, rankBucket: "top", comparisonCount: 0, orderRank: null, lastSeen: new Date(), createdAt: new Date(), updatedAt: new Date() },
@@ -126,8 +126,19 @@ describe("SessionDetailPage — recommended next round + no count/denominator de
 
     render(await SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) }));
 
-    expect(screen.getByText("Refine the top tier")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Refine" })).toHaveAttribute("href", "/collections/summer-bags/sort/1/compare");
+    expect(screen.getAllByText("Compare").length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: "Compare" })).toHaveAttribute("href", "/collections/summer-bags/sort/1/compare");
+  });
+
+  it("keeps the Compare card available before triage has created buckets", async () => {
+    itemRepo.findByCollection.mockResolvedValue([makeItem("a", 1), makeItem("b", 2)]);
+    prefRepo.findByCollection.mockResolvedValue([]);
+
+    render(await SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) }));
+
+    expect(recommendedProps.current.primary.round.kind).toBe("triage");
+    const compareHeading = screen.getByText(ROUND_COPY.compare.name);
+    expect(compareHeading.closest("a")).toHaveAttribute("href", "/collections/summer-bags/sort/1/compare");
   });
 
   it("recommends See results → results when triage is done and the top tier is ordered", async () => {

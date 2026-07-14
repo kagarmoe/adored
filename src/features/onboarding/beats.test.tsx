@@ -67,16 +67,31 @@ describe("WelcomeTriage", () => {
     expect(onOutcome).toHaveBeenCalledWith(TRIAGE_ITEMS[0].id, { kind: "tier", tier: "love" });
   });
 
-  it("Not yet reports deferred; Not mine reports setAside — and shows the touch caption", async () => {
+  it("Not yet reports deferred; Not mine reports setAside — with hover copy on the buttons", async () => {
     const onOutcome = vi.fn();
     render(<WelcomeTriage index={2} onOutcome={onOutcome} />);
     expect(
-      screen.getByText("Not yet keeps it for later. Not mine sets it aside.")
-    ).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: /not yet/i }));
+      screen.queryByText("Not yet keeps it for later. Not mine sets it aside.")
+    ).not.toBeInTheDocument();
+    const defer = screen.getByRole("button", { name: /not yet/i });
+    const setAside = screen.getByRole("button", { name: /not mine/i });
+    expect(defer).toHaveAttribute("title", "Keeps it for later");
+    expect(setAside).toHaveAttribute("title", "Sets it aside");
+    await userEvent.click(defer);
     expect(onOutcome).toHaveBeenCalledWith(TRIAGE_ITEMS[2].id, { kind: "deferred" });
-    await userEvent.click(screen.getByRole("button", { name: /not mine/i }));
+    await userEvent.click(setAside);
     expect(onOutcome).toHaveBeenCalledWith(TRIAGE_ITEMS[2].id, { kind: "setAside" });
+  });
+
+  it("keeps Not yet and Not mine together as item-specific escape actions", () => {
+    render(<WelcomeTriage index={0} onOutcome={vi.fn()} />);
+    const defer = screen.getByRole("button", { name: /not yet/i });
+    const setAside = screen.getByRole("button", { name: /not mine/i });
+    const row = defer.parentElement;
+    expect(row).toHaveClass("flex-nowrap");
+    expect(row).toContainElement(defer);
+    expect(row).toContainElement(setAside);
+    expect(screen.queryByRole("button", { name: "Leave tutorial" })).not.toBeInTheDocument();
   });
 
   it("never fetches across a full item's taps (local mode is synchronous)", async () => {
@@ -108,7 +123,7 @@ describe("WelcomeUsage", () => {
     expect(screen.getByRole("button", { name: "Yes, I use it" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Not these days" })).toBeInTheDocument();
     // The pass's accessible name begins with its visible label (WCAG 2.5.3), so it
-    // is distinct from the shell's own "Skip for now" exit.
+    // is distinct from the shell's own "Leave tutorial" exit.
     expect(screen.getByRole("button", { name: USAGE_PASS_ARIA_LABEL })).toBeInTheDocument();
   });
 

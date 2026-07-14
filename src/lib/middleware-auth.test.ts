@@ -49,21 +49,24 @@ describe("public-path matcher (which routes invoke the auth middleware)", () => 
   // never redirected to /login.
   const isPublic = (pathname: string) => !re.test(pathname);
 
-  it("treats the dev-only /tutorial preview as public (no login redirect)", () => {
+  it("treats the public /tutorial route as public (no login redirect)", () => {
     expect(isPublic("/tutorial")).toBe(true);
   });
 
-  it("does not open any OTHER protected route — only /tutorial", () => {
+  it("treats onboarding sample images as public assets", () => {
+    expect(isPublic("/onboarding/glass-flower-vase.webp")).toBe(true);
+    expect(isPublic("/onboarding/slipcovered-armchair.webp")).toBe(true);
+  });
+
+  it("does not open other protected app routes", () => {
     // The security-relevant claim: normal app routes still run the middleware
     // (and would redirect an unauthenticated visitor to /login).
     expect(isPublic("/collections")).toBe(false);
     expect(isPublic("/collections/col_123/pool")).toBe(false);
     expect(isPublic("/profile")).toBe(false);
     expect(isPublic("/sessions/sess_1")).toBe(false);
-    // The exclusion adds exactly one token to the lookahead (`tutorial`),
-    // matching how login/signup/shared are excluded — it does not widen any
-    // existing gate. There is no `/tutorials*` route in the app, so the
-    // lookahead's prefix nature (shared by every entry) exposes nothing.
+    expect(isPublic("/tutorials")).toBe(false);
+    expect(isPublic("/onboarding-assets")).toBe(false);
   });
 
   it("still excludes the pre-existing public paths", () => {

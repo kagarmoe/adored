@@ -80,10 +80,10 @@ describe("DeferControl (session — through the queue)", () => {
     await waitFor(() => expect(readQueue(KEY)).toHaveLength(1));
   });
 
-  it("conveys 'I'll come back to this' for assistive tech without shouting it visually", () => {
+  it("conveys 'Keeps it for later' for hover and assistive tech without shouting it visually", () => {
     render(<SessionHarness />);
-    const btn = screen.getByRole("button", { name: /come back to this/i });
-    expect(btn).toHaveAttribute("title");
+    const btn = screen.getByRole("button", { name: /keeps it for later/i });
+    expect(btn).toHaveAttribute("title", "Keeps it for later");
   });
 
   it("ignores a rapid double-tap — only one entry is enqueued (in-flight guard)", async () => {

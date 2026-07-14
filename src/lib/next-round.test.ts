@@ -98,7 +98,7 @@ describe("recommendNextRound — ladder", () => {
   });
 
   it("recommends usage when everything is triaged but usage is still unknown, and returns whenUsageDemoted", () => {
-    // Both triaged into rankable buckets; usage unknown for both → usage is primary.
+    // Both triaged; usage unknown for both → usage is primary.
     // Demoted ladder skips usage → a pair still pends → compare.
     const items = [item("a", 1), item("b", 2)];
     const preferences = [pref("a", "top"), pref("b", "high")];
@@ -111,11 +111,11 @@ describe("recommendNextRound — ladder", () => {
 
     expect(primary.kind).toBe("usage");
     expect(whenUsageDemoted).toBeDefined();
-    // Demotion never re-promotes usage: skip it → compare (a rankable pair remains).
+    // Demotion never re-promotes usage: skip it → compare (a comparable pair remains).
     expect(whenUsageDemoted?.kind).toBe("compare");
   });
 
-  it("recommends compare when triage + usage are known and a rankable pair remains (no whenUsageDemoted)", () => {
+  it("recommends compare when triage + usage are known and a comparable pair remains (no whenUsageDemoted)", () => {
     const items = [item("a", 1), item("b", 2)];
     const preferences = [pref("a", "top"), pref("b", "high")];
     // Usage answered for both → usage queue empty → usage falls through to compare.
@@ -128,11 +128,25 @@ describe("recommendNextRound — ladder", () => {
     });
 
     expect(primary.kind).toBe("compare");
-    expect(primary.label).toBe("Refine the top tier");
+    expect(primary.label).toBe("Compare");
     expect(whenUsageDemoted).toBeUndefined();
   });
 
-  it("recommends decide when triage + usage are known and the rankable set is fully ordered (no whenUsageDemoted)", () => {
+  it("recommends compare without requiring top/high buckets once the ladder reaches compare", () => {
+    const items = [item("a", 1), item("b", 2)];
+    const preferences = [pref("a", "medium"), pref("b", "low")];
+    const curatorDecisions = [usageEvent("u-a", "a"), usageEvent("u-b", "b")];
+
+    const { primary } = recommendNextRound({
+      items,
+      preferences,
+      curatorDecisions,
+    });
+
+    expect(primary.kind).toBe("compare");
+  });
+
+  it("recommends decide when triage + usage are known and the comparable set is fully ordered (no whenUsageDemoted)", () => {
     const items = [item("a", 1), item("b", 2)];
     const preferences = [pref("a", "top"), pref("b", "high")];
     // One comparison orders the pair → no pending pair. The compare lives in the
@@ -196,7 +210,7 @@ describe("recommendNextRound — ladder", () => {
     expect(whenUsageDemoted).toBeUndefined();
   });
 
-  it("demotion falls to decide (never usage) when no rankable pair remains", () => {
+  it("demotion falls to decide (never usage) when no comparable pair remains", () => {
     // A single triaged item with usage unknown → usage is primary. Skipping usage
     // leaves one lonely item: no pair → decide. Usage is NEVER re-promoted.
     const items = [item("a", 1)];

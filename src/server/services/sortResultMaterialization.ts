@@ -19,31 +19,45 @@ const BUCKET_PRIORITY: Record<RankBucket, number> = {
 };
 
 /**
- * Pure: rank a curator's preferences into computed items. Orders by bucket
- * priority (top<high<medium<low), then orderRank ascending with NULLS LAST, then
- * itemId ascending as a stable tiebreak — 0-based computedRank, computedBucket
- * taken from each preference's rankBucket. A loved (top/high) item never given an
- * orderRank still appears, after the ranked ones in its bucket. No DB. (Does not
+ * Pure: rank a curator's preferences into computed items. Triage-only results
+ * keep the historical bucket-first order. Once Compare has produced any
+ * orderRank, ranked rows sort globally by orderRank so the pairwise order is
+ * visible; unranked rows follow by bucket priority and itemId. No DB. (Does not
  * mutate the input array.)
  */
 export function rankPreferencesToItems(
   preferences: CollectionPreferenceItem[],
 ): MaterializedItem[] {
+  const hasCompareOrder = preferences.some((pref) => pref.orderRank !== null);
+
   return [...preferences]
     .sort((a, b) => {
+      if (hasCompareOrder) {
+        const aRank = a.orderRank;
+        const bRank = b.orderRank;
+        const aRanked = aRank !== null;
+        const bRanked = bRank !== null;
+        if (aRanked && bRanked) {
+          if (aRank !== bRank) return aRank - bRank;
+          return compareItemId(a.itemId, b.itemId);
+        }
+        if (aRanked !== bRanked) return aRanked ? -1 : 1;
+      }
+
       const pa = BUCKET_PRIORITY[a.rankBucket];
       const pb = BUCKET_PRIORITY[b.rankBucket];
       if (pa !== pb) return pa - pb;
-      const ra = a.orderRank ?? Number.POSITIVE_INFINITY;
-      const rb = b.orderRank ?? Number.POSITIVE_INFINITY;
-      if (ra !== rb) return ra - rb;
-      return a.itemId < b.itemId ? -1 : a.itemId > b.itemId ? 1 : 0;
+      return compareItemId(a.itemId, b.itemId);
     })
     .map((pref, index) => ({
       itemId: pref.itemId,
       computedRank: index,
       computedBucket: pref.rankBucket,
     }));
+}
+
+function compareItemId(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
 }
 
 /**

@@ -14,9 +14,9 @@ const primaryRound: NextRound = {
 };
 const demotedRound: NextRound = {
   kind: "compare",
-  label: "Refine the top tier",
-  description: "Compare the ones you love to see which you love most.",
-  cta: "Refine",
+  label: "Compare",
+  description: "Put two pieces side by side and choose what rises.",
+  cta: "Compare",
 };
 
 const primary = { round: primaryRound, href: "/collections/c/sort/1/usage" };
@@ -61,7 +61,7 @@ describe("RecommendedRound — device-local demotion swap", () => {
       "href",
       "/collections/c/sort/1/usage",
     );
-    expect(screen.queryByText("Refine the top tier")).not.toBeInTheDocument();
+    expect(screen.queryByText("Compare")).not.toBeInTheDocument();
   });
 
   it("swaps to the demoted card after mount when THIS (curator, session) ran a usage round", () => {
@@ -75,8 +75,8 @@ describe("RecommendedRound — device-local demotion swap", () => {
       />,
     );
     // After the mount effect reads the device flag, the same slot shows the demoted card.
-    expect(screen.getByText("Refine the top tier")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Refine" })).toHaveAttribute(
+    expect(screen.getAllByText("Compare").length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: "Compare" })).toHaveAttribute(
       "href",
       "/collections/c/sort/1/compare",
     );
@@ -94,7 +94,7 @@ describe("RecommendedRound — device-local demotion swap", () => {
       />,
     );
     expect(screen.getByText("Do you use this?")).toBeInTheDocument();
-    expect(screen.queryByText("Refine the top tier")).not.toBeInTheDocument();
+    expect(screen.queryByText("Compare")).not.toBeInTheDocument();
   });
 
   it("keeps the primary when a DIFFERENT session ran a usage round (isolation)", () => {
@@ -108,7 +108,7 @@ describe("RecommendedRound — device-local demotion swap", () => {
       />,
     );
     expect(screen.getByText("Do you use this?")).toBeInTheDocument();
-    expect(screen.queryByText("Refine the top tier")).not.toBeInTheDocument();
+    expect(screen.queryByText("Compare")).not.toBeInTheDocument();
   });
 
   it("swaps in the same slot with NO transition/animation classes on the swap container", () => {
@@ -152,6 +152,6 @@ describe("RecommendedRound — device-local demotion swap", () => {
     render(
       <RecommendedRound primary={compareOnly} curatorId={CURATOR} sessionId={SESSION} />,
     );
-    expect(screen.getByText("Refine the top tier")).toBeInTheDocument();
+    expect(screen.getAllByText("Compare").length).toBeGreaterThan(0);
   });
 });
