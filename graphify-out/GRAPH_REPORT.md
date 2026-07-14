@@ -1,16 +1,16 @@
 # Graph Report - purseinator-app  (2026-07-14)
 
 ## Corpus Check
-- 666 files · ~912,380 words
+- 666 files · ~912,395 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4132 nodes · 9788 edges · 261 communities (225 shown, 36 thin omitted)
+- 4132 nodes · 9788 edges · 259 communities (224 shown, 35 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 229 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `5650f3a2`
+- Built from commit: `cab4d526`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -50,7 +50,6 @@
 - [[_COMMUNITY_route.ts|route.ts]]
 - [[_COMMUNITY_DecisionEvent|DecisionEvent]]
 - [[_COMMUNITY_Input|Input]]
-- [[_COMMUNITY_CollectionPreferenceItem|CollectionPreferenceItem]]
 - [[_COMMUNITY_AppLayout.tsx|AppLayout.tsx]]
 - [[_COMMUNITY_append-history.mjs|append-history.mjs]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
@@ -259,7 +258,6 @@
 - [[_COMMUNITY_Community 250|Community 250]]
 - [[_COMMUNITY_Community 251|Community 251]]
 - [[_COMMUNITY_Community 252|Community 252]]
-- [[_COMMUNITY_Community 254|Community 254]]
 - [[_COMMUNITY_Community 255|Community 255]]
 - [[_COMMUNITY_Community 256|Community 256]]
 - [[_COMMUNITY_Community 257|Community 257]]
@@ -303,7 +301,7 @@
 - **Photo pool integrity flow (no-txn guard + blob client-upload + reassign)** — architecture_photo_pool, architecture_neon_no_txn_guard, architecture_blob_client_upload, architecture_reassign_one_op [INFERRED 0.85]
 - **TONE guardrails realized in deferred-metadata UX** — tone_object_is_story, tone_unpressured_forgiving, architecture_deferred_metadata_guardrails [INFERRED 0.85]
 
-## Communities (261 total, 36 thin omitted)
+## Communities (259 total, 35 thin omitted)
 
 ### Community 0 - "Domain types & barrels"
 Cohesion: 0.06
@@ -440,10 +438,6 @@ Nodes (24): 1. Scope, 2.1 Domain types, 2.2 Shared batch schema — `src/lib/dec
 ### Community 34 - "Input"
 Cohesion: 0.06
 Nodes (34): Adored Deployment Guide, Auto-Configured by Vercel, Build Failures, CI gates that stand between a merge and a deploy, Database Backup & Recovery, Development, Email Not Sending, Email (Transactional) (+26 more)
-
-### Community 35 - "CollectionPreferenceItem"
-Cohesion: 0.40
-Nodes (4): MODES, WorkspaceMode, WorkspaceModeChips(), WorkspaceModeChipsProps
 
 ### Community 36 - "AppLayout.tsx"
 Cohesion: 0.18
@@ -794,8 +788,8 @@ Cohesion: 0.33
 Nodes (6): 2.1 Shared objects, private judgment, 2.2 DecisionEvents are the source of truth, 2.3 Sessions are bounded work periods, 2.4 Top-tier discovery matters most, 2.5 Tap-first, accessible interaction, 2. MVP Product Principles
 
 ### Community 140 - "Community 140"
-Cohesion: 0.09
-Nodes (27): bucketDots, bucketLabels, ItemCard(), ItemCardProps, viewerPhoto, deriveUsage(), UsageAnswer, filterItems() (+19 more)
+Cohesion: 0.14
+Nodes (18): bucketDots, bucketLabels, ItemCard(), viewerPhoto, filterItems(), hasName(), itemDisplayName(), itemInitial() (+10 more)
 
 ### Community 141 - "Community 141"
 Cohesion: 0.18
@@ -834,8 +828,8 @@ Cohesion: 0.67
 Nodes (4): Visual regression & UI screenshots exploration, Deterministic e2e seed (pinned IDs, frozen clock) prerequisite, VRT options: hosted (Argos/Chromatic) vs Playwright-native toHaveScreenshot, E2E strategy: Playwright, ephemeral Docker Postgres, fail-closed host guard
 
 ### Community 150 - "Community 150"
-Cohesion: 0.19
-Nodes (11): Bucket, effectiveBucket(), isOnward(), LOVED_BUCKETS, partitionRanked(), RankedJoinedRow, RankedRow, item() (+3 more)
+Cohesion: 0.10
+Nodes (20): deriveUsage(), UsageAnswer, Bucket, effectiveBucket(), isOnward(), LOVED_BUCKETS, partitionRanked(), FinalizeEntry() (+12 more)
 
 ### Community 151 - "Community 151"
 Cohesion: 0.50
@@ -879,11 +873,11 @@ Nodes (4): ReorderResultItemsSchema, ResultItemController, UpdateResultItemSchem
 
 ### Community 164 - "Community 164"
 Cohesion: 0.09
-Nodes (16): CollectionCard(), CollectionCardProps, collection, ItemPhotoCarousel(), ItemPhotoCarouselProps, props, PhotoDeleteControl(), PhotoDeleteControlProps (+8 more)
+Nodes (17): CollectionCard(), CollectionCardProps, collection, ItemCardProps, ItemPhotoCarousel(), ItemPhotoCarouselProps, props, PhotoDeleteControl() (+9 more)
 
 ### Community 165 - "Community 165"
 Cohesion: 0.07
-Nodes (25): CollectionFilters(), CollectionFiltersProps, filters, PhotoPoolPreview(), PhotoPoolPreviewProps, SharePanel(), revoked, share (+17 more)
+Nodes (28): CollectionFilters(), CollectionFiltersProps, filters, PhotoPoolPreview(), PhotoPoolPreviewProps, MODES, WorkspaceMode, WorkspaceModeChips() (+20 more)
 
 ### Community 166 - "Community 166"
 Cohesion: 0.10
@@ -1002,8 +996,8 @@ Cohesion: 0.29
 Nodes (6): Global Constraints, Responsive Pages and Tutorial Alignment Implementation Plan, Task 1: Route responsive coverage table, Task 2: Tutorial reality copy, Task 3: Implement page route responsive layouts, Task 4: Review and verification
 
 ### Community 204 - "Community 204"
-Cohesion: 0.17
-Nodes (17): COMPARE_PAIR, CompareOutcome, CompareRoundResult, RESULT_TO_TIER, SAMPLE_ITEMS, SampleItem, Standing, StandingRow (+9 more)
+Cohesion: 0.19
+Nodes (14): COMPARE_PAIR, CompareRoundResult, RESULT_TO_TIER, SAMPLE_ITEMS, Standing, StandingRow, _outcomes, Tier (+6 more)
 
 ### Community 205 - "Community 205"
 Cohesion: 0.22
@@ -1046,8 +1040,8 @@ Cohesion: 0.38
 Nodes (5): itemRepo(), makeService(), photoRepo(), seedItem(), seedPhoto()
 
 ### Community 215 - "Community 215"
-Cohesion: 0.20
-Nodes (14): SAMPLE_COMPARISON, SAMPLE_WIN, TRIAGE_ITEMS, TriageOutcome, WelcomeHandoff(), WelcomeHandoffProps, WelcomePurpose(), WelcomePurposeProps (+6 more)
+Cohesion: 0.17
+Nodes (12): SAMPLE_COMPARISON, SAMPLE_WIN, CompareOutcome, SampleItem, toItem(), WelcomeCompare(), WelcomeCompareProps, WelcomeRefine() (+4 more)
 
 ### Community 216 - "Community 216"
 Cohesion: 0.04
@@ -1103,8 +1097,8 @@ Cohesion: 0.38
 Nodes (3): at(), corpus(), ev()
 
 ### Community 229 - "Community 229"
-Cohesion: 0.29
-Nodes (6): buildTriageStanding(), comparePairsFor(), Beat, WalkthroughShell(), WelcomeRoundStanding(), TutorialPage()
+Cohesion: 0.18
+Nodes (10): buildTriageStanding(), comparePairsFor(), Beat, WalkthroughShell(), WelcomeHandoff(), WelcomeHandoffProps, WelcomePurpose(), WelcomePurposeProps (+2 more)
 
 ### Community 232 - "Community 232"
 Cohesion: 0.40
@@ -1131,8 +1125,8 @@ Cohesion: 0.50
 Nodes (4): itemRepo(), makeService(), photoRepo(), seedPooled()
 
 ### Community 243 - "Community 243"
-Cohesion: 0.14
-Nodes (14): usageChipLabel(), buildStanding(), COPY, StandingRow(), WelcomeRoundStandingProps, StandingRowItem(), usageFor(), WelcomeStanding() (+6 more)
+Cohesion: 0.13
+Nodes (16): usageChipLabel(), buildStanding(), UsageOutcome, COPY, StandingRow(), WelcomeRoundStandingProps, StandingRowItem(), usageFor() (+8 more)
 
 ### Community 244 - "Community 244"
 Cohesion: 0.27
@@ -1177,16 +1171,16 @@ Nodes (4): DELETE(), GET(), PATCH(), { mockGetSession, mockGetDb, mockGetCurrent
 ## Knowledge Gaps
 - **1677 isolated node(s):** `cov`, `e2e`, `sha`, `ts`, `histPath` (+1672 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **36 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **35 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `MembershipRepository` connect `items.ts` to `Community 248`, `App Router pages`, `PoolUpload.tsx`, `seed.ts`, `Community 178`, `Community 181`, `Community 247`, `Community 216`, `tailwind.config.ts`, `Community 218`, `Invitation`, `Community 184`?**
   _High betweenness centrality (0.017) - this node is a cross-community bridge._
-- **Why does `Item` connect `layout.tsx` to `Sort results & ranking`, `Community 131`, `Collections domain`, `App Router pages`, `Community 140`, `Community 150`, `members.ts`, `Invitation`, `Community 158`, `Community 171`, `Community 178`, `ItemFilters.tsx`, `Community 204`, `Community 212`, `Community 214`, `Community 216`, `Community 217`, `tailwind.config.ts`, `Community 221`, `Community 235`, `Community 247`?**
+- **Why does `Item` connect `layout.tsx` to `Sort results & ranking`, `Community 131`, `Collections domain`, `App Router pages`, `Community 140`, `Community 150`, `members.ts`, `Invitation`, `Community 158`, `Community 164`, `Community 171`, `Community 178`, `ItemFilters.tsx`, `Community 204`, `Community 212`, `Community 214`, `Community 216`, `Community 217`, `tailwind.config.ts`, `Community 221`, `Community 235`, `Community 247`?**
   _High betweenness centrality (0.016) - this node is a cross-community bridge._
-- **Why does `getDb()` connect `Community 218` to `Authorization guards`, `Community 261`, `Database / Drizzle schema`, `App Router pages`, `PoolUpload.tsx`, `Community 140`, `getTestDb()`, `Community 178`, `ItemFilters.tsx`, `Community 244`, `Community 181`, `Community 247`, `tailwind.config.ts`, `Community 158`?**
+- **Why does `getDb()` connect `Community 218` to `Authorization guards`, `Community 261`, `Database / Drizzle schema`, `App Router pages`, `PoolUpload.tsx`, `Community 140`, `getTestDb()`, `Community 178`, `ItemFilters.tsx`, `Community 244`, `Community 181`, `Community 150`, `Community 247`, `tailwind.config.ts`, `Community 158`?**
   _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **Are the 37 inferred relationships involving `getDb()` (e.g. with `EditCollectionPage()` and `ItemEditPage()`) actually correct?**
   _`getDb()` has 37 INFERRED edges - model-reasoned connections that need verification._

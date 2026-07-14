@@ -37,7 +37,9 @@ src/app/**                 file-based pages + src/app/api/** route handlers (mut
       → src/server/repositories/* interface-typed repos; implementations/* do the Drizzle calls
         → Drizzle / Postgres (src/lib/db.ts, schema.ts)
 src/server/dal/*           authorization chokepoint-in-progress (collection-access.ts)
-src/proxy.ts               optimistic login-redirect (Next 16 proxy convention)
+src/proxy.ts               optimistic login-redirect (Next 16 proxy convention);
+                           `/tutorial` + `/onboarding/*` are public walkthrough
+                           surfaces, while real app authz stays in DAL guards
 ```
 
 Key invariants:
