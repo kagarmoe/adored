@@ -16,10 +16,10 @@ export function WelcomeHandoff({ onExplore }: WelcomeHandoffProps) {
       <h1 className="font-display text-4xl text-ink">Now, your turn.</h1>
       <div className="flex flex-col gap-1 max-w-md">
         <p className="text-lg text-ink-soft">
-          Start with a few photos of your things.
+          Begin with photos. They can wait in the pool until you make items.
         </p>
         <p className="text-lg text-ink-soft">
-          Sort whenever you like &mdash; in short rounds, pausing any time.
+          Sort whenever you like, one gentle round at a time.
         </p>
       </div>
 

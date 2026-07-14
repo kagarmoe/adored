@@ -6,8 +6,8 @@ interface WelcomePurposeProps {
   onNext: () => void;
 }
 
-// Beat 1 — the anti-marketplace screen. Names the purpose, then contrasts it
-// with a store, before any mechanic is taught.
+// Beat 1 — names the purpose, then orients the real collection flow before any
+// mechanic is taught.
 export function WelcomePurpose({ onNext }: WelcomePurposeProps) {
   return (
     <section className="flex flex-col items-center text-center gap-6">
@@ -15,13 +15,14 @@ export function WelcomePurpose({ onNext }: WelcomePurposeProps) {
         Rediscover what you love.
       </h1>
       <p className="text-lg text-ink-soft max-w-md">
-        Adored isn&rsquo;t a store. It&rsquo;s a way to notice which of your
-        things you love most, one gentle choice at a time.
+        Adored helps you build a collection from photos, make items when
+        you&rsquo;re ready, and notice what you love most through short rounds.
       </p>
       <div className="flex flex-col gap-1 max-w-md">
-        <p className="text-ink-soft">Gather a few photos of your things.</p>
+        <p className="text-ink-soft">Add photos to a collection.</p>
+        <p className="text-ink-soft">Make items when you&rsquo;re ready.</p>
         <p className="text-ink-soft">Sort in short rounds.</p>
-        <p className="text-ink-soft">See where things stand.</p>
+        <p className="text-ink-soft">See what you love most.</p>
       </div>
       <Button size="lg" onClick={onNext}>
         Show me how

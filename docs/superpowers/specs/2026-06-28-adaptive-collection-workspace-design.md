@@ -154,6 +154,15 @@ Avoid presenting all destinations as equal cards. The workspace should say: "Her
 
 ## 6. Wireframes
 
+Responsive rule for this spec: every web/tablet wireframe has an explicit phone counterpart.
+Phone views are not separate product behavior; they are the same hierarchy collapsed to one column
+with 44px+ tap targets, full-width primary actions, and quiet secondary links that stay reachable
+without becoming peer primaries. Phone button text must fit inside the button without wrapping or
+crowding; shorten the label when the surrounding heading supplies the object. Example: a tablet/web
+button `Begin a collection` becomes `Begin` on phone.
+Route-wide page coverage lives in
+[`2026-07-14-page-phone-layout-coverage.md`](2026-07-14-page-phone-layout-coverage.md).
+
 ### Collection list
 
 ```text
@@ -171,6 +180,33 @@ The things you're deciding about, gathered in one calm place.
 | Summer bags          |  | Winter keepsakes     |
 | Photos waiting       |  |                      |
 +----------------------+  +----------------------+
+```
+
+#### Phone
+
+```text
+/collections
+
+[Header]
+
+Your collections
+The things you're deciding about,
+gathered in one calm place.
+
+[Begin]
+
+[Filters]
+
++------------------------------+
+| cover photo                  |
+| Summer bags                  |
+| Photos waiting               |
++------------------------------+
+
++------------------------------+
+| cover photo                  |
+| Winter keepsakes             |
++------------------------------+
 ```
 
 ### Adaptive collection workspace: pool first
@@ -205,6 +241,49 @@ Continue
 
 (`[bracketed]` = one dominant action; bare text = quiet secondary link.)
 
+#### Phone
+
+```text
+/collections/summer-bags
+
+[Breadcrumbs] Collections / Summer bags
+
+Summer bags
+Created Jun 28, 2026
+
+Collection settings
+Members
+
++ Photo pool ------------------+
+| Photos waiting here          |
+| These can become items       |
+| whenever you're ready.       |
+|                              |
+| [thumb] [thumb]              |
+| [thumb] [thumb]              |
+|                              |
+| [Make items]                 |
+| Add more photos              |
++------------------------------+
+
+Items                         View all items
+Things gathered here
+
++-------------+  +-------------+
+| photo       |  | photo       |
+| Item        |  | Item        |
++-------------+  +-------------+
+
++-------------+  +-------------+
+| photo       |  | photo       |
+| Item        |  | Item        |
++-------------+  +-------------+
+
+Continue
+[Resume sorting]
+Results
+```
+
 ### Adaptive collection workspace: items first
 
 ```text
@@ -227,6 +306,40 @@ Continue
 [Start sorting]  Results
 ```
 
+#### Phone
+
+```text
+/collections/summer-bags
+
+[Breadcrumbs] Collections / Summer bags
+
+Summer bags
+Created Jun 28, 2026
+
+Collection settings
+Members
+
+Items
+Things gathered here
+
+[Add photos]
+Add item · View all items
+
++-------------+  +-------------+
+| photo       |  | photo       |
+| Item        |  | Item        |
++-------------+  +-------------+
+
++-------------+  +-------------+
+| photo       |  | photo       |
+| Item        |  | Item        |
++-------------+  +-------------+
+
+Continue
+[Start sorting]
+Results
+```
+
 ### Empty collection
 
 ```text
@@ -242,6 +355,26 @@ New collection                                   Collection settings
 |                                                                  |
 |                                      [Add photos]                 |
 +------------------------------------------------------------------+
+```
+
+#### Phone
+
+```text
+/collections/new-collection
+
+[Breadcrumbs] Collections / New collection
+
+New collection
+Collection settings
+
++------------------------------+
+| Add photos when you're ready |
+| Photos can wait here until   |
+| you are ready to name or     |
+| group them.                  |
+|                              |
+| [Add photos]                 |
++------------------------------+
 ```
 
 ### Navigation map
@@ -455,7 +588,8 @@ E2E:
 - `/collections/[id]` without loose photos but with items shows items first;
 - `/collections/[id]` with neither shows the add-photos empty state;
 - keyboard can reach pool/items/secondary actions/owner utilities in order;
-- tablet and mobile screenshots for pool-first and items-first states.
+- tablet and phone screenshots for pool-first and items-first states, with the phone shots checked
+  against their paired wireframes in §6.
 
 ## 14. Rollout and sequencing
 
