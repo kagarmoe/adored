@@ -29,9 +29,9 @@ vi.mock("@/server/repositories/implementations/ItemDispositionRepository", () =>
 import ComparePage from "./page";
 
 const COLLECTION = { id: "coll_01ABCDEF", slug: "summer-bags", name: "Summer Bags" };
-const A = { id: "item_a", collectionId: "coll_01ABCDEF", number: 1, name: "Bag A", brand: null, status: "active", createdAt: new Date(1) };
-const B = { id: "item_b", collectionId: "coll_01ABCDEF", number: 2, name: "Bag B", brand: null, status: "active", createdAt: new Date(2) };
-const C = { id: "item_c", collectionId: "coll_01ABCDEF", number: 3, name: "Bag C", brand: null, status: "active", createdAt: new Date(3) };
+const A = { id: "item_a", collectionId: "coll_01ABCDEF", number: 1, name: "Bag A", brand: null, status: "active", createdAt: new Date(1), deletedAt: null };
+const B = { id: "item_b", collectionId: "coll_01ABCDEF", number: 2, name: "Bag B", brand: null, status: "active", createdAt: new Date(2), deletedAt: null };
+const C = { id: "item_c", collectionId: "coll_01ABCDEF", number: 3, name: "Bag C", brand: null, status: "active", createdAt: new Date(3), deletedAt: null };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -41,8 +41,8 @@ beforeEach(() => {
   sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_1", collectionId: "coll_01ABCDEF", number: 1, status: "active", curatorId: "u1" });
   // listForCurator = findByCollectionAndCurator + one findBySession per curator session.
   sessionRepo.findByCollectionAndCurator.mockResolvedValue([{ id: "sess_1" }]);
-  // Both items are Love/Like so they're in the engine's rankable set; with no
-  // comparison recorded yet, selectNextPair asks about exactly this pair.
+  // With no comparison recorded yet, selectNextPair asks about this pair. Compare
+  // no longer requires Love/Like preferences.
   prefRepo.findByCollection.mockResolvedValue([
     { itemId: "item_a", rankBucket: "top" },
     { itemId: "item_b", rankBucket: "high" },
@@ -58,6 +58,17 @@ beforeEach(() => {
 });
 
 describe("ComparePage hero images", () => {
+  it("renders a pair even when no triage preferences exist", async () => {
+    prefRepo.findByCollection.mockResolvedValue([]);
+
+    const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
+    render(ui);
+
+    expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
+    expect(screen.queryByText("All comparisons complete")).not.toBeInTheDocument();
+  });
+
   it("renders both items' hero images using collection.id, batch-loaded once", async () => {
     const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
@@ -73,8 +84,8 @@ describe("ComparePage hero images", () => {
 
 describe("ComparePage disposition exclusion (Epic C PR1)", () => {
   it("excludes a disposed item from the pair — only one eligible item leaves no comparison", async () => {
-    // A and B are both rankable (top/high), but B is deferred → only A remains in
-    // the rankable set → no pair → the "all comparisons complete" empty state, and
+    // B is deferred → only A remains comparable → no pair → the
+    // "all comparisons complete" empty state, and
     // neither hero renders.
     dispRepo.findByCollectionAndCurator.mockResolvedValue([
       { itemId: "item_b", disposition: "deferred", collectionId: "coll_01ABCDEF", curatorId: "u1" },
@@ -91,7 +102,7 @@ describe("ComparePage disposition exclusion (Epic C PR1)", () => {
 
 describe("ComparePage gentle progress text (Epic 0 Task 8 regression)", () => {
   it("renders 'N comparisons made so far' once at least one pairwise decision exists", async () => {
-    // Three rankable items so a pair still remains after one recorded comparison —
+    // Three comparable items so a pair still remains after one recorded comparison —
     // the page reaches CompareChoice (not the "all complete" state) and must show
     // the gentle, non-gamified count derived from the session's pairwise decisions.
     itemRepo.findByCollection.mockResolvedValue([A, B, C]);
@@ -118,12 +129,7 @@ describe("ComparePage gentle progress text (Epic 0 Task 8 regression)", () => {
     expect(screen.getByText(/1 comparison made so far/)).toBeInTheDocument();
   });
 
-  it("keeps the progress text in the 'all comparisons complete' state (E2E seed: top/high/low, one decision)", async () => {
-    // Mirrors seedSortScenario exactly: three items bucketed top/high/low, so only
-    // TWO are rankable. After one recorded comparison the 2-item set is fully
-    // ordered → selectNextPair returns null → the "all complete" empty state. The
-    // gentle count must survive that transition (the Task 8 regression hid it,
-    // because the text lived only inside CompareChoice which no longer renders).
+  it("keeps low-bucket items comparable after one recorded comparison", async () => {
     itemRepo.findByCollection.mockResolvedValue([A, B, C]);
     prefRepo.findByCollection.mockResolvedValue([
       { itemId: "item_a", rankBucket: "top" },
@@ -144,7 +150,7 @@ describe("ComparePage gentle progress text (Epic 0 Task 8 regression)", () => {
     const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
 
-    expect(screen.getByText("All comparisons complete")).toBeInTheDocument();
+    expect(screen.queryByText("All comparisons complete")).not.toBeInTheDocument();
     expect(screen.getByText(/comparison(s)? made so far/)).toBeInTheDocument();
     expect(screen.getByText(/1 comparison made so far/)).toBeInTheDocument();
   });

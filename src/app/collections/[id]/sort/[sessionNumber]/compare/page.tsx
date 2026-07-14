@@ -125,7 +125,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
         <PendingDecisionsGate curatorId={session.user.id}>
           <EmptyState
             heading="All comparisons complete"
-            message="You&apos;ve compared all meaningful pairs. Check your results!"
+            message="You&apos;ve compared the pairs this round can offer. Check your results!"
           />
           {comparisonsMade > 0 && (
             <p className="mt-4 text-center text-sm text-ink-soft">

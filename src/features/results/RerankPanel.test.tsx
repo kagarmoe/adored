@@ -86,7 +86,7 @@ function enterReorder() {
 }
 
 describe("RerankPanel — enter/leave reorder mode", () => {
-  it("shows the normal composition until 'Put in order by hand', then the reorder list", () => {
+  it("shows the normal composition until 'Adjust results', then the reorder list", () => {
     renderDraft();
     expect(screen.getByText("NORMAL VIEW")).toBeInTheDocument();
     expect(screen.queryByTestId("rerank-row")).toBeNull();

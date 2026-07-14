@@ -132,13 +132,13 @@ describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () =
     photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map());
   });
 
-  it("offers 'Put in order by hand' on a DRAFT result, not 'Make a revision'", async () => {
+  it("offers 'Adjust results' on a DRAFT result, not 'Make a revision'", async () => {
     resultRepo.findByCollectionAndNumber.mockResolvedValue({
       id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "draft", curatorId: "u1",
     });
     const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
-    expect(screen.getByRole("button", { name: "Put in order by hand" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Adjust results" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Make a revision" })).toBeNull();
   });
 
@@ -148,7 +148,7 @@ describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () =
     });
     const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
-    expect(screen.queryByRole("button", { name: "Put in order by hand" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Adjust results" })).toBeNull();
     expect(screen.getByRole("button", { name: "Make a revision" })).toBeInTheDocument();
   });
 
@@ -162,7 +162,7 @@ describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () =
     const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     expect(screen.queryByRole("button", { name: "Make a revision" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Put in order by hand" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Adjust results" })).toBeNull();
   });
 
   // 9v1f.1: the hand-order list now spans BOTH tiers — loved rows, a sentinel
@@ -179,7 +179,7 @@ describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () =
     itemRepo.findByCollection.mockResolvedValue([HERO, REST]);
     const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
-    fireEvent.click(screen.getByRole("button", { name: "Put in order by hand" }));
+    fireEvent.click(screen.getByRole("button", { name: "Adjust results" }));
     const rows = screen.getAllByTestId("rerank-row");
     const names = rows.map((li) => within(li).getByText(/Bag/).textContent);
     expect(names).toEqual(["Hero Bag", "Rest Bag"]); // loved row, then the Onward row

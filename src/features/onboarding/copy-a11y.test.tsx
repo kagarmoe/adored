@@ -9,9 +9,14 @@ import { WelcomeCompare } from "./WelcomeCompare";
 import { WelcomeStanding } from "./WelcomeStanding";
 import { WelcomeRefine } from "./WelcomeRefine";
 import { WelcomeHandoff } from "./WelcomeHandoff";
-import { COMPARE_PAIR, type CompareOutcome } from "./sampleData";
+import { COMPARE_PAIR, TRIAGE_ITEMS, type CompareOutcome, type CompareRoundResult } from "./sampleData";
 
 const SAMPLE_WIN: CompareOutcome = { kind: "win", winnerId: COMPARE_PAIR[0].id };
+const SAMPLE_COMPARISON: CompareRoundResult = {
+  itemAId: COMPARE_PAIR[0].id,
+  itemBId: COMPARE_PAIR[1].id,
+  outcome: SAMPLE_WIN,
+};
 
 // The triage beat renders the real sorting controls, which call useRouter()
 // unconditionally. Local mode never touches the router, but the hook still reads
@@ -21,23 +26,26 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("purpose journey line", () => {
-  it("renders the quiet collection journey", () => {
+  it("renders the quiet sample sorting journey", () => {
     const { container } = render(<WelcomePurpose onNext={() => {}} />);
     const text = container.textContent ?? "";
-    expect(text).toContain("Add photos to a collection.");
-    expect(text).toContain("Make items when you’re ready.");
-    expect(text).toContain("Sort in short rounds.");
-    expect(text).toContain("See what you love most.");
+    expect(text).toContain("In this tutorial, you’ll sort a small sample collection through three short rounds.");
+    expect(text).toContain("Triage groups by how you feel.");
+    expect(text).toContain("Usage asks what happens in your life.");
+    expect(text).toContain("Compare puts pieces in order.");
+    expect(text).toContain("After each round, you’ll see what changed and what you adore.");
+    expect(text).not.toContain("Add photos to a collection.");
+    expect(text).not.toContain("Make items when you’re ready.");
   });
 
   it("renders the journey as quiet text-ink-soft paragraphs with no icons/arrows", () => {
     const { container } = render(<WelcomePurpose onNext={() => {}} />);
     // Each journey phrase lives in a text-ink-soft <p>; the stack carries no svg/icon.
     for (const phrase of [
-      "Add photos to a collection.",
-      "Make items when you’re ready.",
-      "Sort in short rounds.",
-      "See what you love most.",
+      "Triage groups by how you feel.",
+      "Usage asks what happens in your life.",
+      "Compare puts pieces in order.",
+      "After each round, you’ll see what changed and what you adore.",
     ]) {
       const p = Array.from(container.querySelectorAll("p")).find(
         (el) => el.textContent?.trim() === phrase
@@ -56,8 +64,8 @@ describe("refine beat copy", () => {
     expect(text).toContain("Refine it any time");
     expect(text).toContain("The standing keeps updating as you sort");
     // Names the REAL button people meet, so the surfaces cannot fork.
-    expect(text).toContain("Put things in order");
-    expect(text).toContain("starts another round whenever you want it truer");
+    expect(text).toContain("Adjust results");
+    expect(text).toContain("lets you drag the list until it feels right");
     expect(text).toContain("When it feels complete, you can finalize it and share it.");
   });
 });
@@ -68,10 +76,11 @@ describe("a11y: touch targets >= 44px", () => {
     for (const c of [
       render(<WelcomePurpose onNext={() => {}} />).container,
       render(<WelcomeTriage index={0} onOutcome={() => {}} />).container,
-      render(<WelcomeUsage onOutcome={() => {}} />).container,
-      render(<WelcomeCompare onOutcome={() => {}} />).container,
+      render(<WelcomeUsage item={TRIAGE_ITEMS[0]} onOutcome={() => {}} />).container,
+      render(<WelcomeCompare left={COMPARE_PAIR[0]} right={COMPARE_PAIR[1]} onOutcome={() => {}} />)
+        .container,
       render(
-        <WelcomeStanding compare={SAMPLE_WIN} triage={{}} onNext={() => {}} />
+        <WelcomeStanding comparisons={[SAMPLE_COMPARISON]} triage={{}} onNext={() => {}} />
       ).container,
       render(<WelcomeRefine onNext={() => {}} />).container,
       render(<WelcomeHandoff onExplore={() => {}} />).container,
@@ -96,7 +105,7 @@ describe("a11y: no essential motion", () => {
     // root element opts into transition/animate utilities.
     for (const c of [
       render(<WelcomePurpose onNext={() => {}} />).container,
-      render(<WelcomeStanding compare={SAMPLE_WIN} triage={{}} onNext={() => {}} />)
+      render(<WelcomeStanding comparisons={[SAMPLE_COMPARISON]} triage={{}} onNext={() => {}} />)
         .container,
     ]) {
       const section = c.querySelector("section");

@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   buildStanding,
+  buildTriageStanding,
+  comparePairsFor,
   COMPARE_PAIR,
   RESULT_TO_TIER,
   SAMPLE_ITEMS,
   toItem,
   TRIAGE_ITEMS,
   type CompareOutcome,
+  type CompareRoundResult,
   type Tier,
   type TriageOutcome,
 } from "./sampleData";
@@ -17,91 +20,130 @@ const tiers = (t: Record<string, Tier>): Record<string, TriageOutcome> =>
     Object.entries(t).map(([id, tier]) => [id, { kind: "tier", tier } as TriageOutcome]),
   );
 
+const compared = (
+  itemAId: string,
+  itemBId: string,
+  outcome: CompareOutcome,
+): CompareRoundResult => ({ itemAId, itemBId, outcome });
+
 describe("buildStanding", () => {
-  it("win: winner love, passed-over like, at the top", () => {
+  it("win: winner rises while triage tiers stay attached", () => {
     const s = buildStanding(
-      { kind: "win", winnerId: "clock" },
-      tiers({ vase: "maybe", books: "maybe", cushion: "maybe" }),
+      [compared("armchair", "clock", { kind: "win", winnerId: "clock" })],
+      tiers({ armchair: "maybe", clock: "maybe", vase: "maybe" }),
     );
-    // clock is the winner (love) and crowns the ranking; armchair is passed over (like).
-    expect(s.ranked[0]).toEqual({ item: SAMPLE_ITEMS[1], tier: "love" });
-    expect(s.ranked[1]).toEqual({ item: SAMPLE_ITEMS[0], tier: "like" });
+    expect(s.ranked.map((r) => r.item.id)).toEqual(["clock", "armchair", "vase"]);
+    expect(s.ranked.map((r) => r.tier)).toEqual(["maybe", "maybe", "maybe"]);
     expect(s.deferred).toEqual([]);
     expect(s.setAside).toEqual([]);
   });
 
-  it("tie: both love, display order kept", () => {
-    const s = buildStanding({ kind: "tie" }, tiers({ vase: "maybe", books: "like", cushion: "love" }));
-    expect(s.ranked[0]).toEqual({ item: SAMPLE_ITEMS[0], tier: "love" });
-    expect(s.ranked[1]).toEqual({ item: SAMPLE_ITEMS[1], tier: "love" });
-  });
-
-  it("skip: both like, display order kept", () => {
-    const s = buildStanding({ kind: "skip" }, tiers({ vase: "maybe", books: "maybe", cushion: "maybe" }));
-    // Neither pair item wins; both drop to "like", keeping displayed pair order.
-    expect(s.ranked[0]).toEqual({ item: SAMPLE_ITEMS[0], tier: "like" });
-    expect(s.ranked[1]).toEqual({ item: SAMPLE_ITEMS[1], tier: "like" });
-  });
-
-  it("triage tiers order remaining rows love>like>maybe>onward", () => {
+  it("tie: both pieces get the same compare weight, then triage order breaks the tie", () => {
     const s = buildStanding(
-      { kind: "win", winnerId: "armchair" },
-      tiers({ vase: "love", books: "maybe", cushion: "onward" }),
+      [compared("armchair", "clock", { kind: "tie" })],
+      tiers({ armchair: "maybe", clock: "like", vase: "love" }),
     );
-    // love: armchair (winner, idx0), vase (idx2); like: clock (passed over, idx1);
-    // maybe: books (idx3); onward: cushion (idx4). Within a tier, display order holds.
-    expect(s.ranked.map((r) => r.item.id)).toEqual(["armchair", "vase", "clock", "books", "cushion"]);
-    expect(s.ranked.map((r) => r.tier)).toEqual(["love", "love", "like", "maybe", "onward"]);
+    expect(s.ranked.map((r) => r.item.id)).toEqual(["clock", "armchair", "vase"]);
+    expect(s.ranked.map((r) => r.tier)).toEqual(["like", "maybe", "love"]);
+  });
+
+  it("skip: compare adds no weight, so triage standing is kept", () => {
+    const s = buildStanding(
+      [compared("armchair", "clock", { kind: "skip" })],
+      tiers({ armchair: "maybe", clock: "maybe", vase: "maybe" }),
+    );
+    expect(s.ranked.map((r) => r.item.id)).toEqual(["armchair", "clock", "vase"]);
+    expect(s.ranked.map((r) => r.tier)).toEqual(["maybe", "maybe", "maybe"]);
+  });
+
+  it("compare rounds reorder ranked rows after triage", () => {
+    const s = buildStanding(
+      [
+        compared("armchair", "clock", { kind: "win", winnerId: "clock" }),
+        compared("armchair", "vase", { kind: "win", winnerId: "vase" }),
+        compared("clock", "vase", { kind: "win", winnerId: "vase" }),
+      ],
+      tiers({ armchair: "love", clock: "love", vase: "love" }),
+    );
+    expect(s.ranked.map((r) => r.item.id)).toEqual(["vase", "clock", "armchair"]);
+    expect(s.ranked.map((r) => r.tier)).toEqual(["love", "love", "love"]);
   });
 
   it("defaults an un-triaged triage item to maybe", () => {
-    const s = buildStanding({ kind: "win", winnerId: "armchair" }, {});
+    const s = buildStanding([compared("armchair", "clock", { kind: "win", winnerId: "armchair" })], {});
     expect(s.ranked.find((r) => r.item.id === "vase")?.tier).toBe("maybe");
-    expect(s.ranked.find((r) => r.item.id === "books")?.tier).toBe("maybe");
-    expect(s.ranked.find((r) => r.item.id === "cushion")?.tier).toBe("maybe");
   });
 
   it("deferred leaves the ranking for the deferred group", () => {
     const s = buildStanding(
-      { kind: "win", winnerId: "armchair" },
-      { ...tiers({ vase: "love", books: "like" }), cushion: { kind: "deferred" } },
+      [compared("armchair", "clock", { kind: "win", winnerId: "armchair" })],
+      { ...tiers({ armchair: "love", clock: "like" }), vase: { kind: "deferred" } },
     );
-    expect(s.deferred.map((i) => i.id)).toEqual(["cushion"]);
-    expect(s.ranked.map((r) => r.item.id)).not.toContain("cushion");
+    expect(s.deferred.map((i) => i.id)).toEqual(["vase"]);
+    expect(s.ranked.map((r) => r.item.id)).not.toContain("vase");
     expect(s.setAside).toEqual([]);
   });
 
   it("setAside leaves the ranking for the set-aside group", () => {
     const s = buildStanding(
-      { kind: "win", winnerId: "armchair" },
-      { ...tiers({ vase: "love", books: "like" }), cushion: { kind: "setAside" } },
+      [compared("armchair", "clock", { kind: "win", winnerId: "armchair" })],
+      { ...tiers({ armchair: "love", clock: "like" }), vase: { kind: "setAside" } },
     );
-    expect(s.setAside.map((i) => i.id)).toEqual(["cushion"]);
-    expect(s.ranked.map((r) => r.item.id)).not.toContain("cushion");
+    expect(s.setAside.map((i) => i.id)).toEqual(["vase"]);
+    expect(s.ranked.map((r) => r.item.id)).not.toContain("vase");
     expect(s.deferred).toEqual([]);
   });
 
-  it("all triage items deferred/set aside still ranks the compare pair", () => {
-    const s = buildStanding({ kind: "tie" }, {
-      vase: { kind: "deferred" },
-      books: { kind: "setAside" },
-      cushion: { kind: "deferred" },
-    });
-    // The compare pair always ranks, so ranked is never empty here — the empty-ranked
-    // "all decided" (hero omitted) variant is a render-layer concern (Task 10), not
-    // reachable through buildStanding because win/tie/skip all rank the pair.
-    expect(s.ranked.map((r) => r.item.id)).toEqual(["armchair", "clock"]);
-    expect(s.ranked.every((r) => r.tier === "love")).toBe(true);
-    expect(s.ranked[0]).toBeDefined();
-    expect(s.deferred.map((i) => i.id)).toEqual(["vase", "cushion"]);
-    expect(s.setAside.map((i) => i.id)).toEqual(["books"]);
+  it("all triage items deferred/set aside leaves no ranked hero", () => {
+    const s = buildStanding(
+      [compared("armchair", "clock", { kind: "tie" })],
+      {
+        armchair: { kind: "deferred" },
+        clock: { kind: "setAside" },
+        vase: { kind: "deferred" },
+      },
+    );
+    expect(s.ranked).toEqual([]);
+    expect(s.deferred.map((i) => i.id)).toEqual(["armchair", "vase"]);
+    expect(s.setAside.map((i) => i.id)).toEqual(["clock"]);
   });
 
-  it("keeps compare and triage sets disjoint (each sample item appears once)", () => {
-    const s = buildStanding({ kind: "win", winnerId: "armchair" }, tiers({ vase: "love", books: "like", cushion: "maybe" }));
+  it("keeps each demonstrated sample item represented once", () => {
+    const s = buildStanding(
+      [compared("armchair", "clock", { kind: "win", winnerId: "armchair" })],
+      tiers({ armchair: "love", clock: "like", vase: "maybe" }),
+    );
     const all = [...s.ranked.map((r) => r.item.id), ...s.deferred.map((i) => i.id), ...s.setAside.map((i) => i.id)];
     expect(new Set(all).size).toBe(all.length);
-    expect(new Set(all)).toEqual(new Set(SAMPLE_ITEMS.map((i) => i.id)));
+    expect(new Set(all)).toEqual(new Set(TRIAGE_ITEMS.map((i) => i.id)));
+  });
+});
+
+describe("buildTriageStanding", () => {
+  it("shows the first standing before usage or compare", () => {
+    const s = buildTriageStanding(tiers({ armchair: "like", clock: "love", vase: "maybe" }));
+    expect(s.ranked.map((r) => r.item.id)).toEqual(["clock", "armchair", "vase"]);
+    expect(s.ranked.map((r) => r.tier)).toEqual(["love", "like", "maybe"]);
+  });
+});
+
+describe("comparePairsFor", () => {
+  it("compares every ranked item against every other ranked item", () => {
+    const standing = buildTriageStanding(tiers({ armchair: "love", clock: "love", vase: "love" }));
+    expect(comparePairsFor(standing).map((pair) => pair.map((item) => item.id))).toEqual([
+      ["armchair", "clock"],
+      ["armchair", "vase"],
+      ["clock", "vase"],
+    ]);
+  });
+
+  it("omits deferred and set-aside items from compare pairs", () => {
+    const standing = buildTriageStanding({
+      armchair: { kind: "deferred" },
+      clock: { kind: "tier", tier: "love" },
+      vase: { kind: "setAside" },
+    });
+    expect(comparePairsFor(standing)).toEqual([]);
   });
 });
 
@@ -161,8 +203,8 @@ describe("sample content", () => {
     expect(COMPARE_PAIR.map((i) => i.id)).toEqual(["armchair", "clock"]);
   });
 
-  it("triage items are vase, books, cushion (the not-yours item third)", () => {
-    expect(TRIAGE_ITEMS.map((i) => i.id)).toEqual(["vase", "books", "cushion"]);
+  it("triage items are the demonstrated sample collection", () => {
+    expect(TRIAGE_ITEMS.map((i) => i.id)).toEqual(["armchair", "clock", "vase"]);
   });
 
   it("renames the cushion to 'The kid's microphone cushion' on the same image", () => {

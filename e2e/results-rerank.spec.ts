@@ -44,7 +44,7 @@ test.describe("draft result — manual re-rank persists through the bulk endpoin
 
   test("within-tier and cross-tier hand-order both persist across a reload", async ({ page }) => {
     await page.goto(`/collections/${slug}/results/${resultNumber}`);
-    await page.getByRole("button", { name: "Put in order by hand" }).click();
+    await page.getByRole("button", { name: "Adjust results" }).click();
 
     const rows = page.getByTestId("rerank-row");
     // The list spans both tiers now: Item 1, Item 2 (loved), then Item 3 (Onward),
@@ -74,7 +74,7 @@ test.describe("draft result — manual re-rank persists through the bulk endpoin
     // promotion are still there — written to the DB (manual_rank + manual_bucket), not
     // just the optimistic view.
     await page.reload();
-    await page.getByRole("button", { name: "Put in order by hand" }).click();
+    await page.getByRole("button", { name: "Adjust results" }).click();
     const reloaded = page.getByTestId("rerank-row");
     await expect(reloaded).toHaveCount(3);
     await expect(reloaded.nth(0)).toContainText("E2E Sort Item 2");

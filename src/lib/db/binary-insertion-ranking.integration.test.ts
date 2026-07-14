@@ -229,9 +229,9 @@ describeDb("preference orderRank persistence", () => {
 
 // Task 7: recalculatePreferences runs the pure binary-insertion engine over the
 // curator's pairwise comparisons and assigns a dense order_rank (0 = most loved)
-// to the top/high (Love+Like) items. Real seam, no mocks beyond the DB boundary:
-// two items triaged into the SAME tier, one pairwise deciding the order, then the
-// materialized preference rows are re-read and their order_rank asserted.
+// to comparable items. Real seam, no mocks beyond the DB boundary: two items,
+// one pairwise decision, then the materialized preference rows are re-read and
+// their order_rank asserted.
 //
 // Local recordTriage/recordPairwise INSERT real decision_events rows (id via
 // generateId, type + decision jsonb matching TriageDecision / PairwiseDecision).
@@ -264,7 +264,7 @@ async function recordPairwise(
     )`);
 }
 
-describeDb("recalculate assigns orderRank to top+high via insertion", () => {
+describeDb("recalculate assigns orderRank via insertion", () => {
   beforeAll(async () => { await resetDb(); });
   afterAll(async () => { await closeDb(); });
 
@@ -355,6 +355,31 @@ describeDb("decisions route — idempotency on clientKey (route -> repo -> DB)",
       sql`select count(*)::int as n from decision_events where session_id = ${sessionId}`,
     );
     expect((rows[0] as { n: number }).n).toBe(2);
+  });
+
+  it("records pairwise-only Compare and assigns dense orderRank without triage", async () => {
+    const { db } = getTestDb();
+    const collRow = await db.execute(
+      sql`select collection_id from sessions where id = ${sessionId}`,
+    );
+    const collectionId = (collRow[0] as { collection_id: string }).collection_id;
+    const itemB = (await new ItemRepository(db).create({ collectionId, name: "Bag B" })).id;
+
+    const res = await postDecision(sessionId, {
+      type: "pairwise_compare",
+      decision: { itemAId: itemId, itemBId: itemB, result: "item_b" },
+      clientKey: "cmp-only",
+    });
+
+    expect(res.status).toBe(201);
+    const prefs = await new CollectionPreferenceItemRepository(db).findByCollection(collectionId, ownerId);
+    const a = prefs.find((p) => p.itemId === itemId);
+    const b = prefs.find((p) => p.itemId === itemB);
+
+    expect(a?.rankBucket).toBe("medium");
+    expect(b?.rankBucket).toBe("medium");
+    expect(b?.orderRank).toBe(0);
+    expect(a?.orderRank).toBe(1);
   });
 
   // Fix 3: a pairwise_compare retried with the SAME clientKey returns the ORIGINAL

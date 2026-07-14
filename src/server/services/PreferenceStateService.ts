@@ -7,11 +7,11 @@ import type { ScoringService } from "@/server/services/ScoringService";
 import { loadCuratorDecisionEvents } from "@/server/services/decision-log";
 import {
   deriveOrder,
-  RANKABLE_BUCKETS,
   toComparisonEvents,
   type ComparisonEvent,
   type RankItem,
 } from "@/lib/insertion-ranking";
+import { selectComparableItems } from "@/lib/compare-selection";
 
 export class PreferenceStateService {
   constructor(
@@ -74,8 +74,8 @@ export class PreferenceStateService {
   }
 
   // Run the pure binary-insertion engine over the curator's pairwise comparisons
-  // for the Love+Like items, mapping each placed item to its dense slot (0 = most
-  // loved). Items the engine leaves unplaced are absent from the map (=> null).
+  // for comparable live items, mapping each placed item to its dense slot (0 =
+  // most loved). Items the engine leaves unplaced are absent from the map (=> null).
   // `items` is the collection's LIVE item set, already loaded by the caller (the
   // preference set is already filtered to it), so no second read is needed.
   private deriveOrderRanks(
@@ -83,15 +83,11 @@ export class PreferenceStateService {
     preferences: CollectionPreferenceItem[],
     events: DecisionEvent[],
   ): Map<string, number> {
-    const rankableIds = new Set(
-      preferences.filter((p) => RANKABLE_BUCKETS.has(p.rankBucket)).map((p) => p.itemId),
-    );
-    if (rankableIds.size === 0) return new Map();
+    if (preferences.length === 0) return new Map();
 
-    // Keep each rankable item's OWN createdAt (drives the engine's deterministic
+    // Keep each comparable item's OWN createdAt (drives the engine's deterministic
     // canonical insertion sequence).
-    const rankItems: RankItem[] = items
-      .filter((i) => rankableIds.has(i.id))
+    const rankItems: RankItem[] = selectComparableItems(items, new Map())
       .map((i) => ({ id: i.id, createdAt: i.createdAt }));
 
     // Shared mapping with the live selector (selectNextPair) — both entry points

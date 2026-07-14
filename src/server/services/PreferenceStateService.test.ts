@@ -168,8 +168,8 @@ describe("PreferenceStateService.recalculatePreferences", () => {
     } as unknown as CollectionPreferenceItemRepository;
 
     const items: Item[] = [
-      { id: "a", createdAt: t0 } as Item,
-      { id: "b", createdAt: t1 } as Item,
+      { id: "a", createdAt: t0, deletedAt: null } as Item,
+      { id: "b", createdAt: t1, deletedAt: null } as Item,
     ];
     const sessions: Session[] = [{ id: "sess-1" } as Session];
     const decisionRepo = {
@@ -199,6 +199,61 @@ describe("PreferenceStateService.recalculatePreferences", () => {
     // Every ranked slot is distinct + dense — the invariant the bulk SQL protects.
     expect(rankOf("b")).toBe(0);
     expect(rankOf("a")).toBe(1);
+  });
+
+  it("assigns dense order ranks to compare-only neutral rows with no triage buckets", async () => {
+    // Pairwise-only rows are scored defensively as medium. Compare is now its own
+    // sort, so medium rows must still receive orderRank from the pairwise engine.
+    const t0 = new Date("2026-06-01T00:00:00Z");
+    const t1 = new Date("2026-06-01T00:00:01Z");
+    const computed = [
+      scored({ itemId: "a", score: 0.375, rankBucket: "medium", comparisonCount: 1 }),
+      scored({ itemId: "b", score: 0.375, rankBucket: "medium", comparisonCount: 1 }),
+    ];
+    const computePreferences = vi.fn().mockResolvedValue(computed);
+    const scoringService = { computePreferences } as unknown as ScoringService;
+
+    let captured: BulkUpsertRow[] = [];
+    const bulkUpsert = vi
+      .fn<CollectionPreferenceItemRepository["bulkUpsert"]>()
+      .mockImplementation(async (rows) => { captured = rows; });
+    const preferenceRepo = {
+      findByCollection: vi.fn().mockResolvedValue([]),
+      bulkUpsert,
+      clearOrderRanks: vi.fn().mockResolvedValue(undefined),
+    } as unknown as CollectionPreferenceItemRepository;
+
+    const items: Item[] = [
+      { id: "a", createdAt: t0, deletedAt: null } as Item,
+      { id: "b", createdAt: t1, deletedAt: null } as Item,
+    ];
+    const sessions: Session[] = [{ id: "sess-1" } as Session];
+    const decisionRepo = {
+      findBySession: vi.fn().mockResolvedValue([
+        {
+          id: "evt-1",
+          sessionId: "sess-1",
+          type: "pairwise_compare",
+          decision: { itemAId: "a", itemBId: "b", result: "item_b" },
+          createdAt: t1,
+        },
+      ]),
+    } as unknown as DecisionEventRepository;
+
+    const service = new PreferenceStateService(
+      preferenceRepo,
+      scoringService,
+      makeItemRepo(items),
+      makeSessionRepo(sessions),
+      decisionRepo,
+    );
+
+    await service.recalculatePreferences(COLLECTION, CURATOR);
+
+    const rankOf = (id: string) => captured.find((c) => c.itemId === id)!.orderRank;
+    expect(rankOf("b")).toBe(0);
+    expect(rankOf("a")).toBe(1);
+    expect(captured.map((c) => c.rankBucket)).toEqual(["medium", "medium"]);
   });
 
   it("returns the freshly-read preferences after persisting", async () => {

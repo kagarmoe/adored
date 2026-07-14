@@ -84,12 +84,17 @@ export function DecisionControls<D extends Record<string, unknown> = Record<stri
     }
   }
 
+  const controlsClassName =
+    type === "triage"
+      ? "grid grid-cols-2 gap-3 sm:flex sm:flex-wrap"
+      : "flex flex-wrap gap-3";
+
   return (
     <div className="space-y-3">
       <p role="status" aria-live="polite" className="sr-only">
         {announcement}
       </p>
-      <div className="flex flex-wrap gap-3">
+      <div className={controlsClassName}>
         {decisions.map((item) => {
           const selected = priorAnswer !== undefined && item.label === priorAnswer;
           return (

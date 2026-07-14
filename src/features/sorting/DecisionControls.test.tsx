@@ -40,6 +40,18 @@ describe("DecisionControls triage tier tap", () => {
     }
   });
 
+  it("lays triage tiers out as a deliberate 2x2 phone grid", () => {
+    render(
+      <DecisionControls
+        submit={{ kind: "session", sessionId: "sess_1" }}
+        type="triage"
+        decisions={TRIAGE_DECISIONS}
+      />,
+    );
+    const tierGroup = screen.getByRole("button", { name: "Love" }).parentElement;
+    expect(tierGroup).toHaveClass("grid", "grid-cols-2", "sm:flex");
+  });
+
   it("tapping a tier POSTs that tier's decision (the right `result`) to the session decisions route", async () => {
     const user = userEvent.setup();
     render(

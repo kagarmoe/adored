@@ -2,9 +2,11 @@
 
 import { CompareChoice } from "@/features/sorting/CompareChoice";
 import { COMPARE_SUBLINE, ROUND_COPY, WELCOME_ROUND_KICKER } from "@/features/sorting/roundCopy";
-import { COMPARE_PAIR, toItem, type CompareOutcome } from "./sampleData";
+import { toItem, type CompareOutcome, type SampleItem } from "./sampleData";
 
 interface WelcomeCompareProps {
+  left: SampleItem;
+  right: SampleItem;
   /** Reports the typed compare outcome, then advances the walkthrough. */
   onOutcome: (outcome: CompareOutcome) => void;
 }
@@ -14,9 +16,11 @@ interface WelcomeCompareProps {
 // uses a NEUTRAL round noun (WELCOME_ROUND_KICKER) distinct from the person-side
 // arc names in ROUND_COPY (user decision); the explainer still comes from ROUND_COPY —
 // never two product cards to buy.
-export function WelcomeCompare({ onOutcome }: WelcomeCompareProps) {
-  const [left, right] = COMPARE_PAIR;
-
+export function WelcomeCompare({
+  left,
+  right,
+  onOutcome,
+}: WelcomeCompareProps) {
   return (
     <section className="flex flex-col items-center text-center gap-6">
       <div className="flex flex-col items-center gap-1">

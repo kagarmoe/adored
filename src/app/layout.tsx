@@ -31,8 +31,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
-      <body className="min-h-screen">
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${playfair.variable} ${inter.variable}`}
+    >
+      <body className="min-h-screen" suppressHydrationWarning>
         <ThemeScript />
         {children}
         <SpeedInsights />

@@ -12,11 +12,11 @@ import { ROUND_COPY } from "@/features/sorting/roundCopy";
  *
  *  - untriaged items remain           → "triage"  ("Quick triage")
  *  - else usage still unknown for one  → "usage"   ("Do you use this?")
- *  - else a rankable pair remains      → "compare" ("Refine the top tier")
+ *  - else a comparable pair remains    → "compare" ("Compare")
  *  - else                             → "decide"  (→ results)
  *
  * Reuses the same derivations the rounds themselves use (selectTriageItem /
- * selectUsageQueue+deriveUsage / selectNextPair over RANKABLE_BUCKETS) so the
+ * selectUsageQueue+deriveUsage / selectNextPair) so the
  * recommendation can never disagree with what the round would actually show (F6).
  */
 export type NextRoundKind = "triage" | "usage" | "compare" | "decide";
@@ -59,9 +59,9 @@ const USAGE_ROUND: NextRound = {
 
 const COMPARE_ROUND: NextRound = {
   kind: "compare",
-  label: "Refine the top tier",
-  description: "Compare the ones you love to see which you love most.",
-  cta: "Refine",
+  label: "Compare",
+  description: "Put two pieces side by side and choose what rises.",
+  cta: "Compare",
 };
 
 const DECIDE_ROUND: NextRound = {

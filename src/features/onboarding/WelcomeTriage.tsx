@@ -49,7 +49,7 @@ export function WelcomeTriage({ index, onOutcome }: WelcomeTriageProps) {
       />
 
       <div className="w-full border-t border-hairline pt-4 flex flex-col items-center gap-3">
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-nowrap justify-center gap-2 sm:gap-3">
           <DeferControl
             submit={{ kind: "local", onDecision: () => onOutcome(item.id, { kind: "deferred" }) }}
             itemId={item.id}
@@ -60,7 +60,6 @@ export function WelcomeTriage({ index, onOutcome }: WelcomeTriageProps) {
             itemName={item.name}
           />
         </div>
-        <p className="text-sm text-ink-soft">Not yet keeps it for later. Not mine sets it aside.</p>
       </div>
     </section>
   );

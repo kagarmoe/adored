@@ -5,7 +5,7 @@
 
 /** Turns the ranked list into a drag-to-reorder list (PRODUCT.md sanctions drag
  *  for reordering; no swiping). */
-export const PUT_IN_ORDER = "Put in order by hand";
+export const PUT_IN_ORDER = "Adjust results";
 
 /** Leaves reorder mode. */
 export const DONE_ARRANGING = "Done";

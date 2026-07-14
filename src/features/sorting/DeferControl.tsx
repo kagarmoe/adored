@@ -22,8 +22,8 @@ type DeferControlProps = {
 };
 
 const LABEL = "Not yet";
-const TITLE = "I'll come back to this";
-const ARIA_LABEL = "Not yet — I'll come back to this";
+const TITLE = "Keeps it for later";
+const ARIA_LABEL = "Not yet — keeps it for later";
 
 export function DeferControl({ submit, itemId }: DeferControlProps) {
   // Non-throwing read: local mode renders with no provider mounted. Session
