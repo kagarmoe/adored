@@ -13,14 +13,19 @@ test.describe("triage hero image", () => {
   });
 
   test("renders the item's hero photo, requested via the collection ULID", async ({ page }) => {
-    // No blob emulator: fulfill the protected /file request with a local fixture.
-    await page.route("**/photos/**/file*", (route) =>
+    // No blob emulator: fulfill the protected item-photo request with a local fixture.
+    await page.route("**/api/photo-files/**", (route) =>
       route.fulfill({ path: "e2e/fixtures/photos/cc0-01.jpg", contentType: "image/jpeg" }),
     );
 
-    const fileRequest = page.waitForRequest(
-      (r) => r.url().includes("/file") && r.url().includes(collectionId) && !r.url().includes(slug),
-    );
+    const fileRequest = page.waitForRequest((r) => {
+      const url = new URL(r.url());
+      return (
+        url.pathname.startsWith("/api/photo-files/") &&
+        url.searchParams.get("collectionId") === collectionId &&
+        !r.url().includes(slug)
+      );
+    });
     await page.goto(`/collections/${slug}/sort/${sessionNumber}/triage`);
     await fileRequest; // the image URL carried collection.id (ULID), not the slug
 
