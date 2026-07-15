@@ -18,24 +18,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/05332694b2bb8a5bb1560bdf63cbee19eb07afb3",
-        "commitHash": "05332694b2bb8a5bb1560bdf63cbee19eb07afb3",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29395222908"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/a81ce87b0037cf7b52428a66f75a00ce1b949d28",
+        "commitHash": "a81ce87b0037cf7b52428a66f75a00ce1b949d28",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29400164928"
       },
       "gitCommit": {
-        "shortHash": "0533269",
-        "hash": "05332694b2bb8a5bb1560bdf63cbee19eb07afb3",
-        "subject": "Add tutorials area and dev sample images (#345)",
-        "body": "Add tutorials area and dev sample images (#345)\n\n* feat: add tutorials area and dev auth bypass\n\n* Add dev sample collection images\n\n* Refresh code graph\n\n* Stabilize Vitest timeout gate",
+        "shortHash": "a81ce87",
+        "hash": "a81ce87b0037cf7b52428a66f75a00ce1b949d28",
+        "subject": "Fix dev item photo file route (#346)",
+        "body": "Fix dev item photo file route (#346)\n\n* Fix dev item photo file route\n\n* docs: sync item photo file route\n\n* Fix rendered dev item photo URLs\n\n* Update image e2e specs for photo file route",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1784098017000
+          "time": 1784103341000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1784098017000
+          "time": 1784103341000
         },
         "branch": "main"
       },
@@ -49,24 +49,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/05332694b2bb8a5bb1560bdf63cbee19eb07afb3",
-            "commitHash": "05332694b2bb8a5bb1560bdf63cbee19eb07afb3",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29395222908"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/a81ce87b0037cf7b52428a66f75a00ce1b949d28",
+            "commitHash": "a81ce87b0037cf7b52428a66f75a00ce1b949d28",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29400164928"
           },
           "gitCommit": {
-            "shortHash": "0533269",
-            "hash": "05332694b2bb8a5bb1560bdf63cbee19eb07afb3",
-            "subject": "Add tutorials area and dev sample images (#345)",
-            "body": "Add tutorials area and dev sample images (#345)\n\n* feat: add tutorials area and dev auth bypass\n\n* Add dev sample collection images\n\n* Refresh code graph\n\n* Stabilize Vitest timeout gate",
+            "shortHash": "a81ce87",
+            "hash": "a81ce87b0037cf7b52428a66f75a00ce1b949d28",
+            "subject": "Fix dev item photo file route (#346)",
+            "body": "Fix dev item photo file route (#346)\n\n* Fix dev item photo file route\n\n* docs: sync item photo file route\n\n* Fix rendered dev item photo URLs\n\n* Update image e2e specs for photo file route",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1784098017000
+              "time": 1784103341000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1784098017000
+              "time": 1784103341000
             },
             "branch": "main"
           },
@@ -87,24 +87,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/05332694b2bb8a5bb1560bdf63cbee19eb07afb3",
-            "commitHash": "05332694b2bb8a5bb1560bdf63cbee19eb07afb3",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29395222908"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/a81ce87b0037cf7b52428a66f75a00ce1b949d28",
+            "commitHash": "a81ce87b0037cf7b52428a66f75a00ce1b949d28",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/29400164928"
           },
           "gitCommit": {
-            "shortHash": "0533269",
-            "hash": "05332694b2bb8a5bb1560bdf63cbee19eb07afb3",
-            "subject": "Add tutorials area and dev sample images (#345)",
-            "body": "Add tutorials area and dev sample images (#345)\n\n* feat: add tutorials area and dev auth bypass\n\n* Add dev sample collection images\n\n* Refresh code graph\n\n* Stabilize Vitest timeout gate",
+            "shortHash": "a81ce87",
+            "hash": "a81ce87b0037cf7b52428a66f75a00ce1b949d28",
+            "subject": "Fix dev item photo file route (#346)",
+            "body": "Fix dev item photo file route (#346)\n\n* Fix dev item photo file route\n\n* docs: sync item photo file route\n\n* Fix rendered dev item photo URLs\n\n* Update image e2e specs for photo file route",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1784098017000
+              "time": 1784103341000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1784098017000
+              "time": 1784103341000
             },
             "branch": "main"
           },
@@ -187,12 +187,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 178,
+                  "duration": 181,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:48:58.707Z",
+                  "startTime": "2026-07-15T08:17:39.195Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -229,7 +229,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 21391,
+                  "duration": 16175,
                   "errors": [],
                   "stdout": [
                     {
@@ -245,7 +245,7 @@
                       "text": "[a11y] item-detail/light: 21 checks passed, 0 violation(s)\n"
                     },
                     {
-                      "text": "[a11y] results/light: 22 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] results/light: 21 checks passed, 0 violation(s)\n"
                     },
                     {
                       "text": "[a11y] members/light: 23 checks passed, 0 violation(s)\n"
@@ -254,12 +254,12 @@
                       "text": "[a11y] profile/light: 24 checks passed, 0 violation(s)\n"
                     },
                     {
-                      "text": "[a11y] triage/light: 25 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] triage/light: 24 checks passed, 0 violation(s)\n"
                     }
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:48:59.542Z",
+                  "startTime": "2026-07-15T08:17:40.046Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -288,23 +288,23 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 16366,
+                  "duration": 19566,
                   "errors": [],
                   "stdout": [
                     {
                       "text": "[a11y] collections/dark: 21 checks passed, 0 violation(s)\n"
                     },
                     {
-                      "text": "[a11y] collection-workspace/dark: 24 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] collection-workspace/dark: 23 checks passed, 0 violation(s)\n"
                     },
                     {
-                      "text": "[a11y] items/dark: 21 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] items/dark: 20 checks passed, 0 violation(s)\n"
                     },
                     {
                       "text": "[a11y] item-detail/dark: 21 checks passed, 0 violation(s)\n"
                     },
                     {
-                      "text": "[a11y] results/dark: 22 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] results/dark: 21 checks passed, 0 violation(s)\n"
                     },
                     {
                       "text": "[a11y] members/dark: 23 checks passed, 0 violation(s)\n"
@@ -313,12 +313,12 @@
                       "text": "[a11y] profile/dark: 24 checks passed, 0 violation(s)\n"
                     },
                     {
-                      "text": "[a11y] triage/dark: 25 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] triage/dark: 24 checks passed, 0 violation(s)\n"
                     }
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:49:22.440Z",
+                  "startTime": "2026-07-15T08:17:57.017Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -347,7 +347,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1668,
+                  "duration": 4268,
                   "errors": [],
                   "stdout": [
                     {
@@ -356,7 +356,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:49:38.831Z",
+                  "startTime": "2026-07-15T08:18:16.608Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -385,7 +385,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1622,
+                  "duration": 8899,
                   "errors": [],
                   "stdout": [
                     {
@@ -394,7 +394,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:49:40.524Z",
+                  "startTime": "2026-07-15T08:18:20.906Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -431,12 +431,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2037,
+                  "duration": 8013,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:49:42.170Z",
+                  "startTime": "2026-07-15T08:18:30.191Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -465,12 +465,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1395,
+                  "duration": 1929,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:49:44.269Z",
+                  "startTime": "2026-07-15T08:18:42.074Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -499,12 +499,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1549,
+                  "duration": 1932,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:49:45.680Z",
+                  "startTime": "2026-07-15T08:18:44.024Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -533,12 +533,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1009,
+                  "duration": 1764,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:49:47.264Z",
+                  "startTime": "2026-07-15T08:18:45.978Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -567,12 +567,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1116,
+                  "duration": 1435,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:49:48.299Z",
+                  "startTime": "2026-07-15T08:18:47.802Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -609,12 +609,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1225,
+                  "duration": 1655,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:49:49.535Z",
+                  "startTime": "2026-07-15T08:18:49.601Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -643,12 +643,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1374,
+                  "duration": 1698,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:49:50.780Z",
+                  "startTime": "2026-07-15T08:18:51.283Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -685,12 +685,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 856,
+                  "duration": 1866,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:49:52.218Z",
+                  "startTime": "2026-07-15T08:18:53.157Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -719,12 +719,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 894,
+                  "duration": 1641,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:49:53.088Z",
+                  "startTime": "2026-07-15T08:18:55.066Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -768,12 +768,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1219,
+                      "duration": 1566,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:49:54.007Z",
+                      "startTime": "2026-07-15T08:18:57.097Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -802,12 +802,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1608,
+                      "duration": 2236,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:49:55.367Z",
+                      "startTime": "2026-07-15T08:19:01.843Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -836,12 +836,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1160,
+                      "duration": 1331,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:49:57.000Z",
+                      "startTime": "2026-07-15T08:19:04.112Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -887,12 +887,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3690,
+                      "duration": 4461,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:49:58.197Z",
+                      "startTime": "2026-07-15T08:19:05.503Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -921,12 +921,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2256,
+                      "duration": 2848,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:50:01.909Z",
+                      "startTime": "2026-07-15T08:19:09.997Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -972,12 +972,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1870,
+                      "duration": 2123,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:50:04.190Z",
+                      "startTime": "2026-07-15T08:19:12.912Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1023,12 +1023,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2676,
+                      "duration": 2724,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:50:06.114Z",
+                      "startTime": "2026-07-15T08:19:15.199Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1074,12 +1074,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1271,
+                      "duration": 1374,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:50:08.862Z",
+                      "startTime": "2026-07-15T08:19:18.043Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1108,12 +1108,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2061,
+                      "duration": 1648,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:50:13.519Z",
+                      "startTime": "2026-07-15T08:19:19.482Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1123,7 +1123,7 @@
               ],
               "id": "af38cfc44e4f9b50eb98-8e3cc0f8c310195e787f",
               "file": "image-perf.spec.ts",
-              "line": 27,
+              "line": 29,
               "column": 7
             }
           ]
@@ -1159,12 +1159,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 7152,
+                      "duration": 5719,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:50:16.374Z",
+                      "startTime": "2026-07-15T08:19:21.196Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1193,12 +1193,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 8319,
+                      "duration": 4710,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:50:26.708Z",
+                      "startTime": "2026-07-15T08:19:27.053Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1244,12 +1244,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 6288,
+                      "duration": 1788,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:50:35.188Z",
+                      "startTime": "2026-07-15T08:19:31.842Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1278,12 +1278,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2873,
+                      "duration": 1825,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:50:41.947Z",
+                      "startTime": "2026-07-15T08:19:33.880Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1329,12 +1329,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3098,
+                      "duration": 699,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:50:45.391Z",
+                      "startTime": "2026-07-15T08:19:35.747Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1363,12 +1363,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1744,
+                      "duration": 182,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:50:48.505Z",
+                      "startTime": "2026-07-15T08:19:36.473Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1397,12 +1397,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 893,
+                      "duration": 256,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:50:50.261Z",
+                      "startTime": "2026-07-15T08:19:36.668Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1441,12 +1441,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1271,
+                  "duration": 1184,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:50:51.431Z",
+                  "startTime": "2026-07-15T08:19:36.985Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1475,12 +1475,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1580,
+                  "duration": 1453,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:50:53.168Z",
+                  "startTime": "2026-07-15T08:19:38.258Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1517,12 +1517,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1566,
+                  "duration": 1356,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:50:54.828Z",
+                  "startTime": "2026-07-15T08:19:39.792Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1551,12 +1551,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1489,
+                  "duration": 1365,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:50:56.674Z",
+                  "startTime": "2026-07-15T08:19:41.208Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1585,7 +1585,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "timedOut",
-                  "duration": 30317,
+                  "duration": 30271,
                   "error": {
                     "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
                     "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
@@ -1606,7 +1606,7 @@
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:50:58.202Z",
+                  "startTime": "2026-07-15T08:19:42.597Z",
                   "annotations": [],
                   "attachments": [
                     {
@@ -1629,65 +1629,21 @@
                 {
                   "workerIndex": 2,
                   "parallelIndex": 0,
-                  "status": "timedOut",
-                  "duration": 30542,
-                  "error": {
-                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                  },
-                  "errors": [
-                    {
-                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                    },
-                    {
-                      "location": {
-                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts",
-                        "column": 10,
-                        "line": 81
-                      },
-                      "message": "Error: page.waitForResponse: Test timeout of 30000ms exceeded.\n\n  79 |   await page.getByLabel(\"Invite by email\").fill(email);\n  80 |   await Promise.all([\n> 81 |     page.waitForResponse(\n     |          ^\n  82 |       (r) =>\n  83 |         r.url().includes(`/api/collections/${collectionId}/invitations`) &&\n  84 |         r.request().method() === \"POST\",\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts:81:10"
-                    }
-                  ],
+                  "status": "passed",
+                  "duration": 1972,
+                  "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 1,
-                  "startTime": "2026-07-15T06:52:00.345Z",
+                  "startTime": "2026-07-15T08:20:13.872Z",
                   "annotations": [],
                   "attachments": [
-                    {
-                      "name": "screenshot",
-                      "contentType": "image/png",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/test-failed-1.png"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/error-context.md"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/error-context.md"
-                    },
                     {
                       "name": "trace",
                       "contentType": "application/zip",
                       "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/trace.zip"
                     }
                   ]
-                },
-                {
-                  "workerIndex": 3,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1556,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 2,
-                  "startTime": "2026-07-15T06:52:32.075Z",
-                  "annotations": [],
-                  "attachments": []
                 }
               ],
               "status": "flaky"
@@ -1726,15 +1682,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3468,
+                      "duration": 3158,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:52:33.859Z",
+                      "startTime": "2026-07-15T08:20:16.157Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1760,15 +1716,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2712,
+                      "duration": 2188,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:52:37.439Z",
+                      "startTime": "2026-07-15T08:20:19.408Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1794,15 +1750,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1350,
+                      "duration": 1384,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:52:40.212Z",
+                      "startTime": "2026-07-15T08:20:21.627Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1845,15 +1801,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 9988,
+                      "duration": 9661,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:52:41.592Z",
+                      "startTime": "2026-07-15T08:20:23.043Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1879,15 +1835,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1483,
+                      "duration": 1355,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:52:51.666Z",
+                      "startTime": "2026-07-15T08:20:32.781Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1923,74 +1879,20 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
-                  "parallelIndex": 0,
-                  "status": "failed",
-                  "duration": 17326,
-                  "error": {
-                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('banner').getByText('Adored E2E 624ac4a0-f7e7-4764-988e-2b8b1d74ad02', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('banner').getByText('Adored E2E 624ac4a0-f7e7-4764-988e-2b8b1d74ad02', { exact: true })\u001b[22m\n",
-                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('banner').getByText('Adored E2E 624ac4a0-f7e7-4764-988e-2b8b1d74ad02', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('banner').getByText('Adored E2E 624ac4a0-f7e7-4764-988e-2b8b1d74ad02', { exact: true })\u001b[22m\n\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts:55:5",
-                    "location": {
-                      "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts",
-                      "column": 5,
-                      "line": 55
-                    },
-                    "snippet": "\u001b[0m \u001b[90m 53 |\u001b[39m   \u001b[36mawait\u001b[39m expect(\n \u001b[90m 54 |\u001b[39m     page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"banner\"\u001b[39m)\u001b[33m.\u001b[39mgetByText(uniqueName\u001b[33m,\u001b[39m { exact\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m })\u001b[33m,\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 55 |\u001b[39m   )\u001b[33m.\u001b[39mtoBeVisible({ timeout\u001b[33m:\u001b[39m \u001b[35m15\u001b[39m_000 })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m     \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 56 |\u001b[39m\n \u001b[90m 57 |\u001b[39m   \u001b[90m// Guard against a false positive where a reload happened: the URL is still\u001b[39m\n \u001b[90m 58 |\u001b[39m   \u001b[90m// /profile and the in-page success status rendered (proves the SPA update\u001b[39m\u001b[0m"
-                  },
-                  "errors": [
-                    {
-                      "location": {
-                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts",
-                        "column": 5,
-                        "line": 55
-                      },
-                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('banner').getByText('Adored E2E 624ac4a0-f7e7-4764-988e-2b8b1d74ad02', { exact: true })\nExpected: visible\nTimeout: 15000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 15000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('banner').getByText('Adored E2E 624ac4a0-f7e7-4764-988e-2b8b1d74ad02', { exact: true })\u001b[22m\n\n\n  53 |   await expect(\n  54 |     page.getByRole(\"banner\").getByText(uniqueName, { exact: true }),\n> 55 |   ).toBeVisible({ timeout: 15_000 });\n     |     ^\n  56 |\n  57 |   // Guard against a false positive where a reload happened: the URL is still\n  58 |   // /profile and the in-page success status rendered (proves the SPA update\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts:55:5"
-                    }
-                  ],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-07-15T06:52:53.173Z",
-                  "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "screenshot",
-                      "contentType": "image/png",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/profile-saving-a-new-displ-0a091-the-header-without-a-reload-tablet/test-failed-1.png"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/profile-saving-a-new-displ-0a091-the-header-without-a-reload-tablet/error-context.md"
-                    }
-                  ],
-                  "errorLocation": {
-                    "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/profile.spec.ts",
-                    "column": 5,
-                    "line": 55
-                  }
-                },
-                {
-                  "workerIndex": 4,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2803,
+                  "duration": 1629,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
-                  "retry": 1,
-                  "startTime": "2026-07-15T06:53:41.244Z",
+                  "retry": 0,
+                  "startTime": "2026-07-15T08:20:34.169Z",
                   "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "trace",
-                      "contentType": "application/zip",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/profile-saving-a-new-displ-0a091-the-header-without-a-reload-tablet-retry1/trace.zip"
-                    }
-                  ]
+                  "attachments": []
                 }
               ],
-              "status": "flaky"
+              "status": "expected"
             }
           ],
           "id": "e8b79b4ee550a37632f1-4dd4a58c47c7d10f604a",
@@ -2011,15 +1913,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2031,
+                  "duration": 1501,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:53:44.324Z",
+                  "startTime": "2026-07-15T08:20:35.822Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2060,15 +1962,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1744,
+                      "duration": 1121,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:53:46.466Z",
+                      "startTime": "2026-07-15T08:20:37.351Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2111,15 +2013,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3410,
+                      "duration": 2647,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:53:48.399Z",
+                      "startTime": "2026-07-15T08:20:38.577Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2162,15 +2064,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1998,
+                      "duration": 1094,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:53:52.032Z",
+                      "startTime": "2026-07-15T08:20:41.320Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2213,15 +2115,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 12242,
+                      "duration": 2721,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:53:54.287Z",
+                      "startTime": "2026-07-15T08:20:42.515Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2247,15 +2149,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 14100,
+                      "duration": 2712,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:54:06.571Z",
+                      "startTime": "2026-07-15T08:20:45.252Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2298,15 +2200,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2763,
+                      "duration": 2178,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:54:21.128Z",
+                      "startTime": "2026-07-15T08:20:47.988Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2349,15 +2251,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2889,
+                      "duration": 2065,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:54:24.153Z",
+                      "startTime": "2026-07-15T08:20:50.255Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2393,15 +2295,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 886,
+                  "duration": 1449,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:54:27.640Z",
+                  "startTime": "2026-07-15T08:20:52.389Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2427,15 +2329,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 995,
+                  "duration": 1438,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:54:28.541Z",
+                  "startTime": "2026-07-15T08:20:53.862Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2461,15 +2363,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1087,
+                  "duration": 1039,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:54:29.557Z",
+                  "startTime": "2026-07-15T08:20:55.340Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2510,15 +2412,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1666,
+                      "duration": 1751,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:54:30.679Z",
+                      "startTime": "2026-07-15T08:20:57.336Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2561,15 +2463,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1856,
+                      "duration": 1432,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:54:32.494Z",
+                      "startTime": "2026-07-15T08:20:59.492Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2595,15 +2497,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1946,
+                      "duration": 1698,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:54:34.433Z",
+                      "startTime": "2026-07-15T08:21:01.452Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2629,15 +2531,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1785,
+                      "duration": 2257,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:54:36.415Z",
+                      "startTime": "2026-07-15T08:21:03.203Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2671,15 +2573,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5397,
+                      "duration": 5520,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:54:38.231Z",
+                      "startTime": "2026-07-15T08:21:05.500Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2705,15 +2607,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2405,
+                      "duration": 2061,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:54:43.744Z",
+                      "startTime": "2026-07-15T08:21:11.529Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2747,15 +2649,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1397,
+                      "duration": 1496,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:54:46.188Z",
+                      "startTime": "2026-07-15T08:21:13.613Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2781,15 +2683,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1028,
+                      "duration": 1349,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:54:47.610Z",
+                      "startTime": "2026-07-15T08:21:15.129Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2832,15 +2734,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4550,
+                      "duration": 3118,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:54:48.701Z",
+                      "startTime": "2026-07-15T08:21:18.640Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2866,15 +2768,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4719,
+                      "duration": 3423,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-07-15T06:54:53.382Z",
+                      "startTime": "2026-07-15T08:21:24.281Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -2910,15 +2812,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 4915,
+                  "duration": 3082,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:54:58.584Z",
+                  "startTime": "2026-07-15T08:21:27.799Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2944,15 +2846,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3039,
+                  "duration": 2973,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:55:03.516Z",
+                  "startTime": "2026-07-15T08:21:30.902Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -2978,15 +2880,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 4,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2204,
+                  "duration": 1832,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-07-15T06:55:06.571Z",
+                  "startTime": "2026-07-15T08:21:33.894Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -3004,11 +2906,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-07-15T06:48:06.730Z",
-    "duration": 452436.056,
-    "expected": 63,
+    "startTime": "2026-07-15T08:16:46.810Z",
+    "duration": 303476.187,
+    "expected": 64,
     "skipped": 0,
     "unexpected": 0,
-    "flaky": 2
+    "flaky": 1
   }
 }
