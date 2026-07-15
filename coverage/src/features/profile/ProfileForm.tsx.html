@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>27/27</span>
+                <span class='fraction'>28/28</span>
             </div>
         
             
@@ -39,14 +39,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>3/3</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>27/27</span>
+                <span class='fraction'>28/28</span>
             </div>
         
             
@@ -192,7 +192,18 @@
 <a name='L127'></a><a href='#L127'>127</a>
 <a name='L128'></a><a href='#L128'>128</a>
 <a name='L129'></a><a href='#L129'>129</a>
-<a name='L130'></a><a href='#L130'>130</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -307,6 +318,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">104x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -330,6 +350,7 @@ import { Button, Card, Input, ErrorMessage } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { DeleteAccountSection } from "./DeleteAccountSection";
 import { apiPatch } from "@/lib/api-client";
+import { TUTORIALS } from "@/features/tutorials/tutorials";
 &nbsp;
 interface ProfileFormProps {
   initialName: string | null;
@@ -430,21 +451,30 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
         &lt;ThemeToggle /&gt;
       &lt;/div&gt;
 &nbsp;
-      &lt;div className="flex flex-col items-start gap-3 rounded-control border border-hairline bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between"&gt;
+      &lt;section
+        aria-labelledby="profile-tutorials-heading"
+        className="rounded-control border border-hairline bg-surface px-4 py-3"
+      &gt;
         &lt;div&gt;
-          &lt;p className="text-sm font-medium text-ink"&gt;New to Adored?&lt;/p&gt;
-          &lt;p className="text-sm text-ink-soft"&gt;Revisit the quick walkthrough anytime.&lt;/p&gt;
+          &lt;h2 id="profile-tutorials-heading" className="text-sm font-medium text-ink"&gt;
+            Tutorials
+          &lt;/h2&gt;
         &lt;/div&gt;
-        {/* Re-open the walkthrough (manual visit — does NOT clear the dismissal flag). */}
-        &lt;Link
-          href="/welcome"
-          aria-label="Walkthrough: how Adored works"
-          className="inline-flex h-11 w-full items-center justify-center rounded-control px-4 text-sm text-primary underline focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary sm:w-auto"
-        &gt;
-          &lt;span className="sm:hidden"&gt;Walkthrough&lt;/span&gt;
-          &lt;span className="hidden sm:inline"&gt;How Adored works&lt;/span&gt;
-        &lt;/Link&gt;
-      &lt;/div&gt;
+        &lt;p className="mt-1 text-sm text-ink-soft"&gt;
+          Revisit any part of Adored when you want a quick refresher.
+        &lt;/p&gt;
+        &lt;div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2"&gt;
+          {TUTORIALS.map((tutorial) =&gt; (
+            &lt;Link
+              key={tutorial.slug}
+              href={tutorial.href}
+              className="inline-flex h-11 items-center rounded-control px-3 text-sm text-primary underline focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+            &gt;
+              {tutorial.title}
+            &lt;/Link&gt;
+          ))}
+        &lt;/div&gt;
+      &lt;/section&gt;
 &nbsp;
       &lt;DeleteAccountSection email={email} /&gt;
     &lt;/div&gt;
@@ -457,7 +487,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-14T23:22:34.967Z
+                at 2026-07-15T06:52:39.711Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
