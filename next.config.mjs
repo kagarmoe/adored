@@ -13,17 +13,6 @@ const config = {
     ],
   },
   skipTrailingSlashRedirect: true,
-  async rewrites() {
-    return {
-      beforeFiles: [
-        {
-          source: "/api/collections/:id/items/:itemId/photos/:photoId/file",
-          destination:
-            "/api/collections/:id/items/:itemId/photos/:photoId",
-        },
-      ],
-    };
-  },
 };
 
 export default config;

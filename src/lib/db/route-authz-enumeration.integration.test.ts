@@ -356,6 +356,11 @@ function buildStrangerCases(
     c("collections/[id]/items/[itemId]/photos/[photoId]/file/route.ts", "GET",
       `/api/collections/${collectionId}/items/${itemAId}/photos/nonexistent-photo-id/file`,
       { id: collectionId, itemId: itemAId, photoId: "nonexistent-photo-id" }),
+    c("photo-files/[photoId]/route.ts", "GET",
+      `/api/photo-files/nonexistent-photo-id`,
+      { photoId: "nonexistent-photo-id" },
+      undefined,
+      { collectionId, itemId: itemAId }),
 
     // ── /api/collections/[id]/pool/group ──────────────────────────────────
     c("collections/[id]/pool/group/route.ts", "POST",

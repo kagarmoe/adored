@@ -128,6 +128,7 @@ Route-level analytics capture has been removed from the API surface; this does n
 | PATCH | `…/photos/[photoId]` | curator (`photos:write`) |
 | GET | `…/photos/[photoId]/file` | curator (`items:read`) |
 | POST | `…/photos/[photoId]/set-hero` | curator (`photos:write`) |
+| GET | `/api/photo-files/[photoId]?collectionId=&itemId=` | curator (`items:read`) |
 
 ### pool & photos
 | Method | Path | Access |
@@ -251,8 +252,13 @@ Authenticated. **Body** → `createCollection`; also creates the caller's **owne
 ### `DELETE /api/collections/[id]/items/[itemId]/photos/[photoId]`
 `getSession` + `requireApiCapability("photos:write")` (**curator**; the old `canDeletePhotos` flag is inert), resolved **before** belongs-to-parent (`404`) — authz precedes existence (`purses-ct0`); also `photo.itemId` must match (`404`). Deletes blob + row, then best-effort sweeps the photo's persisted resized variants (`variants/<collectionId>/<photoId>/`). `200 { success: true }`. `400` on failure; `401`/`403`/`404`.
 
+### `GET /api/photo-files/[photoId]?collectionId=&itemId=`
+This is the generated client-facing image URL for assigned item photos. It reads `collectionId` and `itemId` from query params, then uses the same scoped serving path as the nested item-photo routes. Missing scope query params return `400`.
+
+`getSession` + `requireApiCapability("items:read")` (**curator**) → `403`, resolved **before** belongs-to-parent (`404`) — authz precedes existence, so a non-member cannot distinguish "this photo is in that collection" from "it isn't" (the `purses-ct0` existence oracle, closed). Then delegates to `servePhotoFile` (`src/lib/photo-serving.ts`). Optional `?w=` selects a server-resized variant (allowlist `160|320|640|1280`; other/invalid → `400`); omitted → the full-resolution original streamed verbatim. Resized variants are EXIF auto-oriented `image/webp`; originals keep their stored `Content-Type`. Caching: `Cache-Control: private, max-age=300, must-revalidate` + a strong variant `ETag` (`"photoId:w|orig:updatedAtMs"`) compared **app-side** (the client `If-None-Match` is **not** forwarded to Vercel Blob) → `304`. Source over `RESIZE_MAX_SOURCE_BYTES` (25 MB) or excess decoded pixels → `400`; blob missing → `404`; processing failure → generic `500`; `401`. `runtime = "nodejs"` (sharp). `next/image` keeps `unoptimized` (private blobs + cookie auth). Resized variants are **persisted** to Blob (`variants/<collectionId>/<photoId>/w<w>-v<v>.webp`, resize-once-globally) and served on a HIT without re-decoding; the variant store is best-effort (a get/put failure falls back to on-the-fly resize).
+
 ### `GET /api/collections/[id]/items/[itemId]/photos/[photoId]` · `/file`
-`getSession` + `requireApiCapability("items:read")` (**curator**) → `403`, resolved **before** belongs-to-parent (`404`) — authz precedes existence, so a non-member cannot distinguish "this photo is in that collection" from "it isn't" (the `purses-ct0` existence oracle, closed). Then delegates to `servePhotoFile` (`src/lib/photo-serving.ts`). Optional `?w=` selects a server-resized variant (allowlist `160|320|640|1280`; other/invalid → `400`); omitted → the full-resolution original streamed verbatim. Resized variants are EXIF auto-oriented `image/webp`; originals keep their stored `Content-Type`. Caching: `Cache-Control: private, max-age=300, must-revalidate` + a strong variant `ETag` (`"photoId:w|orig:updatedAtMs"`) compared **app-side** (the client `If-None-Match` is **not** forwarded to Vercel Blob) → `304`. Source over `RESIZE_MAX_SOURCE_BYTES` (25 MB) or excess decoded pixels → `400`; blob missing → `404`; processing failure → generic `500`; `401`. `runtime = "nodejs"` (sharp). `next/image` keeps `unoptimized` (private blobs + cookie auth). Resized variants are **persisted** to Blob (`variants/<collectionId>/<photoId>/w<w>-v<v>.webp`, resize-once-globally) and served on a HIT without re-decoding; the variant store is best-effort (a get/put failure falls back to on-the-fly resize). The `/file` URL is the client-facing image path; `next.config.mjs` rewrites it to the parent photo `GET` route before files so dev and production share one serving implementation.
+Compatibility item-photo byte-serving routes. They use the same authorization, belongs-to-parent checks, resize, cache, and variant-store contract as `/api/photo-files/[photoId]`.
 
 ### `PATCH /api/collections/[id]/items/[itemId]/photos/[photoId]`
 Rotate a photo (persisted, non-destructive). **Body:** `{ rotation: 0|90|180|270 }` (absolute clockwise degrees). `getSession` + `requireApiCapability("photos:write")` (**curator**; the old `canAddPhotos` flag is inert) resolved **before** belongs-to-parent (`404`) — authz precedes existence (`purses-ct0`). Validates `rotation` ∈ the set (else `400`, incl. bad/missing JSON); `PhotoRepository.update` runs only after authz+validation pass. `200 { rotation, updatedAt }` (the new `updatedAt` cache-busts the image URL). `401`. Applied at serve time by `servePhotoFile` (`.rotate()` EXIF then `.rotate(rotation)`); the blob is never rewritten.
@@ -425,6 +431,7 @@ The `0007` DROP of the inert flag columns shipped as the second deploy of `purse
 
 | Route | Verb |
 |---|---|
+| `/api/photo-files/[photoId]?collectionId=&itemId=` | `GET` |
 | `…/items/[itemId]/photos/[photoId]` and `/file` | `GET` |
 | `…/pool/photos/[photoId]/file` | `GET` |
 | `…/items/[itemId]/photos/[photoId]` | `PATCH`, `DELETE` |

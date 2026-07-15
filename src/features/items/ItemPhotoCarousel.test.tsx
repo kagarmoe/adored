@@ -23,6 +23,10 @@ function currentImgSrc() {
   return (screen.getByRole("img") as HTMLImageElement).getAttribute("src") ?? "";
 }
 
+function expectCurrentPhoto(photoId: string) {
+  expect(currentImgSrc()).toContain(`/api/photo-files/${photoId}?`);
+}
+
 describe("ItemPhotoCarousel", () => {
   it("shows an affirming add-photos CTA and no nav when there are no photos", () => {
     render(<ItemPhotoCarousel photos={[]} {...props} />);
@@ -40,11 +44,11 @@ describe("ItemPhotoCarousel", () => {
   it("flips to the next/previous photo via the arrow controls", async () => {
     const user = userEvent.setup();
     render(<ItemPhotoCarousel photos={mk(3)} {...props} />);
-    expect(currentImgSrc()).toContain("/photos/p1/");
+    expectCurrentPhoto("p1");
     await user.click(screen.getByRole("button", { name: /next photo/i }));
-    expect(currentImgSrc()).toContain("/photos/p2/");
+    expectCurrentPhoto("p2");
     await user.click(screen.getByRole("button", { name: /previous photo/i }));
-    expect(currentImgSrc()).toContain("/photos/p1/");
+    expectCurrentPhoto("p1");
   });
 
   it("renders dots (each a ≥44px target) up to 6 photos, with aria-current on the active one", () => {
@@ -86,7 +90,7 @@ describe("ItemPhotoCarousel", () => {
     const user = userEvent.setup();
     render(<ItemPhotoCarousel photos={mk(3)} {...props} />);
     await user.click(screen.getByRole("button", { name: /go to photo 3/i }));
-    expect(currentImgSrc()).toContain("/photos/p3/");
+    expectCurrentPhoto("p3");
     const dots = screen.getAllByRole("button", { name: /go to photo/i });
     expect(dots[2]).toHaveAttribute("aria-current", "true");
     expect(dots[0]).toHaveAttribute("aria-current", "false");
@@ -105,26 +109,26 @@ describe("ItemPhotoCarousel", () => {
   it("drops the current photo from the carousel after a confirmed delete", async () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
     render(<ItemPhotoCarousel photos={mk(3)} {...props} canDelete />);
-    expect(currentImgSrc()).toContain("/photos/p1/");
+    expectCurrentPhoto("p1");
     fireEvent.click(screen.getByRole("button", { name: /delete this photo/i }));
     fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
     await waitFor(() =>
       expect(screen.getAllByRole("button", { name: /go to photo/i })).toHaveLength(2),
     );
-    expect(currentImgSrc()).toContain("/photos/p2/"); // p1 gone → p2 slides into view
+    expectCurrentPhoto("p2"); // p1 gone → p2 slides into view
   });
 
   it("deletes a MIDDLE photo — the neighbour after it slides into view", async () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
     render(<ItemPhotoCarousel photos={mk(3)} {...props} canDelete />);
     fireEvent.click(screen.getByRole("button", { name: /next photo/i })); // → p2 (index 1)
-    expect(currentImgSrc()).toContain("/photos/p2/");
+    expectCurrentPhoto("p2");
     fireEvent.click(screen.getByRole("button", { name: /delete this photo/i }));
     fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
     await waitFor(() =>
       expect(screen.getAllByRole("button", { name: /go to photo/i })).toHaveLength(2),
     );
-    expect(currentImgSrc()).toContain("/photos/p3/"); // p2 gone → p3 takes index 1
+    expectCurrentPhoto("p3"); // p2 gone → p3 takes index 1
   });
 
   it("returns to the add-photos CTA when the last photo is deleted", async () => {
