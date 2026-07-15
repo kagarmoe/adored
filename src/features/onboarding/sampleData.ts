@@ -11,15 +11,34 @@ export interface SampleItem {
   imageSrc: string;
 }
 
-// Five things a person might own — evocative, never shop-like. The names carry
-// a story ("the" + the object), not a catalog SKU. The tutorial uses the first
-// three as the sample collection; the others remain available for future beats.
+// Things a person might own — evocative, never shop-like. The names carry a
+// story ("the" + the object), not a catalog SKU. The tutorial uses the first
+// three as the sample collection; the others remain available for dev seed data
+// and future beats.
 export const SAMPLE_ITEMS: readonly SampleItem[] = [
   { id: "armchair", name: "The slipcovered armchair", imageSrc: "/onboarding/slipcovered-armchair.webp" },
   { id: "clock", name: "The little red wall clock", imageSrc: "/onboarding/red-wall-clock.webp" },
   { id: "vase", name: "The glass flower vase", imageSrc: "/onboarding/glass-flower-vase.webp" },
   { id: "books", name: "The shelf of well-read books", imageSrc: "/onboarding/bookshelf.webp" },
   { id: "cushion", name: "The kid's microphone cushion", imageSrc: "/onboarding/microphone-cushion.webp" },
+  { id: "bowl", name: "The blue mixing bowl", imageSrc: "/onboarding/blue-mixing-bowl.webp" },
+  { id: "tote", name: "The woven market tote", imageSrc: "/onboarding/straw-market-tote.webp" },
+  { id: "lamp", name: "The brass reading lamp", imageSrc: "/onboarding/brass-reading-lamp.webp" },
+  { id: "quilt", name: "The folded linen quilt", imageSrc: "/onboarding/folded-linen-quilt.webp" },
+  { id: "recipe-box", name: "The wooden recipe box", imageSrc: "/onboarding/wooden-recipe-box.webp" },
+  { id: "clippers", name: "The red garden clippers", imageSrc: "/onboarding/red-garden-clippers.webp" },
+  { id: "painting", name: "The framed landscape painting", imageSrc: "/onboarding/framed-landscape-painting.webp" },
+  { id: "kettle", name: "The copper tea kettle", imageSrc: "/onboarding/copper-tea-kettle.webp" },
+  { id: "runner", name: "The embroidered table runner", imageSrc: "/onboarding/embroidered-table-runner.webp" },
+  { id: "boots", name: "The blue rain boots", imageSrc: "/onboarding/blue-rain-boots.webp" },
+  { id: "jewelry-box", name: "The wooden jewelry box", imageSrc: "/onboarding/wooden-jewelry-box.webp" },
+  { id: "pitcher", name: "The cream ceramic pitcher", imageSrc: "/onboarding/cream-ceramic-pitcher.webp" },
+  { id: "cardigan", name: "The charcoal knit cardigan", imageSrc: "/onboarding/charcoal-knit-cardigan.webp" },
+  { id: "camera", name: "The vintage film camera", imageSrc: "/onboarding/vintage-film-camera.webp" },
+  { id: "watering-can", name: "The green watering can", imageSrc: "/onboarding/green-watering-can.webp" },
+  { id: "candlesticks", name: "The silver candlesticks", imageSrc: "/onboarding/silver-candlesticks.webp" },
+  { id: "journal", name: "The leather journal", imageSrc: "/onboarding/leather-journal.webp" },
+  { id: "colander", name: "The blue enamel colander", imageSrc: "/onboarding/blue-enamel-colander.webp" },
 ] as const;
 
 // The initial pair shown if the tutorial reaches Compare before a dynamic pair

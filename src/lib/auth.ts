@@ -33,6 +33,8 @@ async function getDevBypassSession(): Promise<Session> {
     .where(eq(userTable.email, email))
     .limit(1);
   if (existing.length) {
+    const { ensureDevSampleCollection } = await import("@/lib/dev-sample-bootstrap");
+    await ensureDevSampleCollection(db, existing[0].id);
     return { user: existing[0] };
   }
 
@@ -48,6 +50,8 @@ async function getDevBypassSession(): Promise<Session> {
     .returning({ id: userTable.id, email: userTable.email, name: userTable.name });
 
   if (created) {
+    const { ensureDevSampleCollection } = await import("@/lib/dev-sample-bootstrap");
+    await ensureDevSampleCollection(db, created.id);
     return { user: created };
   }
 
@@ -59,6 +63,8 @@ async function getDevBypassSession(): Promise<Session> {
   if (!raced) {
     throw new Error("Unable to create dev auth bypass user");
   }
+  const { ensureDevSampleCollection } = await import("@/lib/dev-sample-bootstrap");
+  await ensureDevSampleCollection(db, raced.id);
   return { user: raced };
 }
 

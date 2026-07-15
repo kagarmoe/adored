@@ -61,10 +61,13 @@ export async function readStreamCapped(
 }
 
 /** Seed placeholder key prefix (see scripts/seed-load.ts). A photo carrying this
- *  key has no real Blob object — its bytes live in the committed demo-image
- *  fixtures — so it is the explicit marker that gates the dev-only fallback. */
+ *  key has no real Blob object — its bytes live in committed local fixtures —
+ *  so it is the explicit marker that gates the dev-only fallback. */
 const DEMO_SEED_PREFIX = "demo-seed-placeholder/";
-const DEMO_IMAGES_DIR = join(process.cwd(), "e2e", "fixtures", "demo-images");
+const DEMO_IMAGE_DIRS = [
+  join(process.cwd(), "public", "onboarding"),
+  join(process.cwd(), "e2e", "fixtures", "demo-images"),
+];
 
 /** A `get()`-shaped success result over a Buffer, so the fallback slots into the
  *  same code paths as a real Blob hit. */
@@ -80,16 +83,19 @@ function bufferResult(buf: Buffer, contentType: string) {
  * ponytail: DEV-ONLY read fallback — the ceiling is `NODE_ENV !== "production"`
  * AND the demo-seed marker key, so it can never serve local bytes for a real
  * photo or in prod. Seeded demo collections carry a `demo-seed-placeholder/<file>`
- * blobKey with no Blob object; in dev (no Blob token) map that key to the committed
- * fixture so seeded/demo photos render. Returns null when it doesn't apply.
+ * blobKey with no Blob object; in dev (no Blob token) map that key to a committed
+ * local fixture so seeded/demo photos render. Returns null when it doesn't apply.
  */
 function devDemoFallback(blobKey: string): ReturnType<typeof bufferResult> | null {
   if (process.env.NODE_ENV === "production" || !blobKey.startsWith(DEMO_SEED_PREFIX)) {
     return null;
   }
-  const file = join(DEMO_IMAGES_DIR, basename(blobKey)); // basename: no path traversal
-  if (!existsSync(file)) return null;
-  return bufferResult(readFileSync(file), "image/webp");
+  const filename = basename(blobKey); // basename: no path traversal
+  for (const dir of DEMO_IMAGE_DIRS) {
+    const file = join(dir, filename);
+    if (existsSync(file)) return bufferResult(readFileSync(file), "image/webp");
+  }
+  return null;
 }
 
 /** Fetch the original bytes from Blob, degrading to the dev-only demo fallback on

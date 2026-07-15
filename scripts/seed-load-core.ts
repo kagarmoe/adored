@@ -10,11 +10,12 @@
  * LOCAL DB ONLY. `resolveLocalUrl` refuses any non-localhost host — this engine
  * writes/TRUNCATEs and must never point at a remote/prod (e.g. Neon) database.
  */
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { basename, join } from "node:path";
 import { eq } from "drizzle-orm";
 import { user, collectionsTable } from "@/lib/db/schema";
 import { generateId } from "@/lib/id";
+import { SAMPLE_ITEMS } from "@/features/onboarding/sampleData";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
@@ -29,7 +30,7 @@ import {
 import { selectComparableItems } from "@/lib/compare-selection";
 import type { Database } from "@/lib/db";
 
-const DEMO_DIR = join(__dirname, "..", "e2e", "fixtures", "demo-images");
+const ONBOARDING_DIR = join(process.cwd(), "public", "onboarding");
 export const ALLOWED_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 
 // ---- LOCAL-DB safety guard -------------------------------------------------
@@ -104,40 +105,42 @@ export interface DemoImage {
   contentType: string;
 }
 
-/** Load the committed demo images (both sets), sorted for determinism. */
+/** Load committed onboarding sample images in SAMPLE_ITEMS order. */
 export function loadDemoImages(): DemoImage[] {
-  if (!existsSync(DEMO_DIR)) {
-    throw new Error(`seed-load: demo image dir missing (${DEMO_DIR}). Run: node scripts/fetch-demo-images.mjs`);
+  if (!existsSync(ONBOARDING_DIR)) {
+    throw new Error(`seed-load: onboarding image dir missing (${ONBOARDING_DIR}).`);
   }
-  const files = readdirSync(DEMO_DIR)
-    .filter((f) => f.endsWith(".webp"))
-    .sort();
-  if (files.length === 0) {
-    throw new Error(`seed-load: no .webp demo images in ${DEMO_DIR}. Run: node scripts/fetch-demo-images.mjs`);
+
+  const files = SAMPLE_ITEMS.map((item) => basename(item.imageSrc));
+  const missing = files.filter((filename) => !existsSync(join(ONBOARDING_DIR, filename)));
+  if (missing.length > 0) {
+    throw new Error(`seed-load: onboarding image(s) missing: ${missing.join(", ")}`);
   }
+
   return files.map((filename) => ({
     filename,
-    buffer: readFileSync(join(DEMO_DIR, filename)),
+    buffer: readFileSync(join(ONBOARDING_DIR, filename)),
     contentType: "image/webp",
   }));
 }
 
+export function seedItemNameFor(index: number): string {
+  return SAMPLE_ITEMS[index % SAMPLE_ITEMS.length]?.name ?? `Demo Item ${index + 1}`;
+}
+
 /**
- * Resolve each demo image to a blobKey that /file can actually serve. Photos are
- * ALWAYS served through @vercel/blob's get() — there is no public/ or local-fs
- * fallback in servePhotoFile — so to RENDER in local dev the bytes must live in a
- * real Vercel Blob store. When BLOB_READ_WRITE_TOKEN is set we upload each image
- * once (public access → blob.url is the blobKey, exactly like the real upload
- * route). Without a token we fall back to a stable placeholder key: rows still
- * seed and the DB perf timing is unaffected, but images won't render (the /file
- * get() 404s) — the caller may warn about this.
+ * Resolve each demo image to a blobKey that /file can actually serve. When
+ * BLOB_READ_WRITE_TOKEN is set we upload each image once (public access →
+ * blob.url is the blobKey, exactly like the real upload route). Without a token
+ * we fall back to a stable placeholder key; in development, photo-serving maps
+ * that marker back to the committed local image bytes.
  */
 export async function resolveBlobKeys(
   images: DemoImage[],
-): Promise<{ keys: string[]; rendered: boolean }> {
+): Promise<{ keys: string[]; uploaded: boolean }> {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (!token) {
-    return { keys: images.map((img) => `demo-seed-placeholder/${img.filename}`), rendered: false };
+    return { keys: images.map((img) => `demo-seed-placeholder/${img.filename}`), uploaded: false };
   }
   const { put } = await import("@vercel/blob");
   const keys: string[] = [];
@@ -153,7 +156,7 @@ export async function resolveBlobKeys(
     });
     keys.push(res.url);
   }
-  return { keys, rendered: true };
+  return { keys, uploaded: true };
 }
 
 // ---- seed core -------------------------------------------------------------
@@ -194,8 +197,9 @@ export async function seedCollection(
   const photoRepo = new PhotoRepository(db);
   const itemIds: string[] = [];
   for (let i = 0; i < itemCount; i++) {
-    const item = await itemRepo.create({ collectionId, name: `Demo Item ${i + 1}` });
-    const blobKey = blobKeys[(index * itemCount + i) % blobKeys.length];
+    const sampleIndex = (index * itemCount + i) % blobKeys.length;
+    const item = await itemRepo.create({ collectionId, name: seedItemNameFor(sampleIndex) });
+    const blobKey = blobKeys[sampleIndex];
     await photoRepo.create({
       itemId: item.id,
       collectionId,

@@ -195,8 +195,32 @@ describe("RESULT_TO_TIER", () => {
 });
 
 describe("sample content", () => {
-  it("orders items [armchair, clock, vase, books, cushion]", () => {
-    expect(SAMPLE_ITEMS.map((i) => i.id)).toEqual(["armchair", "clock", "vase", "books", "cushion"]);
+  it("keeps the tutorial items first, then adds the dev seed pool", () => {
+    expect(SAMPLE_ITEMS.map((i) => i.id)).toEqual([
+      "armchair",
+      "clock",
+      "vase",
+      "books",
+      "cushion",
+      "bowl",
+      "tote",
+      "lamp",
+      "quilt",
+      "recipe-box",
+      "clippers",
+      "painting",
+      "kettle",
+      "runner",
+      "boots",
+      "jewelry-box",
+      "pitcher",
+      "cardigan",
+      "camera",
+      "watering-can",
+      "candlesticks",
+      "journal",
+      "colander",
+    ]);
   });
 
   it("keeps the compare pair as armchair and clock", () => {
@@ -216,6 +240,7 @@ describe("sample content", () => {
   it("serves object images from public/onboarding (no marketplace framing)", () => {
     for (const item of SAMPLE_ITEMS) {
       expect(item.imageSrc.startsWith("/onboarding/")).toBe(true);
+      expect(item.imageSrc.endsWith(".webp")).toBe(true);
     }
   });
 });

@@ -1,8 +1,12 @@
-# Onboarding sample images — attribution
+# Onboarding sample images
 
 The `/welcome` walkthrough uses five object-only sample photos (no people, animals,
 or landscapes). Sourced from Openverse (https://openverse.org) Creative Commons
 search; each is CC BY or CC BY-SA and requires the attribution below.
+
+Additional dev-seed object images in this directory were generated for Adored
+with Codex image generation on 2026-07-14 and do not require third-party
+attribution.
 
 | File | Object | Title / Creator | License |
 |------|--------|-----------------|---------|
@@ -11,6 +15,27 @@ search; each is CC BY or CC BY-SA and requires the attribution below.
 | `glass-flower-vase.webp` | Glass flower vase | "Flower Vase" by Jose Nicdao | CC BY 2.0 |
 | `microphone-cushion.webp` | Throw cushion | "Microphone Throw Pillow" by FWO Clothing | CC BY 2.0 |
 | `bookshelf.webp` | Shelf of books | "Bookshelf" by Dave Kleinschmidt | CC BY-SA 2.0 |
+
+Generated dev-seed files:
+
+- `blue-enamel-colander.webp`
+- `blue-mixing-bowl.webp`
+- `blue-rain-boots.webp`
+- `brass-reading-lamp.webp`
+- `charcoal-knit-cardigan.webp`
+- `copper-tea-kettle.webp`
+- `cream-ceramic-pitcher.webp`
+- `embroidered-table-runner.webp`
+- `folded-linen-quilt.webp`
+- `framed-landscape-painting.webp`
+- `green-watering-can.webp`
+- `leather-journal.webp`
+- `red-garden-clippers.webp`
+- `silver-candlesticks.webp`
+- `straw-market-tote.webp`
+- `vintage-film-camera.webp`
+- `wooden-jewelry-box.webp`
+- `wooden-recipe-box.webp`
 
 Full attributions:
 

@@ -5,8 +5,8 @@
  * sort/compare recompute path (`PreferenceStateService.recalculatePreferences`,
  * the same code the /api/sessions/[id]/decisions route runs under a row lock).
  * It also seeds real collection + item + photo rows referencing the committed
- * demo images (e2e/fixtures/demo-images) so a seeded collection RENDERS in local
- * dev and doubles as fixture data for the future onboarding walkthrough.
+ * onboarding images (public/onboarding) so a seeded collection RENDERS in local
+ * dev and uses the same object-story names as the tutorial sample data.
  *
  * The seed + timing ENGINE lives in `seed-load-core.ts`, shared verbatim with
  * the CI regression benchmark (`bench-recompute.ts`) so both measure the exact
@@ -152,12 +152,12 @@ async function main(): Promise<void> {
     }
 
     const images = loadDemoImages();
-    const { keys, rendered } = await resolveBlobKeys(images);
-    if (!rendered) {
+    const { keys, uploaded } = await resolveBlobKeys(images);
+    if (!uploaded) {
       // eslint-disable-next-line no-console
       console.warn(
-        "seed-load: BLOB_READ_WRITE_TOKEN not set — photos will NOT render in local dev\n" +
-          "  (rows still seed; set the token to upload demo images to Vercel Blob so /file serves them).",
+        "seed-load: BLOB_READ_WRITE_TOKEN not set — using dev-only local image fallback\n" +
+          "  (rows still seed; local dev renders committed onboarding images through /file).",
       );
     } else {
       // eslint-disable-next-line no-console
@@ -168,7 +168,7 @@ async function main(): Promise<void> {
     // eslint-disable-next-line no-console
     console.log(
       `seed-load: owner ${opts.ownerEmail}; ${opts.collections} collections × ${opts.items} items ` +
-        `(${images.length} demo images, render=${rendered}).`,
+        `(${images.length} demo images, blobUpload=${uploaded}).`,
     );
 
     const seeded: SeededCollection[] = [];

@@ -7,6 +7,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 // next/headers, then exercise the REAL façade to prove the mapping.
 
 const getSessionApi = vi.fn();
+const ensureDevSampleCollection = vi.hoisted(() => vi.fn());
 const eqMock = vi.fn();
 const mockGetDb = vi.fn();
 const userTable = {
@@ -23,6 +24,7 @@ vi.mock("@/lib/auth-server", () => ({
   auth: { api: { getSession: getSessionApi } },
 }));
 
+vi.mock("@/lib/dev-sample-bootstrap", () => ({ ensureDevSampleCollection }));
 vi.mock("drizzle-orm", () => ({ eq: eqMock }));
 vi.mock("@/lib/db/schema", () => ({ user: userTable }));
 vi.mock("@/lib/id", () => ({ generateId: () => "user_generated_dev" }));
@@ -37,6 +39,7 @@ vi.mock("next/headers", () => ({
 
 beforeEach(() => {
   getSessionApi.mockReset();
+  ensureDevSampleCollection.mockReset();
   eqMock.mockReset();
   insertValues.mockReset();
   mockGetDb.mockReset();
@@ -126,6 +129,10 @@ describe("auth façade — getSession()", () => {
       name: "Dev User",
       emailVerified: true,
     });
+    expect(ensureDevSampleCollection).toHaveBeenCalledWith(
+      expect.anything(),
+      "user_generated_dev",
+    );
     expect(getSessionApi).not.toHaveBeenCalled();
   });
 
