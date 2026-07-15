@@ -80,11 +80,17 @@ A full-featured web application for managing collections and sorting items throu
 
    Open [http://localhost:3000](http://localhost:3000)
 
+   `npm run dev` starts `next dev` with a local-only auth bypass. The server
+   signs requests in as `dev@adored.test` and creates that user row in the
+   development database if needed; the browser uses the matching
+   `NEXT_PUBLIC_AUTH_BYPASS` flag so the profile link is visible. The bypass is
+   ignored outside `NODE_ENV=development`.
+
 ### Development Commands
 
 **App**
-- `npm run dev` — Start the Next.js dev server with hot reload
-- `npm run dev:tutorial` — Open the onboarding walkthrough at `/tutorial` for local preview/iteration (dev-only)
+- `npm run dev` — Start the Next.js dev server with hot reload and local auth bypass
+- `npm run dev:tutorial` — Open the sort tutorial at `/tutorials/sort` for local preview/iteration
 - `npm run build` — Build for production (`next build`)
 - `npm start` — Run the production build (`next start`)
 - `npm run lint` — Run ESLint over `.ts`/`.tsx`
@@ -120,7 +126,7 @@ A full-featured web application for managing collections and sorting items throu
 
 **Photos:**
 - Storage is Vercel Blob — set `BLOB_READ_WRITE_TOKEN` to enable uploads
-- With no Blob token in dev, a fallback serves the committed seed/demo images from `e2e/fixtures/demo-images/` (see `src/lib/photo-serving.ts`); real uploads require the token
+- With no Blob token in dev, a fallback serves committed seed/demo images from `public/onboarding/` first, then legacy `e2e/fixtures/demo-images/` fixtures (see `src/lib/photo-serving.ts`); real uploads require the token
 - Images are resized on demand and re-encoded to WebP via `sharp`
 
 **Invitations:**
@@ -236,7 +242,7 @@ The app is optimized for Vercel with native integrations:
 ## Known Limitations
 
 - **Email Provider:** Sends via Resend (`RESEND_API_KEY`); with no key, dev logs the link to the console
-- **Photo Storage:** Vercel Blob (`BLOB_READ_WRITE_TOKEN`); with no token, dev serves the seed/demo fixtures from `e2e/fixtures/demo-images/` — real uploads require the token
+- **Photo Storage:** Vercel Blob (`BLOB_READ_WRITE_TOKEN`); with no token, dev serves committed seed/demo images from `public/onboarding/` first, then legacy `e2e/fixtures/demo-images/` fixtures — real uploads require the token
 
 ## Contributing
 

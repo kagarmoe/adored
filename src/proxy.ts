@@ -4,13 +4,13 @@ import { isRequestAuthorized } from "@/lib/middleware-auth";
 
 export const config = {
   matcher: [
-    // Protect all routes except these. `tutorial` is a public walkthrough, and
+    // Protect all routes except these. `tutorials/*` holds public walkthroughs, and
     // `onboarding/*` holds the public sample images it renders. `api/auth` is
     // excluded because better-auth serves its public Google sign-in/session +
     // OAuth-callback endpoints there and must NOT be 307'd to /login, or the
     // login/callback requests never reach the handler. `signup` remains
     // public only so the legacy URL can redirect to /login.
-    "/((?!_next(?:/|$)|api/auth(?:/|$)|login(?:/|$)|signup(?:/|$)|shared(?:/|$)|tutorial(?:/|$)|onboarding(?:/|$)).*)",
+    "/((?!_next(?:/|$)|api/auth(?:/|$)|login(?:/|$)|signup(?:/|$)|shared(?:/|$)|tutorial(?:/|$)|tutorials(?:/|$)|onboarding(?:/|$)).*)",
   ],
 };
 
@@ -23,6 +23,10 @@ export const config = {
 // which self-verifies its Blob-signed payload) is preserved via
 // isRequestAuthorized, exactly as under the old withAuth.
 export default function proxy(request: NextRequest) {
+  if (process.env.NODE_ENV === "development" && process.env.AUTH_BYPASS === "1") {
+    return NextResponse.next();
+  }
+
   const hasCookie = getSessionCookie(request) !== null;
   if (isRequestAuthorized(request.nextUrl.pathname, hasCookie)) {
     return NextResponse.next();

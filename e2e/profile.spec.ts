@@ -60,3 +60,16 @@ test("saving a new display name reflects in the header without a reload", async 
   await expect(page).toHaveURL(/\/profile$/);
   await expect(page.getByRole("status")).toHaveText(/Saved/);
 });
+
+test("profile links to tutorials and the completed sort tutorial", async ({ page }) => {
+  await page.goto("/profile");
+
+  await expect(page.getByRole("heading", { name: "Your profile" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tutorials" })).toBeVisible();
+
+  await page.getByRole("link", { name: "Sort and refine" }).click();
+  await expect(page).toHaveURL(/\/tutorials\/sort$/);
+  await expect(
+    page.getByRole("heading", { name: "Rediscover what you love." }),
+  ).toBeVisible();
+});

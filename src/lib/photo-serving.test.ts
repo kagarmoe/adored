@@ -194,6 +194,9 @@ describe("servePhotoFile — dev-only demo-seed local fallback", () => {
   const demoArgs = { ...baseArgs, blobKey: "demo-seed-placeholder/accessories-01.webp" };
   const localBytes = () =>
     fs.readFileSync(path.join(process.cwd(), "e2e/fixtures/demo-images/accessories-01.webp"));
+  const onboardingArgs = { ...baseArgs, blobKey: "demo-seed-placeholder/blue-mixing-bowl.webp" };
+  const onboardingBytes = () =>
+    fs.readFileSync(path.join(process.cwd(), "public/onboarding/blue-mixing-bowl.webp"));
 
   it("serves a demo-seed key from the local fixture when Blob misses (dev, no ?w=)", async () => {
     vi.stubEnv("NODE_ENV", "development");
@@ -202,6 +205,15 @@ describe("servePhotoFile — dev-only demo-seed local fallback", () => {
     expect(res.status).toBe(200);
     const out = Buffer.from(await res.arrayBuffer());
     expect(out.byteLength).toBe(localBytes().byteLength);
+  });
+
+  it("serves a seeded onboarding image from public/onboarding when Blob misses", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    mockGet.mockResolvedValue(null);
+    const res = await servePhotoFile(onboardingArgs, req());
+    expect(res.status).toBe(200);
+    const out = Buffer.from(await res.arrayBuffer());
+    expect(out.byteLength).toBe(onboardingBytes().byteLength);
   });
 
   it("resizes a demo-seed key from the local fixture when Blob misses (dev, ?w=)", async () => {

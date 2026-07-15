@@ -59,12 +59,27 @@ describe("ProfileForm", () => {
     );
   });
 
-  it("offers a quiet 'How Adored works' link to the walkthrough (real ≥44px tap target)", () => {
+  it("offers the Tutorials section with all four quick refresher links", () => {
     render(<ProfileForm initialName="Tessa" email="tessa@example.com" />);
-    const link = screen.getByRole("link", { name: /how adored works/i });
-    expect(link).toHaveAttribute("href", "/welcome");
-    // Tap target: h-11 (44px). Assert the utility class is present.
-    expect(link.className).toMatch(/\bh-11\b/);
+
+    expect(screen.getByText("Tutorials")).toBeInTheDocument();
+    expect(
+      screen.getByText("Revisit any part of Adored when you want a quick refresher."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("New to Adored?")).not.toBeInTheDocument();
+
+    const links = [
+      ["Start a collection", "/tutorials/collection"],
+      ["Sort and refine", "/tutorials/sort"],
+      ["Invite and share", "/tutorials/sharing"],
+      ["Round timers", "/tutorials/timers"],
+    ] as const;
+
+    for (const [label, href] of links) {
+      const link = screen.getByRole("link", { name: label });
+      expect(link).toHaveAttribute("href", href);
+      expect(link.className).toMatch(/\bh-11\b/);
+    }
   });
 
   it("announces a failing save in an assertive live region and shows no confirmation", async () => {

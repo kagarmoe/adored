@@ -7,9 +7,29 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 // next/headers, then exercise the REAL façade to prove the mapping.
 
 const getSessionApi = vi.fn();
+const ensureDevSampleCollection = vi.hoisted(() => vi.fn());
+const eqMock = vi.fn();
+const mockGetDb = vi.fn();
+const userTable = {
+  id: "id",
+  email: "email",
+  name: "name",
+  emailVerified: "emailVerified",
+};
+let selectQueue: Array<Array<{ id: string; email: string; name: string }>> = [];
+let createdRows: Array<{ id: string; email: string; name: string }> = [];
+const insertValues = vi.fn();
 
 vi.mock("@/lib/auth-server", () => ({
   auth: { api: { getSession: getSessionApi } },
+}));
+
+vi.mock("@/lib/dev-sample-bootstrap", () => ({ ensureDevSampleCollection }));
+vi.mock("drizzle-orm", () => ({ eq: eqMock }));
+vi.mock("@/lib/db/schema", () => ({ user: userTable }));
+vi.mock("@/lib/id", () => ({ generateId: () => "user_generated_dev" }));
+vi.mock("@/lib/db", () => ({
+  getDb: mockGetDb,
 }));
 
 // requireAuth/getSession call `await headers()`; give them a stub Headers.
@@ -19,6 +39,32 @@ vi.mock("next/headers", () => ({
 
 beforeEach(() => {
   getSessionApi.mockReset();
+  ensureDevSampleCollection.mockReset();
+  eqMock.mockReset();
+  insertValues.mockReset();
+  mockGetDb.mockReset();
+  vi.unstubAllEnvs();
+  selectQueue = [];
+  createdRows = [];
+  mockGetDb.mockReturnValue({
+    select: () => ({
+      from: () => ({
+        where: () => ({
+          limit: async () => selectQueue.shift() ?? [],
+        }),
+      }),
+    }),
+    insert: () => ({
+      values: (values: unknown) => {
+        insertValues(values);
+        return {
+          onConflictDoNothing: () => ({
+            returning: async () => createdRows,
+          }),
+        };
+      },
+    }),
+  });
 });
 
 describe("auth façade — getSession()", () => {
@@ -51,6 +97,43 @@ describe("auth façade — getSession()", () => {
     getSessionApi.mockResolvedValue(null);
     const { getSession } = await import("./auth");
     expect(await getSession()).toBeNull();
+  });
+
+  it("does not bypass auth outside NODE_ENV=development", async () => {
+    vi.stubEnv("AUTH_BYPASS", "1");
+    getSessionApi.mockResolvedValue(null);
+
+    const { getSession, isDevAuthBypassEnabled } = await import("./auth");
+
+    expect(isDevAuthBypassEnabled()).toBe(false);
+    expect(await getSession()).toBeNull();
+    expect(getSessionApi).toHaveBeenCalledTimes(1);
+    expect(mockGetDb).not.toHaveBeenCalled();
+  });
+
+  it("returns a real local dev user when the dev auth bypass is enabled", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("AUTH_BYPASS", "1");
+    selectQueue = [[]];
+    createdRows = [{ id: "user_generated_dev", email: "dev@adored.test", name: "Dev User" }];
+
+    const { getSession, isDevAuthBypassEnabled } = await import("./auth");
+
+    await expect(getSession()).resolves.toEqual({
+      user: { id: "user_generated_dev", email: "dev@adored.test", name: "Dev User" },
+    });
+    expect(isDevAuthBypassEnabled()).toBe(true);
+    expect(insertValues).toHaveBeenCalledWith({
+      id: "user_generated_dev",
+      email: "dev@adored.test",
+      name: "Dev User",
+      emailVerified: true,
+    });
+    expect(ensureDevSampleCollection).toHaveBeenCalledWith(
+      expect.anything(),
+      "user_generated_dev",
+    );
+    expect(getSessionApi).not.toHaveBeenCalled();
   });
 
   it("reflects a fresh display-name on each call (name-freshness, no stale cache)", async () => {

@@ -6,8 +6,8 @@
     "node": "24.x"
   },
   "scripts": {
-    "dev": "next dev",
-    "dev:tutorial": "(sleep 3 && (open http://localhost:3000/tutorial || xdg-open http://localhost:3000/tutorial || true) &) ; next dev",
+    "dev": "AUTH_BYPASS=1 NEXT_PUBLIC_AUTH_BYPASS=1 next dev",
+    "dev:tutorial": "(sleep 3 && (open http://localhost:3000/tutorials/sort || xdg-open http://localhost:3000/tutorials/sort || true) &) ; AUTH_BYPASS=1 NEXT_PUBLIC_AUTH_BYPASS=1 next dev",
     "build": "next build",
     "vercel-build": "npm run db:migrate && next build",
     "start": "next start",

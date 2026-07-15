@@ -1,6 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { NextRequest } from "next/server";
 import { isRequestAuthorized } from "./middleware-auth";
-import { config } from "@/proxy";
+import proxy, { config } from "@/proxy";
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 // The matcher's negative-lookahead is the actual mechanism that makes a path
 // "public": paths it excludes never invoke withAuth, so they are never
@@ -41,6 +46,17 @@ describe("middleware authorization predicate", () => {
   });
 });
 
+describe("dev auth bypass", () => {
+  it("lets npm-run-dev protected routes through without a session cookie", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("AUTH_BYPASS", "1");
+
+    const response = proxy(new NextRequest("http://localhost/collections"));
+
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
+});
+
 describe("public-path matcher (which routes invoke the auth middleware)", () => {
   const pattern = config.matcher[0];
   const re = matcherToRegExp(pattern);
@@ -49,8 +65,14 @@ describe("public-path matcher (which routes invoke the auth middleware)", () => 
   // never redirected to /login.
   const isPublic = (pathname: string) => !re.test(pathname);
 
-  it("treats the public /tutorial route as public (no login redirect)", () => {
+  it("treats the legacy /tutorial redirect as public (no login redirect)", () => {
     expect(isPublic("/tutorial")).toBe(true);
+  });
+
+  it("treats the public tutorials area as public (no login redirect)", () => {
+    expect(isPublic("/tutorials")).toBe(true);
+    expect(isPublic("/tutorials/sort")).toBe(true);
+    expect(isPublic("/tutorials/collection")).toBe(true);
   });
 
   it("treats onboarding sample images as public assets", () => {
@@ -65,7 +87,7 @@ describe("public-path matcher (which routes invoke the auth middleware)", () => 
     expect(isPublic("/collections/col_123/pool")).toBe(false);
     expect(isPublic("/profile")).toBe(false);
     expect(isPublic("/sessions/sess_1")).toBe(false);
-    expect(isPublic("/tutorials")).toBe(false);
+    expect(isPublic("/tutorial-ish")).toBe(false);
     expect(isPublic("/onboarding-assets")).toBe(false);
   });
 

@@ -1,6 +1,7 @@
 import type { CollectionMembership, Invitation } from "@/types";
 import { Badge } from "@/components/ui";
 import { RoleBadge } from "./RoleBadge";
+import { MemberRemoveButton } from "./MemberRemoveButton";
 
 interface MemberListProps {
   members: CollectionMembership[];
@@ -42,12 +43,7 @@ export function MemberList({ members, pending = [], canManage = false }: MemberL
             </div>
             <RoleBadge role={member.role} />
             {canManage && !isOwner && (
-              <button
-                type="button"
-                className="flex h-11 items-center rounded-control px-3 text-sm font-medium text-error-deep hover:bg-error-soft focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-error"
-              >
-                Remove
-              </button>
+              <MemberRemoveButton collectionId={member.collectionId} memberId={member.id} />
             )}
           </div>
         );

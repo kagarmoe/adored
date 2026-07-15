@@ -7,6 +7,7 @@ import { Button, Card, Input, ErrorMessage } from "@/components/ui";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { DeleteAccountSection } from "./DeleteAccountSection";
 import { apiPatch } from "@/lib/api-client";
+import { TUTORIALS } from "@/features/tutorials/tutorials";
 
 interface ProfileFormProps {
   initialName: string | null;
@@ -107,21 +108,30 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
         <ThemeToggle />
       </div>
 
-      <div className="flex flex-col items-start gap-3 rounded-control border border-hairline bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <section
+        aria-labelledby="profile-tutorials-heading"
+        className="rounded-control border border-hairline bg-surface px-4 py-3"
+      >
         <div>
-          <p className="text-sm font-medium text-ink">New to Adored?</p>
-          <p className="text-sm text-ink-soft">Revisit the quick walkthrough anytime.</p>
+          <h2 id="profile-tutorials-heading" className="text-sm font-medium text-ink">
+            Tutorials
+          </h2>
         </div>
-        {/* Re-open the walkthrough (manual visit — does NOT clear the dismissal flag). */}
-        <Link
-          href="/welcome"
-          aria-label="Walkthrough: how Adored works"
-          className="inline-flex h-11 w-full items-center justify-center rounded-control px-4 text-sm text-primary underline focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary sm:w-auto"
-        >
-          <span className="sm:hidden">Walkthrough</span>
-          <span className="hidden sm:inline">How Adored works</span>
-        </Link>
-      </div>
+        <p className="mt-1 text-sm text-ink-soft">
+          Revisit any part of Adored when you want a quick refresher.
+        </p>
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {TUTORIALS.map((tutorial) => (
+            <Link
+              key={tutorial.slug}
+              href={tutorial.href}
+              className="inline-flex h-11 items-center rounded-control px-3 text-sm text-primary underline focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+            >
+              {tutorial.title}
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <DeleteAccountSection email={email} />
     </div>

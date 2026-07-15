@@ -9,6 +9,65 @@ export interface Session {
   };
 }
 
+const DEV_AUTH_BYPASS_EMAIL = "dev@adored.test";
+const DEV_AUTH_BYPASS_NAME = "Dev User";
+
+export function isDevAuthBypassEnabled(): boolean {
+  return process.env.NODE_ENV === "development" && process.env.AUTH_BYPASS === "1";
+}
+
+async function getDevBypassSession(): Promise<Session> {
+  const [{ eq }, { getDb }, { user: userTable }, { generateId }] = await Promise.all([
+    import("drizzle-orm"),
+    import("@/lib/db"),
+    import("@/lib/db/schema"),
+    import("@/lib/id"),
+  ]);
+  const db = getDb();
+  const email = process.env.AUTH_BYPASS_EMAIL || DEV_AUTH_BYPASS_EMAIL;
+  const name = process.env.AUTH_BYPASS_NAME || DEV_AUTH_BYPASS_NAME;
+
+  const existing = await db
+    .select({ id: userTable.id, email: userTable.email, name: userTable.name })
+    .from(userTable)
+    .where(eq(userTable.email, email))
+    .limit(1);
+  if (existing.length) {
+    const { ensureDevSampleCollection } = await import("@/lib/dev-sample-bootstrap");
+    await ensureDevSampleCollection(db, existing[0].id);
+    return { user: existing[0] };
+  }
+
+  const [created] = await db
+    .insert(userTable)
+    .values({
+      id: process.env.AUTH_BYPASS_USER_ID || generateId("user"),
+      email,
+      name,
+      emailVerified: true,
+    })
+    .onConflictDoNothing({ target: userTable.email })
+    .returning({ id: userTable.id, email: userTable.email, name: userTable.name });
+
+  if (created) {
+    const { ensureDevSampleCollection } = await import("@/lib/dev-sample-bootstrap");
+    await ensureDevSampleCollection(db, created.id);
+    return { user: created };
+  }
+
+  const [raced] = await db
+    .select({ id: userTable.id, email: userTable.email, name: userTable.name })
+    .from(userTable)
+    .where(eq(userTable.email, email))
+    .limit(1);
+  if (!raced) {
+    throw new Error("Unable to create dev auth bypass user");
+  }
+  const { ensureDevSampleCollection } = await import("@/lib/dev-sample-bootstrap");
+  await ensureDevSampleCollection(db, raced.id);
+  return { user: raced };
+}
+
 // THE FAÇADE (Cutover Pass 1). Reads a better-auth session and returns the
 // byte-identical shape the ~249 call sites + the DAL (`userId: string`) already
 // depend on: { user: { id, email, name } }. better-auth's getSession returns
@@ -23,6 +82,10 @@ export interface Session {
 // owns the whole sign-in/session surface at /api/auth. This module is nothing
 // but the read façade over better-auth.
 export async function getSession(): Promise<Session | null> {
+  if (isDevAuthBypassEnabled()) {
+    return getDevBypassSession();
+  }
+
   const result = await auth.api.getSession({ headers: await headers() });
   if (!result?.user) {
     return null;

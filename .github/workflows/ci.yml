@@ -335,6 +335,7 @@ jobs:
               - 'src/features/onboarding/**'
               - 'src/app/welcome/**'
               - 'src/app/tutorial/**'
+              - 'src/app/tutorials/**'
             auth:
               - 'src/proxy.ts'
               - 'src/lib/auth.ts'
