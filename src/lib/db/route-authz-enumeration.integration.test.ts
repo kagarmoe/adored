@@ -336,6 +336,9 @@ function buildStrangerCases(
 
     // ── /api/collections/[id]/items/[itemId]/photos/[photoId] ─────────────
     // requireApiCapability fires before any photo lookup so nonexistent-photo-id → 403.
+    c("collections/[id]/items/[itemId]/photos/[photoId]/route.ts", "GET",
+      `/api/collections/${collectionId}/items/${itemAId}/photos/nonexistent-photo-id`,
+      { id: collectionId, itemId: itemAId, photoId: "nonexistent-photo-id" }),
     c("collections/[id]/items/[itemId]/photos/[photoId]/route.ts", "PATCH",
       `/api/collections/${collectionId}/items/${itemAId}/photos/nonexistent-photo-id`,
       { id: collectionId, itemId: itemAId, photoId: "nonexistent-photo-id" },

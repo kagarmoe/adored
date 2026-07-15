@@ -8,6 +8,14 @@ import { del } from "@vercel/blob";
 import { ALLOWED_ROTATIONS } from "@/lib/photos";
 import { deleteVariants, variantPrefix } from "@/lib/photo-variants";
 import { errorResponse } from "@/server/api/http-errors";
+import { serveItemPhotoFile } from "@/server/api/item-photo-file";
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string; itemId: string; photoId: string }> }
+) {
+  return serveItemPhotoFile(req, params);
+}
 
 // Rotate a photo (persisted, non-destructive). photos:write = curator (full-curator model).
 export async function PATCH(
