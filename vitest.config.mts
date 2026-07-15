@@ -12,6 +12,10 @@ export default defineConfig({
     // the following tests and one real failure reports as four.
     unstubEnvs: true,
     restoreMocks: true,
+    // The full pre-push suite can run under heavier local load than focused CI
+    // invocations. Keep real hangs bounded while avoiding false timeout failures.
+    testTimeout: 20_000,
+    hookTimeout: 20_000,
     // Unit tests live under src/. Keep vitest out of e2e/ — those are
     // Playwright specs that import @playwright/test and must not be collected
     // by the vitest runner (they'd throw "test() called outside Playwright").
