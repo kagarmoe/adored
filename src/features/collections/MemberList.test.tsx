@@ -1,9 +1,18 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
+import { vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import type { CollectionMembership } from "@/types";
 import type { Invitation } from "@/types";
 import { MemberList } from "./MemberList";
+
+vi.mock("./MemberRemoveButton", () => ({
+  MemberRemoveButton: ({ collectionId, memberId }: { collectionId: string; memberId: string }) => (
+    <button type="button" data-collection-id={collectionId} data-member-id={memberId}>
+      Remove
+    </button>
+  ),
+}));
 
 function membership(over: Partial<CollectionMembership> = {}): CollectionMembership {
   return {
@@ -59,6 +68,14 @@ describe("MemberList", () => {
 
     rerender(<MemberList members={[membership()]} pending={[]} canManage={false} />);
     expect(screen.queryByRole("button", { name: /remove/i })).not.toBeInTheDocument();
+  });
+
+  it("wires the Remove control to the member row and collection", () => {
+    render(<MemberList members={[membership({ id: "mem_curator", collectionId: "col_abc" })]} pending={[]} canManage />);
+
+    const remove = screen.getByRole("button", { name: /remove/i });
+    expect(remove).toHaveAttribute("data-collection-id", "col_abc");
+    expect(remove).toHaveAttribute("data-member-id", "mem_curator");
   });
 
   it("renders a pending invitation with its email and a pending Badge", () => {

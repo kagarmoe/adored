@@ -24,6 +24,7 @@ Deeper reference specs are linked at the end under **[Reference deep-dives](#ref
 - **Next.js 14 App Router**, TypeScript strict, Server Components by default (`"use client"` only for interactive forms/hooks).
 - **Drizzle ORM** over **Postgres** (Neon / Vercel Postgres) via the `postgres-js` driver (`src/lib/db.ts`); schema in `src/lib/db/schema.ts` — **15 `pgTable`s**.
 - **better-auth** with **database sessions** (not JWT), one catch-all handler at `/api/auth/[...all]`; Google is the only supported product login. `src/lib/auth.ts` is a thin read façade (`getSession`/`requireAuth`) over `src/lib/auth-server.ts`. **NextAuth, the `DrizzleAdapter`, the JWT strategy and `bcryptjs` are all gone** (decision 26; `bcryptjs`/`@types/bcryptjs` removed from `package.json`).
+- **Local dev auth bypass:** `npm run dev` sets `AUTH_BYPASS=1`. `src/lib/auth.ts` honors it only when `NODE_ENV=development`, returning a development user (`dev@adored.test` by default) and creating that `user` row if needed. `src/proxy.ts` skips only the optimistic login redirect under the same dev-only gate; production/build/start do not inherit the bypass.
 - **Vercel Blob** for photo storage (client-upload; local filesystem fallback in dev).
 - **Vitest** (unit + DB-backed integration behind `RUN_DB_TESTS=1`), **Playwright** e2e (ephemeral Docker Postgres, multi-viewport), deployed on **Vercel**.
 
@@ -38,8 +39,10 @@ src/app/**                 file-based pages + src/app/api/** route handlers (mut
         → Drizzle / Postgres (src/lib/db.ts, schema.ts)
 src/server/dal/*           authorization chokepoint-in-progress (collection-access.ts)
 src/proxy.ts               optimistic login-redirect (Next 16 proxy convention);
-                           `/tutorial` + `/onboarding/*` are public walkthrough
-                           surfaces, while real app authz stays in DAL guards
+                           `/tutorials/*` + `/onboarding/*` are public tutorial
+                           surfaces, while real app authz stays in DAL guards;
+                           `npm run dev` disables only this redirect layer via
+                           the local-only AUTH_BYPASS gate
 ```
 
 Key invariants:
@@ -207,7 +210,7 @@ Each entry is **Decision / Rationale / Status**. Where design and shipped code d
 
 **25. First-run onboarding walkthrough + gate (`/welcome`, purses-ka23, 2026-07-01).**
 - *Decision:* A signed-in user with **zero collections** who hasn't dismissed the intro is sent to a self-contained, client-only `/welcome` walkthrough (five beats: Purpose → Triage → Compare → Standing → Hand-off) whose one job is dispelling the "marketplace" misread and installing the sort-what-you-own model. **No DB, no API, no server state** — scripted local React state over bundled sample objects (`public/onboarding/*`, CC-attributed). The gate is a **server-side redirect in the collections Server Component** (`shouldShowWelcome(count, dismissed)` → `redirect("/welcome")`) reading a **client-set cookie** `adored-welcome-dismissed` via `next/headers` — chosen over a client `useEffect` redirect to eliminate the empty-collections flash (the marketplace-ish chrome must never be the first impression). The compare choice **drives** the sample Standing ranking (picked item ranks above passed-over) so the aha is earned, not faked.
-- *Rationale:* Users read Adored as a store; the walkthrough is the fix, so the anti-marketplace framing must land before any collection chrome — hence the server-side gate, not a client redirect. Cookie (not `localStorage`) so the server can decide before render; no DB because first-run state doesn't merit schema. Dismissal is set on Skip + Hand-off completion; re-open (a quiet "How Adored works" link on `/profile`) reaches `/welcome` without clearing the cookie, so a zero-collection user isn't re-trapped next login.
+- *Rationale:* Users read Adored as a store; the walkthrough is the fix, so the anti-marketplace framing must land before any collection chrome — hence the server-side gate, not a client redirect. Cookie (not `localStorage`) so the server can decide before render; no DB because first-run state doesn't merit schema. Dismissal is set on Skip + Hand-off completion; re-open now lives in the Profile page's Tutorials section, where "Sort and refine" reaches `/tutorials/sort` without clearing the cookie, so a zero-collection user isn't re-trapped next login. The legacy `/tutorial` URL redirects there.
 - *Status:* **Shipped (purses-ka23).** `src/app/welcome/page.tsx`; `src/features/onboarding/{WalkthroughShell,WelcomePurpose,WelcomeTriage,WelcomeCompare,WelcomeStanding,WelcomeHandoff,sampleData,dismissal,gate}.tsx`; gate in `src/app/collections/page.tsx`; re-open link in `ProfileForm`. Copy-guard + a11y + ranking-from-choice tests under `src/features/onboarding/`; `/welcome` beat screenshots via `e2e/screenshots/capture.ts`.
 
 **26. Auth: NextAuth v4/JWT → better-auth (DB sessions) (`feat/better-auth-migration`, `purses-74tx`). Supersedes entries 2 & 3's mechanism.**

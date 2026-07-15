@@ -80,11 +80,15 @@ A full-featured web application for managing collections and sorting items throu
 
    Open [http://localhost:3000](http://localhost:3000)
 
+   `npm run dev` starts `next dev` with a local-only auth bypass. The app signs
+   requests in as `dev@adored.test` and creates that user row in the development
+   database if needed. The bypass is ignored outside `NODE_ENV=development`.
+
 ### Development Commands
 
 **App**
-- `npm run dev` — Start the Next.js dev server with hot reload
-- `npm run dev:tutorial` — Open the onboarding walkthrough at `/tutorial` for local preview/iteration (dev-only)
+- `npm run dev` — Start the Next.js dev server with hot reload and local auth bypass
+- `npm run dev:tutorial` — Open the sort tutorial at `/tutorials/sort` for local preview/iteration
 - `npm run build` — Build for production (`next build`)
 - `npm start` — Run the production build (`next start`)
 - `npm run lint` — Run ESLint over `.ts`/`.tsx`
