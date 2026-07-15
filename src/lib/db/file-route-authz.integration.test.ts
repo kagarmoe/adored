@@ -20,6 +20,7 @@ vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 import { GET } from "@/app/api/collections/[id]/items/[itemId]/photos/[photoId]/file/route";
 import { GET as GET_POOL } from "@/app/api/collections/[id]/pool/photos/[photoId]/file/route";
 import {
+  GET as GET_PHOTO_ASSET,
   PATCH as PATCH_PHOTO,
   DELETE as DELETE_PHOTO,
 } from "@/app/api/collections/[id]/items/[itemId]/photos/[photoId]/route";
@@ -92,6 +93,15 @@ describeDb("GET /file authorization seam (route -> DB)", () => {
   it("200s for the owner with the correct collection.id", async () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await GET(req() as any, { params: Promise.resolve({ id: collectionId, itemId, photoId }) });
+    expect(res.status).toBe(200);
+  });
+
+  it("200s through the parent photo route used by the dev-safe file rewrite", async () => {
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+    const res = await GET_PHOTO_ASSET(
+      new Request("http://localhost/photo?w=640") as any,
+      { params: Promise.resolve({ id: collectionId, itemId, photoId }) },
+    );
     expect(res.status).toBe(200);
   });
 

@@ -37,16 +37,25 @@ function withQuery(base: string, opts?: PhotoUrlOptions): string {
   return qs ? `${base}?${qs}` : base;
 }
 
+function withItemPhotoQuery(
+  photoId: string,
+  collectionId: string,
+  itemId: string,
+  opts?: PhotoUrlOptions,
+): string {
+  const params = new URLSearchParams({ collectionId, itemId });
+  if (opts?.w) params.set("w", String(opts.w));
+  if (opts?.v) params.set("v", String(opts.v));
+  return `/api/photo-files/${encodeURIComponent(photoId)}?${params.toString()}`;
+}
+
 export function getPhotoAssetUrl(
   collectionId: string,
   itemId: string,
   photoId: string,
   opts?: PhotoUrlOptions
 ): string {
-  return withQuery(
-    `/api/collections/${collectionId}/items/${itemId}/photos/${photoId}/file`,
-    opts
-  );
+  return withItemPhotoQuery(photoId, collectionId, itemId, opts);
 }
 
 export function getPhotoAssetUrlForPhoto(

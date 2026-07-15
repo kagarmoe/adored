@@ -10,18 +10,18 @@ import { RESIZE_WIDTHS } from "./photo-serving";
 
 describe("photo asset URL helpers", () => {
   it("builds an item photo URL with no query when no width is given", () => {
-    expect(getPhotoAssetUrl("c", "i", "p")).toBe("/api/collections/c/items/i/photos/p/file");
+    expect(getPhotoAssetUrl("c", "i", "p")).toBe("/api/photo-files/p?collectionId=c&itemId=i");
   });
 
   it("appends ?w= for an item photo when a width is given", () => {
     expect(getPhotoAssetUrl("c", "i", "p", { w: 640 })).toBe(
-      "/api/collections/c/items/i/photos/p/file?w=640",
+      "/api/photo-files/p?collectionId=c&itemId=i&w=640",
     );
   });
 
   it("appends ?w=&v= when both are given (cache-bust)", () => {
     expect(getPhotoAssetUrl("c", "i", "p", { w: 640, v: 7 })).toBe(
-      "/api/collections/c/items/i/photos/p/file?w=640&v=7",
+      "/api/photo-files/p?collectionId=c&itemId=i&w=640&v=7",
     );
     expect(getPoolPhotoAssetUrl("c", "p", { v: 7 })).toBe(
       "/api/collections/c/pool/photos/p/file?v=7",
@@ -42,7 +42,7 @@ describe("photo asset URL helpers", () => {
         "c",
         { w: 1280 },
       ),
-    ).toBe("/api/collections/c/items/i/photos/p/file?w=1280&v=7");
+    ).toBe("/api/photo-files/p?collectionId=c&itemId=i&w=1280&v=7");
   });
 
   it("getPhotoAssetUrlForPhoto throws for a pool (item-less) photo", () => {
