@@ -192,6 +192,11 @@ for (const theme of ["light", "dark"] as const) {
       // the Items grid (+ the dominant Add photos action).
       ["workspace-pool-first", `/collections/${workspacePoolFirstSlug}`],
       ["workspace-items-first", `/collections/${workspaceItemsFirstSlug}`],
+      // Wayfinding: the Items index (back arrow + Build/Sort/Decide chips) and an
+      // item detail (deepest common trail: Collections / {name} / Items / {item};
+      // the itemsOnly seed's single item is number 1).
+      ["items", `/collections/${workspaceItemsFirstSlug}/items`],
+      ["item-detail", `/collections/${workspaceItemsFirstSlug}/items/1`],
       // Epic 3: the pool "Photos" screen (grid + copy). poolOnly has loose photos.
       ["pool", `/collections/${workspacePoolFirstSlug}/pool`],
       // Epic R: the session hub showing all three round cards (Get acquainted /
