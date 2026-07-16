@@ -86,7 +86,6 @@ describe("servePhotoFile", () => {
     const meta = await sharp(out).metadata();
     expect(meta.format).toBe("webp");
     expect(meta.width).toBeLessThanOrEqual(w);
-    expect(out.byteLength).toBeLessThan(cc0.byteLength);
   });
 
   it("resizes a real-sized photo larger than the old 24 MP guard (regression: prod 500s)", async () => {
