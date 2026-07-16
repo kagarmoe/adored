@@ -8,6 +8,7 @@ import { SessionController } from "@/server/api/sessions";
 import { DecisionController } from "@/server/api/decisions";
 import { DispositionController } from "@/server/api/dispositions";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { Badge, Button, Card } from "@/components/ui";
 import { SessionAnalytics } from "@/features/sessions/SessionAnalytics";
 import { SeeResultsCard } from "@/features/sessions/SeeResultsCard";
@@ -95,14 +96,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
   };
 
   return (
-    <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Sort", href: `/collections/${collection.slug ?? collection.id}/sort` },
-        { label: "Session" },
-      ]}
-    >
+    <AppLayout breadcrumbs={trail.session(collection, sortSession.number)}>
       {/* Recovery gate (spec §3.4): the analytics/recommendation below derive
           from decision events — drain pending ones before trusting them. */}
       <PendingDecisionsGate curatorId={session.user.id}>

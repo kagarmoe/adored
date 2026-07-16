@@ -6,6 +6,7 @@ import { PhotoController } from "@/server/api/photos";
 import { ItemController } from "@/server/api/items";
 import { SessionController } from "@/server/api/sessions";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { EmptyState, buttonVariants } from "@/components/ui";
 import { ActiveSessionPanel } from "@/features/sessions/ActiveSessionPanel";
 import { PhotoPoolPreview } from "@/features/collections/PhotoPoolPreview";
@@ -76,12 +77,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   );
 
   return (
-    <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name },
-      ]}
-    >
+    <AppLayout breadcrumbs={trail.collection(collection)}>
       <div className="space-y-10">
         <header className="max-w-3xl">
           <h1 className="text-2xl text-ink sm:text-3xl">{collection.name}</h1>

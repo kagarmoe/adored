@@ -6,6 +6,7 @@ import { CollectionController } from "@/server/api/collections";
 import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { buttonVariants, EmptyState } from "@/components/ui";
 import { CollectionCard } from "@/features/collections/CollectionCard";
 import { CollectionFilters } from "@/features/collections/CollectionFilters";
@@ -53,7 +54,7 @@ export default async function CollectionsPage(props: CollectionsPageProps) {
     : collections.filter((collection) => collection.status === activeFilter);
 
   return (
-    <AppLayout breadcrumbs={[{ label: "Collections" }]}>
+    <AppLayout breadcrumbs={trail.collections()}>
       <div className="space-y-8">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

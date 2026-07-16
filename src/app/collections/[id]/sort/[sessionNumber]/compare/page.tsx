@@ -8,6 +8,7 @@ import { PreferenceController } from "@/server/api/preferences";
 import { DecisionController } from "@/server/api/decisions";
 import { DispositionController } from "@/server/api/dispositions";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { EmptyState } from "@/components/ui";
 import { CompareChoice } from "@/features/sorting/CompareChoice";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
@@ -47,6 +48,9 @@ export default async function ComparePage({ params }: ComparePageProps) {
   if (sortSession.curatorId !== session.user.id) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
+
+  // One trail for all three render branches — hand-built copies drifted before.
+  const breadcrumbs = trail.compare(collection, sortSession.number);
 
   // "Take a break" stays reachable in every state of the compare screen — even
   // the not-enough-items / all-done branches — so stepping away is never gated.
@@ -146,12 +150,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
 
   return (
     <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}` },
-        { label: "Compare" },
-      ]}
+      breadcrumbs={breadcrumbs}
       actions={breakAction}
     >
       {/* Recovery gate (spec §3.4): the pair below was selected from the server

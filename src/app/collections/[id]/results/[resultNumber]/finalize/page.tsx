@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
 import { ResultController } from "@/server/api/results";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { FinalizeResultForm } from "@/features/results/FinalizeResultForm";
 
 interface FinalizePageProps {
@@ -38,14 +39,7 @@ export default async function FinalizePage({ params }: FinalizePageProps) {
   }
 
   return (
-    <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Results", href: `/collections/${collection.slug ?? collection.id}/results` },
-        { label: "Finalize" },
-      ]}
-    >
+    <AppLayout breadcrumbs={trail.finalize(collection, result)}>
       <div className="mx-auto w-full max-w-2xl space-y-6">
         <div>
           <h1 className="text-2xl text-ink sm:text-3xl">Finalize results</h1>

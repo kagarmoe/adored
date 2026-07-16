@@ -5,6 +5,7 @@ import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemController } from "@/server/api/items";
 import { PhotoController } from "@/server/api/photos";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { Card } from "@/components/ui";
 import { PhotoUpload } from "@/features/items/PhotoUpload";
 import { PhotoGallery } from "@/features/items/PhotoGallery";
@@ -42,15 +43,7 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
     .map((i) => ({ id: i.id, number: i.number, name: i.name }));
 
   return (
-    <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Items", href: `/collections/${collection.slug ?? collection.id}/items` },
-        { label: itemDisplayName(item), href: `/collections/${collection.slug ?? collection.id}/items/${item.number}` },
-        { label: "Photos" },
-      ]}
-    >
+    <AppLayout breadcrumbs={trail.itemPhotos(collection, item)}>
       <div className="space-y-8">
         <div className="max-w-3xl">
           <h1 className="text-2xl text-ink sm:text-3xl">{itemDisplayName(item)}</h1>

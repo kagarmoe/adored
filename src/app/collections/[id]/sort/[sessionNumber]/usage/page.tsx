@@ -9,6 +9,7 @@ import { DispositionController } from "@/server/api/dispositions";
 import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { TakeABreakControl } from "@/features/sorting/TakeABreakControl";
 import { UsageRound } from "@/features/sorting/UsageRound";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
@@ -76,12 +77,7 @@ export default async function UsagePage({ params }: UsagePageProps) {
 
   return (
     <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${slugOrId}` },
-        { label: "Session", href: hubHref },
-        { label: "Usage" },
-      ]}
+      breadcrumbs={trail.usage(collection, sortSession.number)}
       actions={
         <TakeABreakControl
           curatorId={session.user.id}

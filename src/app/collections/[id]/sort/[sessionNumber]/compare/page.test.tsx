@@ -184,6 +184,12 @@ describe("ComparePage round chrome + copy (Epic 4c)", () => {
     expect(screen.queryByRole("heading", { name: /reach for/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/\bkeep\b/i)).not.toBeInTheDocument();
   });
+
+  it("renders no workspace mode chips mid-round (one decision at a time)", async () => {
+    const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
+    render(ui);
+    expect(screen.queryByRole("navigation", { name: "Workspace mode" })).not.toBeInTheDocument();
+  });
 });
 
 describe("ComparePage curator-wide compare selection (§7.3)", () => {

@@ -10,6 +10,7 @@ import { DispositionController } from "@/server/api/dispositions";
 import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { TriageUndoProvider } from "@/features/sorting/TriageUndoProvider";
 import { TriageUndoNotice } from "@/features/sorting/TriageUndoNotice";
 import { TakeABreakControl } from "@/features/sorting/TakeABreakControl";
@@ -80,12 +81,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
 
   return (
     <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${slugOrId}` },
-        { label: "Session", href: hubHref },
-        { label: "Triage" },
-      ]}
+      breadcrumbs={trail.triage(collection, sortSession.number)}
       actions={
         <TakeABreakControl
           curatorId={session.user.id}

@@ -6,6 +6,7 @@ import { ItemController } from "@/server/api/items";
 import { PhotoController } from "@/server/api/photos";
 import { MemberController } from "@/server/api/members";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { Button, Card } from "@/components/ui";
 import { ItemMetadata } from "@/features/items/ItemMetadata";
 import { ItemPhotoCarousel } from "@/features/items/ItemPhotoCarousel";
@@ -71,14 +72,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   );
 
   return (
-    <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Items", href: `/collections/${collection.slug ?? collection.id}/items` },
-        { label: itemDisplayName(item) },
-      ]}
-    >
+    <AppLayout breadcrumbs={trail.item(collection, item)}>
       <div className="space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">

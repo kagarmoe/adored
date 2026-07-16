@@ -5,9 +5,11 @@ import { requireCollectionAccess } from "@/lib/collection-access";
 import { PhotoController } from "@/server/api/photos";
 import { ItemController } from "@/server/api/items";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { EmptyState } from "@/components/ui";
 import { PoolUpload } from "@/features/pool/PoolUpload";
 import { PoolPhotoGrid } from "@/features/pool/PoolPhotoGrid";
+import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 
 interface PoolPageProps {
   params: Promise<{ id: string }>;
@@ -30,13 +32,7 @@ export default async function PoolPage({ params }: PoolPageProps) {
   const targets = items.map((i) => ({ id: i.id, number: i.number, name: i.name }));
 
   return (
-    <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Photos" },
-      ]}
-    >
+    <AppLayout breadcrumbs={trail.pool(collection)}>
       <div className="space-y-8">
         <div className="max-w-3xl">
           <h1 className="text-2xl text-ink sm:text-3xl">Photos</h1>
@@ -44,6 +40,14 @@ export default async function PoolPage({ params }: PoolPageProps) {
             Dump everything in fast. Group them into items later — or never. There&rsquo;s no rush.
           </p>
         </div>
+
+        {/* Section index page: the active Build chip links to the workspace root,
+            not this page, so aria-current is "true" (section), not "page". */}
+        <WorkspaceModeChips
+          base={`/collections/${collection.slug ?? collection.id}`}
+          activeMode="build"
+          activeExact={false}
+        />
 
         <PoolUpload collectionId={collection.id} />
 

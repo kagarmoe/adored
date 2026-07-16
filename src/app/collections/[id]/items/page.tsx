@@ -6,8 +6,10 @@ import { ItemController } from "@/server/api/items";
 import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { Button, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
+import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { ItemFilters } from "@/features/items/ItemFilters";
 import { filterItems, itemsEmptyState } from "@/lib/items";
 import Link from "next/link";
@@ -44,13 +46,7 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
   });
 
   return (
-    <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Items" },
-      ]}
-    >
+    <AppLayout breadcrumbs={trail.items(collection)}>
       <div className="space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -70,6 +66,14 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
             </Link>
           </div>
         </div>
+
+        {/* Section index, not the workspace root: Build is the current section,
+            not the current page — hence activeExact={false}. */}
+        <WorkspaceModeChips
+          base={`/collections/${collection.slug ?? collection.id}`}
+          activeMode="build"
+          activeExact={false}
+        />
 
         <ItemFilters activeFilter={activeFilter} unnamed={unnamed} collectionId={collection.slug ?? collection.id} />
 

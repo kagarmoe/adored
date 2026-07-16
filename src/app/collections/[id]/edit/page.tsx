@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionOwnerPage } from "@/lib/collection-access";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { CollectionForm } from "@/features/collections/CollectionForm";
 import { DeleteCollectionSection } from "@/features/collections/DeleteCollectionSection";
 
@@ -22,13 +23,7 @@ export default async function EditCollectionPage({ params }: EditPageProps) {
   const collection = await requireCollectionOwnerPage(db, id, session.user.id);
 
   return (
-    <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Edit" },
-      ]}
-    >
+    <AppLayout breadcrumbs={trail.collectionEdit(collection)}>
       <div className="mx-auto w-full max-w-2xl">
         <h1 className="mb-6 text-2xl text-ink sm:mb-8 sm:text-3xl">Edit collection</h1>
         <CollectionForm collection={collection} mode="edit" />

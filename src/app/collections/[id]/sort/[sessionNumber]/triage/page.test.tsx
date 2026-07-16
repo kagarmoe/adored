@@ -173,6 +173,12 @@ describe("TriagePage round chrome (Epic 4c)", () => {
     expect(screen.getByRole("button", { name: /^love$/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /how do you feel about this one\?/i })).toBeInTheDocument();
   });
+
+  it("renders no workspace mode chips mid-round (one decision at a time)", async () => {
+    const ui = await TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
+    render(ui);
+    expect(screen.queryByRole("navigation", { name: "Workspace mode" })).not.toBeInTheDocument();
+  });
 });
 
 describe("TriagePage patient-waiting skin (showingDeferred)", () => {

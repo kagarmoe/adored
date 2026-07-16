@@ -120,6 +120,26 @@ describe("/collections/[id]/items owns its status/unnamed query state", () => {
   });
 });
 
+describe("/items is a section index: lateral mode chips (wayfinding invariant 3)", () => {
+  it("renders the Build/Sort/Decide chips with Build current-section (aria-current=\"true\", not \"page\")", async () => {
+    await renderPage();
+    const nav = screen.getByRole("navigation", { name: "Workspace mode" });
+    expect(nav).toBeInTheDocument();
+    // Build links to the workspace root, not this page — section-current, not page-current.
+    const build = screen.getByRole("link", { name: "Build" });
+    expect(build).toHaveAttribute("href", "/collections/summer-bags");
+    expect(build).toHaveAttribute("aria-current", "true");
+    expect(screen.getByRole("link", { name: "Sort" })).toHaveAttribute(
+      "href",
+      "/collections/summer-bags/sort",
+    );
+    expect(screen.getByRole("link", { name: "Decide" })).toHaveAttribute(
+      "href",
+      "/collections/summer-bags/results",
+    );
+  });
+});
+
 describe("durable /items labels are sentence case (governed allowlist, asserted once)", () => {
   it("renders the governed labels by role + accessible name and no legacy casing", async () => {
     await renderPage();

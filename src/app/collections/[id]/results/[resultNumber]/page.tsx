@@ -9,6 +9,7 @@ import { ShareController } from "@/server/api/shares";
 import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { Badge, Button, EmptyState } from "@/components/ui";
 import { RankedResults } from "@/features/results/RankedResults";
 import { RerankPanel, type RerankRow } from "@/features/results/RerankPanel";
@@ -98,14 +99,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
   }));
 
   return (
-    <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Results", href: `/collections/${collection.slug ?? collection.id}/results` },
-        { label: result.name },
-      ]}
-    >
+    <AppLayout breadcrumbs={trail.result(collection, result)}>
       <div className="space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>

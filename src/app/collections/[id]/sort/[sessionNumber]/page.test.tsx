@@ -85,6 +85,8 @@ describe("SessionDetailPage resolution + integrity guard", () => {
     // Hub consumes the shared teaching copy — a hub-side fork of this string fails here.
     expect(screen.getByText(ROUND_COPY.triage.explainer)).toBeInTheDocument();
     expect(screen.getByText("Choose any round. Each one adds another layer.")).toBeInTheDocument();
+    // Invariant 3: the session hub is mid-flow — no lateral mode chips.
+    expect(screen.queryByRole("navigation", { name: "Workspace mode" })).not.toBeInTheDocument();
   });
   it("redirects when the user is not the session's curator — independent sort (purses-t9l)", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "s1", collectionId: "coll_REAL", number: 1, status: "active", curatorId: "someone_else" });
