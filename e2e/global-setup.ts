@@ -10,4 +10,10 @@ export default async function globalSetup() {
     cwd: process.cwd(),
     env: process.env,
   });
+  // Regenerate per-spec labeled test images; a non-zero exit (missing/undersized
+  // output) fails the whole run loudly — specs never assert on pixels themselves.
+  await execFileAsync("node", ["scripts/label-test-images.mjs"], {
+    cwd: process.cwd(),
+    env: process.env,
+  });
 }
