@@ -158,19 +158,14 @@ describe("Decide Standing — workspace mode chips", () => {
     const ui = await ResultsPage({ params: Promise.resolve({ id: "summer-bags" }) });
     render(ui);
 
+    // Page-owned facts only: the Decide chip links to THIS page, so
+    // aria-current is the exact "page". Chip internals are pinned by
+    // WorkspaceModeChips.test.tsx.
     const nav = screen.getByRole("navigation", { name: "Workspace mode" });
-    const build = within(nav).getByRole("link", { name: "Build" });
-    const sort = within(nav).getByRole("link", { name: "Sort" });
-    const decide = within(nav).getByRole("link", { name: "Decide" });
-
-    expect(build).toHaveAttribute("href", "/collections/summer-bags");
-    expect(sort).toHaveAttribute("href", "/collections/summer-bags/sort");
-    expect(decide).toHaveAttribute("href", "/collections/summer-bags/results");
-
-    // The Decide chip links to THIS page, so aria-current is the exact "page".
-    expect(decide).toHaveAttribute("aria-current", "page");
-    expect(build).not.toHaveAttribute("aria-current");
-    expect(sort).not.toHaveAttribute("aria-current");
+    expect(within(nav).getByRole("link", { name: "Decide" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 });
 

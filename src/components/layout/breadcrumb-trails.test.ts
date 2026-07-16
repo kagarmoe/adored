@@ -32,6 +32,10 @@ const allTrails: Record<string, { label: string; href?: string }[]> = {
 };
 
 describe("breadcrumb trails", () => {
+  it("covers every builder — a new trail must join the invariant check", () => {
+    expect(Object.keys(allTrails).sort()).toEqual(Object.keys(trail).sort());
+  });
+
   it("every non-last crumb has an href (back-arrow invariant)", () => {
     for (const [name, crumbs] of Object.entries(allTrails)) {
       expect(crumbs.length, name).toBeGreaterThan(0);
@@ -39,6 +43,14 @@ describe("breadcrumb trails", () => {
         expect(crumb.href, `${name}: "${crumb.label}"`).toBeTruthy();
       }
     }
+  });
+
+  it("drops the item crumb's link (and so the arrow) for a null item number", () => {
+    // The one documented exception to the invariant above: rather than mint a
+    // broken href, a number-less item leaves its crumb unlinked.
+    expect(trail.itemEdit(c, { name: "Red Clutch", number: null }).at(-2)).toEqual({
+      label: "Red Clutch",
+    });
   });
 
   it("uses the chip vocabulary: Sort and Decide", () => {

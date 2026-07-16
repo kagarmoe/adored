@@ -38,13 +38,13 @@ describe("pool page workspace mode chips", () => {
   it("marks Build as the current section — aria-current='true', not 'page' (the chip links to the workspace root)", async () => {
     render(await PoolPage({ params: Promise.resolve({ id: "summer-bags" }) }));
 
+    // Page-owned facts only: chips wired with the right mode + non-exact
+    // aria-current. Chip internals (hrefs, register) are pinned by
+    // WorkspaceModeChips.test.tsx.
     const nav = screen.getByRole("navigation", { name: "Workspace mode" });
-    const build = within(nav).getByRole("link", { name: "Build" });
-    expect(build).toHaveAttribute("href", "/collections/summer-bags");
-    expect(build).toHaveAttribute("aria-current", "true");
-    expect(within(nav).getByRole("link", { name: "Sort" })).not.toHaveAttribute("aria-current");
-    expect(within(nav).getByRole("link", { name: "Decide" })).not.toHaveAttribute("aria-current");
-    // Chips are navigation, never the page's dominant action.
-    expect(nav.querySelectorAll(".bg-primary")).toHaveLength(0);
+    expect(within(nav).getByRole("link", { name: "Build" })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
   });
 });

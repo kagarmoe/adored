@@ -21,6 +21,13 @@ describe("Breadcrumbs back arrow", () => {
     expect(arrow).toHaveAttribute("tabindex", "-1");
   });
 
+  it("names the breadcrumb landmark and keeps the scroll region off the nav", () => {
+    render(<Breadcrumbs items={deep} />);
+    const nav = screen.getByRole("navigation", { name: "Breadcrumb" });
+    // overflow on the nav itself would clip the 44px back-arrow hit area
+    expect(nav.className).not.toMatch(/overflow/);
+  });
+
   it("renders the phone back link with an accessible 'Back to {parent}' name", () => {
     render(<Breadcrumbs items={deep} />);
     const back = screen.getByRole("link", { name: "Back to Items" });

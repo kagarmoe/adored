@@ -21,6 +21,14 @@ describe("WorkspaceModeChips", () => {
     expect(screen.getByRole("link", { name: "Decide" })).not.toHaveAttribute("aria-current");
   });
 
+  it("activeExact=false marks the active section, not a false current page", () => {
+    // On Pool/Items the Build chip links to the workspace root, so
+    // aria-current="page" would be a lie; "true" means current section.
+    render(<WorkspaceModeChips base={BASE} activeMode="build" activeExact={false} />);
+    expect(screen.getByRole("link", { name: "Build" })).toHaveAttribute("aria-current", "true");
+    expect(screen.getByRole("link", { name: "Sort" })).not.toHaveAttribute("aria-current");
+  });
+
   it("uses the 44px (h-11) touch-target size on every chip", () => {
     render(<WorkspaceModeChips base={BASE} activeMode="build" />);
     for (const name of ["Build", "Sort", "Decide"]) {

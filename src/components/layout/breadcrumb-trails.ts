@@ -28,7 +28,9 @@ const base = (c: TrailCollection) => `/collections/${c.slug ?? c.id}`;
 
 // Linked-crumb constructors: every non-leaf level goes through one of these,
 // so the back-arrow invariant (non-last crumbs always have an href) holds by
-// construction. Each trail below is a parent prefix + an unlinked leaf.
+// construction — with one documented exception: a null item number leaves the
+// item crumb unlinked (see itemPrefix). Each trail below is a parent prefix +
+// an unlinked leaf.
 const collectionsCrumb: Crumb = { label: "Collections", href: "/collections" };
 const collectionPrefix = (c: TrailCollection): Crumb[] => [
   collectionsCrumb,

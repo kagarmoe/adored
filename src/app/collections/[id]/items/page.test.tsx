@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import type { Collection, Item } from "@/types";
 
 const { mockGetSession, mockRequireAccess, itemController, photoController } = vi.hoisted(() => ({
@@ -123,19 +123,12 @@ describe("/collections/[id]/items owns its status/unnamed query state", () => {
 describe("/items is a section index: lateral mode chips (wayfinding invariant 3)", () => {
   it("renders the Build/Sort/Decide chips with Build current-section (aria-current=\"true\", not \"page\")", async () => {
     await renderPage();
+    // Page-owned facts only: chips wired with the right mode + non-exact
+    // aria-current. Chip internals are pinned by WorkspaceModeChips.test.tsx.
     const nav = screen.getByRole("navigation", { name: "Workspace mode" });
-    expect(nav).toBeInTheDocument();
-    // Build links to the workspace root, not this page — section-current, not page-current.
-    const build = screen.getByRole("link", { name: "Build" });
-    expect(build).toHaveAttribute("href", "/collections/summer-bags");
-    expect(build).toHaveAttribute("aria-current", "true");
-    expect(screen.getByRole("link", { name: "Sort" })).toHaveAttribute(
-      "href",
-      "/collections/summer-bags/sort",
-    );
-    expect(screen.getByRole("link", { name: "Decide" })).toHaveAttribute(
-      "href",
-      "/collections/summer-bags/results",
+    expect(within(nav).getByRole("link", { name: "Build" })).toHaveAttribute(
+      "aria-current",
+      "true",
     );
   });
 });

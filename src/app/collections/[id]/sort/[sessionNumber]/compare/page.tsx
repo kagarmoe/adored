@@ -81,15 +81,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
 
   if (items.length < 2) {
     return (
-      <AppLayout
-        breadcrumbs={[
-          { label: "Collections", href: "/collections" },
-          { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-          { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}` },
-          { label: "Compare" },
-        ]}
-        actions={breakAction}
-      >
+      <AppLayout breadcrumbs={breadcrumbs} actions={breakAction}>
         <PendingDecisionsGate curatorId={session.user.id}>
           <EmptyState
             heading="Not enough items"
@@ -115,15 +107,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
 
   if (!pair) {
     return (
-      <AppLayout
-        breadcrumbs={[
-          { label: "Collections", href: "/collections" },
-          { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-          { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}` },
-          { label: "Compare" },
-        ]}
-        actions={breakAction}
-      >
+      <AppLayout breadcrumbs={breadcrumbs} actions={breakAction}>
         {/* "All complete" is derived from the decision log — gate it too, or a
             crash-reload could claim completion over undrained decisions. */}
         <PendingDecisionsGate curatorId={session.user.id}>

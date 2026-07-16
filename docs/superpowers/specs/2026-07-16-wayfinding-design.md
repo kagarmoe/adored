@@ -26,7 +26,9 @@ answers "how do I go back one step?"
 
 1. The back arrow always targets the **parent crumb** (second-to-last breadcrumb), never
    browser history. It renders only when there are ≥2 crumbs **and** the parent crumb has an
-   `href`; trail builders guarantee every non-last crumb has an `href`.
+   `href`; trail builders guarantee every non-last crumb has an `href` (one documented
+   exception: an item with a null `number` leaves its crumb unlinked rather than minting a
+   broken href — the arrow degrades away instead of 404ing).
 2. Every page's `<h1>` answers "where am I"; the phone trail only answers "one step up".
 3. Decision surfaces (triage / compare / usage rounds) and leaf pages get **no** mode chips —
    "one decision at a time" means no lateral temptation mid-flow; the back arrow is the exit.
