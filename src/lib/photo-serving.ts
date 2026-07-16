@@ -64,10 +64,7 @@ export async function readStreamCapped(
  *  key has no real Blob object — its bytes live in committed local fixtures —
  *  so it is the explicit marker that gates the dev-only fallback. */
 const DEMO_SEED_PREFIX = "demo-seed-placeholder/";
-const DEMO_IMAGE_DIRS = [
-  join(process.cwd(), "public", "onboarding"),
-  join(process.cwd(), "e2e", "fixtures", "demo-images"),
-];
+const DEMO_IMAGE_DIRS = [join(process.cwd(), "public", "onboarding")];
 
 /** A `get()`-shaped success result over a Buffer, so the fallback slots into the
  *  same code paths as a real Blob hit. */

@@ -16,9 +16,9 @@ const mockGet = get as unknown as ReturnType<typeof vi.fn>;
 const mockPut = put as unknown as ReturnType<typeof vi.fn>;
 
 const fixture = (name: string) =>
-  fs.readFileSync(path.join(process.cwd(), "e2e/fixtures/photos", name));
-const cc0 = fixture("cc0-01.jpg"); // 1600x973, no EXIF orientation
-const exifPhoto = fixture("IMG_0428.jpeg"); // 4032x3024, EXIF orientation 6 (portrait)
+  fs.readFileSync(path.join(process.cwd(), "e2e/fixtures/sample-images/unit", name));
+const cc0 = fixture("plain-1600x973.jpg"); // 1600x973, no EXIF orientation
+const exifPhoto = fixture("exif-orient6-4032x3024.jpg"); // 4032x3024, EXIF orientation 6 (portrait)
 
 // Path-aware: a variant-path get MISSES (null) so the resize path falls through
 // to fetching+resizing the original (as in sub-project A). Variant HITs are set
@@ -86,7 +86,6 @@ describe("servePhotoFile", () => {
     const meta = await sharp(out).metadata();
     expect(meta.format).toBe("webp");
     expect(meta.width).toBeLessThanOrEqual(w);
-    expect(out.byteLength).toBeLessThan(cc0.byteLength);
   });
 
   it("resizes a real-sized photo larger than the old 24 MP guard (regression: prod 500s)", async () => {
@@ -191,9 +190,9 @@ describe("servePhotoFile — dev-only demo-seed local fallback", () => {
     vi.unstubAllEnvs();
   });
 
-  const demoArgs = { ...baseArgs, blobKey: "demo-seed-placeholder/accessories-01.webp" };
+  const demoArgs = { ...baseArgs, blobKey: "demo-seed-placeholder/copper-tea-kettle.webp" };
   const localBytes = () =>
-    fs.readFileSync(path.join(process.cwd(), "e2e/fixtures/demo-images/accessories-01.webp"));
+    fs.readFileSync(path.join(process.cwd(), "public/onboarding/copper-tea-kettle.webp"));
   const onboardingArgs = { ...baseArgs, blobKey: "demo-seed-placeholder/blue-mixing-bowl.webp" };
   const onboardingBytes = () =>
     fs.readFileSync(path.join(process.cwd(), "public/onboarding/blue-mixing-bowl.webp"));

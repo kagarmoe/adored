@@ -16,7 +16,7 @@ import { ROUTE } from "./fixtures/ui";
 
 // Fulfil every protected /file request with a local fixture so triage's hero
 // renders without a blob emulator (same approach as sort-images.spec.ts).
-const PHOTO_FIXTURE = "e2e/fixtures/photos/cc0-01.jpg";
+const PHOTO_FIXTURE = "e2e/fixtures/sample-images/labeled/sort-session.webp";
 
 test.describe("sort session → triage", () => {
   let slug: string;
@@ -34,7 +34,7 @@ test.describe("sort session → triage", () => {
 
   test.beforeEach(async ({ page }) => {
     await page.route("**/photos/**/file*", (route) =>
-      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/jpeg" }),
+      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/webp" }),
     );
   });
 
@@ -131,7 +131,7 @@ test.describe("session detail → See what you love most → results", () => {
 
   test.beforeEach(async ({ page }) => {
     await page.route("**/photos/**/file*", (route) =>
-      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/jpeg" }),
+      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/webp" }),
     );
   });
 

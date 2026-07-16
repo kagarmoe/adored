@@ -30,7 +30,7 @@ test.describe("item page — carousel + details", () => {
 
   test.beforeEach(async ({ page }) => {
     await page.route("**/photos/**/file*", (route) =>
-      route.fulfill({ path: "e2e/fixtures/photos/cc0-01.jpg", contentType: "image/jpeg" }),
+      route.fulfill({ path: "e2e/fixtures/sample-images/labeled/item-page.webp", contentType: "image/webp" }),
     );
   });
 
