@@ -25,7 +25,7 @@ import { seedBaseline, seedJourneyScenario } from "./fixtures/seed";
 // Intercept the protected hero image (TRAILING star matches the ?w= querystring
 // the triage/list pages append — see the `e2e-image-file-glob-querystring`
 // memory). Without it the item's <img> hangs and the card never settles.
-const PHOTO_FIXTURE = "e2e/fixtures/photos/cc0-01.jpg";
+const PHOTO_FIXTURE = "e2e/fixtures/sample-images/labeled/not-mine-set-aside.webp";
 
 // The triage page renders exactly one ItemCard at a time; its <h3> is the
 // focused item's display name. Reading it lets us prove the flow advanced to a
@@ -58,7 +58,7 @@ test.describe("triage — 'Not mine' set-aside flow", () => {
 
   test.beforeEach(async ({ page }) => {
     await page.route("**/photos/**/file*", (route) =>
-      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/jpeg" }),
+      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/webp" }),
     );
   });
 

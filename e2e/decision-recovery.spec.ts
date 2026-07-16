@@ -29,7 +29,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { seedBaseline, seedJourneyScenario } from "./fixtures/seed";
 
-const PHOTO_FIXTURE = "e2e/fixtures/photos/cc0-01.jpg";
+const PHOTO_FIXTURE = "e2e/fixtures/sample-images/labeled/decision-recovery.webp";
 
 // Glob for route interception; RegExp for waitForResponse (anchored on the batch
 // path). Kept in lockstep so the block and the wait target the same requests.
@@ -64,7 +64,7 @@ async function pendingItemIdOrder(page: Page): Promise<string[] | null> {
 test.describe("decision queue — crash & unload recovery", () => {
   test.beforeEach(async ({ page }) => {
     await page.route("**/photos/**/file*", (route) =>
-      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/jpeg" }),
+      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/webp" }),
     );
   });
 

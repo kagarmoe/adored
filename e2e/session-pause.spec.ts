@@ -22,7 +22,7 @@ import { seedBaseline, seedJourneyScenario } from "./fixtures/seed";
 // Intercept the protected hero image (TRAILING star matches the ?w= querystring
 // triage appends — see the `e2e-image-file-glob-querystring` memory). Without it
 // the item's <img> hangs and the card never settles.
-const PHOTO_FIXTURE = "e2e/fixtures/photos/cc0-01.jpg";
+const PHOTO_FIXTURE = "e2e/fixtures/sample-images/labeled/session-pause.webp";
 
 // The load-bearing side effects. PATCH /api/sessions/{id} flips status; we await
 // the real 2xx so the assertion never races the router.push() that follows.
@@ -42,7 +42,7 @@ test.describe("sort — 'Take a break' pause → calm landing → Resume", () =>
 
   test.beforeEach(async ({ page }) => {
     await page.route("**/photos/**/file*", (route) =>
-      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/jpeg" }),
+      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/webp" }),
     );
   });
 

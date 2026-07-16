@@ -34,7 +34,7 @@ async function pendingCount(page: Page): Promise<number | null> {
 
 // Fulfil every protected /file request with a local fixture so each item's hero
 // renders without a blob emulator (same approach as the sibling specs).
-const PHOTO_FIXTURE = "e2e/fixtures/photos/cc0-01.jpg";
+const PHOTO_FIXTURE = "e2e/fixtures/sample-images/labeled/usage-round.webp";
 
 test.describe("usage round — do you use this?", () => {
   let slug: string;
@@ -50,7 +50,7 @@ test.describe("usage round — do you use this?", () => {
 
   test.beforeEach(async ({ page }) => {
     await page.route("**/photos/**/file*", (route) =>
-      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/jpeg" }),
+      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/webp" }),
     );
   });
 

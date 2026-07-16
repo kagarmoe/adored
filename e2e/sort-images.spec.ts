@@ -15,7 +15,7 @@ test.describe("triage hero image", () => {
   test("renders the item's hero photo, requested via the collection ULID", async ({ page }) => {
     // No blob emulator: fulfill the protected item-photo request with a local fixture.
     await page.route("**/api/photo-files/**", (route) =>
-      route.fulfill({ path: "e2e/fixtures/photos/cc0-01.jpg", contentType: "image/jpeg" }),
+      route.fulfill({ path: "e2e/fixtures/sample-images/labeled/sort-images.webp", contentType: "image/webp" }),
     );
 
     const fileRequest = page.waitForRequest((r) => {

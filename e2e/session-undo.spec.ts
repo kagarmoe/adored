@@ -20,7 +20,7 @@
 import { test, expect } from "@playwright/test";
 import { seedBaseline, seedJourneyScenario } from "./fixtures/seed";
 
-const PHOTO_FIXTURE = "e2e/fixtures/photos/cc0-01.jpg";
+const PHOTO_FIXTURE = "e2e/fixtures/sample-images/labeled/session-undo.webp";
 
 // The load-bearing side effects. DELETE soft-deletes the session; POST
 // /restore re-activates it. We await the real 2xx so the assertions never race
@@ -46,7 +46,7 @@ test.describe("collection — set a session aside (two-step) → persistent Undo
 
   test.beforeEach(async ({ page }) => {
     await page.route("**/photos/**/file*", (route) =>
-      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/jpeg" }),
+      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/webp" }),
     );
   });
 

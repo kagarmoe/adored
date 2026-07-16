@@ -9,7 +9,7 @@
 import { test, expect } from "@playwright/test";
 import { seedBaseline, seedSortScenario } from "./fixtures/seed";
 
-const PHOTO_FIXTURE = "e2e/fixtures/photos/cc0-02.jpg";
+const PHOTO_FIXTURE = "e2e/fixtures/sample-images/labeled/compare.webp";
 
 test.describe("compare — which do you love more?", () => {
   let slug: string;
@@ -22,7 +22,7 @@ test.describe("compare — which do you love more?", () => {
 
   test.beforeEach(async ({ page }) => {
     await page.route("**/photos/**/file*", (route) =>
-      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/jpeg" }),
+      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/webp" }),
     );
   });
 

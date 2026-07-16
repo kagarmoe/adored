@@ -34,7 +34,7 @@ import { seedBaseline, seedJourneyScenario } from "./fixtures/seed";
 
 // Trailing star matches the ?w= querystring triage appends to /file — see the
 // `e2e-image-file-glob-querystring` memory; without it the hero <img> hangs.
-const PHOTO_FIXTURE = "e2e/fixtures/photos/cc0-01.jpg";
+const PHOTO_FIXTURE = "e2e/fixtures/sample-images/labeled/session-create-after-set-aside.webp";
 
 // Load-bearing side effects we await so assertions never race a router push /
 // refresh. DELETE soft-deletes the session (frees the slot); the FOLLOW-UP POST
@@ -53,7 +53,7 @@ const isSessionPatch = (r: import("@playwright/test").Response) =>
 test.describe("session uniqueness — create after set-aside; paused collection card", () => {
   test.beforeEach(async ({ page }) => {
     await page.route("**/photos/**/file*", (route) =>
-      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/jpeg" }),
+      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/webp" }),
     );
   });
 

@@ -14,7 +14,7 @@ test.describe("photo viewer: rotate + zoom", () => {
   // No blob emulator: fulfill the protected /file request with a local fixture so images render.
   test.beforeEach(async ({ page }) => {
     await page.route("**/photos/**/file*", (route) =>
-      route.fulfill({ path: "e2e/fixtures/photos/cc0-01.jpg", contentType: "image/jpeg" }),
+      route.fulfill({ path: "e2e/fixtures/sample-images/labeled/image-rotate.webp", contentType: "image/webp" }),
     );
   });
 

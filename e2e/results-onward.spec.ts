@@ -25,7 +25,7 @@
 import { test, expect, type Locator } from "@playwright/test";
 import { seedBaseline, seedSortScenario } from "./fixtures/seed";
 
-const PHOTO_FIXTURE = "e2e/fixtures/photos/cc0-03.jpg";
+const PHOTO_FIXTURE = "e2e/fixtures/sample-images/labeled/results-onward.webp";
 
 // Bucket → seeded item name, from seedSortScenario's ordering.
 const HERO_ITEM = "E2E Sort Item 1"; // top → most-loved hero
@@ -43,7 +43,7 @@ test.describe("results page — Onward renders as a separate gentle section", ()
 
   test.beforeEach(async ({ page }) => {
     await page.route("**/photos/**/file*", (route) =>
-      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/jpeg" }),
+      route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/webp" }),
     );
   });
 

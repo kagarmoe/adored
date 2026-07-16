@@ -13,7 +13,7 @@ test.describe("per-surface image widths", () => {
   // No blob emulator: fulfill the protected item-photo request with a local fixture.
   test.beforeEach(async ({ page }) => {
     await page.route("**/api/photo-files/**", (route) =>
-      route.fulfill({ path: "e2e/fixtures/photos/cc0-01.jpg", contentType: "image/jpeg" }),
+      route.fulfill({ path: "e2e/fixtures/sample-images/labeled/image-perf.webp", contentType: "image/webp" }),
     );
   });
 

@@ -22,8 +22,8 @@ import { ItemDispositionRepository } from "@/server/repositories/implementations
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 
-// A real photo so the shots show a real rendered image, not a placeholder.
-const FIXTURE = "e2e/fixtures/photos/IMG_0428.jpeg";
+// A real photo so the shots show a real rendered image, not a labeled test card.
+const FIXTURE = "public/onboarding/blue-mixing-bowl.webp";
 
 let slug = "";
 let membersSlug = "";
@@ -132,7 +132,7 @@ for (const theme of ["light", "dark"] as const) {
       }
     }, theme);
     await page.route("**/photos/**/file*", (route) =>
-      route.fulfill({ path: FIXTURE, contentType: "image/jpeg" }),
+      route.fulfill({ path: FIXTURE, contentType: "image/webp" }),
     );
 
     // purses-r4it: assert the precondition z23h violated, before any file is written.

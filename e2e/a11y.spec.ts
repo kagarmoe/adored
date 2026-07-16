@@ -20,7 +20,7 @@ import {
   seedJourneyScenario,
 } from "./fixtures/seed";
 
-const FIXTURE = "e2e/fixtures/photos/IMG_0428.jpeg";
+const FIXTURE = "e2e/fixtures/sample-images/labeled/a11y.webp";
 const THEMES = ["light", "dark"] as const;
 // WCAG 2.0 + 2.1, levels A and AA — the conformance target in PRODUCT.md.
 // (Best-practice rules are excluded so the gate fails only on real AA gaps.)
@@ -100,7 +100,7 @@ for (const theme of THEMES) {
     await setTheme(page, theme);
     // Real photo bytes so image-bearing screens render (no blob emulator locally).
     await page.route("**/photos/**/file*", (route) =>
-      route.fulfill({ path: FIXTURE, contentType: "image/jpeg" }),
+      route.fulfill({ path: FIXTURE, contentType: "image/webp" }),
     );
 
     const screens: [string, string][] = [
