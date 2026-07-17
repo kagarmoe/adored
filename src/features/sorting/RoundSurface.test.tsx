@@ -154,4 +154,33 @@ describe("RoundSurface round-length dialog (compare, spec §3.1, Task 6)", () =>
     expect(screen.getByRole("timer")).toBeInTheDocument();
     expect(screen.getByText(/about 4 minutes left in this round/i)).toBeInTheDocument();
   });
+
+  it("Done persists the committed box to localStorage (setRoundBox) for the next round", async () => {
+    vi.useFakeTimers();
+    store.setItem("pi-round-box", "1"); // start with a 1-minute box
+    renderSurface();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    commitBoxViaDialog(2); // Home then 2 ArrowUp: none→30→60
+    expect(store.getItem("pi-round-box")).toBe("60");
+  });
+
+  it("Esc returns focus to the ring button that opened the dialog", async () => {
+    vi.useFakeTimers();
+    store.setItem("pi-round-box", "1");
+    renderSurface();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    const trigger = screen.getByRole("button", { name: "Change round length" });
+    fireEvent.click(trigger);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Change round length" })).toHaveFocus();
+  });
 });

@@ -122,6 +122,10 @@ export function UsageRound({
   const [beatSuspended, setBeatSuspended] = useState(false); // focus on chrome holds the beat
   const [nowAnnounce, setNowAnnounce] = useState(""); // role=status advance announcement (c)
   const [lengthDialogOpen, setLengthDialogOpen] = useState(false);
+  // Handed to RoundTimer (renders the adjust button) AND RoundLengthDialog
+  // (refocuses it on close) — the dialog is a portal, so it can't reach the
+  // trigger on its own.
+  const adjustButtonRef = useRef<HTMLButtonElement>(null);
 
   // Focus targets and the advance intent that drives the Quick focus/announce move.
   const rootRef = useRef<HTMLDivElement>(null); // the whole round surface (incl. RoundShell chrome)
@@ -344,6 +348,7 @@ export function UsageRound({
           onExpire={round.onExpire}
           roundLabel={THIS_ROUND_LABEL}
           onAdjust={!roundOver ? () => setLengthDialogOpen(true) : undefined}
+          adjustButtonRef={adjustButtonRef}
         />
       </div>
     </div>
@@ -495,6 +500,7 @@ export function UsageRound({
           round.onBoxChange(box); // …and re-arm THIS round against its unchanged start
         }}
         onClose={() => setLengthDialogOpen(false)}
+        returnFocusRef={adjustButtonRef}
       />
       </RoundShell>
     </div>

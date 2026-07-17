@@ -40,6 +40,12 @@ export function TimerDial({ value, onChange, size = 200, discClassName = "bg-sur
   function onPointerUp() {
     dragging.current = false;
   }
+  // A cancelled gesture (e.g. the OS taking over for a system gesture) must
+  // stop the drag exactly like pointerup — otherwise a later, capture-less
+  // pointermove would still be treated as an in-progress drag.
+  function onPointerCancel() {
+    dragging.current = false;
+  }
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     let next: RoundBoxSeconds | undefined;
@@ -68,6 +74,7 @@ export function TimerDial({ value, onChange, size = 200, discClassName = "bg-sur
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
         onKeyDown={onKeyDown}
         className="touch-none rounded-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
       >

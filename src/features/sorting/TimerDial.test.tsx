@@ -48,4 +48,20 @@ describe("TimerDial", () => {
     fireEvent.pointerDown(surface, { clientX: 200, clientY: 100 }); // 3 o'clock = 90° → round(90/36)=3 → 90s
     expect(onChange).toHaveBeenLastCalledWith(90);
   });
+
+  it("pointercancel ends the drag — a later pointermove (without a new pointerdown) is inert", () => {
+    const onChange = vi.fn();
+    render(<TimerDial value={120} onChange={onChange} />);
+    const surface = screen.getByRole("slider");
+    surface.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 200, height: 200, right: 200, bottom: 200, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+
+    fireEvent.pointerDown(surface, { clientX: 200, clientY: 100 }); // 90s
+    expect(onChange).toHaveBeenLastCalledWith(90);
+
+    fireEvent.pointerCancel(surface);
+    onChange.mockClear();
+    fireEvent.pointerMove(surface, { clientX: 100, clientY: 200 }); // would be 180° → 150s if still dragging
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });

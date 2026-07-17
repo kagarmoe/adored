@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { fractionElapsed, isExpired, remainingMs } from "@/lib/round-timer";
 import { TimerRing } from "./TimerRing";
 
@@ -13,6 +13,10 @@ interface RoundTimerProps {
   roundLabel: string;
   /** When given, the ring becomes a ≥44px tap target that opens the round-length control. */
   onAdjust?: () => void;
+  /** Exposes the adjust button so the host can return focus to it when the
+   *  round-length dialog it opens closes (the dialog is a portal, so it can't
+   *  reach this trigger itself). Ignored when `onAdjust` is absent. */
+  adjustButtonRef?: RefObject<HTMLButtonElement | null>;
 }
 
 const TICK_MS = 1_000;
@@ -33,7 +37,7 @@ function minutesLeft(ms: number): number {
  * coarse tick — and therefore the expiry callback — always runs regardless of what's
  * rendered.
  */
-export function RoundTimer({ startedAtMs, boxMs, onExpire, roundLabel, onAdjust }: RoundTimerProps) {
+export function RoundTimer({ startedAtMs, boxMs, onExpire, roundLabel, onAdjust, adjustButtonRef }: RoundTimerProps) {
   const [now, setNow] = useState(() => Date.now());
   const firedRef = useRef(false);
   // Keep the latest onExpire without re-arming the interval each render. Written after
@@ -76,6 +80,7 @@ export function RoundTimer({ startedAtMs, boxMs, onExpire, roundLabel, onAdjust 
   );
   const adjustButton = onAdjust ? (
     <button
+      ref={adjustButtonRef}
       type="button"
       onClick={onAdjust}
       aria-label="Change round length"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { boxToMs, getRoundBox, setRoundBox, type RoundBoxSeconds } from "@/lib/round-preference";
 import { useDeviceValue } from "@/lib/useDeviceValue";
 import type { MovedDecision } from "@/lib/what-moved";
@@ -58,6 +58,10 @@ export function RoundSurface({
   const boxMs = chosenBoxMs === null ? stored : chosenBoxMs.ms;
   const [expired, setExpired] = useState(false);
   const [lengthDialogOpen, setLengthDialogOpen] = useState(false);
+  // Handed to RoundTimer (renders the adjust button) AND RoundLengthDialog
+  // (refocuses it on close) — the dialog is a portal, so it can't reach the
+  // trigger on its own.
+  const adjustButtonRef = useRef<HTMLButtonElement>(null);
 
   // Mid-round length switch (parent D2): re-arm boxMs against the UNCHANGED start —
   // "none" drops the countdown, a shorter box expires at the next tick.
@@ -77,6 +81,7 @@ export function RoundSurface({
           onExpire={() => setExpired(true)}
           roundLabel={roundLabel}
           onAdjust={!ended ? () => setLengthDialogOpen(true) : undefined}
+          adjustButtonRef={adjustButtonRef}
         />
       </div>
     </div>
@@ -103,6 +108,7 @@ export function RoundSurface({
           onBoxChange(box); // …and re-arm THIS round against its unchanged start
         }}
         onClose={() => setLengthDialogOpen(false)}
+        returnFocusRef={adjustButtonRef}
       />
     </RoundShell>
   );

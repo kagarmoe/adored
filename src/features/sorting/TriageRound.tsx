@@ -74,6 +74,10 @@ export function TriageRound({
   const [handled, setHandled] = useState<ReadonlySet<string>>(new Set());
   const [newlyDecided, setNewlyDecided] = useState<ReadonlySet<string>>(new Set());
   const [lengthDialogOpen, setLengthDialogOpen] = useState(false);
+  // Handed to RoundTimer (renders the adjust button) AND RoundLengthDialog
+  // (refocuses it on close) — the dialog is a portal, so it can't reach the
+  // trigger on its own.
+  const adjustButtonRef = useRef<HTMLButtonElement>(null);
   const undoCtx = useOptionalTriageUndo();
 
   // The queue fork is triage's own: the head not yet handled. Everything else
@@ -209,6 +213,7 @@ export function TriageRound({
           onExpire={round.onExpire}
           roundLabel={THIS_ROUND_LABEL}
           onAdjust={!roundOver ? () => setLengthDialogOpen(true) : undefined}
+          adjustButtonRef={adjustButtonRef}
         />
       </div>
     </div>
@@ -341,6 +346,7 @@ export function TriageRound({
           round.onBoxChange(box); // …and re-arm THIS round against its unchanged start
         }}
         onClose={() => setLengthDialogOpen(false)}
+        returnFocusRef={adjustButtonRef}
       />
     </RoundShell>
   );
