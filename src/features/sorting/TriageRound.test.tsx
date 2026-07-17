@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll, afterEach } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Item } from "@/types";
@@ -71,6 +71,15 @@ function renderRound(over: Partial<Parameters<typeof TriageRound>[0]> = {}) {
 }
 
 let store: Storage;
+
+// jsdom does not implement the Pointer Capture API — TimerDial's onPointerDown
+// calls it, so it's stubbed for every test that opens the length dialog.
+beforeAll(() => {
+  Object.defineProperty(HTMLElement.prototype, "setPointerCapture", {
+    value: vi.fn(),
+    writable: true,
+  });
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -542,7 +551,17 @@ describe("TriageRound undo-as-revisit (F19/F4)", () => {
   });
 });
 
-describe("TriageRound round-length chooser (mid-round switch, spec §3.1)", () => {
+// Opens the mid-round length dialog and commits `box` via the keyboard (Home
+// then ArrowUp `steps` times) — avoids depending on the dial's current value.
+function commitBoxViaDialog(steps: number) {
+  fireEvent.click(screen.getByRole("button", { name: "Change round length" }));
+  const slider = screen.getByRole("slider");
+  fireEvent.keyDown(slider, { key: "Home" }); // "none"
+  for (let i = 0; i < steps; i++) fireEvent.keyDown(slider, { key: "ArrowUp" });
+  fireEvent.click(screen.getByRole("button", { name: "Done" }));
+}
+
+describe("TriageRound round-length dialog (mid-round switch, spec §3.1, Task 6)", () => {
   it("mid-round switch to 'No timer' removes the countdown and the round no longer expires", async () => {
     vi.useFakeTimers();
     store.setItem("pi-round-box", "1"); // start with a 1-minute box
@@ -554,10 +573,8 @@ describe("TriageRound round-length chooser (mid-round switch, spec §3.1)", () =
     });
     expect(screen.getByRole("timer")).toBeInTheDocument();
 
-    // Switch to No timer mid-round: the countdown is gone…
-    fireEvent.change(screen.getByRole("combobox", { name: "Round length" }), {
-      target: { value: "none" },
-    });
+    // Switch to No timer mid-round (Home = "none"): the countdown is gone…
+    commitBoxViaDialog(0);
     expect(screen.queryByRole("timer")).not.toBeInTheDocument();
 
     // …and advancing well past the old box never ends the round.
@@ -579,11 +596,10 @@ describe("TriageRound round-length chooser (mid-round switch, spec §3.1)", () =
     });
     expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
 
-    // Switch to a 1-minute box: already past. It expires (against the unchanged
-    // start) and ends the round into the recap — no error, no shaming.
-    fireEvent.change(screen.getByRole("combobox", { name: "Round length" }), {
-      target: { value: "1" },
-    });
+    // Commit a 1-minute box (Home then 2 ArrowUp: none→30→60): already past. It
+    // expires (against the unchanged start) and ends the round into the recap —
+    // no error, no shaming.
+    commitBoxViaDialog(2);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1_500);
     });
@@ -591,15 +607,43 @@ describe("TriageRound round-length chooser (mid-round switch, spec §3.1)", () =
     expect(screen.queryByText(/error|failed|too many/i)).not.toBeInTheDocument();
   });
 
-  it("the round-length chooser is absent once the recap shows", async () => {
+  it("committing a LARGER box mid-round re-arms against the unchanged start (no reset)", async () => {
+    vi.useFakeTimers();
+    store.setItem("pi-round-box", "1"); // start with a 1-minute box
+    renderRound({ queue: [entry("item_a", "Bag A")] });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    // 45s in — still under the 1-minute box.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(45_000);
+    });
+    expect(screen.getByRole("timer")).toBeInTheDocument();
+
+    // Commit the max 5-minute box (Home then 10 ArrowUp: none→30→…→300) against
+    // the UNCHANGED start (45s already elapsed).
+    commitBoxViaDialog(10);
+
+    // 30s later (75s total elapsed): a re-arm against the unchanged start reads
+    // ~4 minutes left (300-75s → ceil(225s/60s)=4). A reset-to-a-fresh-start bug
+    // would instead read ~5 minutes (300-30s → ceil(270s/60s)=5).
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30_000);
+    });
+    expect(screen.getByRole("timer")).toBeInTheDocument();
+    expect(screen.getByText(/about 4 minutes left in this round/i)).toBeInTheDocument();
+  });
+
+  it("the round-length adjust button is absent once the recap shows", async () => {
     const user = userEvent.setup();
     renderRound({ queue: [entry("item_a", "Bag A")] });
 
-    expect(screen.getByRole("combobox", { name: "Round length" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Change round length" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Love" }));
 
     expect(await screen.findByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-    expect(screen.queryByRole("combobox", { name: "Round length" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Change round length" })).not.toBeInTheDocument();
   });
 });
 

@@ -2,12 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { boxToMs, getRoundBox, type RoundBoxSeconds } from "@/lib/round-preference";
+import { boxToMs, getRoundBox, setRoundBox, type RoundBoxSeconds } from "@/lib/round-preference";
 import { useDeviceValue } from "@/lib/useDeviceValue";
 import type { MovedDecision } from "@/lib/what-moved";
 import { RoundShell } from "./RoundShell";
 import { RoundTimer } from "./RoundTimer";
-import { RoundLengthChooser } from "./RoundLengthChooser";
+import { RoundLengthDialog } from "./RoundLengthDialog";
 import { WhatMoved } from "./WhatMoved";
 
 interface RoundSurfaceProps {
@@ -57,6 +57,7 @@ export function RoundSurface({
   const [chosenBoxMs, setChosenBoxMs] = useState<{ ms: number | null } | null>(null);
   const boxMs = chosenBoxMs === null ? stored : chosenBoxMs.ms;
   const [expired, setExpired] = useState(false);
+  const [lengthDialogOpen, setLengthDialogOpen] = useState(false);
 
   // Mid-round length switch (parent D2): re-arm boxMs against the UNCHANGED start —
   // "none" drops the countdown, a shorter box expires at the next tick.
@@ -65,6 +66,7 @@ export function RoundSurface({
   // The round ends on the timer expiring OR the server handing us an empty queue —
   // either way the recap replaces the content and both paths terminate the round.
   const ended = expired || queueEmpty;
+  const currentBox: RoundBoxSeconds = boxMs === null ? "none" : ((boxMs / 1000) as RoundBoxSeconds);
 
   const timer = (
     <div className="flex items-start gap-3">
@@ -74,10 +76,9 @@ export function RoundSurface({
           boxMs={boxMs}
           onExpire={() => setExpired(true)}
           roundLabel={roundLabel}
+          onAdjust={!ended ? () => setLengthDialogOpen(true) : undefined}
         />
       </div>
-      {/* Switchable before AND during a round (parent D2); only while live. */}
-      {!ended && <RoundLengthChooser onChange={onBoxChange} />}
     </div>
   );
 
@@ -94,6 +95,15 @@ export function RoundSurface({
       ) : (
         children
       )}
+      <RoundLengthDialog
+        open={lengthDialogOpen}
+        initial={currentBox}
+        onCommit={(box) => {
+          setRoundBox(box); // persist for the next round…
+          onBoxChange(box); // …and re-arm THIS round against its unchanged start
+        }}
+        onClose={() => setLengthDialogOpen(false)}
+      />
     </RoundShell>
   );
 }

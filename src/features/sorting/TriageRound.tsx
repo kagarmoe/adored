@@ -14,8 +14,9 @@ import { SetAsideButton } from "./SetAsideButton";
 import { useOptionalTriageUndo } from "./TriageUndoProvider";
 import { RoundShell } from "./RoundShell";
 import { RoundTimer } from "./RoundTimer";
-import { RoundLengthChooser } from "./RoundLengthChooser";
+import { RoundLengthDialog } from "./RoundLengthDialog";
 import { WhatMoved } from "./WhatMoved";
+import { setRoundBox, type RoundBoxSeconds } from "@/lib/round-preference";
 import { enqueue, newClientKey } from "./decisionQueue";
 import { triggerFlush } from "./decisionFlusher";
 import { STUMBLE_LINE, useOptimisticRound } from "./useOptimisticRound";
@@ -72,6 +73,7 @@ export function TriageRound({
   const [entries, setEntries] = useState<TriageRoundQueueEntry[]>(queue);
   const [handled, setHandled] = useState<ReadonlySet<string>>(new Set());
   const [newlyDecided, setNewlyDecided] = useState<ReadonlySet<string>>(new Set());
+  const [lengthDialogOpen, setLengthDialogOpen] = useState(false);
   const undoCtx = useOptionalTriageUndo();
 
   // The queue fork is triage's own: the head not yet handled. Everything else
@@ -197,6 +199,7 @@ export function TriageRound({
   const decided = seed + newlyDecided.size;
 
   const roundOver = shown === undefined || expired;
+  const currentBox: RoundBoxSeconds = round.boxMs === null ? "none" : ((round.boxMs / 1000) as RoundBoxSeconds);
   const timer = (
     <div className="flex items-start gap-3">
       <div className="min-w-0 flex-1">
@@ -205,11 +208,9 @@ export function TriageRound({
           boxMs={round.boxMs}
           onExpire={round.onExpire}
           roundLabel={THIS_ROUND_LABEL}
+          onAdjust={!roundOver ? () => setLengthDialogOpen(true) : undefined}
         />
       </div>
-      {/* Switchable before AND during a round (parent D2); shown only while the
-          round is live — the recap has no length to choose. */}
-      {!roundOver && <RoundLengthChooser onChange={round.onBoxChange} />}
     </div>
   );
 
@@ -332,6 +333,15 @@ export function TriageRound({
           </Card>
         </div>
       )}
+      <RoundLengthDialog
+        open={lengthDialogOpen}
+        initial={currentBox}
+        onCommit={(box) => {
+          setRoundBox(box); // persist for the next round…
+          round.onBoxChange(box); // …and re-arm THIS round against its unchanged start
+        }}
+        onClose={() => setLengthDialogOpen(false)}
+      />
     </RoundShell>
   );
 }

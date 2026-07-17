@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll, afterEach } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Item } from "@/types";
@@ -117,6 +117,15 @@ function renderRound(over: Partial<Parameters<typeof UsageRound>[0]> = {}) {
 
 let store: Storage;
 
+// jsdom does not implement the Pointer Capture API — TimerDial's onPointerDown
+// calls it, so it's stubbed for every test that opens the length dialog.
+beforeAll(() => {
+  Object.defineProperty(HTMLElement.prototype, "setPointerCapture", {
+    value: vi.fn(),
+    writable: true,
+  });
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
   dc.props.length = 0;
@@ -163,15 +172,15 @@ describe("UsageRound surface pins (spec §3.4)", () => {
     expect(dc.props.every((p) => p.type === "usage")).toBe(true);
   });
 
-  it("shows the round-length chooser while live and drops it on the recap", async () => {
+  it("shows the round-length adjust button while live and drops it on the recap", async () => {
     const user = userEvent.setup();
     renderRound({ queue: [entry("item_a", "Bag A")] });
-    expect(screen.getByRole("combobox", { name: "Round length" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Change round length" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: YES }));
 
     expect(await screen.findByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-    expect(screen.queryByRole("combobox", { name: "Round length" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Change round length" })).not.toBeInTheDocument();
   });
 });
 
@@ -687,7 +696,7 @@ describe("UsageRound Quick pacing — the beat (spec §3.5, parent D2)", () => {
 
 describe("UsageRound Quick pacing — the a11y floor (parent D2 (a)-(d))", () => {
   it.each([
-    ["the Round length chooser", () => screen.getByRole("combobox", { name: "Round length" })],
+    ["the round-length adjust button", () => screen.getByRole("button", { name: "Change round length" })],
     ["the Quick toggle", () => screen.getByRole("button", { name: QUICK_PACE_LABEL })],
     ["Pause", () => screen.getByRole("button", { name: "Pause" })],
   ])("(a) focus on %s suspends the beat; focusout re-arms the full beat", async (_label, getEl) => {

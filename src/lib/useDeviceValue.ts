@@ -15,8 +15,8 @@ import { useSyncExternalStore } from "react";
 //
 // Nothing outside the tab mutates these values mid-life, so there is nothing to
 // subscribe to; a component that also WRITES the value keeps its own state override
-// (see RoundLengthChooser), which is what preserves the choice when the storage write
-// silently fails (private mode).
+// (see RoundSurface's chosenBoxMs / RoundLengthDialog's onCommit wiring), which is
+// what preserves the choice when the storage write silently fails (private mode).
 const noSubscribe = () => () => {};
 
 export function useDeviceValue<T extends string | number | boolean | null>(

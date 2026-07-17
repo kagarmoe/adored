@@ -21,11 +21,12 @@ import {
 } from "./roundCopy";
 import { RoundShell } from "./RoundShell";
 import { RoundTimer } from "./RoundTimer";
-import { RoundLengthChooser } from "./RoundLengthChooser";
+import { RoundLengthDialog } from "./RoundLengthDialog";
 import { WhatMoved } from "./WhatMoved";
 import { STUMBLE_LINE, useOptimisticRound } from "./useOptimisticRound";
 import { PendingNotices } from "./pendingNotices";
 import { useDeviceValue } from "@/lib/useDeviceValue";
+import { setRoundBox, type RoundBoxSeconds } from "@/lib/round-preference";
 import {
   getUsagePace,
   setUsagePace,
@@ -120,6 +121,7 @@ export function UsageRound({
   const [showQuickIntro, setShowQuickIntro] = useState(false); // first-Quick education (UX-4)
   const [beatSuspended, setBeatSuspended] = useState(false); // focus on chrome holds the beat
   const [nowAnnounce, setNowAnnounce] = useState(""); // role=status advance announcement (c)
+  const [lengthDialogOpen, setLengthDialogOpen] = useState(false);
 
   // Focus targets and the advance intent that drives the Quick focus/announce move.
   const rootRef = useRef<HTMLDivElement>(null); // the whole round surface (incl. RoundShell chrome)
@@ -247,9 +249,9 @@ export function UsageRound({
   const revisiting = revisit !== null;
 
   // (a) Suspend the beat while focus is on ANY interactive chrome of the round
-  // surface — decision controls, Skip, Back, the toggle, the length chooser, Pause.
-  // focusin/focusout on the root; re-arm restarts the FULL beat (a named choice:
-  // restart, not resume). One pair, attached once.
+  // surface — decision controls, Skip, Back, the toggle, the length-dialog
+  // trigger, Pause. focusin/focusout on the root; re-arm restarts the FULL
+  // beat (a named choice: restart, not resume). One pair, attached once.
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -332,6 +334,7 @@ export function UsageRound({
   const answered = seed + newlyAnswered.size;
 
   const roundOver = shown === undefined || expired;
+  const currentBox: RoundBoxSeconds = round.boxMs === null ? "none" : ((round.boxMs / 1000) as RoundBoxSeconds);
   const timer = (
     <div className="flex items-start gap-3">
       <div className="min-w-0 flex-1">
@@ -340,11 +343,9 @@ export function UsageRound({
           boxMs={round.boxMs}
           onExpire={round.onExpire}
           roundLabel={THIS_ROUND_LABEL}
+          onAdjust={!roundOver ? () => setLengthDialogOpen(true) : undefined}
         />
       </div>
-      {/* Switchable before AND during a round (parent D2); live-only — the recap
-          has no length to choose. */}
-      {!roundOver && <RoundLengthChooser onChange={round.onBoxChange} />}
     </div>
   );
 
@@ -486,6 +487,15 @@ export function UsageRound({
           </div>
         </div>
       )}
+      <RoundLengthDialog
+        open={lengthDialogOpen}
+        initial={currentBox}
+        onCommit={(box) => {
+          setRoundBox(box); // persist for the next round…
+          round.onBoxChange(box); // …and re-arm THIS round against its unchanged start
+        }}
+        onClose={() => setLengthDialogOpen(false)}
+      />
       </RoundShell>
     </div>
   );
