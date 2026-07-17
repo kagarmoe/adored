@@ -203,6 +203,13 @@ export function TriageRound({
   const decided = seed + newlyDecided.size;
 
   const roundOver = shown === undefined || expired;
+  // Round end closes any open length dialog and discards its uncommitted preview:
+  // a Done landing AFTER end would mutate round.boxMs and retroactively flip
+  // WhatMoved's live-derived `hadTimer` badge for a round that's already over.
+  // A direct render-time clamp (not an effect, which wouldn't run until after
+  // the browser paints the ended UI); idempotent once lengthDialogOpen is
+  // already false, so this never loops.
+  if (roundOver && lengthDialogOpen) setLengthDialogOpen(false);
   const currentBox: RoundBoxSeconds = round.boxMs === null ? "none" : ((round.boxMs / 1000) as RoundBoxSeconds);
   const timer = (
     <div className="flex items-start gap-3">

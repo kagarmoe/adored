@@ -70,6 +70,13 @@ export function RoundSurface({
   // The round ends on the timer expiring OR the server handing us an empty queue —
   // either way the recap replaces the content and both paths terminate the round.
   const ended = expired || queueEmpty;
+  // Round end closes any open length dialog and discards its uncommitted preview:
+  // a Done landing AFTER end would mutate boxMs and retroactively flip WhatMoved's
+  // live-derived `hadTimer` badge for a round that's already over. A direct
+  // render-time clamp (not an effect, which wouldn't run until after the browser
+  // paints the ended UI — a dialog-still-open flash over the recap); idempotent
+  // once lengthDialogOpen is already false, so this never loops.
+  if (ended && lengthDialogOpen) setLengthDialogOpen(false);
   const currentBox: RoundBoxSeconds = boxMs === null ? "none" : ((boxMs / 1000) as RoundBoxSeconds);
 
   const timer = (
