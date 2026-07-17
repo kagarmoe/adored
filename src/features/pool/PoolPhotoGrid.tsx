@@ -11,6 +11,21 @@ function alt(filename: string): string {
   return filename.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ");
 }
 
+// Reads a failed response's `error` field (the errorResponse contract — see
+// src/server/api/http-errors.ts; there is no `message` field) so the UI can
+// surface the server's own warm copy instead of a generic fallback. A body
+// that isn't JSON, or has no string `error`, falls back quietly.
+async function serverErrorMessage(res: Response, fallback: string): Promise<string> {
+  try {
+    const body: unknown = await res.json();
+    const message = (body as { error?: unknown })?.error;
+    if (typeof message === "string" && message) return message;
+  } catch {
+    // non-JSON or empty body — use the fallback below
+  }
+  return fallback;
+}
+
 export function PoolPhotoGrid({
   collectionId,
   photos,
@@ -52,8 +67,13 @@ export function PoolPhotoGrid({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(mode ? { photoIds: selected, mode } : { photoIds: selected }),
       });
+      const fallback =
+        mode === "each"
+          ? "We couldn’t make those items just now — your photos are safe; try again."
+          : "We couldn’t make that item just now — your photos are safe; try again.";
       if (!res.ok) {
-        throw new Error("group failed");
+        setError(await serverErrorMessage(res, fallback));
+        return;
       }
       const data = (await res.json()) as { number: number };
       const grouped = new Set(selected);
@@ -90,7 +110,8 @@ export function PoolPhotoGrid({
         body: JSON.stringify({ photoIds: selected, destination: dest }),
       });
       if (!res.ok) {
-        throw new Error("reassign failed");
+        setError(await serverErrorMessage(res, "We couldn’t move those just now — your photos are safe; try again."));
+        return;
       }
       await res.json();
       const moved = new Set(selected);
@@ -124,6 +145,7 @@ export function PoolPhotoGrid({
       <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(150px,1fr))]">
         {pool.map((p) => {
           const isSelected = selected.includes(p.id);
+          const isCover = selected[0] === p.id;
           return (
             <button
               key={p.id}
@@ -141,7 +163,14 @@ export function PoolPhotoGrid({
                 loading="lazy"
                 className="h-full w-full object-cover"
               />
-              {isSelected && (
+              {isSelected && isCover && (
+                // Unlike the plain ✓, "Cover" carries information aria-pressed
+                // doesn't (WHICH photo becomes the item's hero) — not aria-hidden.
+                <span className="absolute left-1.5 top-1.5 rounded-full bg-spark px-2 py-0.5 text-xs font-medium text-spark-ink shadow-sm">
+                  Cover
+                </span>
+              )}
+              {isSelected && !isCover && (
                 <span
                   aria-hidden
                   className="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-sm text-primary-ink shadow-sm"

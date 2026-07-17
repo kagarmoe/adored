@@ -116,18 +116,56 @@ describe("PoolPhotoGrid selection + grouping", () => {
     expect(screen.getByRole("button", { name: /three/i })).toBeInTheDocument();
   });
 
-  it("on failure: keeps the selection and shows an error", async () => {
+  it("on failure: surfaces the server's own message and keeps the selection", async () => {
     const user = userEvent.setup();
-    (fetch as any).mockResolvedValue({ ok: false, status: 409, json: async () => ({ error: "gone" }) });
+    (fetch as any).mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => ({ error: "Some of those photos aren't available to group anymore — try again." }),
+    });
     render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} />);
 
     await user.click(tile("one"));
     await user.click(screen.getByRole("button", { name: /group into an item/i }));
 
-    await waitFor(() => expect(screen.getByText(/couldn’t make that item|try again/i)).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText(/some of those photos aren.t available to group/i)).toBeInTheDocument(),
+    );
     expect(screen.getByRole("alert")).toBeInTheDocument();
     expect(tile("one")).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: /three/i })).toBeInTheDocument();
+  });
+
+  it("on failure without a usable server message: falls back to the generic copy", async () => {
+    const user = userEvent.setup();
+    (fetch as any).mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
+    render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} />);
+
+    await user.click(tile("one"));
+    await user.click(screen.getByRole("button", { name: /group into an item/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/couldn’t make that item.*try again/i)).toBeInTheDocument(),
+    );
+  });
+
+  it("on failure with a non-JSON body: falls back to the generic copy", async () => {
+    const user = userEvent.setup();
+    (fetch as any).mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => {
+        throw new SyntaxError("Unexpected end of JSON input");
+      },
+    });
+    render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} />);
+
+    await user.click(tile("one"));
+    await user.click(screen.getByRole("button", { name: /group into an item/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/couldn’t make that item.*try again/i)).toBeInTheDocument(),
+    );
   });
 
   it("guards against double-submit while a group is in flight", async () => {
@@ -182,7 +220,7 @@ describe("PoolPhotoGrid selection + grouping", () => {
 });
 
 describe("PoolPhotoGrid selected-tile styling", () => {
-  it("selected tile carries a teal border + top-left check and aria-pressed", async () => {
+  it("selected tile carries a teal border and aria-pressed", async () => {
     const user = userEvent.setup();
     render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} targets={TARGETS} />);
 
@@ -194,11 +232,29 @@ describe("PoolPhotoGrid selected-tile styling", () => {
 
     expect(one).toHaveAttribute("aria-pressed", "true");
     expect(one).toHaveClass("border-2", "border-primary");
-    const check = one.querySelector("span[aria-hidden]");
-    expect(check).not.toBeNull();
-    // check chip sits top-left, not top-right
-    expect(check).toHaveClass("left-1.5", "top-1.5");
-    expect(check?.className).not.toContain("right-1.5");
+  });
+
+  it("selected[0] renders the Cover pill; later selections render the ✓ badge", async () => {
+    const user = userEvent.setup();
+    render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} targets={TARGETS} />);
+
+    await user.click(tile("one"));
+    await user.click(tile("two"));
+
+    expect(tile("one")).toHaveTextContent("Cover");
+    expect(tile("two")).toHaveTextContent("✓");
+    expect(tile("two")).not.toHaveTextContent("Cover");
+  });
+
+  it("deselecting the cover promotes the next-tapped photo's badge", async () => {
+    const user = userEvent.setup();
+    render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} targets={TARGETS} />);
+
+    await user.click(tile("one")); // cover
+    await user.click(tile("two"));
+    await user.click(tile("one")); // deselect the cover
+
+    expect(tile("two")).toHaveTextContent("Cover");
   });
 });
 
@@ -249,16 +305,34 @@ describe("PoolPhotoGrid Move to…", () => {
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/moved/i));
   });
 
-  it("on move failure keeps the selection and shows an alert", async () => {
+  it("on move failure surfaces the server's own message and keeps the selection", async () => {
     const user = userEvent.setup();
-    (fetch as any).mockResolvedValue({ ok: false, status: 409, json: async () => ({ error: "gone" }) });
+    (fetch as any).mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => ({ error: "That item isn't available anymore — try again." }),
+    });
     render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} targets={TARGETS} />);
 
     await user.click(tile("two"));
     await user.click(screen.getByRole("button", { name: /move to/i }));
     await user.click(screen.getByRole("button", { name: /new item/i }));
 
-    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(/couldn’t move|try again/i));
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(/that item isn.t available anymore/i),
+    );
     expect(tile("two")).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("on move failure without a usable server message: falls back to the generic copy", async () => {
+    const user = userEvent.setup();
+    (fetch as any).mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
+    render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} targets={TARGETS} />);
+
+    await user.click(tile("two"));
+    await user.click(screen.getByRole("button", { name: /move to/i }));
+    await user.click(screen.getByRole("button", { name: /new item/i }));
+
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(/couldn’t move.*try again/i));
   });
 });

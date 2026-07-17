@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PoolActionBar, type MoveTarget } from "./PoolActionBar";
+import { MAX_GROUP_PHOTOS, POOL_CAP_MESSAGE } from "@/lib/pool-limits";
 
 const TARGETS: MoveTarget[] = [{ id: "i9", number: 9, name: "Red clutch" }];
 
@@ -115,5 +116,35 @@ describe("PoolActionBar", () => {
     await user.click(screen.getByRole("button", { name: /#4/i }));
 
     expect(onMove).toHaveBeenCalledWith({ type: "item", itemId: "i4" });
+  });
+
+  it("shows the cover hint (sm:+) once at least one photo is selected", () => {
+    renderBar({ count: 1 });
+    expect(
+      screen.getByText(/the first photo you tapped becomes the cover/i),
+    ).toBeInTheDocument();
+  });
+
+  it('uses short mobile labels "One item" / "One each"', () => {
+    renderBar({ count: 2 });
+    // Full phrasing still carried by the aria-label for screen readers.
+    expect(screen.getByRole("button", { name: /group into an item/i })).toHaveTextContent("One item");
+    expect(screen.getByRole("button", { name: /each photo its own item/i })).toHaveTextContent("One each");
+  });
+
+  it("shows the cap message and disables Group/Each/Move (not Clear) over the limit", () => {
+    renderBar({ count: MAX_GROUP_PHOTOS + 1 });
+
+    expect(screen.getByText(POOL_CAP_MESSAGE)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /group into an item/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /each photo its own item/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /move to/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /clear/i })).not.toBeDisabled();
+  });
+
+  it("does not show the cap message at or under the limit", () => {
+    renderBar({ count: MAX_GROUP_PHOTOS });
+    expect(screen.queryByText(POOL_CAP_MESSAGE)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /group into an item/i })).not.toBeDisabled();
   });
 });
