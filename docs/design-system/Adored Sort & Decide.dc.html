@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+.ph{width:312px;background:#fff;border:2.5px solid #2b2b2b;border-radius:32px;padding:10px;box-shadow:4px 6px 0 rgba(0,0,0,0.06);position:relative;}
+.scr{background:#fff;border-radius:23px;overflow:hidden;border:1px solid #ececec;min-height:566px;display:flex;flex-direction:column;}
+.notch{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:88px;height:16px;background:#2b2b2b;border-radius:0 0 11px 11px;z-index:3;}
+.sb{display:flex;justify-content:space-between;align-items:center;padding:8px 16px 4px;font-family:system-ui;font-size:9px;color:#7a7a7a;}
+.bd{padding:2px 15px 14px;flex:1;display:flex;flex-direction:column;}
+.tabs{display:flex;border-top:1.5px solid #ececec;margin-top:auto;}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 9px;font-family:system-ui;font-size:8.5px;color:#9a9a9a;}
+.tab.on{color:#004a67;}
+.tab .ic{width:17px;height:17px;border-radius:5px;border:1.6px solid currentColor;}
+.ttl{font-family:'Caveat',cursive;color:#2b2b2b;line-height:1;}
+.photo{background:repeating-linear-gradient(45deg,#f0f0f0 0 8px,#e6e6e6 8px 16px);display:flex;align-items:center;justify-content:center;color:#a6a6a6;font-size:10px;font-family:system-ui;}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:42px;border-radius:10px;font-size:13px;font-family:system-ui;font-weight:600;white-space:nowrap;}
+.pri{background:#004a67;color:#fff;}
+.out{border:1.5px solid #004a67;color:#004a67;background:transparent;}
+.tier{flex:1;display:flex;align-items:center;justify-content:center;height:44px;border-radius:10px;font-family:system-ui;font-weight:600;font-size:13px;}
+.meta{font-size:10px;color:#9a9a9a;font-family:system-ui;}
+.lk{font-size:11px;color:#004a67;font-family:system-ui;}
+.chip{display:inline-flex;align-items:center;height:23px;padding:0 10px;border-radius:999px;font-size:10px;font-family:system-ui;background:#eef3f4;color:#3a5560;}
+.lbl{position:absolute;top:-24px;left:4px;font-family:'Caveat',cursive;font-size:17px;color:rgba(60,50,40,.78);}
+.back{font-family:system-ui;font-size:17px;color:#004a67;}
+.ring{width:40px;height:40px;border-radius:999px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ring-in{border-radius:999px;background:#fff;}
+.sec-h{position:absolute;font-family:'Caveat',cursive;font-size:27px;color:#5a5a5a;}
+.sec-s{position:absolute;font-family:system-ui;font-size:12px;color:#9a9a9a;}
+.flow{position:absolute;font-family:'Caveat',cursive;font-size:22px;color:#c0a93f;}
+.note{position:absolute;background:#fef4a8;padding:14px 16px;font:12px/1.6 system-ui;color:#5b5326;box-shadow:0 1px 3px rgba(0,0,0,.12);border-radius:2px;}
+</style>
+</helmet>
+
+<div style="position:absolute;left:80px;top:6px;width:760px;">
+  <div class="ttl" style="font-size:38px;">Adored — sort &amp; decide (round model)</div>
+  <div class="meta" style="font-size:13px;margin-top:6px;">A loop of short, timed <strong>rounds</strong> against a ranking that firms up over time. Three moods (Triage required; Compare &amp; Useful optional). The goal is to find your <strong>adored</strong> things, not rank all 100. You return to the Decide hub between rounds.</div>
+</div>
+
+<div class="note" style="left:870px;top:-8px;width:315px;transform:rotate(-1deg);">
+  <strong style="font-family:'Caveat',cursive;font-size:18px;">The loop</strong><br>
+  Hub recommends a round → you pick (or accept) → timed round → ends on timer <em>or</em> empty queue → &ldquo;what moved&rdquo; → back to hub. Moods you choose, never a forced march.
+</div>
+<div class="note" style="left:1205px;top:-8px;width:325px;transform:rotate(0.8deg);background:#e8f0ee;color:#1f4a4a;">
+  <strong style="font-family:'Caveat',cursive;font-size:18px;">Quiet ring, no clock</strong><br>
+  The round timer is a <strong>depleting violet arc — no digits</strong> (a number ticking down adds pressure). It empties as you go, turns <strong>gold</strong> when done. <strong>Triage</strong> = deliberate taps; <strong>Useful</strong> = swipe reflex.
+</div>
+
+<!-- ============ SECTION 1 ============ -->
+<div class="sec-h" style="left:80px;top:128px;">1 · The round loop</div>
+<div class="sec-s" style="left:80px;top:162px;">Hub recommends → timed round → what moved → back</div>
+
+<!-- 1 Hub recommends -->
+<div style="position:absolute;left:80px;top:220px;">
+  <div class="lbl" data-drags-parent="1">1 · Hub · next round</div>
+  <div class="ph"><div class="notch"></div><div class="scr">
+    <div class="sb"><span>9:41</span><span>▦ ▦ ▮</span></div>
+    <div class="bd">
+      <div style="display:flex;justify-content:space-between;align-items:center;"><div class="ttl" style="font-size:23px;">Vintage bags</div><div style="width:26px;height:26px;border-radius:999px;border:1.5px solid #cfcfcf;"></div></div>
+      <div class="meta" style="font-size:11px;margin-top:3px;">100 items · 38 sorted so far</div>
+      <div style="background:#eef3f4;border:1px solid #dfe7e9;border-radius:13px;padding:14px;margin-top:14px;">
+        <div class="meta" style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#3a5560;">Recommended</div>
+        <div class="ttl" style="font-size:21px;margin-top:5px;">A quick triage round</div>
+        <div class="meta" style="font-size:11px;margin-top:4px;">62 still to sort. Take a handful.</div>
+        <div class="btn pri" style="width:100%;margin-top:12px;">Start · 2 min</div>
+        <div style="text-align:center;margin-top:8px;"><span class="lk">Change length</span></div>
+      </div>
+      <div class="meta" style="font-size:10px;margin-top:14px;">Or pick a mood</div>
+      <div style="display:flex;gap:7px;margin-top:7px;"><div class="chip" style="flex:1;justify-content:center;height:30px;">Triage</div><div class="chip" style="flex:1;justify-content:center;height:30px;">Compare</div><div class="chip" style="flex:1;justify-content:center;height:30px;opacity:.5;">Useful · later</div></div>
+    </div>
+    <div class="tabs"><div class="tab on"><div class="ic"></div>Sort</div><div class="tab"><div class="ic"></div>Standing</div><div class="tab"><div class="ic"></div>You</div></div>
+  </div></div>
+</div>
+
+<!-- 2 Length picker -->
+<div style="position:absolute;left:470px;top:220px;">
+  <div class="lbl" data-drags-parent="1">2 · Round length (once-set)</div>
+  <div class="ph"><div class="notch"></div><div class="scr">
+    <div class="sb"><span>9:41</span><span>▦ ▦ ▮</span></div>
+    <div class="bd" style="justify-content:flex-end;">
+      <div style="flex:1;"></div>
+      <div style="background:#fff;border:1px solid #ececec;border-radius:16px;box-shadow:0 -2px 18px rgba(0,0,0,.06);padding:16px;">
+        <div class="ttl" style="font-size:20px;">How long?</div>
+        <div class="meta" style="font-size:10px;margin-top:3px;">We&rsquo;ll remember this. Change anytime.</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;border:1.5px solid #e6e6e6;border-radius:9px;padding:11px 13px;"><span style="font-size:13px;font-family:system-ui;color:#2b2b2b;">30 sec</span><span class="meta" style="font-size:10px;">a breath</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;border:2px solid #004a67;border-radius:9px;padding:11px 13px;background:#f4f8f9;"><span style="font-size:13px;font-family:system-ui;font-weight:600;color:#004a67;">2 min ✓</span><span class="meta" style="font-size:10px;">a handful</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;border:1.5px solid #e6e6e6;border-radius:9px;padding:11px 13px;"><span style="font-size:13px;font-family:system-ui;color:#2b2b2b;">5 min</span><span class="meta" style="font-size:10px;">a real dent</span></div>
+        </div>
+        <div class="btn pri" style="width:100%;margin-top:12px;">Start triage</div>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+<!-- 3 Triage round active -->
+<div style="position:absolute;left:860px;top:220px;">
+  <div class="lbl" data-drags-parent="1">3 · Triage round · taps</div>
+  <div class="ph"><div class="notch"></div><div class="scr">
+    <div class="sb"><span>9:41</span><span>▦ ▦ ▮</span></div>
+    <div class="bd">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="ring" style="background:conic-gradient(#8e7ea8 58%,#ece8f1 0);"><div class="ring-in" style="width:30px;height:30px;"></div></div>
+        <div style="text-align:right;"><div class="meta" style="font-size:11px;color:#5a5a5a;">8 sorted</div><div class="meta" style="font-size:10px;">this round</div></div>
+      </div>
+      <div class="ttl" style="font-size:23px;margin-top:10px;">How do you feel?</div>
+      <div class="photo" style="height:150px;border-radius:11px;margin-top:8px;">item</div>
+      <div class="ttl" style="font-size:16px;margin-top:7px;">Brass clock</div>
+      <div style="display:flex;gap:6px;margin-top:8px;"><div class="tier" style="background:#004a67;color:#fff;">Love</div><div class="tier" style="background:#2f6e8c;color:#fff;">Like</div></div>
+      <div style="display:flex;gap:6px;margin-top:6px;"><div class="tier" style="background:#6fa0b8;color:#08222b;">Maybe</div><div class="tier" style="background:#b8d4dc;color:#16242b;">Onward</div></div>
+      <div style="display:flex;justify-content:center;gap:22px;margin-top:9px;"><span class="lk">Not yet</span><span class="lk">Not mine</span></div>
+    </div>
+  </div></div>
+</div>
+
+<!-- 4 Round complete -->
+<div style="position:absolute;left:1250px;top:220px;">
+  <div class="lbl" data-drags-parent="1">4 · Round complete (ring → gold)</div>
+  <div class="ph"><div class="notch"></div><div class="scr">
+    <div class="sb"><span>9:41</span><span>▦ ▦ ▮</span></div>
+    <div class="bd" style="align-items:center;text-align:center;">
+      <div class="ring" style="width:60px;height:60px;background:#efcb77;margin-top:18px;"><div class="ring-in" style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#7a6a14;">✓</div></div>
+      <div class="ttl" style="font-size:24px;margin-top:13px;">Time&rsquo;s up — nice</div>
+      <div class="meta" style="font-size:11px;margin-top:6px;max-width:200px;">You sorted 11 this round. Here&rsquo;s what moved.</div>
+      <div style="width:100%;display:flex;flex-direction:column;gap:6px;margin-top:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;background:#f4f8f9;border-radius:8px;padding:8px 11px;"><span style="font-size:12px;font-family:system-ui;color:#2b2b2b;">→ Love</span><span class="meta">+3</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;background:#f4f8f9;border-radius:8px;padding:8px 11px;"><span style="font-size:12px;font-family:system-ui;color:#2b2b2b;">→ Like</span><span class="meta">+4</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;background:#f4f8f9;border-radius:8px;padding:8px 11px;"><span style="font-size:12px;font-family:system-ui;color:#2b2b2b;">→ Maybe / Onward</span><span class="meta">+4</span></div>
+      </div>
+      <div class="meta" style="font-size:10px;margin-top:10px;">51 still to sort · no rush</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;width:100%;"><div class="btn pri" style="width:100%;">Another round</div><div class="btn out" style="width:100%;">Back to standing</div></div>
+    </div>
+  </div></div>
+</div>
+<div class="flow" style="left:412px;top:496px;">→</div>
+<div class="flow" style="left:802px;top:496px;">→</div>
+<div class="flow" style="left:1192px;top:496px;">→</div>
+
+<!-- ============ SECTION 2 ============ -->
+<div class="sec-h" style="left:80px;top:850px;">2 · The other moods</div>
+<div class="sec-s" style="left:80px;top:884px;">Compare sharpens the Love/Like edge · Useful sub-orders within Love</div>
+
+<!-- 5 Compare round -->
+<div style="position:absolute;left:80px;top:942px;">
+  <div class="lbl" data-drags-parent="1">5 · Compare round · edges</div>
+  <div class="ph"><div class="notch"></div><div class="scr">
+    <div class="sb"><span>9:41</span><span>▦ ▦ ▮</span></div>
+    <div class="bd">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="ring" style="background:conic-gradient(#8e7ea8 35%,#ece8f1 0);"><div class="ring-in" style="width:30px;height:30px;"></div></div>
+        <div style="text-align:right;"><div class="meta" style="font-size:11px;color:#5a5a5a;">12 / 50 placed</div><div class="meta" style="font-size:10px;">this round &amp; the next</div></div>
+      </div>
+      <div class="ttl" style="font-size:23px;margin-top:10px;">Love which more?</div>
+      <div class="meta" style="font-size:10px;margin-top:2px;">Placing this in your Love &amp; Like order.</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:9px;">
+        <div style="border:2px solid #d0d0d0;border-radius:11px;padding:6px;text-align:center;"><div class="photo" style="height:92px;border-radius:8px;">A</div><div class="ttl" style="font-size:15px;margin-top:4px;">Blue vase</div></div>
+        <div style="border:2px solid #d0d0d0;border-radius:11px;padding:6px;text-align:center;"><div class="photo" style="height:92px;border-radius:8px;">B</div><div class="ttl" style="font-size:15px;margin-top:4px;">Brass clock</div></div>
+      </div>
+      <div style="display:flex;justify-content:center;gap:20px;margin-top:9px;"><span class="lk">Tie</span><span class="meta">Skip</span></div>
+    </div>
+  </div></div>
+</div>
+
+<!-- 6 Useful round -->
+<div style="position:absolute;left:470px;top:942px;">
+  <div class="lbl" data-drags-parent="1">6 · Useful round · swipe (later)</div>
+  <div class="ph"><div class="notch"></div><div class="scr">
+    <div class="sb"><span>9:41</span><span>▦ ▦ ▮</span></div>
+    <div class="bd">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="ring" style="background:conic-gradient(#8e7ea8 80%,#ece8f1 0);"><div class="ring-in" style="width:30px;height:30px;"></div></div>
+        <div style="text-align:right;"><div class="meta" style="font-size:11px;color:#5a5a5a;">within Love</div><div class="chip" style="height:18px;font-size:8px;margin-top:3px;">later</div></div>
+      </div>
+      <div class="ttl" style="font-size:23px;margin-top:10px;">Do you use it?</div>
+      <div class="meta" style="font-size:10px;margin-top:2px;">Quick gut check — a beat, then it skips.</div>
+      <div style="position:relative;margin-top:9px;">
+        <div class="photo" style="height:148px;border-radius:11px;transform:rotate(-3deg);box-shadow:3px 5px 0 rgba(0,74,103,.10);">item</div>
+        <div style="position:absolute;top:8px;left:8px;background:#9b4036;color:#fff;font:600 10px system-ui;padding:3px 9px;border-radius:999px;opacity:.85;">◀ No</div>
+        <div style="position:absolute;top:8px;right:8px;background:#3f5a34;color:#fff;font:600 10px system-ui;padding:3px 9px;border-radius:999px;">Yes ▶</div>
+      </div>
+      <div class="ttl" style="font-size:15px;margin-top:7px;">Silk scarf</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:9px;"><span class="meta" style="font-size:10px;">swipe or tap</span><div style="display:flex;gap:7px;"><span class="tier" style="flex:none;width:64px;height:34px;background:#f3deda;color:#7e2c24;font-size:12px;">No</span><span class="tier" style="flex:none;width:64px;height:34px;background:#dce7d9;color:#2c3f26;font-size:12px;">Yes</span></div></div>
+      <div class="meta" style="font-size:9px;text-align:center;margin-top:8px;">Undecided ones come back later in the round.</div>
+    </div>
+  </div></div>
+</div>
+
+<div class="note" style="left:870px;top:966px;width:330px;transform:rotate(-0.6deg);">
+  <strong style="font-family:'Caveat',cursive;font-size:18px;">How the moods relate</strong>
+  <ul style="margin:6px 0 0;padding-left:15px;">
+    <li><strong>Triage</strong> sorts by feeling (required).</li>
+    <li><strong>Compare</strong> ranks your <strong>top two bins</strong> (Love &amp; Like) by binary insertion — a few high-value choices per item, not all-pairs. The timer just bounds the <em>round</em>, not the task; the ranking carries across rounds.</li>
+    <li><strong>Useful</strong> sub-orders <em>within</em> Love: loved-and-used sits above loved-but-not. &ldquo;No&rdquo; nudges down a notch — it never leaves Love.</li>
+  </ul>
+</div>
+
+<!-- ============ SECTION 3 ============ -->
+<div class="sec-h" style="left:80px;top:1530px;">3 · The Decide hub</div>
+<div class="sec-s" style="left:80px;top:1564px;">Home base between rounds — four parts</div>
+
+<!-- 7 Standing -->
+<div style="position:absolute;left:80px;top:1622px;">
+  <div class="lbl" data-drags-parent="1">7 · Standing</div>
+  <div class="ph"><div class="notch"></div><div class="scr">
+    <div class="sb"><span>9:41</span><span>▦ ▦ ▮</span></div>
+    <div class="bd">
+      <div class="ttl" style="font-size:22px;">What you love</div>
+      <div class="meta" style="font-size:10px;margin-top:2px;">So far, from 38 sorted.</div>
+      <div style="border:1.5px solid #e6e6e6;border-radius:11px;padding:9px;margin-top:10px;display:flex;gap:9px;align-items:center;background:#fafcfc;"><div class="photo" style="width:58px;height:54px;border-radius:8px;flex-shrink:0;">★</div><div><div class="meta" style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#004a67;">Most loved</div><div class="ttl" style="font-size:17px;margin-top:1px;">Blue vase</div></div></div>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-top:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:11px;font-family:system-ui;color:#2b2b2b;">♥ Love</span><span class="meta">9</span></div>
+        <div style="height:7px;border-radius:999px;background:#004a67;width:100%;"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;"><span style="font-size:11px;font-family:system-ui;color:#2b2b2b;">◆ Like</span><span class="meta">14</span></div>
+        <div style="height:7px;border-radius:999px;background:#2f6e8c;width:78%;"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;"><span style="font-size:11px;font-family:system-ui;color:#2b2b2b;">○ Maybe</span><span class="meta">10</span></div>
+        <div style="height:7px;border-radius:999px;background:#6fa0b8;width:56%;"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;"><span style="font-size:11px;font-family:system-ui;color:#2b2b2b;">→ Onward</span><span class="meta">5</span></div>
+        <div style="height:7px;border-radius:999px;background:#b8d4dc;width:34%;"></div>
+      </div>
+      <div style="border-top:1px solid #f0f0f0;margin-top:12px;padding-top:10px;text-align:center;"><span class="lk">Put your favorites in order →</span></div>
+    </div>
+    <div class="tabs"><div class="tab"><div class="ic"></div>Sort</div><div class="tab on"><div class="ic"></div>Standing</div><div class="tab"><div class="ic"></div>You</div></div>
+  </div></div>
+</div>
+
+<!-- 8 Edges -->
+<div style="position:absolute;left:470px;top:1622px;">
+  <div class="lbl" data-drags-parent="1">8 · Put in order (Love &amp; Like)</div>
+  <div class="ph"><div class="notch"></div><div class="scr">
+    <div class="sb"><span>9:41</span><span>▦ ▦ ▮</span></div>
+    <div class="bd">
+      <div class="ttl" style="font-size:22px;">Your favorites, in order</div>
+      <div class="meta" style="font-size:10px;margin-top:2px;max-width:235px;">Sorting grouped them — now put Love &amp; Like in order. About 50 quick choices, a round at a time.</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:11px;"><div style="flex:1;height:7px;border-radius:999px;background:#eee;overflow:hidden;"><div style="width:24%;height:100%;background:#004a67;"></div></div><span class="meta" style="font-size:10px;">12 / 50</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:11px;">
+        <div style="display:flex;align-items:center;gap:8px;border:1.5px solid #004a67;border-radius:9px;padding:7px;background:#fafcfc;"><span class="meta" style="font-size:11px;color:#004a67;width:14px;">1</span><div class="photo" style="width:34px;height:34px;border-radius:6px;"></div><span style="flex:1;font-size:11px;font-family:system-ui;color:#2b2b2b;">Blue vase</span><span style="color:#c0a93f;">★</span></div>
+        <div style="display:flex;align-items:center;gap:8px;border:1.5px solid #e6e6e6;border-radius:9px;padding:7px;"><span class="meta" style="font-size:11px;width:14px;">2</span><div class="photo" style="width:34px;height:34px;border-radius:6px;"></div><span style="flex:1;font-size:11px;font-family:system-ui;color:#2b2b2b;">Brass clock</span></div>
+        <div style="display:flex;align-items:center;gap:8px;border:1.5px solid #e6e6e6;border-radius:9px;padding:7px;opacity:.6;"><span class="meta" style="font-size:11px;width:14px;">?</span><div class="photo" style="width:34px;height:34px;border-radius:6px;"></div><span style="flex:1;font-size:11px;font-family:system-ui;color:#9a9a9a;">38 still to place</span></div>
+      </div>
+      <div class="btn pri" style="width:100%;margin-top:12px;">Put in order · 2 min</div>
+    </div>
+    <div class="tabs"><div class="tab"><div class="ic"></div>Sort</div><div class="tab on"><div class="ic"></div>Standing</div><div class="tab"><div class="ic"></div>You</div></div>
+  </div></div>
+</div>
+
+<!-- 9 Set aside -->
+<div style="position:absolute;left:860px;top:1622px;">
+  <div class="lbl" data-drags-parent="1">9 · Set aside (shelf)</div>
+  <div class="ph"><div class="notch"></div><div class="scr">
+    <div class="sb"><span>9:41</span><span>▦ ▦ ▮</span></div>
+    <div class="bd">
+      <div style="display:flex;align-items:center;gap:9px;"><span class="back">‹</span><div class="ttl" style="font-size:22px;">Set aside</div></div>
+      <div class="meta" style="font-size:10px;margin-top:6px;">Not yours — restore anytime. Lives in Decide, away from the sorting.</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+        <div style="display:flex;align-items:center;gap:9px;border:1.5px solid #e6e6e6;border-radius:10px;padding:8px;"><div style="width:40px;height:40px;border-radius:7px;background:#cae4e1;display:flex;align-items:center;justify-content:center;color:#5b6b73;">☾</div><span style="flex:1;font-size:12px;font-family:system-ui;color:#2b2b2b;">Dad&rsquo;s toolbox</span><span class="lk">Restore</span></div>
+        <div style="display:flex;align-items:center;gap:9px;border:1.5px solid #e6e6e6;border-radius:10px;padding:8px;"><div style="width:40px;height:40px;border-radius:7px;background:#cae4e1;display:flex;align-items:center;justify-content:center;color:#5b6b73;">☾</div><span style="flex:1;font-size:12px;font-family:system-ui;color:#2b2b2b;">Old frame</span><span class="lk">Restore</span></div>
+        <div style="display:flex;align-items:center;gap:9px;border:1.5px solid #e6e6e6;border-radius:10px;padding:8px;"><div style="width:40px;height:40px;border-radius:7px;background:#cae4e1;display:flex;align-items:center;justify-content:center;color:#5b6b73;">☾</div><span style="flex:1;font-size:12px;font-family:system-ui;color:#2b2b2b;">Lamp base</span><span class="lk">Restore</span></div>
+      </div>
+      <div class="meta" style="font-size:10px;text-align:center;margin-top:12px;">3 set aside</div>
+    </div>
+  </div></div>
+</div>
+
+<!-- 10 Finalize -->
+<div style="position:absolute;left:1250px;top:1622px;">
+  <div class="lbl" data-drags-parent="1">10 · Finalize</div>
+  <div class="ph"><div class="notch"></div><div class="scr">
+    <div class="sb"><span>9:41</span><span>▦ ▦ ▮</span></div>
+    <div class="bd" style="align-items:center;text-align:center;">
+      <div class="ring" style="width:56px;height:56px;background:#efcb77;margin-top:18px;"><div class="ring-in" style="width:46px;height:46px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#7a6a14;">✓</div></div>
+      <div class="ttl" style="font-size:24px;margin-top:13px;">Ready when you are</div>
+      <div class="meta" style="font-size:11px;margin-top:6px;max-width:200px;">You&rsquo;ve found what you love. Lock it in — keep sorting anytime.</div>
+      <div style="width:100%;margin-top:14px;text-align:left;"><div class="meta" style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#004a67;">In order · 9 adored</div>
+        <div style="display:flex;flex-direction:column;gap:5px;margin-top:7px;">
+          <div style="display:flex;align-items:center;gap:8px;border:1.5px solid #e6e6e6;border-radius:9px;padding:6px;background:#fafcfc;"><span class="meta" style="font-size:10px;width:12px;">1</span><div class="photo" style="width:30px;height:30px;border-radius:6px;"></div><span style="flex:1;font-size:11px;font-family:system-ui;color:#2b2b2b;">Blue vase</span><span style="color:#b0b0b0;">≡</span></div>
+          <div style="display:flex;align-items:center;gap:8px;border:1.5px solid #e6e6e6;border-radius:9px;padding:6px;"><span class="meta" style="font-size:10px;width:12px;">2</span><div class="photo" style="width:30px;height:30px;border-radius:6px;"></div><span style="flex:1;font-size:11px;font-family:system-ui;color:#2b2b2b;">Brass clock</span><span style="color:#b0b0b0;">≡</span></div>
+          <div style="display:flex;align-items:center;gap:8px;border:1.5px solid #e6e6e6;border-radius:9px;padding:6px;"><span class="meta" style="font-size:10px;width:12px;">3</span><div class="photo" style="width:30px;height:30px;border-radius:6px;"></div><span style="flex:1;font-size:11px;font-family:system-ui;color:#2b2b2b;">Silk scarf</span><span style="color:#b0b0b0;">≡</span></div>
+        </div>
+        <div class="meta" style="font-size:9px;text-align:center;margin-top:7px;">Drag ≡ to reorder before you finalize</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;width:100%;"><div class="btn pri" style="width:100%;">Finalize what I love</div><div class="btn out" style="width:100%;opacity:.5;">Share — later</div></div>
+    </div>
+  </div></div>
+</div>
+
+<div class="note" style="left:80px;top:2210px;width:520px;transform:rotate(-0.5deg);">
+  <strong style="font-family:'Caveat',cursive;font-size:19px;">The hub is home base, not a finish line</strong>
+  <ul style="margin:6px 0 0;padding-left:16px;">
+    <li><strong>Standing</strong> — what you love so far; you can finish here with buckets alone.</li>
+    <li><strong>Rank</strong> — order Love &amp; Like by binary insertion → runs Compare rounds.</li>
+    <li><strong>Set aside</strong> — the &ldquo;not mine&rdquo; shelf, kept out of the sorting flow.</li>
+    <li><strong>Finalize</strong> — review the ranking, drag to adjust, then commit; sharing comes later.</li>
+  </ul>
+</div>
+</x-dc>
+</body>
+</html>

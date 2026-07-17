@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<style>
+.pf{font-family:'Playfair Display',Georgia,serif;}
+.in{font-family:'Inter',ui-sans-serif,system-ui,sans-serif;}
+.flbl{position:absolute;top:-25px;left:2px;font:600 13px 'Inter',sans-serif;color:rgba(50,60,66,.82);}
+.bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.av{width:22px;height:22px;border-radius:999px;border:1px solid rgba(255,255,255,.3);}
+.spk{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 11px;border-radius:999px;background:#cbb94f;color:#1b1605;font:600 10px 'Inter';text-transform:uppercase;letter-spacing:.05em;}
+.tok{display:flex;gap:4px;margin-top:14px;}
+.tok>div{flex:1;height:30px;border-radius:6px;border:1px solid rgba(20,40,55,.15);}
+.cap{font-family:'SF Mono',monospace;font-size:9px;color:#46555d;margin-top:6px;line-height:1.6;}
+</style>
+</helmet>
+
+<div style="position:absolute;left:80px;top:0;width:980px;">
+  <div class="pf" style="font-size:30px;color:#22303a;">Elevation by light, not value</div>
+  <div class="in" style="font-size:14px;color:#5b6b73;margin-top:6px;">Surface and raised both stay dark enough for white text at AAA. They&rsquo;re told apart by a bright luminous rim + glow — the aurora catching the edge — so we escape the mid-tone contrast trap. All on the #005667 spine.</div>
+</div>
+
+<!-- A · RIM + GLOW -->
+<div style="position:absolute;left:80px;top:150px;width:400px;">
+  <div class="flbl" data-drags-parent="1">A · rim + glow (raised stays dark)</div>
+  <div class="in" style="background:#001b21;border-radius:18px;padding:16px;box-shadow:0 8px 26px rgba(0,0,0,.42);">
+    <div class="bar"><span class="pf" style="font-size:16px;color:#dcf1f0;">Adored</span><span class="av"></span></div>
+    <div style="background:#0e474f;border:1px solid #2c707c;border-radius:14px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 20px rgba(0,150,170,.18);">
+      <div style="display:flex;gap:14px;align-items:center;">
+        <div style="position:relative;width:84px;height:84px;flex-shrink:0;">
+          <div style="position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(circle,#6d5c9b 0%,rgba(109,92,155,0) 70%);filter:blur(5px);opacity:.55;"></div>
+          <div style="position:relative;width:84px;height:84px;border-radius:11px;background:repeating-linear-gradient(45deg,#135159 0 8px,#0e4750 8px 16px);border:1px solid #2c707c;"></div>
+        </div>
+        <div><span class="spk">✦ Most loved</span><div class="pf" style="font-size:21px;color:#eff6f7;margin-top:8px;line-height:1.1;">The blue glass vase</div></div>
+      </div>
+      <p class="in" style="font-size:13px;color:#aecccf;margin-top:12px;line-height:1.5;">From your grandmother&rsquo;s window — the one you chose first.</p>
+    </div>
+    <div style="background:#0f4d57;border:1px solid #548e99;border-radius:11px;padding:11px 13px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 0 18px rgba(84,142,153,.45);"><span class="in" style="font:600 12px 'Inter';color:#eff6f7;">Continue · Session 2</span><span class="in" style="display:inline-flex;align-items:center;height:30px;padding:0 14px;border-radius:8px;background:#bfe6ee;color:#06222b;font:600 12px 'Inter';">Resume</span></div>
+  </div>
+  <div class="tok"><div style="background:#001b21;"></div><div style="background:#0e474f;"></div><div style="background:#0f4d57;"></div><div style="background:#548e99;"></div></div>
+  <div class="cap">raised #0F4D57 ≈ surface in value, set apart by #548E99 rim + glow<br>white on raised 8.9:1 AAA · rim vs surface 2.8:1 (non-text, perceivable)</div>
+</div>
+
+<!-- B · BRIGHT RIM ONLY -->
+<div style="position:absolute;left:520px;top:150px;width:400px;">
+  <div class="flbl" data-drags-parent="1">B · bright rim, no glow (crisper)</div>
+  <div class="in" style="background:#001b21;border-radius:18px;padding:16px;box-shadow:0 8px 26px rgba(0,0,0,.42);">
+    <div class="bar"><span class="pf" style="font-size:16px;color:#dcf1f0;">Adored</span><span class="av"></span></div>
+    <div style="background:#0e474f;border:1px solid #2c707c;border-radius:14px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);">
+      <div style="display:flex;gap:14px;align-items:center;">
+        <div style="position:relative;width:84px;height:84px;flex-shrink:0;">
+          <div style="position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(circle,#6d5c9b 0%,rgba(109,92,155,0) 70%);filter:blur(5px);opacity:.55;"></div>
+          <div style="position:relative;width:84px;height:84px;border-radius:11px;background:repeating-linear-gradient(45deg,#135159 0 8px,#0e4750 8px 16px);border:1px solid #2c707c;"></div>
+        </div>
+        <div><span class="spk">✦ Most loved</span><div class="pf" style="font-size:21px;color:#eff6f7;margin-top:8px;line-height:1.1;">The blue glass vase</div></div>
+      </div>
+      <p class="in" style="font-size:13px;color:#aecccf;margin-top:12px;line-height:1.5;">From your grandmother&rsquo;s window — the one you chose first.</p>
+    </div>
+    <div style="background:#0c3f48;border:1.5px solid #6aa6b0;border-radius:11px;padding:11px 13px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;"><span class="in" style="font:600 12px 'Inter';color:#eff6f7;">Continue · Session 2</span><span class="in" style="display:inline-flex;align-items:center;height:30px;padding:0 14px;border-radius:8px;background:#bfe6ee;color:#06222b;font:600 12px 'Inter';">Resume</span></div>
+  </div>
+  <div class="tok"><div style="background:#001b21;"></div><div style="background:#0e474f;"></div><div style="background:#0c3f48;"></div><div style="background:#6aa6b0;"></div></div>
+  <div class="cap">raised slightly DARKER than surface, ringed by a bright #6AA6B0 hairline<br>white on raised 9.8:1 AAA · the rim does all the separating</div>
+</div>
+
+<!-- C · HUE PIVOT + RIM -->
+<div style="position:absolute;left:960px;top:150px;width:400px;">
+  <div class="flbl" data-drags-parent="1">C · hue pivot + rim (teal → cyan)</div>
+  <div class="in" style="background:#001b21;border-radius:18px;padding:16px;box-shadow:0 8px 26px rgba(0,0,0,.42);">
+    <div class="bar"><span class="pf" style="font-size:16px;color:#dcf1f0;">Adored</span><span class="av"></span></div>
+    <div style="background:#103f4a;border:1px solid #2c707c;border-radius:14px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);">
+      <div style="display:flex;gap:14px;align-items:center;">
+        <div style="position:relative;width:84px;height:84px;flex-shrink:0;">
+          <div style="position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(circle,#6d5c9b 0%,rgba(109,92,155,0) 70%);filter:blur(5px);opacity:.55;"></div>
+          <div style="position:relative;width:84px;height:84px;border-radius:11px;background:repeating-linear-gradient(45deg,#14525d 0 8px,#0f4751 8px 16px);border:1px solid #2c707c;"></div>
+        </div>
+        <div><span class="spk">✦ Most loved</span><div class="pf" style="font-size:21px;color:#eff6f7;margin-top:8px;line-height:1.1;">The blue glass vase</div></div>
+      </div>
+      <p class="in" style="font-size:13px;color:#aecccf;margin-top:12px;line-height:1.5;">From your grandmother&rsquo;s window — the one you chose first.</p>
+    </div>
+    <div style="background:#123a4e;border:1px solid #3f7fa0;border-radius:11px;padding:11px 13px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 16px rgba(63,127,160,.4);"><span class="in" style="font:600 12px 'Inter';color:#eff6f7;">Continue · Session 2</span><span class="in" style="display:inline-flex;align-items:center;height:30px;padding:0 14px;border-radius:8px;background:#bfe6ee;color:#06222b;font:600 12px 'Inter';">Resume</span></div>
+  </div>
+  <div class="tok"><div style="background:#001b21;"></div><div style="background:#103f4a;"></div><div style="background:#123a4e;"></div><div style="background:#3f7fa0;"></div></div>
+  <div class="cap">raised pivots teal→blue (hue), same darkness, rim + glow in the bluer hue<br>white on raised 9.5:1 AAA · separated by hue + light, not value</div>
+</div>
+
+<div style="position:absolute;left:80px;top:610px;width:620px;background:#fef4a8;padding:15px 18px;font:13px/1.55 'Inter',system-ui;color:#5b5326;box-shadow:0 1px 3px rgba(0,0,0,.12);transform:rotate(-0.5deg);border-radius:2px;">
+  <div class="pf" style="font-size:19px;color:#4a431d;margin-bottom:6px;">Why this works</div>
+  WCAG governs <strong>text</strong> and control contrast, not how two panels read apart. So we let text always sit on a dark fill (white &ge; 8.9:1, AAA) and separate the planes with a bright rim + inner highlight + glow. <strong>A</strong> = rim + soft glow; <strong>B</strong> = crisp bright rim, raised even darker; <strong>C</strong> = the raised zone pivots hue (teal→blue) so it differs by colour AND light while staying dark. None rely on a mid-tone fill, so none fall in the trap — and all three look &ldquo;lit from within,&rdquo; like sea glass after dark.
+</div>
+</x-dc>
+</body>
+</html>
