@@ -56,7 +56,7 @@ export function WhatMoved({ decisions, windowStartMs, nowMs, hubHref, hadTimer }
   return (
     <div aria-live="polite" className="mx-auto max-w-xl space-y-6 text-center">
       {hadTimer && (
-        <div aria-hidden className="flex justify-center">
+        <div aria-hidden data-testid="round-complete-badge" className="flex justify-center">
           <TimerRing fraction={0} size={56} expired discClassName="bg-surface-raised" />
         </div>
       )}

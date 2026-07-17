@@ -30,9 +30,10 @@ test.describe("timer ring: dial → quiet ring → live adjust → gold recap", 
   test("live adjust to 30 seconds ends the round into the gold recap", async ({
     page,
   }) => {
-    // The round-end wait alone can take up to 45s (see below); the default
-    // 30s test timeout would abort mid-wait.
-    test.setTimeout(60_000);
+    // The round-end wait alone can take up to 45s (see below); widened past
+    // that for CI runner headroom (the default 30s test timeout would abort
+    // mid-wait even locally).
+    test.setTimeout(90_000);
 
     await page.goto(`/collections/${slug}/sort/${sessionNumber}/triage`);
     await expect(
@@ -40,10 +41,17 @@ test.describe("timer ring: dial → quiet ring → live adjust → gold recap", 
     ).toBeVisible();
 
     // The running ring: an adjust button, and no visible remaining-time
-    // digits — the countdown is announced to screen readers only.
+    // digits — the countdown is announced to screen readers only. Assert the
+    // RENDERED invisibility (a real 1x1 box, per Tailwind's .sr-only), not
+    // just the class name — a class-name check alone would still pass if
+    // the CSS ever stopped clipping it.
     const adjust = page.getByRole("button", { name: "Change round length" });
     await expect(adjust).toBeVisible();
-    await expect(page.getByText(/left in this round/)).toHaveClass(/sr-only/);
+    const remaining = page.getByText(/left in this round/);
+    await expect(remaining).toBeAttached();
+    const remainingBox = await remaining.boundingBox();
+    expect(remainingBox?.width).toBeLessThanOrEqual(1);
+    expect(remainingBox?.height).toBeLessThanOrEqual(1);
 
     // Live adjust: open the dialog, keyboard to "no clock" then one step up
     // to the minimum (30 seconds — a breath), Done.
@@ -58,9 +66,13 @@ test.describe("timer ring: dial → quiet ring → live adjust → gold recap", 
     await expect(adjust).toBeVisible();
 
     // The round re-arms against its (unchanged) start with the new 30s box —
-    // it ends itself into the recap, led by the gold ring badge.
+    // it ends itself into the recap, led by the gold ring badge. Expiry also
+    // gold-settles the (now-inert) HEADER ring, so a bare page-wide search for
+    // the gold marker would false-pass without the recap badge specifically —
+    // scope to WhatMoved.tsx's own badge wrapper (data-testid="round-complete-badge").
     await expect(
       page.getByRole("heading", { name: /what moved/i }),
     ).toBeVisible({ timeout: 45_000 });
+    await expect(page.getByTestId("round-complete-badge")).toBeVisible();
   });
 });
