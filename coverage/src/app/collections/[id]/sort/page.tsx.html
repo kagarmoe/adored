@@ -191,9 +191,7 @@
 <a name='L126'></a><a href='#L126'>126</a>
 <a name='L127'></a><a href='#L127'>127</a>
 <a name='L128'></a><a href='#L128'>128</a>
-<a name='L129'></a><a href='#L129'>129</a>
-<a name='L130'></a><a href='#L130'>130</a>
-<a name='L131'></a><a href='#L131'>131</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L129'></a><a href='#L129'>129</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -209,26 +207,28 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -296,11 +296,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -329,7 +325,9 @@ import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
 import { SessionController } from "@/server/api/sessions";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { Badge, Button, Card, EmptyState } from "@/components/ui";
+import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { ResumeControl } from "@/features/sorting/ResumeControl";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
 import Link from "next/link";
@@ -359,13 +357,7 @@ export default async function SortPage({ params }: SortPageProps) {
   const collectionHref = `/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}`;</span>
 &nbsp;
   return (
-    &lt;AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: collectionHref },
-        { label: "Sorting" },
-      ]}
-    &gt;
+    &lt;AppLayout breadcrumbs={trail.sort(collection)}&gt;
       {/* Recovery gate (spec §3.4): pending decisions drain before this hub
           renders from stale session/preference data. Empty queue = zero cost. */}
       &lt;PendingDecisionsGate curatorId={session.user.id}&gt;
@@ -380,6 +372,8 @@ export default async function SortPage({ params }: SortPageProps) {
             &lt;/Link&gt;
           )}
         &lt;/div&gt;
+&nbsp;
+        &lt;WorkspaceModeChips base={collectionHref} activeMode="sort" /&gt;
 &nbsp;
         {currentSession &amp;&amp; (
           &lt;Card padding="lg" className="border-hairline bg-content-soft"&gt;
@@ -460,7 +454,7 @@ export default async function SortPage({ params }: SortPageProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-16T23:48:43.499Z
+                at 2026-07-17T00:20:19.635Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

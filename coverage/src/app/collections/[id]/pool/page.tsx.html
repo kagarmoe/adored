@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">41.66% </span>
+                <span class="strong">75% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>5/12</span>
+                <span class='fraction'>9/12</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">16.66% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>1/6</span>
+                <span class='fraction'>3/6</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">45.45% </span>
+                <span class="strong">81.81% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>5/11</span>
+                <span class='fraction'>9/11</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -128,7 +128,11 @@
 <a name='L63'></a><a href='#L63'>63</a>
 <a name='L64'></a><a href='#L64'>64</a>
 <a name='L65'></a><a href='#L65'>65</a>
-<a name='L66'></a><a href='#L66'>66</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -141,25 +145,29 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -200,9 +208,11 @@ import { requireCollectionAccess } from "@/lib/collection-access";
 import { PhotoController } from "@/server/api/photos";
 import { ItemController } from "@/server/api/items";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { EmptyState } from "@/components/ui";
 import { PoolUpload } from "@/features/pool/PoolUpload";
 import { PoolPhotoGrid } from "@/features/pool/PoolPhotoGrid";
+import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 &nbsp;
 interface PoolPageProps {
   params: Promise&lt;{ id: string }&gt;;
@@ -217,21 +227,15 @@ export default async function PoolPage({ params }: PoolPageProps) {
 &nbsp;
   const db = getDb();
   const collection = await requireCollectionAccess(db, id, session.user.id);
-  const pool = <span class="cstat-no" title="statement not covered" >await PhotoController.fromDb(db).findPoolByCollection(collection.id);</span>
+  const pool = await PhotoController.fromDb(db).findPoolByCollection(collection.id);
 &nbsp;
   // Existing items feed the "Move to…" chooser's destination list, mirroring the
   // item-side move flow (PhotoGallery -&gt; PhotoMoveBar).
-  const items = <span class="cstat-no" title="statement not covered" >await ItemController.fromDb(db).listItems(collection.id);</span>
-  const targets = <span class="cstat-no" title="statement not covered" >items.<span class="fstat-no" title="function not covered" >map((i</span>) =&gt; (<span class="cstat-no" title="statement not covered" >{ id: i.id, number: i.number, name: i.name }))</span>;</span>
+  const items = await ItemController.fromDb(db).listItems(collection.id);
+  const targets = items.<span class="fstat-no" title="function not covered" >map((i</span>) =&gt; (<span class="cstat-no" title="statement not covered" >{ id: i.id, number: i.number, name: i.name }))</span>;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return (</span>
-    &lt;AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Photos" },
-      ]}
-    &gt;
+  return (
+    &lt;AppLayout breadcrumbs={trail.pool(collection)}&gt;
       &lt;div className="space-y-8"&gt;
         &lt;div className="max-w-3xl"&gt;
           &lt;h1 className="text-2xl text-ink sm:text-3xl"&gt;Photos&lt;/h1&gt;
@@ -239,6 +243,14 @@ export default async function PoolPage({ params }: PoolPageProps) {
             Dump everything in fast. Group them into items later — or never. There&amp;rsquo;s no rush.
           &lt;/p&gt;
         &lt;/div&gt;
+&nbsp;
+        {/* Section index page: the active Build chip links to the workspace root,
+            not this page, so aria-current is "true" (section), not "page". */}
+        &lt;WorkspaceModeChips
+          base={`/collections/${collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id}`}</span>
+          activeMode="build"
+          activeExact={false}
+        /&gt;
 &nbsp;
         &lt;PoolUpload collectionId={collection.id} /&gt;
 &nbsp;
@@ -248,7 +260,7 @@ export default async function PoolPage({ params }: PoolPageProps) {
             message="Photos you add here wait for you until you're ready to group them."
           /&gt;
         ) : (
-          &lt;PoolPhotoGrid
+<span class="branch-1 cbranch-no" title="branch not covered" >          &lt;PoolPhotoGrid</span>
             collectionId={collection.id}
             photos={pool.<span class="fstat-no" title="function not covered" >map((p</span>) =&gt; (<span class="cstat-no" title="statement not covered" >{ id: p.id, filename: p.filename }))</span>}
             targets={targets}
@@ -265,7 +277,7 @@ export default async function PoolPage({ params }: PoolPageProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-16T23:48:43.499Z
+                at 2026-07-17T00:20:19.635Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>
