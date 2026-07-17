@@ -48,7 +48,7 @@ export default async function SortPage({ params }: SortPageProps) {
           <h1 className="text-2xl text-ink sm:text-3xl">Sort</h1>
           {/* purses-4bhh: only invite a new session when none is open — starting a
               second while one is active/paused violates sessions_active_unique. */}
-          {!currentSession && (
+          {!currentSession && sessions.length > 0 && (
             <div className="flex flex-col items-start gap-2 sm:items-end">
               <StartSortingButton collectionId={collection.id} collectionSlug={collection.slug ?? collection.id} />
               {/* purses-znkt.1: the deliberate path stays reachable — goal text +

@@ -127,9 +127,9 @@ describe("SortPage session links", () => {
     render(ui);
     expect(screen.getByRole("heading", { name: "Nothing sorted yet" })).toBeInTheDocument();
     expect(screen.getByText("Begin with how you feel about each.")).toBeInTheDocument();
-    // The header CTA also renders while no session is open, so allow >=1 rather
-    // than pinning an exact count to that (pre-existing, unrelated) duplication.
-    expect(screen.getAllByRole("button", { name: "Start sorting" }).length).toBeGreaterThan(0);
+    // At zero sessions, the header slot is hidden (only history shows the header CTA).
+    // The empty state renders the sole island.
+    expect(screen.getAllByRole("button", { name: "Start sorting" })).toHaveLength(1);
   });
 
   it("history moves under 'Earlier passes', drops the status Badge, and falls back to 'A sorting pass' for a null goal", async () => {

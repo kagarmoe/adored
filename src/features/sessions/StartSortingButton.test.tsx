@@ -81,4 +81,18 @@ describe("StartSortingButton", () => {
     );
     expect(button).not.toBeDisabled();
   });
+
+  it("handles fetch rejection (offline) with error message and re-enables the button", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")));
+    render(<StartSortingButton collectionId="c" collectionSlug="s" />);
+    const button = screen.getByRole("button", { name: "Start sorting" });
+    fireEvent.click(button);
+
+    await waitFor(() =>
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "That didn't go through — give it another try in a moment.",
+      ),
+    );
+    expect(button).not.toBeDisabled();
+  });
 });

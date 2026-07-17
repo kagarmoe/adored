@@ -24,28 +24,33 @@ export function StartSortingButton({ collectionId, collectionSlug }: StartSortin
     setIsSubmitting(true);
     setMessage(null);
 
-    const response = await fetch("/api/sessions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ collectionId }),
-    });
+    try {
+      const response = await fetch("/api/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ collectionId }),
+      });
 
-    if (response.status === 201) {
-      const newSession = await response.json();
-      router.push(`/collections/${collectionSlug}/sort/${newSession.number}/triage`);
-      // Stay disabled through the navigation — no flash of a re-enabled button.
-      return;
-    }
+      if (response.status === 201) {
+        const newSession = await response.json();
+        router.push(`/collections/${collectionSlug}/sort/${newSession.number}/triage`);
+        // Stay disabled through the navigation — no flash of a re-enabled button.
+        return;
+      }
 
-    if (response.status === 409) {
-      setMessage("Your sort is already open — resuming is one tap away.");
+      if (response.status === 409) {
+        setMessage("Your sort is already open — resuming is one tap away.");
+        setIsSubmitting(false);
+        router.refresh();
+        return;
+      }
+
+      setMessage("That didn't go through — give it another try in a moment.");
       setIsSubmitting(false);
-      router.refresh();
-      return;
+    } catch (error) {
+      setMessage("That didn't go through — give it another try in a moment.");
+      setIsSubmitting(false);
     }
-
-    setMessage("That didn't go through — give it another try in a moment.");
-    setIsSubmitting(false);
   }
 
   return (
