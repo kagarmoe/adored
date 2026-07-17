@@ -90,7 +90,7 @@ const rows = [...history].reverse().map((h, idx) => {
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Purseinator — Trends</title>
+<title>Adored — Trends</title>
 <style>
 :root{--bg:#0f1115;--card:#171a21;--ink:#e6e8ee;--soft:#9aa3b2;--line:#262b35;--accent:#7c9cff}
 @media(prefers-color-scheme:light){:root{--bg:#f6f7f9;--card:#fff;--ink:#1a1d24;--soft:#5b6472;--line:#e3e6eb;--accent:#3056d3}}
