@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { getRoundBox, type RoundBox } from "@/lib/round-preference";
+import { boxToMs, getRoundBox, type RoundBoxSeconds } from "@/lib/round-preference";
 import { useDeviceValue } from "@/lib/useDeviceValue";
 import type { MovedDecision } from "@/lib/what-moved";
 import { RoundShell } from "./RoundShell";
@@ -28,9 +28,6 @@ interface RoundSurfaceProps {
   queueEmpty?: boolean;
 }
 
-const MINUTE_MS = 60_000;
-
-const boxToMs = (box: RoundBox): number | null => (box === "none" ? null : box * MINUTE_MS);
 const storedBoxMs = (): number | null => boxToMs(getRoundBox());
 
 /**
@@ -63,7 +60,7 @@ export function RoundSurface({
 
   // Mid-round length switch (parent D2): re-arm boxMs against the UNCHANGED start —
   // "none" drops the countdown, a shorter box expires at the next tick.
-  const onBoxChange = (box: RoundBox) => setChosenBoxMs({ ms: boxToMs(box) });
+  const onBoxChange = (box: RoundBoxSeconds) => setChosenBoxMs({ ms: boxToMs(box) });
 
   // The round ends on the timer expiring OR the server handing us an empty queue —
   // either way the recap replaces the content and both paths terminate the round.

@@ -4,14 +4,21 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Input, Select } from "@/components/ui";
-import { setRoundBox, ROUND_BOX_OPTIONS, DEFAULT_ROUND_BOX, type RoundBox } from "@/lib/round-preference";
+import { setRoundBox, DEFAULT_ROUND_BOX, type RoundBoxSeconds } from "@/lib/round-preference";
 
 // Quiet helper lines under the Round length control, keyed to the selection (TONE).
 export const TIMED_BOX_HELPER = "A short round — it wraps up gently.";
 export const NO_TIMER_HELPER = "Take all the time you like.";
 
-// HTML <select> values are strings; ROUND_BOX_OPTIONS is the one home for the list.
-const TIMEBOX_OPTIONS = ROUND_BOX_OPTIONS.map((o) => ({ value: String(o.value), label: o.label }));
+// HTML <select> values are strings. Full dial replacement lands in Task 7 —
+// this list is inlined rather than shared since it's short-lived.
+const TIMEBOX_OPTIONS: { value: string; label: string }[] = [
+  { value: "30", label: "30 seconds" },
+  { value: "60", label: "1 minute" },
+  { value: "120", label: "2 minutes" },
+  { value: "300", label: "5 minutes" },
+  { value: "none", label: "No timer" },
+];
 
 interface StartSessionFormProps {
   collectionId: string;
@@ -30,7 +37,7 @@ export function StartSessionForm({ collectionId, collectionSlug }: StartSessionF
 
   function chooseTimebox(value: string) {
     setTimebox(value);
-    const box: RoundBox = value === "none" ? "none" : (Number(value) as RoundBox);
+    const box: RoundBoxSeconds = value === "none" ? "none" : (Number(value) as RoundBoxSeconds);
     setRoundBox(box);
   }
 

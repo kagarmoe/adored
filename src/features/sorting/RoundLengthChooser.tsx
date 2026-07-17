@@ -1,13 +1,23 @@
 "use client";
 
 import { useState, type ChangeEvent } from "react";
-import { getRoundBox, setRoundBox, ROUND_BOX_OPTIONS, DEFAULT_ROUND_BOX, type RoundBox } from "@/lib/round-preference";
+import { getRoundBox, setRoundBox, DEFAULT_ROUND_BOX, type RoundBoxSeconds } from "@/lib/round-preference";
 import { useDeviceValue } from "@/lib/useDeviceValue";
+
+// Deleted in Task 6 (replaced by the dial UI) — options list is inlined rather
+// than shared, since there's no second consumer left to justify exporting it.
+const ROUND_BOX_OPTIONS: { value: RoundBoxSeconds; label: string }[] = [
+  { value: 30, label: "30 seconds" },
+  { value: 60, label: "1 minute" },
+  { value: 120, label: "2 minutes" },
+  { value: 300, label: "5 minutes" },
+  { value: "none", label: "No timer" },
+];
 
 interface RoundLengthChooserProps {
   /** Fires with the newly chosen box so the LIVE round re-arms its clock against
-   *  its unchanged start (the consumer maps "none" → null, else box·MINUTE_MS). */
-  onChange: (box: RoundBox) => void;
+   *  its unchanged start (the consumer maps "none" → null, else `boxToMs(box)`). */
+  onChange: (box: RoundBoxSeconds) => void;
 }
 
 /**
@@ -21,13 +31,13 @@ export function RoundLengthChooser({ onChange }: RoundLengthChooserProps) {
   // localStorage → would mismatch on hydration); the real stored box lands right after
   // mount, matching the sibling clock (RoundSurface/useOptimisticRound). The person's
   // own choice overrides the stored one — a failed persist must not snap the select back.
-  const stored = useDeviceValue<RoundBox>(getRoundBox, DEFAULT_ROUND_BOX);
-  const [chosen, setChosen] = useState<RoundBox | null>(null);
+  const stored = useDeviceValue<RoundBoxSeconds>(getRoundBox, DEFAULT_ROUND_BOX);
+  const [chosen, setChosen] = useState<RoundBoxSeconds | null>(null);
   const value = chosen ?? stored;
 
   function handleChange(event: ChangeEvent<HTMLSelectElement>) {
     const raw = event.target.value;
-    const box: RoundBox = raw === "none" ? "none" : (Number(raw) as RoundBox);
+    const box: RoundBoxSeconds = raw === "none" ? "none" : (Number(raw) as RoundBoxSeconds);
     setChosen(box);
     setRoundBox(box); // persist for the next round…
     onChange(box); // …and re-arm this round's clock now

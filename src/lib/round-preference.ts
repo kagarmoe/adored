@@ -30,7 +30,7 @@ export function getRoundBox(): RoundBoxSeconds {
     const raw = window.localStorage.getItem(KEY);
     if (raw === null) return DEFAULT_ROUND_BOX;
     if (raw === "none") return "none";
-    if (Object.hasOwn(LEGACY_MINUTES, raw)) return LEGACY_MINUTES[raw];
+    if (Object.prototype.hasOwnProperty.call(LEGACY_MINUTES, raw)) return LEGACY_MINUTES[raw];
     const n = Number(raw);
     return isStep(n) ? n : DEFAULT_ROUND_BOX;
   } catch {

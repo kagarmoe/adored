@@ -2,14 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { dedupeDecisionsLatestWins, type MovedDecision } from "@/lib/what-moved";
-import { getRoundBox, type RoundBox } from "@/lib/round-preference";
+import { boxToMs, getRoundBox, type RoundBoxSeconds } from "@/lib/round-preference";
 import { useDeviceValue } from "@/lib/useDeviceValue";
 import { enqueue, newClientKey, removeQueued, type PendingEntry, type QueueKey } from "./decisionQueue";
 import { awaitAck, isInFlight, triggerFlush, useDecisionFlusher, type AckOutcome } from "./decisionFlusher";
 
-const MINUTE_MS = 60_000;
-
-const boxToMs = (box: RoundBox): number | null => (box === "none" ? null : box * MINUTE_MS);
 const storedBoxMs = (): number | null => boxToMs(getRoundBox());
 
 // TONE register — a gentle stumble, never "error"/"failed" (matches the
@@ -61,8 +58,8 @@ export interface OptimisticRound<D extends Record<string, unknown>> {
   expired: boolean;
   onExpire: () => void;
   /** Mid-round length switch (parent D2): re-arm `boxMs` against the UNCHANGED
-   *  `startedAtRef` — "none" → null, else box·MINUTE_MS. Never resets the clock. */
-  onBoxChange: (box: RoundBox) => void;
+   *  `startedAtRef` — "none" → null, else `boxToMs(box)`. Never resets the clock. */
+  onBoxChange: (box: RoundBoxSeconds) => void;
   // Frozen recap (F5).
   recapDecisions: MovedDecision[];
   recapNowMs: number | undefined;
@@ -153,7 +150,7 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
   // Mid-round length switch (parent D2): recompute the box against the UNCHANGED
   // start — RoundTimer's effect re-arms on the boxMs prop, so "none" drops the
   // countdown and a box shorter than the elapsed time expires at the next tick.
-  const onBoxChange = useCallback((box: RoundBox) => {
+  const onBoxChange = useCallback((box: RoundBoxSeconds) => {
     setChosenBoxMs({ ms: boxToMs(box) });
   }, []);
 

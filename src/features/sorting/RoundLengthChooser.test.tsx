@@ -3,27 +3,29 @@ import "@testing-library/jest-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ROUND_BOX_OPTIONS, setRoundBox } from "@/lib/round-preference";
+import { setRoundBox } from "@/lib/round-preference";
 import { RoundLengthChooser } from "./RoundLengthChooser";
 
-// setRoundBox is spied to prove the choice persists; ROUND_BOX_OPTIONS and
-// getRoundBox stay REAL so the options list is asserted by constant identity,
-// never by re-pinned label strings.
+// setRoundBox is spied to prove the choice persists; getRoundBox stays REAL.
+// RoundLengthChooser's option list is inlined (no longer exported from
+// round-preference), so it's asserted by literal label here — this file is
+// deleted in Task 6 along with the component.
 vi.mock("@/lib/round-preference", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/round-preference")>();
   return { ...actual, setRoundBox: vi.fn() };
 });
 
+const OPTION_LABELS = ["30 seconds", "1 minute", "2 minutes", "5 minutes", "No timer"];
+
 beforeEach(() => vi.clearAllMocks());
 
 describe("RoundLengthChooser", () => {
-  it("renders every ROUND_BOX_OPTIONS entry (constant identity), with 'No timer' a visible peer", () => {
+  it("renders every option, with 'No timer' a visible peer", () => {
     render(<RoundLengthChooser onChange={vi.fn()} />);
-    for (const opt of ROUND_BOX_OPTIONS) {
-      expect(screen.getByRole("option", { name: opt.label })).toBeInTheDocument();
+    for (const label of OPTION_LABELS) {
+      expect(screen.getByRole("option", { name: label })).toBeInTheDocument();
     }
     // "No timer" is a first-class peer in the same list, not hidden behind a toggle.
-    expect(ROUND_BOX_OPTIONS.some((o) => o.value === "none")).toBe(true);
     expect(screen.getByRole("option", { name: "No timer" })).toBeVisible();
   });
 
@@ -39,9 +41,9 @@ describe("RoundLengthChooser", () => {
     render(<RoundLengthChooser onChange={onChange} />);
     const select = screen.getByRole("combobox", { name: "Round length" });
 
-    await user.selectOptions(select, "1");
-    expect(setRoundBox).toHaveBeenCalledWith(1);
-    expect(onChange).toHaveBeenCalledWith(1);
+    await user.selectOptions(select, "60");
+    expect(setRoundBox).toHaveBeenCalledWith(60);
+    expect(onChange).toHaveBeenCalledWith(60);
 
     await user.selectOptions(select, "none");
     expect(setRoundBox).toHaveBeenCalledWith("none");
