@@ -9,16 +9,6 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }
 import { StartSessionForm, TIMED_BOX_HELPER, NO_TIMER_HELPER } from "./StartSessionForm";
 import { getRoundBox } from "@/lib/round-preference";
 
-// Mirrors StartSessionForm's inlined TIMEBOX_OPTIONS (short-lived — the dial
-// replaces this select in Task 7).
-const TIMEBOX_OPTIONS = [
-  { value: "30", label: "30 seconds" },
-  { value: "60", label: "1 minute" },
-  { value: "120", label: "2 minutes" },
-  { value: "300", label: "5 minutes" },
-  { value: "none", label: "No timer" },
-];
-
 // jsdom here does not expose a working localStorage on file:// URLs (same as
 // round-preference.test); install a minimal Map-backed Storage so the persistence
 // assertions run against a real getItem/setItem round-trip.
