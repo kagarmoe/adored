@@ -14,8 +14,9 @@ import { SetAsideButton } from "./SetAsideButton";
 import { useOptionalTriageUndo } from "./TriageUndoProvider";
 import { RoundShell } from "./RoundShell";
 import { RoundTimer } from "./RoundTimer";
-import { RoundLengthChooser } from "./RoundLengthChooser";
+import { RoundLengthDialog } from "./RoundLengthDialog";
 import { WhatMoved } from "./WhatMoved";
+import { setRoundBox, type RoundBoxSeconds } from "@/lib/round-preference";
 import { enqueue, newClientKey } from "./decisionQueue";
 import { triggerFlush } from "./decisionFlusher";
 import { STUMBLE_LINE, useOptimisticRound } from "./useOptimisticRound";
@@ -72,6 +73,11 @@ export function TriageRound({
   const [entries, setEntries] = useState<TriageRoundQueueEntry[]>(queue);
   const [handled, setHandled] = useState<ReadonlySet<string>>(new Set());
   const [newlyDecided, setNewlyDecided] = useState<ReadonlySet<string>>(new Set());
+  const [lengthDialogOpen, setLengthDialogOpen] = useState(false);
+  // Handed to RoundTimer (renders the adjust button) AND RoundLengthDialog
+  // (refocuses it on close) — the dialog is a portal, so it can't reach the
+  // trigger on its own.
+  const adjustButtonRef = useRef<HTMLButtonElement>(null);
   const undoCtx = useOptionalTriageUndo();
 
   // The queue fork is triage's own: the head not yet handled. Everything else
@@ -197,6 +203,14 @@ export function TriageRound({
   const decided = seed + newlyDecided.size;
 
   const roundOver = shown === undefined || expired;
+  // Round end closes any open length dialog and discards its uncommitted preview:
+  // a Done landing AFTER end would mutate round.boxMs and retroactively flip
+  // WhatMoved's live-derived `hadTimer` badge for a round that's already over.
+  // A direct render-time clamp (not an effect, which wouldn't run until after
+  // the browser paints the ended UI); idempotent once lengthDialogOpen is
+  // already false, so this never loops.
+  if (roundOver && lengthDialogOpen) setLengthDialogOpen(false);
+  const currentBox: RoundBoxSeconds = round.boxMs === null ? "none" : ((round.boxMs / 1000) as RoundBoxSeconds);
   const timer = (
     <div className="flex items-start gap-3">
       <div className="min-w-0 flex-1">
@@ -205,11 +219,10 @@ export function TriageRound({
           boxMs={round.boxMs}
           onExpire={round.onExpire}
           roundLabel={THIS_ROUND_LABEL}
+          onAdjust={!roundOver ? () => setLengthDialogOpen(true) : undefined}
+          adjustButtonRef={adjustButtonRef}
         />
       </div>
-      {/* Switchable before AND during a round (parent D2); shown only while the
-          round is live — the recap has no length to choose. */}
-      {!roundOver && <RoundLengthChooser onChange={round.onBoxChange} />}
     </div>
   );
 
@@ -233,6 +246,7 @@ export function TriageRound({
           windowStartMs={round.windowStartMs}
           nowMs={round.recapNowMs}
           hubHref={hubHref}
+          hadTimer={round.boxMs !== null}
         />
       ) : (
         <div className="mx-auto max-w-xl space-y-6">
@@ -332,6 +346,16 @@ export function TriageRound({
           </Card>
         </div>
       )}
+      <RoundLengthDialog
+        open={lengthDialogOpen}
+        initial={currentBox}
+        onCommit={(box) => {
+          setRoundBox(box); // persist for the next round…
+          round.onBoxChange(box); // …and re-arm THIS round against its unchanged start
+        }}
+        onClose={() => setLengthDialogOpen(false)}
+        returnFocusRef={adjustButtonRef}
+      />
     </RoundShell>
   );
 }

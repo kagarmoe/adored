@@ -26,6 +26,9 @@
 
   --color-decor: var(--color-decor);
 
+  --color-ring-sweep: var(--color-ring-sweep);
+  --color-ring-track: var(--color-ring-track);
+
   --color-info: var(--color-info);
   --color-info-soft: var(--color-info-soft);
   --color-info-deep: var(--color-info-deep);
@@ -119,6 +122,11 @@
   --color-decor: #b5aacc;
   --color-decor-soft: #cec6dd;
 
+  /* Round-timer ring: the depleting edge is the sole sighted signal (time text is
+     sr-only), so this pair is pinned at ≥3:1 by contrast.test.ts in BOTH themes. */
+  --color-ring-sweep: #7b6a99;
+  --color-ring-track: #e5eef0;
+
   --color-error: #9b4036;
   --color-error-soft: #f3deda;
   --color-error-deep: #7e2c24;
@@ -189,6 +197,9 @@
   --color-spark-soft: #b89f55;
   --color-decor: #6d5c9b;
   --color-decor-soft: #8a79b3;
+
+  --color-ring-sweep: #a795c9;
+  --color-ring-track: #173f4d;
 
   /* Semantic — softs lifted clear of the dark surface so chips stay visible */
   --color-error: #c98a82;

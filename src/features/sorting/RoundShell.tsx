@@ -70,7 +70,7 @@ export function RoundShell({ step, totalSteps, roundLabel, timer, onPause, child
             </p>
             <h2 className="text-ink">{roundLabel}</h2>
           </div>
-          {timer && <div className="min-w-40 flex-1 sm:max-w-xs">{timer}</div>}
+          {timer && <div className="shrink-0">{timer}</div>}
         </div>
       </header>
 

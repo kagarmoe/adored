@@ -9,6 +9,7 @@ import {
   type MovedDecision,
   type WhatMovedSummary,
 } from "@/lib/what-moved";
+import { TimerRing } from "./TimerRing";
 
 interface WhatMovedProps {
   /** The session's decisions; only those inside the window are counted. */
@@ -19,6 +20,8 @@ interface WhatMovedProps {
   nowMs?: number;
   /** Where "Back to your sort" returns to (the session hub). */
   hubHref: string;
+  /** Whether the round had a timer when it ended (renders the gold ring badge). */
+  hadTimer?: boolean;
 }
 
 /** A single affirming line per outcome, only when that outcome has a count. */
@@ -41,8 +44,9 @@ function lines(summary: WhatMovedSummary): string[] {
  * recap of what the person moved in this round — server-time decisions within the
  * round window, grouped by outcome. Forward-framed ("Here's what moved"), never a
  * score or a remaining count. aria-live so it's announced when it replaces the round.
+ * When hadTimer is true, a quiet gold ring badge marks the completion moment.
  */
-export function WhatMoved({ decisions, windowStartMs, nowMs, hubHref }: WhatMovedProps) {
+export function WhatMoved({ decisions, windowStartMs, nowMs, hubHref, hadTimer }: WhatMovedProps) {
   // The recap is a still photograph: when the caller hands no window end, it closes at
   // the moment this mounts (a lazy initializer — Date.now() is impure, never a render read).
   const [mountedAtMs] = useState(() => Date.now());
@@ -51,6 +55,11 @@ export function WhatMoved({ decisions, windowStartMs, nowMs, hubHref }: WhatMove
 
   return (
     <div aria-live="polite" className="mx-auto max-w-xl space-y-6 text-center">
+      {hadTimer && (
+        <div aria-hidden data-testid="round-complete-badge" className="flex justify-center">
+          <TimerRing fraction={0} size={56} expired discClassName="bg-surface-raised" />
+        </div>
+      )}
       <div className="space-y-2">
         <h2 className="text-2xl text-ink">Here&apos;s what moved</h2>
         {summary.total === 0 ? (

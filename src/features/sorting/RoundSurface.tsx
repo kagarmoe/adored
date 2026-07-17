@@ -1,13 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
-import { getRoundBox, type RoundBox } from "@/lib/round-preference";
+import { useRef, useState, type ReactNode } from "react";
+import { boxToMs, getRoundBox, setRoundBox, type RoundBoxSeconds } from "@/lib/round-preference";
 import { useDeviceValue } from "@/lib/useDeviceValue";
 import type { MovedDecision } from "@/lib/what-moved";
 import { RoundShell } from "./RoundShell";
 import { RoundTimer } from "./RoundTimer";
-import { RoundLengthChooser } from "./RoundLengthChooser";
+import { RoundLengthDialog } from "./RoundLengthDialog";
 import { WhatMoved } from "./WhatMoved";
 
 interface RoundSurfaceProps {
@@ -28,9 +28,6 @@ interface RoundSurfaceProps {
   queueEmpty?: boolean;
 }
 
-const MINUTE_MS = 60_000;
-
-const boxToMs = (box: RoundBox): number | null => (box === "none" ? null : box * MINUTE_MS);
 const storedBoxMs = (): number | null => boxToMs(getRoundBox());
 
 /**
@@ -60,14 +57,27 @@ export function RoundSurface({
   const [chosenBoxMs, setChosenBoxMs] = useState<{ ms: number | null } | null>(null);
   const boxMs = chosenBoxMs === null ? stored : chosenBoxMs.ms;
   const [expired, setExpired] = useState(false);
+  const [lengthDialogOpen, setLengthDialogOpen] = useState(false);
+  // Handed to RoundTimer (renders the adjust button) AND RoundLengthDialog
+  // (refocuses it on close) — the dialog is a portal, so it can't reach the
+  // trigger on its own.
+  const adjustButtonRef = useRef<HTMLButtonElement>(null);
 
   // Mid-round length switch (parent D2): re-arm boxMs against the UNCHANGED start —
   // "none" drops the countdown, a shorter box expires at the next tick.
-  const onBoxChange = (box: RoundBox) => setChosenBoxMs({ ms: boxToMs(box) });
+  const onBoxChange = (box: RoundBoxSeconds) => setChosenBoxMs({ ms: boxToMs(box) });
 
   // The round ends on the timer expiring OR the server handing us an empty queue —
   // either way the recap replaces the content and both paths terminate the round.
   const ended = expired || queueEmpty;
+  // Round end closes any open length dialog and discards its uncommitted preview:
+  // a Done landing AFTER end would mutate boxMs and retroactively flip WhatMoved's
+  // live-derived `hadTimer` badge for a round that's already over. A direct
+  // render-time clamp (not an effect, which wouldn't run until after the browser
+  // paints the ended UI — a dialog-still-open flash over the recap); idempotent
+  // once lengthDialogOpen is already false, so this never loops.
+  if (ended && lengthDialogOpen) setLengthDialogOpen(false);
+  const currentBox: RoundBoxSeconds = boxMs === null ? "none" : ((boxMs / 1000) as RoundBoxSeconds);
 
   const timer = (
     <div className="flex items-start gap-3">
@@ -77,10 +87,10 @@ export function RoundSurface({
           boxMs={boxMs}
           onExpire={() => setExpired(true)}
           roundLabel={roundLabel}
+          onAdjust={!ended ? () => setLengthDialogOpen(true) : undefined}
+          adjustButtonRef={adjustButtonRef}
         />
       </div>
-      {/* Switchable before AND during a round (parent D2); only while live. */}
-      {!ended && <RoundLengthChooser onChange={onBoxChange} />}
     </div>
   );
 
@@ -93,10 +103,20 @@ export function RoundSurface({
       onPause={() => router.push(hubHref)}
     >
       {ended ? (
-        <WhatMoved decisions={decisions} windowStartMs={startedAtMs} hubHref={hubHref} />
+        <WhatMoved decisions={decisions} windowStartMs={startedAtMs} hubHref={hubHref} hadTimer={boxMs !== null} />
       ) : (
         children
       )}
+      <RoundLengthDialog
+        open={lengthDialogOpen}
+        initial={currentBox}
+        onCommit={(box) => {
+          setRoundBox(box); // persist for the next round…
+          onBoxChange(box); // …and re-arm THIS round against its unchanged start
+        }}
+        onClose={() => setLengthDialogOpen(false)}
+        returnFocusRef={adjustButtonRef}
+      />
     </RoundShell>
   );
 }

@@ -1,18 +1,11 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, fireEvent } from "@testing-library/react";
 import { RoundTimer, SUB_MINUTE_LABEL } from "./RoundTimer";
-
-// The reduced-motion hook is mocked per-test; default is "no reduced motion".
-let reducedMotion = false;
-vi.mock("@/lib/useReducedMotion", () => ({
-  useReducedMotion: () => reducedMotion,
-}));
 
 describe("RoundTimer", () => {
   beforeEach(() => {
-    reducedMotion = false;
     vi.useFakeTimers();
     // A fixed clock so remaining-time math is deterministic.
     vi.setSystemTime(1_000_000);
@@ -31,15 +24,51 @@ describe("RoundTimer", () => {
     expect(timer).toHaveAttribute("aria-live", "polite");
   });
 
-  it("renders a depleting violet bar (bg-decor fill over a bg-content-soft track) while running", () => {
-    const { container } = render(
-      <RoundTimer startedAtMs={1_000_000} boxMs={10 * 60_000} onExpire={vi.fn()} roundLabel="Round" />,
+  it("renders the quiet ring with NO visible digits while running", () => {
+    render(
+      <RoundTimer startedAtMs={Date.now()} boxMs={120_000} onExpire={vi.fn()} roundLabel="Triage round" />,
     );
-    expect(container.querySelector(".bg-content-soft")).not.toBeNull();
-    const fill = container.querySelector(".bg-decor");
-    expect(fill).not.toBeNull();
-    // Just started: bar is (nearly) full, not gold.
-    expect(container.querySelector(".bg-spark")).toBeNull();
+    const timer = screen.getByRole("timer");
+    // the remaining-time words exist for SR users only
+    expect(screen.getByText(/about 2 minutes left/i)).toHaveClass("sr-only");
+    expect(timer.querySelector("[style*='conic-gradient']")).toBeTruthy();
+  });
+
+  it("a 30-second box never claims a whole minute (honesty contract)", () => {
+    render(
+      <RoundTimer startedAtMs={Date.now()} boxMs={30_000} onExpire={vi.fn()} roundLabel="Triage round" />,
+    );
+    expect(screen.getByText(SUB_MINUTE_LABEL)).toHaveClass("sr-only");
+    expect(screen.queryByText(/about 1 minute/i)).not.toBeInTheDocument();
+  });
+
+  it("no-timer + onAdjust: empty-ring button stays (no dead end)", () => {
+    render(
+      <RoundTimer
+        startedAtMs={Date.now()}
+        boxMs={null}
+        onExpire={vi.fn()}
+        roundLabel="Triage round"
+        onAdjust={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Change round length" })).toBeInTheDocument();
+    expect(screen.getByText("No clock")).toBeInTheDocument();
+  });
+
+  it("timed + onAdjust: tapping the ring calls onAdjust", () => {
+    const onAdjust = vi.fn();
+    render(
+      <RoundTimer
+        startedAtMs={Date.now()}
+        boxMs={120_000}
+        onExpire={vi.fn()}
+        roundLabel="Triage round"
+        onAdjust={onAdjust}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Change round length" }));
+    expect(onAdjust).toHaveBeenCalledTimes(1);
   });
 
   it("fires onExpire exactly once and settles to the gold end state with a non-colour cue", () => {
@@ -56,9 +85,11 @@ describe("RoundTimer", () => {
     });
 
     expect(onExpire).toHaveBeenCalledTimes(1);
-    // Non-colour end cue: text + glyph, queryable by text (never colour alone).
-    expect(screen.getByText(/round complete/i)).toBeInTheDocument();
-    // Gold settle.
+    // Non-colour end cue: text + glyph, queryable by text (never colour alone) — VISIBLE (state text, not a digit).
+    const complete = screen.getByText(/round complete/i);
+    expect(complete).toBeInTheDocument();
+    expect(complete).not.toHaveClass("sr-only");
+    // The ring itself settles to the gold/spark disc (RoundTimer -> TimerRing expired wiring).
     expect(container.querySelector(".bg-spark")).not.toBeNull();
 
     // Keep ticking: the callback must not fire a second time.
@@ -69,36 +100,14 @@ describe("RoundTimer", () => {
     expect(onExpire).toHaveBeenCalledTimes(1);
   });
 
-  it("under reduced motion does NOT animate the bar, but expiry STILL fires", () => {
-    reducedMotion = true;
+  it("with no timer (boxMs=null) renders the label, NO countdown, and never calls onExpire", () => {
     const onExpire = vi.fn();
-    const { container } = render(
-      <RoundTimer startedAtMs={1_000_000} boxMs={2_000} onExpire={onExpire} roundLabel="Round" />,
-    );
-
-    // No transition/animation class on the fill while reduced motion is on.
-    const fill = container.querySelector(".bg-decor");
-    expect(fill).not.toBeNull();
-    expect(fill!.className).not.toMatch(/transition|animate/);
-
-    // The subtle correctness test: suppressing animation must NOT suppress termination.
-    act(() => {
-      vi.setSystemTime(1_003_000);
-      vi.advanceTimersByTime(3_000);
-    });
-    expect(onExpire).toHaveBeenCalledTimes(1);
-    expect(screen.getByText(/round complete/i)).toBeInTheDocument();
-  });
-
-  it("with no timer (boxMs=null) renders the label, NO bar/countdown, and never calls onExpire", () => {
-    const onExpire = vi.fn();
-    const { container } = render(
+    render(
       <RoundTimer startedAtMs={1_000_000} boxMs={null} onExpire={onExpire} roundLabel="Round one" />,
     );
 
     expect(screen.getByText("Round one")).toBeInTheDocument();
     expect(screen.queryByRole("timer")).toBeNull();
-    expect(container.querySelector(".bg-decor")).toBeNull();
     expect(screen.queryByText(/left/i)).toBeNull();
 
     act(() => {

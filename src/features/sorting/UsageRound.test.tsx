@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll, afterEach } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Item } from "@/types";
@@ -117,6 +117,15 @@ function renderRound(over: Partial<Parameters<typeof UsageRound>[0]> = {}) {
 
 let store: Storage;
 
+// jsdom does not implement the Pointer Capture API — TimerDial's onPointerDown
+// calls it, so it's stubbed for every test that opens the length dialog.
+beforeAll(() => {
+  Object.defineProperty(HTMLElement.prototype, "setPointerCapture", {
+    value: vi.fn(),
+    writable: true,
+  });
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
   dc.props.length = 0;
@@ -163,15 +172,15 @@ describe("UsageRound surface pins (spec §3.4)", () => {
     expect(dc.props.every((p) => p.type === "usage")).toBe(true);
   });
 
-  it("shows the round-length chooser while live and drops it on the recap", async () => {
+  it("shows the round-length adjust button while live and drops it on the recap", async () => {
     const user = userEvent.setup();
     renderRound({ queue: [entry("item_a", "Bag A")] });
-    expect(screen.getByRole("combobox", { name: "Round length" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Change round length" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: YES }));
 
     expect(await screen.findByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-    expect(screen.queryByRole("combobox", { name: "Round length" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Change round length" })).not.toBeInTheDocument();
   });
 });
 
@@ -477,6 +486,34 @@ describe("UsageRound round end (F15) & recap", () => {
     expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
     expect(refresh).not.toHaveBeenCalled();
   });
+
+  it("round end closes an open dialog and discards its uncommitted preview (badge race)", async () => {
+    vi.useFakeTimers();
+    store.setItem("pi-round-box", "1"); // start with a 1-minute box — the round HAD a timer
+    const { container } = renderRound({ queue: [entry("item_a", "Bag A")] });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    // Open the dialog and preview "no timer" — NEVER committed via Done.
+    fireEvent.click(screen.getByRole("button", { name: "Change round length" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole("slider"), { key: "Home" }); // preview only
+
+    // Let the round expire while the dialog is still open — a Done landing after
+    // this point would be meaningless UX and would retroactively flip the recap's
+    // hadTimer badge for a round that already ran with a timer.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000 + 1_500);
+    });
+
+    // The dialog is gone (the race is closed at the root)...
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    // ...and the recap shows, with the badge for the box the round actually ran
+    // with — the discarded "no timer" preview never touched it.
+    expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
+    expect(container.querySelector(".bg-spark")).not.toBeNull();
+  });
 });
 
 describe("UsageRound demotion memory (markUsageRoundRan, spec §3.8)", () => {
@@ -683,11 +720,29 @@ describe("UsageRound Quick pacing — the beat (spec §3.5, parent D2)", () => {
       "false",
     );
   });
+
+  it("the round-length dialog (a body portal, outside the focus-suspension root) suspends the beat", async () => {
+    vi.useFakeTimers();
+    renderRound(); // [A, B]
+    enableQuick();
+
+    fireEvent.click(screen.getByRole("button", { name: "Change round length" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS + 1_000);
+    });
+
+    // The dialog sits in a portal outside the round root, so the in-root focus
+    // listener never sees it — the beat must be held on lengthDialogOpen alone.
+    // A must NOT have auto-passed behind the scrim.
+    expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
+  });
 });
 
 describe("UsageRound Quick pacing — the a11y floor (parent D2 (a)-(d))", () => {
   it.each([
-    ["the Round length chooser", () => screen.getByRole("combobox", { name: "Round length" })],
+    ["the round-length adjust button", () => screen.getByRole("button", { name: "Change round length" })],
     ["the Quick toggle", () => screen.getByRole("button", { name: QUICK_PACE_LABEL })],
     ["Pause", () => screen.getByRole("button", { name: "Pause" })],
   ])("(a) focus on %s suspends the beat; focusout re-arms the full beat", async (_label, getEl) => {
