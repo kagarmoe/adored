@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">95.23% </span>
+                <span class="strong">95.45% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>20/21</span>
+                <span class='fraction'>21/22</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">82.14% </span>
+                <span class="strong">84.37% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>23/28</span>
+                <span class='fraction'>27/32</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">95.23% </span>
+                <span class="strong">95.45% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>20/21</span>
+                <span class='fraction'>21/22</span>
             </div>
         
             
@@ -255,7 +255,20 @@
 <a name='L190'></a><a href='#L190'>190</a>
 <a name='L191'></a><a href='#L191'>191</a>
 <a name='L192'></a><a href='#L192'>192</a>
-<a name='L193'></a><a href='#L193'>193</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L193'></a><a href='#L193'>193</a>
+<a name='L194'></a><a href='#L194'>194</a>
+<a name='L195'></a><a href='#L195'>195</a>
+<a name='L196'></a><a href='#L196'>196</a>
+<a name='L197'></a><a href='#L197'>197</a>
+<a name='L198'></a><a href='#L198'>198</a>
+<a name='L199'></a><a href='#L199'>199</a>
+<a name='L200'></a><a href='#L200'>200</a>
+<a name='L201'></a><a href='#L201'>201</a>
+<a name='L202'></a><a href='#L202'>202</a>
+<a name='L203'></a><a href='#L203'>203</a>
+<a name='L204'></a><a href='#L204'>204</a>
+<a name='L205'></a><a href='#L205'>205</a>
+<a name='L206'></a><a href='#L206'>206</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -319,6 +332,17 @@
 <span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -352,6 +376,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -509,12 +535,23 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
     (s) =&gt; s.status === "active" || <span class="branch-1 cbranch-no" title="branch not covered" >s.status === "paused",</span>
   );
   const resumeHref = `${base}/sort/${currentSession?.number}`;
+  // Any past session (completed/abandoned included) means the curator has sorted
+  // before — feeds the start card's progress-keyed copy ("Start" vs "Keep sorting").
+  const hasEverSorted = sessions.length &gt; 0;
 &nbsp;
-  // A1: at most one dominant (bg-primary) action on the workspace. When a
-  // session exists, its Resume IS that one action, so the adaptive section's
-  // lead action ("Make items" / "Add photos") is demoted to a non-primary.
-  // With no session, the lead action stays primary.
-  const leadActionVariant = currentSession ? "secondary" : "primary";
+  // A1: at most one dominant (bg-primary) action on the workspace. Sort wins
+  // once items exist — either a session is already open (Resume/undo IS that
+  // one action) or the Continue section's start card will claim it once items
+  // exist, so the adaptive section's lead action ("Make items" / "Add photos")
+  // is demoted to a non-primary in both cases.
+  //
+  // Deliberate, documented exception: during the set-aside undo window (and the
+  // rare post-409 settled note), ActiveSessionPanel shows only a quiet notice
+  // with no primary action, so the page briefly has ZERO primary actions rather
+  // than two. See docs/superpowers/specs/2026-07-17-collection-home-continue-design.md
+  // §2 — zero-during-undo is TONE-preferable to a shouting CTA beside a
+  // reversible-escape notice, and it self-heals on navigation or undo resolution.
+  const leadActionVariant = currentSession || itemPreview.length &gt; 0 ? "secondary" : "primary";
 &nbsp;
   const itemsPreview = (
     &lt;ItemPreviewGrid
@@ -622,6 +659,8 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
                 : null
             }
             resumeHref={resumeHref}
+            startHref={itemPreview.length &gt; 0 ? `${base}/sort/new` : undefined}
+            hasEverSorted={hasEverSorted}
           /&gt;
         )}
 &nbsp;
@@ -646,7 +685,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-17T07:33:18.631Z
+                at 2026-07-17T08:14:24.494Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>
