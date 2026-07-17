@@ -11,8 +11,13 @@ export const config = {
     // login/callback requests never reach the handler. `signup` remains
     // public only so the legacy URL can redirect to /login. `shared-results/*`
     // is the tokenized read-only share page — SharePanel promises "no account,
-    // no signing in", and the token itself is the capability.
-    "/((?!_next(?:/|$)|api/auth(?:/|$)|login(?:/|$)|signup(?:/|$)|shared-results(?:/|$)|tutorial(?:/|$)|tutorials(?:/|$)|onboarding(?:/|$)).*)",
+    // no signing in", and the token itself is the capability. `invitations/*`
+    // (the accept page) and `api/invitations/accept` (its GET preview) are
+    // public for the same reason: the 256-bit invitation token IS the read
+    // capability. POST accept keeps its own route-level session 401 (DAL
+    // enforcement) — this matcher is only the UX redirect, never the security
+    // boundary.
+    "/((?!_next(?:/|$)|api/auth(?:/|$)|login(?:/|$)|signup(?:/|$)|shared-results(?:/|$)|tutorial(?:/|$)|tutorials(?:/|$)|onboarding(?:/|$)|invitations(?:/|$)|api/invitations/accept(?:/|$)).*)",
   ],
 };
 

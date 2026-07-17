@@ -15,16 +15,16 @@ export async function GET(request: NextRequest) {
     }
 
     const db = getDb();
-    const invitation = await InvitationAcceptService.fromDb(db).findByToken(token);
+    const preview = await InvitationAcceptService.fromDb(db).getPreview(token);
 
-    if (!invitation) {
+    if (!preview) {
       return NextResponse.json(
         { error: "Invitation not found or expired" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(invitation);
+    return NextResponse.json(preview);
   } catch (error) {
     return errorResponse(error);
   }
@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
     }
 
     const db = getDb();
-    await InvitationAcceptService.fromDb(db).accept(token, userId);
-    return NextResponse.json({ message: "Invitation accepted successfully" });
+    const { collectionId } = await InvitationAcceptService.fromDb(db).accept(token, userId);
+    return NextResponse.json({ message: "Invitation accepted successfully", collectionId });
   } catch (error) {
     // errorResponse passes InvitationAcceptError's curated copy + status through,
     // and logs+hides anything internal.

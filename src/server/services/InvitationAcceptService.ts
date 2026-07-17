@@ -1,8 +1,9 @@
 import type { Database } from "@/lib/db";
-import type { Invitation } from "@/types";
+import type { Invitation, InvitationStatus } from "@/types";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
 import { MembershipRepository } from "@/server/repositories/implementations/MembershipRepository";
 import { UserRepository } from "@/server/repositories/implementations/UserRepository";
+import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
 import { withTransaction } from "@/lib/transactions";
 import { normalizeEmail } from "@/lib/normalize-email";
 
@@ -15,6 +16,20 @@ export class InvitationAcceptError extends Error {
   }
 }
 
+/**
+ * The GET preview payload — deliberately narrower than the raw `Invitation` row.
+ * No token echo (the caller already holds it) and no ids: only what the
+ * emailed recipient already legitimately sees or needs (spec Global
+ * Constraints, purses-puuj.3).
+ */
+export interface InvitationPreview {
+  collectionName: string;
+  collectionDescription: string | null;
+  inviterName: string | null;
+  invitedEmail: string;
+  status: InvitationStatus;
+}
+
 export class InvitationAcceptService {
   constructor(private db: Database) {}
 
@@ -22,13 +37,39 @@ export class InvitationAcceptService {
     return new InvitationAcceptService(db);
   }
 
-  /** Look up an invitation by token — for the GET (preview) path. */
+  /** Look up an invitation by token — internal (accept()) and the raw-row callers. */
   async findByToken(token: string): Promise<Invitation | null> {
     return new InvitationRepository(this.db).findByToken(token);
   }
 
+  /**
+   * Shaped preview for the GET (public) path: joins the collection and its
+   * owner (= inviter — only owners can invite) server-side, so the caller
+   * never sees the raw row, the token, or any id. Returns null on a bad/
+   * expired token OR a collection that no longer exists — either way there's
+   * nothing to preview, and the route maps null to 404 either way.
+   */
+  async getPreview(token: string): Promise<InvitationPreview | null> {
+    const invitation = await this.findByToken(token);
+    if (!invitation) return null;
+
+    const collection = await new CollectionRepository(this.db).findById(invitation.collectionId);
+    if (!collection) return null;
+
+    const owner = await new UserRepository(this.db).findById(collection.ownerId);
+
+    return {
+      collectionName: collection.name,
+      collectionDescription: collection.description,
+      // Never an email — a display name only, and only if one exists.
+      inviterName: owner?.name ?? null,
+      invitedEmail: invitation.email,
+      status: invitation.status,
+    };
+  }
+
   /** Accept an invitation: validate status + email, then atomically create membership + mark accepted. */
-  async accept(token: string, userId: string): Promise<void> {
+  async accept(token: string, userId: string): Promise<{ collectionId: string }> {
     const invRepo = new InvitationRepository(this.db);
     const invitation = await invRepo.findByToken(token);
     if (!invitation) {
@@ -57,5 +98,7 @@ export class InvitationAcceptService {
         acceptedAt: new Date(),
       });
     });
+
+    return { collectionId: invitation.collectionId };
   }
 }
