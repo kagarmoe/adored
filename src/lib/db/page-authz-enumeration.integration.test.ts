@@ -152,8 +152,13 @@ function buildStrangerPageCases(collectionId: string): StrangerPageCase[] {
     p("collections/[id]/results", { id }),
     p("collections/[id]/results/[resultNumber]", { id, resultNumber: N }),
     p("collections/[id]/results/[resultNumber]/finalize", { id, resultNumber: N }),
+    p("collections/[id]/results/set-aside", { id }),
     p("collections/[id]/sort", { id }),
     p("collections/[id]/sort/new", { id }),
+    // The old shelf path now guard-then-permanentRedirect()s (purses-znkt.4);
+    // it stays enumerated because the stranger must still be bounced by the
+    // requireCollectionAccess guard, which runs BEFORE the redirect to the
+    // new path — this is the exact-first-throw the guard's contract requires.
     p("collections/[id]/sort/set-aside", { id }),
     p("collections/[id]/sort/[sessionNumber]", { id, sessionNumber: N }),
     p("collections/[id]/sort/[sessionNumber]/triage", { id, sessionNumber: N }),

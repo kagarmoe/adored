@@ -116,7 +116,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
               decisions={decisions}
               decidedSeed={preferences.length}
               hubHref={hubHref}
-              setAsideHref={`/collections/${slugOrId}/sort/set-aside`}
+              setAsideHref={`/collections/${slugOrId}/results/set-aside`}
             />
           </div>
         </TriageUndoProvider>

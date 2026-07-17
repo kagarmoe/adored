@@ -92,6 +92,11 @@ describe("SessionDetailPage resolution + integrity guard", () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "s1", collectionId: "coll_REAL", number: 1, status: "active", curatorId: "someone_else" });
     await expect(SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
   });
+  it("omits the Goal line entirely for a null-goal session (purses-znkt.1b) — no dangling 'Goal: '", async () => {
+    sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "s1", collectionId: "coll_REAL", number: 1, status: "active", curatorId: "u1", goal: null });
+    render(await SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) }));
+    expect(screen.queryByText(/Goal:/)).not.toBeInTheDocument();
+  });
 });
 
 function makeItem(id: string, createdAtMs = 0) {

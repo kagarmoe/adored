@@ -107,9 +107,12 @@ test.describe("session uniqueness — create after set-aside; paused collection 
     // affordance the redesign re-enabled.
     await page.getByRole("link", { name: "Sort" }).first().click();
     await page.waitForURL(new RegExp(`/collections/${slug}/sort$`));
-    const newSession = page.getByRole("link", { name: "New session" });
-    await expect(newSession).toBeVisible();
-    await newSession.click();
+    // purses-znkt.1: the hub's primary is now the one-tap "Start sorting"
+    // island; the deliberate path (goal text + round-length dial) is reached
+    // via the quiet secondary "Set a goal first" link beside it.
+    const setGoalFirst = page.getByRole("link", { name: "Set a goal first" });
+    await expect(setGoalFirst).toBeVisible();
+    await setGoalFirst.click();
 
     // /sort/new → StartSessionForm. Submit it and capture the real POST. Before
     // the partial-index fix this POST 409'd/500'd because the soft-deleted row

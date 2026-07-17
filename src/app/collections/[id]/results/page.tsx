@@ -203,7 +203,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
                 </li>
               ))}
             </ul>
-            <Link href={`${collectionHref}/sort/set-aside`} className="inline-block text-sm text-ink-soft underline">
+            <Link href={`${collectionHref}/results/set-aside`} className="inline-block text-sm text-ink-soft underline">
               Bring any back
             </Link>
           </section>

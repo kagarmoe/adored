@@ -58,10 +58,10 @@ describe("breadcrumb trails", () => {
     expect(trail.results(c).at(-1)).toEqual({ label: "Decide" });
   });
 
-  it("parents Set aside and Session under Sort", () => {
+  it("parents Set aside under Decide and Session under Sort", () => {
     expect(trail.setAside(c).at(-2)).toEqual({
-      label: "Sort",
-      href: "/collections/spring-bags/sort",
+      label: "Decide",
+      href: "/collections/spring-bags/results",
     });
     expect(trail.session(c, 3)).toEqual([
       { label: "Collections", href: "/collections" },

@@ -87,7 +87,7 @@ export const trail = {
   ],
   sort: (c: TrailCollection): Crumb[] => [...collectionPrefix(c), { label: "Sort" }],
   sortNew: (c: TrailCollection): Crumb[] => [...sortPrefix(c), { label: "New session" }],
-  setAside: (c: TrailCollection): Crumb[] => [...sortPrefix(c), { label: "Set aside" }],
+  setAside: (c: TrailCollection): Crumb[] => [...decidePrefix(c), { label: "Set aside" }],
   // _sessionNumber keeps the (c, n) arity of the other session-scoped builders;
   // the Session leaf itself is the current page, so it carries no href.
   session: (c: TrailCollection, _sessionNumber: number): Crumb[] => [
