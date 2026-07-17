@@ -114,6 +114,28 @@ test.describe("sort session → triage", () => {
     ).not.toBeNull();
     await expect(page.getByRole("heading", { name: /Here.?s what moved/ })).toBeVisible();
   });
+
+  // purses-znkt.1: the hub's one-tap primary — no goal/scope form, straight to
+  // triage. A fresh collection (own ownerId + seedCollections call) so it has
+  // no open session and can't collide with the ULID-addressed collection above.
+  test("hub one-tap: 'Start sorting' island creates a session and lands DIRECTLY on triage", async ({
+    page,
+  }) => {
+    const ownerId = await seedBaseline();
+    const [collectionId] = await seedCollections(ownerId, 1);
+
+    await page.goto(`/collections/${collectionId}/sort`);
+    await expect(page.getByRole("heading", { level: 1, name: "Sort" })).toBeVisible();
+
+    // A brand-new collection has zero sessions, so BOTH the header CTA and the
+    // empty state's own island render (pre-existing double-CTA behavior on a
+    // zero-sessions hub, unrelated to this change) — either is the real island.
+    const start = page.getByRole("button", { name: "Start sorting" }).first();
+    await expect(start).toBeVisible();
+
+    await Promise.all([page.waitForURL(/\/sort\/\d+\/triage$/), start.click()]);
+    await expect(page).toHaveURL(/\/sort\/\d+\/triage$/);
+  });
 });
 
 // The live results affordance: the whole sort → results seam exercised through

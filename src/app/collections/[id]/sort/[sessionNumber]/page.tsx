@@ -105,7 +105,11 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
           <div>
             <h1 className="text-2xl text-ink sm:text-3xl">Sorting session</h1>
             <p className="mt-2 text-ink-soft">Choose any round. Each one adds another layer.</p>
-            <p className="mt-1 text-sm text-ink-soft">Goal: {sortSession.goal}</p>
+            {/* purses-znkt.1b: the one-tap flow is the first real producer of
+                null-goal sessions — omit the line rather than render "Goal: "
+                dangling. The gentle fallback sentence belongs to cards, not a
+                labeled field. */}
+            {sortSession.goal && <p className="mt-1 text-sm text-ink-soft">Goal: {sortSession.goal}</p>}
             <div className="mt-3">
               <Badge variant={sortSession.status}>{sortSession.status}</Badge>
             </div>

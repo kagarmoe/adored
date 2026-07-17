@@ -5,11 +5,13 @@ import { requireCollectionAccess } from "@/lib/collection-access";
 import { SessionController } from "@/server/api/sessions";
 import { AppLayout } from "@/components/layout";
 import { trail } from "@/components/layout/breadcrumb-trails";
-import { Badge, Button, Card, EmptyState } from "@/components/ui";
+import { Button, Card, EmptyState } from "@/components/ui";
 import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { ResumeControl } from "@/features/sorting/ResumeControl";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
 import { SessionResumeCard } from "@/features/sessions/SessionResumeCard";
+import { StartSortingButton } from "@/features/sessions/StartSortingButton";
+import { quietLink } from "@/lib/design/quiet-link";
 import Link from "next/link";
 
 interface SortPageProps {
@@ -43,13 +45,20 @@ export default async function SortPage({ params }: SortPageProps) {
       <PendingDecisionsGate curatorId={session.user.id}>
       <div className="space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl text-ink sm:text-3xl">Sorting sessions</h1>
+          <h1 className="text-2xl text-ink sm:text-3xl">Sort</h1>
           {/* purses-4bhh: only invite a new session when none is open — starting a
               second while one is active/paused violates sessions_active_unique. */}
           {!currentSession && (
-            <Link href={`${collectionHref}/sort/new`} className="w-full sm:w-auto">
-              <Button className="w-full">New session</Button>
-            </Link>
+            <div className="flex flex-col items-start gap-2 sm:items-end">
+              <StartSortingButton collectionId={collection.id} collectionSlug={collection.slug ?? collection.id} />
+              {/* purses-znkt.1: the deliberate path stays reachable — goal text +
+                  round-length dial — behind a quiet secondary link. Named for the
+                  field it actually sets (never "scope": that select is dead weight
+                  server-side, out of scope for this pass). */}
+              <Link href={`${collectionHref}/sort/new`} className={quietLink}>
+                Set a goal first
+              </Link>
+            </div>
           )}
         </div>
 
@@ -82,34 +91,31 @@ export default async function SortPage({ params }: SortPageProps) {
         )}
 
         {sessions.length === 0 ? (
-          <EmptyState
-            heading="No sorting sessions yet"
-            message="Create a session to start organizing items"
-            action={{
-              label: "Create session",
-              mobileLabel: "Create",
-              href: `${collectionHref}/sort/new`,
-            }}
-          />
+          <div className="flex flex-col items-center gap-4">
+            {/* EmptyState's action prop only takes a Link or a bare Button — it
+                can't host the island's own POST + status-line state, so the
+                heading/message render through EmptyState (no action) and the
+                one-tap island renders as the single primary CTA beneath it. */}
+            <EmptyState heading="Nothing sorted yet" message="Begin with how you feel about each." />
+            <StartSortingButton collectionId={collection.id} collectionSlug={collection.slug ?? collection.id} />
+          </div>
         ) : (
           <div className="space-y-3">
-            {sessions.map((s) => (
-              <Link key={s.id} href={`${collectionHref}/sort/${s.number}`}>
-                <Card interactive padding="md">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h3 className="text-ink">{s.goal}</h3>
-                      <div className="mt-2 flex items-center gap-2">
-                        <Badge variant={s.status}>{s.status}</Badge>
-                      </div>
+            <h2 className="text-xl text-ink">Earlier passes</h2>
+            <div className="space-y-3">
+              {sessions.map((s) => (
+                <Link key={s.id} href={`${collectionHref}/sort/${s.number}`}>
+                  <Card interactive padding="md">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <h3 className="text-ink">{s.goal ?? "A sorting pass"}</h3>
+                      <span className="text-sm text-ink-soft">
+                        {new Date(s.createdAt).toLocaleDateString()}
+                      </span>
                     </div>
-                    <span className="text-sm text-ink-soft">
-                      {new Date(s.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                </Card>
-              </Link>
-            ))}
+                  </Card>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </div>

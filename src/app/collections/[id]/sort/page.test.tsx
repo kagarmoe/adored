@@ -105,4 +105,41 @@ describe("SortPage session links", () => {
     const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href") ?? "");
     expect(hrefs).toContain("/collections/summer-bags/sort/new");
   });
+
+  it("renders the h1 'Sort' (not the old 'Sorting sessions')", async () => {
+    const ui = await SortPage({ params: Promise.resolve({ id: "summer-bags" }) });
+    render(ui);
+    expect(screen.getByRole("heading", { level: 1, name: "Sort" })).toBeInTheDocument();
+  });
+
+  it("no open session: offers the one-tap 'Start sorting' island plus a quiet 'Set a goal first' secondary link", async () => {
+    // default mock: a single completed session — nothing open.
+    const ui = await SortPage({ params: Promise.resolve({ id: "summer-bags" }) });
+    render(ui);
+    expect(screen.getByRole("button", { name: "Start sorting" })).toBeInTheDocument();
+    const secondary = screen.getByRole("link", { name: "Set a goal first" });
+    expect(secondary).toHaveAttribute("href", "/collections/summer-bags/sort/new");
+  });
+
+  it("empty state: gentle heading/message, and the one-tap island as its action", async () => {
+    sessionRepo.findByCollectionAndCurator.mockResolvedValue([]);
+    const ui = await SortPage({ params: Promise.resolve({ id: "summer-bags" }) });
+    render(ui);
+    expect(screen.getByRole("heading", { name: "Nothing sorted yet" })).toBeInTheDocument();
+    expect(screen.getByText("Begin with how you feel about each.")).toBeInTheDocument();
+    // The header CTA also renders while no session is open, so allow >=1 rather
+    // than pinning an exact count to that (pre-existing, unrelated) duplication.
+    expect(screen.getAllByRole("button", { name: "Start sorting" }).length).toBeGreaterThan(0);
+  });
+
+  it("history moves under 'Earlier passes', drops the status Badge, and falls back to 'A sorting pass' for a null goal", async () => {
+    sessionRepo.findByCollectionAndCurator.mockResolvedValue([
+      { id: "sess_zzz", number: 3, curatorId: "u1", goal: null, status: "completed", createdAt: new Date("2026-01-03") },
+    ]);
+    const ui = await SortPage({ params: Promise.resolve({ id: "summer-bags" }) });
+    render(ui);
+    expect(screen.getByRole("heading", { level: 2, name: "Earlier passes" })).toBeInTheDocument();
+    expect(screen.getByText("A sorting pass")).toBeInTheDocument();
+    expect(screen.queryByText("completed")).not.toBeInTheDocument();
+  });
 });
