@@ -1,6 +1,14 @@
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
-import { getRoundBox, setRoundBox, DEFAULT_ROUND_BOX, ROUND_BOX_OPTIONS } from "./round-preference";
+import {
+  getRoundBox,
+  setRoundBox,
+  DEFAULT_ROUND_BOX,
+  boxToMs,
+  feelName,
+  formatBoxDuration,
+  roundBoxLabel,
+} from "./round-preference";
 
 // jsdom in this setup does not expose a working localStorage on file:// URLs, so
 // install a minimal Map-backed Storage for the hermetic round-trip tests.
@@ -25,26 +33,21 @@ describe("round-preference", () => {
     installStorage();
   });
 
-  it("defaults to 2 minutes when nothing is stored", () => {
-    expect(DEFAULT_ROUND_BOX).toBe(2);
-    expect(getRoundBox()).toBe(2);
+  it("defaults to 120 seconds (2 minutes) when nothing is stored", () => {
+    expect(DEFAULT_ROUND_BOX).toBe(120);
+    expect(getRoundBox()).toBe(120);
   });
 
-  it("round-trips each valid value (incl. the 0.5 → '0.5' → 0.5 trip)", () => {
-    for (const v of [0.5, 1, 2, 5, "none"] as const) {
+  it("round-trips new second values", () => {
+    for (const v of [30, 60, 120, 300, "none"] as const) {
       setRoundBox(v);
       expect(getRoundBox()).toBe(v);
     }
   });
 
-  it("persists 0.5 as the string '0.5'", () => {
-    setRoundBox(0.5);
-    expect(window.localStorage.getItem("pi-round-box")).toBe("0.5");
-  });
-
   it("persists to the pi-round-box key", () => {
-    setRoundBox(5);
-    expect(window.localStorage.getItem("pi-round-box")).toBe("5");
+    setRoundBox(300);
+    expect(window.localStorage.getItem("pi-round-box")).toBe("300");
   });
 
   describe("clamp-on-read migration (the clamp IS the migration)", () => {
@@ -53,36 +56,12 @@ describe("round-preference", () => {
       expect(getRoundBox()).toBe("none");
     });
 
-    for (const raw of ["0.5", "1", "2", "5"] as const) {
-      it(`keeps a valid stored ${raw} as itself`, () => {
-        window.localStorage.setItem("pi-round-box", raw);
-        expect(getRoundBox()).toBe(Number(raw));
-      });
-    }
-
-    for (const stale of ["10", "20"] as const) {
-      it(`clamps stale ${stale} down to 5`, () => {
-        window.localStorage.setItem("pi-round-box", stale);
-        expect(getRoundBox()).toBe(5);
-      });
-    }
-
     for (const garbage of ["7", "abc", ""] as const) {
-      it(`falls back to the default (2) for garbage ${JSON.stringify(garbage)}`, () => {
+      it(`falls back to the default (120) for garbage ${JSON.stringify(garbage)}`, () => {
         window.localStorage.setItem("pi-round-box", garbage);
-        expect(getRoundBox()).toBe(2);
+        expect(getRoundBox()).toBe(120);
       });
     }
-  });
-
-  it("ROUND_BOX_OPTIONS is the one home for the option list (verbatim)", () => {
-    expect(ROUND_BOX_OPTIONS).toEqual([
-      { value: 0.5, label: "30 seconds" },
-      { value: 1, label: "1 minute" },
-      { value: 2, label: "2 minutes" },
-      { value: 5, label: "5 minutes" },
-      { value: "none", label: "No timer" },
-    ]);
   });
 
   describe("SSR safety (no window)", () => {
@@ -95,12 +74,57 @@ describe("round-preference", () => {
     it("returns the default without throwing when window is undefined", () => {
       vi.stubGlobal("window", undefined);
       expect(() => getRoundBox()).not.toThrow();
-      expect(getRoundBox()).toBe(2);
+      expect(getRoundBox()).toBe(120);
     });
 
     it("is a no-op (no throw) when setting with no window", () => {
       vi.stubGlobal("window", undefined);
-      expect(() => setRoundBox(5)).not.toThrow();
+      expect(() => setRoundBox(300)).not.toThrow();
     });
+  });
+});
+
+describe("seconds model", () => {
+  beforeEach(() => {
+    installStorage();
+  });
+
+  it("parses every legacy minutes value, clamping 10 and 20 to 300", () => {
+    const cases: Array<[string, unknown]> = [
+      ["0.5", 30], ["1", 60], ["2", 120], ["5", 300], ["10", 300], ["20", 300], ["none", "none"],
+    ];
+    for (const [raw, expected] of cases) {
+      window.localStorage.setItem("pi-round-box", raw);
+      expect(getRoundBox()).toBe(expected);
+    }
+  });
+  it("round-trips new second values and defaults on garbage", () => {
+    setRoundBox(150);
+    expect(getRoundBox()).toBe(150);
+    window.localStorage.setItem("pi-round-box", "97");
+    expect(getRoundBox()).toBe(120);
+  });
+  it("boxToMs: seconds to ms, none to null", () => {
+    expect(boxToMs(30)).toBe(30_000);
+    expect(boxToMs(300)).toBe(300_000);
+    expect(boxToMs("none")).toBeNull();
+  });
+  it("every reachable value has a feel name and a duration label (totality)", () => {
+    const steps = [30, 60, 90, 120, 150, 180, 210, 240, 270, 300] as const;
+    for (const s of steps) expect(roundBoxLabel(s)).toMatch(/ — (a breath|a handful|a real dent)$/);
+    expect(roundBoxLabel("none")).toBe("no clock at all");
+  });
+  it("formats: 30 seconds, whole and half minutes", () => {
+    expect(formatBoxDuration(30)).toBe("30 seconds");
+    expect(formatBoxDuration(60)).toBe("1 minute");
+    expect(formatBoxDuration(90)).toBe("1½ minutes");
+    expect(formatBoxDuration(120)).toBe("2 minutes");
+    expect(roundBoxLabel(120)).toBe("2 minutes — a handful");
+  });
+  it("band edges: 60 is a breath, 90 a handful, 150 a handful, 180 a real dent", () => {
+    expect(feelName(60)).toBe("a breath");
+    expect(feelName(90)).toBe("a handful");
+    expect(feelName(150)).toBe("a handful");
+    expect(feelName(180)).toBe("a real dent");
   });
 });
