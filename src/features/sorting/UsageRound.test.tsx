@@ -486,6 +486,34 @@ describe("UsageRound round end (F15) & recap", () => {
     expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
     expect(refresh).not.toHaveBeenCalled();
   });
+
+  it("round end closes an open dialog and discards its uncommitted preview (badge race)", async () => {
+    vi.useFakeTimers();
+    store.setItem("pi-round-box", "1"); // start with a 1-minute box — the round HAD a timer
+    const { container } = renderRound({ queue: [entry("item_a", "Bag A")] });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    // Open the dialog and preview "no timer" — NEVER committed via Done.
+    fireEvent.click(screen.getByRole("button", { name: "Change round length" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole("slider"), { key: "Home" }); // preview only
+
+    // Let the round expire while the dialog is still open — a Done landing after
+    // this point would be meaningless UX and would retroactively flip the recap's
+    // hadTimer badge for a round that already ran with a timer.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000 + 1_500);
+    });
+
+    // The dialog is gone (the race is closed at the root)...
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    // ...and the recap shows, with the badge for the box the round actually ran
+    // with — the discarded "no timer" preview never touched it.
+    expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
+    expect(container.querySelector(".bg-spark")).not.toBeNull();
+  });
 });
 
 describe("UsageRound demotion memory (markUsageRoundRan, spec §3.8)", () => {
