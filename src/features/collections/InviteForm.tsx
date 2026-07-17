@@ -18,6 +18,7 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [emailNotSent, setEmailNotSent] = useState(false);
   const [email, setEmail] = useState("");
 
   // Auto-reset the success view after 3s, cleaning the timer up on unmount so we
@@ -35,8 +36,12 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
 
     try {
       const validated = inviteSchema.parse({ email });
-      await apiPost(`/api/collections/${collectionId}/invitations`, validated);
+      const result = await apiPost<{ emailSent?: boolean }>(
+        `/api/collections/${collectionId}/invitations`,
+        validated,
+      );
       setSuccess(true);
+      setEmailNotSent(result.emailSent === false);
       setEmail("");
       onSuccess?.();
     } catch (err: any) {
@@ -56,11 +61,18 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
 
       {/* Persistent live region: pre-existing in the DOM so the text change on
           success is announced reliably (a region mounted together with its text
-          is frequently skipped by screen readers). */}
+          is frequently skipped by screen readers). Both the success message and
+          the (rarer) email-not-sent notice share this one region. */}
       <div role="status" aria-live="polite">
         {success && (
           <div className="bg-success-soft border border-success-soft rounded-control px-4 py-3 text-success-deep">
             Invitation sent successfully!
+          </div>
+        )}
+        {success && emailNotSent && (
+          <div className="mt-2 bg-info-soft border border-info-soft rounded-control px-4 py-3 text-info-deep">
+            The invite is saved — the email didn&apos;t go out, so share the link yourself with Copy
+            link.
           </div>
         )}
       </div>

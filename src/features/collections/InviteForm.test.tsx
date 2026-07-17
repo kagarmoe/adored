@@ -128,6 +128,41 @@ describe("InviteForm", () => {
     }
   });
 
+  it("shows the email-not-sent notice when the response carries emailSent:false — invite is still saved", async () => {
+    (fetch as any).mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({ emailSent: false }),
+    });
+
+    render(<InviteForm collectionId="coll_01ULID" />);
+    fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          "The invite is saved — the email didn't go out, so share the link yourself with Copy link.",
+        ),
+      ).toBeInTheDocument(),
+    );
+    // Announced via a persistent role=status node (same pattern as the success region).
+    expect(screen.getByText(/didn't go out/i).closest('[role="status"]')).not.toBeNull();
+  });
+
+  it("does NOT show the email-not-sent notice when emailSent is true (or absent)", async () => {
+    (fetch as any).mockResolvedValue({ ok: true, status: 201, json: async () => ({ emailSent: true }) });
+
+    render(<InviteForm collectionId="coll_01ULID" />);
+    fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
+
+    await waitFor(() =>
+      expect(screen.getByText("Invitation sent successfully!")).toBeInTheDocument(),
+    );
+    expect(screen.queryByText(/didn't go out/i)).not.toBeInTheDocument();
+  });
+
   it("a failing API response surfaces the server error and does NOT show success", async () => {
     (fetch as any).mockResolvedValue({
       ok: false,

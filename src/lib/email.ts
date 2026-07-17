@@ -33,7 +33,7 @@ async function send(args: {
   devLabel: string;
   buildUrl: () => string;
   html: (url: string) => string;
-}): Promise<void> {
+}): Promise<{ sent: boolean }> {
   const resend = getClient();
 
   if (!resend) {
@@ -42,7 +42,11 @@ async function send(args: {
     if (process.env.NODE_ENV === "development") {
       console.log(`[DEV ${args.devLabel}] ${args.to}\n${args.buildUrl()}`);
     }
-    return;
+    if (process.env.NODE_ENV === "production") {
+      // Static string — never interpolate token/email here (Security pin).
+      console.error("[email] RESEND_API_KEY missing — invitation email NOT sent");
+    }
+    return { sent: false };
   }
 
   const url = args.buildUrl();
@@ -60,12 +64,14 @@ async function send(args: {
     // Never include the url/token in the thrown error or any log.
     throw new Error(`Failed to send email: ${error.message}`);
   }
+
+  return { sent: true };
 }
 
-export async function sendInvitation({ to, token }: InvitationArgs): Promise<void> {
+export async function sendInvitation({ to, token }: InvitationArgs): Promise<{ sent: boolean }> {
   // Build the invite URL INSIDE the send, after the no-op guard, so a missing
   // RESEND_API_KEY (which no-ops) never forces env.AUTH_URL to be present.
-  await send({
+  return send({
     to,
     devLabel: "INVITATION",
     subject: "You've been invited to a collection on Adored",

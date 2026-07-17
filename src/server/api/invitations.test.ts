@@ -6,7 +6,7 @@ import type { InvitationRepository } from "@/server/repositories/implementations
 // resendInvitation call sendInvitation with the invited address + the token)
 // without any network I/O. The controller no longer builds the URL or touches
 // env.AUTH_URL — sendInvitation owns the URL build — so no env mock is needed.
-const sendInvitation = vi.fn(async () => {});
+const sendInvitation = vi.fn(async () => ({ sent: true }));
 vi.mock("@/lib/email", () => ({
   sendInvitation: (args: { to: string; token: string }) => sendInvitation(args),
 }));
@@ -60,7 +60,7 @@ let InvitationController: typeof import("./invitations").InvitationController;
 beforeEach(async () => {
   vi.resetModules();
   sendInvitation.mockReset();
-  sendInvitation.mockResolvedValue(undefined);
+  sendInvitation.mockResolvedValue({ sent: true });
   ({ InvitationController } = await import("./invitations"));
 });
 
@@ -91,6 +91,29 @@ describe("createInvitation — sends the invitation email", () => {
     // Only two keys: to + token. The controller no longer builds a URL.
     expect(Object.keys(arg).sort()).toEqual(["to", "token"]);
     expect(arg.token).toBe(result.token);
+  });
+
+  it("propagates emailSent:true from a successful send", async () => {
+    sendInvitation.mockResolvedValue({ sent: true });
+    const repo = makeRepo();
+    const controller = new InvitationController(repo);
+
+    const result = await controller.createInvitation("col_1", { email: "invitee@example.com" });
+
+    expect(result.emailSent).toBe(true);
+  });
+
+  it("propagates emailSent:false when the transport didn't send (e.g. no RESEND_API_KEY) — invitation is still created", async () => {
+    sendInvitation.mockResolvedValue({ sent: false });
+    const repo = makeRepo();
+    const controller = new InvitationController(repo);
+
+    const result = await controller.createInvitation("col_1", { email: "invitee@example.com" });
+
+    expect(result.emailSent).toBe(false);
+    // The invitation itself is still created — email is best-effort delivery.
+    expect(result.token).toEqual(expect.any(String));
+    expect(await repo.findById(result.id)).not.toBeNull();
   });
 });
 
@@ -127,5 +150,25 @@ describe("resendInvitation — re-sends the existing invitation link", () => {
 
     await expect(controller.resendInvitation("nope")).rejects.toThrow(/not found/i);
     expect(sendInvitation).not.toHaveBeenCalled();
+  });
+
+  it("propagates emailSent:false when the transport didn't send", async () => {
+    sendInvitation.mockResolvedValue({ sent: false });
+    const existing: Invitation = {
+      id: "inv_existing",
+      collectionId: "col_1",
+      email: "invitee@example.com",
+      token: "EXISTING_TOKEN",
+      status: "pending",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      acceptedAt: null,
+    };
+    const repo = makeRepo([existing]);
+    const controller = new InvitationController(repo);
+
+    const result = await controller.resendInvitation("inv_existing");
+
+    expect(result.emailSent).toBe(false);
   });
 });

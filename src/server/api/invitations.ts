@@ -31,7 +31,7 @@ export class InvitationController {
   async createInvitation(
     collectionId: string,
     data: unknown,
-  ): Promise<Invitation & { token: string }> {
+  ): Promise<Invitation & { token: string; emailSent: boolean }> {
     const parsed = CreateInvitationSchema.parse(data);
     const email = normalizeEmail(parsed.email);
     const token = randomBytes(32).toString("hex");
@@ -41,8 +41,10 @@ export class InvitationController {
       email,
       token,
     });
-    await sendInvitation({ to: email, token });
-    return { ...invitation, token };
+    // The invitation itself is always created — email is best-effort delivery,
+    // so a transport miss (e.g. no RESEND_API_KEY) never fails the request.
+    const { sent } = await sendInvitation({ to: email, token });
+    return { ...invitation, token, emailSent: sent };
   }
 
   async getInvitation(invitationId: string): Promise<Invitation> {
@@ -69,12 +71,12 @@ export class InvitationController {
     await this.invitationRepo.update(invitationId, { status: "revoked" });
   }
 
-  async resendInvitation(invitationId: string): Promise<{ message: string }> {
+  async resendInvitation(invitationId: string): Promise<{ message: string; emailSent: boolean }> {
     const invitation = await this.invitationRepo.findById(invitationId);
     if (!invitation) {
       throw new Error("Invitation not found");
     }
-    await sendInvitation({ to: invitation.email, token: invitation.token });
-    return { message: "Invitation resent" };
+    const { sent } = await sendInvitation({ to: invitation.email, token: invitation.token });
+    return { message: "Invitation resent", emailSent: sent };
   }
 }
