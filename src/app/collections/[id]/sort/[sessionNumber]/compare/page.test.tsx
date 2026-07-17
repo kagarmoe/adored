@@ -17,7 +17,13 @@ const { mockGetSession, mockRequireAccess, itemRepo, sessionRepo, prefRepo, deci
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn(() => { throw new Error("REDIRECT"); }), useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
-vi.mock("@/components/layout", () => ({ AppLayout: ({ children }: any) => <div>{children}</div> }));
+const layoutProps = vi.hoisted(() => ({ breadcrumbs: null as any }));
+vi.mock("@/components/layout", () => ({
+  AppLayout: ({ children, breadcrumbs }: any) => {
+    layoutProps.breadcrumbs = breadcrumbs;
+    return <div>{children}</div>;
+  },
+}));
 vi.mock("@/lib/collection-access", () => ({ requireCollectionAccess: mockRequireAccess }));
 vi.mock("@/server/repositories/implementations/ItemRepository", () => ({ ItemRepository: vi.fn(function () { return itemRepo; }) }));
 vi.mock("@/server/repositories/implementations/SessionRepository", () => ({ SessionRepository: vi.fn(function () { return sessionRepo; }) }));
@@ -184,6 +190,12 @@ describe("ComparePage round chrome + copy (Epic 4c)", () => {
     expect(screen.queryByRole("heading", { name: /reach for/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/\bkeep\b/i)).not.toBeInTheDocument();
   });
+
+  it("renders no workspace mode chips mid-round (one decision at a time)", async () => {
+    const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
+    render(ui);
+    expect(screen.queryByRole("navigation", { name: "Workspace mode" })).not.toBeInTheDocument();
+  });
 });
 
 describe("ComparePage curator-wide compare selection (§7.3)", () => {
@@ -242,5 +254,36 @@ describe("ComparePage integrity guard", () => {
   it("redirects (and halts) when the user is not the session's curator — independent sort (purses-t9l)", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_x", collectionId: "coll_01ABCDEF", number: 1, status: "active", curatorId: "someone_else" });
     await expect(ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
+  });
+});
+
+describe("ComparePage canonical trail (all render branches)", () => {
+  const CANONICAL = ["Collections", "Summer Bags", "Sort", "Session", "Compare"];
+  const renderPage = async () => {
+    layoutProps.breadcrumbs = null;
+    const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
+    render(ui);
+  };
+
+  // The three branches once hand-built diverging trails; the crumb row must not
+  // change shape when the last comparison completes or items run out.
+  it("active pair uses the canonical 5-crumb trail", async () => {
+    await renderPage();
+    expect(layoutProps.breadcrumbs.map((b: any) => b.label)).toEqual(CANONICAL);
+    expect(layoutProps.breadcrumbs.at(-1).href).toBeUndefined();
+  });
+
+  it("'all comparisons complete' keeps the same trail", async () => {
+    dispRepo.findByCollectionAndCurator.mockResolvedValue([
+      { itemId: "item_b", disposition: "deferred", collectionId: "coll_01ABCDEF", curatorId: "u1" },
+    ]);
+    await renderPage();
+    expect(layoutProps.breadcrumbs.map((b: any) => b.label)).toEqual(CANONICAL);
+  });
+
+  it("'not enough items' keeps the same trail", async () => {
+    itemRepo.findByCollection.mockResolvedValue([A]);
+    await renderPage();
+    expect(layoutProps.breadcrumbs.map((b: any) => b.label)).toEqual(CANONICAL);
   });
 });

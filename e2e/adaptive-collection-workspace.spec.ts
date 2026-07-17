@@ -116,6 +116,53 @@ async function focusableNamesInDomOrder(page: Page): Promise<string[]> {
   });
 }
 
+// ── Wayfinding (spec 2026-07-16): the breadcrumb back arrow. The pool page sits
+// one step below the workspace, so its parent crumb (the collection) is linkable
+// and the arrow must render. On tablet the arrow is pointer-only (aria-hidden +
+// tabindex=-1 — the parent crumb link is the accessible path), so it is located
+// structurally by its attributes + href, never by role.
+
+test("back arrow on a deep page: the tablet pointer shortcut lands on the parent route", async ({
+  page,
+}) => {
+  await page.goto(`/collections/${poolOnly.slug}/pool`);
+  await expect(page.getByRole("heading", { name: "Photos", exact: true })).toBeVisible();
+
+  const arrow = page.locator(
+    `a[aria-hidden="true"][tabindex="-1"][href="/collections/${poolOnly.slug}"]`,
+  );
+  await expect(arrow).toBeVisible();
+  // The phone collapse link exists only below `sm`; role matching excludes
+  // hidden elements, so on tablet it must resolve to nothing.
+  await expect(
+    page.getByRole("link", { name: "Back to E2E Workspace pool-only" }),
+  ).toHaveCount(0);
+
+  // Real navigation: the arrow targets the PARENT crumb (the workspace), not history.
+  await arrow.click();
+  await expect(page).toHaveURL(new RegExp(`/collections/${poolOnly.slug}$`));
+});
+
+test("phone: the trail collapses to a single accessible back link", async ({ page }) => {
+  // Match the phone project's viewport (iPhone 13, playwright.config.ts) inside
+  // the default project — CI runs one webkit project and never sets PW_VIEWPORT,
+  // so an env-gated phone project would never run in CI.
+  await page.setViewportSize({ width: 390, height: 664 });
+  await page.goto(`/collections/${poolOnly.slug}/pool`);
+  await expect(page.getByRole("heading", { name: "Photos", exact: true })).toBeVisible();
+
+  const back = page.getByRole("link", { name: "Back to E2E Workspace pool-only" });
+  await expect(back).toBeVisible();
+  await expect(back).toHaveAttribute("href", `/collections/${poolOnly.slug}`);
+  // The full trail is hidden below `sm` — the collapse leaves exactly this one
+  // link (the "Collections" root crumb is the sentinel for the rest of the trail;
+  // the header home link is named "Adored home", so no collision).
+  await expect(page.getByRole("link", { name: "Collections", exact: true })).toHaveCount(0);
+
+  await back.click();
+  await expect(page).toHaveURL(new RegExp(`/collections/${poolOnly.slug}$`));
+});
+
 test("keyboard traversal reaches header → primary section → secondary actions → owner utilities in order", async ({
   page,
 }) => {

@@ -1,18 +1,24 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 
-const { mockGetSession, mockRequireAccess, sessionRepo } = vi.hoisted(() => ({
+const { mockGetSession, mockRequireAccess, sessionRepo, layoutProps } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockRequireAccess: vi.fn(),
   sessionRepo: { findByCollectionAndCurator: vi.fn() },
+  layoutProps: { breadcrumbs: null as any },
 }));
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
 // ResumeControl (rendered for a paused current session) calls useRouter.
 vi.mock("next/navigation", () => ({ redirect: vi.fn(), useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
-vi.mock("@/components/layout", () => ({ AppLayout: ({ children }: any) => <div>{children}</div> }));
+vi.mock("@/components/layout", () => ({
+  AppLayout: ({ children, breadcrumbs }: any) => {
+    layoutProps.breadcrumbs = breadcrumbs;
+    return <div>{children}</div>;
+  },
+}));
 vi.mock("@/lib/collection-access", () => ({ requireCollectionAccess: mockRequireAccess }));
 vi.mock("@/server/repositories/implementations/SessionRepository", () => ({ SessionRepository: vi.fn(function () { return sessionRepo; }) }));
 
@@ -73,6 +79,23 @@ describe("SortPage session links", () => {
       .filter((h) => h.endsWith("/sort/new"));
     expect(newSessionHrefs).toHaveLength(0);
     expect(screen.queryByRole("link", { name: /new session/i })).not.toBeInTheDocument();
+  });
+
+  it("uses the canonical trail — 'Sort' crumb, never 'Sorting'", async () => {
+    const ui = await SortPage({ params: Promise.resolve({ id: "summer-bags" }) });
+    render(ui);
+    expect(layoutProps.breadcrumbs.map((b: any) => b.label)).toEqual(["Collections", "Summer Bags", "Sort"]);
+    // The leaf is the current page — unlinked (back-arrow invariant).
+    expect(layoutProps.breadcrumbs.at(-1).href).toBeUndefined();
+  });
+
+  it("renders mode chips with Sort active as the exact current page", async () => {
+    const ui = await SortPage({ params: Promise.resolve({ id: "summer-bags" }) });
+    render(ui);
+    const chips = screen.getByRole("navigation", { name: "Workspace mode" });
+    const sortChip = within(chips).getByRole("link", { name: "Sort" });
+    expect(sortChip).toHaveAttribute("aria-current", "page");
+    expect(sortChip).toHaveAttribute("href", "/collections/summer-bags/sort");
   });
 
   it("offers New Session when NO current session exists (only completed history)", async () => {

@@ -9,7 +9,9 @@ import { PhotoController } from "@/server/api/photos";
 import { PreferenceController } from "@/server/api/preferences";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { Button, Card, CardImage, buttonVariants } from "@/components/ui";
+import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { RankedResults } from "@/features/results/RankedResults";
 import { FinalizeEntry } from "@/features/results/FinalizeEntry";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
@@ -85,13 +87,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   const hasStanding = loved.length > 0 || onward.length > 0;
 
   return (
-    <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: collectionHref },
-        { label: "Deciding" },
-      ]}
-    >
+    <AppLayout breadcrumbs={trail.results(collection)}>
       {/* Recovery gate (spec §3.4): the Standing derives from live preferences —
           pending decisions must land before it can be trusted. */}
       <PendingDecisionsGate curatorId={session.user.id}>
@@ -125,6 +121,8 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
             </div>
           )}
         </div>
+
+        <WorkspaceModeChips base={collectionHref} activeMode="decide" />
 
         {/* aria-live so the live Standing announces gently as it settles. */}
         <div aria-live="polite">

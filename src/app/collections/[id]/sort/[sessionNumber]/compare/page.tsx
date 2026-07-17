@@ -8,6 +8,7 @@ import { PreferenceController } from "@/server/api/preferences";
 import { DecisionController } from "@/server/api/decisions";
 import { DispositionController } from "@/server/api/dispositions";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { EmptyState } from "@/components/ui";
 import { CompareChoice } from "@/features/sorting/CompareChoice";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
@@ -48,6 +49,9 @@ export default async function ComparePage({ params }: ComparePageProps) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
+  // One trail for all three render branches — hand-built copies drifted before.
+  const breadcrumbs = trail.compare(collection, sortSession.number);
+
   // "Take a break" stays reachable in every state of the compare screen — even
   // the not-enough-items / all-done branches — so stepping away is never gated.
   const breakAction = (
@@ -77,15 +81,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
 
   if (items.length < 2) {
     return (
-      <AppLayout
-        breadcrumbs={[
-          { label: "Collections", href: "/collections" },
-          { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-          { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}` },
-          { label: "Compare" },
-        ]}
-        actions={breakAction}
-      >
+      <AppLayout breadcrumbs={breadcrumbs} actions={breakAction}>
         <PendingDecisionsGate curatorId={session.user.id}>
           <EmptyState
             heading="Not enough items"
@@ -111,15 +107,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
 
   if (!pair) {
     return (
-      <AppLayout
-        breadcrumbs={[
-          { label: "Collections", href: "/collections" },
-          { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-          { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}` },
-          { label: "Compare" },
-        ]}
-        actions={breakAction}
-      >
+      <AppLayout breadcrumbs={breadcrumbs} actions={breakAction}>
         {/* "All complete" is derived from the decision log — gate it too, or a
             crash-reload could claim completion over undrained decisions. */}
         <PendingDecisionsGate curatorId={session.user.id}>
@@ -146,12 +134,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
 
   return (
     <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Session", href: `/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}` },
-        { label: "Compare" },
-      ]}
+      breadcrumbs={breadcrumbs}
       actions={breakAction}
     >
       {/* Recovery gate (spec §3.4): the pair below was selected from the server

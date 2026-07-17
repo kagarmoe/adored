@@ -239,4 +239,10 @@ describe("UsagePage layout & wrap", () => {
     expect(within(crumbs).getByText("Session")).toBeInTheDocument();
     expect(usageRoundProps.current.hubHref).toBe("/collections/summer-bags/sort/1");
   });
+
+  it("renders no workspace mode chips mid-round (one decision at a time)", async () => {
+    const ui = await UsagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
+    render(ui);
+    expect(screen.queryByRole("navigation", { name: "Workspace mode" })).not.toBeInTheDocument();
+  });
 });

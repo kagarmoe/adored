@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import type { Collection, Item } from "@/types";
 
 const { mockGetSession, mockRequireAccess, itemController, photoController } = vi.hoisted(() => ({
@@ -117,6 +117,19 @@ describe("/collections/[id]/items owns its status/unnamed query state", () => {
     // ARCHIVED has a name, so nothing matches; the calm empty state shows, not a card.
     expect(screen.queryByRole("link", { name: "Old clutch" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Everything has a name" })).toBeInTheDocument();
+  });
+});
+
+describe("/items is a section index: lateral mode chips (wayfinding invariant 3)", () => {
+  it("renders the Build/Sort/Decide chips with Build current-section (aria-current=\"true\", not \"page\")", async () => {
+    await renderPage();
+    // Page-owned facts only: chips wired with the right mode + non-exact
+    // aria-current. Chip internals are pinned by WorkspaceModeChips.test.tsx.
+    const nav = screen.getByRole("navigation", { name: "Workspace mode" });
+    expect(within(nav).getByRole("link", { name: "Build" })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
   });
 });
 

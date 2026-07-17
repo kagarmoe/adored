@@ -142,6 +142,18 @@ Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by 
 - **Inputs:** surface fill, hairline border, 10px radius, 44px height; focus → teal ring; error → error border + a message, never colour alone.
 - **Badges / buckets:** tier badges use the value-ramp tokens + label + icon. Status badges are semantic where meaningful, neutral (hairline) otherwise. A **benign, in-progress** status (e.g. a paused sort) is **not** a warning — it uses a cool-blue benign chip (`content-mid` fill + `ink` text, AA-gated), never a safety/amber hue ("Brand never speaks Danger"). (`content-deep` is the deeper sibling on the ramp — a non-text fill in Sea Glass, too dark to carry AA-legible label text.)
 - **Theme toggle:** top-right of the shell; 44px tap target; honours reduced-motion.
+- **Wayfinding (breadcrumb + back arrow):** every authenticated page carries the breadcrumb
+  trail (`Breadcrumbs`, nav labelled "Breadcrumb"); with ≥2 crumbs a chevron back arrow leads
+  it, always targeting the **parent crumb** — hierarchical "up", never browser history. The
+  arrow speaks `primary` (it is an action) with a 44px hit area that never changes the row
+  height. Tablet: the arrow is a pointer-only shortcut (the trail itself is the
+  keyboard/screen-reader path); phone: the trail collapses to one accessible
+  "Back to {parent}" link. Trail labels come from one builder
+  (`src/components/layout/breadcrumb-trails.ts`) and share the mode-chip vocabulary
+  (Build/Sort/Decide). Mode chips appear on section **index** pages only (Photos, Items,
+  Sort, Decide) — never on decision surfaces or leaf pages ("one decision at a time"); on
+  descendant pages the active chip marks the current *section* (`aria-current="true"`), not
+  a false current page.
 - **Patient waiting (Not yet):** when a deferred ("Not yet") item resurfaces, a calm banner — a cool-blue benign chip (`content-mid`) with `ink` text (not `ink-soft`: ink-soft on sky fails light-theme AA) plus a non-state moon glyph so hue is never the sole signal. Crossfade in with `--ease-gentle`; instant under reduced-motion. Gentle, never urgent: no remaining count, no inbox or "resting place" framing — the item simply comes back when the person is ready.
 
 ## 6. Do's and Don'ts

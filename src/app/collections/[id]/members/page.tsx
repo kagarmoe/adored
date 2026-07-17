@@ -5,6 +5,7 @@ import { requireCollectionOwnerPage } from "@/lib/collection-access";
 import { MemberController } from "@/server/api/members";
 import { InvitationController } from "@/server/api/invitations";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { Card } from "@/components/ui";
 import { MemberList } from "@/features/collections/MemberList";
 import { InviteForm } from "@/features/collections/InviteForm";
@@ -30,13 +31,7 @@ export default async function MembersPage({ params }: MembersPageProps) {
   const pending = invitations.filter((i) => i.status === "pending");
 
   return (
-    <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "People" },
-      ]}
-    >
+    <AppLayout breadcrumbs={trail.members(collection)}>
       <div className="space-y-8">
         <div className="space-y-2">
           <h1 className="text-2xl text-ink sm:text-3xl">People</h1>

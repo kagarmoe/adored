@@ -7,6 +7,7 @@ import { DispositionController } from "@/server/api/dispositions";
 import { PhotoController } from "@/server/api/photos";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { Card, CardImage, EmptyState } from "@/components/ui";
 import { BringBackControl } from "@/features/sorting/BringBackControl";
 
@@ -41,16 +42,10 @@ export default async function SetAsidePage({ params }: SetAsidePageProps) {
       ? await PhotoController.fromDb(db).findCoverPhotosByItemIds(items.map((i) => i.id))
       : new Map();
 
-  const collectionHref = `/collections/${collection.slug ?? collection.id}`;
-
   return (
-    <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: collectionHref },
-        { label: "Set aside" },
-      ]}
-    >
+    // Reparented under Sort: set-aside is a mid-sort surface, so the back
+    // arrow returns to the sorting context, not the workspace.
+    <AppLayout breadcrumbs={trail.setAside(collection)}>
       <div className="mx-auto w-full max-w-xl space-y-6">
         <div>
           <h1 className="text-2xl text-ink sm:text-3xl">Set aside</h1>

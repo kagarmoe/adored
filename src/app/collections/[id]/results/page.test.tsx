@@ -151,6 +151,24 @@ describe("Decide Standing — empty", () => {
   });
 });
 
+describe("Decide Standing — workspace mode chips", () => {
+  it("renders Build/Sort/Decide chips with Decide the exact current page", async () => {
+    preferenceController.listItemPreferences.mockResolvedValue([]);
+    itemController.listItems.mockResolvedValue([]);
+    const ui = await ResultsPage({ params: Promise.resolve({ id: "summer-bags" }) });
+    render(ui);
+
+    // Page-owned facts only: the Decide chip links to THIS page, so
+    // aria-current is the exact "page". Chip internals are pinned by
+    // WorkspaceModeChips.test.tsx.
+    const nav = screen.getByRole("navigation", { name: "Workspace mode" });
+    expect(within(nav).getByRole("link", { name: "Decide" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+});
+
 describe("Decide Standing — usage chip (Epic S1)", () => {
   beforeEach(() => {
     preferenceController.listItemPreferences.mockResolvedValue([

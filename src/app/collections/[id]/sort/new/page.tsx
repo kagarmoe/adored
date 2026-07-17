@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { StartSessionForm } from "@/features/sorting/StartSessionForm";
 
 interface NewSortSessionPageProps {
@@ -20,14 +21,7 @@ export default async function NewSortSessionPage({ params }: NewSortSessionPageP
   const collection = await requireCollectionAccess(db, id, session.user.id);
 
   return (
-    <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Sorting", href: `/collections/${collection.slug ?? collection.id}/sort` },
-        { label: "New session" },
-      ]}
-    >
+    <AppLayout breadcrumbs={trail.sortNew(collection)}>
       <div className="mx-auto w-full max-w-2xl space-y-6">
         <div>
           <h1 className="text-2xl text-ink sm:text-3xl">New sorting session</h1>

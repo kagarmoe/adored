@@ -4,8 +4,8 @@ import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemController } from "@/server/api/items";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { ItemEditForm } from "@/features/items/ItemEditForm";
-import { itemDisplayName } from "@/lib/items";
 
 interface ItemEditPageProps {
   params: Promise<{ id: string; itemNumber: string }>;
@@ -31,15 +31,7 @@ export default async function ItemEditPage({ params }: ItemEditPageProps) {
   }
 
   return (
-    <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: `/collections/${collection.slug ?? collection.id}` },
-        { label: "Items", href: `/collections/${collection.slug ?? collection.id}/items` },
-        { label: itemDisplayName(item), href: `/collections/${collection.slug ?? collection.id}/items/${item.number}` },
-        { label: "Edit" },
-      ]}
-    >
+    <AppLayout breadcrumbs={trail.itemEdit(collection, item)}>
       <div className="mx-auto w-full max-w-2xl space-y-6">
         <div>
           <h1 className="text-2xl text-ink sm:text-3xl">Edit item</h1>

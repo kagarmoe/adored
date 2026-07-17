@@ -4,7 +4,9 @@ import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
 import { SessionController } from "@/server/api/sessions";
 import { AppLayout } from "@/components/layout";
+import { trail } from "@/components/layout/breadcrumb-trails";
 import { Badge, Button, Card, EmptyState } from "@/components/ui";
+import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { ResumeControl } from "@/features/sorting/ResumeControl";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
 import Link from "next/link";
@@ -34,13 +36,7 @@ export default async function SortPage({ params }: SortPageProps) {
   const collectionHref = `/collections/${collection.slug ?? collection.id}`;
 
   return (
-    <AppLayout
-      breadcrumbs={[
-        { label: "Collections", href: "/collections" },
-        { label: collection.name, href: collectionHref },
-        { label: "Sorting" },
-      ]}
-    >
+    <AppLayout breadcrumbs={trail.sort(collection)}>
       {/* Recovery gate (spec §3.4): pending decisions drain before this hub
           renders from stale session/preference data. Empty queue = zero cost. */}
       <PendingDecisionsGate curatorId={session.user.id}>
@@ -55,6 +51,8 @@ export default async function SortPage({ params }: SortPageProps) {
             </Link>
           )}
         </div>
+
+        <WorkspaceModeChips base={collectionHref} activeMode="sort" />
 
         {currentSession && (
           <Card padding="lg" className="border-hairline bg-content-soft">
