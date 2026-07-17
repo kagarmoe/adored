@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button, Input, ErrorMessage } from "@/components/ui";
 import { apiPost } from "@/lib/api-client";
 import { z } from "zod";
@@ -15,6 +16,7 @@ interface InviteFormProps {
 }
 
 export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -32,6 +34,8 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setSuccess(false);
+    setEmailNotSent(false);
     setLoading(true);
 
     try {
@@ -43,6 +47,9 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
       setSuccess(true);
       setEmailNotSent(result.emailSent === false);
       setEmail("");
+      // The members page is a server component; refresh so the new pending
+      // row (with its Copy link button) appears while this notice is visible.
+      router.refresh();
       onSuccess?.();
     } catch (err: any) {
       if (err instanceof z.ZodError) {
@@ -62,14 +69,18 @@ export function InviteForm({ collectionId, onSuccess }: InviteFormProps) {
       {/* Persistent live region: pre-existing in the DOM so the text change on
           success is announced reliably (a region mounted together with its text
           is frequently skipped by screen readers). Both the success message and
-          the (rarer) email-not-sent notice share this one region. */}
+          the (rarer) email-not-sent notice share this one region.
+          `emailNotSent` is intentionally NOT gated on `success` here: the plain
+          success message auto-resets after 3s, but the email-not-sent notice
+          must stay visible — there's still a Copy link the user needs — until
+          the next submit begins (cleared there, same beat as `error`). */}
       <div role="status" aria-live="polite">
         {success && (
           <div className="bg-success-soft border border-success-soft rounded-control px-4 py-3 text-success-deep">
             Invitation sent successfully!
           </div>
         )}
-        {success && emailNotSent && (
+        {emailNotSent && (
           <div className="mt-2 bg-info-soft border border-info-soft rounded-control px-4 py-3 text-info-deep">
             The invite is saved — the email didn&apos;t go out, so share the link yourself with Copy
             link.

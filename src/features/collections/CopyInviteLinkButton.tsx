@@ -9,6 +9,7 @@ interface CopyInviteLinkButtonProps {
 
 export function CopyInviteLinkButton({ token }: CopyInviteLinkButtonProps) {
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
   // Auto-reset the "Copied" label after ~2s, cleaning the timer up on unmount so we
   // never call setCopied on an unmounted component (mirrors InviteForm's success reset).
@@ -20,8 +21,15 @@ export function CopyInviteLinkButton({ token }: CopyInviteLinkButtonProps) {
 
   async function handleClick() {
     const url = `${window.location.origin}/invitations/${token}`;
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopyFailed(false);
+      setCopied(true);
+    } catch {
+      // Clipboard access can be denied (permissions, insecure context, etc.).
+      // Never claim success — leave the label as "Copy link" and say so gently.
+      setCopyFailed(true);
+    }
   }
 
   return (
@@ -34,6 +42,7 @@ export function CopyInviteLinkButton({ token }: CopyInviteLinkButtonProps) {
           (the InviteForm precedent — a region born with its text is frequently skipped). */}
       <div role="status" aria-live="polite" className="sr-only">
         {copied && "Invite link copied"}
+        {copyFailed && "Couldn't copy — try again."}
       </div>
     </div>
   );

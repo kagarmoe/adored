@@ -58,4 +58,21 @@ describe("CopyInviteLinkButton", () => {
     expect(screen.getByRole("button", { name: "Copy link" })).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("");
   });
+
+  it("on a clipboard failure, never flips to 'Copied' and shows a gentle fallback status instead", async () => {
+    const writeText = vi.fn().mockRejectedValue(new Error("denied"));
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText },
+      configurable: true,
+    });
+    render(<CopyInviteLinkButton token="tok_1" />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
+    });
+
+    expect(screen.getByRole("button", { name: "Copy link" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Copied" })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Couldn't copy — try again.");
+  });
 });
