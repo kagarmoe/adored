@@ -9,8 +9,10 @@ export const config = {
     // excluded because better-auth serves its public Google sign-in/session +
     // OAuth-callback endpoints there and must NOT be 307'd to /login, or the
     // login/callback requests never reach the handler. `signup` remains
-    // public only so the legacy URL can redirect to /login.
-    "/((?!_next(?:/|$)|api/auth(?:/|$)|login(?:/|$)|signup(?:/|$)|shared(?:/|$)|tutorial(?:/|$)|tutorials(?:/|$)|onboarding(?:/|$)).*)",
+    // public only so the legacy URL can redirect to /login. `shared-results/*`
+    // is the tokenized read-only share page — SharePanel promises "no account,
+    // no signing in", and the token itself is the capability.
+    "/((?!_next(?:/|$)|api/auth(?:/|$)|login(?:/|$)|signup(?:/|$)|shared-results(?:/|$)|tutorial(?:/|$)|tutorials(?:/|$)|onboarding(?:/|$)).*)",
   ],
 };
 
@@ -32,5 +34,9 @@ export default function proxy(request: NextRequest) {
     return NextResponse.next();
   }
   const loginUrl = new URL("/login", request.url);
+  // Carry the original path so sign-in lands back on it — an emailed
+  // /invitations/[token] link must survive the login round-trip. Path only
+  // (always "/"-rooted), never a full URL, so this can't open-redirect.
+  loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
   return NextResponse.redirect(loginUrl);
 }

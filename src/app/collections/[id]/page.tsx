@@ -155,29 +155,25 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
             Continue/sorting chrome would only lead to empty pages, so it is
             withheld until there is something to continue. */}
         {state.kind !== "empty" && (
-          <section aria-labelledby="continue-heading" className="space-y-4">
-            <h2 id="continue-heading" className="text-xl text-ink">
-              Continue
-            </h2>
-            {/* Mounted UNCONDITIONALLY (not inside `{currentSession && …}`) so the
-                persistent set-aside Undo survives the refresh that flips
-                currentSession to null — it renders nothing when there's neither a
-                session nor a pending undo. */}
-            <ActiveSessionPanel
-              curatorId={session.user.id}
-              session={
-                currentSession
-                  ? {
-                      id: currentSession.id,
-                      number: currentSession.number,
-                      goal: currentSession.goal,
-                      status: currentSession.status as "active" | "paused",
-                    }
-                  : null
-              }
-              resumeHref={resumeHref}
-            />
-          </section>
+          /* Mounted UNCONDITIONALLY (not inside `{currentSession && …}`) so the
+             persistent set-aside Undo survives the refresh that flips
+             currentSession to null. The panel owns the "Continue" section chrome
+             and renders nothing at all — heading included — when there's neither
+             a session nor a pending undo. */
+          <ActiveSessionPanel
+            curatorId={session.user.id}
+            session={
+              currentSession
+                ? {
+                    id: currentSession.id,
+                    number: currentSession.number,
+                    goal: currentSession.goal,
+                    status: currentSession.status as "active" | "paused",
+                  }
+                : null
+            }
+            resumeHref={resumeHref}
+          />
         )}
 
         {isOwner && (

@@ -80,6 +80,10 @@ describe("public-path matcher (which routes invoke the auth middleware)", () => 
     expect(isPublic("/onboarding/charcoal-knit-cardigan.webp")).toBe(true);
   });
 
+  it("treats shared result links as public — the share promises 'no account, no signing in'", () => {
+    expect(isPublic("/shared-results/tok_abc123")).toBe(true);
+  });
+
   it("does not open other protected app routes", () => {
     // The security-relevant claim: normal app routes still run the middleware
     // (and would redirect an unauthenticated visitor to /login).
@@ -89,11 +93,23 @@ describe("public-path matcher (which routes invoke the auth middleware)", () => 
     expect(isPublic("/sessions/sess_1")).toBe(false);
     expect(isPublic("/tutorial-ish")).toBe(false);
     expect(isPublic("/onboarding-assets")).toBe(false);
+    expect(isPublic("/shared-resultsish")).toBe(false);
+    // No /shared/* route exists; the old exclusion was dead and is gone.
+    expect(isPublic("/shared/abc")).toBe(false);
   });
 
   it("still excludes the pre-existing public paths", () => {
     expect(isPublic("/login")).toBe(true);
     expect(isPublic("/signup")).toBe(true);
-    expect(isPublic("/shared/abc")).toBe(true);
+  });
+});
+
+describe("login redirect", () => {
+  it("carries the original path as callbackUrl so sign-in returns there (emailed invitation links)", () => {
+    const response = proxy(new NextRequest("http://localhost/invitations/tok_1"));
+    expect(response.status).toBe(307);
+    const location = new URL(response.headers.get("location")!);
+    expect(location.pathname).toBe("/login");
+    expect(location.searchParams.get("callbackUrl")).toBe("/invitations/tok_1");
   });
 });
