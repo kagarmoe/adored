@@ -1,55 +1,68 @@
 # Timer ring + touch-set dial — design
 
-**Date:** 2026-07-16 · **Epic:** purses-n4wm · **Branch:** feat/timer-ring
-**Owner decisions folded in:** one branch/PR for the whole epic; the timer is settable by touch (min 30 s, max 5 min), live during a round; 30-second snapping; dragging below the minimum lands on "no timer"; HTML + CSS rendering (no SVG).
+**Date:** 2026-07-16 · **Epic:** purses-n4wm · **Branch:** feat/timer-ring · **Rev 2** (adversarial spec review folded in: UX, Architect, Craftsman+QA, Graphic Design)
+**Owner decisions:** one branch/PR for the whole epic; the timer is settable by touch (min 30 s, max 5 min), live during a round; 30-second snapping; below the minimum lands on "no timer"; HTML + CSS rendering (no SVG).
 
 ## Purpose
 
-Replace the linear round-timer bar with the wireframes' quiet ring ("violet ring = round timer (no digits)", "Quiet ring, no clock"), add the gold completion moment ("4 · Round complete (ring → gold)"), give round lengths their feel-based names, and make the length a touch-set dial. The timer stays a gentle fatigue guard, never a stopwatch.
+Replace the linear round-timer bar with the wireframes' quiet ring ("violet ring = round timer (no digits)", "Quiet ring, no clock"), add the gold completion moment ("4 · Round complete (ring → gold)"), give round lengths their feel-based names, and make the length a touch-set dial. The timer stays a gentle fatigue guard, never a stopwatch. The dial (owner-chosen over the wireframes' three-option list) trades one tap for a tactile, continuous-feeling control; the feel-band labels keep the *perceived* choice at four bands, not eleven steps.
 
-## What exists today (verified)
+## What exists today (verified, rev 2)
 
-- `src/features/sorting/RoundTimer.tsx` — linear `h-2` bar, violet `bg-decor` fill shrinking on a 1 s tick, gold `bg-spark` at expiry with "✓ Round complete", visible "About N minutes left in this round" text, `role="timer" aria-live="polite"`; `boxMs=null` renders only the round label.
-- `src/lib/round-timer.ts` — pure math (`remainingMs`, `isExpired`, `fractionElapsed`, injectable clock). **Unchanged by this work.**
-- `src/features/sorting/RoundShell.tsx` — header `timer` slot (`min-w-40 flex-1 sm:max-w-xs`), plus a step-circle round-progress indicator (not a timer; untouched).
-- `src/features/sorting/useOptimisticRound.ts` — owns `startedAtMs`, `boxMs`, `expired`, `onExpire`, `onBoxChange(box)`; mid-round changes re-arm `boxMs` against the **unchanged** start time; expiry-as-pause. Contracts preserved.
-- Round length is chosen from discrete options (`ROUND_BOX_OPTIONS`), persisted device-locally as `pi-round-box`; the welcome walkthrough seeds `"2"`, and a stale `"10"` clamps.
+- `src/features/sorting/RoundTimer.tsx` — linear bar, violet fill on a 1 s tick, gold at expiry ("✓ Round complete"), visible "About N minutes left…" text, `role="timer" aria-live="polite"`; `boxMs=null` → round label only; `transition-[width] duration-1000 ease-linear` guarded by `useReducedMotion`; `firedRef` gates one-shot expiry (never resets on box change — hosts must preserve the `!ended` gate).
+- `src/lib/round-timer.ts` — pure ms math (`remainingMs`, `isExpired`, `fractionElapsed`), unit-agnostic. **Unchanged.**
+- `src/lib/round-preference.ts` — `RoundBox` (minutes union), `DEFAULT_ROUND_BOX = 2`, `ROUND_BOX_OPTIONS`, `VALID`, read-clamp (`10 || 20 → 5`), `pi-round-box` storage. `DEFAULT_ROUND_BOX` is how "2 minutes" arrives; nothing seeds the key except the screenshot harness (`e2e/screenshots/capture.ts`).
+- `src/features/sorting/RoundLengthChooser.tsx` — the mid-round `<select>`; **three live hosts**: `RoundSurface.tsx`, `TriageRound.tsx`, `UsageRound.tsx`. Its "'No timer' is a first-class peer, never a hidden mode" comment is a contract this design must keep.
+- `src/features/sorting/StartSessionForm.tsx` — a **fourth** length control (`TIMEBOX_OPTIONS` from `ROUND_BOX_OPTIONS`); session POST carries no length — round length is **purely client-local** (no server/DB surface; verified against schema).
+- `useOptimisticRound.ts` + `RoundSurface.tsx` — **duplicate** `boxToMs = box · MINUTE_MS` converters; `onBoxChange` re-arms against the never-updated `startedAtMs`; **expiry irreversibly ENDS the round** (one-shot end sequence, frozen recap, flush) — it is *not* a pause. Pause is a separate hub affordance.
+- `SortHelpDialog.tsx` — the repo's one overlay: hand-rolled `role="dialog"`, focus trap, Escape, trigger refocus. The pattern this design reuses.
+- No e2e spec asserts any timer UI today; the walkthrough/tutorials never teach the timer.
 
 ## Components
 
 ### 1. `TimerRing` (shared presentational)
 
-One stateless element used by every timer surface. A `rounded-full` div whose background is `conic-gradient(<sweep> var(--ring-fraction), <track> 0)`, with an inner disc making it a ring — the wireframes' own technique. No SVG.
+Stateless ring: `rounded-full` div, `background: conic-gradient(<sweep> calc(var(--ring-fraction) - 0.5%), <track> var(--ring-fraction))` — the 0.5 % blend kills the hard-stop aliasing at small sizes. Inner disc (~75 % diameter at every size) makes it a ring; the disc color **matches the host backdrop** (passed in), so the ring reads as a cut-out, not a pale circle.
 
-- **Colors:** sweep `decor` (violet), track the pale content-soft tone; expired state swaps to `spark` gold. Inner disc uses the surface token (never `#fff`) so dark mode is correct. All role tokens from DESIGN.md — no raw hexes.
-- **Sizes:** `sm` ≈ 40 px (round header), `lg` ≈ 200 px (dial), `badge` ≈ 56 px (completion moment).
-- **Fraction:** driven by a `--ring-fraction` custom property set from `fractionElapsed()`; the display depletes (full → empty) to match the wireframe sweep.
-- **Motion:** the 1 s tick moves the fraction in discrete steps — no continuous CSS animation, so there is nothing to disable for `prefers-reduced-motion`. (A short transition on the property may smooth the step; if added, it is disabled under reduced motion.)
+- **New role tokens (DESIGN.md amendment):** `ring-sweep` / `ring-track`, one pair per ramp, chosen to clear **≥3:1 against each other in both themes** — the existing `decor`/`content-soft` pair fails (1.61:1 light, 1.97:1 dark). Direction: light deepens toward the wireframe violet (`#8e7ea8` on `#ece8f1` = 3.05:1); dark takes a lighter sweep on a darker track. Exact values are pinned by new `contrast.test.ts` pairs (below) — the test, not taste, is the gate.
+- **Expired state:** band swaps to `spark` gold with a centered ✓ in **`ink` on the disc** (AA in both ramps; `spark-ink` is only safe *on* gold). The gold band's low contrast against light surfaces is acceptable because the ✓ + live-region text carry the state — the band is accent, not signal.
+- **Sizes:** one component, diameter prop: 40 px (header), 200 px (dial), 56 px (completion badge).
+- **Motion: committed — discrete 1 s steps, no CSS transition on the gradient.** A custom property inside `conic-gradient()` doesn't transition without `@property` registration; discrete steps are simpler, honest, and need no reduced-motion branch.
 
 ### 2. `RoundTimer` (display) — rewired visuals, same contract
 
-- Renders `TimerRing sm` in the header slot instead of the bar. **No digits while running.**
-- The remaining-time strings ("About N minutes left…", "Less than a minute…", "✓ Round complete") become `sr-only` inside the existing `role="timer" aria-live="polite"` container — non-sighted users keep the coarse announcements sighted users now get from the ring.
-- At expiry the ring turns gold with a visible ✓ (color is not the only signal).
-- `boxMs=null` → no ring, round label only (unchanged).
-- **Tap-to-adjust (live):** the running ring is wrapped in a ≥44 px button ("Change round length") that opens the dial popover (tablet) / bottom sheet (phone). Display stays quiet — no drag affordance on the small ring itself.
+- `TimerRing` 40 px in the header slot; **no digits while running**. RoundShell's timer slot drops `min-w-40 flex-1` (bar-era sizing) — ring + label are intrinsic width, right-aligned.
+- Remaining-time strings become `sr-only` inside the existing `role="timer" aria-live="polite"` container. **Honesty contract preserved:** a 30 s round announces sub-minute copy, never "About 1 minute" (named test).
+- Expiry: gold ring + ✓ (visible), existing announcement text.
+- **Tap-to-adjust (live):** the ring is wrapped in a ≥44 px button labeled "Change round length" that opens the dial dialog. **In the no-timer state the button remains** — an empty ring outline + quiet "No clock" label — so no-timer is never a dead end (keeps the RoundLengthChooser first-class-peer contract). `boxMs=null` therefore renders the empty-ring button, not nothing.
 
-### 3. `TimerDial` (input) — the touch-set control
+### 3. `TimerDial` (input)
 
-`TimerRing lg` plus pointer handling; used in the round-length chooser at round start and in the mid-round popover. One component, two hosts.
+`TimerRing` 200 px + pointer/keyboard handling, hosted in (a) the round-start chooser (replacing StartSessionForm's select) and (b) the mid-round dialog. Here the sweep means *duration set* — the dialog title "Round length" and the persistent label disambiguate it from the remaining-time header ring.
 
-- **Gesture:** drag (or tap) anywhere on the ring; pointer angle from the dial center maps to a value, snapped to 30 s steps in **[30 s … 300 s]**. Dragging below the minimum (sweeping past the top counter-clockwise, or releasing under 15 s) lands on **"no timer"** — the ring empties and the label reads "no clock at all".
-- **Feedback while setting (digits allowed here, per the wireframes' own "Start · 2 min"):** a live label under the dial — "2 minutes — a handful", "1½ minutes — a handful", "30 seconds — a breath", "no clock at all".
-- **Keyboard/SR:** `role="slider"`, `aria-valuemin=0` (0 ⇒ no timer), `aria-valuemax=300`, `aria-valuenow` in seconds, `aria-valuetext` = the live label; ← ↓ / → ↑ move one 30 s step (below 30 s → no timer), Home = no timer, End = 5 minutes. The slider pattern is the single-pointer/keyboard alternative WCAG 2.5.1 requires for the drag gesture.
-- **Commit semantics:** at round start the dial sets the stored preference; mid-round it calls the existing `onBoxChange` — re-arming against the unchanged start time (never resetting the clock), `no timer` → `null` (timer disappears; expiry-as-pause simply never fires).
+- **Geometry (explicit):** 12-o'clock = start, clockwise; full circle = 300 s, so each 30 s step = 36° of arc (~50 px at the dial's radius). A **visible handle** sits at the value angle — the draggability signifier and the Fitts target. The "no clock" zone is the full first step-width below 30 s (a 36° band, not a sliver); entering it previews "no clock at all".
+- **Values:** 30 s steps in [30 … 300]; below-min = "no timer". Erratic pointer values snap to the nearest legal step; past 5 min clamps.
+- **Commit semantics (blocker fix):** the dial **previews continuously but never re-arms `boxMs` mid-gesture**. Mid-round, the dialog commits **once, on "Done"** (Esc / scrim = cancel, no change) — because a commit below elapsed time immediately and irreversibly *ends* the round (today's deliberate contract, kept — but it must be reachable only by a deliberate act, never by a finger passing through values). At round start there is no running clock, so the dial commits the stored preference on release.
+- **Feedback while setting** (digits allowed here, per the wireframes' own "Start · 2 min"): a **persistent** label — "2 minutes — a handful", "no clock at all" — rendered whenever the dial is visible, not only mid-drag (it is also the non-hue discriminator between empty and 30 s). Quiet microcopy beneath: "Drag or tap to set." (the control is novel; nothing else teaches it).
+- **Keyboard/SR:** `role="slider"`, `aria-valuemin=0` (0 ⇒ no timer), `aria-valuemax=300`, `aria-valuenow` seconds, `aria-valuetext` = the label; arrows ±30 s (below 30 → no timer), Home = no timer, End = 5 min. Keyboard changes preview like drag; Done commits. Satisfies WCAG 2.5.1's single-pointer alternative.
 
-### 4. Completion moment
+### 4. Mid-round dialog (one overlay, responsive)
 
-The round recap ("Here's what moved") leads with `TimerRing badge` in its gold/✓ state above the heading — the wireframes' "ring → gold" beat. Decorative (`aria-hidden`); the existing live-region text carries the meaning. Appears only when the round had a timer.
+**One** dialog in the `SortHelpDialog` pattern — focus trap, Escape, scrim, trigger refocus — not a popover + bottom-sheet pair. Phone presentation (full-width, bottom-aligned under `sm:`) vs tablet (centered card) is CSS only, so the interaction is viewport-insensitive and one tablet e2e covers it. **Focus contract:** open → focus the slider; Done/Esc/scrim → focus returns to the ring button.
 
-### 5. Feel-based names
+### 5. `RoundLengthChooser` and `StartSessionForm` (blast radius, explicit)
 
-Total mapping over every reachable value (bands cover all 30 s steps):
+- `RoundLengthChooser.tsx` is **deleted**; its three hosts render nothing in that slot — the ring button is the affordance. `RoundLengthChooser.test.tsx` deleted; its behavioral pins (persist + live re-arm + no-timer peer) port to the dial/dialog tests.
+- `StartSessionForm.tsx` replaces its length `<select>` with the `TimerDial` (its helper copy adapts); `StartSessionForm.test.tsx` updates.
+- `WhatMoved` (recap) gains a `hadTimer` prop from its hosts to gate the completion badge.
+
+### 6. Completion moment
+
+The recap leads with `TimerRing` 56 px in gold/✓ above "Here's what moved" — decorative (`aria-hidden`), meaning carried by the existing live-region text; only when the round had a timer. A marker, not a celebration (TONE: no gamification).
+
+### 7. Feel-based names
+
+Total over every reachable value:
 
 | Value | Name |
 |---|---|
@@ -58,30 +71,32 @@ Total mapping over every reachable value (bands cover all 30 s steps):
 | 3 – 5 min | **a real dent** |
 | no timer | **no clock at all** |
 
-Formatting: whole minutes as "N minutes", half steps as "N½ minutes", 30 s as "30 seconds". Names appear wherever a length is *chosen or announced* (dial label, `aria-valuetext`, start-screen chooser); never on the running ring.
+Formatting: "30 seconds", "1 minute", "1½ minutes", "2 minutes"… Names appear where a length is chosen or announced; never on the running ring. *(TONE note: "a real dent" is wireframe-sourced; flagged to the owner as a deliberate keep-or-rename call — default keep.)*
 
 ## Data model
 
-- `RoundBox` becomes **seconds** (`30 | 60 | … | 300`) **or `"none"`** — stored in `pi-round-box` as the number string or `"none"`.
-- **Legacy parsing** (old minutes values, read-once on load): `"0.5"`→30, `"1"`→60, `"2"`→120, `"5"`→300, `"10"`→300 (existing clamp), `"none"`→"none", unparseable → default 120.
-- The `box·MINUTE_MS` conversion in `useOptimisticRound`/hosts becomes seconds→ms. `src/lib/round-timer.ts` math is untouched.
-- Welcome walkthrough seed `"2"` parses via the legacy map — no fixture churn required, but fixtures may move to `"120"` for clarity.
+- `RoundBox` becomes **seconds** (`30 | 60 | … | 300`) or `"none"`, stored in `pi-round-box` (number string or `"none"`). The union stays flat (a discriminated kind adds ceremony, no safety); the **unit lives in the name** — `RoundBoxSeconds` — and **one** shared `boxToMs(seconds)` converter replaces the two duplicates (`useOptimisticRound.ts`, `RoundSurface.tsx`), so a missed call site is a type error, not a silent 60× bug.
+- **Legacy parsing** (read-once): `"0.5"`→30, `"1"`→60, `"2"`→120, `"5"`→300, `"10"`→300, **`"20"`→300** (both existing clamps), `"none"`→"none", unparseable → 120. Old minute strings and new second strings are disjoint — unambiguous.
+- Round length remains **client-local only** — no session/DB field (verified).
+- Test fixtures seeding minutes (`TriageRound/UsageRound/RoundSurface` tests, `capture.ts` `"2"`) keep working via the map; they migrate to second values in this branch for clarity.
 
 ## Errors & edges
 
-- Drag past 5 min clamps at 300 s; erratic pointer values snap to the nearest legal step; the dial never produces an out-of-range value.
-- Mid-round shrink below elapsed time ⇒ `isExpired` is immediately true ⇒ existing expiry-as-pause path (already the contract; a test pins it).
-- Storage unavailable ⇒ default 2 minutes, dial still works for the session (existing behavior).
+- Mid-round Done with a value below elapsed ⇒ round ends immediately with the frozen recap — **deliberate, dialog-gated**; a named test pins that mid-drag preview never triggers it.
+- Growing the box mid-round re-arms against the **unchanged** start (named test: remaining time reflects original start + new box).
+- Hosts preserve the `!ended` gate around the adjust button so the one-shot `firedRef` contract holds.
+- Storage unavailable ⇒ default 2 minutes, dial still works for the session.
 
 ## Testing
 
-- **Unit:** angle→step mapping (including the below-min → none edge and the 359°/0° boundary), legacy `pi-round-box` parsing, band/label formatter totality (every step has a name), seconds→ms conversion.
-- **Component (jsdom):** `RoundTimer` — ring renders with fraction, gold+✓ at expiry, sr-only strings present in the live region, `boxMs=null` renders no ring; `TimerDial` — slider keyboard semantics (arrows, Home/End, below-min → none), `aria-valuetext`, commit calls; tap-to-adjust opens and closes the popover.
-- **e2e (tablet + phone, the dial is a new touch interaction):** start a round setting the length by dial → quiet ring runs (no digits visible) → adjust live via tap-to-adjust → complete → gold recap moment. Existing round/sort specs stay green.
-- All tests run in CI's existing gate/e2e jobs (no new env flags); the mapped Playwright specs are added to the selective spec map if a new spec file is created.
+- **Contrast (CI gate, new):** `contrast.test.ts` pairs — `[ring-sweep, ring-track, 3.0]` in both themes; `[✓ ink, disc, 4.5]`; these pin the new tokens.
+- **Unit:** angle→step mapping (incl. below-min band, 359°/0° boundary), legacy `pi-round-box` parsing (all seven legacy values), band/label formatter totality, single `boxToMs`.
+- **Component (jsdom):** RoundTimer — ring fraction, gold+✓ at expiry, sr-only strings (incl. the 30 s sub-minute honesty case), empty-ring button in the no-timer state; TimerDial — slider keyboard semantics, `aria-valuetext`, preview-vs-commit (no `onBoxChange` until Done mid-round), dialog focus contract (open → slider; close → ring button); StartSessionForm with the dial.
+- **e2e — new `e2e/timer-ring.spec.ts` (tablet; added to CI's selective spec map under the sort area):** set length via **keyboard** on the dial at round start → quiet ring runs (no digits) → tap-to-adjust mid-round → Done → complete → gold recap. Drag/angle math stays at unit level (Playwright arc-drag is brittle and re-tests unit-covered math). Phone styling asserted at jsdom level; the interaction is viewport-insensitive by design.
+- Existing round/sort specs stay green (weak evidence by itself — none asserts timer UI; the named tests above are the real net).
 
 ## Out of scope
 
 - Wireframe-doc sync for shipped timer behaviors — bead purses-xnp8.
 - Results-page ranked-item images/decorations — bead purses-21x5.1.
-- Any change to `src/lib/round-timer.ts` math or session/round semantics.
+- `src/lib/round-timer.ts` math, session/round semantics, server storage of round length.
