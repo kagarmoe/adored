@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Badge, Button, Card } from "@/components/ui";
@@ -27,6 +27,20 @@ interface SessionSummary {
   number: number | null;
   goal: string | null;
   status: "active" | "paused";
+}
+
+// The panel owns the "Continue" section chrome so the heading can never render
+// over nothing: no session, no undo, no settled note → no heading at all
+// (wireframe rule: "'Start' before anything is sorted; 'Keep sorting' only after").
+function ContinueSection({ children }: { children: ReactNode }) {
+  return (
+    <section aria-labelledby="continue-heading" className="space-y-4">
+      <h2 id="continue-heading" className="text-xl text-ink">
+        Continue
+      </h2>
+      {children}
+    </section>
+  );
 }
 
 export function ActiveSessionPanel({
@@ -114,9 +128,11 @@ export function ActiveSessionPanel({
   // MUST take precedence over the undo-invite block below.
   if (settled) {
     return (
-      <p role="status" className="text-sm text-ink-soft">
-        Set aside. You&rsquo;ve started a new sort since, so this one stays put.
-      </p>
+      <ContinueSection>
+        <p role="status" className="text-sm text-ink-soft">
+          Set aside. You&rsquo;ve started a new sort since, so this one stays put.
+        </p>
+      </ContinueSection>
     );
   }
 
@@ -125,25 +141,27 @@ export function ActiveSessionPanel({
   // for the render between set-aside and the refresh landing.
   if (undo) {
     return (
-      <div className="flex flex-col items-start gap-2">
-        <p role="status" className="text-sm text-ink-soft">
-          Set aside — you can bring it back{" "}
-          <span aria-hidden="true">·</span>{" "}
-          <button
-            type="button"
-            onClick={bringBack}
-            disabled={busy}
-            className="min-h-11 font-medium text-primary underline underline-offset-2 hover:text-primary-hover focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-xs disabled:opacity-50"
-          >
-            Undo
-          </button>
-        </p>
-        {error && (
-          <span role="status" className="text-sm text-ink-soft">
-            {error}
-          </span>
-        )}
-      </div>
+      <ContinueSection>
+        <div className="flex flex-col items-start gap-2">
+          <p role="status" className="text-sm text-ink-soft">
+            Set aside — you can bring it back{" "}
+            <span aria-hidden="true">·</span>{" "}
+            <button
+              type="button"
+              onClick={bringBack}
+              disabled={busy}
+              className="min-h-11 font-medium text-primary underline underline-offset-2 hover:text-primary-hover focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-xs disabled:opacity-50"
+            >
+              Undo
+            </button>
+          </p>
+          {error && (
+            <span role="status" className="text-sm text-ink-soft">
+              {error}
+            </span>
+          )}
+        </div>
+      </ContinueSection>
     );
   }
 
@@ -152,83 +170,85 @@ export function ActiveSessionPanel({
   const paused = session.status === "paused";
 
   return (
-    <Card padding="lg" className="border-hairline bg-content-soft dark:bg-surface-raised dark:shadow-raised">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="mb-2 flex items-center gap-2">
-            <h2 className="text-lg text-ink">
-              {paused ? "Your sort is paused" : "Active session"}
-            </h2>
-            <Badge variant={session.status}>{session.status}</Badge>
-          </div>
-          <p className="text-sm text-ink">
-            {paused
-              ? "Your sort is safe — pick up where you left off."
-              : session.goal || "Preference discovery"}
-          </p>
-        </div>
-        <div className="flex flex-col items-start gap-2 sm:items-end">
-          {!confirming ? (
-            <div className="flex gap-2">
-              {/* A paused row stays status='paused' in the DB — a bare Link would
-                  land the curator mid-sort while the row says paused, desyncing
-                  the in-progress predicate. ResumeControl PATCHes status:active
-                  THEN navigates, so the DB and the URL agree. */}
-              {paused ? (
-                <ResumeControl
-                  curatorId={curatorId}
-                  sessionId={session.id}
-                  sortHref={resumeHref}
-                  onBusyChange={setResumeBusy}
-                  label="Resume sorting"
-                />
-              ) : (
-                <Link href={resumeHref}>
-                  <Button>Resume sorting</Button>
-                </Link>
-              )}
-              {/* Disabled while a resume PATCH is in flight so a curator can't
-                  open the set-aside confirm and DELETE mid-resume (same row). */}
-              <Button
-                variant="secondary"
-                onClick={() => setConfirming(true)}
-                disabled={resumeBusy}
-              >
-                Set aside
-              </Button>
+    <ContinueSection>
+      <Card padding="lg" className="border-hairline bg-content-soft dark:bg-surface-raised dark:shadow-raised">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="mb-2 flex items-center gap-2">
+              <h2 className="text-lg text-ink">
+                {paused ? "Your sort is paused" : "Active session"}
+              </h2>
+              <Badge variant={session.status}>{session.status}</Badge>
             </div>
-          ) : (
-            <div
-              role="group"
-              aria-label="Set this session aside"
-              className="flex flex-col items-start gap-1 sm:items-end"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-ink">Set this session aside?</span>
+            <p className="text-sm text-ink">
+              {paused
+                ? "Your sort is safe — pick up where you left off."
+                : session.goal || "Preference discovery"}
+            </p>
+          </div>
+          <div className="flex flex-col items-start gap-2 sm:items-end">
+            {!confirming ? (
+              <div className="flex gap-2">
+                {/* A paused row stays status='paused' in the DB — a bare Link would
+                    land the curator mid-sort while the row says paused, desyncing
+                    the in-progress predicate. ResumeControl PATCHes status:active
+                    THEN navigates, so the DB and the URL agree. */}
+                {paused ? (
+                  <ResumeControl
+                    curatorId={curatorId}
+                    sessionId={session.id}
+                    sortHref={resumeHref}
+                    onBusyChange={setResumeBusy}
+                    label="Resume sorting"
+                  />
+                ) : (
+                  <Link href={resumeHref}>
+                    <Button>Resume sorting</Button>
+                  </Link>
+                )}
+                {/* Disabled while a resume PATCH is in flight so a curator can't
+                    open the set-aside confirm and DELETE mid-resume (same row). */}
                 <Button
-                  ref={cancelRef}
                   variant="secondary"
-                  onClick={() => {
-                    setConfirming(false);
-                    setError("");
-                  }}
-                  disabled={busy}
+                  onClick={() => setConfirming(true)}
+                  disabled={resumeBusy}
                 >
-                  Never mind
-                </Button>
-                <Button onClick={setAside} disabled={busy}>
-                  {busy ? "Setting aside…" : "Set aside"}
+                  Set aside
                 </Button>
               </div>
-              {error && (
-                <span role="status" className="text-sm text-ink-soft">
-                  {error}
-                </span>
-              )}
-            </div>
-          )}
+            ) : (
+              <div
+                role="group"
+                aria-label="Set this session aside"
+                className="flex flex-col items-start gap-1 sm:items-end"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-ink">Set this session aside?</span>
+                  <Button
+                    ref={cancelRef}
+                    variant="secondary"
+                    onClick={() => {
+                      setConfirming(false);
+                      setError("");
+                    }}
+                    disabled={busy}
+                  >
+                    Never mind
+                  </Button>
+                  <Button onClick={setAside} disabled={busy}>
+                    {busy ? "Setting aside…" : "Set aside"}
+                  </Button>
+                </div>
+                {error && (
+                  <span role="status" className="text-sm text-ink-soft">
+                    {error}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+    </ContinueSection>
   );
 }
