@@ -88,7 +88,7 @@ export interface Photo {
   fileSize: number | null;
   uploadedBy: string;
   isHero: boolean;
-  /** bowlwise display rotation in degrees: 0 | 90 | 180 | 270 (non-destructive). */
+  /** Clockwise display rotation in degrees: 0 | 90 | 180 | 270 (non-destructive). */
   rotation: number;
   createdAt: Date;
   updatedAt: Date;

@@ -266,7 +266,7 @@ describeDb("single decisions route accepts usage (route -> controller -> repo ->
     // vanished seed would make byte-identity trivially true.
     expect(snapshot).not.toBe("[]");
 
-    // Sleep so a spurious recompute's JS-bowl updatedAt could not collide with
+    // Sleep so a spurious recompute's JS-clock updatedAt could not collide with
     // the triage's millisecond.
     await sleep(5);
     const usageRes = await postDecision(

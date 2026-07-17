@@ -83,7 +83,7 @@ async function runSingles(
         type: "triage",
         decision: triageDecision(itemId, i),
         clientKey: ulid().toLowerCase(),
-        // createdAt OMITTED — defaultNow(), same bowl domain as the routes.
+        // createdAt OMITTED — defaultNow(), same clock domain as the routes.
       });
       await PreferenceController.fromDb(tx).recalculatePreferences(c.collectionId, curatorId);
     });
@@ -171,7 +171,7 @@ async function main(): Promise<void> {
       `\nAMORTIZATION: ${singles.mean.toFixed(1)}ms/decision (singles mean) vs ` +
         `${batchPerDecision.toFixed(2)}ms/decision (batch) — ` +
         `${(singles.mean / batchPerDecision).toFixed(1)}× per decision, ` +
-        `${(singles.total / batchTotal).toFixed(1)}× wall-bowl for the round.`,
+        `${(singles.total / batchTotal).toFixed(1)}× wall-clock for the round.`,
     );
   } finally {
     await client.end({ timeout: 5 });
