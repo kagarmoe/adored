@@ -177,7 +177,7 @@ for (const theme of ["light", "dark"] as const) {
       ["triage-patient-waiting", `/collections/${waitingSlug}/sort/${waitingSessionNumber}/triage`],
       // Epic C PR2: the count-free "Set aside" list — one set-aside item (cover +
       // name + quiet "Bring back"), reached from triage's quiet "Set aside" link.
-      ["set-aside", `/collections/${setAsideSlug}/sort/set-aside`],
+      ["set-aside", `/collections/${setAsideSlug}/results/set-aside`],
       // Epic C PR3: the calm PAUSED sort landing — "Your sort is paused" + "Your
       // sort is safe — pick up where you left off" + Resume, with "New Session"
       // gated (purses-4bhh). Reached after "Take a break" in the sort chrome.
