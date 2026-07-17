@@ -75,4 +75,30 @@ describe("WhatMoved", () => {
     const link = screen.getByRole("link", { name: /back to your sort/i });
     expect(link).toHaveAttribute("href", "/collections/x/sort/2");
   });
+
+  it("renders a gold ring badge when hadTimer is true", () => {
+    const { container } = render(
+      <WhatMoved decisions={[triage("top", 2_000)]} windowStartMs={START} nowMs={NOW} hubHref="/hub" hadTimer />,
+    );
+    const badge = container.querySelector(".bg-spark");
+    expect(badge).not.toBeNull();
+    const ariaHidden = container.querySelector('[aria-hidden] .bg-spark');
+    expect(ariaHidden).not.toBeNull();
+  });
+
+  it("does not render the badge when hadTimer is false", () => {
+    const { container } = render(
+      <WhatMoved decisions={[triage("top", 2_000)]} windowStartMs={START} nowMs={NOW} hubHref="/hub" hadTimer={false} />,
+    );
+    const badge = container.querySelector(".bg-spark");
+    expect(badge).toBeNull();
+  });
+
+  it("does not render the badge when hadTimer is undefined", () => {
+    const { container } = render(
+      <WhatMoved decisions={[triage("top", 2_000)]} windowStartMs={START} nowMs={NOW} hubHref="/hub" />,
+    );
+    const badge = container.querySelector(".bg-spark");
+    expect(badge).toBeNull();
+  });
 });

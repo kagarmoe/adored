@@ -96,7 +96,7 @@ export function RoundSurface({
       onPause={() => router.push(hubHref)}
     >
       {ended ? (
-        <WhatMoved decisions={decisions} windowStartMs={startedAtMs} hubHref={hubHref} />
+        <WhatMoved decisions={decisions} windowStartMs={startedAtMs} hubHref={hubHref} hadTimer={boxMs !== null} />
       ) : (
         children
       )}

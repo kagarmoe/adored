@@ -374,6 +374,7 @@ export function UsageRound({
           windowStartMs={round.windowStartMs}
           nowMs={round.recapNowMs}
           hubHref={hubHref}
+          hadTimer={round.boxMs !== null}
         />
       ) : (
         <div className="mx-auto max-w-xl space-y-6">
