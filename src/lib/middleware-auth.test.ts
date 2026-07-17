@@ -84,6 +84,11 @@ describe("public-path matcher (which routes invoke the auth middleware)", () => 
     expect(isPublic("/shared-results/tok_abc123")).toBe(true);
   });
 
+  it("treats the invitation accept page and its GET preview as public — the token is the read capability", () => {
+    expect(isPublic("/invitations/tok_1")).toBe(true);
+    expect(isPublic("/api/invitations/accept")).toBe(true);
+  });
+
   it("does not open other protected app routes", () => {
     // The security-relevant claim: normal app routes still run the middleware
     // (and would redirect an unauthenticated visitor to /login).
@@ -96,6 +101,8 @@ describe("public-path matcher (which routes invoke the auth middleware)", () => 
     expect(isPublic("/shared-resultsish")).toBe(false);
     // No /shared/* route exists; the old exclusion was dead and is gone.
     expect(isPublic("/shared/abc")).toBe(false);
+    // Lookalike path — must not accidentally match the invitations exclusion.
+    expect(isPublic("/invitationsish")).toBe(false);
   });
 
   it("still excludes the pre-existing public paths", () => {
@@ -105,11 +112,13 @@ describe("public-path matcher (which routes invoke the auth middleware)", () => 
 });
 
 describe("login redirect", () => {
-  it("carries the original path as callbackUrl so sign-in returns there (emailed invitation links)", () => {
-    const response = proxy(new NextRequest("http://localhost/invitations/tok_1"));
+  it("carries the original path as callbackUrl so sign-in returns there", () => {
+    // /invitations/* is now public (see above) so it no longer redirects; a
+    // still-protected route exercises the same callbackUrl mechanism instead.
+    const response = proxy(new NextRequest("http://localhost/collections/col_1"));
     expect(response.status).toBe(307);
     const location = new URL(response.headers.get("location")!);
     expect(location.pathname).toBe("/login");
-    expect(location.searchParams.get("callbackUrl")).toBe("/invitations/tok_1");
+    expect(location.searchParams.get("callbackUrl")).toBe("/collections/col_1");
   });
 });

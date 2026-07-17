@@ -23,7 +23,7 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
-import { seedBaseline, seedBareCollection, seedUserRow } from "../../../e2e/fixtures/seed";
+import { seedBaseline, seedBareCollection, seedUserRow, BASELINE_USER } from "../../../e2e/fixtures/seed";
 import { mockAuth } from "../../../e2e/fixtures/mock-auth";
 import { generateId } from "@/lib/id";
 import { InvitationRepository } from "@/server/repositories/implementations/InvitationRepository";
@@ -385,17 +385,23 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(body.error).toMatch(/not found|expired/i);
     });
 
-    it("happy path — returns invitation for a valid token (no auth required)", async () => {
+    it("happy path — returns the shaped preview (collection + inviter join), not the raw row", async () => {
       const collectionId = await seedBareCollection(ownerId);
-      const { id, token } = await seedInvitation(collectionId, "gettest@adored.test");
+      const { token } = await seedInvitation(collectionId, "gettest@adored.test");
 
       const req = makeNextRequest("GET", `http://localhost/api/invitations/accept?token=${token}`);
       const res = await acceptGet(req as any);
       expect(res.status).toBe(200);
       const body = await res.json();
-      expect(body.id).toBe(id);
-      expect(body.token).toBe(token);
-      expect(body.status).toBe("pending");
+      // Exact shape (spec Global Constraints): collection + owner joined
+      // server-side, no token echo, no ids.
+      expect(body).toEqual({
+        collectionName: "Test Collection",
+        collectionDescription: null,
+        inviterName: BASELINE_USER.name,
+        invitedEmail: "gettest@adored.test",
+        status: "pending",
+      });
     });
 
     it("no auth required — works without a session (public endpoint)", async () => {
@@ -450,6 +456,9 @@ describeDb("Invitation routes — real DB integration", () => {
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.message).toMatch(/accepted/i);
+      // The accept page has no id in its GET preview payload anymore, so the
+      // client needs the collectionId from HERE to route to the workspace.
+      expect(body.collectionId).toBe(collectionId);
 
       // DB state: invitation status = "accepted".
       const updated = await new InvitationRepository(db).findById(inv.id);

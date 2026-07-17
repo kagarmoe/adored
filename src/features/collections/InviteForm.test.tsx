@@ -3,11 +3,13 @@ import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 
-// Boundary: fetch only. InviteForm posts through the REAL @/lib/api-client
+// Boundary: fetch only, plus next/navigation's useRouter (real router isn't
+// available in jsdom). InviteForm posts through the REAL @/lib/api-client
 // (apiPost) and the REAL zod schema. The invite is email-only under the role model
 // (no permission checkboxes — an accepted invite becomes a curator).
-// It does NOT use next/navigation — success is communicated via an in-place
-// success view and the onSuccess callback. Nothing to mock but fetch.
+const refresh = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
+
 import { InviteForm } from "./InviteForm";
 
 beforeEach(() => {
@@ -128,6 +130,41 @@ describe("InviteForm", () => {
     }
   });
 
+  it("shows the email-not-sent notice when the response carries emailSent:false — invite is still saved", async () => {
+    (fetch as any).mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({ emailSent: false }),
+    });
+
+    render(<InviteForm collectionId="coll_01ULID" />);
+    fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          "The invite is saved — the email didn't go out, so share the link yourself with Copy link.",
+        ),
+      ).toBeInTheDocument(),
+    );
+    // Announced via a persistent role=status node (same pattern as the success region).
+    expect(screen.getByText(/didn't go out/i).closest('[role="status"]')).not.toBeNull();
+  });
+
+  it("does NOT show the email-not-sent notice when emailSent is true (or absent)", async () => {
+    (fetch as any).mockResolvedValue({ ok: true, status: 201, json: async () => ({ emailSent: true }) });
+
+    render(<InviteForm collectionId="coll_01ULID" />);
+    fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
+
+    await waitFor(() =>
+      expect(screen.getByText("Invitation sent successfully!")).toBeInTheDocument(),
+    );
+    expect(screen.queryByText(/didn't go out/i)).not.toBeInTheDocument();
+  });
+
   it("a failing API response surfaces the server error and does NOT show success", async () => {
     (fetch as any).mockResolvedValue({
       ok: false,
@@ -142,6 +179,68 @@ describe("InviteForm", () => {
     await waitFor(() =>
       expect(screen.getByText("You cannot invite members")).toBeInTheDocument(),
     );
+    expect(screen.queryByText("Invitation sent successfully!")).not.toBeInTheDocument();
+  });
+
+  it("refreshes the route on a successful create, so the members page's new pending row appears", async () => {
+    (fetch as any).mockResolvedValue({ ok: true, status: 201, json: async () => ({}) });
+
+    render(<InviteForm collectionId="coll_01ULID" />);
+    fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
+
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("keeps the email-not-sent notice visible past the 3s success auto-reset, clearing only when the next submit begins", async () => {
+    vi.useFakeTimers();
+    try {
+      (fetch as any).mockResolvedValue({
+        ok: true,
+        status: 201,
+        json: async () => ({ emailSent: false }),
+      });
+
+      render(<InviteForm collectionId="coll_01ULID" />);
+      fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
+      fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(screen.getByText(/didn't go out/i)).toBeInTheDocument();
+
+      // Past the plain success message's 3s auto-reset — the email-not-sent
+      // notice must survive because there's still a Copy link to point to.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3000);
+      });
+      expect(screen.queryByText("Invitation sent successfully!")).not.toBeInTheDocument();
+      expect(screen.getByText(/didn't go out/i)).toBeInTheDocument();
+
+      // Starting the next submit clears it immediately (same beat as `error`).
+      fireEvent.change(emailField(), { target: { value: "another@example.com" } });
+      fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
+      expect(screen.queryByText(/didn't go out/i)).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("clears a stale success message when the next submit begins", async () => {
+    (fetch as any).mockResolvedValue({ ok: true, status: 201, json: async () => ({}) });
+
+    render(<InviteForm collectionId="coll_01ULID" />);
+    fireEvent.change(emailField(), { target: { value: "curator@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
+    await waitFor(() =>
+      expect(screen.getByText("Invitation sent successfully!")).toBeInTheDocument(),
+    );
+
+    // Before the 3s auto-reset fires, start another submit — success must
+    // clear immediately, the same beat as `error`.
+    fireEvent.change(emailField(), { target: { value: "another@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send invite" }));
     expect(screen.queryByText("Invitation sent successfully!")).not.toBeInTheDocument();
   });
 });

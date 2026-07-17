@@ -36,12 +36,13 @@ afterEach(() => {
 });
 
 describe("sendInvitation — with RESEND_API_KEY set", () => {
-  it("builds ${AUTH_URL}/invitations/${token} and sends it in the html", async () => {
+  it("builds ${AUTH_URL}/invitations/${token} and sends it in the html, returning {sent:true}", async () => {
     process.env.RESEND_API_KEY = "re_test_key";
     const { sendInvitation } = await import("./email");
 
-    await sendInvitation({ to: "invitee@example.com", token: "INVITE_TOKEN" });
+    const result = await sendInvitation({ to: "invitee@example.com", token: "INVITE_TOKEN" });
 
+    expect(result).toEqual({ sent: true });
     expect(sendMock).toHaveBeenCalledTimes(1);
     const arg = sendMock.mock.calls[0][0];
     expect(arg.from).toBe("noreply@kimberlygarmoe.com");
@@ -53,14 +54,14 @@ describe("sendInvitation — with RESEND_API_KEY set", () => {
 });
 
 describe("graceful fallback — RESEND_API_KEY unset", () => {
-  it("does NOT construct a client, does NOT send, does NOT throw", async () => {
+  it("does NOT construct a client, does NOT send, does NOT throw, and returns {sent:false}", async () => {
     delete process.env.RESEND_API_KEY;
     const { Resend } = await import("resend");
     const { sendInvitation } = await import("./email");
 
     await expect(
       sendInvitation({ to: "invitee@example.com", token: "t" }),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual({ sent: false });
 
     expect(Resend).not.toHaveBeenCalled();
     expect(sendMock).not.toHaveBeenCalled();
@@ -73,7 +74,7 @@ describe("graceful fallback — RESEND_API_KEY unset", () => {
 
     await expect(
       sendInvitation({ to: "invitee@example.com", token: "t" }),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual({ sent: false });
     expect(sendMock).not.toHaveBeenCalled();
   });
 
@@ -102,6 +103,33 @@ describe("graceful fallback — RESEND_API_KEY unset", () => {
     const logged = log.mock.calls.map((c) => JSON.stringify(c)).join("\n");
     expect(logged).toContain("https://adored.example.com/invitations/DEVLINK");
     log.mockRestore();
+  });
+
+  it("logs the EXACT static console.error string in production — never interpolates token/email (Security pin)", async () => {
+    delete process.env.RESEND_API_KEY;
+    vi.stubEnv("NODE_ENV", "production");
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { sendInvitation } = await import("./email");
+
+    await sendInvitation({ to: "invitee@example.com", token: "SECRET_TOKEN" });
+
+    expect(errSpy).toHaveBeenCalledTimes(1);
+    expect(errSpy).toHaveBeenCalledWith(
+      "[email] RESEND_API_KEY missing — invitation email NOT sent",
+    );
+    errSpy.mockRestore();
+  });
+
+  it("does NOT console.error in non-production envs when the key is unset", async () => {
+    delete process.env.RESEND_API_KEY;
+    vi.stubEnv("NODE_ENV", "test");
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { sendInvitation } = await import("./email");
+
+    await sendInvitation({ to: "invitee@example.com", token: "t" });
+
+    expect(errSpy).not.toHaveBeenCalled();
+    errSpy.mockRestore();
   });
 });
 
