@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">78.57% </span>
+                <span class="strong">80.95% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>11/14</span>
+                <span class='fraction'>17/21</span>
             </div>
         
             
@@ -182,7 +182,21 @@
 <a name='L117'></a><a href='#L117'>117</a>
 <a name='L118'></a><a href='#L118'>118</a>
 <a name='L119'></a><a href='#L119'>119</a>
-<a name='L120'></a><a href='#L120'>120</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L120'></a><a href='#L120'>120</a>
+<a name='L121'></a><a href='#L121'>121</a>
+<a name='L122'></a><a href='#L122'>122</a>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -201,26 +215,28 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -278,11 +294,23 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -308,11 +336,13 @@ import { requireCollectionAccess } from "@/lib/collection-access";
 import { SessionController } from "@/server/api/sessions";
 import { AppLayout } from "@/components/layout";
 import { trail } from "@/components/layout/breadcrumb-trails";
-import { Badge, Button, Card, EmptyState } from "@/components/ui";
+import { Button, Card, EmptyState } from "@/components/ui";
 import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { ResumeControl } from "@/features/sorting/ResumeControl";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
 import { SessionResumeCard } from "@/features/sessions/SessionResumeCard";
+import { StartSortingButton } from "@/features/sessions/StartSortingButton";
+import { quietLink } from "@/lib/design/quiet-link";
 import Link from "next/link";
 &nbsp;
 interface SortPageProps {
@@ -346,13 +376,20 @@ export default async function SortPage({ params }: SortPageProps) {
       &lt;PendingDecisionsGate curatorId={session.user.id}&gt;
       &lt;div className="space-y-8"&gt;
         &lt;div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"&gt;
-          &lt;h1 className="text-2xl text-ink sm:text-3xl"&gt;Sorting sessions&lt;/h1&gt;
+          &lt;h1 className="text-2xl text-ink sm:text-3xl"&gt;Sort&lt;/h1&gt;
           {/* purses-4bhh: only invite a new session when none is open — starting a
               second while one is active/paused violates sessions_active_unique. */}
-          {!currentSession &amp;&amp; (
-            &lt;Link href={`${collectionHref}/sort/new`} className="w-full sm:w-auto"&gt;
-              &lt;Button className="w-full"&gt;New session&lt;/Button&gt;
-            &lt;/Link&gt;
+          {!currentSession &amp;&amp; sessions.length &gt; 0 &amp;&amp; (
+            &lt;div className="flex flex-col items-start gap-2 sm:items-end"&gt;
+              &lt;StartSortingButton collectionId={collection.id} collectionSlug={collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id} /&gt;</span>
+              {/* purses-znkt.1: the deliberate path stays reachable — goal text +
+                  round-length dial — behind a quiet secondary link. Named for the
+                  field it actually sets (never "scope": that select is dead weight
+                  server-side, out of scope for this pass). */}
+              &lt;Link href={`${collectionHref}/sort/new`} className={quietLink}&gt;
+                Set a goal first
+              &lt;/Link&gt;
+            &lt;/div&gt;
           )}
         &lt;/div&gt;
 &nbsp;
@@ -385,34 +422,39 @@ export default async function SortPage({ params }: SortPageProps) {
         )}
 &nbsp;
         {sessions.length === 0 ? (
-<span class="branch-0 cbranch-no" title="branch not covered" >          &lt;EmptyState</span>
-            heading="No sorting sessions yet"
-            message="Create a session to start organizing items"
-            action={{
-              label: "Create session",
-              mobileLabel: "Create",
-              href: `${collectionHref}/sort/new`,
-            }}
-          /&gt;
+          &lt;div className="flex flex-col items-center gap-4"&gt;
+            {/* EmptyState's action prop only takes a Link or a bare Button — it
+                can't host the island's own POST + status-line state, so the
+                heading/message render through EmptyState (no action) and the
+                one-tap island renders as the single primary CTA beneath it. */}
+            &lt;EmptyState heading="Nothing sorted yet" message="Begin with how you feel about each." /&gt;
+            &lt;div className="flex flex-col items-center gap-2"&gt;
+              &lt;StartSortingButton collectionId={collection.id} collectionSlug={collection.slug ?? <span class="branch-1 cbranch-no" title="branch not covered" >collection.id} /&gt;</span>
+              {/* purses-znkt.1: the deliberate path stays reachable even in the empty
+                  state — goal text + round-length dial — behind a quiet secondary
+                  link. Named for the field it actually sets. */}
+              &lt;Link href={`${collectionHref}/sort/new`} className={quietLink}&gt;
+                Set a goal first
+              &lt;/Link&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
         ) : (
           &lt;div className="space-y-3"&gt;
-            {sessions.map((s) =&gt; (
-              &lt;Link key={s.id} href={`${collectionHref}/sort/${s.number}`}&gt;
-                &lt;Card interactive padding="md"&gt;
-                  &lt;div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"&gt;
-                    &lt;div&gt;
-                      &lt;h3 className="text-ink"&gt;{s.goal}&lt;/h3&gt;
-                      &lt;div className="mt-2 flex items-center gap-2"&gt;
-                        &lt;Badge variant={s.status}&gt;{s.status}&lt;/Badge&gt;
-                      &lt;/div&gt;
+            &lt;h2 className="text-xl text-ink"&gt;Earlier passes&lt;/h2&gt;
+            &lt;div className="space-y-3"&gt;
+              {sessions.map((s) =&gt; (
+                &lt;Link key={s.id} href={`${collectionHref}/sort/${s.number}`}&gt;
+                  &lt;Card interactive padding="md"&gt;
+                    &lt;div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"&gt;
+                      &lt;h3 className="text-ink"&gt;{s.goal ?? "A sorting pass"}&lt;/h3&gt;
+                      &lt;span className="text-sm text-ink-soft"&gt;
+                        {new Date(s.createdAt).toLocaleDateString()}
+                      &lt;/span&gt;
                     &lt;/div&gt;
-                    &lt;span className="text-sm text-ink-soft"&gt;
-                      {new Date(s.createdAt).toLocaleDateString()}
-                    &lt;/span&gt;
-                  &lt;/div&gt;
-                &lt;/Card&gt;
-              &lt;/Link&gt;
-            ))}
+                  &lt;/Card&gt;
+                &lt;/Link&gt;
+              ))}
+            &lt;/div&gt;
           &lt;/div&gt;
         )}
       &lt;/div&gt;
@@ -427,7 +469,7 @@ export default async function SortPage({ params }: SortPageProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-17T10:20:11.619Z
+                at 2026-07-17T11:28:15.458Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>
