@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;}
+.pf{font-family:'Playfair Display',Georgia,serif;}
+.mono{font-family:'SF Mono',ui-monospace,Menlo,monospace;}
+.tile{background:#ffffff;border:1px solid #c7dade;border-radius:12px;padding:12px;box-shadow:0 4px 12px rgba(20,50,60,.05);}
+.sw{display:flex;height:56px;border-radius:9px;overflow:hidden;border:1px solid #c7dade;}
+.sw>div{flex:1;}
+.nm{font:600 13px 'Inter',sans-serif;color:#16242b;margin-top:9px;}
+.role{font:12px/1.35 'Inter',sans-serif;color:#46555d;margin-top:2px;}
+.hx{font-family:'SF Mono',monospace;font-size:10px;color:#46555d;margin-top:6px;letter-spacing:.01em;}
+.sec{font-family:'Playfair Display',serif;font-size:22px;color:#16242b;margin:38px 0 4px;font-weight:600;}
+.secsub{font:13px/1.45 'Inter',sans-serif;color:#46555d;margin-bottom:16px;max-width:74ch;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:16px;}
+</style>
+</helmet>
+<div data-screen-label="Adored Color Scheme" style="min-height:100%;background:#dceaec;color:#16242b;font-family:'Inter',ui-sans-serif,system-ui,sans-serif;padding:48px 40px 80px;">
+<div style="max-width:1180px;margin:0 auto;">
+
+  <header style="display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;">
+    <div>
+      <div style="font:600 12px 'Inter';letter-spacing:.12em;text-transform:uppercase;color:#46555d;">Adored · The Luminous Gallery</div>
+      <h1 class="pf" style="font-size:40px;font-weight:700;margin-top:8px;line-height:1.05;">The colour scheme</h1>
+      <p style="max-width:64ch;margin-top:12px;font-size:15px;color:#46555d;">One family from <span class="mono" style="font-size:13px;">#004A67 / #005667</span>. Each swatch is split — <strong style="color:#16242b;">left&nbsp;=&nbsp;light (Sea Glass)</strong>, <strong style="color:#16242b;">right&nbsp;=&nbsp;dark (Sea Glass at Night)</strong> — with both resolved values beneath.</p>
+    </div>
+    <div class="mono" style="font-size:11px;color:#46555d;text-align:right;line-height:1.7;">light · Sea Glass, white cards rise<br>dark · Sea Glass at Night, hue-pivot raised<br>dark elevation = rim + glow, not value</div>
+  </header>
+
+  <!-- APPLIED PREVIEW -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:32px;">
+    <div style="background:#d3e2e5;border-radius:16px;padding:18px;border:1px solid #c7dade;">
+      <div class="mono" style="font-size:10px;color:#46555d;">LIGHT · sea glass</div>
+      <div style="background:#ffffff;border:1px solid #c7dade;border-radius:14px;box-shadow:0 14px 30px rgba(20,50,60,.14);padding:18px;margin-top:8px;">
+        <div class="pf" style="font-size:24px;font-weight:700;">The blue glass vase</div>
+        <p style="font-size:15px;line-height:1.6;color:#434f57;margin-top:8px;">You sat with each one and let yourself feel clearly.</p>
+        <div style="background:#d7dee4;border-radius:10px;padding:11px 12px;margin-top:13px;display:flex;justify-content:space-between;align-items:center;gap:8px;"><span style="font-size:12px;">Continue · Session 2</span><span style="display:inline-flex;align-items:center;height:32px;padding:0 14px;border-radius:8px;background:#004a67;color:#fff;font:600 12px 'Inter';">Resume</span></div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;"><span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 12px;border-radius:999px;background:#efcb77;color:#1b1605;font:600 11px 'Inter';text-transform:uppercase;letter-spacing:.05em;">✦ Most loved</span><span style="display:inline-flex;align-items:center;height:26px;padding:0 12px;border-radius:999px;background:#004a67;color:#fff;font:600 11px 'Inter';">Love</span><span style="display:inline-flex;align-items:center;height:26px;padding:0 12px;border-radius:999px;background:#b8d4dc;color:#16242b;font:600 11px 'Inter';">Onward</span></div>
+      </div>
+    </div>
+    <div style="background:#001b21;border-radius:16px;padding:18px;border:1px solid #2c707c;">
+      <div class="mono" style="font-size:10px;color:#b0c6cb;">DARK · Sea Glass at Night</div>
+      <div style="background:#103f4a;border:1px solid #2c707c;border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 10px 26px rgba(0,0,0,.55);padding:18px;margin-top:8px;">
+        <div class="pf" style="font-size:24px;font-weight:700;color:#ecf2f4;">The blue glass vase</div>
+        <p style="font-size:15px;line-height:1.6;color:#b0c6cb;margin-top:8px;">You sat with each one and let yourself feel clearly.</p>
+        <div style="background:#123a4e;border:1px solid #3f7fa0;border-radius:10px;padding:11px 12px;margin-top:13px;display:flex;justify-content:space-between;align-items:center;gap:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 16px rgba(63,127,160,.4);"><span style="font-size:12px;color:#ecf2f4;">Continue · Session 2</span><span style="display:inline-flex;align-items:center;height:32px;padding:0 14px;border-radius:8px;background:#4fb6c7;color:#042026;font:600 12px 'Inter';">Resume</span></div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;"><span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 12px;border-radius:999px;background:#efcb77;color:#1b1605;font:600 11px 'Inter';text-transform:uppercase;letter-spacing:.05em;">✦ Most loved</span><span style="display:inline-flex;align-items:center;height:26px;padding:0 12px;border-radius:999px;background:#bfe6ee;color:#08222b;font:600 11px 'Inter';">Love</span><span style="display:inline-flex;align-items:center;height:26px;padding:0 12px;border-radius:999px;background:#334654;color:#d6e2e6;font:600 11px 'Inter';">Onward</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SURFACES -->
+  <div class="sec">Surfaces &amp; elevation</div>
+  <div class="secsub">Light recedes the ground and rises to white cards; Sea Glass at Night is the same #005667 spine inverted toward black, the raised plane pivoted teal→blue and lifted by a luminous rim + glow rather than a mid-tone fill.</div>
+  <div class="grid">
+    <div class="tile"><div class="sw"><div style="background:#d3e2e5;"></div><div style="background:#001b21;"></div></div><div class="nm">Ground</div><div class="role">The room behind everything</div><div class="hx">L #D3E2E5 · D #001B21</div></div>
+    <div class="tile"><div class="sw"><div style="background:#e5eef0;"></div><div style="background:#103f4a;"></div></div><div class="nm">Surface</div><div class="role">Cards, panels — text lives here</div><div class="hx">L #E5EEF0 · D #103F4A</div></div>
+    <div class="tile"><div class="sw"><div style="background:#ffffff;"></div><div style="background:#123a4e;"></div></div><div class="nm">Surface raised</div><div class="role">Lifted — shadow (L) / hue-pivot + rim (D)</div><div class="hx">L #FFFFFF · D #123A4E</div></div>
+    <div class="tile"><div class="sw"><div style="background:#c7dade;"></div><div style="background:#3f7fa0;"></div></div><div class="nm">Hairline / rim</div><div class="role">Borders; the luminous edge in dark</div><div class="hx">L #C7DADE · D #3F7FA0</div></div>
+  </div>
+
+  <!-- TEXT -->
+  <div class="sec">Text</div>
+  <div class="secsub">Soft near-black / near-white, never pure black. Ink-soft holds AAA in both themes for 40+ eyes.</div>
+  <div class="grid">
+    <div class="tile"><div class="sw"><div style="background:#16242b;"></div><div style="background:#ecf2f4;"></div></div><div class="nm">Ink</div><div class="role">Primary text &amp; headings (neutral)</div><div class="hx">L #16242B · D #ECF2F4</div></div>
+    <div class="tile"><div class="sw"><div style="background:#434f57;"></div><div style="background:#b0c6cb;"></div></div><div class="nm">Ink soft</div><div class="role">Secondary text, meta — AAA</div><div class="hx">L #434F57 · D #B0C6CB</div></div>
+  </div>
+
+  <!-- ANCHOR -->
+  <div class="sec">Anchor · primary</div>
+  <div class="secsub">Deep teal in light; a luminous teal-cyan in dark so the one action colour stays visible on the dark spine. Action only — never a heading colour.</div>
+  <div class="grid">
+    <div class="tile"><div class="sw"><div style="background:#004a67;"></div><div style="background:#4fb6c7;"></div></div><div class="nm">Primary</div><div class="role">Actions, links, focus, selection</div><div class="hx">L #004A67 · D #4FB6C7</div></div>
+    <div class="tile"><div class="sw"><div style="background:#003e5b;"></div><div style="background:#6bc8d6;"></div></div><div class="nm">Primary hover</div><div class="role">Pressed / hover state</div><div class="hx">L #003E5B · D #6BC8D6</div></div>
+    <div class="tile"><div class="sw"><div style="background:#ffffff;"></div><div style="background:#042026;"></div></div><div class="nm">Primary ink</div><div class="role">Text on a primary fill</div><div class="hx">L #FFFFFF · D #042026</div></div>
+  </div>
+
+  <!-- COOL CONTENT -->
+  <div class="sec">Cool content · the blues</div>
+  <div class="secsub">The teal tint ramp plus the indigo analogous — soft fills, photo areas, benign zones.</div>
+  <div class="grid">
+    <div class="tile"><div class="sw"><div style="background:#d7dee4;"></div><div style="background:#173f4d;"></div></div><div class="nm">Content soft</div><div class="hx">L #D7DEE4 · D #173F4D</div></div>
+    <div class="tile"><div class="sw"><div style="background:#b0beca;"></div><div style="background:#2d6377;"></div></div><div class="nm">Content mid</div><div class="hx">L #B0BECA · D #2D6377</div></div>
+    <div class="tile"><div class="sw"><div style="background:#638297;"></div><div style="background:#4f8ba3;"></div></div><div class="nm">Content deep</div><div class="hx">L #638297 · D #4F8BA3</div></div>
+    <div class="tile"><div class="sw"><div style="background:#4a5878;"></div><div style="background:#4a5c84;"></div></div><div class="nm">Indigo</div><div class="role">analogous</div><div class="hx">L #4A5878 · D #4A5C84</div></div>
+  </div>
+
+  <!-- ACCENTS -->
+  <div class="sec">Accents · spend rarely</div>
+  <div class="secsub">The spark is a warm marigold; the decor is a soft violet. One affirmation; decoration used freely — soft fills, backgrounds, framing — but never a state.</div>
+  <div class="grid">
+    <div class="tile"><div class="sw"><div style="background:#efcb77;"></div><div style="background:#efcb77;"></div></div><div class="nm">Spark · marigold</div><div class="role">The lone most-loved spark</div><div class="hx">L · D #EFCB77</div></div>
+    <div class="tile"><div class="sw"><div style="background:#f6e1b1;"></div><div style="background:#b89f55;"></div></div><div class="nm">Spark soft</div><div class="role">Warm fill behind the hero</div><div class="hx">L #F6E1B1 · D #B89F55</div></div>
+    <div class="tile"><div class="sw"><div style="background:#1b1605;"></div><div style="background:#1b1605;"></div></div><div class="nm">Spark ink</div><div class="role">Dark text on marigold</div><div class="hx">L · D #1B1605</div></div>
+    <div class="tile"><div class="sw"><div style="background:#b5aacc;"></div><div style="background:#6d5c9b;"></div></div><div class="nm">Decor · violet</div><div class="role">Gentle decoration — fills, framing</div><div class="hx">L #B5AACC · D #6D5C9B</div></div>
+    <div class="tile"><div class="sw"><div style="background:#cec6dd;"></div><div style="background:#8a79b3;"></div></div><div class="nm">Decor soft</div><div class="role">Optional lighter step</div><div class="hx">L #CEC6DD · D #8A79B3</div></div>
+  </div>
+
+  <!-- TIERS -->
+  <div class="sec">Tiers · Love → Onward</div>
+  <div class="secsub">A single cool value-ramp — deeper/brighter teal is more loved, quietest is Onward. Always paired with label + icon.</div>
+  <div class="grid">
+    <div class="tile"><div class="sw"><div style="background:#004a67;"></div><div style="background:#bfe6ee;"></div></div><div class="nm">Love ♥</div><div class="hx">L #004A67 · D #BFE6EE</div></div>
+    <div class="tile"><div class="sw"><div style="background:#2f6e8c;"></div><div style="background:#79afe0;"></div></div><div class="nm">Like ◆</div><div class="hx">L #2F6E8C · D #79AFE0</div></div>
+    <div class="tile"><div class="sw"><div style="background:#6fa0b8;"></div><div style="background:#5e83a0;"></div></div><div class="nm">Maybe ○</div><div class="hx">L #6FA0B8 · D #5E83A0</div></div>
+    <div class="tile"><div class="sw"><div style="background:#b8d4dc;"></div><div style="background:#334654;"></div></div><div class="nm">Onward →</div><div class="hx">L #B8D4DC · D #334654</div></div>
+    <div class="tile"><div class="sw"><div style="background:#4f7da0;"></div><div style="background:#234d66;"></div></div><div class="nm">Not yet ☾</div><div class="role">benign, separate from tiers</div><div class="hx">L #4F7DA0 · D #234D66</div></div>
+  </div>
+
+  <!-- SEMANTIC -->
+  <div class="sec">Semantic · reserved for meaning</div>
+  <div class="secsub">Drawn from the harmony&rsquo;s maroon, bronze, green &amp; indigo points so they read conventionally while staying in-family. Each has soft &amp; deep variants.</div>
+  <div class="grid">
+    <div class="tile"><div class="sw"><div style="background:#9b4036;"></div><div style="background:#c98a82;"></div></div><div class="nm">Error</div><div class="role">Destructive, irreversible only</div><div class="hx">L #9B4036 · D #C98A82</div></div>
+    <div class="tile"><div class="sw"><div style="background:#f3deda;"></div><div style="background:#4a241e;"></div></div><div class="nm">Error soft</div><div class="hx">L #F3DEDA · D #4A241E</div></div>
+    <div class="tile"><div class="sw"><div style="background:#7e2c24;"></div><div style="background:#f3deda;"></div></div><div class="nm">Error deep</div><div class="role">text on soft</div><div class="hx">L #7E2C24 · D #F3DEDA</div></div>
+    <div class="tile"><div class="sw"><div style="background:#9c6b22;"></div><div style="background:#d4a24e;"></div></div><div class="nm">Warning</div><div class="hx">L #9C6B22 · D #D4A24E</div></div>
+    <div class="tile"><div class="sw"><div style="background:#f4e6cc;"></div><div style="background:#463411;"></div></div><div class="nm">Warning soft</div><div class="hx">L #F4E6CC · D #463411</div></div>
+    <div class="tile"><div class="sw"><div style="background:#6e4b16;"></div><div style="background:#f4e6cc;"></div></div><div class="nm">Warning deep</div><div class="role">text on soft</div><div class="hx">L #6E4B16 · D #F4E6CC</div></div>
+    <div class="tile"><div class="sw"><div style="background:#3f5a34;"></div><div style="background:#6e9e72;"></div></div><div class="nm">Success</div><div class="hx">L #3F5A34 · D #6E9E72</div></div>
+    <div class="tile"><div class="sw"><div style="background:#dce7d9;"></div><div style="background:#25492f;"></div></div><div class="nm">Success soft</div><div class="hx">L #DCE7D9 · D #25492F</div></div>
+    <div class="tile"><div class="sw"><div style="background:#2c3f26;"></div><div style="background:#dce7d9;"></div></div><div class="nm">Success deep</div><div class="role">text on soft</div><div class="hx">L #2C3F26 · D #DCE7D9</div></div>
+    <div class="tile"><div class="sw"><div style="background:#2e4769;"></div><div style="background:#7e97b8;"></div></div><div class="nm">Info</div><div class="hx">L #2E4769 · D #7E97B8</div></div>
+    <div class="tile"><div class="sw"><div style="background:#d9e4ee;"></div><div style="background:#21425a;"></div></div><div class="nm">Info soft</div><div class="hx">L #D9E4EE · D #21425A</div></div>
+    <div class="tile"><div class="sw"><div style="background:#1f3350;"></div><div style="background:#d9e4ee;"></div></div><div class="nm">Info deep</div><div class="role">text on soft</div><div class="hx">L #1F3350 · D #D9E4EE</div></div>
+  </div>
+
+  <footer style="margin-top:48px;border-top:1px solid #c7dade;padding-top:18px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+    <div class="pf" style="font-size:16px;font-weight:600;">Adored · The Luminous Gallery</div>
+    <div class="mono" style="font-size:11px;color:#46555d;">split swatch · left = light (Sea Glass) · right = dark (Sea Glass at Night)</div>
+  </footer>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;}}"></script>
+</body>
+</html>

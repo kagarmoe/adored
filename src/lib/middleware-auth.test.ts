@@ -76,8 +76,8 @@ describe("public-path matcher (which routes invoke the auth middleware)", () => 
   });
 
   it("treats onboarding sample images as public assets", () => {
-    expect(isPublic("/onboarding/glass-flower-vase.webp")).toBe(true);
-    expect(isPublic("/onboarding/slipcovered-armchair.webp")).toBe(true);
+    expect(isPublic("/onboarding/red-garden-clippers.webp")).toBe(true);
+    expect(isPublic("/onboarding/charcoal-knit-cardigan.webp")).toBe(true);
   });
 
   it("does not open other protected app routes", () => {

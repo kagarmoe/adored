@@ -16,10 +16,6 @@ export interface SampleItem {
 // three as the sample collection; the others remain available for dev seed data
 // and future beats.
 export const SAMPLE_ITEMS: readonly SampleItem[] = [
-  { id: "armchair", name: "The slipcovered armchair", imageSrc: "/onboarding/slipcovered-armchair.webp" },
-  { id: "clock", name: "The little red wall clock", imageSrc: "/onboarding/red-wall-clock.webp" },
-  { id: "vase", name: "The glass flower vase", imageSrc: "/onboarding/glass-flower-vase.webp" },
-  { id: "books", name: "The shelf of well-read books", imageSrc: "/onboarding/bookshelf.webp" },
   { id: "cushion", name: "The kid's microphone cushion", imageSrc: "/onboarding/microphone-cushion.webp" },
   { id: "bowl", name: "The blue mixing bowl", imageSrc: "/onboarding/blue-mixing-bowl.webp" },
   { id: "tote", name: "The woven market tote", imageSrc: "/onboarding/straw-market-tote.webp" },

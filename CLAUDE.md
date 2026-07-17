@@ -231,7 +231,8 @@ elevation, and component system — and is accountable to [`TONE.md`](TONE.md).
 
 ## Wireframes (reference, not law)
 
-`docs/Adored_wireframes.pdf` is a **starting reference, not a spec to match exactly.**
+The wireframes in [`docs/design-system/`](docs/design-system/) (`Adored Tablet Wireframes.dc.html`,
+`Adored Phone Wireframes.dc.html`) are a **starting reference, not a spec to match exactly.**
 Deviate whenever a better flow serves the user — the governing authorities are
 [`PRODUCT.md`](PRODUCT.md) (purpose) and [`TONE.md`](TONE.md) (first-order tone contract),
 **not** the wireframes. When a wireframe and a better flow conflict, choose the better flow.

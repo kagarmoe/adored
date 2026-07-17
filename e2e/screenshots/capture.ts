@@ -321,8 +321,8 @@ for (const theme of ["light", "dark"] as const) {
     await page.waitForTimeout(400);
     await shot("welcome-3-compare");
 
-    // Beat 4 — Standing. Tap the left compare item ("The slipcovered armchair").
-    await page.getByRole("button", { name: "The slipcovered armchair" }).click();
+    // Beat 4 — Standing. Tap the left compare item ("The kid's microphone cushion").
+    await page.getByRole("button", { name: "The kid's microphone cushion" }).click();
     // WelcomeStanding's h1 is "Where things stand"; "What you love most" is a <p> caption.
     await page.getByRole("heading", { name: "Where things stand" }).waitFor();
     await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
