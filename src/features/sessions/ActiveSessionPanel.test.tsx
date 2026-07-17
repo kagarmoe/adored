@@ -29,7 +29,7 @@ beforeEach(() => {
 describe("ActiveSessionPanel", () => {
   it("renders the session card with goal and a Resume link when an active session is present", () => {
     render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
-    expect(screen.getByRole("heading", { name: "Active session" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Keep sorting" })).toBeInTheDocument();
     expect(screen.getByText(/find my favorites/i)).toBeInTheDocument();
     // Governed label (spec §9): the resume affordance reads "Resume sorting".
     const resume = screen.getByRole("link", { name: "Resume sorting" });
@@ -45,14 +45,14 @@ describe("ActiveSessionPanel", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  it("for a paused session, renders the person-side paused copy and a Badge", () => {
+  it("for a paused session, renders the person-side paused copy", () => {
     render(<ActiveSessionPanel curatorId="u1" session={pausedSession} resumeHref={resumeHref} />);
     expect(screen.getByText(/your sort is paused/i)).toBeInTheDocument();
     expect(
       screen.getByText(/your sort is safe — pick up where you left off\./i),
     ).toBeInTheDocument();
     // The active heading must NOT appear for a paused session.
-    expect(screen.queryByRole("heading", { name: "Active session" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Keep sorting" })).not.toBeInTheDocument();
   });
 
   it("lifts the panel by light in dark (surface-raised + glow), not a muddy tint", () => {
@@ -130,6 +130,64 @@ describe("ActiveSessionPanel", () => {
     expect(screen.queryByText(/active/i)).not.toBeInTheDocument();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("no session + startHref (never sorted): the start card with wireframe copy, primary link", () => {
+    render(
+      <ActiveSessionPanel
+        curatorId="u1"
+        session={null}
+        resumeHref={resumeHref}
+        startHref="/collections/c/sort/new"
+        hasEverSorted={false}
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "Continue" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Start sorting" })).toBeInTheDocument();
+    expect(screen.getByText("Begin with how you feel about each.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Start sorting" })).toHaveAttribute(
+      "href",
+      "/collections/c/sort/new",
+    );
+  });
+
+  it("no session + startHref (sorted before): progress-aware copy", () => {
+    render(
+      <ActiveSessionPanel curatorId="u1" session={null} resumeHref={resumeHref} startHref="/s" hasEverSorted />,
+    );
+    expect(screen.getByRole("heading", { name: "Keep sorting" })).toBeInTheDocument();
+    expect(
+      screen.getByText("Pick up where you left off — one decision at a time."),
+    ).toBeInTheDocument();
+  });
+
+  it("startHref absent and no session: still renders NOTHING (the #351 pin)", () => {
+    const { container } = render(<ActiveSessionPanel curatorId="u1" session={null} resumeHref={resumeHref} />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("undo takes precedence over the start card", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
+    const { rerender } = render(
+      <ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} startHref="/s" />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^set aside$/i }));
+    await screen.findByRole("status");
+    rerender(<ActiveSessionPanel curatorId="u1" session={null} resumeHref={resumeHref} startHref="/s" />);
+    expect(screen.queryByRole("heading", { name: "Start sorting" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /undo/i })).toBeInTheDocument();
+  });
+
+  it("session card: 'Keep sorting', no badge, fallback line", () => {
+    render(
+      <ActiveSessionPanel curatorId="u1" session={{ ...session, goal: null }} resumeHref={resumeHref} />,
+    );
+    expect(screen.getByRole("heading", { name: "Keep sorting" })).toBeInTheDocument();
+    expect(screen.queryByText(/^active$/)).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Pick up where you left off — one decision at a time."),
+    ).toBeInTheDocument();
   });
 
   it("a single tap only reveals the confirm — it does NOT DELETE", () => {
