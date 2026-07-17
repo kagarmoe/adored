@@ -27,7 +27,7 @@ interface ServeArgs {
   photoId: string;
   collectionId: string;
   updatedAt: Date;
-  /** Stored clockwise rotation (0|90|180|270), applied on top of EXIF auto-orient. */
+  /** Stored bowlwise rotation (0|90|180|270), applied on top of EXIF auto-orient. */
   rotation: number;
 }
 
@@ -198,7 +198,7 @@ export async function servePhotoFile(
     }
     const out = await sharp(buf, { limitInputPixels: LIMIT_INPUT_PIXELS, failOn: "truncated" })
       .rotate() // EXIF auto-orient, then strips the orientation tag
-      .rotate(rotation) // user's stored clockwise turn on top (0 = no-op)
+      .rotate(rotation) // user's stored bowlwise turn on top (0 = no-op)
       .resize({ width, withoutEnlargement: true })
       .webp({ quality: 80 })
       .toBuffer();

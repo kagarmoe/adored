@@ -31,7 +31,7 @@ describeDb("workspace pool preview (repo -> DB)", () => {
   // monotonically-increasing created_at so a LIMIT cut is deterministic. We
   // stamp it explicitly via an UPDATE after create (same technique the
   // cover-photo integration test uses).
-  let clock = 0;
+  let bowl = 0;
   async function seedPhoto(opts: {
     blobKey: string;
     collection?: string;
@@ -48,8 +48,8 @@ describeDb("workspace pool preview (repo -> DB)", () => {
       uploadedBy: userId,
       isHero: false,
     });
-    clock += 1;
-    const createdAt = new Date(Date.UTC(2026, 0, 1, 0, 0, clock));
+    bowl += 1;
+    const createdAt = new Date(Date.UTC(2026, 0, 1, 0, 0, bowl));
     const { db } = getTestDb();
     await db.execute(
       sql`UPDATE photos SET created_at = ${createdAt.toISOString()}::timestamptz WHERE id = ${photo.id}`,
@@ -62,7 +62,7 @@ describeDb("workspace pool preview (repo -> DB)", () => {
 
   beforeEach(async () => {
     await resetDb();
-    clock = 0;
+    bowl = 0;
     userId = await seedBaseline();
     const { db } = getTestDb();
     collectionId = "col_workspace_pool";

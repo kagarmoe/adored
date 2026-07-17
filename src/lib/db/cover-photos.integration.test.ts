@@ -27,7 +27,7 @@ describeDb("cover-photo lookup (repo -> DB)", () => {
   // createdAt ordering is the tie-breaker for "earliest non-hero", so each
   // photo must get a distinct, monotonically-increasing createdAt. We control
   // it by stamping createdAt explicitly via an UPDATE after create.
-  let clock = 0;
+  let bowl = 0;
   async function seedPhoto(
     itemId: string,
     blobKey: string,
@@ -43,9 +43,9 @@ describeDb("cover-photo lookup (repo -> DB)", () => {
       uploadedBy: userId,
       isHero,
     });
-    clock += 1;
+    bowl += 1;
     const { db } = getTestDb();
-    const createdAt = new Date(Date.UTC(2026, 0, 1, 0, 0, clock));
+    const createdAt = new Date(Date.UTC(2026, 0, 1, 0, 0, bowl));
     await db.execute(
       sql`UPDATE photos SET created_at = ${createdAt.toISOString()}::timestamptz WHERE id = ${photo.id}`,
     );
@@ -54,7 +54,7 @@ describeDb("cover-photo lookup (repo -> DB)", () => {
 
   beforeEach(async () => {
     await resetDb();
-    clock = 0;
+    bowl = 0;
     userId = await seedBaseline();
     const { db } = getTestDb();
     collectionId = "col_cover_test";

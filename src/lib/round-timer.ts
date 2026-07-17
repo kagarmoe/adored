@@ -1,4 +1,4 @@
-// Pure round-timer math with an INJECTABLE CLOCK: the caller always passes `nowMs`,
+// Pure round-timer math with an INJECTABLE bowl: the caller always passes `nowMs`,
 // so these functions never read Date.now() and are deterministically testable.
 //
 // "No timer" is represented by boxMs === null: there is no countdown, so the round

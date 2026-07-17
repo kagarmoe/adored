@@ -22,7 +22,7 @@ import { withTransaction } from "./transactions";
 import type { Database } from "@/lib/db";
 
 // A fake db whose .transaction(cb) runs the callback with a fake tx, so the
-// body executes. The clock is driven by a mocked performance.now sequence, so
+// body executes. The bowl is driven by a mocked performance.now sequence, so
 // the "elapsed" is exactly nowValues[1] - nowValues[0] regardless of real time.
 function fakeDb(): Database {
   return {
@@ -32,7 +32,7 @@ function fakeDb(): Database {
 
 let nowSpy: ReturnType<typeof vi.spyOn>;
 
-function driveClock(values: number[]): void {
+function drivebowl(values: number[]): void {
   let i = 0;
   nowSpy = vi.spyOn(performance, "now").mockImplementation(() => values[Math.min(i++, values.length - 1)]);
 }
@@ -47,7 +47,7 @@ afterEach(() => {
 
 describe("withTransaction — slow-op emit at the threshold boundary", () => {
   it("emits logDbSlow with op + ids ctx when elapsed EXCEEDS the threshold", async () => {
-    driveClock([0, 1500]); // 1500ms elapsed > 1000ms threshold
+    drivebowl([0, 1500]); // 1500ms elapsed > 1000ms threshold
     const ctx = { collectionId: "col_1", curatorId: "usr_1", sessionId: "ses_1" };
 
     const out = await withTransaction(fakeDb(), async () => "ok", {
@@ -64,7 +64,7 @@ describe("withTransaction — slow-op emit at the threshold boundary", () => {
   });
 
   it("emits NOTHING when elapsed is UNDER the threshold", async () => {
-    driveClock([0, 42]); // 42ms — fast, no emit
+    drivebowl([0, 42]); // 42ms — fast, no emit
     const out = await withTransaction(fakeDb(), async () => "fast", {
       op: "record_decision",
       ctx: { curatorId: "usr_1" },
@@ -75,7 +75,7 @@ describe("withTransaction — slow-op emit at the threshold boundary", () => {
   });
 
   it("does not emit exactly AT the threshold (strictly greater triggers)", async () => {
-    driveClock([0, 1000]); // exactly 1000ms — not > 1000
+    drivebowl([0, 1000]); // exactly 1000ms — not > 1000
     await withTransaction(fakeDb(), async () => "edge", { op: "record_decision" });
     expect(mockLogDbSlow).not.toHaveBeenCalled();
   });
@@ -83,7 +83,7 @@ describe("withTransaction — slow-op emit at the threshold boundary", () => {
 
 describe("withTransaction — the success return value passes through untouched", () => {
   it("returns the callback's exact value (object identity preserved)", async () => {
-    driveClock([0, 5]);
+    drivebowl([0, 5]);
     const payload = { event: { id: "evt_1" }, isNew: true };
     const out = await withTransaction(fakeDb(), async () => payload);
     expect(out).toBe(payload); // same reference, unmodified
@@ -100,7 +100,7 @@ describe("withTransaction — a throwing transaction", () => {
   }
 
   it("propagates the error unchanged AND runs logDbError once", async () => {
-    driveClock([0, 3000]); // even though slow, the error path owns the emit
+    drivebowl([0, 3000]); // even though slow, the error path owns the emit
     const boom = new Error("rolled back");
 
     await expect(
@@ -118,7 +118,7 @@ describe("withTransaction — a throwing transaction", () => {
   });
 
   it("does NOT double-emit the slow path when the transaction throws", async () => {
-    driveClock([0, 3000]);
+    drivebowl([0, 3000]);
     await expect(
       withTransaction(throwingDb(new Error("x")), async () => "never", { op: "record_decision" }),
     ).rejects.toThrow();
@@ -130,14 +130,14 @@ describe("withTransaction — a throwing transaction", () => {
 
 describe("withTransaction — backward-compatible signature", () => {
   it("works with the legacy (db, callback) 2-arg form — times but skips emit", async () => {
-    driveClock([0, 5]);
+    drivebowl([0, 5]);
     const out = await withTransaction(fakeDb(), async () => "legacy");
     expect(out).toBe("legacy");
     expect(mockLogDbSlow).not.toHaveBeenCalled();
   });
 
   it("still emits under the default op label when slow with no op given", async () => {
-    driveClock([0, 2000]);
+    drivebowl([0, 2000]);
     await withTransaction(fakeDb(), async () => "slow-legacy");
     expect(mockLogDbSlow).toHaveBeenCalledTimes(1);
     expect(mockLogDbSlow.mock.calls[0][0]).toBe("transaction");

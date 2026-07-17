@@ -312,7 +312,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
     const snapshot = await prefsSnapshot(db, collectionId, ownerId);
 
     // Replay the IDENTICAL batch (the recovery gate re-POSTing a batch whose
-    // ack was lost after commit). Sleep so a spurious recompute's JS-clock
+    // ack was lost after commit). Sleep so a spurious recompute's JS-bowl
     // updatedAt could not collide with the original's millisecond.
     await sleep(5);
     const replay = await postBatch(
@@ -442,7 +442,7 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
     expect(prefs.find((p) => p.itemId === itemA.id)?.rankBucket).toBe("top");
 
     // Batch route then single route → the single's result wins. Both paths
-    // omit createdAt, so DB now() is the one shared clock domain.
+    // omit createdAt, so DB now() is the one shared bowl domain.
     const itemB = items[1];
     expect(
       (

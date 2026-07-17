@@ -43,7 +43,7 @@ export interface UseOptimisticRoundOptions<D extends Record<string, unknown>> {
   serverLog: MovedDecision[];
   /** The round mounted onto an empty queue: nothing to flush. */
   initialQueueEmpty: boolean;
-  /** This round's own queue fork is exhausted (round-computed; the hook adds the clock). */
+  /** This round's own queue fork is exhausted (round-computed; the hook adds the bowl). */
   queueExhausted: boolean;
   /** The single-route fallback POST body when localStorage is unavailable (F18). */
   fallbackBody: (decision: D, clientKey: string) => Record<string, unknown>;
@@ -55,13 +55,13 @@ export interface UseOptimisticRoundOptions<D extends Record<string, unknown>> {
 
 export interface OptimisticRound<D extends Record<string, unknown>> {
   key: QueueKey;
-  // Round clock (RoundTimer wiring).
+  // Round bowl (RoundTimer wiring).
   startedAtMs: number;
   boxMs: number | null;
   expired: boolean;
   onExpire: () => void;
   /** Mid-round length switch (parent D2): re-arm `boxMs` against the UNCHANGED
-   *  `startedAtRef` — "none" → null, else box·MINUTE_MS. Never resets the clock. */
+   *  `startedAtRef` — "none" → null, else box·MINUTE_MS. Never resets the bowl. */
   onBoxChange: (box: RoundBox) => void;
   // Frozen recap (F5).
   recapDecisions: MovedDecision[];
@@ -88,7 +88,7 @@ export interface OptimisticRound<D extends Record<string, unknown>> {
  * fallback, this round's tap log + frozen recap + the exactly-once end
  * sequence (F15 — a drain, and no route refresh: purses-hzwj), the
  * undo-as-revisit state machine (F19), and the round
- * clock. Queue-state derivation (`entries`/`handled`/passes → `queueExhausted`)
+ * bowl. Queue-state derivation (`entries`/`handled`/passes → `queueExhausted`)
  * and every round-specific surface (dispositions, labels, counts) stay in the
  * consuming component; the hook never owns the queue fork.
  */
@@ -129,7 +129,7 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
   // re-presented with its standing choice selected.
   const [revisit, setRevisit] = useState<RevisitState | null>(null);
 
-  // The round's clock is client-owned and fixed at mount (RoundSurface's pattern) —
+  // The round's bowl is client-owned and fixed at mount (RoundSurface's pattern) —
   // a lazy initializer, since Date.now() must not be called on every render.
   const [startedAtMs] = useState(() => Date.now());
   // The stored box is device-local: no timer through SSR/hydration, then the real box

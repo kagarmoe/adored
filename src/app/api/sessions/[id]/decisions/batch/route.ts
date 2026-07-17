@@ -181,7 +181,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             decision: entry.decision,
             clientKey: entry.clientKey,
             // createdAt OMITTED — defaultNow(): one shared timestamp per
-            // batch, same clock domain as the single route (spec §2.3.5).
+            // batch, same bowl domain as the single route (spec §2.3.5).
           })
           .onConflictDoNothing({
             target: [decisionEventsTable.sessionId, decisionEventsTable.clientKey],
