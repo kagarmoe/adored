@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for src/features/sorting/RoundLengthChooser.tsx</title>
+    <title>Code coverage report for src/features/sorting/TimerRing.tsx</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../../prettify.css" />
     <link rel="stylesheet" href="../../../base.css" />
@@ -19,34 +19,34 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../../index.html">All files</a> / <a href="index.html">src/features/sorting</a> RoundLengthChooser.tsx</h1>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">src/features/sorting</a> TimerRing.tsx</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>11/11</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>9/9</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>3/3</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>11/11</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
@@ -108,12 +108,27 @@
 <a name='L43'></a><a href='#L43'>43</a>
 <a name='L44'></a><a href='#L44'>44</a>
 <a name='L45'></a><a href='#L45'>45</a>
-<a name='L46'></a><a href='#L46'>46</a>
-<a name='L47'></a><a href='#L47'>47</a>
-<a name='L48'></a><a href='#L48'>48</a>
-<a name='L49'></a><a href='#L49'>49</a>
-<a name='L50'></a><a href='#L50'>50</a>
-<a name='L51'></a><a href='#L51'>51</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">8x</span>
+<a name='L46'></a><a href='#L46'>46</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">569x</span>
+<span class="cline-any cline-yes">569x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -136,81 +151,51 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">245x</span>
-<span class="cline-any cline-yes">245x</span>
-<span class="cline-any cline-yes">245x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">245x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1225x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">"use client";
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import type { ReactNode } from "react";
 &nbsp;
-import { useState, type ChangeEvent } from "react";
-import { getRoundBox, setRoundBox, ROUND_BOX_OPTIONS, DEFAULT_ROUND_BOX, type RoundBox } from "@/lib/round-preference";
-import { useDeviceValue } from "@/lib/useDeviceValue";
-&nbsp;
-interface RoundLengthChooserProps {
-  /** Fires with the newly chosen box so the LIVE round re-arms its clock against
-   *  its unchanged start (the consumer maps "none" → null, else box·MINUTE_MS). */
-  onChange: (box: RoundBox) =&gt; void;
+interface TimerRingProps {
+  fraction: number;
+  size: number;
+  expired?: boolean;
+  discClassName?: string;
+  className?: string;
+  children?: ReactNode;
 }
 &nbsp;
 /**
- * A compact round-length select (parent D2): switchable BEFORE and DURING a round.
- * On change it both persists the device-local preference (`setRoundBox`, so the next
- * round inherits it) AND calls `onChange` so the mounted round re-arms its box live —
- * "No timer" is a first-class peer in the same list, never a hidden mode.
+ * The quiet ring (wireframes: "violet ring = round timer (no digits)"), shared by
+ * the header display, the set-length dial, and the recap badge. HTML+CSS only:
+ * a conic-gradient band (0.5% blended stop kills hard-edge aliasing) around a
+ * disc that matches the host backdrop. Expired = gold band + ink ✓ (colour is
+ * never the sole signal; the consumer's live region carries the words).
  */
-export function RoundLengthChooser({ onChange }: RoundLengthChooserProps) {
-  // SSR and the first client render show the stable literal (getRoundBox reads
-  // localStorage → would mismatch on hydration); the real stored box lands right after
-  // mount, matching the sibling clock (RoundSurface/useOptimisticRound). The person's
-  // own choice overrides the stored one — a failed persist must not snap the select back.
-  const stored = useDeviceValue&lt;RoundBox&gt;(getRoundBox, DEFAULT_ROUND_BOX);
-  const [chosen, setChosen] = useState&lt;RoundBox | null&gt;(null);
-  const value = chosen ?? stored;
-&nbsp;
-  function handleChange(event: ChangeEvent&lt;HTMLSelectElement&gt;) {
-    const raw = event.target.value;
-    const box: RoundBox = raw === "none" ? "none" : (Number(raw) as RoundBox);
-    setChosen(box);
-    setRoundBox(box); // persist for the next round…
-    onChange(box); // …and re-arm this round's clock now
-  }
-&nbsp;
+export function TimerRing({ fraction, size, expired = false, discClassName = "bg-surface", className = "", children }: TimerRingProps) {
+  const pct = Math.min(1, Math.max(0, fraction)) * 100;
   return (
-    &lt;select
-      aria-label="Round length"
-      value={String(value)}
-      onChange={handleChange}
-      className="h-11 rounded-control border border-hairline bg-surface px-3 text-sm text-ink transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+    &lt;div
+      className={`relative flex shrink-0 items-center justify-center rounded-full ${expired ? "bg-spark" : ""} ${className}`}
+      style={{
+        width: size,
+        height: size,
+        background: expired
+          ? undefined
+          : `conic-gradient(var(--color-ring-sweep) calc(${pct}% - 0.5%), var(--color-ring-track) ${pct}%)`,
+      }}
     &gt;
-      {ROUND_BOX_OPTIONS.map((option) =&gt; (
-        &lt;option key={String(option.value)} value={String(option.value)}&gt;
-          {option.label}
-        &lt;/option&gt;
-      ))}
-    &lt;/select&gt;
+      &lt;div
+        className={`flex items-center justify-center rounded-full ${discClassName}`}
+        style={{ width: size * 0.75, height: size * 0.75 }}
+      &gt;
+        {expired ? (
+          &lt;span aria-hidden className="text-ink" style={{ fontSize: size * 0.4 }}&gt;
+            ✓
+          &lt;/span&gt;
+        ) : null}
+      &lt;/div&gt;
+      {children}
+    &lt;/div&gt;
   );
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -220,7 +205,7 @@ export function RoundLengthChooser({ onChange }: RoundLengthChooserProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-17T03:51:58.343Z
+                at 2026-07-17T07:33:18.631Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

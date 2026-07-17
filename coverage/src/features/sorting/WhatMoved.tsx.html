@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">95% </span>
+                <span class="strong">95.45% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>19/20</span>
+                <span class='fraction'>21/22</span>
             </div>
         
             
@@ -142,7 +142,16 @@
 <a name='L77'></a><a href='#L77'>77</a>
 <a name='L78'></a><a href='#L78'>78</a>
 <a name='L79'></a><a href='#L79'>79</a>
-<a name='L80'></a><a href='#L80'>80</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">8x</span>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -167,17 +176,20 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">64x</span>
-<span class="cline-any cline-yes">64x</span>
-<span class="cline-any cline-yes">64x</span>
-<span class="cline-any cline-yes">64x</span>
-<span class="cline-any cline-yes">64x</span>
-<span class="cline-any cline-yes">64x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">64x</span>
-<span class="cline-any cline-yes">64x</span>
-<span class="cline-any cline-yes">64x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -189,14 +201,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">64x</span>
-<span class="cline-any cline-yes">64x</span>
-<span class="cline-any cline-yes">64x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">64x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
+<span class="cline-any cline-yes">72x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">72x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -204,7 +214,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">42x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">45x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -232,6 +250,7 @@ import {
   type MovedDecision,
   type WhatMovedSummary,
 } from "@/lib/what-moved";
+import { TimerRing } from "./TimerRing";
 &nbsp;
 interface WhatMovedProps {
   /** The session's decisions; only those inside the window are counted. */
@@ -242,6 +261,8 @@ interface WhatMovedProps {
   nowMs?: number;
   /** Where "Back to your sort" returns to (the session hub). */
   hubHref: string;
+  /** Whether the round had a timer when it ended (renders the gold ring badge). */
+  hadTimer?: boolean;
 }
 &nbsp;
 /** A single affirming line per outcome, only when that outcome has a count. */
@@ -264,8 +285,9 @@ function lines(summary: WhatMovedSummary): string[] {
  * recap of what the person moved in this round — server-time decisions within the
  * round window, grouped by outcome. Forward-framed ("Here's what moved"), never a
  * score or a remaining count. aria-live so it's announced when it replaces the round.
+ * When hadTimer is true, a quiet gold ring badge marks the completion moment.
  */
-export function WhatMoved({ decisions, windowStartMs, nowMs, hubHref }: WhatMovedProps) {
+export function WhatMoved({ decisions, windowStartMs, nowMs, hubHref, hadTimer }: WhatMovedProps) {
   // The recap is a still photograph: when the caller hands no window end, it closes at
   // the moment this mounts (a lazy initializer — Date.now() is impure, never a render read).
   const [mountedAtMs] = useState(() =&gt; Date.now());
@@ -274,6 +296,11 @@ export function WhatMoved({ decisions, windowStartMs, nowMs, hubHref }: WhatMove
 &nbsp;
   return (
     &lt;div aria-live="polite" className="mx-auto max-w-xl space-y-6 text-center"&gt;
+      {hadTimer &amp;&amp; (
+        &lt;div aria-hidden data-testid="round-complete-badge" className="flex justify-center"&gt;
+          &lt;TimerRing fraction={0} size={56} expired discClassName="bg-surface-raised" /&gt;
+        &lt;/div&gt;
+      )}
       &lt;div className="space-y-2"&gt;
         &lt;h2 className="text-2xl text-ink"&gt;Here&amp;apos;s what moved&lt;/h2&gt;
         {summary.total === 0 ? (
@@ -307,7 +334,7 @@ export function WhatMoved({ decisions, windowStartMs, nowMs, hubHref }: WhatMove
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-17T03:51:58.343Z
+                at 2026-07-17T07:33:18.631Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

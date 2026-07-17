@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">77.41% </span>
+                <span class="strong">74.07% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>24/31</span>
+                <span class='fraction'>20/27</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">71.42% </span>
+                <span class="strong">66.66% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>10/14</span>
+                <span class='fraction'>8/12</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">62.5% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>5/8</span>
+                <span class='fraction'>3/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">79.31% </span>
+                <span class="strong">76.92% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>23/29</span>
+                <span class='fraction'>20/26</span>
             </div>
         
             
@@ -171,17 +171,8 @@
 <a name='L106'></a><a href='#L106'>106</a>
 <a name='L107'></a><a href='#L107'>107</a>
 <a name='L108'></a><a href='#L108'>108</a>
-<a name='L109'></a><a href='#L109'>109</a>
-<a name='L110'></a><a href='#L110'>110</a>
-<a name='L111'></a><a href='#L111'>111</a>
-<a name='L112'></a><a href='#L112'>112</a>
-<a name='L113'></a><a href='#L113'>113</a>
-<a name='L114'></a><a href='#L114'>114</a>
-<a name='L115'></a><a href='#L115'>115</a>
-<a name='L116'></a><a href='#L116'>116</a>
-<a name='L117'></a><a href='#L117'>117</a>
-<a name='L118'></a><a href='#L118'>118</a>
-<a name='L119'></a><a href='#L119'>119</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
+<a name='L109'></a><a href='#L109'>109</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -194,9 +185,6 @@
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -214,7 +202,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -260,13 +247,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -305,14 +285,12 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Input, Select } from "@/components/ui";
-import { setRoundBox, ROUND_BOX_OPTIONS, DEFAULT_ROUND_BOX, type RoundBox } from "@/lib/round-preference";
+import { setRoundBox, DEFAULT_ROUND_BOX, type RoundBoxSeconds } from "@/lib/round-preference";
+import { TimerDial } from "./TimerDial";
 &nbsp;
 // Quiet helper lines under the Round length control, keyed to the selection (TONE).
 export const TIMED_BOX_HELPER = "A short round — it wraps up gently.";
 export const NO_TIMER_HELPER = "Take all the time you like.";
-&nbsp;
-// HTML &lt;select&gt; values are strings; ROUND_BOX_OPTIONS is the one home for the list.
-const TIMEBOX_OPTIONS = ROUND_BOX_OPTIONS.map((o) =&gt; ({ value: String(o.value), label: o.label }));
 &nbsp;
 interface StartSessionFormProps {
   collectionId: string;
@@ -325,14 +303,13 @@ export function StartSessionForm({ collectionId, collectionSlug }: StartSessionF
   const [scope, setScope] = useState("all");
   // Default to the shared gentle round box (round-preference.ts is the one home);
   // "No timer" is a first-class peer, never buried. Persisted device-locally, never to the DB.
-  const [timebox, setTimebox] = useState(String(DEFAULT_ROUND_BOX));
+  const [timebox, setTimebox] = useState&lt;RoundBoxSeconds&gt;(DEFAULT_ROUND_BOX);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState&lt;string | null&gt;(null);
 &nbsp;
-  function chooseTimebox(value: string) {
-    setTimebox(value);
-    const box: RoundBox = value === "none" ? "none" : (Number(value) as RoundBox);
-    setRoundBox(box);
+  function chooseTimebox(box: RoundBoxSeconds) {
+    setTimebox(box);
+    setRoundBox(box); // no running clock at start — persist immediately
   }
 &nbsp;
   async function handleSubmit(event: FormEvent&lt;HTMLFormElement&gt;) {
@@ -379,17 +356,10 @@ export function StartSessionForm({ collectionId, collectionSlug }: StartSessionF
                 ]}
               /&gt;
             &lt;/div&gt;
-            &lt;div&gt;
+            &lt;div className="flex flex-col items-center gap-3"&gt;
               &lt;label className="mb-2 block text-sm font-medium text-ink"&gt;Round length&lt;/label&gt;
-              &lt;Select
-                aria-label="Round length"
-                value={timebox}
-                onChange={(event) =&gt; chooseTimebox(event.target.value)}
-                options={TIMEBOX_OPTIONS}
-              /&gt;
-              &lt;p className="mt-2 text-sm text-ink-soft"&gt;
-                {timebox === "none" ? NO_TIMER_HELPER : TIMED_BOX_HELPER}
-              &lt;/p&gt;
+              &lt;TimerDial value={timebox} onChange={chooseTimebox} size={200} discClassName="bg-surface" /&gt;
+              &lt;p className="text-sm text-ink-soft"&gt;{timebox === "none" ? NO_TIMER_HELPER : TIMED_BOX_HELPER}&lt;/p&gt;
             &lt;/div&gt;
           &lt;/div&gt;
         &lt;/div&gt;
@@ -424,7 +394,7 @@ export function StartSessionForm({ collectionId, collectionSlug }: StartSessionF
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-17T03:51:58.343Z
+                at 2026-07-17T07:33:18.631Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
