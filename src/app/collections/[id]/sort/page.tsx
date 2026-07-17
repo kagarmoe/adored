@@ -9,6 +9,7 @@ import { Badge, Button, Card, EmptyState } from "@/components/ui";
 import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { ResumeControl } from "@/features/sorting/ResumeControl";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
+import { SessionResumeCard } from "@/features/sessions/SessionResumeCard";
 import Link from "next/link";
 
 interface SortPageProps {
@@ -55,21 +56,11 @@ export default async function SortPage({ params }: SortPageProps) {
         <WorkspaceModeChips base={collectionHref} activeMode="sort" />
 
         {currentSession && (
-          <Card padding="lg" className="border-hairline bg-content-soft">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="mb-2 flex items-center gap-2">
-                  <h2 className="text-lg text-ink">
-                    {currentSession.status === "paused" ? "Your sort is paused" : "Active session"}
-                  </h2>
-                  <Badge variant={currentSession.status}>{currentSession.status}</Badge>
-                </div>
-                <p className="text-sm text-ink">
-                  {currentSession.status === "paused"
-                    ? "Your sort is safe — pick up where you left off."
-                    : currentSession.goal || "Preference discovery"}
-                </p>
-              </div>
+          <SessionResumeCard
+            status={currentSession.status as "active" | "paused"}
+            goal={currentSession.goal}
+            headingLevel="h2"
+            actions={
               <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto">
                 {currentSession.status === "paused" ? (
                   <ResumeControl
@@ -86,8 +77,8 @@ export default async function SortPage({ params }: SortPageProps) {
                   <Button variant="secondary" className="w-full">Details</Button>
                 </Link>
               </div>
-            </div>
-          </Card>
+            }
+          />
         )}
 
         {sessions.length === 0 ? (

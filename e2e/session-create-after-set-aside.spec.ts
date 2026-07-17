@@ -71,7 +71,7 @@ test.describe("session uniqueness — create after set-aside; paused collection 
     // "Set aside" (reveal → confirm), matching session-undo.spec.ts.
     await page.goto(`/collections/${slug}`);
     await expect(
-      page.getByRole("heading", { name: "Active session" }),
+      page.getByRole("heading", { name: "Keep sorting" }),
     ).toBeVisible();
 
     // Step 1: reveal the confirm group. The reveal alone does NOT delete.
@@ -97,7 +97,7 @@ test.describe("session uniqueness — create after set-aside; paused collection 
       page.getByRole("status").filter({ hasText: "Set aside" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Active session" }),
+      page.getByRole("heading", { name: "Keep sorting" }),
     ).toHaveCount(0);
 
     // ── Now start a NEW sort. Navigate to the sort landing via the in-page "Sort"
@@ -184,7 +184,7 @@ test.describe("session uniqueness — create after set-aside; paused collection 
     await expect(page.getByText(/Your sort is safe/)).toBeVisible();
     // It is NOT the active-session headline — the card is genuinely status-aware.
     await expect(
-      page.getByRole("heading", { name: "Active session" }),
+      page.getByRole("heading", { name: "Keep sorting" }),
     ).toHaveCount(0);
 
     // ── Resume. The paused card's Resume is the ResumeControl island — PATCH
@@ -211,7 +211,7 @@ test.describe("session uniqueness — create after set-aside; paused collection 
       page.getByRole("heading", { name: "Your sort is paused" }),
     ).toHaveCount(0);
     await expect(
-      page.getByRole("heading", { name: "Active session" }),
+      page.getByRole("heading", { name: "Keep sorting" }),
     ).toBeVisible();
   });
 });

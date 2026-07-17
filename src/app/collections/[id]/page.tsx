@@ -60,12 +60,23 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
     (s) => s.status === "active" || s.status === "paused",
   );
   const resumeHref = `${base}/sort/${currentSession?.number}`;
+  // Any past session (completed/abandoned included) means the curator has sorted
+  // before — feeds the start card's progress-keyed copy ("Start" vs "Keep sorting").
+  const hasEverSorted = sessions.length > 0;
 
-  // A1: at most one dominant (bg-primary) action on the workspace. When a
-  // session exists, its Resume IS that one action, so the adaptive section's
-  // lead action ("Make items" / "Add photos") is demoted to a non-primary.
-  // With no session, the lead action stays primary.
-  const leadActionVariant = currentSession ? "secondary" : "primary";
+  // A1: at most one dominant (bg-primary) action on the workspace. Sort wins
+  // once items exist — either a session is already open (Resume/undo IS that
+  // one action) or the Continue section's start card will claim it once items
+  // exist, so the adaptive section's lead action ("Make items" / "Add photos")
+  // is demoted to a non-primary in both cases.
+  //
+  // Deliberate, documented exception: during the set-aside undo window (and the
+  // rare post-409 settled note), ActiveSessionPanel shows only a quiet notice
+  // with no primary action, so the page briefly has ZERO primary actions rather
+  // than two. See docs/superpowers/specs/2026-07-17-collection-home-continue-design.md
+  // §2 — zero-during-undo is TONE-preferable to a shouting CTA beside a
+  // reversible-escape notice, and it self-heals on navigation or undo resolution.
+  const leadActionVariant = currentSession || itemPreview.length > 0 ? "secondary" : "primary";
 
   const itemsPreview = (
     <ItemPreviewGrid
@@ -173,6 +184,8 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
                 : null
             }
             resumeHref={resumeHref}
+            startHref={itemPreview.length > 0 ? `${base}/sort/new` : undefined}
+            hasEverSorted={hasEverSorted}
           />
         )}
 

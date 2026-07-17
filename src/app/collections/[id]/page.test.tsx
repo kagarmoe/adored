@@ -157,20 +157,27 @@ describe("adaptive workspace states", () => {
     );
   });
 
-  it("items-first: exactly one dominant action (Add photos); Add item + View all items are secondary", async () => {
+  it("items-first, never sorted: Sort wins — Start sorting is dominant, Add photos/Add item/View all items are secondary", async () => {
     itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
-    // No session, so the Continue panel's primary Resume button is absent.
+    // No session, so the Continue panel's Resume button is absent — but items
+    // exist, so the start card claims the one primary action (spec §2: "Sort
+    // wins once items exist").
     const { container } = await renderPage();
 
-    const addPhotos = screen.getByRole("link", { name: "Add photos" });
-    expect(addPhotos).toHaveAttribute("href", "/collections/summer-bags/pool");
-    expect(addPhotos.className).toContain("bg-primary"); // dominant (primary button)
+    const startSortingLink = screen.getByRole("link", { name: "Start sorting" });
+    expect(startSortingLink).toHaveAttribute("href", "/collections/summer-bags/sort/new");
+    const startSorting = screen.getByRole("button", { name: "Start sorting" });
+    expect(startSorting.className).toContain("bg-primary"); // dominant (primary button)
 
-    // The other two item actions exist but are NOT peer primaries.
+    // The adaptive lead action and the other item actions exist but are NOT
+    // peer primaries — demoted because items exist (leadActionVariant).
+    const addPhotos = screen.getByRole("link", { name: "Add photos" });
     const addItem = screen.getByRole("link", { name: "Add item" });
     const viewAll = screen.getByRole("link", { name: "View all items" });
+    expect(addPhotos).toHaveAttribute("href", "/collections/summer-bags/pool");
     expect(addItem).toHaveAttribute("href", "/collections/summer-bags/items/new");
     expect(viewAll).toHaveAttribute("href", "/collections/summer-bags/items");
+    expect(addPhotos.className).not.toContain("bg-primary");
     expect(addItem.className).not.toContain("bg-primary");
     expect(viewAll.className).not.toContain("bg-primary");
 

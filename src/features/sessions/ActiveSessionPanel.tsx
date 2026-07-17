@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Badge, Button, Card } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 import { ResumeControl } from "@/features/sorting/ResumeControl";
 import { deleteSessionWithPreflush } from "@/features/sorting/sessionStatusPatch";
+import { SessionResumeCard } from "@/features/sessions/SessionResumeCard";
 
 // The collection landing page's active-session affordance, restructured so the
 // "set aside" undo SURVIVES the refresh that makes the session disappear.
@@ -47,10 +48,14 @@ export function ActiveSessionPanel({
   curatorId,
   session,
   resumeHref,
+  startHref,
+  hasEverSorted = false,
 }: {
   curatorId: string;
   session: SessionSummary | null;
   resumeHref: string;
+  startHref?: string;
+  hasEverSorted?: boolean;
 }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
@@ -165,27 +170,40 @@ export function ActiveSessionPanel({
     );
   }
 
-  if (!session) return null;
+  if (!session) {
+    if (!startHref) return null;
+    const started = hasEverSorted;
+    return (
+      <ContinueSection>
+        <Card padding="lg" className="border-hairline bg-content-soft dark:bg-surface-raised dark:shadow-raised">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="mb-2 text-lg text-ink">{started ? "Keep sorting" : "Start sorting"}</h3>
+              <p className="text-sm text-ink">
+                {started
+                  ? "Pick up where you left off — one decision at a time."
+                  : "Begin with how you feel about each."}
+              </p>
+            </div>
+            <Link href={startHref}>
+              <Button>{started ? "Keep sorting" : "Start sorting"}</Button>
+            </Link>
+          </div>
+        </Card>
+      </ContinueSection>
+    );
+  }
 
   const paused = session.status === "paused";
 
   return (
     <ContinueSection>
-      <Card padding="lg" className="border-hairline bg-content-soft dark:bg-surface-raised dark:shadow-raised">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <h2 className="text-lg text-ink">
-                {paused ? "Your sort is paused" : "Active session"}
-              </h2>
-              <Badge variant={session.status}>{session.status}</Badge>
-            </div>
-            <p className="text-sm text-ink">
-              {paused
-                ? "Your sort is safe — pick up where you left off."
-                : session.goal || "Preference discovery"}
-            </p>
-          </div>
+      <SessionResumeCard
+        status={session.status}
+        goal={session.goal}
+        headingLevel="h3"
+        className="dark:bg-surface-raised dark:shadow-raised"
+        actions={
           <div className="flex flex-col items-start gap-2 sm:items-end">
             {!confirming ? (
               <div className="flex gap-2">
@@ -247,8 +265,8 @@ export function ActiveSessionPanel({
               </div>
             )}
           </div>
-        </div>
-      </Card>
+        }
+      />
     </ContinueSection>
   );
 }
