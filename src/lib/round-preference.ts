@@ -1,12 +1,9 @@
-// Device-local round-length preference, stored in localStorage under `pi-round-box`.
-// Mirrors the pi-theme read/write pattern (guard typeof window, wrap in try/catch so
-// private mode / disabled storage degrades gracefully instead of throwing).
-//
-// Range is 30 s–5 m with a 2-minute default and "No timer" as a first-class peer
-// (parent §1.12): the earlier "none, calm no-pressure" default was deliberately
-// superseded — the review's regression warning was answered by keeping "No timer" a
-// peer option, not the default. getRoundBox() clamps on read, so a device that stored
-// the shipped 10/20 choices migrates silently (the clamp IS the migration).
+// Device-local round-length preference (RoundBoxSeconds), stored in localStorage under `pi-round-box`.
+// Model: 30s steps from 30–300 seconds, plus "none" as a first-class peer (no timer).
+// 2-minute default (120s). Legacy devices stored minutes (0.5, 1, 2, 5, 10, 20); LEGACY_MINUTES
+// read-once map parses these: 0.5→30, 1→60, 2→120, 5→300, 10→300 (clamped), 20→300 (clamped).
+// Guards typeof window, wraps all access in try/catch for graceful degradation in
+// private mode or when storage is disabled — no throw, just return default or no-op.
 
 export type RoundBoxSeconds = 30 | 60 | 90 | 120 | 150 | 180 | 210 | 240 | 270 | 300 | "none";
 
@@ -33,7 +30,7 @@ export function getRoundBox(): RoundBoxSeconds {
     const raw = window.localStorage.getItem(KEY);
     if (raw === null) return DEFAULT_ROUND_BOX;
     if (raw === "none") return "none";
-    if (raw in LEGACY_MINUTES) return LEGACY_MINUTES[raw];
+    if (Object.hasOwn(LEGACY_MINUTES, raw)) return LEGACY_MINUTES[raw];
     const n = Number(raw);
     return isStep(n) ? n : DEFAULT_ROUND_BOX;
   } catch {
