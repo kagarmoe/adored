@@ -116,6 +116,15 @@ describe("ActiveSessionPanel", () => {
     await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
   });
 
+  it("owns the Continue heading — present with a session, gone without one (no bare heading)", () => {
+    const { container, rerender } = render(
+      <ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />,
+    );
+    expect(screen.getByRole("heading", { name: "Continue" })).toBeInTheDocument();
+    rerender(<ActiveSessionPanel curatorId="u1" session={null} resumeHref={resumeHref} />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
   it("renders nothing visible when there is no session and no undo", () => {
     const { container } = render(<ActiveSessionPanel curatorId="u1" session={null} resumeHref={resumeHref} />);
     expect(screen.queryByText(/active/i)).not.toBeInTheDocument();
@@ -187,6 +196,8 @@ describe("ActiveSessionPanel", () => {
     const stillThere = screen.getByRole("status");
     expect(stillThere).toHaveTextContent(/set aside/i);
     expect(screen.getByRole("button", { name: /undo/i })).toBeInTheDocument();
+    // The undo notice keeps the Continue section chrome — never a bare notice.
+    expect(screen.getByRole("heading", { name: "Continue" })).toBeInTheDocument();
   });
 
   it("clicking Undo POSTs to the restore route and refreshes, clearing the notice", async () => {
@@ -291,6 +302,8 @@ describe("ActiveSessionPanel", () => {
 
     // Settled: the single gentle "started a new sort" notice renders…
     await screen.findByText(/started a new sort/i);
+    // …still inside the Continue section chrome…
+    expect(screen.getByRole("heading", { name: "Continue" })).toBeInTheDocument();
     // …with NO live Undo button anymore (fix B — one voice, not undo + error).
     expect(screen.queryByRole("button", { name: /undo/i })).not.toBeInTheDocument();
     // The 409 is terminal — there is nothing to refresh to, so refresh stays at 1
