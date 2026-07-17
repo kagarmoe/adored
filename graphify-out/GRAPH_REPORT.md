@@ -1,7 +1,7 @@
 # Graph Report - purseinator-app  (2026-07-17)
 
 ## Corpus Check
-- 721 files · ~730,813 words
+- 721 files · ~730,909 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e7c0c8d3`
+- Built from commit: `eb5f81bc`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -355,7 +355,7 @@ Nodes (22): 0. Review folds (changelog), 10. Screenshots (hard rule), 11. Out of
 
 ### Community 8 - "App Router pages"
 Cohesion: 0.10
-Nodes (19): CollectionCard(), collection, CollectionFilters(), CollectionFiltersProps, filters, ItemPreviewGrid(), CollectionsPage(), CollectionsPageProps (+11 more)
+Nodes (18): ItemPreviewGrid(), PhotoPoolPreview(), MODES, WorkspaceMode, WorkspaceModeChips(), WorkspaceModeChipsProps, resolveWorkspaceState(), WorkspaceState (+10 more)
 
 ### Community 9 - "Auth & sessions"
 Cohesion: 0.16
@@ -387,7 +387,7 @@ Nodes (25): compilerOptions, allowJs, allowSyntheticDefaultImports, esModuleInte
 
 ### Community 17 - "User"
 Cohesion: 0.08
-Nodes (33): ItemDetailPage(), bucketDots, bucketLabels, ItemCard(), viewerPhoto, ItemsPage(), ItemsPageProps, filterItems() (+25 more)
+Nodes (36): bucketDots, bucketLabels, ItemCard(), viewerPhoto, ItemsPage(), ItemsPageProps, filterItems(), hasName() (+28 more)
 
 ### Community 18 - "devDependencies"
 Cohesion: 0.08
@@ -422,8 +422,8 @@ Cohesion: 0.09
 Nodes (22): scripts, auth:verify, bench:batch, bench:recompute, build, db:generate, db:migrate, db:reset (+14 more)
 
 ### Community 26 - "domain.ts"
-Cohesion: 0.07
-Nodes (25): CollectionCardProps, ItemDetailPageProps, COLLECTION, ITEM, { mockGetSession, mockRequireAccess, itemRepo, photoRepo, membershipRepo }, renderPage(), ItemCardProps, ItemMetadata() (+17 more)
+Cohesion: 0.06
+Nodes (38): CollectionCard(), CollectionCardProps, collection, CollectionFilters(), CollectionFiltersProps, filters, CollectionsPage(), CollectionsPageProps (+30 more)
 
 ### Community 27 - "Invitation"
 Cohesion: 0.06
@@ -458,8 +458,8 @@ Cohesion: 0.06
 Nodes (34): Adored Deployment Guide, Auto-Configured by Vercel, Build Failures, CI gates that stand between a merge and a deploy, Database Backup & Recovery, Development, Email Not Sending, Email (Transactional) (+26 more)
 
 ### Community 35 - "Community 35"
-Cohesion: 0.07
-Nodes (44): ComparePage(), EditCollectionPage(), EditPageProps, ItemEditPage(), ItemEditPageProps, FinalizePage(), FinalizePageProps, { mockGetSession, mockRequireAccess, redirectMock, resultRepo } (+36 more)
+Cohesion: 0.08
+Nodes (42): CreateItemSchema, UpdateItemSchema, ComparePage(), ComparePageProps, EditCollectionPage(), EditPageProps, ItemEditPage(), FinalizePage() (+34 more)
 
 ### Community 36 - "AppLayout.tsx"
 Cohesion: 0.14
@@ -495,7 +495,7 @@ Nodes (11): PurseInator MVP App & Infrastructure Spec, Internal buckets: top/hig
 
 ### Community 44 - "layout.tsx"
 Cohesion: 0.07
-Nodes (14): CreateItemSchema, ItemController, UpdateItemSchema, FindByCollectionOptions, ItemEditForm(), ItemEditFormProps, back, push (+6 more)
+Nodes (15): ItemController, ItemPreviewGridProps, ItemEditPageProps, FindByCollectionOptions, ItemEditForm(), ItemEditFormProps, back, push (+7 more)
 
 ### Community 45 - "ScoringService.ts"
 Cohesion: 0.14
@@ -518,8 +518,8 @@ Cohesion: 0.11
 Nodes (17): 1. Schema conventions, 2. Migration workflow, 3. `db:reset` — destructive, owner-only, on purpose, 4. Environments, 5. Testing tiers, 6. Backup / restore, and monitoring, CHECK constraints, Database (+9 more)
 
 ### Community 50 - "ItemFilters.tsx"
-Cohesion: 0.13
-Nodes (18): useDecisionFlusher(), DeferControl(), TriageResult, RoundShell(), RoundShellProps, SetAsideButton(), entry(), flusher (+10 more)
+Cohesion: 0.09
+Nodes (25): useDecisionFlusher(), DeferControl(), KEY, refresh, { triggerFlush, isInFlight }, TriageResult, RoundShell(), RoundShellProps (+17 more)
 
 ### Community 51 - "validation.ts"
 Cohesion: 0.10
@@ -550,8 +550,8 @@ Cohesion: 0.09
 Nodes (22): §0 — Corrections to the parent design (verified against code), §1 — Scope, §2.1 Thread the usage fold to the render, §2.2 The chip (TONE item), §2.3 Usage-only collections (F5), §2.4 Test floor (A), §2 — Two-axis Standing: per-item chip (deliverable A, read-side, no migration), §3.1 Migration (additive) (+14 more)
 
 ### Community 58 - "SessionCompleteScreen.tsx"
-Cohesion: 0.07
-Nodes (46): drain(), drainKey(), subscribeNotices(), triggerFlush(), allStorageKeys(), deleteQueue(), enqueue(), EnqueueResult (+38 more)
+Cohesion: 0.05
+Nodes (61): drain(), drainKey(), FlushNotice, subscribeNotices(), Engine, FakeLocks, FetchMock, jsonRes() (+53 more)
 
 ### Community 59 - "CompareChoice.tsx"
 Cohesion: 0.18
@@ -578,8 +578,8 @@ Cohesion: 0.11
 Nodes (18): Adored — Curatorial Collection Sorting App, Architecture, Contributing, Database Schema, Deployment, Development Commands, Features, Known Limitations (+10 more)
 
 ### Community 65 - "PairingService"
-Cohesion: 0.14
-Nodes (19): ItemPreviewGridProps, ComparePageProps, ALLOWED_ROTATIONS, getPhotoAssetUrl(), getPhotoAssetUrlForPhoto(), getPoolPhotoAssetUrl(), PHOTO_WIDTH, PhotoUrlOptions (+11 more)
+Cohesion: 0.50
+Nodes (3): COLLECTION, ITEM, { mockGetSession, mockRequireAccess, itemRepo, sessionRepo, prefRepo, decisionRepo, photoRepo, dispRepo }
 
 ### Community 66 - "POST()"
 Cohesion: 0.11
@@ -614,8 +614,8 @@ Cohesion: 0.25
 Nodes (7): Global Constraints, Item Page Carousel Implementation Plan (sub-project C), Self-review, Task 1: `ItemMetadata` affirming empty state (purses-0gv), Task 2: `ItemPhotoCarousel`, Task 3: Item page restructure + page test, Task 4: e2e
 
 ### Community 78 - "route.test.ts"
-Cohesion: 0.07
-Nodes (22): FlushNotice, Engine, FakeLocks, FetchMock, jsonRes(), keyA, loadEngine(), respondCreated() (+14 more)
+Cohesion: 0.16
+Nodes (11): AppLayoutProps, BreadcrumbItem, BreadcrumbItem, Breadcrumbs(), BreadcrumbsProps, deep, Header(), PageContainer (+3 more)
 
 ### Community 79 - "Community 79"
 Cohesion: 0.14
@@ -1071,7 +1071,7 @@ Nodes (4): comparePairsFor(), WalkthroughShell(), SortTutorialPage(), TutorialPa
 
 ### Community 212 - "Community 212"
 Cohesion: 0.04
-Nodes (50): DeleteCollectionSection(), DeleteCollectionSectionProps, props, push, refresh, InviteForm(), InviteFormProps, inviteSchema (+42 more)
+Nodes (48): DeleteCollectionSection(), DeleteCollectionSectionProps, props, push, refresh, InviteForm(), InviteFormProps, inviteSchema (+40 more)
 
 ### Community 213 - "Community 213"
 Cohesion: 0.29
@@ -1106,8 +1106,8 @@ Cohesion: 0.25
 Nodes (7): Epic S — Implementation Plan (Standing usage chip · snapshot/revision · bulk re-rank + UI), Global constraints, Order, PR S1 — Standing usage chip (deliverable A; read-only, no migration), PR S2 — `sort_result_items.usage` snapshot + revision (deliverable B; migration), PR S3a — Transactional bulk re-rank endpoint (deliverable C backend; F1), PR S3b — Re-rank UI (deliverable C frontend; depends on S3a)
 
 ### Community 221 - "Community 221"
-Cohesion: 0.14
-Nodes (10): authClient, ClientSession, DeleteAccountSection(), DeleteAccountSectionProps, push, signOut, ProfileForm(), ProfileFormProps (+2 more)
+Cohesion: 0.25
+Nodes (3): PhotoUpload(), PhotoUploadProps, { convertHeifToJpeg, refresh }
 
 ### Community 222 - "Community 222"
 Cohesion: 0.18
@@ -1278,11 +1278,11 @@ Nodes (3): db, { selectWhere, insertReturning }, valuesSpy
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `getDb()` connect `ID generation` to `PairingService`, `Sort results & ranking`, `Community 35`, `AppLayout.tsx`, `domain.ts`, `Community 166`, `page.test.tsx`, `App Router pages`, `Database / Drizzle schema`, `layout.tsx`, `User`, `Community 212`, `Community 214`, `Community 247`, `Community 184`, `tailwind.config.ts`, `Community 218`, `Invitation`?**
+- **Why does `getDb()` connect `ID generation` to `Sort results & ranking`, `Community 35`, `AppLayout.tsx`, `Community 166`, `page.test.tsx`, `App Router pages`, `Community 218`, `Database / Drizzle schema`, `layout.tsx`, `User`, `Community 214`, `Community 247`, `Community 184`, `tailwind.config.ts`, `domain.ts`, `Invitation`?**
   _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **Why does `getTestDb()` connect `Community 216` to `Domain types & barrels`, `Sort results & ranking`, `Community 288`, `Community 228`, `AppLayout.tsx`, `Community 263`, `Community 171`, `MostLovedHero.tsx`, `Community 214`, `Community 281`, `Community 218`, `Invitation`?**
   _High betweenness centrality (0.014) - this node is a cross-community bridge._
-- **Why does `Item` connect `layout.tsx` to `Community 258`, `Community 259`, `Authorization guards`, `Collections domain`, `Community 131`, `Community 263`, `User`, `Community 150`, `domain.ts`, `Community 157`, `Community 288`, `Community 166`, `ItemFilters.tsx`, `Community 183`, `PairingService`, `route.test.ts`, `Community 214`, `Community 218`, `Community 229`, `Community 247`?**
+- **Why does `Item` connect `layout.tsx` to `Community 258`, `Community 259`, `Authorization guards`, `Collections domain`, `Community 131`, `Community 263`, `User`, `Community 150`, `domain.ts`, `Community 157`, `Community 288`, `Community 35`, `Community 166`, `ItemFilters.tsx`, `Community 183`, `SessionCompleteScreen.tsx`, `Community 214`, `Community 218`, `Community 229`, `Community 247`?**
   _High betweenness centrality (0.013) - this node is a cross-community bridge._
 - **Are the 38 inferred relationships involving `getDb()` (e.g. with `EditCollectionPage()` and `ItemEditPage()`) actually correct?**
   _`getDb()` has 38 INFERRED edges - model-reasoned connections that need verification._

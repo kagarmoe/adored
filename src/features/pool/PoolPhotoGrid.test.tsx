@@ -75,8 +75,10 @@ describe("PoolPhotoGrid selection + grouping", () => {
         body: JSON.stringify({ photoIds: ["p2", "p1"] }),
       }),
     ));
-    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/item #7 is ready/i));
-    const link = screen.getByRole("link", { name: /take a look/i });
+    // The whole sentence is the link's accessible name (not just "take a
+    // look.") — several notices sharing a bare "take a look." name would
+    // violate the standalone-meaningful-link-text rule.
+    const link = screen.getByRole("link", { name: "Item #7 is ready — take a look." });
     expect(link).toHaveAttribute("href", "/collections/c1/items/7");
     expect(screen.queryByRole("button", { name: /two/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /one/i })).not.toBeInTheDocument();
@@ -111,8 +113,7 @@ describe("PoolPhotoGrid selection + grouping", () => {
         body: JSON.stringify({ photoIds: ["p1", "p2"], mode: "each" }),
       }),
     ));
-    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/2 items are ready/i));
-    const link = screen.getByRole("link", { name: /see them all/i });
+    const link = await screen.findByRole("link", { name: "2 items are ready — see them all." });
     expect(link).toHaveAttribute("href", "/collections/c1/items");
     expect(screen.queryByRole("button", { name: /one/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /two/i })).not.toBeInTheDocument();
@@ -234,19 +235,15 @@ describe("PoolPhotoGrid selection + grouping", () => {
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
-  it("clears the success notice when Clear is pressed", async () => {
-    const user = userEvent.setup();
-    (fetch as any).mockResolvedValue({ ok: true, json: async () => ({ number: 7 }) });
-    render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} />);
-
-    await user.click(tile("one"));
-    await user.click(screen.getByRole("button", { name: /group into an item/i }));
-    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/item #7 is ready/i));
-
-    await user.click(tile("three")); // re-select something so Clear renders (bar hides at 0)
-    await user.click(screen.getByRole("button", { name: /clear/i }));
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
-  });
+  // No standalone "Clear button clears the notice" test: reaching the Clear
+  // button after a notice is showing requires re-selecting a tile first
+  // (every successful action empties `selected`, which hides the action bar
+  // until the next toggle()) — and that toggle already clears the notice
+  // per the test above. So `clear()`'s own `setNotice(null)` is unreachable
+  // through the real UI; it's kept for defensive symmetry with toggle/group/
+  // move, not because a test can independently exercise it without already
+  // being vacuously true. Not testing it rather than keeping a test that
+  // can't fail.
 
   it("clears the success notice when a move action completes (linking to the new destination)", async () => {
     const user = userEvent.setup();
@@ -265,7 +262,7 @@ describe("PoolPhotoGrid selection + grouping", () => {
 
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/moved/i));
     expect(screen.queryByText(/item #7 is ready/i)).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /take a look/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Moved — take a look." })).toHaveAttribute(
       "href",
       "/collections/c1/items/9",
     );
@@ -332,7 +329,7 @@ describe("PoolPhotoGrid Move to…", () => {
       ),
     );
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/their own item/i));
-    expect(screen.getByRole("link", { name: /take a look/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Now their own item — take a look." })).toHaveAttribute(
       "href",
       "/collections/c1/items/5",
     );
@@ -360,7 +357,7 @@ describe("PoolPhotoGrid Move to…", () => {
       ),
     );
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/moved/i));
-    expect(screen.getByRole("link", { name: /take a look/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Moved — take a look." })).toHaveAttribute(
       "href",
       "/collections/c1/items/9",
     );

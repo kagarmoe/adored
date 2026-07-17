@@ -11,8 +11,11 @@ type PoolPhoto = Pick<Photo, "id" | "filename">;
 // A success notice that offers a link to the thing it just created is an
 // offer, not a redirect — it stays up until the person acts on it or moves
 // on (toggle/group/each/move/clear), never auto-dismissed. A notice with no
-// href is a plain confirmation and keeps the old 4s auto-dismiss.
-type Notice = { text: string; href?: string; linkLabel?: string };
+// href is a plain confirmation and keeps the old 4s auto-dismiss. When href
+// is set, the WHOLE sentence is the link's accessible name — a repo copy
+// rule against several links sharing one bare accessible name (e.g. "take a
+// look.") on the same page.
+type Notice = { text: string; href?: string };
 
 function alt(filename: string): string {
   return filename.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ");
@@ -95,15 +98,13 @@ export function PoolPhotoGrid({
       if (mode === "each") {
         const data = (await res.json()) as { count: number };
         setNotice({
-          text: `${data.count} items are ready —`,
-          linkLabel: "see them all.",
+          text: `${data.count} items are ready — see them all.`,
           href: `/collections/${collectionId}/items`,
         });
       } else {
         const data = (await res.json()) as { number: number };
         setNotice({
-          text: `Item #${data.number} is ready —`,
-          linkLabel: "take a look.",
+          text: `Item #${data.number} is ready — take a look.`,
           href: `/collections/${collectionId}/items/${data.number}`,
         });
       }
@@ -140,11 +141,9 @@ export function PoolPhotoGrid({
       const moved = new Set(selected);
       setPool((prev) => prev.filter((p) => !moved.has(p.id)));
       setSelected([]);
-      setNotice({
-        text: dest.type === "new" ? "Now their own item —" : "Moved —",
-        linkLabel: data.number != null ? "take a look." : undefined,
-        href: data.number != null ? `/collections/${collectionId}/items/${data.number}` : undefined,
-      });
+      const base = dest.type === "new" ? "Now their own item" : "Moved";
+      const href = data.number != null ? `/collections/${collectionId}/items/${data.number}` : undefined;
+      setNotice({ text: href ? `${base} — take a look.` : `${base}.`, href });
     } catch {
       setError("We couldn’t move those just now — your photos are safe; try again.");
     } finally {
@@ -156,14 +155,12 @@ export function PoolPhotoGrid({
     <div className="space-y-4">
       {notice && (
         <p className="rounded-lg bg-success-soft px-4 py-2 text-success-deep" role="status">
-          {notice.text}
-          {notice.href && notice.linkLabel && (
-            <>
-              {" "}
-              <Link href={notice.href} className="font-medium underline">
-                {notice.linkLabel}
-              </Link>
-            </>
+          {notice.href ? (
+            <Link href={notice.href} className="font-medium underline">
+              {notice.text}
+            </Link>
+          ) : (
+            notice.text
           )}
         </p>
       )}
