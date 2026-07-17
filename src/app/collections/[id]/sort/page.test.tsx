@@ -128,8 +128,12 @@ describe("SortPage session links", () => {
     expect(screen.getByRole("heading", { name: "Nothing sorted yet" })).toBeInTheDocument();
     expect(screen.getByText("Begin with how you feel about each.")).toBeInTheDocument();
     // At zero sessions, the header slot is hidden (only history shows the header CTA).
-    // The empty state renders the sole island.
+    // The empty state renders the sole island plus the deliberate path secondary link.
     expect(screen.getAllByRole("button", { name: "Start sorting" })).toHaveLength(1);
+    expect(screen.getByRole("link", { name: "Set a goal first" })).toHaveAttribute(
+      "href",
+      "/collections/summer-bags/sort/new",
+    );
   });
 
   it("history moves under 'Earlier passes', drops the status Badge, and falls back to 'A sorting pass' for a null goal", async () => {

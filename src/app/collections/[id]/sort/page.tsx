@@ -97,7 +97,15 @@ export default async function SortPage({ params }: SortPageProps) {
                 heading/message render through EmptyState (no action) and the
                 one-tap island renders as the single primary CTA beneath it. */}
             <EmptyState heading="Nothing sorted yet" message="Begin with how you feel about each." />
-            <StartSortingButton collectionId={collection.id} collectionSlug={collection.slug ?? collection.id} />
+            <div className="flex flex-col items-center gap-2">
+              <StartSortingButton collectionId={collection.id} collectionSlug={collection.slug ?? collection.id} />
+              {/* purses-znkt.1: the deliberate path stays reachable even in the empty
+                  state — goal text + round-length dial — behind a quiet secondary
+                  link. Named for the field it actually sets. */}
+              <Link href={`${collectionHref}/sort/new`} className={quietLink}>
+                Set a goal first
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">
