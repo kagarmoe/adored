@@ -58,7 +58,7 @@ describe("PoolPhotoGrid selection + grouping", () => {
     expect(tile("one")).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("on success: posts ordered ids, removes the tiles, clears, and confirms with the number", async () => {
+  it("on success: posts ordered ids, removes the tiles, clears, and confirms with a link to the item", async () => {
     const user = userEvent.setup();
     (fetch as any).mockResolvedValue({ ok: true, json: async () => ({ number: 7 }) });
     render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} />);
@@ -75,8 +75,9 @@ describe("PoolPhotoGrid selection + grouping", () => {
         body: JSON.stringify({ photoIds: ["p2", "p1"] }),
       }),
     ));
-    await waitFor(() => expect(screen.getByText(/your photos are grouped/i)).toBeInTheDocument());
-    expect(screen.getByRole("status")).toHaveTextContent(/grouped.*#7|#7.*grouped/i);
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/item #7 is ready/i));
+    const link = screen.getByRole("link", { name: /take a look/i });
+    expect(link).toHaveAttribute("href", "/collections/c1/items/7");
     expect(screen.queryByRole("button", { name: /two/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /one/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /three/i })).toBeInTheDocument();
@@ -93,7 +94,7 @@ describe("PoolPhotoGrid selection + grouping", () => {
     expect(screen.getByRole("button", { name: /each photo its own item/i })).toBeInTheDocument();
   });
 
-  it('"Make each its own" posts mode "each", confirms the count, and removes the tiles', async () => {
+  it('"Make each its own" posts mode "each", confirms the count with a link to the items list, and removes the tiles', async () => {
     const user = userEvent.setup();
     (fetch as any).mockResolvedValue({ ok: true, json: async () => ({ count: 2 }) });
     render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} />);
@@ -110,7 +111,9 @@ describe("PoolPhotoGrid selection + grouping", () => {
         body: JSON.stringify({ photoIds: ["p1", "p2"], mode: "each" }),
       }),
     ));
-    await waitFor(() => expect(screen.getByText(/your photos are now their own items/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/2 items are ready/i));
+    const link = screen.getByRole("link", { name: /see them all/i });
+    expect(link).toHaveAttribute("href", "/collections/c1/items");
     expect(screen.queryByRole("button", { name: /one/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /two/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /three/i })).toBeInTheDocument();
@@ -190,10 +193,10 @@ describe("PoolPhotoGrid selection + grouping", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
 
     resolveFetch({ ok: true, json: async () => ({ number: 9 }) });
-    await waitFor(() => expect(screen.getByText(/your photos are grouped/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/item #9 is ready/i));
   });
 
-  it("auto-dismisses the success confirmation after the timeout", async () => {
+  it("does NOT auto-dismiss the link-bearing success notice after the timeout", async () => {
     // Fake timers throughout: drive clicks with fireEvent (synchronous, no
     // userEvent internal delays) so there's no userEvent/fake-timer deadlock.
     vi.useFakeTimers();
@@ -207,15 +210,65 @@ describe("PoolPhotoGrid selection + grouping", () => {
       await act(async () => {
         await vi.advanceTimersByTimeAsync(0);
       });
-      expect(screen.getByText(/grouped/i)).toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent(/item #7 is ready/i);
 
       await act(async () => {
         await vi.advanceTimersByTimeAsync(4000);
       });
-      expect(screen.queryByText(/grouped/i)).not.toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent(/item #7 is ready/i);
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("clears the success notice on the next selection change (toggle)", async () => {
+    const user = userEvent.setup();
+    (fetch as any).mockResolvedValue({ ok: true, json: async () => ({ number: 7 }) });
+    render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} />);
+
+    await user.click(tile("one"));
+    await user.click(screen.getByRole("button", { name: /group into an item/i }));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/item #7 is ready/i));
+
+    await user.click(tile("three"));
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("clears the success notice when Clear is pressed", async () => {
+    const user = userEvent.setup();
+    (fetch as any).mockResolvedValue({ ok: true, json: async () => ({ number: 7 }) });
+    render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} />);
+
+    await user.click(tile("one"));
+    await user.click(screen.getByRole("button", { name: /group into an item/i }));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/item #7 is ready/i));
+
+    await user.click(tile("three")); // re-select something so Clear renders (bar hides at 0)
+    await user.click(screen.getByRole("button", { name: /clear/i }));
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("clears the success notice when a move action completes (linking to the new destination)", async () => {
+    const user = userEvent.setup();
+    (fetch as any)
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ number: 7 }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ number: 9 }) });
+    render(<PoolPhotoGrid collectionId="c1" photos={PHOTOS} targets={TARGETS} />);
+
+    await user.click(tile("one"));
+    await user.click(screen.getByRole("button", { name: /group into an item/i }));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/item #7 is ready/i));
+
+    await user.click(tile("two"));
+    await user.click(screen.getByRole("button", { name: /move to/i }));
+    await user.click(screen.getByRole("button", { name: /red clutch/i }));
+
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/moved/i));
+    expect(screen.queryByText(/item #7 is ready/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /take a look/i })).toHaveAttribute(
+      "href",
+      "/collections/c1/items/9",
+    );
   });
 });
 
@@ -279,6 +332,10 @@ describe("PoolPhotoGrid Move to…", () => {
       ),
     );
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/their own item/i));
+    expect(screen.getByRole("link", { name: /take a look/i })).toHaveAttribute(
+      "href",
+      "/collections/c1/items/5",
+    );
     expect(screen.queryByRole("button", { name: /two/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /three/i })).toBeInTheDocument();
   });
@@ -303,6 +360,10 @@ describe("PoolPhotoGrid Move to…", () => {
       ),
     );
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/moved/i));
+    expect(screen.getByRole("link", { name: /take a look/i })).toHaveAttribute(
+      "href",
+      "/collections/c1/items/9",
+    );
   });
 
   it("on move failure surfaces the server's own message and keeps the selection", async () => {

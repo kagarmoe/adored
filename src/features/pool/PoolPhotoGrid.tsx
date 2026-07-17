@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getPoolPhotoAssetUrl, PHOTO_WIDTH } from "@/lib/photos";
 import type { Photo } from "@/types";
 import { PoolActionBar, type MoveDestination, type MoveTarget } from "./PoolActionBar";
 
 type PoolPhoto = Pick<Photo, "id" | "filename">;
+
+// A success notice that offers a link to the thing it just created is an
+// offer, not a redirect — it stays up until the person acts on it or moves
+// on (toggle/group/each/move/clear), never auto-dismissed. A notice with no
+// href is a plain confirmation and keeps the old 4s auto-dismiss.
+type Notice = { text: string; href?: string; linkLabel?: string };
 
 function alt(filename: string): string {
   return filename.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ");
@@ -38,21 +45,28 @@ export function PoolPhotoGrid({
   const [pool, setPool] = useState<PoolPhoto[]>(photos);
   const [selected, setSelected] = useState<string[]>([]); // selection order: [0] becomes hero
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // The success confirmation is a quiet, auto-dismissing note (design spec) —
-  // it clears itself so it never lingers as the person keeps grouping.
+  // A link-bearing notice is an offer to follow up, not a toast — it stays
+  // until the next selection change or action-bar action clears it (see
+  // toggle/clear/groupPool/moveTo below). A plain notice keeps the old
+  // quiet auto-dismiss so it never lingers.
   useEffect(() => {
-    if (!notice) return;
+    if (!notice || notice.href) return;
     const timer = setTimeout(() => setNotice(null), 4000);
     return () => clearTimeout(timer);
   }, [notice]);
 
-  const toggle = (id: string) =>
+  const toggle = (id: string) => {
+    setNotice(null);
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
 
-  const clear = () => setSelected([]);
+  const clear = () => {
+    setNotice(null);
+    setSelected([]);
+  };
 
   // `mode: "each"` splits the selection into one item per photo; the default
   // groups them all into a single item (whose number the success note surfaces).
@@ -75,15 +89,24 @@ export function PoolPhotoGrid({
         setError(await serverErrorMessage(res, fallback));
         return;
       }
-      const data = (await res.json()) as { number: number };
       const grouped = new Set(selected);
       setPool((prev) => prev.filter((p) => !grouped.has(p.id)));
       setSelected([]);
-      setNotice(
-        mode === "each"
-          ? "Your photos are now their own items — find them in your items."
-          : `Your photos are grouped — find item #${data.number} in your items.`,
-      );
+      if (mode === "each") {
+        const data = (await res.json()) as { count: number };
+        setNotice({
+          text: `${data.count} items are ready —`,
+          linkLabel: "see them all.",
+          href: `/collections/${collectionId}/items`,
+        });
+      } else {
+        const data = (await res.json()) as { number: number };
+        setNotice({
+          text: `Item #${data.number} is ready —`,
+          linkLabel: "take a look.",
+          href: `/collections/${collectionId}/items/${data.number}`,
+        });
+      }
     } catch {
       setError(
         mode === "each"
@@ -113,15 +136,15 @@ export function PoolPhotoGrid({
         setError(await serverErrorMessage(res, "We couldn’t move those just now — your photos are safe; try again."));
         return;
       }
-      await res.json();
+      const data = (await res.json()) as { number: number | null };
       const moved = new Set(selected);
       setPool((prev) => prev.filter((p) => !moved.has(p.id)));
       setSelected([]);
-      setNotice(
-        dest.type === "new"
-          ? "Now their own item — find it in your items."
-          : "Moved — find them on that item.",
-      );
+      setNotice({
+        text: dest.type === "new" ? "Now their own item —" : "Moved —",
+        linkLabel: data.number != null ? "take a look." : undefined,
+        href: data.number != null ? `/collections/${collectionId}/items/${data.number}` : undefined,
+      });
     } catch {
       setError("We couldn’t move those just now — your photos are safe; try again.");
     } finally {
@@ -133,7 +156,15 @@ export function PoolPhotoGrid({
     <div className="space-y-4">
       {notice && (
         <p className="rounded-lg bg-success-soft px-4 py-2 text-success-deep" role="status">
-          {notice}
+          {notice.text}
+          {notice.href && notice.linkLabel && (
+            <>
+              {" "}
+              <Link href={notice.href} className="font-medium underline">
+                {notice.linkLabel}
+              </Link>
+            </>
+          )}
         </p>
       )}
       {error && (

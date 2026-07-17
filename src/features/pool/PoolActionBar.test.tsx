@@ -120,9 +120,22 @@ describe("PoolActionBar", () => {
 
   it("shows the cover hint (sm:+) once at least one photo is selected", () => {
     renderBar({ count: 1 });
-    expect(
-      screen.getByText(/the first photo you tapped becomes the cover/i),
-    ).toBeInTheDocument();
+    const hint = screen.getByText(/the first photo you tapped becomes the cover/i);
+    expect(hint).toBeInTheDocument();
+    expect(hint).toHaveClass("hidden", "sm:block");
+  });
+
+  it("opening the Move to… chooser is not an action — it calls no callback", async () => {
+    const user = userEvent.setup();
+    const props = renderBar();
+
+    await user.click(screen.getByRole("button", { name: /move to/i }));
+
+    expect(screen.getByRole("button", { name: /new item/i })).toBeInTheDocument();
+    expect(props.onMove).not.toHaveBeenCalled();
+    expect(props.onMakeItem).not.toHaveBeenCalled();
+    expect(props.onMakeEach).not.toHaveBeenCalled();
+    expect(props.onClear).not.toHaveBeenCalled();
   });
 
   it('uses short mobile labels "One item" / "One each"', () => {
