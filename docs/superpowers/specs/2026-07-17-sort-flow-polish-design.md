@@ -1,6 +1,6 @@
 # Sort flow polish: one-tap start, mood-hub voice, canonical set-aside — design
 
-**Date:** 2026-07-17 · **Epic:** purses-znkt (.1, .2, .4; .3 gets a separate design doc for owner review, no implementation) · **Branch:** feat/sort-flow-polish
+**Date:** 2026-07-17 · **Epic:** purses-znkt (.1, .2, .4; .3 gets a separate design doc for owner review, no implementation) · **Branch:** feat/sort-flow-polish · **Rev 2** (spec review folded)
 **Provenance:** verified reconciliation (sort-dashboard area) + fresh fact-check; owner overnight execute-and-merge authority.
 
 ## Verified facts
@@ -14,13 +14,17 @@
 
 ### 1. One-tap "Start sorting" (purses-znkt.1)
 
-On the hub, when no open session exists, the "New session" button becomes a **one-tap primary "Start sorting"** (a small client island): POSTs `/api/sessions` with `{ collectionId }` only — no canned goal; the resume card's gentle fallback line already covers a null goal — then routes to `/collections/[slug]/sort/[number]/triage` (the same landing the form uses; round length comes from the stored device preference, as today). On a 409 (raced open session) show a gentle status line ("Your sort is already open — resuming is one tap away.") and `router.refresh()` so the resume card appears.
+On the hub, when no open session exists, the "New session" button becomes a **one-tap primary "Start sorting"** (a small client island): POSTs `/api/sessions` with `{ collectionId }` only — no canned goal; the resume card's gentle fallback line already covers a null goal — then routes to `/collections/[slug]/sort/[number]/triage` (the same landing the form uses; round length comes from the stored device preference, as today — landing on a possibly-empty triage queue is the form's existing, handled behavior, inherited knowingly). On a 409 (raced open session) show a gentle status line ("Your sort is already open — resuming is one tap away.") and `router.refresh()` so the resume card appears.
 
-`/sort/new` stays reachable as a quiet secondary link beside the primary — **"Choose a goal or scope first"** — for the deliberate path (goal text, scope, round-length dial). The workspace start card (#353) keeps pointing at `/sort/new` (unchanged this pass).
+`/sort/new` stays reachable as a quiet secondary link beside the primary — **"Set a goal first"** (review F4: naming scope would advertise the very field this spec proved is dead) — for the deliberate path (goal text, round-length dial). The workspace start card (#353) keeps pointing at `/sort/new` (unchanged this pass).
 
 The empty state's CTA becomes the same one-tap island (see §2). The two form-driving e2e specs are untouched and must stay green; add one hub-level e2e: tap "Start sorting" → land on `/sort/\d+/triage`.
 
 **Scope note (fact-check finding):** the form's `scope` value is dead weight server-side. Out of scope to fix here; file a bead (either persist it or remove the select — owner call).
+
+### 1b. Null-goal fallout (review F3)
+
+The one-tap flow is the first real producer of null-goal sessions. The session-detail page (`/sort/[sessionNumber]/page.tsx` ~L108) renders `Goal: {goal}` raw — with null it shows a dangling "Goal: ". Fix in this pass: omit the line entirely when `goal` is null (the gentle fallback sentence belongs to cards, not a labeled field).
 
 ### 2. Hub voice pass (purses-znkt.2)
 
@@ -32,7 +36,7 @@ The empty state's CTA becomes the same one-tap island (see §2). The two form-dr
 
 ### 3. Canonical set-aside on the Decide side (purses-znkt.4)
 
-- The shelf page **moves** to `/collections/[id]/results/set-aside` (Decide side, per the wireframes' "Lives in Decide, away from the sorting"); the old `/sort/set-aside` route becomes a permanent `redirect()` to it (old links/bookmarks keep working).
+- The shelf page **moves** to `/collections/[id]/results/set-aside`; the old `/sort/set-aside` route keeps its **`requireCollectionAccess` guard FIRST** (review F1: the stranger-enumeration integration test exact-matches the first thrown redirect — the authz bounce must stay the first throw) and only then `permanentRedirect()`s (review F5: `redirect()` is 307; permanence needs `permanentRedirect()`, a first use in this repo) to the new path.
 - Breadcrumbs: `trail.setAside` re-parents under the results prefix (leaf label "Set aside" unchanged); update `breadcrumb-trails.test.ts`.
 - Update the two in-app links: triage's `setAsideHref` and the results page's "Bring any back".
 - Page content unchanged (list + `BringBackControl`, same copy). `page-authz-enumeration.integration.test.ts` gains/updates the new route entry (test:db required).
@@ -42,7 +46,7 @@ The empty state's CTA becomes the same one-tap island (see §2). The two form-dr
 - One-tap island unit: POST body `{collectionId}` only; 201 → push to triage href; 409 → gentle line + refresh; button disabled while in flight.
 - Hub page tests: new h1/empty-state/history pins; existing gating + href pins stay.
 - Set-aside: redirect test (old path → new), breadcrumb test update, both link sites updated (grep proves no `/sort/set-aside` links remain outside the redirect), authz-enumeration integration updated (`npm run test:db`).
-- e2e: the two form specs stay green; new hub one-tap journey (tablet); `session-pause`/`session-undo` stay green (hub copy changes touch their assertions? grep "Sorting sessions" in e2e — update if pinned).
+- e2e (review F2 — the load-bearing pinned string is **"New session"**, not the h1): `session-create-after-set-aside.spec.ts` L110 locates `getByRole("link", { name: "New session" })` — REWRITE that step: the deliberate path is now reached via the secondary "Set a goal first" link; keep its 201/no-409 assertions intact (they are the 4bhh proof). `sort-session.spec.ts` enters /sort/new directly — stays green. `not-mine-set-aside.spec.ts` L258 `goto`s the OLD shelf path — keep it as the live proof the redirect round-trips (note it in the PR). New hub one-tap journey (tablet). `session-pause`/`session-undo` stay green.
 - Full gates incl. `npm run test:db`.
 
 ## Out of scope
