@@ -1,14 +1,39 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getPoolPhotoAssetUrl, PHOTO_WIDTH } from "@/lib/photos";
 import type { Photo } from "@/types";
 import { PoolActionBar, type MoveDestination, type MoveTarget } from "./PoolActionBar";
 
 type PoolPhoto = Pick<Photo, "id" | "filename">;
 
+// A success notice that offers a link to the thing it just created is an
+// offer, not a redirect — it stays up until the person acts on it or moves
+// on (toggle/group/each/move/clear), never auto-dismissed. A notice with no
+// href is a plain confirmation and keeps the old 4s auto-dismiss. When href
+// is set, the WHOLE sentence is the link's accessible name — a repo copy
+// rule against several links sharing one bare accessible name (e.g. "take a
+// look.") on the same page.
+type Notice = { text: string; href?: string };
+
 function alt(filename: string): string {
   return filename.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ");
+}
+
+// Reads a failed response's `error` field (the errorResponse contract — see
+// src/server/api/http-errors.ts; there is no `message` field) so the UI can
+// surface the server's own warm copy instead of a generic fallback. A body
+// that isn't JSON, or has no string `error`, falls back quietly.
+async function serverErrorMessage(res: Response, fallback: string): Promise<string> {
+  try {
+    const body: unknown = await res.json();
+    const message = (body as { error?: unknown })?.error;
+    if (typeof message === "string" && message) return message;
+  } catch {
+    // non-JSON or empty body — use the fallback below
+  }
+  return fallback;
 }
 
 export function PoolPhotoGrid({
@@ -23,21 +48,28 @@ export function PoolPhotoGrid({
   const [pool, setPool] = useState<PoolPhoto[]>(photos);
   const [selected, setSelected] = useState<string[]>([]); // selection order: [0] becomes hero
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // The success confirmation is a quiet, auto-dismissing note (design spec) —
-  // it clears itself so it never lingers as the person keeps grouping.
+  // A link-bearing notice is an offer to follow up, not a toast — it stays
+  // until the next selection change or action-bar action clears it (see
+  // toggle/clear/groupPool/moveTo below). A plain notice keeps the old
+  // quiet auto-dismiss so it never lingers.
   useEffect(() => {
-    if (!notice) return;
+    if (!notice || notice.href) return;
     const timer = setTimeout(() => setNotice(null), 4000);
     return () => clearTimeout(timer);
   }, [notice]);
 
-  const toggle = (id: string) =>
+  const toggle = (id: string) => {
+    setNotice(null);
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
 
-  const clear = () => setSelected([]);
+  const clear = () => {
+    setNotice(null);
+    setSelected([]);
+  };
 
   // `mode: "each"` splits the selection into one item per photo; the default
   // groups them all into a single item (whose number the success note surfaces).
@@ -52,18 +84,30 @@ export function PoolPhotoGrid({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(mode ? { photoIds: selected, mode } : { photoIds: selected }),
       });
+      const fallback =
+        mode === "each"
+          ? "We couldn’t make those items just now — your photos are safe; try again."
+          : "We couldn’t make that item just now — your photos are safe; try again.";
       if (!res.ok) {
-        throw new Error("group failed");
+        setError(await serverErrorMessage(res, fallback));
+        return;
       }
-      const data = (await res.json()) as { number: number };
       const grouped = new Set(selected);
       setPool((prev) => prev.filter((p) => !grouped.has(p.id)));
       setSelected([]);
-      setNotice(
-        mode === "each"
-          ? "Your photos are now their own items — find them in your items."
-          : `Your photos are grouped — find item #${data.number} in your items.`,
-      );
+      if (mode === "each") {
+        const data = (await res.json()) as { count: number };
+        setNotice({
+          text: `${data.count} items are ready — see them all.`,
+          href: `/collections/${collectionId}/items`,
+        });
+      } else {
+        const data = (await res.json()) as { number: number };
+        setNotice({
+          text: `Item #${data.number} is ready — take a look.`,
+          href: `/collections/${collectionId}/items/${data.number}`,
+        });
+      }
     } catch {
       setError(
         mode === "each"
@@ -90,17 +134,16 @@ export function PoolPhotoGrid({
         body: JSON.stringify({ photoIds: selected, destination: dest }),
       });
       if (!res.ok) {
-        throw new Error("reassign failed");
+        setError(await serverErrorMessage(res, "We couldn’t move those just now — your photos are safe; try again."));
+        return;
       }
-      await res.json();
+      const data = (await res.json()) as { number: number | null };
       const moved = new Set(selected);
       setPool((prev) => prev.filter((p) => !moved.has(p.id)));
       setSelected([]);
-      setNotice(
-        dest.type === "new"
-          ? "Now their own item — find it in your items."
-          : "Moved — find them on that item.",
-      );
+      const base = dest.type === "new" ? "Now their own item" : "Moved";
+      const href = data.number != null ? `/collections/${collectionId}/items/${data.number}` : undefined;
+      setNotice({ text: href ? `${base} — take a look.` : `${base}.`, href });
     } catch {
       setError("We couldn’t move those just now — your photos are safe; try again.");
     } finally {
@@ -112,7 +155,13 @@ export function PoolPhotoGrid({
     <div className="space-y-4">
       {notice && (
         <p className="rounded-lg bg-success-soft px-4 py-2 text-success-deep" role="status">
-          {notice}
+          {notice.href ? (
+            <Link href={notice.href} className="font-medium underline">
+              {notice.text}
+            </Link>
+          ) : (
+            notice.text
+          )}
         </p>
       )}
       {error && (
@@ -124,6 +173,7 @@ export function PoolPhotoGrid({
       <div className="grid gap-3 grid-cols-[repeat(auto-fill,minmax(150px,1fr))]">
         {pool.map((p) => {
           const isSelected = selected.includes(p.id);
+          const isCover = selected[0] === p.id;
           return (
             <button
               key={p.id}
@@ -141,7 +191,14 @@ export function PoolPhotoGrid({
                 loading="lazy"
                 className="h-full w-full object-cover"
               />
-              {isSelected && (
+              {isSelected && isCover && (
+                // Unlike the plain ✓, "Cover" carries information aria-pressed
+                // doesn't (WHICH photo becomes the item's hero) — not aria-hidden.
+                <span className="absolute left-1.5 top-1.5 rounded-full bg-spark px-2 py-0.5 text-xs font-medium text-spark-ink shadow-sm">
+                  Cover
+                </span>
+              )}
+              {isSelected && !isCover && (
                 <span
                   aria-hidden
                   className="absolute left-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-sm text-primary-ink shadow-sm"

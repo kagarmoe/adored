@@ -4,8 +4,11 @@ import { ItemRepository } from "@/server/repositories/implementations/ItemReposi
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { AuditLogRepository } from "@/server/repositories/implementations/AuditLogRepository";
 import { withTransaction } from "@/lib/transactions";
+import { MAX_GROUP_PHOTOS, POOL_CAP_MESSAGE } from "@/lib/pool-limits";
 
-export const MAX_GROUP_PHOTOS = 50;
+// Re-exported so existing call sites (API routes) keep importing the cap from
+// here — the number itself lives in the shared client-safe module.
+export { MAX_GROUP_PHOTOS };
 
 export type ReassignDest =
   | { type: "item"; itemId: string }
@@ -43,7 +46,7 @@ export class ItemService {
       throw new PoolGroupError("empty", "Choose at least one photo to make an item.");
     }
     if (ids.length > MAX_GROUP_PHOTOS) {
-      throw new PoolGroupError("too_many", `You can group up to ${MAX_GROUP_PHOTOS} photos at once.`);
+      throw new PoolGroupError("too_many", POOL_CAP_MESSAGE);
     }
 
     // Pre-validate availability BEFORE creating or assigning anything, so a

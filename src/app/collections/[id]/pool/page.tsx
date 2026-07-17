@@ -37,7 +37,7 @@ export default async function PoolPage({ params }: PoolPageProps) {
         <div className="max-w-3xl">
           <h1 className="text-2xl text-ink sm:text-3xl">Photos</h1>
           <p className="mt-2 text-ink-soft">
-            Dump everything in fast. Group them into items later — or never. There&rsquo;s no rush.
+            Drop them in now — name and group them whenever, or never. There&rsquo;s no rush.
           </p>
         </div>
 

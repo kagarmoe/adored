@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui";
 import { targetLabel, type MoveDestination, type MoveTarget } from "@/features/items/PhotoMoveBar";
+import { MAX_GROUP_PHOTOS, POOL_CAP_MESSAGE } from "@/lib/pool-limits";
 
 export type { MoveDestination, MoveTarget } from "@/features/items/PhotoMoveBar";
 
@@ -36,6 +37,8 @@ export function PoolActionBar({
   }, [open]);
 
   if (count === 0) return null;
+
+  const overCap = count > MAX_GROUP_PHOTOS;
 
   const choose = (dest: MoveDestination) => {
     setOpen(false);
@@ -88,6 +91,19 @@ export function PoolActionBar({
             </div>
           )}
 
+          {/* The phone bar is already dense (count row + button grid + safe-area);
+              the Cover pill itself carries the cue on phones, so this hint only
+              earns its line at sm:+. */}
+          <p className="hidden pb-2 text-xs text-ink-soft sm:block">
+            The first photo you tapped becomes the cover.
+          </p>
+
+          {overCap && (
+            <p className="mb-2 rounded-lg bg-warning-soft px-3 py-2 text-sm text-warning-deep" role="alert">
+              {POOL_CAP_MESSAGE}
+            </p>
+          )}
+
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-ink-soft" aria-live="polite">
               {count} selected
@@ -100,7 +116,7 @@ export function PoolActionBar({
                 type="button"
                 variant="secondary"
                 className="min-h-11 w-full sm:w-auto"
-                disabled={busy}
+                disabled={busy || overCap}
                 aria-expanded={open}
                 onClick={() => setOpen((v) => !v)}
               >
@@ -114,10 +130,10 @@ export function PoolActionBar({
                   variant="secondary"
                   className="min-h-11 w-full sm:w-auto"
                   aria-label="Each photo its own item"
-                  disabled={busy}
+                  disabled={busy || overCap}
                   onClick={onMakeEach}
                 >
-                  <span className="sm:hidden">Each</span>
+                  <span className="sm:hidden">One each</span>
                   <span className="hidden sm:inline">Make each its own</span>
                 </Button>
               )}
@@ -125,7 +141,7 @@ export function PoolActionBar({
                 type="button"
                 variant="primary"
                 className="min-h-11 w-full sm:w-auto"
-                disabled={busy}
+                disabled={busy || overCap}
                 aria-label={busy ? "Making" : "Group into an item"}
                 onClick={onMakeItem}
               >
@@ -133,7 +149,7 @@ export function PoolActionBar({
                   "Making…"
                 ) : (
                   <>
-                    <span className="sm:hidden">Group</span>
+                    <span className="sm:hidden">One item</span>
                     <span className="hidden sm:inline">Group into an item</span>
                   </>
                 )}

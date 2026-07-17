@@ -271,7 +271,7 @@ Rotate a photo (persisted, non-destructive). **Body:** `{ rotation: 0|90|180|270
 The **pool** is a collection's uploaded-but-unassigned photos. All pool routes are member-or-owner (inline).
 
 ### `POST /api/collections/[id]/pool/group`
-Group pooled photos into item(s). **Body:** `{ photoIds: string[] (1..MAX_GROUP_PHOTOS), mode?: "each" | "combine" }` (`mode` lenient — unknown ⇒ `"combine"`, never a 400). `"combine"` → `201 { number }` (one new item); `"each"` → `201 { count }` (one item per photo). `400` bad/empty/oversized `photoIds`; `409` conflict; `401`/`403`/`404`.
+Group pooled photos into item(s). **Body:** `{ photoIds: string[] (1..MAX_GROUP_PHOTOS), mode?: "each" | "combine" }` (`mode` lenient — unknown ⇒ `"combine"`, never a 400). `"combine"` → `201 { number }` (one new item); `"each"` → `201 { count }` (one item per photo). `400` bad/empty/oversized `photoIds` — the oversized case returns the user-facing cap sentence (shared `POOL_CAP_MESSAGE` from `src/lib/pool-limits.ts`; the pool UI surfaces route `error` strings verbatim, so cap errors here are user copy); `409` conflict; `401`/`403`/`404`.
 
 ### `GET /api/collections/[id]/pool/photos`
 Lists pooled photos. **Returns** `{ photos: [{ id, filename }] }`. (The bulk uploader polls this until async-recorded rows appear.) `401`/`403`/`404`.

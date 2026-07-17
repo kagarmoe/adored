@@ -7,6 +7,7 @@ import {
   MAX_GROUP_PHOTOS,
   type ReassignDest,
 } from "@/server/services/ItemService";
+import { POOL_CAP_MESSAGE } from "@/lib/pool-limits";
 import { errorResponse } from "@/server/api/http-errors";
 
 // Unified "Move to…": reassigns selected photos to an existing item, a new item,
@@ -39,7 +40,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
   if (photoIds.length > MAX_GROUP_PHOTOS) {
     return NextResponse.json(
-      { error: `photoIds must be at most ${MAX_GROUP_PHOTOS}` },
+      { error: POOL_CAP_MESSAGE },
       { status: 400 },
     );
   }

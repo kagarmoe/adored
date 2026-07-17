@@ -34,6 +34,17 @@ beforeEach(() => {
   itemRepo.findByCollection.mockResolvedValue([]);
 });
 
+describe("pool page intro copy", () => {
+  it("uses the gentler no-rush framing, not the old machine-voiced 'Dump everything' line", async () => {
+    render(await PoolPage({ params: Promise.resolve({ id: "summer-bags" }) }));
+
+    expect(
+      screen.getByText(/drop them in now.*name and group them whenever, or never/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/dump everything/i)).not.toBeInTheDocument();
+  });
+});
+
 describe("pool page workspace mode chips", () => {
   it("marks Build as the current section — aria-current='true', not 'page' (the chip links to the workspace root)", async () => {
     render(await PoolPage({ params: Promise.resolve({ id: "summer-bags" }) }));

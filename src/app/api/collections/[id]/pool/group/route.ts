@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { requireApiCapability } from "@/server/dal/collection-access";
 import { ItemService, MAX_GROUP_PHOTOS } from "@/server/services/ItemService";
+import { POOL_CAP_MESSAGE } from "@/lib/pool-limits";
 import { errorResponse } from "@/server/api/http-errors";
 
 // Groups selected pooled photos into one new (nameless, catalog-numbered) item.
@@ -35,7 +36,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
   if (photoIds.length > MAX_GROUP_PHOTOS) {
     return NextResponse.json(
-      { error: `photoIds must be at most ${MAX_GROUP_PHOTOS}` },
+      { error: POOL_CAP_MESSAGE },
       { status: 400 },
     );
   }
