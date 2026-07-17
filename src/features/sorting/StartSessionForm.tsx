@@ -5,20 +5,12 @@ import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Input, Select } from "@/components/ui";
 import { setRoundBox, DEFAULT_ROUND_BOX, type RoundBoxSeconds } from "@/lib/round-preference";
+import { TimerDial } from "./TimerDial";
 
 // Quiet helper lines under the Round length control, keyed to the selection (TONE).
 export const TIMED_BOX_HELPER = "A short round — it wraps up gently.";
 export const NO_TIMER_HELPER = "Take all the time you like.";
 
-// HTML <select> values are strings. Full dial replacement lands in Task 7 —
-// this list is inlined rather than shared since it's short-lived.
-const TIMEBOX_OPTIONS: { value: string; label: string }[] = [
-  { value: "30", label: "30 seconds" },
-  { value: "60", label: "1 minute" },
-  { value: "120", label: "2 minutes" },
-  { value: "300", label: "5 minutes" },
-  { value: "none", label: "No timer" },
-];
 
 interface StartSessionFormProps {
   collectionId: string;
@@ -31,14 +23,13 @@ export function StartSessionForm({ collectionId, collectionSlug }: StartSessionF
   const [scope, setScope] = useState("all");
   // Default to the shared gentle round box (round-preference.ts is the one home);
   // "No timer" is a first-class peer, never buried. Persisted device-locally, never to the DB.
-  const [timebox, setTimebox] = useState(String(DEFAULT_ROUND_BOX));
+  const [timebox, setTimebox] = useState<RoundBoxSeconds>(DEFAULT_ROUND_BOX);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function chooseTimebox(value: string) {
-    setTimebox(value);
-    const box: RoundBoxSeconds = value === "none" ? "none" : (Number(value) as RoundBoxSeconds);
-    setRoundBox(box);
+  function chooseTimebox(box: RoundBoxSeconds) {
+    setTimebox(box);
+    setRoundBox(box); // no running clock at start — persist immediately
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -85,17 +76,10 @@ export function StartSessionForm({ collectionId, collectionSlug }: StartSessionF
                 ]}
               />
             </div>
-            <div>
+            <div className="flex flex-col items-center gap-3">
               <label className="mb-2 block text-sm font-medium text-ink">Round length</label>
-              <Select
-                aria-label="Round length"
-                value={timebox}
-                onChange={(event) => chooseTimebox(event.target.value)}
-                options={TIMEBOX_OPTIONS}
-              />
-              <p className="mt-2 text-sm text-ink-soft">
-                {timebox === "none" ? NO_TIMER_HELPER : TIMED_BOX_HELPER}
-              </p>
+              <TimerDial value={timebox} onChange={chooseTimebox} size={200} discClassName="bg-surface" />
+              <p className="text-sm text-ink-soft">{timebox === "none" ? NO_TIMER_HELPER : TIMED_BOX_HELPER}</p>
             </div>
           </div>
         </div>

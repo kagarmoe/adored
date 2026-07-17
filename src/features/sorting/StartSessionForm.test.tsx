@@ -41,6 +41,12 @@ beforeEach(() => {
   vi.clearAllMocks();
   installStorage();
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: "sess_01ABC", number: 4 }) }));
+  // jsdom does not implement Pointer Capture API — stub it so TimerDial's onPointerDown doesn't throw
+  Object.defineProperty(HTMLElement.prototype, "setPointerCapture", {
+    value: vi.fn(),
+    writable: true,
+    configurable: true,
+  });
 });
 
 describe("StartSessionForm", () => {
@@ -52,42 +58,43 @@ describe("StartSessionForm", () => {
     expect(body.collectionId).toBe("coll_01ULID"); // API body uses the ULID, not the slug
   });
 
-  it("renders the round-length options, 'No timer' a first-class peer", () => {
+  it("renders the dial with slider role and round-length aria-label", () => {
     render(<StartSessionForm collectionId="c" collectionSlug="s" />);
-    const select = screen.getByRole("combobox", { name: /round length/i });
-    const opts = Array.from(select.querySelectorAll("option"));
-    expect(opts.map((o) => o.value)).toEqual(TIMEBOX_OPTIONS.map((o) => o.value));
-    expect(opts.map((o) => o.textContent)).toEqual(TIMEBOX_OPTIONS.map((o) => o.label));
+    const dial = screen.getByRole("slider", { name: /round length/i });
+    expect(dial).toBeInTheDocument();
+    expect(dial).toHaveAttribute("aria-valuenow", "120");
   });
 
-  it("defaults the selection to the gentle 2-minute round box", () => {
+  it("defaults the dial to the gentle 2-minute round box", () => {
     render(<StartSessionForm collectionId="c" collectionSlug="s" />);
-    const select = screen.getByRole("combobox", { name: /round length/i }) as HTMLSelectElement;
-    expect(select.value).toBe("120");
+    const dial = screen.getByRole("slider", { name: /round length/i });
+    expect(dial).toHaveAttribute("aria-valuenow", "120");
   });
 
-  it("shows a quiet helper keyed to the selection — timed vs 'No timer'", () => {
+  it("shows a quiet helper keyed to the dial value — timed vs 'No timer'", () => {
     render(<StartSessionForm collectionId="c" collectionSlug="s" />);
-    const select = screen.getByRole("combobox", { name: /round length/i });
+    const dial = screen.getByRole("slider", { name: /round length/i });
 
     // Default is a timed box → the gentle timed helper.
     expect(screen.getByText(TIMED_BOX_HELPER)).toBeInTheDocument();
     expect(screen.queryByText(NO_TIMER_HELPER)).not.toBeInTheDocument();
 
-    // Choosing "No timer" swaps the helper to the no-pressure line.
-    fireEvent.change(select, { target: { value: "none" } });
+    // Pressing Home sets to "none" and swaps the helper to the no-pressure line.
+    fireEvent.keyDown(dial, { key: "Home" });
     expect(screen.getByText(NO_TIMER_HELPER)).toBeInTheDocument();
     expect(screen.queryByText(TIMED_BOX_HELPER)).not.toBeInTheDocument();
   });
 
-  it("persists the chosen box to the device-local round preference (not the DB)", () => {
+  it("persists the chosen box to the device-local round preference (not the DB) via dial keyboard", () => {
     render(<StartSessionForm collectionId="c" collectionSlug="s" />);
-    const select = screen.getByRole("combobox", { name: /round length/i });
+    const dial = screen.getByRole("slider", { name: /round length/i });
 
-    fireEvent.change(select, { target: { value: "30" } });
-    expect(getRoundBox()).toBe(30);
+    // ArrowUp steps from 120 to 150 and persists
+    fireEvent.keyDown(dial, { key: "ArrowUp" });
+    expect(getRoundBox()).toBe(150);
 
-    fireEvent.change(select, { target: { value: "none" } });
+    // Home sets to "none" and persists
+    fireEvent.keyDown(dial, { key: "Home" });
     expect(getRoundBox()).toBe("none");
   });
 });
