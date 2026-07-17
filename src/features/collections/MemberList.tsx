@@ -2,6 +2,7 @@ import type { CollectionMembership, Invitation } from "@/types";
 import { Badge } from "@/components/ui";
 import { RoleBadge } from "./RoleBadge";
 import { MemberRemoveButton } from "./MemberRemoveButton";
+import { CopyInviteLinkButton } from "./CopyInviteLinkButton";
 
 interface MemberListProps {
   members: CollectionMembership[];
@@ -62,6 +63,7 @@ export function MemberList({ members, pending = [], canManage = false }: MemberL
             <p className="truncate text-sm text-ink-soft">Invitation sent</p>
           </div>
           <Badge variant="pending">Pending</Badge>
+          {canManage && <CopyInviteLinkButton token={invite.token} />}
         </div>
       ))}
     </div>

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
-import { vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
 import type { CollectionMembership } from "@/types";
 import type { Invitation } from "@/types";
 import { MemberList } from "./MemberList";
@@ -10,6 +10,14 @@ vi.mock("./MemberRemoveButton", () => ({
   MemberRemoveButton: ({ collectionId, memberId }: { collectionId: string; memberId: string }) => (
     <button type="button" data-collection-id={collectionId} data-member-id={memberId}>
       Remove
+    </button>
+  ),
+}));
+
+vi.mock("./CopyInviteLinkButton", () => ({
+  CopyInviteLinkButton: ({ token }: { token: string }) => (
+    <button type="button" data-token={token}>
+      Copy link
     </button>
   ),
 }));
@@ -99,5 +107,25 @@ describe("MemberList", () => {
     render(<MemberList members={[]} pending={[invitation({ email: "zed@adored.test" })]} />);
     // Pending avatars carry the ✦ mark, never the invitee's initial letter.
     expect(screen.getByText("✦")).toBeInTheDocument();
+  });
+
+  it("offers Copy link on a pending row only when canManage", () => {
+    const { rerender } = render(
+      <MemberList members={[]} pending={[invitation()]} canManage />,
+    );
+    expect(screen.getByRole("button", { name: /copy link/i })).toBeInTheDocument();
+
+    rerender(<MemberList members={[]} pending={[invitation()]} canManage={false} />);
+    expect(screen.queryByRole("button", { name: /copy link/i })).not.toBeInTheDocument();
+  });
+
+  it("wires Copy link to the invite's token", () => {
+    render(
+      <MemberList members={[]} pending={[invitation({ token: "tok_visible_in_prop" })]} canManage />,
+    );
+    expect(screen.getByRole("button", { name: /copy link/i })).toHaveAttribute(
+      "data-token",
+      "tok_visible_in_prop",
+    );
   });
 });
