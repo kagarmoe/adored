@@ -167,13 +167,4 @@ describe("degrade gracefully when storage throws", () => {
   it("setRoundBox is a no-op (no throw)", () => {
     expect(() => setRoundBox(150)).not.toThrow();
   });
-
-  it("constructor stored value → getRoundBox returns default (120), not NaN", () => {
-    // This test also validates the Object.hasOwn fix: "constructor" is in LEGACY_MINUTES
-    // (as a prototype-chain key when using `in`), but Object.hasOwn excludes it.
-    // With throwing storage, we can't set the value, so we trust the fix via the
-    // prior non-throwing test; this verifies the catch fallback works.
-    expect(() => getRoundBox()).not.toThrow();
-    expect(getRoundBox()).toBe(120);
-  });
 });

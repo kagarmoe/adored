@@ -73,7 +73,7 @@ describe("RoundTimer", () => {
 
   it("fires onExpire exactly once and settles to the gold end state with a non-colour cue", () => {
     const onExpire = vi.fn();
-    render(
+    const { container } = render(
       <RoundTimer startedAtMs={1_000_000} boxMs={2_000} onExpire={onExpire} roundLabel="Round" />,
     );
     expect(onExpire).not.toHaveBeenCalled();
@@ -89,6 +89,8 @@ describe("RoundTimer", () => {
     const complete = screen.getByText(/round complete/i);
     expect(complete).toBeInTheDocument();
     expect(complete).not.toHaveClass("sr-only");
+    // The ring itself settles to the gold/spark disc (RoundTimer -> TimerRing expired wiring).
+    expect(container.querySelector(".bg-spark")).not.toBeNull();
 
     // Keep ticking: the callback must not fire a second time.
     act(() => {

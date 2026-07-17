@@ -280,7 +280,15 @@ export function UsageRound({
   // item id in deps so a new item re-arms a full beat and cleanup cancels the old.
   const beatItemId = revisiting ? undefined : current?.item.id;
   useEffect(() => {
-    if (pace !== "quick" || expired || revisiting || beatSuspended || beatItemId === undefined) return;
+    if (
+      pace !== "quick" ||
+      expired ||
+      revisiting ||
+      beatSuspended ||
+      lengthDialogOpen ||
+      beatItemId === undefined
+    )
+      return;
     const id = setTimeout(() => {
       // Resolve the tap-race: an answered/answering item was already claimed, and a
       // stale target (the head moved on) is ignored.
@@ -290,7 +298,7 @@ export function UsageRound({
       passRef.current(currentRef.current.item);
     }, QUICK_BEAT_MS);
     return () => clearTimeout(id);
-  }, [pace, expired, revisiting, beatSuspended, beatItemId]);
+  }, [pace, expired, revisiting, beatSuspended, lengthDialogOpen, beatItemId]);
 
   // (b)+(c) After a Quick advance: announce the new item ("Now: {name}") and move
   // focus to the question heading (WCAG 2.4.3) — EXCEPT an auto-pass never steals

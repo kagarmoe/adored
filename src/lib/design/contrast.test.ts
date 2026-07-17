@@ -92,7 +92,7 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     [t.infoDeep, t.infoSoft, 4.5, "info-deep on info-soft"],
     [t.primaryInk, t.error, 4.5, "text on error (destructive button)"],
     [t.ringSweep, t.ringTrack, 3.0, "ring sweep on ring track (round timer, sole sighted signal)"],
-    [t.ink, t.surface, 4.5, "expired ring ✓ (ink) on the ring disc (surface)"],
+    [t.ink, t.surfaceRaised, 4.5, "expired ring ✓ (ink) on the recap badge disc (surface-raised)"],
   ];
 }
 

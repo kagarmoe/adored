@@ -720,6 +720,24 @@ describe("UsageRound Quick pacing — the beat (spec §3.5, parent D2)", () => {
       "false",
     );
   });
+
+  it("the round-length dialog (a body portal, outside the focus-suspension root) suspends the beat", async () => {
+    vi.useFakeTimers();
+    renderRound(); // [A, B]
+    enableQuick();
+
+    fireEvent.click(screen.getByRole("button", { name: "Change round length" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(QUICK_BEAT_MS + 1_000);
+    });
+
+    // The dialog sits in a portal outside the round root, so the in-root focus
+    // listener never sees it — the beat must be held on lengthDialogOpen alone.
+    // A must NOT have auto-passed behind the scrim.
+    expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
+  });
 });
 
 describe("UsageRound Quick pacing — the a11y floor (parent D2 (a)-(d))", () => {

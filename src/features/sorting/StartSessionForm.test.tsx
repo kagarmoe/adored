@@ -31,12 +31,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   installStorage();
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: "sess_01ABC", number: 4 }) }));
-  // jsdom does not implement Pointer Capture API — stub it so TimerDial's onPointerDown doesn't throw
-  Object.defineProperty(HTMLElement.prototype, "setPointerCapture", {
-    value: vi.fn(),
-    writable: true,
-    configurable: true,
-  });
 });
 
 describe("StartSessionForm", () => {

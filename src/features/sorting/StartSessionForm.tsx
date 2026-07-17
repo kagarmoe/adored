@@ -11,7 +11,6 @@ import { TimerDial } from "./TimerDial";
 export const TIMED_BOX_HELPER = "A short round — it wraps up gently.";
 export const NO_TIMER_HELPER = "Take all the time you like.";
 
-
 interface StartSessionFormProps {
   collectionId: string;
   collectionSlug: string;
