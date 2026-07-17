@@ -1,0 +1,203 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: compare.spec.ts >> compare — which do you love more? >> renders the prompt, two choice cards, and quiet Tie/Skip escapes
+- Location: e2e/compare.spec.ts:29:7
+
+# Error details
+
+```
+Error: expect(locator).toBeVisible() failed
+
+Locator: getByRole('img').first()
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for getByRole('img').first()
+
+```
+
+```yaml
+- banner:
+  - link "Adored home":
+    - /url: /collections
+    - text: Adored
+  - button "Switch to dark theme"
+  - link "E2E Tester":
+    - /url: /profile
+  - button "Sign out"
+- main:
+  - navigation "Breadcrumb":
+    - link "Collections":
+      - /url: /collections
+    - text: /
+    - link "E2E Sort Bags":
+      - /url: /collections/e2e-sort-bags-col_01kxpv7f54764xgs2xsbetyegy
+    - text: /
+    - link "Sort":
+      - /url: /collections/e2e-sort-bags-col_01kxpv7f54764xgs2xsbetyegy/sort
+    - text: /
+    - link "Session":
+      - /url: /collections/e2e-sort-bags-col_01kxpv7f54764xgs2xsbetyegy/sort/1
+    - text: / Compare
+  - button "Take a break — I need a moment": Take a break
+  - 'list "Round progress: step 3 of 4"':
+    - listitem
+    - listitem
+    - listitem
+    - listitem
+  - button "Pause"
+  - paragraph: Step 3 of 4
+  - heading "Comparing" [level=2]
+  - timer:
+    - paragraph: About 2 minutes left in this round
+  - combobox "Round length":
+    - option "30 seconds"
+    - option "1 minute"
+    - option "2 minutes" [selected]
+    - option "5 minutes"
+    - option "No timer"
+  - heading "Which do you love more?" [level=1]
+  - paragraph: Tap the one you love more. Tie or skip whenever you like.
+  - status
+  - button "Choose E2E Sort Item 2":
+    - heading "E2E Sort Item 2" [level=3]
+  - button "Choose E2E Sort Item 1":
+    - heading "E2E Sort Item 1" [level=3]
+  - button "Tie"
+  - button "Skip"
+- contentinfo:
+  - paragraph: Adored · Find the things you love
+- alert
+```
+
+# Test source
+
+```ts
+  1   | // e2e/compare.spec.ts
+  2   | //
+  3   | // Journey: pairwise comparison ("Which do you love more?"). Mirrors
+  4   | // sort-images.spec.ts — seedBaseline + seedSortScenario, slug/number URLs, and
+  5   | // the protected-image intercept. Authenticated via the shared storageState
+  6   | // (playwright.config.ts). seedSortScenario seeds three items (each with a hero
+  7   | // photo) and preferences, so selectNextPair always has an undecided adjacent
+  8   | // pair to surface.
+  9   | import { test, expect } from "@playwright/test";
+  10  | import { seedBaseline, seedSortScenario } from "./fixtures/seed";
+  11  | 
+  12  | const PHOTO_FIXTURE = "e2e/fixtures/sample-images/labeled/compare.webp";
+  13  | 
+  14  | test.describe("compare — which do you love more?", () => {
+  15  |   let slug: string;
+  16  |   let sessionNumber: number;
+  17  | 
+  18  |   test.beforeAll(async () => {
+  19  |     const ownerId = await seedBaseline();
+  20  |     ({ slug, sessionNumber } = await seedSortScenario(ownerId));
+  21  |   });
+  22  | 
+  23  |   test.beforeEach(async ({ page }) => {
+  24  |     await page.route("**/photos/**/file*", (route) =>
+  25  |       route.fulfill({ path: PHOTO_FIXTURE, contentType: "image/webp" }),
+  26  |     );
+  27  |   });
+  28  | 
+  29  |   test("renders the prompt, two choice cards, and quiet Tie/Skip escapes", async ({
+  30  |     page,
+  31  |   }) => {
+  32  |     await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
+  33  | 
+  34  |     // Slug/number addressing — the collection segment is the slug, never a bare
+  35  |     // `/collections/col_…` ULID segment. (This fixture's slug embeds the ULID, so
+  36  |     // assert the segment shape rather than ULID-absence.)
+  37  |     await expect(page).toHaveURL(
+  38  |       new RegExp(`/collections/${slug}/sort/${sessionNumber}/compare`),
+  39  |     );
+  40  |     expect(page.url()).not.toMatch(/\/collections\/col_[^/]+\/sort/);
+  41  | 
+  42  |     // The affirming, non-pressuring prompt + subtext.
+  43  |     await expect(
+  44  |       page.getByRole("heading", { name: "Which do you love more?" }),
+  45  |     ).toBeVisible();
+  46  |     await expect(
+  47  |       page.getByText("Tap the one you love more. Tie or skip whenever you like."),
+  48  |     ).toBeVisible();
+  49  | 
+  50  |     // Two choice cards (tapping a card IS the choice). Each item carries a hero
+  51  |     // image rendered through the authenticated /file intercept.
+  52  |     const choiceCards = page.getByRole("button", { name: /^Choose / });
+  53  |     await expect(choiceCards).toHaveCount(2);
+> 54  |     await expect(page.getByRole("img").first()).toBeVisible();
+      |                                                 ^ Error: expect(locator).toBeVisible() failed
+  55  | 
+  56  |     // Tie / Skip are present but secondary (ghost buttons, deliberately quiet).
+  57  |     await expect(page.getByRole("button", { name: "Tie" })).toBeVisible();
+  58  |     await expect(page.getByRole("button", { name: "Skip" })).toBeVisible();
+  59  |   });
+  60  | 
+  61  |   test("tapping a card chooses it and the next pair (or a graceful end) appears", async ({
+  62  |     page,
+  63  |   }) => {
+  64  |     await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
+  65  |     await expect(
+  66  |       page.getByRole("heading", { name: "Which do you love more?" }),
+  67  |     ).toBeVisible();
+  68  | 
+  69  |     // Capture the first pair's accessible labels so we can detect the advance.
+  70  |     const firstChoices = page.getByRole("button", { name: /^Choose / });
+  71  |     await expect(firstChoices).toHaveCount(2);
+  72  |     const firstLabels = await firstChoices.evaluateAll((nodes) =>
+  73  |       nodes.map((n) => n.getAttribute("aria-label")).sort(),
+  74  |     );
+  75  | 
+  76  |     // The decision rides the queue and flushes as a batch-of-1 (Epic P) — the
+  77  |     // batch POST is the load-bearing side effect; wait for it so we don't race
+  78  |     // the ack-driven router.refresh().
+  79  |     await Promise.all([
+  80  |       page.waitForResponse(
+  81  |         (r) =>
+  82  |           /\/api\/sessions\/[^/]+\/decisions\/batch$/.test(r.url()) &&
+  83  |           r.request().method() === "POST",
+  84  |       ),
+  85  |       firstChoices.first().click(),
+  86  |     ]);
+  87  | 
+  88  |     // After the choice the page re-renders. Either a NEW pair is shown, or every
+  89  |     // meaningful pair is decided and we land on the gentle completion state.
+  90  |     await expect(async () => {
+  91  |       const completed = await page
+  92  |         .getByRole("heading", { name: "All comparisons complete" })
+  93  |         .isVisible();
+  94  |       if (completed) return; // graceful end — acceptable per the brief.
+  95  | 
+  96  |       const nextChoices = page.getByRole("button", { name: /^Choose / });
+  97  |       await expect(nextChoices).toHaveCount(2);
+  98  |       const nextLabels = await nextChoices.evaluateAll((nodes) =>
+  99  |         nodes.map((n) => n.getAttribute("aria-label")).sort(),
+  100 |       );
+  101 |       // The pair must have advanced — not the same two items again.
+  102 |       expect(nextLabels).not.toEqual(firstLabels);
+  103 |     }).toPass({ timeout: 10_000 });
+  104 |   });
+  105 | 
+  106 |   test("gentle progress text appears after a comparison is made", async ({
+  107 |     page,
+  108 |   }) => {
+  109 |     await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
+  110 | 
+  111 |     // The progress line ("N comparisons made so far") renders only once at least
+  112 |     // one comparison exists. The prior test already recorded a decision for this
+  113 |     // shared session, so after a reload the gentle, non-gamified count is visible.
+  114 |     await expect(page.getByText(/comparison(s)? made so far/)).toBeVisible();
+  115 |   });
+  116 | });
+  117 | 
+```
