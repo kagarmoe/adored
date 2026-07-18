@@ -28,7 +28,7 @@
 On the session hub (`/sort/[sessionNumber]`), each round card gains a progress line, derived server-side from data the page already fetches (plus `items` count):
 
 - **Triage card:** "38 of 100 sorted by feel" — decided = curator preference rows + set-aside dispositions (mutually exclusive by construction — verified); total = items. **Omit the line entirely at 0 decided** (same rule as the others; never render "0 of 100" — TONE).
-- **Usage card:** "41 answered" — `deriveUsage(curatorEvents, rankedItemIds).size` (0 → "Not started yet" is machine-voice; use **"None answered yet"**… actually: omit the line entirely at 0 — absence is quieter than a zero).
+- **Usage card:** "41 answered" — `deriveUsage(curatorEvents, rankedItemIds).size`; omit the line entirely at 0 (absence is quieter than a zero).
 - **Compare card:** qualitative only: buckets of the persisted `confidence` field → (omit at none) / **"Your ranking is taking shape."** / **"Your ranking is nearly settled."** ("ranking", not "order" — review: 'order' echoes commerce status copy, and it unifies the vocabulary). Thresholds are implementation details; unit tests pin BOTH the thresholds and **monotonicity** (more comparisons never demotes the message).
 - All three lines are plain text (`text-sm text-ink-soft`), no bars, no percentages (TONE; the amendment sanctions orientation, not KPI grids).
 - **Workspace "Keep sorting" card** (resolves purses-1xbp.1): gains **"38 of 100 sorted so far"** — accomplished-count framing (review: "62 still to sort" mirrors TONE's own forbidden "N still undecided" exemplar; the wireframe's phrasing loses to the first-order contract). Omit at 0 decided. The total MUST be a real count — never `itemPreview.length` (bounded to 12).
