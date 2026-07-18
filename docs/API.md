@@ -199,6 +199,7 @@ Route-level analytics capture has been removed from the API surface; this does n
 | GET·POST | `/api/sort-results/[id]/shares` | curator |
 | GET·PATCH·DELETE | `/api/sort-results/[id]/shares/[sid]` | curator |
 | GET | `/api/shared-results/[token]` | public (token) |
+| GET | `/api/shared-results/[token]/photos/[photoId]?w=` | public (token) |
 
 ---
 
@@ -404,6 +405,9 @@ Curator-private results, gated by `requireApiResultAccess` (member-or-owner **an
 
 ### `GET /api/shared-results/[token]`
 **Public**, token-based — the recipient view of a shared result. Returns the shared result for `token`; **any** error (absent, expired, or a genuine DB failure) → a generic **`404`** `{ error: "That shared result isn't available." }`, logged server-side. It deliberately does **not** call `errorResponse`: this is the one route an unauthenticated stranger can reach, so it collapses everything to one indistinguishable answer rather than surfacing a `500` (which, before the error-contract fix, echoed raw driver text to that stranger).
+
+### `GET /api/shared-results/[token]/photos/[photoId]?w=`
+**Public**, token-based (purses-21x5.1) — the byte-serving counterpart to the shared-results page, which is deliberately anonymous and so can't reach the session-gated `/api/photo-files/[photoId]`. Authorizes by the SHARE, not a session: `token` → an active, unexpired share → its result must be **`finalized`** → the requested `photoId`'s item must be one of that result's ranked result-items (`ResultItemController`) — closing the same "no existence oracle" concern as `/file`, but the capability boundary here is the token, so a share can never be walked to an unrelated photo in the same collection. Delegates to `servePhotoFile` (same width allowlist, ETag, cache, and variant-store contract as `/api/photo-files/[photoId]`). Every gating failure (bad token, expired/revoked share, draft result, non-ranked photo) collapses to the same generic **`404`**, same posture as `GET /api/shared-results/[token]`.
 
 ## Known authz gaps
 

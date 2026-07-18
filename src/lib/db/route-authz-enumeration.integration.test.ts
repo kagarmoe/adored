@@ -176,6 +176,12 @@ const PUBLIC_OR_SELF_KEYS = new Set<string>([
 
   // Shared-results: the entire point is anonymous token-based read for outsiders.
   "GET /api/shared-results/[param]",
+  // Shared-results photo bytes (purses-21x5.1): same anonymous token-based read —
+  // authorized by the share token (active+unexpired, result finalized, photo
+  // ranked in that result), not a session. Its own DB-tier suite
+  // (public-account-routes.integration.test.ts) exercises the non-member/wrong-item
+  // and revoked-share cases directly.
+  "GET /api/shared-results/[param]/photos/[param]",
 
   // /users/me: self-resource only. Operates on the caller's own account — no collection gate
   // and no "stranger" concept (a stranger's /me is their own data).

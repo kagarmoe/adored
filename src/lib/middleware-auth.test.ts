@@ -84,6 +84,11 @@ describe("public-path matcher (which routes invoke the auth middleware)", () => 
     expect(isPublic("/shared-results/tok_abc123")).toBe(true);
   });
 
+  it("treats the token-scoped shared photo route as public (purses-21x5.1) — the img tag carries no session cookie", () => {
+    expect(isPublic("/api/shared-results/tok_abc123/photos/photo_1")).toBe(true);
+    expect(isPublic("/api/shared-results/tok_abc123")).toBe(true);
+  });
+
   it("treats the invitation accept page and its GET preview as public — the token is the read capability", () => {
     expect(isPublic("/invitations/tok_1")).toBe(true);
     expect(isPublic("/api/invitations/accept")).toBe(true);
@@ -103,6 +108,8 @@ describe("public-path matcher (which routes invoke the auth middleware)", () => 
     expect(isPublic("/shared/abc")).toBe(false);
     // Lookalike path — must not accidentally match the invitations exclusion.
     expect(isPublic("/invitationsish")).toBe(false);
+    // Lookalike path — must not accidentally match the api/shared-results exclusion.
+    expect(isPublic("/api/shared-resultsish")).toBe(false);
   });
 
   it("still excludes the pre-existing public paths", () => {

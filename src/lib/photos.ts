@@ -83,3 +83,16 @@ export function getPoolPhotoAssetUrl(
 ): string {
   return withQuery(`/api/collections/${collectionId}/pool/photos/${photoId}/file`, opts);
 }
+
+/** The token-scoped, public photo byte route for an anonymous shared-results
+ *  viewer — authorized by the share token, not a session (purses-21x5.1). */
+export function getSharedResultPhotoAssetUrl(
+  token: string,
+  photo: Pick<Photo, "id" | "updatedAt">,
+  opts?: PhotoUrlOptions
+): string {
+  return withQuery(
+    `/api/shared-results/${encodeURIComponent(token)}/photos/${encodeURIComponent(photo.id)}`,
+    { ...opts, v: opts?.v ?? photo.updatedAt?.getTime() },
+  );
+}

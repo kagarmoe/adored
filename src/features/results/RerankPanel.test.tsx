@@ -22,9 +22,9 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: pushMock, refresh:
 /** Three loved rows (top/high/medium) — one group, sentinel at the end. */
 function makeRows(): RerankRow[] {
   return [
-    { rid: "ri_a", itemId: "a", name: "Aqua tote", computedRank: 0, computedBucket: "top" },
-    { rid: "ri_b", itemId: "b", name: "Blue clutch", computedRank: 1, computedBucket: "high" },
-    { rid: "ri_c", itemId: "c", name: "Cream bag", computedRank: 2, computedBucket: "medium" },
+    { rid: "ri_a", itemId: "a", name: "Aqua tote", initial: "A", computedRank: 0, computedBucket: "top" },
+    { rid: "ri_b", itemId: "b", name: "Blue clutch", initial: "B", computedRank: 1, computedBucket: "high" },
+    { rid: "ri_c", itemId: "c", name: "Cream bag", initial: "C", computedRank: 2, computedBucket: "medium" },
   ];
 }
 
@@ -32,9 +32,9 @@ function makeRows(): RerankRow[] {
  *  sits between Blue and Cream. Display order: loved first, then onward. */
 function makeMixedRows(): RerankRow[] {
   return [
-    { rid: "ri_a", itemId: "a", name: "Aqua tote", computedRank: 0, computedBucket: "top" },
-    { rid: "ri_b", itemId: "b", name: "Blue clutch", computedRank: 1, computedBucket: "high" },
-    { rid: "ri_c", itemId: "c", name: "Cream bag", computedRank: 2, computedBucket: "low" },
+    { rid: "ri_a", itemId: "a", name: "Aqua tote", initial: "A", computedRank: 0, computedBucket: "top" },
+    { rid: "ri_b", itemId: "b", name: "Blue clutch", initial: "B", computedRank: 1, computedBucket: "high" },
+    { rid: "ri_c", itemId: "c", name: "Cream bag", initial: "C", computedRank: 2, computedBucket: "low" },
   ];
 }
 
@@ -198,9 +198,9 @@ describe("RerankPanel — reset to the computed order (DELETE)", () => {
     vi.stubGlobal("fetch", fetchMock);
     // Seed a hand-order that differs from computedRank so the reset is observable.
     renderDraft([
-      { rid: "ri_c", itemId: "c", name: "Cream bag", computedRank: 2, computedBucket: "medium" },
-      { rid: "ri_a", itemId: "a", name: "Aqua tote", computedRank: 0, computedBucket: "top" },
-      { rid: "ri_b", itemId: "b", name: "Blue clutch", computedRank: 1, computedBucket: "high" },
+      { rid: "ri_c", itemId: "c", name: "Cream bag", initial: "C", computedRank: 2, computedBucket: "medium" },
+      { rid: "ri_a", itemId: "a", name: "Aqua tote", initial: "A", computedRank: 0, computedBucket: "top" },
+      { rid: "ri_b", itemId: "b", name: "Blue clutch", initial: "B", computedRank: 1, computedBucket: "high" },
     ]);
     enterReorder();
     expect(rowNames()).toEqual(["Cream bag", "Aqua tote", "Blue clutch"]);
@@ -218,9 +218,9 @@ describe("RerankPanel — reset to the computed order (DELETE)", () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
     vi.stubGlobal("fetch", fetchMock);
     renderDraft([
-      { rid: "ri_c", itemId: "c", name: "Cream bag", computedRank: 2, computedBucket: "medium" },
-      { rid: "ri_a", itemId: "a", name: "Aqua tote", computedRank: 0, computedBucket: "top" },
-      { rid: "ri_b", itemId: "b", name: "Blue clutch", computedRank: 1, computedBucket: "high" },
+      { rid: "ri_c", itemId: "c", name: "Cream bag", initial: "C", computedRank: 2, computedBucket: "medium" },
+      { rid: "ri_a", itemId: "a", name: "Aqua tote", initial: "A", computedRank: 0, computedBucket: "top" },
+      { rid: "ri_b", itemId: "b", name: "Blue clutch", initial: "B", computedRank: 1, computedBucket: "high" },
     ]);
     enterReorder();
     fireEvent.click(screen.getByRole("button", { name: BACK_TO_COMPUTED }));
@@ -317,6 +317,18 @@ describe("RerankPanel — cross-tier hand-order (9v1f.1)", () => {
     expect(within(lovedRow).getByText(ZONE_LOVED_LABEL)).toBeInTheDocument();
     const onwardRow = screen.getAllByTestId("rerank-row").find((li) => within(li).queryByText("Cream bag"))!;
     expect(within(onwardRow).getByText(ZONE_ONWARD_LABEL)).toBeInTheDocument();
+  });
+});
+
+describe("RerankPanel — no-cover fallback (purses-21x5.1: one absence language everywhere)", () => {
+  it("shows the item's initial letter, not a blank span, when a row has no coverUrl", () => {
+    renderDraft(makeRows()); // no coverUrl on any row
+    enterReorder();
+    const firstRow = screen.getAllByTestId("rerank-row")[0];
+    // aria-hidden — a sighted-user glyph, not an AT-perceivable label — matches
+    // ItemCard's own fallback contract for a photo-less item.
+    const glyph = firstRow.querySelector('[aria-hidden="true"].font-display');
+    expect(glyph).toHaveTextContent("A");
   });
 });
 

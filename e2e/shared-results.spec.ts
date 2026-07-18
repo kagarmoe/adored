@@ -42,3 +42,34 @@ test("a stranger with the link sees the read-only result, not a login redirect",
   await expect(page.getByText("Shared read-only result")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Shared ranking" })).toBeVisible();
 });
+
+// purses-21x5.1: the shared page's item photo must actually resolve for an
+// anonymous viewer — it now points at the new token-scoped
+// /api/shared-results/[token]/photos/[photoId] route instead of the
+// session-gated /api/photo-files one, which would 401 every image here.
+//
+// HONESTY NOTE: this harness has no blob emulator — seeded photos carry a bare
+// placeholder blobKey ("e2e-placeholder", see fixtures/seed.ts), not a real
+// blob object, so servePhotoFile's real fetch-from-Blob path can't return real
+// bytes here. sort-images.spec.ts hits the identical wall for the session-gated
+// route and resolves it by fulfilling the request with a local fixture image
+// via page.route; this test follows that SAME established pattern for the new
+// route (the only proven way this repo serves real-looking image bytes in the
+// Playwright harness). What's actually verified: the shared page's img tag now
+// requests the NEW token-scoped route (not the old session-gated one, which an
+// anonymous viewer can never authenticate against) and that request resolves
+// 200 in-page — the real assertion this ticket cares about.
+test("an anonymous viewer's item image resolves via the token-scoped photo route", async ({ page }) => {
+  await page.route(`**/api/shared-results/${SHARE_TOKEN}/photos/**`, (route) =>
+    route.fulfill({ path: "e2e/fixtures/sample-images/labeled/sort-images.webp", contentType: "image/webp" }),
+  );
+
+  const photoResponse = page.waitForResponse(
+    (r) => new URL(r.url()).pathname.includes(`/api/shared-results/${SHARE_TOKEN}/photos/`),
+  );
+  await page.goto(`/shared-results/${SHARE_TOKEN}`);
+
+  const res = await photoResponse;
+  expect(res.status()).toBe(200);
+  await expect(page.getByRole("img").first()).toBeVisible();
+});

@@ -32,6 +32,10 @@ export interface RerankRow {
   itemId: string;
   name: string;
   coverUrl?: string;
+  /** Single-glyph avatar for when there's no cover (`itemInitial(item)`) — the
+   *  same absence language as ItemCard's fallback, so a photo-less item never
+   *  renders a bare blank box here. */
+  initial: string;
   computedRank: number;
   computedBucket: RankBucket;
 }
@@ -340,8 +344,16 @@ export function RerankPanel({ resultId, collectionId, status, rows, lovedCount, 
                     >
                       ⠿
                     </span>
-                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-sm bg-content-soft">
-                      <CardImage src={row.coverUrl} alt="" fallback={<span aria-hidden />} />
+                    <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-content-soft">
+                      <CardImage
+                        src={row.coverUrl}
+                        alt=""
+                        fallback={
+                          <span className="font-display text-lg text-ink-soft" aria-hidden>
+                            {row.initial}
+                          </span>
+                        }
+                      />
                     </div>
                     <span className="flex-1 truncate text-ink">{row.name}</span>
                     {/* Group membership, perceivable on static AT navigation (R3). */}
