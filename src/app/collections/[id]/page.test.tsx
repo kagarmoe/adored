@@ -163,6 +163,16 @@ describe("adaptive workspace states", () => {
     );
   });
 
+  it("no sessions but existing decisions (only session was set aside): the start card says Keep sorting, not day-one copy", async () => {
+    // purses-1xbp.2: a curator whose ONLY session was set aside has zero session
+    // rows (soft-deleted), but their preference rows persist — they HAVE sorted.
+    itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
+    prefRepo.findByCollection.mockResolvedValue([{ itemId: "item_1" }]);
+    await renderPage();
+    expect(screen.getByRole("heading", { name: "Keep sorting" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Start sorting" })).not.toBeInTheDocument();
+  });
+
   it("items-first, never sorted: Sort wins — Start sorting is dominant, Add photos/Add item/View all items are secondary", async () => {
     itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
     // No session, so the Continue panel's Resume button is absent — but items
@@ -404,10 +414,12 @@ describe("workspace resume card meta (spec §B, purses-1xbp.1)", () => {
     expect(screen.queryByText(/sorted so far/)).not.toBeInTheDocument();
   });
 
-  it("does not fetch preferences/dispositions when there is no active session (no meta to show)", async () => {
+  it("without a session, skips the meta-only fetches (dispositions/items) but still reads preferences for hasEverSorted", async () => {
     await renderPage(); // no session set up
 
-    expect(prefRepo.findByCollection).not.toHaveBeenCalled();
+    // Preferences are always read — they feed the sorted-before signal
+    // (purses-1xbp.2: a set-aside-only history has no session rows).
+    expect(prefRepo.findByCollection).toHaveBeenCalledTimes(1);
     expect(dispositionRepo.findByCollectionAndCurator).not.toHaveBeenCalled();
   });
 });
