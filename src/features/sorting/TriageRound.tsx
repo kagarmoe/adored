@@ -42,6 +42,8 @@ interface TriageRoundProps {
   /** Server-computed distinct-decided count (today's `preferences.length`). */
   decidedSeed: number;
   hubHref: string;
+  /** Where the recap's "See your ranking so far" leads (the collection's results page). */
+  resultsHref: string;
   setAsideHref: string;
 }
 
@@ -62,6 +64,7 @@ export function TriageRound({
   decisions,
   decidedSeed,
   hubHref,
+  resultsHref,
   setAsideHref,
 }: TriageRoundProps) {
   const router = useRouter();
@@ -246,6 +249,7 @@ export function TriageRound({
           windowStartMs={round.windowStartMs}
           nowMs={round.recapNowMs}
           hubHref={hubHref}
+          resultsHref={resultsHref}
           hadTimer={round.boxMs !== null}
         />
       ) : (

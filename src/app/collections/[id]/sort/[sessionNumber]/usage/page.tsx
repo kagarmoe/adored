@@ -74,6 +74,7 @@ export default async function UsagePage({ params }: UsagePageProps) {
 
   const slugOrId = collection.slug ?? collection.id;
   const hubHref = `/collections/${slugOrId}/sort/${sortSession.number}`;
+  const resultsHref = `/collections/${slugOrId}/results`;
 
   return (
     <AppLayout
@@ -103,6 +104,7 @@ export default async function UsagePage({ params }: UsagePageProps) {
             decisions={[]}
             usageKnownSeed={usageByItemId.size}
             hubHref={hubHref}
+            resultsHref={resultsHref}
           />
         </div>
       </PendingDecisionsGate>

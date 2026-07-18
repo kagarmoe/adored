@@ -155,6 +155,7 @@ describe("PendingNotices in the round — rejected acks (F9)", () => {
         decisions={[]}
         decidedSeed={0}
         hubHref="/hub"
+        resultsHref="/results"
         setAsideHref="/set-aside"
       />,
     );

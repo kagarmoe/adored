@@ -49,7 +49,7 @@ export function SeeResultsCard({ collectionId, collectionSlug }: SeeResultsCardP
           </p>
         </div>
         <Button type="button" onClick={handleClick} disabled={loading}>
-          {loading ? "Gathering…" : "Show me what I love"}
+          {loading ? "Gathering…" : "See results"}
         </Button>
       </div>
       {error && (

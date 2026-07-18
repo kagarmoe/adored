@@ -20,6 +20,8 @@ interface WhatMovedProps {
   nowMs?: number;
   /** Where "Back to your sort" returns to (the session hub). */
   hubHref: string;
+  /** Where "See your ranking so far" leads (the collection's results page). */
+  resultsHref: string;
   /** Whether the round had a timer when it ended (renders the gold ring badge). */
   hadTimer?: boolean;
 }
@@ -46,7 +48,7 @@ function lines(summary: WhatMovedSummary): string[] {
  * score or a remaining count. aria-live so it's announced when it replaces the round.
  * When hadTimer is true, a quiet gold ring badge marks the completion moment.
  */
-export function WhatMoved({ decisions, windowStartMs, nowMs, hubHref, hadTimer }: WhatMovedProps) {
+export function WhatMoved({ decisions, windowStartMs, nowMs, hubHref, resultsHref, hadTimer }: WhatMovedProps) {
   // The recap is a still photograph: when the caller hands no window end, it closes at
   // the moment this mounts (a lazy initializer — Date.now() is impure, never a render read).
   const [mountedAtMs] = useState(() => Date.now());
@@ -75,6 +77,14 @@ export function WhatMoved({ decisions, windowStartMs, nowMs, hubHref, hadTimer }
         )}
       </div>
 
+      <p>
+        <Link
+          href={resultsHref}
+          className="inline-flex h-11 items-center rounded-control px-4 text-ink underline underline-offset-2 hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+        >
+          See your ranking so far
+        </Link>
+      </p>
       <p>
         <Link
           href={hubHref}

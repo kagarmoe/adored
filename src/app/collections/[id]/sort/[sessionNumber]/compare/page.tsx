@@ -146,6 +146,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
         roundLabel="Comparing"
         decisions={decisions}
         hubHref={`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}`}
+        resultsHref={`/collections/${collection.slug ?? collection.id}/results`}
       >
         <div className="mx-auto max-w-2xl space-y-6">
           {/* The flush engine's one quiet voice on this surface — a rejected

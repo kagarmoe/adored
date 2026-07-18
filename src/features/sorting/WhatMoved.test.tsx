@@ -29,7 +29,7 @@ describe("WhatMoved", () => {
       compare(4_500),
       triage("top", NOW + 1), // AFTER the window → excluded
     ];
-    render(<WhatMoved decisions={decisions} windowStartMs={START} nowMs={NOW} hubHref="/hub" />);
+    render(<WhatMoved decisions={decisions} windowStartMs={START} nowMs={NOW} hubHref="/hub" resultsHref="/results" />);
 
     expect(screen.getByRole("heading", { name: /here's what moved/i })).toBeInTheDocument();
     // top: 1 (edge only; the pre-window top is excluded)
@@ -46,39 +46,65 @@ describe("WhatMoved", () => {
       usage("uses", 3_000),
       usage("not_uses", 4_000),
     ];
-    render(<WhatMoved decisions={decisions} windowStartMs={START} nowMs={NOW} hubHref="/hub" />);
+    render(<WhatMoved decisions={decisions} windowStartMs={START} nowMs={NOW} hubHref="/hub" resultsHref="/results" />);
     expect(screen.getByText(/2 in your life/i)).toBeInTheDocument();
     expect(screen.getByText(/1 resting for now/i)).toBeInTheDocument();
   });
 
   it("renders no usage lines for a triage-only recap", () => {
-    render(<WhatMoved decisions={[triage("top", 2_000)]} windowStartMs={START} nowMs={NOW} hubHref="/hub" />);
+    render(<WhatMoved decisions={[triage("top", 2_000)]} windowStartMs={START} nowMs={NOW} hubHref="/hub" resultsHref="/results" />);
     expect(screen.queryByText(/in your life/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/resting for now/i)).not.toBeInTheDocument();
   });
 
   it("announces the recap via an aria-live region", () => {
     const { container } = render(
-      <WhatMoved decisions={[triage("top", 2_000)]} windowStartMs={START} nowMs={NOW} hubHref="/hub" />,
+      <WhatMoved decisions={[triage("top", 2_000)]} windowStartMs={START} nowMs={NOW} hubHref="/hub" resultsHref="/results" />,
     );
     expect(container.querySelector('[aria-live="polite"]')).not.toBeNull();
   });
 
   it("shows a gentle empty state when nothing moved in the window", () => {
-    render(<WhatMoved decisions={[]} windowStartMs={START} nowMs={NOW} hubHref="/hub" />);
+    render(<WhatMoved decisions={[]} windowStartMs={START} nowMs={NOW} hubHref="/hub" resultsHref="/results" />);
     expect(screen.getByText(/gentle pass/i)).toBeInTheDocument();
     expect(screen.queryByText(/you love/i)).not.toBeInTheDocument();
   });
 
   it("links back to the session hub", () => {
-    render(<WhatMoved decisions={[]} windowStartMs={START} nowMs={NOW} hubHref="/collections/x/sort/2" />);
+    render(
+      <WhatMoved
+        decisions={[]}
+        windowStartMs={START}
+        nowMs={NOW}
+        hubHref="/collections/x/sort/2"
+        resultsHref="/collections/x/results"
+      />,
+    );
     const link = screen.getByRole("link", { name: /back to your sort/i });
     expect(link).toHaveAttribute("href", "/collections/x/sort/2");
   });
 
+  it("renders 'See your ranking so far' BEFORE 'Back to your sort', linking to resultsHref", () => {
+    render(
+      <WhatMoved
+        decisions={[]}
+        windowStartMs={START}
+        nowMs={NOW}
+        hubHref="/collections/x/sort/2"
+        resultsHref="/collections/x/results"
+      />,
+    );
+    const links = screen.getAllByRole("link");
+    const rankingIndex = links.findIndex((l) => /see your ranking so far/i.test(l.textContent ?? ""));
+    const backIndex = links.findIndex((l) => /back to your sort/i.test(l.textContent ?? ""));
+    expect(rankingIndex).toBeGreaterThanOrEqual(0);
+    expect(backIndex).toBeGreaterThan(rankingIndex);
+    expect(links[rankingIndex]).toHaveAttribute("href", "/collections/x/results");
+  });
+
   it("renders a gold ring badge when hadTimer is true", () => {
     const { container } = render(
-      <WhatMoved decisions={[triage("top", 2_000)]} windowStartMs={START} nowMs={NOW} hubHref="/hub" hadTimer />,
+      <WhatMoved decisions={[triage("top", 2_000)]} windowStartMs={START} nowMs={NOW} hubHref="/hub" resultsHref="/results" hadTimer />,
     );
     const badge = container.querySelector(".bg-spark");
     expect(badge).not.toBeNull();
@@ -88,7 +114,7 @@ describe("WhatMoved", () => {
 
   it("does not render the badge when hadTimer is false", () => {
     const { container } = render(
-      <WhatMoved decisions={[triage("top", 2_000)]} windowStartMs={START} nowMs={NOW} hubHref="/hub" hadTimer={false} />,
+      <WhatMoved decisions={[triage("top", 2_000)]} windowStartMs={START} nowMs={NOW} hubHref="/hub" resultsHref="/results" hadTimer={false} />,
     );
     const badge = container.querySelector(".bg-spark");
     expect(badge).toBeNull();
@@ -96,7 +122,7 @@ describe("WhatMoved", () => {
 
   it("does not render the badge when hadTimer is undefined", () => {
     const { container } = render(
-      <WhatMoved decisions={[triage("top", 2_000)]} windowStartMs={START} nowMs={NOW} hubHref="/hub" />,
+      <WhatMoved decisions={[triage("top", 2_000)]} windowStartMs={START} nowMs={NOW} hubHref="/hub" resultsHref="/results" />,
     );
     const badge = container.querySelector(".bg-spark");
     expect(badge).toBeNull();

@@ -78,6 +78,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
 
   const slugOrId = collection.slug ?? collection.id;
   const hubHref = `/collections/${slugOrId}/sort/${sortSession.number}`;
+  const resultsHref = `/collections/${slugOrId}/results`;
 
   return (
     <AppLayout
@@ -116,6 +117,7 @@ export default async function TriagePage({ params }: TriagePageProps) {
               decisions={decisions}
               decidedSeed={preferences.length}
               hubHref={hubHref}
+              resultsHref={resultsHref}
               setAsideHref={`/collections/${slugOrId}/results/set-aside`}
             />
           </div>
