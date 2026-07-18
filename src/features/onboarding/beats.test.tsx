@@ -293,7 +293,7 @@ describe("WelcomeStanding", () => {
     render(<WelcomeStanding comparisons={[winRound]} triage={{}} onNext={vi.fn()} />);
     expect(
       screen.getByText(
-        "Compare folds those pair choices into the same standing. Triage groups and Usage notes stay with each piece."
+        "Compare folds those pair choices into the same ranking. Triage groups and Usage notes stay with each piece."
       )
     ).toBeInTheDocument();
     expect(screen.queryByText(/Usage adds a quiet note/i)).not.toBeInTheDocument();

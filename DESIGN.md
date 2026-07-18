@@ -162,7 +162,7 @@ Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by 
 ### Do
 
 - **Do** treat the gallery as aesthetically rich — colour-forward, lush photography, visible craft — held in calm. **Aesthetic, not minimalist** (see [`TONE.md`](TONE.md) → "Restraint is not minimalism").
-- **Do** frame the work as affirmation — "which do you love more?" — never as culling.
+- **Do** frame the work as affirmation — "which would you reach for first?" — never as culling.
 - **Do** keep one decision in view; let airy whitespace carry the calm.
 - **Do** let the photographs be the richest thing on screen.
 - **Do** keep the chrome to the teal anchor + cool blues; spend the marigold rarely.

@@ -42,7 +42,7 @@ export function WelcomeStanding({ comparisons, triage, usageByItemId, onNext }: 
         Your ranking so far
       </h1>
       <p className="max-w-md text-ink-soft">
-        Compare folds those pair choices into the same standing. Triage groups and Usage notes stay with each piece.
+        Compare folds those pair choices into the same ranking. Triage groups and Usage notes stay with each piece.
       </p>
 
       {hero ? (
