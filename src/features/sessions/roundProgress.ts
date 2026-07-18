@@ -25,8 +25,12 @@ export function workspaceMeta(decidedCount: number, totalItems: number): string 
 
 // Mean confidence across items that have been part of at least one comparison
 // (comparisonCount > 0) reaching this bucket flips the message from "taking
-// shape" to "nearly settled". Pinned by tests along with monotonicity: more
-// comparisons / higher confidence must never demote the message.
+// shape" to "nearly settled". The honest stability contract (spec §B, amended
+// after review): more comparisons/confidence on the SAME already-compared set
+// never demotes the message — but a newly-compared item entering the mean MAY
+// reset "nearly settled" back to "taking shape". That's real new information
+// (a fresh item just entered the ranking with low confidence), not a bug, so
+// it's a deliberate, documented exception rather than a monotonicity violation.
 const NEARLY_SETTLED_THRESHOLD = 0.7;
 
 /**

@@ -106,20 +106,49 @@ describe("compareProgress", () => {
     expect(compareProgress(preferences)).toBe("Your ranking is nearly settled.");
   });
 
-  it("monotonicity: more comparisons / higher confidence never demotes the message", () => {
-    const takingShape = [pref({ comparisonCount: 1, confidence: 0.1 })];
-    const settled = [pref({ comparisonCount: 10, confidence: 1 })];
+  it("stability: more comparisons/confidence on the SAME compared set never demotes the message", () => {
     const rank = (msg: string | null) =>
       msg === "Your ranking is nearly settled." ? 2 : msg === "Your ranking is taking shape." ? 1 : 0;
-    expect(rank(compareProgress(settled))).toBeGreaterThanOrEqual(rank(compareProgress(takingShape)));
 
-    // Same set of items, confidence only goes up across snapshots — the message
-    // must never step backwards.
-    const snapshot1 = [pref({ itemId: "a", comparisonCount: 1, confidence: 0.1 })];
-    const snapshot2 = [pref({ itemId: "a", comparisonCount: 5, confidence: 0.5 })];
-    const snapshot3 = [pref({ itemId: "a", comparisonCount: 10, confidence: 1 })];
-    const ranks = [snapshot1, snapshot2, snapshot3].map((s) => rank(compareProgress(s)));
-    expect(ranks[1]).toBeGreaterThanOrEqual(ranks[0]);
-    expect(ranks[2]).toBeGreaterThanOrEqual(ranks[1]);
+    // Multi-item set, growing across a multi-step sweep — the same two items
+    // gain comparisons/confidence over time; the message must never step
+    // backwards as long as no NEW item enters the set.
+    const step1 = [
+      pref({ itemId: "a", comparisonCount: 1, confidence: 0.1 }),
+      pref({ itemId: "b", comparisonCount: 1, confidence: 0.1 }),
+    ];
+    const step2 = [
+      pref({ itemId: "a", comparisonCount: 4, confidence: 0.4 }),
+      pref({ itemId: "b", comparisonCount: 3, confidence: 0.3 }),
+    ];
+    const step3 = [
+      pref({ itemId: "a", comparisonCount: 8, confidence: 0.8 }),
+      pref({ itemId: "b", comparisonCount: 7, confidence: 0.7 }),
+    ];
+    const step4 = [
+      pref({ itemId: "a", comparisonCount: 10, confidence: 1 }),
+      pref({ itemId: "b", comparisonCount: 10, confidence: 1 }),
+    ];
+    const ranks = [step1, step2, step3, step4].map((s) => rank(compareProgress(s)));
+    for (let i = 1; i < ranks.length; i++) {
+      expect(ranks[i]).toBeGreaterThanOrEqual(ranks[i - 1]);
+    }
+  });
+
+  it("a newly-compared low-confidence item MAY reset 'nearly settled' to 'taking shape' — deliberate, not a monotonicity bug (spec §B)", () => {
+    // One well-compared item alone is nearly settled...
+    const settledAlone = [pref({ itemId: "a", comparisonCount: 10, confidence: 1 })];
+    expect(compareProgress(settledAlone)).toBe("Your ranking is nearly settled.");
+
+    // ...but a second item that just entered its FIRST comparison (real new
+    // information — low confidence, freshly ranked) pulls the mean back down.
+    // This demotion is intentional per the amended spec contract: stability is
+    // promised only across the same already-compared set, not across the
+    // arrival of new items.
+    const plusNewItem = [
+      ...settledAlone,
+      pref({ itemId: "b", comparisonCount: 1, confidence: 0.1 }),
+    ];
+    expect(compareProgress(plusNewItem)).toBe("Your ranking is taking shape.");
   });
 });
