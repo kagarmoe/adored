@@ -5,15 +5,19 @@
 export const ROUND_COPY = {
   triage: { name: "Get acquainted", explainer: "One at a time — how do you feel about each?" },
   usage: { name: "Do you use this?", explainer: "One piece at a time — is it in your life these days?" },
-  compare: { name: "Which do you love more?", explainer: "Two side by side — which do you love more?" },
+  compare: {
+    name: "Which would you reach for first?",
+    explainer: "Two side by side — which would you reach for first?",
+  },
 } as const;
 
-export const COMPARE_SUBLINE = "Tap the one you love more. Tie or skip whenever you like.";
+export const COMPARE_SUBLINE = "Tap the one you'd reach for. Tie or skip whenever you like.";
 
 // The /welcome walkthrough teaches with a NEUTRAL round noun distinct from the
-// person-side arc names in ROUND_COPY (user decision): interpolating those names
-// as "A <name> round" read awkwardly ("A Which do you love more? round"). One
-// home so both Welcome beats assert against the same string.
+// person-side arc names in ROUND_COPY (user decision): interpolating those
+// names as "A <name> round" reads awkwardly with any compare-name phrasing
+// ("A Which would you reach for first? round"). One home so both Welcome
+// beats assert against the same string.
 export const WELCOME_ROUND_KICKER = "A sorting round";
 
 // The RoundShell heading for the in-progress round. Shared by triage and usage

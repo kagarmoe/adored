@@ -200,7 +200,7 @@ for (const theme of ["light", "dark"] as const) {
       // Epic 3: the pool "Photos" screen (grid + copy). poolOnly has loose photos.
       ["pool", `/collections/${workspacePoolFirstSlug}/pool`],
       // Epic R: the session hub showing all three round cards (Get acquainted /
-      // Do you use this? / Which do you love more?) + the "recommended" card. The
+      // Do you use this? / Which would you reach for first?) + the "recommended" card. The
       // untriaged journey seed leaves items usage-unknown + undisposed, so the
       // usage round renders.
       ["sort-hub", `/collections/${triageSlug}/sort/${triageSessionNumber}`],
@@ -316,15 +316,15 @@ for (const theme of ["light", "dark"] as const) {
     await page.getByRole("button", { name: "Yes, I use it" }).click();
 
     // Beat 4 — Compare.
-    await page.getByRole("heading", { name: "Which do you love more?" }).waitFor();
+    await page.getByRole("heading", { name: "Which would you reach for first?" }).waitFor();
     await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
     await page.waitForTimeout(400);
     await shot("welcome-3-compare");
 
     // Beat 4 — Standing. Tap the left compare item ("The kid's microphone cushion").
     await page.getByRole("button", { name: "The kid's microphone cushion" }).click();
-    // WelcomeStanding's h1 is "Where things stand"; "What you love most" is a <p> caption.
-    await page.getByRole("heading", { name: "Where things stand" }).waitFor();
+    // WelcomeStanding's h1 is "Your ranking so far"; "What you love most" is a <p> caption.
+    await page.getByRole("heading", { name: "Your ranking so far" }).waitFor();
     await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
     await page.waitForTimeout(400);
     await shot("welcome-4-standing");

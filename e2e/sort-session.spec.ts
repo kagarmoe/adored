@@ -199,6 +199,8 @@ test.describe("session detail → See what you love most → results", () => {
       page.getByRole("button", { name: "Like" }).click(),
     ]);
     await expect(page.getByRole("heading", { name: /Here.?s what moved/ })).toBeVisible();
+    // The recap offers the ranking door before the hub link (spec §C).
+    await expect(page.getByRole("link", { name: "See your ranking so far" })).toBeVisible();
 
     // 2. Back to the hub from the recap, by TAP (a client navigation, the way the
     //    recap's own link works). The hub MUST show the round we just finished:
@@ -209,7 +211,7 @@ test.describe("session detail → See what you love most → results", () => {
     //    cache invalidation has to come from somewhere — it comes from staleTimes.
     await page.getByRole("link", { name: "Back to your sort" }).click();
     await expect(page).toHaveURL(new RegExp(`/collections/${slug}/sort/${sessionNumber}$`));
-    await expect(page.getByRole("button", { name: "Show me what I love" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "See results" })).toBeVisible();
 
     // 3. Move to compare and choose one card (tapping a card IS the choice).
     // ONE un-retried goto, deliberately (purses-hzwj): round end no longer
@@ -218,7 +220,7 @@ test.describe("session detail → See what you love most → results", () => {
     // ("interrupted by another navigation") and fail rather than absorb the race.
     await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
     await expect(
-      page.getByRole("heading", { name: "Which do you love more?" }),
+      page.getByRole("heading", { name: "Which would you reach for first?" }),
     ).toBeVisible();
 
     await page.getByRole("button", { name: /^Choose / }).first().click();
@@ -232,7 +234,7 @@ test.describe("session detail → See what you love most → results", () => {
     // ("See what you love most" now appears twice — as the SeeResultsCard heading
     // AND as the Epic-4 next-step recommendation — so target the unique, load-bearing
     // trigger button, which lives only on the SeeResultsCard, not the ambiguous text.)
-    const trigger = page.getByRole("button", { name: "Show me what I love" });
+    const trigger = page.getByRole("button", { name: "See results" });
     await expect(trigger).toBeVisible();
 
     // 6. Tap it → POST /api/sort-results materializes a draft and we land on it.
@@ -261,7 +263,7 @@ test.describe("session detail → See what you love most → results", () => {
       route.fulfill({ status: 500, contentType: "application/json", body: "{}" }),
     );
 
-    const trigger = page.getByRole("button", { name: "Show me what I love" });
+    const trigger = page.getByRole("button", { name: "See results" });
     await trigger.click();
 
     // Soft, reversible, nothing-lost copy — and we never left the session page.
@@ -272,7 +274,7 @@ test.describe("session detail → See what you love most → results", () => {
     ).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`/collections/${slug}/sort/${sessionNumber}$`));
     // The button is re-enabled (and back to its resting label), so the person can retry.
-    await expect(page.getByRole("button", { name: "Show me what I love" })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "See results" })).toBeEnabled();
   });
 });
 

@@ -66,7 +66,7 @@ async function passCompare(
   user: ReturnType<typeof userEvent.setup>,
   outcome: "first" | "second" | "tie" | "skip" = "first",
 ) {
-  for (let i = 0; i < 10 && screen.queryByRole("heading", { name: "Which do you love more?" }); i++) {
+  for (let i = 0; i < 10 && screen.queryByRole("heading", { name: "Which would you reach for first?" }); i++) {
     if (outcome === "tie") {
       await user.click(screen.getByRole("button", { name: "Tie" }));
     } else if (outcome === "skip") {
@@ -96,13 +96,13 @@ describe("WalkthroughShell", () => {
     await passUsage(user);
 
     // Compare — several pairs, then the cumulative standing.
-    expect(screen.getByRole("heading", { name: "Which do you love more?" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Which would you reach for first?" })).toBeInTheDocument();
     expect(screen.queryByText(/Pair 1 of/i)).not.toBeInTheDocument();
     await passCompare(user, "second");
 
-    // Standing — beat title is "Where things stand"; the hero eyebrow keeps the
+    // Standing — beat title is "Your ranking so far"; the hero eyebrow keeps the
     // "What you love most" affirmation inside the beat.
-    expect(screen.getByRole("heading", { name: "Where things stand" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your ranking so far" })).toBeInTheDocument();
     expect(
       screen.getByText(
         "Compare folds those pair choices into the same standing. Triage groups and Usage notes stay with each piece."
@@ -127,7 +127,7 @@ describe("WalkthroughShell", () => {
     await tapTiers(user);
     await passUsage(user);
     await passCompare(user, "tie");
-    expect(screen.getByRole("heading", { name: "Where things stand" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your ranking so far" })).toBeInTheDocument();
     expect(screen.getByText(TRIAGE_ITEMS[0].name)).toBeInTheDocument();
     expect(screen.getByText(TRIAGE_ITEMS[1].name)).toBeInTheDocument();
   });
@@ -139,7 +139,7 @@ describe("WalkthroughShell", () => {
     await tapTiers(user);
     await passUsage(user);
     await passCompare(user, "skip");
-    expect(screen.getByRole("heading", { name: "Where things stand" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your ranking so far" })).toBeInTheDocument();
     expect(screen.getByText(TRIAGE_ITEMS[0].name)).toBeInTheDocument();
     expect(screen.getByText(TRIAGE_ITEMS[1].name)).toBeInTheDocument();
   });
@@ -168,7 +168,7 @@ describe("WalkthroughShell", () => {
     await passUsage(user);
 
     // ...and then compare.
-    expect(screen.getByRole("heading", { name: "Which do you love more?" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Which would you reach for first?" })).toBeInTheDocument();
   });
 
   it("set-aside path shows the set-aside group in standing", async () => {
@@ -185,7 +185,7 @@ describe("WalkthroughShell", () => {
     await passUsage(user); // usage beat -> compare
     await passCompare(user);
 
-    expect(screen.getByRole("heading", { name: "Where things stand" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your ranking so far" })).toBeInTheDocument();
     expect(screen.getByText("Set aside — waiting, whenever you want them")).toBeInTheDocument();
     // The last triage item is the kid's microphone cushion.
     expect(screen.getByText(TRIAGE_ITEMS[2].name)).toBeInTheDocument();
@@ -206,7 +206,7 @@ describe("WalkthroughShell", () => {
 
     await passUsage(user); // usage beat -> standing when no ranked items remain
 
-    expect(screen.getByRole("heading", { name: "Where things stand" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your ranking so far" })).toBeInTheDocument();
     expect(screen.getByText("Set aside — waiting, whenever you want them")).toBeInTheDocument();
     expect(screen.getByText("Ready when you are")).toBeInTheDocument();
     expect(screen.queryByText("What you love most")).not.toBeInTheDocument();

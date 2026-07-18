@@ -179,7 +179,7 @@ describe("WelcomeCompare", () => {
     // Kicker is a neutral round noun distinct from the person-side arc names (user decision).
     expect(screen.getByText(WELCOME_ROUND_KICKER)).toBeInTheDocument();
     expect(screen.getByText(ROUND_COPY.compare.explainer)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Which do you love more?" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Which would you reach for first?" })).toBeInTheDocument();
     expect(screen.getByText(COMPARE_SUBLINE)).toBeInTheDocument();
     expect(screen.queryByText(/Pair 1 of/i)).not.toBeInTheDocument();
   });
@@ -268,12 +268,12 @@ describe("WelcomeStanding", () => {
     outcome: win,
   };
 
-  it("titles the beat 'Where things stand' with the hero labeled 'What you love most'", () => {
+  it("titles the beat 'Your ranking so far' with the hero labeled 'What you love most'", () => {
     render(<WelcomeStanding comparisons={[winRound]} triage={{}} onNext={vi.fn()} />);
-    expect(screen.getByRole("heading", { name: "Where things stand" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your ranking so far" })).toBeInTheDocument();
     // The winner leads as the hero, under the "What you love most" eyebrow.
     expect(screen.getByText("What you love most")).toBeInTheDocument();
-    const region = screen.getByRole("region", { name: /where things stand/i });
+    const region = screen.getByRole("region", { name: /your ranking so far/i });
     expect(within(region).getByText(COMPARE_PAIR[0].name)).toBeInTheDocument();
   });
 
@@ -284,7 +284,7 @@ describe("WelcomeStanding", () => {
       [TRIAGE_ITEMS[2].id]: { kind: "deferred" },
     };
     render(<WelcomeStanding comparisons={[winRound]} triage={triage} onNext={vi.fn()} />);
-    const section = screen.getByRole("region", { name: /where things stand/i });
+    const section = screen.getByRole("region", { name: /your ranking so far/i });
     const paras = within(section).getAllByText(/./, { selector: "p, h1, h3, li" });
     expect(paras[paras.length - 1]).toHaveTextContent("What you love most is at the top.");
   });
@@ -356,7 +356,7 @@ describe("WelcomeStanding", () => {
       [TRIAGE_ITEMS[2].id]: { kind: "deferred" },
     };
     render(<WelcomeStanding comparisons={[winRound]} triage={escaped} onNext={vi.fn()} />);
-    const region = screen.getByRole("region", { name: /where things stand/i });
+    const region = screen.getByRole("region", { name: /your ranking so far/i });
     expect(screen.queryByText("What you love most")).not.toBeInTheDocument();
     expect(screen.getByText("Nothing needs to rise yet. The pieces you stepped around are waiting below.")).toBeInTheDocument();
     expect(within(region).getByText(COMPARE_PAIR[0].name)).toBeInTheDocument();

@@ -94,7 +94,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
       <div className="space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="font-display text-2xl text-ink sm:text-3xl">Where things stand</h1>
+            <h1 className="font-display text-2xl text-ink sm:text-3xl">Your ranking so far</h1>
             {/* Person-side, forward-framed, no count (TONE #1, #4). */}
             <p className="mt-2 text-ink-soft">The clearer this feels, the more it&rsquo;s yours.</p>
             {/* Epic S §4.4 bridge: name live Standing as the always-current picture,

@@ -18,7 +18,7 @@ Sharing exists, but it is an *after-the-fact* step: once a ranked list is comple
 
 ## Product Purpose
 
-Adored helps one person discover what they love most in a collection, and arrive at a confident ranking of it. The work happens in phases — triage, then pairwise comparisons ("which do you love more?"), then results — so the user never faces the whole pile at once. Success is the user reaching a finished, ranked list they trust, feeling that the things they cherish have been *recognized* — and feeling settled rather than drained. The completed list can then be shared. Letting go, where it happens, follows naturally from knowing what matters most.
+Adored helps one person discover what they love most in a collection, and arrive at a confident ranking of it. The work happens in phases — triage, then pairwise comparisons ("which would you reach for first?"), then results — so the user never faces the whole pile at once. Success is the user reaching a finished, ranked list they trust, feeling that the things they cherish have been *recognized* — and feeling settled rather than drained. The completed list can then be shared. Letting go, where it happens, follows naturally from knowing what matters most.
 
 It exists because surfacing what you truly love is emotionally and cognitively heavy, and existing tools (catalogs, inventory apps, shopping sites) treat belongings as stock to be counted, not as things that matter to a person.
 
@@ -35,15 +35,15 @@ The voice is warm and unhurried. It never counts against the user ("you have too
 - **Not a catalog.** No dense inventory grids, no SKU-like density, no "browse the collection" framing.
 - **Not a storage / inventory platform.** It is not about tracking what you own or counting stock.
 - **Not a shopping site.** No cart affordances, no acquisition framing, no "add more."
-- Also avoid: gamified habit-tracker energy (confetti, streaks, points), busy enterprise dashboards (KPI tiles, everything-at-once), and cold spreadsheet UIs that make personal objects feel like rows of data.
+- Also avoid: gamified habit-tracker energy (confetti, streaks, points), busy enterprise dashboards (KPI tiles, everything-at-once — the sort orientation dashboard is the one deliberate exception: progress and the ranking, never KPI grids), and cold spreadsheet UIs that make personal objects feel like rows of data.
 
 ## Design Principles
 
-1. **One decision at a time.** Never show the whole mountain. Reduce what's on screen to the single choice in front of the user; the phased flow (triage → pairwise → results) is the product's core mercy. Actively avoid cognitive overload.
-2. **Affirmation, not subtraction.** Frame the work as discovering what you love, not culling what you don't. Prefer "which do you love more?" over "keep or discard?"; celebrate favorites rather than tallying removals. Letting go is honored when it comes, but it is never the headline.
+1. **One decision at a time.** Never show the whole mountain. Reduce what's on screen to the single choice in front of the user; the phased flow (triage → pairwise → results) is the product's core mercy. Actively avoid cognitive overload. Deciding stays one-at-a-time; the one sanctioned exception is the orientation dashboard — progress, the current ranking, each item shown with its photo, and the quiet door to it at the end of each round — because knowing where you are is part of the gentleness, not a violation of it.
+2. **Affirmation, not subtraction.** Frame the work as discovering what you love, not culling what you don't. Prefer "which would you reach for first?" over "keep or discard?"; celebrate favorites rather than tallying removals. Letting go is honored when it comes, but it is never the headline.
 3. **Judgement-free space.** No framing that shames or pressures — no "too many," no efficiency scolding, no loud completion metrics. Neutral, supportive language throughout.
 4. **Gentle by default.** Unhurried pacing: calm transitions, encouraging copy, forgiving interactions (easy undo, no destructive surprises). The user can stop and come back without penalty.
-5. **Treat the objects with care.** Photos are prominent and shown respectfully. Items are things that matter to a person, not data rows; the curatorial frame wins over the inventory frame.
+5. **Treat the objects with care.** Photos are prominent and shown respectfully. Items are things that matter to a person, not data rows; the curatorial frame wins over the inventory frame. Rankings and results always show each item's photo.
 6. **Calm over stimulation, with warmth in the moments.** Restraint is the baseline. The touch of playfulness appears as small, soft beats — never as a system of rewards.
 7. **Finish, then share.** Sharing is an outcome of completed work, not a social loop woven through the experience.
 

@@ -106,7 +106,7 @@ export function SortHelpDialog() {
                 </div>
                 <div>
                   <dt className="font-semibold text-ink">Compare</dt>
-                  <dd className="mt-1 text-sm text-ink-soft">Puts pieces in order by what you love more.</dd>
+                  <dd className="mt-1 text-sm text-ink-soft">Puts pieces in order by what you&apos;d reach for first.</dd>
                 </div>
               </dl>
             </div>
