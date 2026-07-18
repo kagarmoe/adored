@@ -31,4 +31,22 @@ describe("SessionResumeCard", () => {
     render(<SessionResumeCard status="active" goal={null} headingLevel="h3" actions={<button>Resume</button>} />);
     expect(screen.getByRole("button", { name: "Resume" })).toBeInTheDocument();
   });
+
+  it("renders the meta line under the body when given", () => {
+    render(
+      <SessionResumeCard
+        status="active"
+        goal="Find favorites"
+        headingLevel="h3"
+        actions={null}
+        meta="38 of 100 sorted so far"
+      />,
+    );
+    expect(screen.getByText("38 of 100 sorted so far")).toBeInTheDocument();
+  });
+
+  it("omits the meta line entirely when absent", () => {
+    render(<SessionResumeCard status="active" goal="Find favorites" headingLevel="h3" actions={null} />);
+    expect(screen.queryByText(/sorted so far/)).not.toBeInTheDocument();
+  });
 });

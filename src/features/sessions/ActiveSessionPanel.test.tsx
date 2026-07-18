@@ -369,6 +369,23 @@ describe("ActiveSessionPanel", () => {
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
+  it("passes the meta prop through to SessionResumeCard's body slot (spec §B workspace meta)", () => {
+    render(
+      <ActiveSessionPanel
+        curatorId="u1"
+        session={session}
+        resumeHref={resumeHref}
+        meta="38 of 100 sorted so far"
+      />,
+    );
+    expect(screen.getByText("38 of 100 sorted so far")).toBeInTheDocument();
+  });
+
+  it("omits the meta line when not given", () => {
+    render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);
+    expect(screen.queryByText(/sorted so far/)).not.toBeInTheDocument();
+  });
+
   it("renders a decorative middot that is hidden from screen readers in the undo notice", async () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
     render(<ActiveSessionPanel curatorId="u1" session={session} resumeHref={resumeHref} />);

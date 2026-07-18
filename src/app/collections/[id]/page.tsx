@@ -5,6 +5,8 @@ import { requireCollectionAccess } from "@/lib/collection-access";
 import { PhotoController } from "@/server/api/photos";
 import { ItemController } from "@/server/api/items";
 import { SessionController } from "@/server/api/sessions";
+import { PreferenceController } from "@/server/api/preferences";
+import { DispositionController } from "@/server/api/dispositions";
 import { AppLayout } from "@/components/layout";
 import { trail } from "@/components/layout/breadcrumb-trails";
 import { EmptyState, buttonVariants } from "@/components/ui";
@@ -13,6 +15,7 @@ import { PhotoPoolPreview } from "@/features/collections/PhotoPoolPreview";
 import { ItemPreviewGrid } from "@/features/collections/ItemPreviewGrid";
 import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { resolveWorkspaceState } from "@/features/collections/workspaceState";
+import { workspaceMeta } from "@/features/sessions/roundProgress";
 import { quietLink } from "@/lib/design/quiet-link";
 import Link from "next/link";
 
@@ -63,6 +66,21 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   // Any past session (completed/abandoned included) means the curator has sorted
   // before — feeds the start card's progress-keyed copy ("Start" vs "Keep sorting").
   const hasEverSorted = sessions.length > 0;
+
+  // Workspace resume card meta (spec §B last bullet, purses-1xbp.1): only fetched
+  // when there's a session to show it on. The total MUST be a real count — never
+  // itemPreview.length (bounded to 12) — so this reads the full item list, not
+  // the preview. Decided = preference rows + set-aside dispositions, mutually
+  // exclusive by construction (same rule as the session hub).
+  const [preferences, setAsideDispositions, allItems] = currentSession
+    ? await Promise.all([
+        PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id),
+        DispositionController.fromDb(db).listDispositions(collection.id, session.user.id, "set_aside"),
+        ItemController.fromDb(db).listItems(collection.id),
+      ])
+    : [[], [], []];
+  const workspaceMetaLine =
+    workspaceMeta(preferences.length + setAsideDispositions.length, allItems.length) ?? undefined;
 
   // A1: at most one dominant (bg-primary) action on the workspace. Sort wins
   // once items exist — either a session is already open (Resume/undo IS that
@@ -186,6 +204,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
             resumeHref={resumeHref}
             startHref={itemPreview.length > 0 ? `${base}/sort/new` : undefined}
             hasEverSorted={hasEverSorted}
+            meta={workspaceMetaLine}
           />
         )}
 
