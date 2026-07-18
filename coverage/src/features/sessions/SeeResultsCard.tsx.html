@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">6.66% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>1/15</span>
+                <span class='fraction'>15/15</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">6.66% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>1/15</span>
+                <span class='fraction'>15/15</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -125,7 +125,7 @@
 <a name='L60'></a><a href='#L60'>60</a>
 <a name='L61'></a><a href='#L61'>61</a>
 <a name='L62'></a><a href='#L62'>62</a>
-<a name='L63'></a><a href='#L63'>63</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L63'></a><a href='#L63'>63</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -141,32 +141,32 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -202,33 +202,33 @@ interface SeeResultsCardProps {
 // place. Tap-only, reversible, nothing-lost on failure — the trigger creates a
 // populated draft result (POST /api/sort-results materializes the ranked items
 // from the curator's preferences) and navigates to it.
-export function <span class="fstat-no" title="function not covered" >SeeResultsCard({</span> collectionId, collectionSlug }: SeeResultsCardProps) {
-  const <span class="cstat-no" title="statement not covered" >router = useRouter();</span>
-  const [loading, <span class="cstat-no" title="statement not covered" >setLoading] = useState(false);</span>
-  const [error, <span class="cstat-no" title="statement not covered" >setError] = useState&lt;string | null&gt;(null);</span>
+export function SeeResultsCard({ collectionId, collectionSlug }: SeeResultsCardProps) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState&lt;string | null&gt;(null);
 &nbsp;
-  async function <span class="fstat-no" title="function not covered" >handleClick() {</span>
-<span class="cstat-no" title="statement not covered" >    setLoading(true);</span>
-<span class="cstat-no" title="statement not covered" >    setError(null);</span>
-<span class="cstat-no" title="statement not covered" >    try {</span>
-      const response = <span class="cstat-no" title="statement not covered" >await fetch("/api/sort-results", {</span>
+  async function handleClick() {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/sort-results", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ collectionId, name: "Draft result" }),
       });
-<span class="cstat-no" title="statement not covered" >      if (!response.ok) {</span>
-<span class="cstat-no" title="statement not covered" >        throw new Error("create failed");</span>
+      if (!response.ok) {
+        throw new Error("create failed");
       }
-      const result = <span class="cstat-no" title="statement not covered" >await response.json();</span>
-<span class="cstat-no" title="statement not covered" >      router.push(`/collections/${collectionSlug}/results/${result.number}`);</span>
+      const result = await response.json();
+      router.push(`/collections/${collectionSlug}/results/${result.number}`);
     } catch {
       // Soft, person's-side, reversible: nothing was lost, retry whenever.
-<span class="cstat-no" title="statement not covered" >      setError("That didn't come together just now. Nothing was lost — try again whenever you like.");</span>
-<span class="cstat-no" title="statement not covered" >      setLoading(false);</span>
+      setError("That didn't come together just now. Nothing was lost — try again whenever you like.");
+      setLoading(false);
     }
   }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return (</span>
+  return (
     &lt;Card padding="lg" className="border-hairline bg-content-soft"&gt;
       &lt;div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"&gt;
         &lt;div&gt;
@@ -238,7 +238,7 @@ export function <span class="fstat-no" title="function not covered" >SeeResultsC
           &lt;/p&gt;
         &lt;/div&gt;
         &lt;Button type="button" onClick={handleClick} disabled={loading}&gt;
-          {loading ? "Gathering…" : "Show me what I love"}
+          {loading ? "Gathering…" : "See results"}
         &lt;/Button&gt;
       &lt;/div&gt;
       {error &amp;&amp; (
@@ -256,7 +256,7 @@ export function <span class="fstat-no" title="function not covered" >SeeResultsC
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-17T11:40:21.580Z
+                at 2026-07-18T02:49:23.549Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
