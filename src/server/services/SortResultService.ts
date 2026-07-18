@@ -328,12 +328,46 @@ export class SortResultService {
     await this.sortResultItemRepo.delete(id);
   }
 
+  /**
+   * Finalize a draft into an immutable snapshot AND close the pass it belongs
+   * to (spec §E, "sessions as invisible bookkeeping"): both writes commit or
+   * roll back together in ONE transaction. `sort_results` carries no
+   * sessionId — a result can be finalized from any of the curator's sessions —
+   * so the curator's currently open (active|paused) session for the result's
+   * collection is resolved AT FINALIZE TIME, by (collectionId, curatorId). No
+   * open session is not an error: the result finalizes alone.
+   *
+   * The result row is locked (`findByIdForUpdate`) inside the transaction so a
+   * concurrent finalize serializes here instead of racing the state guard
+   * (mirrors `reorderResultItems`' TOCTOU pattern).
+   */
   async finalizeResult(id: string): Promise<SortResult> {
-    return this.sortResultRepo.update(id, {
-      status: "finalized",
-      finalizedAt: new Date(),
-      updatedAt: new Date(),
-    });
+    return withTransaction(
+      this.db,
+      async (tx) => {
+        const resultRepo = new SortResultRepository(tx);
+        const result = await resultRepo.findByIdForUpdate(id);
+        if (!result) throw new Error("Result not found");
+        if (result.status === "finalized") throw new FinalizeStateError();
+
+        const finalized = await resultRepo.update(id, {
+          status: "finalized",
+          finalizedAt: new Date(),
+        });
+
+        const sessionRepo = new SessionRepository(tx);
+        const openSession = await sessionRepo.findInProgress(
+          result.collectionId,
+          result.curatorId,
+        );
+        if (openSession) {
+          await sessionRepo.update(openSession.id, { status: "completed" });
+        }
+
+        return finalized;
+      },
+      { op: "finalize_result", ctx: { resultId: id } },
+    );
   }
 
   async supersedeResult(id: string): Promise<SortResult | null> {

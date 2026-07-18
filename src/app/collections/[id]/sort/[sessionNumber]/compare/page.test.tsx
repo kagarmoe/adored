@@ -181,13 +181,17 @@ describe("ComparePage round chrome + copy (Epic 4c)", () => {
     expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
   });
 
-  it("uses the TONE.md love-framing copy", async () => {
+  it("uses the reach-for-first framing (owner-signed language sweep, spec §D)", async () => {
     const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
-    expect(screen.getByRole("heading", { name: /which do you love more\?/i })).toBeInTheDocument();
-    expect(screen.getByText(/tap the one you love more/i)).toBeInTheDocument();
-    // Regression guard: the utility/keep framing TONE.md forbids must not return.
-    expect(screen.queryByRole("heading", { name: /reach for/i })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Which would you reach for first?" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Tap the one you'd reach for. Tie or skip whenever you like."),
+    ).toBeInTheDocument();
+    // Regression guard: the forced A/B "love more" framing must not return.
+    expect(screen.queryByText(/love more/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/\bkeep\b/i)).not.toBeInTheDocument();
   });
 
@@ -253,6 +257,13 @@ describe("ComparePage integrity guard", () => {
 
   it("redirects (and halts) when the user is not the session's curator — independent sort (purses-t9l)", async () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_x", collectionId: "coll_01ABCDEF", number: 1, status: "active", curatorId: "someone_else" });
+    await expect(ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
+  });
+
+  // Spec §E: finalize can complete this session out from under an open tab —
+  // a round is only for an in-progress (active|paused) session.
+  it("redirects to the hub when the session has been completed (finalize closed it)", async () => {
+    sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_1", collectionId: "coll_01ABCDEF", number: 1, status: "completed", curatorId: "u1" });
     await expect(ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
   });
 });

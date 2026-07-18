@@ -15,7 +15,7 @@ import { RankedResults } from "@/features/results/RankedResults";
 import { RerankPanel, type RerankRow } from "@/features/results/RerankPanel";
 import { SharePanel } from "@/features/results/SharePanel";
 import { partitionRanked } from "@/lib/results-buckets";
-import { itemDisplayName } from "@/lib/items";
+import { itemDisplayName, itemInitial } from "@/lib/items";
 import type { UsageAnswer } from "@/lib/derive-usage";
 import Link from "next/link";
 
@@ -94,6 +94,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
     itemId: item.id,
     name: itemDisplayName(item),
     coverUrl: coverUrl(item.id),
+    initial: itemInitial(item),
     computedRank: ri.computedRank,
     computedBucket: ri.computedBucket,
   }));

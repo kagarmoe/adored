@@ -218,7 +218,7 @@ is an amendment to that file, never a local override. Strategic design context l
 principles, accessibility). Read both before any UI work.
 
 **The one thing to internalize:** the purpose is **realizing what you love most** (affirmation), not
-deciding what to discard — prefer "which do you love more?" over "keep or let go?"; letting go follows
+deciding what to discard — prefer "which would you reach for first?" over "keep or let go?"; letting go follows
 naturally and is never the headline. Each object is a story, not a data row. Design is gentle,
 judgement-free, and low-cognitive-load by duty of care, not taste. One decision at a time; never the
 whole pile. No gamification (no confetti/streaks/scores), no shaming metrics ("too many"), no

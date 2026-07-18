@@ -261,3 +261,45 @@ describe("SessionDetailPage — usage in the grid, one-read log, dual return", (
     expect(recommendedProps.current.sessionId).toBe("s1");
   });
 });
+
+describe("SessionDetailPage — per-sort progress lines (spec §B)", () => {
+  beforeEach(() => {
+    sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "s1", collectionId: "coll_REAL", number: 1, status: "active", curatorId: "u1" });
+  });
+
+  it("renders all three lines with seeded preferences/usage/dispositions data", async () => {
+    itemRepo.findByCollection.mockResolvedValue([
+      makeItem("a", 1), makeItem("b", 2), makeItem("c", 3), makeItem("d", 4),
+    ]);
+    // 2 preference rows + 1 set-aside disposition = 3 of 4 decided.
+    prefRepo.findByCollection.mockResolvedValue([
+      { id: "p1", collectionId: "coll_REAL", curatorId: "u1", itemId: "a", score: 0.5, confidence: 0.8, rankBucket: "top", comparisonCount: 8, orderRank: null, lastSeen: new Date(), createdAt: new Date(), updatedAt: new Date() },
+      { id: "p2", collectionId: "coll_REAL", curatorId: "u1", itemId: "b", score: 0.5, confidence: 0.8, rankBucket: "high", comparisonCount: 8, orderRank: null, lastSeen: new Date(), createdAt: new Date(), updatedAt: new Date() },
+    ]);
+    dispositionRepo.findByCollectionAndCurator.mockResolvedValue([
+      { id: "d1", collectionId: "coll_REAL", curatorId: "u1", itemId: "c", disposition: "set_aside", createdAt: new Date(), updatedAt: new Date() },
+    ]);
+    // listForCurator reads via sessionRepo.findByCollectionAndCurator + decisionRepo.findBySession.
+    sessionRepo.findByCollectionAndCurator.mockResolvedValue([{ id: "s1" }]);
+    decisionRepo.findBySession.mockResolvedValue([usageEvt("u1", "a"), usageEvt("u2", "b")]);
+
+    render(await SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) }));
+
+    expect(screen.getByText("3 of 4 sorted by feel")).toBeInTheDocument();
+    expect(screen.getByText("2 answered")).toBeInTheDocument();
+    expect(screen.getByText("Your ranking is nearly settled.")).toBeInTheDocument();
+  });
+
+  it("omits all three progress lines when nothing has been decided/answered/compared", async () => {
+    itemRepo.findByCollection.mockResolvedValue([makeItem("a", 1), makeItem("b", 2)]);
+    prefRepo.findByCollection.mockResolvedValue([]);
+    dispositionRepo.findByCollectionAndCurator.mockResolvedValue([]);
+    decisionRepo.findBySession.mockResolvedValue([]);
+
+    render(await SessionDetailPage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) }));
+
+    expect(screen.queryByText(/sorted by feel/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/answered/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ranking is/)).not.toBeInTheDocument();
+  });
+});

@@ -21,6 +21,8 @@ interface RoundSurfaceProps {
   decisions: MovedDecision[];
   /** The session hub, where Pause and "Back to your sort" return to. */
   hubHref: string;
+  /** Where the recap's "See your ranking so far" leads (the collection's results page). */
+  resultsHref: string;
   /**
    * True when the server rendered an empty queue (no item / no pair). The round is
    * over: show the recap instead of the (empty) content. Expiry does the same.
@@ -45,6 +47,7 @@ export function RoundSurface({
   children,
   decisions,
   hubHref,
+  resultsHref,
   queueEmpty = false,
 }: RoundSurfaceProps) {
   const router = useRouter();
@@ -103,7 +106,13 @@ export function RoundSurface({
       onPause={() => router.push(hubHref)}
     >
       {ended ? (
-        <WhatMoved decisions={decisions} windowStartMs={startedAtMs} hubHref={hubHref} hadTimer={boxMs !== null} />
+        <WhatMoved
+          decisions={decisions}
+          windowStartMs={startedAtMs}
+          hubHref={hubHref}
+          resultsHref={resultsHref}
+          hadTimer={boxMs !== null}
+        />
       ) : (
         children
       )}

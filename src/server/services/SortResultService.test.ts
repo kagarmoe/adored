@@ -6,9 +6,18 @@ import { fakeTxDb } from "@/test-support/fakeTxDb";
 // injected repos. Mock the tx-bound repo constructors (mirroring the route
 // tests) to observe the in-transaction writes; the AUTHORITATIVE atomicity proof
 // is the un-mocked integration rollback test in sort-pipeline.integration.test.ts.
-const { txResultRepo, txItemRepo, isResultNumberConflict } = vi.hoisted(() => ({
-  txResultRepo: { getNextResultNumber: vi.fn(), insertWithNumber: vi.fn(), delete: vi.fn() },
+const { txResultRepo, txItemRepo, txSessionRepo, isResultNumberConflict } = vi.hoisted(() => ({
+  txResultRepo: {
+    getNextResultNumber: vi.fn(),
+    insertWithNumber: vi.fn(),
+    delete: vi.fn(),
+    findByIdForUpdate: vi.fn(),
+    update: vi.fn(),
+  },
   txItemRepo: { create: vi.fn(), deleteByResult: vi.fn() },
+  // finalizeResult resolves the curator's open session via a tx-bound
+  // SessionRepository — mocked the same way as the other tx-bound repos above.
+  txSessionRepo: { findInProgress: vi.fn(), update: vi.fn() },
   isResultNumberConflict: vi.fn(function () { return false; }),
 }));
 vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
@@ -17,6 +26,9 @@ vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
 }));
 vi.mock("@/server/repositories/implementations/SortResultItemRepository", () => ({
   SortResultItemRepository: vi.fn(function () { return txItemRepo; }),
+}));
+vi.mock("@/server/repositories/implementations/SessionRepository", () => ({
+  SessionRepository: vi.fn(function () { return txSessionRepo; }),
 }));
 // Epic S: the service reads the curator's decision log to snapshot usage at
 // materialization. This unit test isolates the tx wiring, so stub the log empty
@@ -30,6 +42,7 @@ import {
   SortResultService,
   SupersedeStateError,
   DeleteResultStateError,
+  FinalizeStateError,
   ResultNumberExhaustedError,
 } from "./SortResultService";
 import type {
@@ -107,8 +120,12 @@ beforeEach(() => {
   txResultRepo.getNextResultNumber.mockResolvedValue(1);
   txResultRepo.insertWithNumber.mockResolvedValue(sortResult());
   txResultRepo.delete.mockResolvedValue(undefined);
+  txResultRepo.findByIdForUpdate.mockResolvedValue(sortResult());
+  txResultRepo.update.mockResolvedValue(sortResult({ status: "finalized" }));
   txItemRepo.create.mockResolvedValue(sortResultItem());
   txItemRepo.deleteByResult.mockResolvedValue(undefined);
+  txSessionRepo.findInProgress.mockResolvedValue(null);
+  txSessionRepo.update.mockResolvedValue(undefined);
 });
 
 describe("SortResultService.createDraftResult", () => {
@@ -216,24 +233,55 @@ describe("SortResultService.createDraftResult", () => {
 });
 
 describe("SortResultService.finalizeResult", () => {
-  it("finalizeResult sets status finalized + finalizedAt", async () => {
-    const update = vi.fn(async () => sortResult({ status: "finalized" }));
-    const sortResultRepo = { update } as unknown as SortResultRepository;
-
-    await new SortResultService(
-      sortResultRepo,
+  // The tx-bound wiring is proven here (mirroring the other tx-primitive
+  // tests in this file); the AUTHORITATIVE atomicity proof — both rows
+  // actually moved together against a real DB — lives in the DB-tier
+  // sort-results-pipeline.integration.test.ts.
+  function service() {
+    return new SortResultService(
+      {} as unknown as SortResultRepository,
       {} as unknown as SortResultItemRepository,
       {} as unknown as CollectionPreferenceItemRepository,
       txDb,
-    ).finalizeResult("res-1");
-
-    expect(update).toHaveBeenCalledWith(
-      "res-1",
-      expect.objectContaining({
-        status: "finalized",
-        finalizedAt: expect.any(Date),
-      }),
     );
+  }
+
+  it("locks the row (tx-bound), finalizes it, and completes the curator's open session", async () => {
+    const draft = sortResult({ status: "draft" });
+    const finalized = sortResult({ status: "finalized", finalizedAt: new Date() });
+    txResultRepo.findByIdForUpdate.mockResolvedValue(draft);
+    txResultRepo.update.mockResolvedValue(finalized);
+    const openSession = { id: "sess-1", collectionId: COLLECTION, curatorId: CURATOR, status: "active" };
+    txSessionRepo.findInProgress.mockResolvedValue(openSession);
+
+    const result = await service().finalizeResult("res-1");
+
+    expect(result).toBe(finalized);
+    expect(txResultRepo.findByIdForUpdate).toHaveBeenCalledWith("res-1");
+    expect(txResultRepo.update).toHaveBeenCalledWith(
+      "res-1",
+      expect.objectContaining({ status: "finalized", finalizedAt: expect.any(Date) }),
+    );
+    expect(txSessionRepo.findInProgress).toHaveBeenCalledWith(COLLECTION, CURATOR);
+    expect(txSessionRepo.update).toHaveBeenCalledWith("sess-1", { status: "completed" });
+  });
+
+  it("finalizes alone when no open session exists (no session write, no error)", async () => {
+    txResultRepo.findByIdForUpdate.mockResolvedValue(sortResult({ status: "draft" }));
+    txSessionRepo.findInProgress.mockResolvedValue(null);
+
+    const result = await service().finalizeResult("res-1");
+
+    expect(result.status).toBe("finalized");
+    expect(txSessionRepo.update).not.toHaveBeenCalled();
+  });
+
+  it("throws FinalizeStateError when already finalized (no update, no session touched)", async () => {
+    txResultRepo.findByIdForUpdate.mockResolvedValue(sortResult({ status: "finalized" }));
+
+    await expect(service().finalizeResult("res-1")).rejects.toBeInstanceOf(FinalizeStateError);
+    expect(txResultRepo.update).not.toHaveBeenCalled();
+    expect(txSessionRepo.findInProgress).not.toHaveBeenCalled();
   });
 });
 

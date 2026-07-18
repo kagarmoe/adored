@@ -17,6 +17,8 @@ import { recommendNextRound, type NextRound } from "@/lib/next-round";
 import { ROUND_COPY } from "@/features/sorting/roundCopy";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
 import { SortHelpDialog } from "@/features/sorting/SortHelpDialog";
+import { deriveUsage } from "@/lib/derive-usage";
+import { compareProgress, triageProgress, usageProgress } from "@/features/sessions/roundProgress";
 import Link from "next/link";
 
 interface SessionPageProps {
@@ -69,6 +71,17 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
 
   // Gates the "See results" card: at least one item has been given a feeling.
   const bucketed = preferences.length;
+
+  // Per-sort progress lines (spec §B). Triage decided = preference rows +
+  // set-aside dispositions — mutually exclusive by construction (verified in
+  // the spec: a preference row and a set-aside disposition on the same item
+  // never coexist), so a plain sum can't double-count.
+  const setAsideCount = dispositions.filter((d) => d.disposition === "set_aside").length;
+  const triageDecided = preferences.length + setAsideCount;
+  const triageLine = triageProgress(triageDecided, items.length);
+  const usageAnsweredCount = deriveUsage(curatorDecisions, new Set(items.map((i) => i.id))).size;
+  const usageLine = usageProgress(usageAnsweredCount);
+  const compareLine = compareProgress(preferences);
 
   // Derived, no schema: which round is a good next step, plus the demoted twin the
   // device-local anti-nagging swap needs. Reuses the same selectTriageItem /
@@ -131,6 +144,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
             <Card interactive padding="lg">
               <h2 className="text-lg text-ink">{ROUND_COPY.triage.name}</h2>
               <p className="mt-2 text-sm text-ink-soft">{ROUND_COPY.triage.explainer}</p>
+              {triageLine && <p className="mt-2 text-sm text-ink-soft">{triageLine}</p>}
               <div className="mt-4">
                 <Button size="sm">Open</Button>
               </div>
@@ -140,6 +154,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
             <Card interactive padding="lg">
               <h2 className="text-lg text-ink">{ROUND_COPY.usage.name}</h2>
               <p className="mt-2 text-sm text-ink-soft">{ROUND_COPY.usage.explainer}</p>
+              {usageLine && <p className="mt-2 text-sm text-ink-soft">{usageLine}</p>}
               <div className="mt-4">
                 <Button size="sm">Open</Button>
               </div>
@@ -149,6 +164,7 @@ export default async function SortSessionPage({ params }: SessionPageProps) {
             <Card interactive padding="lg">
               <h2 className="text-lg text-ink">{ROUND_COPY.compare.name}</h2>
               <p className="mt-2 text-sm text-ink-soft">{ROUND_COPY.compare.explainer}</p>
+              {compareLine && <p className="mt-2 text-sm text-ink-soft">{compareLine}</p>}
               <div className="mt-4">
                 <Button size="sm">Open</Button>
               </div>

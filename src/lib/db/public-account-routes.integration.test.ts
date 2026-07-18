@@ -1,10 +1,13 @@
 // @vitest-environment node
 //
-// Real-DB integration tests for two routes:
-//   - GET /api/shared-results/[token]  (public, no auth required)
-//   - GET/PATCH/DELETE /api/users/me   (session-gated, self-only)
+// Real-DB integration tests for three routes:
+//   - GET /api/shared-results/[token]                (public, no auth required)
+//   - GET /api/shared-results/[token]/photos/[photoId] (public, token-scoped photo bytes)
+//   - GET/PATCH/DELETE /api/users/me                 (session-gated, self-only)
 //
-// Harness: real Postgres via getTestDb; mocks only getSession + getDb.
+// Harness: real Postgres via getTestDb; mocks only getSession, getDb, and
+// (for the photo route) @vercel/blob's `get` — the one true external boundary
+// servePhotoFile crosses, mirroring file-route-authz.integration.test.ts.
 // Run with: RUN_DB_TESTS=1 npx vitest run src/lib/db/public-account-routes.integration.test.ts
 
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -14,17 +17,23 @@ import { seedBaseline, seedFullCollection, seedUserRow } from "../../../e2e/fixt
 import { mockAuth } from "../../../e2e/fixtures/mock-auth";
 import { generateId } from "@/lib/id";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
+import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import { user as userTable } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 // ---- hoisted spies ---------------------------------------------------------
-const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
+const { mockGetSession, mockBlobGet } = vi.hoisted(() => ({
+  mockGetSession: vi.fn(),
+  mockBlobGet: vi.fn(),
+}));
 
 vi.mock("@/lib/auth", () => mockAuth(mockGetSession));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
+vi.mock("@vercel/blob", () => ({ get: mockBlobGet }));
 
 // Routes imported AFTER mocks are wired.
 import { GET as sharedResultsGet } from "@/app/api/shared-results/[token]/route";
+import { GET as sharedPhotoGet } from "@/app/api/shared-results/[token]/photos/[photoId]/route";
 import { GET as meGet, PATCH as mePatch, DELETE as meDelete } from "@/app/api/users/me/route";
 
 // ---- gate ------------------------------------------------------------------
@@ -150,6 +159,133 @@ describeDb("GET /api/shared-results/[token] (public route)", () => {
     });
 
     expect(res.status).toBe(200);
+  });
+});
+
+// ============================================================================
+// purses-21x5.1: the token-scoped photo byte route. servePhotoFile's own
+// resize/etag/cache behavior is covered elsewhere (file-route-authz, item-photo
+// routes) — this suite is the un-mocked crossing the testing principle demands:
+// a real share row, a real finalized result, a real ranked-result-item, and a
+// real photo row, reached with NO session, through the actual route → repo →
+// Postgres stack. @vercel/blob's `get` is mocked (the one true external
+// boundary), so "200 with image bytes" here means "servePhotoFile's own
+// success path executed for real bytes it received from that mocked read" —
+// the same honesty bar file-route-authz.integration.test.ts already sets.
+describeDb("GET /api/shared-results/[token]/photos/[photoId] (public route)", () => {
+  let ownerId: string;
+
+  beforeEach(async () => {
+    await resetDb();
+    vi.clearAllMocks();
+    mockBlobGet.mockResolvedValue({
+      statusCode: 200,
+      stream: new Response(new Uint8Array([1, 2, 3])).body,
+      blob: { contentType: "image/jpeg" },
+    });
+    ownerId = await seedBaseline();
+  });
+
+  afterAll(async () => {
+    await closeDb();
+  });
+
+  function photoCtx(token: string, photoId: string) {
+    return { params: Promise.resolve({ token, photoId }) } as never;
+  }
+
+  it("200s with image bytes for a photo whose item IS ranked in the shared (finalized) result — no session needed", async () => {
+    const { db } = getTestDb();
+    const seed = await seedFullCollection(ownerId);
+
+    // itemB is the finalized result's ranked item (see seedFullCollection), but
+    // its only seeded photo is soft-deleted — create a fresh active one.
+    const photo = await new PhotoRepository(db).create({
+      itemId: seed.itemBId,
+      collectionId: seed.collectionId,
+      blobKey: "https://blob.example/shared-b.jpg",
+      filename: "shared-b.jpg",
+      mimeType: "image/jpeg",
+      fileSize: 3,
+      uploadedBy: ownerId,
+      isHero: true,
+    });
+
+    const [shareRow] = await db.execute(
+      sql`SELECT share_token FROM sort_result_shares
+          WHERE sort_result_id IN (
+            SELECT id FROM sort_results WHERE collection_id = ${seed.collectionId} AND status = 'finalized'
+          ) LIMIT 1`,
+    );
+    const token = (shareRow as { share_token: string }).share_token;
+
+    mockGetSession.mockResolvedValue(null);
+    const res = await sharedPhotoGet(makeRequest("GET") as any, photoCtx(token, photo.id));
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("image/jpeg");
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    expect(bytes).toEqual(new Uint8Array([1, 2, 3]));
+  });
+
+  it("404s for a photo whose item is NOT ranked in the shared result — a share token can't reach an unrelated collection photo", async () => {
+    const { db } = getTestDb();
+    const seed = await seedFullCollection(ownerId);
+
+    // itemA carries an active photo but is only in the DRAFT result, never the
+    // finalized one that's shared.
+    const [activePhoto] = await new PhotoRepository(db).findByItem(seed.itemAId);
+
+    const [shareRow] = await db.execute(
+      sql`SELECT share_token FROM sort_result_shares
+          WHERE sort_result_id IN (
+            SELECT id FROM sort_results WHERE collection_id = ${seed.collectionId} AND status = 'finalized'
+          ) LIMIT 1`,
+    );
+    const token = (shareRow as { share_token: string }).share_token;
+
+    mockGetSession.mockResolvedValue(null);
+    const res = await sharedPhotoGet(makeRequest("GET") as any, photoCtx(token, activePhoto.id));
+
+    expect(res.status).toBe(404);
+    expect(mockBlobGet).not.toHaveBeenCalled();
+  });
+
+  it("404s for a revoked share — never reaches servePhotoFile", async () => {
+    const { db } = getTestDb();
+    const seed = await seedFullCollection(ownerId);
+    const photo = await new PhotoRepository(db).create({
+      itemId: seed.itemBId,
+      collectionId: seed.collectionId,
+      blobKey: "https://blob.example/shared-b2.jpg",
+      filename: "shared-b2.jpg",
+      mimeType: "image/jpeg",
+      fileSize: 3,
+      uploadedBy: ownerId,
+      isHero: false,
+    });
+
+    const [row] = await db.execute(
+      sql`SELECT id FROM sort_results WHERE collection_id = ${seed.collectionId} AND status = 'finalized'`,
+    );
+    const sortResultId = (row as { id: string }).id;
+    const shareRepo = new SortResultShareRepository(db);
+    const token = generateId("tok-revoked-photo");
+    const share = await shareRepo.create({ sortResultId, shareToken: token });
+    await shareRepo.update(share.id, { status: "revoked" });
+
+    mockGetSession.mockResolvedValue(null);
+    const res = await sharedPhotoGet(makeRequest("GET") as any, photoCtx(token, photo.id));
+
+    expect(res.status).toBe(404);
+    expect(mockBlobGet).not.toHaveBeenCalled();
+  });
+
+  it("404s for an unknown token", async () => {
+    mockGetSession.mockResolvedValue(null);
+    const res = await sharedPhotoGet(makeRequest("GET") as any, photoCtx("tok-does-not-exist", "photo-does-not-exist"));
+    expect(res.status).toBe(404);
+    expect(mockBlobGet).not.toHaveBeenCalled();
   });
 });
 

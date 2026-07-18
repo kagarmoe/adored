@@ -1,6 +1,6 @@
 // e2e/compare.spec.ts
 //
-// Journey: pairwise comparison ("Which do you love more?"). Mirrors
+// Journey: pairwise comparison ("Which would you reach for first?"). Mirrors
 // sort-images.spec.ts — seedBaseline + seedSortScenario, slug/number URLs, and
 // the protected-image intercept. Authenticated via the shared storageState
 // (playwright.config.ts). seedSortScenario seeds three items (each with a hero
@@ -11,7 +11,7 @@ import { seedBaseline, seedSortScenario } from "./fixtures/seed";
 
 const PHOTO_FIXTURE = "e2e/fixtures/sample-images/labeled/compare.webp";
 
-test.describe("compare — which do you love more?", () => {
+test.describe("compare — which would you reach for first?", () => {
   let slug: string;
   let sessionNumber: number;
 
@@ -41,10 +41,10 @@ test.describe("compare — which do you love more?", () => {
 
     // The affirming, non-pressuring prompt + subtext.
     await expect(
-      page.getByRole("heading", { name: "Which do you love more?" }),
+      page.getByRole("heading", { name: "Which would you reach for first?" }),
     ).toBeVisible();
     await expect(
-      page.getByText("Tap the one you love more. Tie or skip whenever you like."),
+      page.getByText("Tap the one you'd reach for. Tie or skip whenever you like."),
     ).toBeVisible();
 
     // Two choice cards (tapping a card IS the choice). Each item carries a hero
@@ -63,7 +63,7 @@ test.describe("compare — which do you love more?", () => {
   }) => {
     await page.goto(`/collections/${slug}/sort/${sessionNumber}/compare`);
     await expect(
-      page.getByRole("heading", { name: "Which do you love more?" }),
+      page.getByRole("heading", { name: "Which would you reach for first?" }),
     ).toBeVisible();
 
     // Capture the first pair's accessible labels so we can detect the advance.

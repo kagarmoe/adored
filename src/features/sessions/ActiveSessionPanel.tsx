@@ -50,12 +50,16 @@ export function ActiveSessionPanel({
   resumeHref,
   startHref,
   hasEverSorted = false,
+  meta,
 }: {
   curatorId: string;
   session: SessionSummary | null;
   resumeHref: string;
   startHref?: string;
   hasEverSorted?: boolean;
+  /** Quiet accomplished-count line (spec §B), e.g. "38 of 100 sorted so far".
+   * Threaded to the SessionResumeCard body slot; omitted when absent. */
+  meta?: string;
 }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
@@ -203,6 +207,7 @@ export function ActiveSessionPanel({
         goal={session.goal}
         headingLevel="h3"
         className="dark:bg-surface-raised dark:shadow-raised"
+        meta={meta}
         actions={
           <div className="flex flex-col items-start gap-2 sm:items-end">
             {!confirming ? (

@@ -4,12 +4,14 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import type { Collection, Item, Photo, Session } from "@/types";
 
-const { mockGetSession, mockRequireAccess, photoRepo, itemRepo, sessionRepo } = vi.hoisted(() => ({
+const { mockGetSession, mockRequireAccess, photoRepo, itemRepo, sessionRepo, prefRepo, dispositionRepo } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockRequireAccess: vi.fn(),
   photoRepo: { findPoolByCollection: vi.fn(), findCoverPhotosByItemIds: vi.fn() },
   itemRepo: { findByCollection: vi.fn() },
   sessionRepo: { findByCollectionAndCurator: vi.fn() },
+  prefRepo: { findByCollection: vi.fn() },
+  dispositionRepo: { findByCollectionAndCurator: vi.fn() },
 }));
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
@@ -23,6 +25,8 @@ vi.mock("@/lib/collection-access", () => ({ requireCollectionAccess: mockRequire
 vi.mock("@/server/repositories/implementations/PhotoRepository", () => ({ PhotoRepository: vi.fn(function () { return photoRepo; }) }));
 vi.mock("@/server/repositories/implementations/ItemRepository", () => ({ ItemRepository: vi.fn(function () { return itemRepo; }) }));
 vi.mock("@/server/repositories/implementations/SessionRepository", () => ({ SessionRepository: vi.fn(function () { return sessionRepo; }) }));
+vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({ CollectionPreferenceItemRepository: vi.fn(function () { return prefRepo; }) }));
+vi.mock("@/server/repositories/implementations/ItemDispositionRepository", () => ({ ItemDispositionRepository: vi.fn(function () { return dispositionRepo; }) }));
 
 import CollectionPage from "./page";
 
@@ -117,6 +121,8 @@ beforeEach(() => {
   photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map());
   itemRepo.findByCollection.mockResolvedValue([]);
   sessionRepo.findByCollectionAndCurator.mockResolvedValue([]);
+  prefRepo.findByCollection.mockResolvedValue([]);
+  dispositionRepo.findByCollectionAndCurator.mockResolvedValue([]);
 });
 
 async function renderPage() {
@@ -362,6 +368,47 @@ describe("workspace mode chips", () => {
     await renderPage();
     const nav = screen.getByRole("navigation", { name: "Workspace mode" });
     expect(nav.querySelectorAll(".bg-primary")).toHaveLength(0);
+  });
+});
+
+describe("workspace resume card meta (spec §B, purses-1xbp.1)", () => {
+  it("shows accomplished-count meta using the REAL total, not the bounded preview (12)", async () => {
+    sessionRepo.findByCollectionAndCurator.mockResolvedValue([makeSession(5)]);
+    // 20 real items — well past the 12-item preview bound.
+    const allItems = Array.from({ length: 20 }, (_, i) => makeItem(i + 1, `Item ${i + 1}`));
+    itemRepo.findByCollection.mockImplementation((_id: string, options?: { limit?: number }) =>
+      Promise.resolve(options?.limit ? allItems.slice(0, options.limit) : allItems),
+    );
+    // 3 preference rows + 2 set-aside dispositions = 5 decided.
+    prefRepo.findByCollection.mockResolvedValue([
+      { id: "p1", collectionId: COLLECTION_ID, curatorId: "u1", itemId: "item_1", score: 0.5, confidence: 0.5, rankBucket: "top", comparisonCount: 0, orderRank: null, lastSeen: new Date(), createdAt: new Date(), updatedAt: new Date() },
+      { id: "p2", collectionId: COLLECTION_ID, curatorId: "u1", itemId: "item_2", score: 0.5, confidence: 0.5, rankBucket: "high", comparisonCount: 0, orderRank: null, lastSeen: new Date(), createdAt: new Date(), updatedAt: new Date() },
+      { id: "p3", collectionId: COLLECTION_ID, curatorId: "u1", itemId: "item_3", score: 0.5, confidence: 0.5, rankBucket: "medium", comparisonCount: 0, orderRank: null, lastSeen: new Date(), createdAt: new Date(), updatedAt: new Date() },
+    ]);
+    dispositionRepo.findByCollectionAndCurator.mockResolvedValue([
+      { id: "d1", collectionId: COLLECTION_ID, curatorId: "u1", itemId: "item_4", disposition: "set_aside", createdAt: new Date(), updatedAt: new Date() },
+      { id: "d2", collectionId: COLLECTION_ID, curatorId: "u1", itemId: "item_5", disposition: "set_aside", createdAt: new Date(), updatedAt: new Date() },
+    ]);
+
+    await renderPage();
+
+    expect(screen.getByText("5 of 20 sorted so far")).toBeInTheDocument();
+  });
+
+  it("omits the meta line when nothing is decided", async () => {
+    sessionRepo.findByCollectionAndCurator.mockResolvedValue([makeSession(5)]);
+    itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
+
+    await renderPage();
+
+    expect(screen.queryByText(/sorted so far/)).not.toBeInTheDocument();
+  });
+
+  it("does not fetch preferences/dispositions when there is no active session (no meta to show)", async () => {
+    await renderPage(); // no session set up
+
+    expect(prefRepo.findByCollection).not.toHaveBeenCalled();
+    expect(dispositionRepo.findByCollectionAndCurator).not.toHaveBeenCalled();
   });
 });
 

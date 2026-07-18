@@ -3,6 +3,8 @@ import { ShareController } from "@/server/api/shares";
 import { ResultController } from "@/server/api/results";
 import { ResultItemController } from "@/server/api/result-items";
 import { ItemController } from "@/server/api/items";
+import { PhotoController } from "@/server/api/photos";
+import { getSharedResultPhotoAssetUrl, PHOTO_WIDTH } from "@/lib/photos";
 import { Badge, Card, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
 import { notFound } from "next/navigation";
@@ -32,6 +34,17 @@ export default async function SharedResultPage({ params }: SharedResultPageProps
   const itemById = new Map(items.map((item) => [item.id, item]));
   const sortedResultItems = [...resultItems].sort((a, b) => (a.manualRank ?? a.computedRank) - (b.manualRank ?? b.computedRank));
 
+  // Anonymous viewer: photo bytes must come from the token-scoped route, never
+  // the session-gated /api/photo-files one (purses-21x5.1) — a signed-out
+  // caller would 401 on every image.
+  const covers = await PhotoController.fromDb(db).findCoverPhotosByItemIds(
+    sortedResultItems.map((ri) => ri.itemId),
+  );
+  const heroPhotoUrl = (itemId: string) => {
+    const cover = covers.get(itemId);
+    return cover ? getSharedResultPhotoAssetUrl(token, cover, { w: PHOTO_WIDTH.card }) : undefined;
+  };
+
   return (
     <main className="min-h-screen bg-ground px-4 py-6 sm:py-8">
       <div className="mx-auto max-w-6xl space-y-8">
@@ -56,6 +69,7 @@ export default async function SharedResultPage({ params }: SharedResultPageProps
                     key={resultItem.id}
                     item={item}
                     collectionId={result.collectionId}
+                    heroPhotoUrl={heroPhotoUrl(item.id)}
                     bucket={resultItem.manualBucket || resultItem.computedBucket}
                   />
                 );

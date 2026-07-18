@@ -49,6 +49,14 @@ export default async function ComparePage({ params }: ComparePageProps) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
+  // Spec §E: a finalize can complete this session out from under an open tab.
+  // A round is only for an in-progress (active|paused) session — anything else
+  // (completed/abandoned/deleted) redirects to the hub, which renders fine for
+  // any owned session.
+  if (sortSession.status !== "active" && sortSession.status !== "paused") {
+    redirect(`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}`);
+  }
+
   // One trail for all three render branches — hand-built copies drifted before.
   const breadcrumbs = trail.compare(collection, sortSession.number);
 
@@ -146,13 +154,14 @@ export default async function ComparePage({ params }: ComparePageProps) {
         roundLabel="Comparing"
         decisions={decisions}
         hubHref={`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}`}
+        resultsHref={`/collections/${collection.slug ?? collection.id}/results`}
       >
         <div className="mx-auto max-w-2xl space-y-6">
           {/* The flush engine's one quiet voice on this surface — a rejected
               batch-of-1 ack surfaces here, never as an error (spec §3.2/F9). */}
           <PendingNotices />
           <div>
-            <h1 className="text-2xl text-ink sm:text-3xl">Which do you love more?</h1>
+            <h1 className="text-2xl text-ink sm:text-3xl">Which would you reach for first?</h1>
             <p className="mt-2 text-ink-soft">{COMPARE_SUBLINE}</p>
           </div>
 

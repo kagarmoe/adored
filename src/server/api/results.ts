@@ -1,6 +1,5 @@
 import { z } from "zod";
 import type { SortResult } from "@/types";
-import { FinalizeStateError } from "@/server/services/SortResultService";
 import type { Database } from "@/lib/db";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 
@@ -36,19 +35,5 @@ export class ResultController {
   async updateResult(resultId: string, data: unknown): Promise<SortResult> {
     const parsed = UpdateResultSchema.parse(data);
     return this.resultRepo.update(resultId, parsed);
-  }
-
-  async finalizeResult(resultId: string): Promise<SortResult> {
-    const result = await this.resultRepo.findById(resultId);
-    if (!result) {
-      throw new Error("Result not found");
-    }
-    if (result.status === "finalized") {
-      throw new FinalizeStateError();
-    }
-    return this.resultRepo.update(resultId, {
-      status: "finalized",
-      finalizedAt: new Date(),
-    });
   }
 }

@@ -7,6 +7,9 @@ interface SessionResumeCardProps {
   headingLevel: "h2" | "h3";
   className?: string;
   actions: ReactNode;
+  /** Quiet second line under the body (spec §B workspace meta, e.g. "38 of 100
+   * sorted so far"). Omitted entirely when absent — never a labeled field. */
+  meta?: string;
 }
 
 /**
@@ -15,7 +18,7 @@ interface SessionResumeCardProps {
  * Resume for its set-aside confirm group mid-flow; the hub renders
  * Resume+Details. Strings live here so a tone pass lands on both surfaces.
  */
-export function SessionResumeCard({ status, goal, headingLevel, className = "", actions }: SessionResumeCardProps) {
+export function SessionResumeCard({ status, goal, headingLevel, className = "", actions, meta }: SessionResumeCardProps) {
   const Heading = headingLevel;
   const paused = status === "paused";
   return (
@@ -30,6 +33,7 @@ export function SessionResumeCard({ status, goal, headingLevel, className = "", 
               ? "Your sort is safe — pick up where you left off."
               : goal || "Pick up where you left off — one decision at a time."}
           </p>
+          {meta && <p className="mt-1 text-sm text-ink-soft">{meta}</p>}
         </div>
         {actions}
       </div>

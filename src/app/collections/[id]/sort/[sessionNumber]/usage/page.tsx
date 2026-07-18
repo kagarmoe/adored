@@ -51,6 +51,14 @@ export default async function UsagePage({ params }: UsagePageProps) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
+  // Spec §E: a finalize can complete this session out from under an open tab.
+  // A round is only for an in-progress (active|paused) session — anything else
+  // (completed/abandoned/deleted) redirects to the hub, which renders fine for
+  // any owned session.
+  if (sortSession.status !== "active" && sortSession.status !== "paused") {
+    redirect(`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}`);
+  }
+
   const dispositionByItemId = new Map(dispositions.map((d) => [d.itemId, d.disposition]));
   // Usage is derived at read time (no projection table): latest usage event per
   // live item wins. The queue is the eligible remainder — usage-unknown AND not
@@ -74,6 +82,7 @@ export default async function UsagePage({ params }: UsagePageProps) {
 
   const slugOrId = collection.slug ?? collection.id;
   const hubHref = `/collections/${slugOrId}/sort/${sortSession.number}`;
+  const resultsHref = `/collections/${slugOrId}/results`;
 
   return (
     <AppLayout
@@ -103,6 +112,7 @@ export default async function UsagePage({ params }: UsagePageProps) {
             decisions={[]}
             usageKnownSeed={usageByItemId.size}
             hubHref={hubHref}
+            resultsHref={resultsHref}
           />
         </div>
       </PendingDecisionsGate>

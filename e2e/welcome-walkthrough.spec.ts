@@ -62,7 +62,7 @@ async function walkToHandoff(page: Page): Promise<void> {
 
   await page.getByRole("button", { name: "Tie", exact: true }).click();
 
-  await expect(page.getByRole("heading", { name: "Where things stand" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your ranking so far" })).toBeVisible();
   // The set-aside from item 3 surfaces in its gentle group.
   await expect(page.getByText(/waiting, whenever you want them/i)).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click(); // standing → refine

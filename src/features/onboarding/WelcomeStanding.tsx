@@ -24,7 +24,7 @@ interface WelcomeStandingProps {
 const HEADING_ID = "welcome-standing-heading";
 
 // Beat 5 — the payoff, mirroring the real results page (RankedResults): the
-// beat is titled "Where things stand", the most-loved item leads under the
+// beat is titled "Your ranking so far", the most-loved item leads under the
 // "What you love most" eyebrow, then the ranking, then the onward / set-aside /
 // deferred groups in subordinate styling, closing on the affirmation. The
 // ranking is built from the user's own taps (buildStanding), so the top feels
@@ -39,10 +39,10 @@ export function WelcomeStanding({ comparisons, triage, usageByItemId, onNext }: 
   return (
     <section aria-labelledby={HEADING_ID} className="flex flex-col items-center text-center gap-6">
       <h1 id={HEADING_ID} className="font-display text-3xl sm:text-4xl text-ink">
-        Where things stand
+        Your ranking so far
       </h1>
       <p className="max-w-md text-ink-soft">
-        Compare folds those pair choices into the same standing. Triage groups and Usage notes stay with each piece.
+        Compare folds those pair choices into the same ranking. Triage groups and Usage notes stay with each piece.
       </p>
 
       {hero ? (

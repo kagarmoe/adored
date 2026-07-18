@@ -13,7 +13,7 @@ import {
 describe("roundCopy", () => {
   it("names both rounds with person-side arc names + explainers", () => {
     expect(ROUND_COPY.triage.name).toBe("Get acquainted");
-    expect(ROUND_COPY.compare.name).toBe("Which do you love more?");
+    expect(ROUND_COPY.compare.name).toBe("Which would you reach for first?");
     // TONE litmus: no inventory verbs, no pace words (spec: rewritten person-side).
     for (const round of Object.values(ROUND_COPY)) {
       expect(round.explainer.toLowerCase()).not.toMatch(/bucket|quickly|refine ranking/);
@@ -52,7 +52,11 @@ describe("roundCopy", () => {
   });
 
   it("carries the compare sub-line", () => {
-    expect(COMPARE_SUBLINE).toBe("Tap the one you love more. Tie or skip whenever you like.");
+    expect(COMPARE_SUBLINE).toBe("Tap the one you'd reach for. Tie or skip whenever you like.");
+  });
+
+  it("carries the compare explainer verbatim", () => {
+    expect(ROUND_COPY.compare.explainer).toBe("Two side by side — which would you reach for first?");
   });
 
   it("stays server-importable (no 'use client')", () => {

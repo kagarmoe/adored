@@ -28,7 +28,7 @@ export function WelcomeCompare({
         <p className="text-sm text-ink-soft">{ROUND_COPY.compare.explainer}</p>
       </div>
 
-      <h1 className="font-display text-3xl text-ink">Which do you love more?</h1>
+      <h1 className="font-display text-3xl text-ink">Which would you reach for first?</h1>
 
       <p className="text-sm text-ink-soft">{COMPARE_SUBLINE}</p>
 

@@ -110,6 +110,7 @@ function renderRound(over: Partial<Parameters<typeof UsageRound>[0]> = {}) {
     decisions: [],
     usageKnownSeed: 0,
     hubHref: "/hub",
+    resultsHref: "/results",
     ...over,
   };
   return render(<UsageRound {...props} />);

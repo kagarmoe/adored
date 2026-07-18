@@ -16,8 +16,12 @@ export const config = {
     // public for the same reason: the 256-bit invitation token IS the read
     // capability. POST accept keeps its own route-level session 401 (DAL
     // enforcement) — this matcher is only the UX redirect, never the security
-    // boundary.
-    "/((?!_next(?:/|$)|api/auth(?:/|$)|login(?:/|$)|signup(?:/|$)|shared-results(?:/|$)|tutorial(?:/|$)|tutorials(?:/|$)|onboarding(?:/|$)|invitations(?:/|$)|api/invitations/accept(?:/|$)).*)",
+    // boundary. `api/shared-results/*` (purses-21x5.1) is the same share-token
+    // capability applied to its photo byte route: the page's <img> requests
+    // carry no session cookie, and the route re-derives its own authz from the
+    // token — this exclusion is only the UX bypass, the real gate lives in the
+    // route.
+    "/((?!_next(?:/|$)|api/auth(?:/|$)|login(?:/|$)|signup(?:/|$)|api/shared-results(?:/|$)|shared-results(?:/|$)|tutorial(?:/|$)|tutorials(?:/|$)|onboarding(?:/|$)|invitations(?:/|$)|api/invitations/accept(?:/|$)).*)",
   ],
 };
 

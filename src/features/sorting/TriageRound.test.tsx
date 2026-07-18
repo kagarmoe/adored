@@ -64,6 +64,7 @@ function renderRound(over: Partial<Parameters<typeof TriageRound>[0]> = {}) {
     decisions: [],
     decidedSeed: 0,
     hubHref: "/hub",
+    resultsHref: "/results",
     setAsideHref: "/set-aside",
     ...over,
   };
@@ -250,6 +251,7 @@ describe("TriageRound frozen recap (F5)", () => {
         decisions={[{ type: "triage", createdAt: new Date(), decision: { itemId: "item_a", result: "top" } }]}
         decidedSeed={1}
         hubHref="/hub"
+        resultsHref="/results"
         setAsideHref="/set-aside"
       />,
     );
@@ -317,6 +319,7 @@ describe("TriageRound set-aside stays optimistic and undoable", () => {
           decisions={[]}
           decidedSeed={0}
           hubHref="/hub"
+          resultsHref="/results"
           setAsideHref="/set-aside"
         />
       </TriageUndoProvider>,
@@ -350,6 +353,7 @@ describe("TriageRound bring-back restores the item to the round (Epic C §11 und
           decisions={[]}
           decidedSeed={0}
           hubHref="/hub"
+          resultsHref="/results"
           setAsideHref="/set-aside"
         />
       </TriageUndoProvider>,

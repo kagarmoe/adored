@@ -55,6 +55,8 @@ interface UsageRoundProps {
   /** Server-computed usage-known count (usageByItemId.size) — the answered-cue seed. */
   usageKnownSeed: number;
   hubHref: string;
+  /** Where the recap's "See your ranking so far" leads (the collection's results page). */
+  resultsHref: string;
 }
 
 /** The answered-count cue's one home ("{n} answered so far", F20). */
@@ -98,6 +100,7 @@ export function UsageRound({
   decisions,
   usageKnownSeed,
   hubHref,
+  resultsHref,
 }: UsageRoundProps) {
   const router = useRouter();
 
@@ -389,6 +392,7 @@ export function UsageRound({
           windowStartMs={round.windowStartMs}
           nowMs={round.recapNowMs}
           hubHref={hubHref}
+          resultsHref={resultsHref}
           hadTimer={round.boxMs !== null}
         />
       ) : (
