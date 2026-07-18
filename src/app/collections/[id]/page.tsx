@@ -63,22 +63,27 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
     (s) => s.status === "active" || s.status === "paused",
   );
   const resumeHref = `${base}/sort/${currentSession?.number}`;
-  // Any past session (completed/abandoned included) means the curator has sorted
-  // before — feeds the start card's progress-keyed copy ("Start" vs "Keep sorting").
-  const hasEverSorted = sessions.length > 0;
-
-  // Workspace resume card meta (spec §B last bullet, purses-1xbp.1): only fetched
-  // when there's a session to show it on. The total MUST be a real count — never
-  // itemPreview.length (bounded to 12) — so this reads the full item list, not
-  // the preview. Decided = preference rows + set-aside dispositions, mutually
-  // exclusive by construction (same rule as the session hub).
-  const [preferences, setAsideDispositions, allItems] = currentSession
+  // Workspace resume card meta (spec §B last bullet, purses-1xbp.1). Preferences
+  // are fetched UNCONDITIONALLY: they also feed hasEverSorted below (a curator
+  // whose only session was set aside has zero session rows — soft-deleted — but
+  // their decisions persist; purses-1xbp.2). The total MUST be a real count —
+  // never itemPreview.length (bounded to 12) — so this reads the full item
+  // list, not the preview. Decided = preference rows + set-aside dispositions,
+  // mutually exclusive by construction (same rule as the session hub).
+  const preferences = await PreferenceController.fromDb(db).listItemPreferences(
+    collection.id,
+    session.user.id,
+  );
+  const [setAsideDispositions, allItems] = currentSession
     ? await Promise.all([
-        PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id),
         DispositionController.fromDb(db).listDispositions(collection.id, session.user.id, "set_aside"),
         ItemController.fromDb(db).listItems(collection.id),
       ])
-    : [[], [], []];
+    : [[], []];
+
+  // Sorted before = any past session (completed/abandoned) OR any surviving
+  // decision — feeds the start card's progress-keyed copy ("Start" vs "Keep sorting").
+  const hasEverSorted = sessions.length > 0 || preferences.length > 0;
   const workspaceMetaLine =
     workspaceMeta(preferences.length + setAsideDispositions.length, allItems.length) ?? undefined;
 

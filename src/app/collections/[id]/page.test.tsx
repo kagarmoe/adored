@@ -163,6 +163,16 @@ describe("adaptive workspace states", () => {
     );
   });
 
+  it("no sessions but existing decisions (only session was set aside): the start card says Keep sorting, not day-one copy", async () => {
+    // purses-1xbp.2: a curator whose ONLY session was set aside has zero session
+    // rows (soft-deleted), but their preference rows persist — they HAVE sorted.
+    itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
+    prefRepo.findByCollection.mockResolvedValue([{ itemId: "item_1" }]);
+    await renderPage();
+    expect(screen.getByRole("heading", { name: "Keep sorting" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Start sorting" })).not.toBeInTheDocument();
+  });
+
   it("items-first, never sorted: Sort wins — Start sorting is dominant, Add photos/Add item/View all items are secondary", async () => {
     itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
     // No session, so the Continue panel's Resume button is absent — but items
