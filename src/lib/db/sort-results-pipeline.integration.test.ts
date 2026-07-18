@@ -272,6 +272,41 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       expect((await res.json()).status).toBe("finalized");
       expect((await new SortResultRepository(db).findById(resultId))!.status).toBe("finalized");
     });
+
+    // AUTHORITATIVE un-mocked transactional-rollback proof (mirrors
+    // sort-pipeline.integration.test.ts's createDraftResult rollback test and
+    // decisions-routes.integration.test.ts's clear-on-triage atomicity test):
+    // force the SECOND write in the tx (the session-complete) to fail AFTER the
+    // result-finalize write has run, by spying on the tx-bound repo's own
+    // prototype method — this runs on the REAL db/tx, only the one failing call
+    // is faked. Without the transaction this would leave the result finalized
+    // while the session stayed open; WITH it, the whole tx rolls back and the
+    // result is untouched. The prior tests above prove co-occurrence; this one
+    // proves atomicity.
+    it("ATOMICITY: a session-complete failure rolls back the result finalize too", async () => {
+      const { db } = getTestDb();
+      const { collectionId, resultId } = await seedPopulatedDraft();
+      const sessionRepo = new SessionRepository(db);
+      const openSession = await sessionRepo.create({ collectionId, curatorId: ownerId });
+      expect(openSession.status).toBe("active");
+
+      login(ownerId);
+      const spy = vi
+        .spyOn(SessionRepository.prototype, "update")
+        .mockRejectedValueOnce(new Error("simulated session-complete failure"));
+      try {
+        const res = await finalizeResult(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId }) } as any);
+        // The route's errorResponse maps an unmapped thrown error to 500.
+        expect(res.status).toBe(500);
+      } finally {
+        spy.mockRestore();
+      }
+
+      // Transaction rolled back: the result is STILL draft (not finalized), and
+      // the session is STILL active (not completed) — neither write landed.
+      expect((await new SortResultRepository(db).findById(resultId))!.status).toBe("draft");
+      expect((await sessionRepo.findById(openSession.id))!.status).toBe("active");
+    });
   });
 
   // ── items GET (list) ──────────────────────────────────────────────────────
