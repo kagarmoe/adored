@@ -414,10 +414,12 @@ describe("workspace resume card meta (spec §B, purses-1xbp.1)", () => {
     expect(screen.queryByText(/sorted so far/)).not.toBeInTheDocument();
   });
 
-  it("does not fetch preferences/dispositions when there is no active session (no meta to show)", async () => {
+  it("without a session, skips the meta-only fetches (dispositions/items) but still reads preferences for hasEverSorted", async () => {
     await renderPage(); // no session set up
 
-    expect(prefRepo.findByCollection).not.toHaveBeenCalled();
+    // Preferences are always read — they feed the sorted-before signal
+    // (purses-1xbp.2: a set-aside-only history has no session rows).
+    expect(prefRepo.findByCollection).toHaveBeenCalledTimes(1);
     expect(dispositionRepo.findByCollectionAndCurator).not.toHaveBeenCalled();
   });
 });
