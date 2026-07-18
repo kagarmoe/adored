@@ -259,6 +259,13 @@ describe("ComparePage integrity guard", () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_x", collectionId: "coll_01ABCDEF", number: 1, status: "active", curatorId: "someone_else" });
     await expect(ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
   });
+
+  // Spec §E: finalize can complete this session out from under an open tab —
+  // a round is only for an in-progress (active|paused) session.
+  it("redirects to the hub when the session has been completed (finalize closed it)", async () => {
+    sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_1", collectionId: "coll_01ABCDEF", number: 1, status: "completed", curatorId: "u1" });
+    await expect(ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
+  });
 });
 
 describe("ComparePage canonical trail (all render branches)", () => {

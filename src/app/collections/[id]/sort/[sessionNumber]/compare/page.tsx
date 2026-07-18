@@ -49,6 +49,14 @@ export default async function ComparePage({ params }: ComparePageProps) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
+  // Spec §E: a finalize can complete this session out from under an open tab.
+  // A round is only for an in-progress (active|paused) session — anything else
+  // (completed/abandoned/deleted) redirects to the hub, which renders fine for
+  // any owned session.
+  if (sortSession.status !== "active" && sortSession.status !== "paused") {
+    redirect(`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}`);
+  }
+
   // One trail for all three render branches — hand-built copies drifted before.
   const breadcrumbs = trail.compare(collection, sortSession.number);
 

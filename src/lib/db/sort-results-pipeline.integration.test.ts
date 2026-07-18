@@ -34,6 +34,7 @@ import { CollectionPreferenceItemRepository } from "@/server/repositories/implem
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
+import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { SortResultService } from "@/server/services/SortResultService";
 import { deriveStanding } from "@/features/results/standing";
 import { partitionRanked } from "@/lib/results-buckets";
@@ -219,6 +220,56 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       const second = await finalizeResult(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId }) } as any);
       expect(second.status).toBe(409);
       // Still finalized — the state guard fired, nothing changed.
+      expect((await new SortResultRepository(db).findById(resultId))!.status).toBe("finalized");
+    });
+
+    // Spec §E "sessions as invisible bookkeeping": finalize closes the pass it
+    // belongs to. Both writes (the result -> finalized AND the session ->
+    // completed) happen in the SAME `withTransaction` call — this is the one
+    // un-mocked crossing proving the atomic wiring end to end.
+    it("completes the curator's open (active) session in the same finalize", async () => {
+      const { db } = getTestDb();
+      const { collectionId, resultId } = await seedPopulatedDraft();
+      const sessionRepo = new SessionRepository(db);
+      const openSession = await sessionRepo.create({ collectionId, curatorId: ownerId });
+      // Non-vacuous: the session is active BEFORE finalize.
+      expect(openSession.status).toBe("active");
+
+      login(ownerId);
+      const res = await finalizeResult(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId }) } as any);
+      expect(res.status).toBe(200);
+      expect((await res.json()).status).toBe("finalized");
+
+      // AFTER: both rows moved — result finalized, session completed.
+      expect((await new SortResultRepository(db).findById(resultId))!.status).toBe("finalized");
+      expect((await sessionRepo.findById(openSession.id))!.status).toBe("completed");
+    });
+
+    // Same atomicity contract, the paused branch of the "open" definition.
+    it("completes the curator's open (paused) session in the same finalize", async () => {
+      const { db } = getTestDb();
+      const { collectionId, resultId } = await seedPopulatedDraft();
+      const sessionRepo = new SessionRepository(db);
+      const openSession = await sessionRepo.create({ collectionId, curatorId: ownerId });
+      await sessionRepo.update(openSession.id, { status: "paused" });
+      expect((await sessionRepo.findById(openSession.id))!.status).toBe("paused");
+
+      login(ownerId);
+      const res = await finalizeResult(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId }) } as any);
+      expect(res.status).toBe(200);
+
+      expect((await new SortResultRepository(db).findById(resultId))!.status).toBe("finalized");
+      expect((await sessionRepo.findById(openSession.id))!.status).toBe("completed");
+    });
+
+    it("finalizes alone when the curator has no open session — no error, nothing else mutated", async () => {
+      const { db } = getTestDb();
+      const { resultId } = await seedPopulatedDraft();
+      login(ownerId);
+
+      const res = await finalizeResult(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId }) } as any);
+      expect(res.status).toBe(200);
+      expect((await res.json()).status).toBe("finalized");
       expect((await new SortResultRepository(db).findById(resultId))!.status).toBe("finalized");
     });
   });

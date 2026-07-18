@@ -51,6 +51,14 @@ export default async function TriagePage({ params }: TriagePageProps) {
     redirect(`/collections/${collection.slug ?? collection.id}/sort`);
   }
 
+  // Spec §E: a finalize can complete this session out from under an open tab.
+  // A round is only for an in-progress (active|paused) session — anything else
+  // (completed/abandoned/deleted) redirects to the hub, which renders fine for
+  // any owned session.
+  if (sortSession.status !== "active" && sortSession.status !== "paused") {
+    redirect(`/collections/${collection.slug ?? collection.id}/sort/${sortSession.number}`);
+  }
+
   const preferenceItemIds = new Set(preferences.map((p) => p.itemId));
   const dispositionByItemId = new Map(dispositions.map((d) => [d.itemId, d.disposition]));
   // The WHOLE eligible remainder (spec §3.3/F6): the client round advances

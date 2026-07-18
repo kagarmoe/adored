@@ -53,6 +53,20 @@ describe("TriagePage integrity guard", () => {
     sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_x", collectionId: "coll_01ABCDEF", number: 1, status: "active", curatorId: "someone_else" });
     await expect(TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
   });
+
+  // Spec §E: finalize can complete this session out from under an open tab —
+  // a round is only for an in-progress (active|paused) session.
+  it("redirects to the hub when the session has been completed (finalize closed it)", async () => {
+    sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_1", collectionId: "coll_01ABCDEF", number: 1, status: "completed", curatorId: "u1" });
+    await expect(TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) })).rejects.toThrow("REDIRECT");
+  });
+
+  it("does NOT redirect for a paused session (still in-progress)", async () => {
+    sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_1", collectionId: "coll_01ABCDEF", number: 1, status: "paused", curatorId: "u1" });
+    const ui = await TriagePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
+    render(ui);
+    expect(screen.getByRole("heading", { name: /how do you feel about this one\?/i })).toBeInTheDocument();
+  });
 });
 
 describe("TriagePage hero image", () => {
