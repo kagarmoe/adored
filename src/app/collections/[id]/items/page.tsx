@@ -9,6 +9,7 @@ import { AppLayout } from "@/components/layout";
 import { trail } from "@/components/layout/breadcrumb-trails";
 import { Button, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
+import { RemovedItemNotice } from "@/features/items/RemovedItemNotice";
 import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { ItemFilters } from "@/features/items/ItemFilters";
 import { filterItems, itemsEmptyState } from "@/lib/items";
@@ -16,7 +17,7 @@ import Link from "next/link";
 
 interface ItemsPageProps {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ status?: string; unnamed?: string }>;
+  searchParams?: Promise<{ status?: string; unnamed?: string; removed?: string }>;
 }
 
 export default async function ItemsPage({ params, searchParams: searchParamsPromise }: ItemsPageProps) {
@@ -66,6 +67,15 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
             </Link>
           </div>
         </div>
+
+        {/* The undo half of item removal (purses-v7gv): announced via role=status,
+            rides POST /api/items/[id]/restore. Param comes from ItemDeleteControl. */}
+        {searchParams?.removed && (
+          <RemovedItemNotice
+            itemId={searchParams.removed}
+            itemsHref={`/collections/${collection.slug ?? collection.id}/items`}
+          />
+        )}
 
         {/* Section index, not the workspace root: Build is the current section,
             not the current page — hence activeExact={false}. */}

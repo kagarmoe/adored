@@ -8,6 +8,7 @@ import { MemberController } from "@/server/api/members";
 import { AppLayout } from "@/components/layout";
 import { trail } from "@/components/layout/breadcrumb-trails";
 import { Button, Card } from "@/components/ui";
+import { ItemDeleteControl } from "@/features/items/ItemDeleteControl";
 import { ItemMetadata } from "@/features/items/ItemMetadata";
 import { ItemPhotoCarousel } from "@/features/items/ItemPhotoCarousel";
 import type { ViewerPhoto } from "@/components/ui";
@@ -28,11 +29,11 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   const db = getDb();
   const collection = await requireCollectionAccess(db, id, session.user.id);
 
-  // Show the delete control to any member (owner or curator) — the DELETE API
-  // enforces the same photos:write = member-or-owner rule, so this matches the
-  // real authz boundary without relying on the now-removed per-flag fields.
+  // Show the photo- and item-delete controls to any member (owner or curator) —
+  // the DELETE APIs enforce the same write = member-or-owner rule (photos:write /
+  // items:write both resolve to curator), so this matches the real authz boundary.
   const membership = await MemberController.fromDb(db).getByUser(session.user.id, collection.id);
-  const canDeletePhotos =
+  const canModify =
     collection.ownerId === session.user.id || membership !== null;
 
   const number = Number(itemNumber);
@@ -114,7 +115,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
             collectionId={collection.id}
             itemName={itemDisplayName(item)}
             addPhotosHref={photosHref}
-            canDelete={canDeletePhotos}
+            canDelete={canModify}
           />
 
           {/* Details — with a contextual edit affordance (purses-0gv). */}
@@ -135,6 +136,14 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
               >
                 Manage photos
               </Link>
+            )}
+            {/* Its own bordered block (not another quiet link) so the destructive
+                action can't be mistaken for the nav link above it. */}
+            {canModify && (
+              <ItemDeleteControl
+                itemId={item.id}
+                itemsHref={`/collections/${collection.slug ?? collection.id}/items`}
+              />
             )}
           </Card>
         </div>
