@@ -197,7 +197,7 @@ The Drizzle schema (`src/lib/db/schema.ts`) defines 17 tables. The core domain t
 - **decision_events** — Append-only decision events (triage, pairwise)
 - **item_dispositions** — per-curator triage shelving (`set_aside` / `deferred`); parks an untriaged item out of the sort queue
 - **sort_results** / **sort_result_items** / **sort_result_shares** — finalized rankings + tokenized public shares
-- **collection_preference_items** — per-curator computed preferences
+- **collection_preference_items** — per-curator preferences: computed rank + optional hand-bin overlay (`manual_bucket`)
 - **invitations** — Email invitations with expiring tokens
 - plus the NextAuth tables (**user**, **account**, **session**, **verification_token**)
 

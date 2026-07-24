@@ -305,6 +305,21 @@ Each entry is **Decision / Rationale / Status**. Where design and shipped code d
 
 ---
 
+**41. Per-curator hand-bin overlay on live preferences (`purses-xxo7`, migration `0003_jazzy_psynapse`, 2026-07-23).**
+- *Decision:* A hand-set bin (Love/Like/Maybe/Onward from the item details page) is a nullable
+  `preferences.manual_bucket` column — a single-row upsert via `PUT /api/items/[id]/bin`, **no decision
+  event, no recompute**. `effectiveBucket = manualBucket ?? rankBucket` (the rule finalized snapshots
+  already used, decision 29) now governs live reads (details select, live Standing, SessionAnalytics
+  chips); finalize carries the live overlay into the snapshot's own `manual_bucket`. Binning clears a
+  set-aside disposition in-tx (preference/disposition mutual exclusion). Clearing a hand-only row
+  (`comparison_count = 0`) deletes it in one conditional statement. A re-binned sorted item joins its
+  new bin at the end — bins partition, they do not re-rank.
+- *Rationale:* Owner direction: bins and formal sorts must coordinate, and a 1-of-4 bin needs no full
+  recompute. The overlay survives recompute by construction (outside the bulk-upsert SET list —
+  DB-tested). Rejected: writing bins through decision events (session machinery for a label; parked on
+  `feat/item-detail-binning`) and a bare `items.category` label (collection-global, invisible to Standing).
+- *Status:* **Shipped** (PR #364). Spec: `docs/superpowers/specs/2026-07-23-manual-bucket-overlay-design.md` rev 2.
+
 ## Where we're going
 
 The current direction (live status is tracked in **beads** — those are the source of truth, not this list):

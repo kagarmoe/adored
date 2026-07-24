@@ -111,7 +111,11 @@ in a `.sql` file is invisible to `drizzle-kit generate`, which will then happily
 the column as free text.
 
 The other enum-ish columns (`status`, `disposition`, `rank_bucket`, `manual_bucket`, `usage`) are
-deliberately **plain text with no CHECK**, guarded by typed writers instead. `sort_result_items.usage`
+deliberately **plain text with no CHECK**, guarded by typed writers instead. Migration `0003` adds
+`preferences.manual_bucket` (nullable, same no-CHECK convention): the per-curator hand-bin overlay —
+`effectiveBucket = manual_bucket ?? rank_bucket` on live reads; written by `PUT /api/items/[id]/bin`
+as a single-row upsert with **no decision event and no recompute**, and deliberately **outside** the
+recompute upsert's SET list so `recalculatePreferences` can never clobber it (ARCHITECTURE decision 41). `sort_result_items.usage`
 documents that choice at `schema.ts:376`: NULL means "unknown at snapshot time" and renders no chip, rather
 than being an invalid value.
 

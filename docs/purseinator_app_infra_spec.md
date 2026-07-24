@@ -235,7 +235,8 @@ Schema.org alignment: similar to `Action`.
 
 ### 5.9 CollectionPreferenceItem
 
-Derived curator-specific preference state for an item.
+Derived curator-specific preference state for an item, plus an optional hand-set `manual_bucket`
+overlay (effective bucket = manual ?? computed; see ARCHITECTURE decision 41).
 
 This is recalculated from DecisionEvents.
 
