@@ -134,6 +134,12 @@ for (const theme of ["light", "dark"] as const) {
     await page.route("**/photos/**/file*", (route) =>
       route.fulfill({ path: FIXTURE, contentType: "image/webp" }),
     );
+    // purses-rthw: item photos now load via /api/photo-files/<id>?collectionId=…
+    // (src/lib/photos.ts getPhotoAssetUrlForPhoto) — a shape the pattern above
+    // never matches, so those surfaces rendered a broken hero image.
+    await page.route("**/photo-files/**", (route) =>
+      route.fulfill({ path: FIXTURE, contentType: "image/webp" }),
+    );
 
     // purses-r4it: assert the precondition z23h violated, before any file is written.
     // Every usage surface below needs an UNANSWERED queue; the recap block at the end
