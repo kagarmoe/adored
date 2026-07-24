@@ -226,6 +226,23 @@ for (const theme of ["light", "dark"] as const) {
     const shot = (n: string) =>
       page.screenshot({ path: `pr-screenshots/${n}-${theme}-${proj}.png`, fullPage: true });
 
+    // purses-v7gv: the remove-item confirm card and the items-list undo notice.
+    // Self-restoring — the beat ends on "Bring it back", so the collection is
+    // exactly as seeded for every later beat and the other theme pass.
+    await page.goto(`/collections/${slug}/items/1`);
+    await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+    await page.getByRole("button", { name: "Remove from collection" }).click();
+    await page.getByText("Remove this item from the collection?").waitFor({ state: "visible", timeout: 10_000 });
+    await page.waitForTimeout(400);
+    await shot("item-remove-confirm");
+    await page.getByRole("button", { name: "Remove", exact: true }).click();
+    await page.getByRole("button", { name: "Bring it back" }).waitFor({ state: "visible", timeout: 10_000 });
+    await page.waitForTimeout(400);
+    await shot("items-removed-undo");
+    await page.getByRole("button", { name: "Bring it back" }).click();
+    await page.getByRole("link", { name: /view/i }).first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+    await page.waitForTimeout(400);
+
     // Epic R: usage-round scripted-tap surfaces. Like the /welcome beats below,
     // these are driven by role/accessible-name (never CSS), with the same img-wait
     // + settle. Placed before /welcome so its pre-existing flake can't block them.

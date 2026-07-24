@@ -9,6 +9,7 @@ import { AppLayout } from "@/components/layout";
 import { trail } from "@/components/layout/breadcrumb-trails";
 import { Button, EmptyState } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
+import { RemovedItemNotice } from "@/features/items/RemovedItemNotice";
 import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { ItemFilters } from "@/features/items/ItemFilters";
 import { filterItems, itemsEmptyState } from "@/lib/items";
@@ -16,7 +17,7 @@ import Link from "next/link";
 
 interface ItemsPageProps {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ status?: string; unnamed?: string }>;
+  searchParams?: Promise<{ status?: string; unnamed?: string; removed?: string }>;
 }
 
 export default async function ItemsPage({ params, searchParams: searchParamsPromise }: ItemsPageProps) {
@@ -29,6 +30,8 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
 
   const db = getDb();
   const collection = await requireCollectionAccess(db, id, session.user.id);
+
+  const collectionHref = `/collections/${collection.slug ?? collection.id}`;
 
   const items = await ItemController.fromDb(db).listItems(collection.id);
   const covers = await PhotoController.fromDb(db).findCoverPhotosByItemIds(
@@ -56,21 +59,30 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
             </p>
           </div>
           <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto">
-            <Link href={`/collections/${collection.slug ?? collection.id}/pool`} className="min-w-0">
+            <Link href={`${collectionHref}/pool`} className="min-w-0">
               <Button variant="secondary" className="w-full">
                 Add photos
               </Button>
             </Link>
-            <Link href={`/collections/${collection.slug ?? collection.id}/items/new`} className="min-w-0">
+            <Link href={`${collectionHref}/items/new`} className="min-w-0">
               <Button className="w-full">Add item</Button>
             </Link>
           </div>
         </div>
 
+        {/* The undo half of item removal (purses-v7gv), rides POST
+            /api/items/[id]/restore. Guarded against a stale/bookmarked URL: if
+            the id is in the live list the removal claim would be false — skip.
+            (typeof check: a repeated ?removed= key arrives as string[].) */}
+        {typeof searchParams?.removed === "string" &&
+          !items.some((i) => i.id === searchParams.removed) && (
+            <RemovedItemNotice itemId={searchParams.removed} />
+          )}
+
         {/* Section index, not the workspace root: Build is the current section,
             not the current page — hence activeExact={false}. */}
         <WorkspaceModeChips
-          base={`/collections/${collection.slug ?? collection.id}`}
+          base={collectionHref}
           activeMode="build"
           activeExact={false}
         />
@@ -83,7 +95,7 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
             message={empty.message}
             action={
               items.length === 0
-                ? { label: "Add item", href: `/collections/${collection.slug ?? collection.id}/items/new` }
+                ? { label: "Add item", href: `${collectionHref}/items/new` }
                 : undefined
             }
           />

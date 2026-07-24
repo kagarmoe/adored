@@ -137,4 +137,9 @@ describe("ItemDetailPage redesign (carousel + info card)", () => {
     await renderPage();
     expect(screen.getAllByRole("button", { name: /delete this photo/i }).length).toBeGreaterThan(0);
   });
+
+  it("offers 'Remove from collection' to a member (purses-v7gv; true side only — with no viewer tier, any renderer is a member)", async () => {
+    await renderPage();
+    expect(screen.getByRole("button", { name: /remove from collection/i })).toBeInTheDocument();
+  });
 });
