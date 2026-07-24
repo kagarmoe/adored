@@ -28,7 +28,10 @@ test.describe("remove an item, then bring it back", () => {
 
     // Confirm → real DELETE → lands on the items list with the undo notice, item gone.
     await page.getByRole("button", { name: /^remove$/i }).click();
-    await expect(page).toHaveURL(new RegExp(`/collections/${slug}/items\\?removed=`));
+    // Predicate, not a slug-interpolated RegExp — slugs aren't regex-safe.
+    await page.waitForURL(
+      (url) => url.pathname === `/collections/${slug}/items` && url.searchParams.has("removed"),
+    );
     await expect(page.getByRole("status")).toContainText(/removed/i);
     await expect(page.getByRole("link", { name: itemName.trim() })).toHaveCount(0);
 

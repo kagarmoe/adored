@@ -31,6 +31,8 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
   const db = getDb();
   const collection = await requireCollectionAccess(db, id, session.user.id);
 
+  const collectionHref = `/collections/${collection.slug ?? collection.id}`;
+
   const items = await ItemController.fromDb(db).listItems(collection.id);
   const covers = await PhotoController.fromDb(db).findCoverPhotosByItemIds(
     items.map((i) => i.id),
@@ -57,30 +59,30 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
             </p>
           </div>
           <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto">
-            <Link href={`/collections/${collection.slug ?? collection.id}/pool`} className="min-w-0">
+            <Link href={`${collectionHref}/pool`} className="min-w-0">
               <Button variant="secondary" className="w-full">
                 Add photos
               </Button>
             </Link>
-            <Link href={`/collections/${collection.slug ?? collection.id}/items/new`} className="min-w-0">
+            <Link href={`${collectionHref}/items/new`} className="min-w-0">
               <Button className="w-full">Add item</Button>
             </Link>
           </div>
         </div>
 
-        {/* The undo half of item removal (purses-v7gv): announced via role=status,
-            rides POST /api/items/[id]/restore. Param comes from ItemDeleteControl. */}
-        {searchParams?.removed && (
-          <RemovedItemNotice
-            itemId={searchParams.removed}
-            itemsHref={`/collections/${collection.slug ?? collection.id}/items`}
-          />
-        )}
+        {/* The undo half of item removal (purses-v7gv), rides POST
+            /api/items/[id]/restore. Guarded against a stale/bookmarked URL: if
+            the id is in the live list the removal claim would be false — skip.
+            (typeof check: a repeated ?removed= key arrives as string[].) */}
+        {typeof searchParams?.removed === "string" &&
+          !items.some((i) => i.id === searchParams.removed) && (
+            <RemovedItemNotice itemId={searchParams.removed} />
+          )}
 
         {/* Section index, not the workspace root: Build is the current section,
             not the current page — hence activeExact={false}. */}
         <WorkspaceModeChips
-          base={`/collections/${collection.slug ?? collection.id}`}
+          base={collectionHref}
           activeMode="build"
           activeExact={false}
         />
@@ -93,7 +95,7 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
             message={empty.message}
             action={
               items.length === 0
-                ? { label: "Add item", href: `/collections/${collection.slug ?? collection.id}/items/new` }
+                ? { label: "Add item", href: `${collectionHref}/items/new` }
                 : undefined
             }
           />

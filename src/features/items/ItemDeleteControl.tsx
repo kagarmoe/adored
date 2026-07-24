@@ -35,8 +35,9 @@ export function ItemDeleteControl({ itemId, itemsHref }: ItemDeleteControlProps)
     try {
       const res = await fetch(`/api/items/${itemId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("remove failed");
+      // No router.refresh(): the items route is dynamic (session+DB), so the
+      // push to a new URL already renders it fresh — proven by the e2e.
       router.push(`${itemsHref}?removed=${itemId}`);
-      router.refresh();
     } catch {
       setError("That didn’t go through — the item is still here; try again.");
       setBusy(false);
@@ -79,9 +80,10 @@ export function ItemDeleteControl({ itemId, itemsHref }: ItemDeleteControlProps)
         your mind.
       </span>
       <div className="flex gap-2">
+        {/* Default size (h-11): the confirm pair are the destructive moment's
+            primary tap targets — DESIGN.md's 44px floor applies hardest here. */}
         <Button
           ref={cancelRef}
-          size="sm"
           variant="secondary"
           onClick={() => {
             setConfirming(false);
@@ -91,7 +93,7 @@ export function ItemDeleteControl({ itemId, itemsHref }: ItemDeleteControlProps)
         >
           Keep
         </Button>
-        <Button size="sm" variant="danger" onClick={remove} disabled={busy}>
+        <Button variant="danger" onClick={remove} disabled={busy}>
           {busy ? "Removing…" : "Remove"}
         </Button>
       </div>

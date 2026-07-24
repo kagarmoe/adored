@@ -4,28 +4,31 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 const replace = vi.fn();
-const refresh = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, refresh }) }));
+let search = "removed=i1";
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace }),
+  usePathname: () => "/collections/rachels-purses/items",
+  useSearchParams: () => new URLSearchParams(search),
+}));
 
 import { RemovedItemNotice } from "./RemovedItemNotice";
 
-const props = { itemId: "i1", itemsHref: "/collections/rachels-purses/items" };
-
 beforeEach(() => {
   vi.clearAllMocks();
+  search = "removed=i1";
   global.fetch = vi.fn();
 });
 
 describe("RemovedItemNotice", () => {
-  it("announces the removal via role=status and offers the way back", () => {
-    render(<RemovedItemNotice {...props} />);
+  it("receives focus on mount — a server-rendered live region is not announced, the focus move is the AT signal", () => {
+    render(<RemovedItemNotice itemId="i1" />);
+    expect(screen.getByRole("status")).toHaveFocus();
     expect(screen.getByRole("status")).toHaveTextContent(/removed/i);
-    expect(screen.getByRole("button", { name: /bring it back/i })).toBeInTheDocument();
   });
 
-  it("'Bring it back' restores the item, strips the param and refreshes", async () => {
+  it("'Bring it back' restores the item and strips only the removed param", async () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
-    render(<RemovedItemNotice {...props} />);
+    render(<RemovedItemNotice itemId="i1" />);
     fireEvent.click(screen.getByRole("button", { name: /bring it back/i }));
     await waitFor(() =>
       expect(global.fetch).toHaveBeenCalledWith("/api/items/i1/restore", { method: "POST" }),
@@ -33,21 +36,23 @@ describe("RemovedItemNotice", () => {
     await waitFor(() =>
       expect(replace).toHaveBeenCalledWith("/collections/rachels-purses/items"),
     );
-    expect(refresh).toHaveBeenCalled();
   });
 
-  it("a failed restore shows a gentle retry line and keeps the notice", async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: false });
-    render(<RemovedItemNotice {...props} />);
-    fireEvent.click(screen.getByRole("button", { name: /bring it back/i }));
-    await waitFor(() => expect(screen.getByText(/didn’t go through/i)).toBeInTheDocument());
-    expect(replace).not.toHaveBeenCalled();
-  });
-
-  it("'Done' dismisses by stripping the param", () => {
-    render(<RemovedItemNotice {...props} />);
+  it("keeps co-present filters when stripping the removed param", () => {
+    search = "status=archived&removed=i1";
+    render(<RemovedItemNotice itemId="i1" />);
     fireEvent.click(screen.getByRole("button", { name: /^done$/i }));
-    expect(replace).toHaveBeenCalledWith("/collections/rachels-purses/items");
+    expect(replace).toHaveBeenCalledWith(
+      "/collections/rachels-purses/items?status=archived",
+    );
     expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("a failed restore shows the shared gentle retry line and keeps the notice", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: false });
+    render(<RemovedItemNotice itemId="i1" />);
+    fireEvent.click(screen.getByRole("button", { name: /bring it back/i }));
+    await waitFor(() => expect(screen.getByText(/didn.t go through/i)).toBeInTheDocument());
+    expect(replace).not.toHaveBeenCalled();
   });
 });

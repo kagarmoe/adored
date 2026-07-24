@@ -1,60 +1,66 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui";
+import { AsyncActionButton } from "@/features/sorting/AsyncActionButton";
 
 interface RemovedItemNoticeProps {
   itemId: string;
-  /** The items-list path without query — Done/undo strip the ?removed param via replace. */
-  itemsHref: string;
 }
 
 // The undo half of the remove flow (spec 2026-07-23 rev 2): the details page's
-// ItemDeleteControl lands here with ?removed=<id>; this notice announces the
-// removal (role=status → aria-live for AT) and offers the existing restore
-// endpoint as an immediate way back. Focus is not stolen; a stale/foreign id
-// just 404s into the gentle retry line.
-export function RemovedItemNotice({ itemId, itemsHref }: RemovedItemNoticeProps) {
+// ItemDeleteControl lands on the items list with ?removed=<id>; this notice
+// offers the existing restore endpoint as an immediate way back. Focus moves to
+// the notice on mount — an aria-live region server-rendered into a freshly
+// navigated page is NOT announced (live regions announce mutations, not initial
+// content), so the focus move is what tells an AT user the removal happened and
+// where the way back is. Dismissing strips only the `removed` param, so any
+// co-present filters (?status=…) survive. A stale/foreign id just 404s into the
+// gentle retry line.
+export function RemovedItemNotice({ itemId }: RemovedItemNoticeProps) {
   const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const inFlight = useRef(false);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    containerRef.current?.focus();
+  }, []);
+
+  function hrefWithoutRemoved() {
+    const params = new URLSearchParams(searchParams);
+    params.delete("removed");
+    const qs = params.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  }
 
   async function restore() {
-    if (inFlight.current) return;
-    inFlight.current = true;
-    setBusy(true);
-    setError("");
-    try {
-      const res = await fetch(`/api/items/${itemId}/restore`, { method: "POST" });
-      if (!res.ok) throw new Error("restore failed");
-      router.replace(itemsHref);
-      router.refresh();
-    } catch {
-      setError("That didn’t go through — try again.");
-      setBusy(false);
-      inFlight.current = false;
-    }
+    const res = await fetch(`/api/items/${itemId}/restore`, { method: "POST" });
+    if (!res.ok) throw new Error("restore failed");
+    router.replace(hrefWithoutRemoved());
   }
 
   return (
     <div
+      ref={containerRef}
+      tabIndex={-1}
       role="status"
-      className="flex flex-col gap-3 rounded-card bg-surface p-4 ring-1 ring-hairline sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-col gap-3 rounded-card bg-surface p-4 ring-1 ring-hairline outline-hidden sm:flex-row sm:items-center sm:justify-between"
     >
       <span className="text-sm text-ink">
         Removed. It can come back if you change your mind.
       </span>
       <div className="flex items-center gap-2">
-        <Button size="sm" variant="secondary" onClick={restore} disabled={busy}>
-          {busy ? "Bringing it back…" : "Bring it back"}
-        </Button>
-        <Button size="sm" variant="ghost" onClick={() => router.replace(itemsHref)} disabled={busy}>
+        <AsyncActionButton
+          action={restore}
+          label="Bring it back"
+          busyLabel="Bringing it back…"
+        />
+        <Button variant="ghost" onClick={() => router.replace(hrefWithoutRemoved())}>
           Done
         </Button>
       </div>
-      {error && <span className="text-sm text-error-deep">{error}</span>}
     </div>
   );
 }

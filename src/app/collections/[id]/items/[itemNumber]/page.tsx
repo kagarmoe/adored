@@ -47,7 +47,8 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   }
 
   const photos = await PhotoController.fromDb(db).findByItem(item.id);
-  const nav = `/collections/${collection.slug ?? collection.id}/items/${item.number}`;
+  const collectionHref = `/collections/${collection.slug ?? collection.id}`;
+  const nav = `${collectionHref}/items/${item.number}`;
   const editHref = `${nav}/edit`;
   const photosHref = `${nav}/photos`;
 
@@ -140,10 +141,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
             {/* Its own bordered block (not another quiet link) so the destructive
                 action can't be mistaken for the nav link above it. */}
             {canModify && (
-              <ItemDeleteControl
-                itemId={item.id}
-                itemsHref={`/collections/${collection.slug ?? collection.id}/items`}
-              />
+              <ItemDeleteControl itemId={item.id} itemsHref={`${collectionHref}/items`} />
             )}
           </Card>
         </div>
