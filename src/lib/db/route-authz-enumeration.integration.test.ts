@@ -434,6 +434,14 @@ function buildStrangerCases(
       `/api/items/${itemAId}`,
       { id: itemAId }),
 
+    // ── /api/items/[id]/bin ───────────────────────────────────────────────
+    // PUT resolves the ITEM (requireApiItemCapability "preferences:write"); a stranger
+    // fails the capability gate → 403. Body supplied so authz fires before any parse.
+    c("items/[id]/bin/route.ts", "PUT",
+      `/api/items/${itemAId}/bin`,
+      { id: itemAId },
+      { bucket: "top" }),
+
     // ── /api/items/[id]/restore ───────────────────────────────────────────
     // itemBId's photo was soft-deleted in seedFullCollection; the item itself is active.
     // Use itemBId as the restore target so the item resolves (restore uses includeDeleted).

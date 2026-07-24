@@ -13,6 +13,9 @@ export class SortResultItemRepository {
     itemId: string;
     computedRank: number;
     computedBucket: "top" | "high" | "medium" | "low";
+    // Manual bin overlay carried from the live pref at materialization (purses-xxo7):
+    // finalize freezes the effective composition. Absent/undefined → NULL (no override).
+    manualBucket?: "top" | "high" | "medium" | "low" | null;
     // Epic S: usage standing stamped by the materialization step (deriveUsage's
     // typed output guards the value). Absent/undefined → NULL ("unknown").
     usage?: "uses" | "not_uses" | null;
@@ -27,7 +30,7 @@ export class SortResultItemRepository {
         computedRank: data.computedRank,
         computedBucket: data.computedBucket,
         manualRank: null,
-        manualBucket: null,
+        manualBucket: data.manualBucket ?? null,
         usage: data.usage ?? null,
         createdAt: new Date(),
         updatedAt: new Date(),

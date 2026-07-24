@@ -86,6 +86,7 @@ function preference(
     score: 0.5,
     confidence: 0.5,
     rankBucket: "medium",
+    manualBucket: null,
     comparisonCount: 1,
     lastSeen: new Date(),
     createdAt: new Date(),
@@ -175,6 +176,7 @@ describe("SortResultService.createDraftResult", () => {
       itemId: "a",
       computedRank: 0,
       computedBucket: "top",
+      manualBucket: null,
       usage: null,
     });
     expect(txItemRepo.create).toHaveBeenNthCalledWith(2, {
@@ -182,6 +184,7 @@ describe("SortResultService.createDraftResult", () => {
       itemId: "b",
       computedRank: 1,
       computedBucket: "medium",
+      manualBucket: null,
       usage: null,
     });
   });
@@ -319,13 +322,14 @@ describe("SortResultService.supersedeResult", () => {
         status: "draft",
       }),
     );
-    // Fresh-fold: the clone drops manual fields and does not carry usage; usage
-    // is re-derived here (empty stubbed log → null) and stamped by the create.
+    // Fresh-fold: the clone drops manual fields (manualBucket null) and does not
+    // carry usage; usage is re-derived here (empty stubbed log → null) by the create.
     expect(txItemRepo.create).toHaveBeenNthCalledWith(1, {
       sortResultId: newResult.id,
       itemId: "a",
       computedRank: 0,
       computedBucket: "top",
+      manualBucket: null,
       usage: null,
     });
     expect(txItemRepo.create).toHaveBeenNthCalledWith(2, {
@@ -333,6 +337,7 @@ describe("SortResultService.supersedeResult", () => {
       itemId: "b",
       computedRank: 1,
       computedBucket: "low",
+      manualBucket: null,
       usage: null,
     });
   });

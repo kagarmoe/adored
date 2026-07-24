@@ -16,6 +16,7 @@ function pref(overrides: Partial<CollectionPreferenceItem> = {}): CollectionPref
     score: 0.5,
     confidence: 0,
     rankBucket: "top",
+    manualBucket: null,
     comparisonCount: 0,
     orderRank: null,
     lastSeen: new Date(),

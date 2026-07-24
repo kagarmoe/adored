@@ -11,6 +11,7 @@ function pref(over: Partial<CollectionPreferenceItem>): CollectionPreferenceItem
     score: 0,
     confidence: 0,
     rankBucket: "top",
+    manualBucket: null,
     comparisonCount: 0,
     orderRank: null,
     lastSeen: new Date(),
@@ -62,9 +63,29 @@ describe("deriveStanding — live-preference → loved/onward", () => {
     expect(onward).toHaveLength(0);
   });
 
-  it("carries no manual overlay — every derived row's manualBucket is null", () => {
+  it("threads the live manual overlay onto each row (null when no hand-bin)", () => {
     const prefs = [pref({ itemId: "a", rankBucket: "top", orderRank: 1 })];
     const { loved } = deriveStanding(prefs, new Map([["a", item("a", "A")]]));
     expect(loved[0].ri.manualBucket).toBeNull();
+  });
+
+  it("a manual bin that disagrees with rankBucket WINS the loved/onward partition (purses-xxo7)", () => {
+    // rankBucket=low would land in onward; the hand-set top overlay pulls it into
+    // loved (effectiveBucket = manualBucket ?? rankBucket). And a loved item hand-set
+    // to low drops to onward. The bin is a partition, so a rebinned item joins its
+    // new partition at the END (computedRank still follows the raw rankBucket order).
+    const prefs = [
+      pref({ itemId: "pulled-up", rankBucket: "low", manualBucket: "top", orderRank: null }),
+      pref({ itemId: "real-loved", rankBucket: "high", manualBucket: null, orderRank: null }),
+      pref({ itemId: "dropped", rankBucket: "top", manualBucket: "low", orderRank: null }),
+    ];
+    const itemById = new Map([
+      ["pulled-up", item("pulled-up", "Up")],
+      ["real-loved", item("real-loved", "Loved")],
+      ["dropped", item("dropped", "Down")],
+    ]);
+    const { loved, onward } = deriveStanding(prefs, itemById);
+    expect(loved.map((r) => r.item.id)).toEqual(["real-loved", "pulled-up"]);
+    expect(onward.map((r) => r.item.id)).toEqual(["dropped"]);
   });
 });

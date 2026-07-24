@@ -4,11 +4,14 @@ import type {
   SortResultItem,
 } from "@/types";
 
-/** The computed-only item shape that SortResultItemRepository.create consumes. */
+/** The item shape that SortResultItemRepository.create consumes. Carries the live
+ *  manual bin overlay (purses-xxo7) so finalize freezes the effective composition;
+ *  a fresh clone (revision) drops it. */
 export interface MaterializedItem {
   itemId: string;
   computedRank: number;
   computedBucket: RankBucket;
+  manualBucket: RankBucket | null;
 }
 
 const BUCKET_PRIORITY: Record<RankBucket, number> = {
@@ -52,7 +55,11 @@ export function rankPreferencesToItems(
     .map((pref, index) => ({
       itemId: pref.itemId,
       computedRank: index,
+      // ORDERING above uses the RAW rankBucket (a bin is a partition, not a rank);
+      // computedBucket stays raw, and the live manual overlay rides alongside so a
+      // finalize freezes the effective composition (purses-xxo7).
       computedBucket: pref.rankBucket,
+      manualBucket: pref.manualBucket,
     }));
 }
 
@@ -61,14 +68,15 @@ function compareItemId(a: string, b: string): number {
 }
 
 /**
- * Pure: clone a finalized result's items into the computed-only create shape,
- * dropping any manual overrides (the repo hard-codes manualRank/manualBucket to
- * null, so the clone carries no manual fields).
+ * Pure: clone a finalized result's items into the create shape, dropping any manual
+ * overrides (fresh-fold: a revision re-derives, so manualBucket is null and the repo
+ * still hard-codes manualRank to null).
  */
 export function cloneItemsFrom(items: SortResultItem[]): MaterializedItem[] {
   return items.map((item) => ({
     itemId: item.itemId,
     computedRank: item.computedRank,
     computedBucket: item.computedBucket,
+    manualBucket: null,
   }));
 }

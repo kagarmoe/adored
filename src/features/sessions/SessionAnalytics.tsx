@@ -2,6 +2,7 @@
 
 import { Card } from "@/components/ui";
 import type { CollectionPreferenceItem, DecisionEvent } from "@/types";
+import { effectiveBucket } from "@/lib/results-buckets";
 
 interface SessionAnalyticsProps {
   preferences: CollectionPreferenceItem[];
@@ -21,11 +22,14 @@ interface SessionAnalyticsProps {
 export function SessionAnalytics({ preferences, decisions }: SessionAnalyticsProps) {
   const hasWork = preferences.length > 0 || decisions.length > 0;
 
+  // A hand-set bin wins the chip it lights, same as the Standing (purses-xxo7).
+  const bucketOf = (p: CollectionPreferenceItem) =>
+    effectiveBucket({ manualBucket: p.manualBucket, computedBucket: p.rankBucket });
   const tiers = [
-    { label: "Love", present: preferences.some((p) => p.rankBucket === "top") },
-    { label: "Like", present: preferences.some((p) => p.rankBucket === "high") },
-    { label: "Maybe", present: preferences.some((p) => p.rankBucket === "medium") },
-    { label: "Onward", present: preferences.some((p) => p.rankBucket === "low") },
+    { label: "Love", present: preferences.some((p) => bucketOf(p) === "top") },
+    { label: "Like", present: preferences.some((p) => bucketOf(p) === "high") },
+    { label: "Maybe", present: preferences.some((p) => bucketOf(p) === "medium") },
+    { label: "Onward", present: preferences.some((p) => bucketOf(p) === "low") },
   ];
   const discovered = tiers.filter((t) => t.present);
 

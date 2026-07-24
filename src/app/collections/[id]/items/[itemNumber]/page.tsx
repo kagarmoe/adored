@@ -5,6 +5,8 @@ import { requireCollectionAccess } from "@/lib/collection-access";
 import { ItemController } from "@/server/api/items";
 import { PhotoController } from "@/server/api/photos";
 import { MemberController } from "@/server/api/members";
+import { PreferenceController } from "@/server/api/preferences";
+import { effectiveBucket } from "@/lib/results-buckets";
 import { AppLayout } from "@/components/layout";
 import { trail } from "@/components/layout/breadcrumb-trails";
 import { Button, Card } from "@/components/ui";
@@ -48,6 +50,12 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   }
 
   const photos = await PhotoController.fromDb(db).findByItem(item.id);
+  // The "Placed with" bin reflects this curator's live preference overlay
+  // (effectiveBucket = manualBucket ?? rankBucket), NOT items.category (purses-xxo7).
+  const preference = await PreferenceController.fromDb(db).getItemPreference(item.id, session.user.id);
+  const currentBucket = preference
+    ? effectiveBucket({ manualBucket: preference.manualBucket, computedBucket: preference.rankBucket })
+    : null;
   const collectionHref = `/collections/${collection.slug ?? collection.id}`;
   const nav = `${collectionHref}/items/${item.number}`;
   const editHref = `${nav}/edit`;
@@ -131,9 +139,9 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
               )}
             </div>
             <ItemMetadata item={item} editHref={editHref} />
-            {/* Binning as a constrained label on items.category (purses-xxo7) —
-                deliberately not wired into sort preferences; see ItemBinSelect. */}
-            {canModify && <ItemBinSelect itemId={item.id} value={item.category} />}
+            {/* Hand-set bin = a per-curator overlay on live preferences (purses-xxo7):
+                effectiveBucket wins the Standing/results partition. See ItemBinSelect. */}
+            {canModify && <ItemBinSelect itemId={item.id} value={currentBucket} />}
             {photos.length > 0 && (
               <Link
                 href={photosHref}

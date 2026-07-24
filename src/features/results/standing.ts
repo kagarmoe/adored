@@ -7,9 +7,11 @@ import type { RankedJoinedRow, RankedRow } from "@/features/results/RankedResult
  * Pure: derive the live Standing's loved/onward rows from a curator's live
  * preferences — the SAME rankPreferencesToItems → partitionRanked/effectiveBucket
  * derivation a finalized snapshot uses (shared source of truth, spec §ranked-read).
- * Live preferences carry no manual overlay, so each row's manualBucket is null
- * (effectiveBucket then falls back to the computed bucket). Items missing from the
- * lookup are dropped. No DB, no engine call — orderRank is pre-materialized.
+ * A live hand-bin overlay (manualBucket, purses-xxo7) rides through so effectiveBucket
+ * wins the partition; ORDERING stays on the raw computed bucket, so a rebinned sorted
+ * item joins its new partition at the END (a bin is a partition, not a rank). Items
+ * missing from the lookup are dropped. No DB, no engine call — orderRank is
+ * pre-materialized.
  */
 export function deriveStanding(
   preferences: CollectionPreferenceItem[],
@@ -20,7 +22,7 @@ export function deriveStanding(
     id: m.itemId,
     itemId: m.itemId,
     computedBucket: m.computedBucket as Bucket,
-    manualBucket: null,
+    manualBucket: m.manualBucket,
   }));
 
   const { loved: lovedRows, onward: onwardRows } = partitionRanked(rows);

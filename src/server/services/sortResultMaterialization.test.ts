@@ -16,6 +16,7 @@ function preference(
     score: 0.5,
     confidence: 0.5,
     rankBucket: "medium",
+    manualBucket: null,
     orderRank: null,
     comparisonCount: 1,
     lastSeen: new Date(),
@@ -52,9 +53,9 @@ describe("rankPreferencesToItems", () => {
     ]);
 
     expect(items).toEqual([
-      { itemId: "top", computedRank: 0, computedBucket: "top" },
-      { itemId: "mid", computedRank: 1, computedBucket: "high" },
-      { itemId: "low", computedRank: 2, computedBucket: "low" },
+      { itemId: "top", computedRank: 0, computedBucket: "top", manualBucket: null },
+      { itemId: "mid", computedRank: 1, computedBucket: "high", manualBucket: null },
+      { itemId: "low", computedRank: 2, computedBucket: "low", manualBucket: null },
     ]);
   });
 
@@ -66,9 +67,22 @@ describe("rankPreferencesToItems", () => {
     ]);
 
     expect(items).toEqual([
-      { itemId: "top", computedRank: 0, computedBucket: "top" },
-      { itemId: "mid", computedRank: 1, computedBucket: "high" },
-      { itemId: "low", computedRank: 2, computedBucket: "low" },
+      { itemId: "top", computedRank: 0, computedBucket: "top", manualBucket: null },
+      { itemId: "mid", computedRank: 1, computedBucket: "high", manualBucket: null },
+      { itemId: "low", computedRank: 2, computedBucket: "low", manualBucket: null },
+    ]);
+  });
+
+  it("carries the live manual bin overlay onto the materialized item (raw ORDERING unchanged)", () => {
+    // A hand-bin to top on a low-bucket item: ORDERING stays on the raw rankBucket
+    // (low sorts last), but manualBucket rides through so finalize freezes effective.
+    const items = rankPreferencesToItems([
+      preference({ itemId: "keep", rankBucket: "top" }),
+      preference({ itemId: "rebinned", rankBucket: "low", manualBucket: "top" }),
+    ]);
+    expect(items).toEqual([
+      { itemId: "keep", computedRank: 0, computedBucket: "top", manualBucket: null },
+      { itemId: "rebinned", computedRank: 1, computedBucket: "low", manualBucket: "top" },
     ]);
   });
 
@@ -90,6 +104,7 @@ describe("rankPreferencesToItems", () => {
     // Bucket stays as annotation/partition context; Compare order does not
     // relabel an Onward item as loved.
     expect(out.map((o) => o.computedBucket)).toEqual(["medium", "low", "top", "high"]);
+    expect(out.map((o) => o.manualBucket)).toEqual([null, null, null, null]);
   });
 
   it("breaks ties on itemId when bucket and orderRank match", () => {
@@ -113,13 +128,14 @@ describe("cloneItemsFrom", () => {
     ]);
 
     expect(cloned).toEqual([
-      { itemId: "a", computedRank: 0, computedBucket: "top" },
-      { itemId: "b", computedRank: 1, computedBucket: "low" },
+      { itemId: "a", computedRank: 0, computedBucket: "top", manualBucket: null },
+      { itemId: "b", computedRank: 1, computedBucket: "low", manualBucket: null },
     ]);
-    // The create-input shape carries no manual fields (repo hard-codes them null).
+    // Fresh-fold: a revision drops the overlay (manualBucket null); manualRank is
+    // still hard-coded null by the repo, so the create-input carries no manualRank.
     for (const c of cloned) {
       expect(c).not.toHaveProperty("manualRank");
-      expect(c).not.toHaveProperty("manualBucket");
+      expect(c.manualBucket).toBeNull();
     }
   });
 });

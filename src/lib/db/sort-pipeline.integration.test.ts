@@ -241,12 +241,14 @@ describeDb("sort pipeline (route/service -> DB)", () => {
         {
           id: generateId("pref"), collectionId, curatorId: ownerId,
           itemId: realItem.id, score: 0.9, confidence: 1, rankBucket: "top",
+          manualBucket: null, orderRank: null,
           comparisonCount: 0, lastSeen: now, createdAt: now, updatedAt: now,
         },
         // Lower score → computedRank 1 → inserted SECOND, FK-fails (23503).
         {
           id: generateId("pref"), collectionId, curatorId: ownerId,
           itemId: ghostItemId, score: 0.1, confidence: 1, rankBucket: "low",
+          manualBucket: null, orderRank: null,
           comparisonCount: 0, lastSeen: now, createdAt: now, updatedAt: now,
         },
       ],

@@ -114,4 +114,11 @@ export class PreferenceStateService {
   ): Promise<CollectionPreferenceItem[]> {
     return this.preferenceRepo.findByCollection(collectionId, curatorId);
   }
+
+  async getItemPreference(
+    itemId: string,
+    curatorId: string,
+  ): Promise<CollectionPreferenceItem | null> {
+    return this.preferenceRepo.findByItem(itemId, curatorId);
+  }
 }

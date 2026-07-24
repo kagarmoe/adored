@@ -3,13 +3,14 @@ import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-const { mockGetSession, mockRequireAccess, itemRepo, photoRepo, membershipRepo } = vi.hoisted(
+const { mockGetSession, mockRequireAccess, itemRepo, photoRepo, membershipRepo, prefController } = vi.hoisted(
   () => ({
     mockGetSession: vi.fn(),
     mockRequireAccess: vi.fn(),
     itemRepo: { findByCollectionAndNumber: vi.fn() },
     photoRepo: { findByItem: vi.fn() },
     membershipRepo: { findByUser: vi.fn() },
+    prefController: { getItemPreference: vi.fn() },
   }),
 );
 
@@ -26,6 +27,7 @@ vi.mock("@/lib/collection-access", () => ({ requireCollectionAccess: mockRequire
 vi.mock("@/server/repositories/implementations/ItemRepository", () => ({ ItemRepository: vi.fn(function () { return itemRepo; }) }));
 vi.mock("@/server/repositories/implementations/PhotoRepository", () => ({ PhotoRepository: vi.fn(function () { return photoRepo; }) }));
 vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({ MembershipRepository: vi.fn(function () { return membershipRepo; }) }));
+vi.mock("@/server/api/preferences", () => ({ PreferenceController: { fromDb: () => prefController } }));
 
 import ItemDetailPage from "./page";
 
@@ -61,6 +63,7 @@ beforeEach(() => {
   itemRepo.findByCollectionAndNumber.mockResolvedValue(ITEM);
   photoRepo.findByItem.mockResolvedValue([photo("p1", true), photo("p2")]);
   membershipRepo.findByUser.mockResolvedValue(null); // owner by default (COLLECTION.ownerId === u1)
+  prefController.getItemPreference.mockResolvedValue(null); // no bin placement by default
 });
 
 const renderPage = async () => render(await ItemDetailPage({ params: Promise.resolve({ id: "summer-bags", itemNumber: "7" }) }));
@@ -138,11 +141,13 @@ describe("ItemDetailPage redesign (carousel + info card)", () => {
     expect(screen.getAllByRole("button", { name: /delete this photo/i }).length).toBeGreaterThan(0);
   });
 
-  it("offers the 'Placed with' bin select preloaded with the item's category (purses-xxo7)", async () => {
-    itemRepo.findByCollectionAndNumber.mockResolvedValue({ ...ITEM, category: "Maybe" });
+  it("offers the 'Placed with' bin select preloaded from the caller's preference overlay (purses-xxo7)", async () => {
+    // currentBucket = effectiveBucket(manualBucket ?? rankBucket) from THIS curator's
+    // preference — a hand overlay wins over the computed rankBucket. NOT items.category.
+    prefController.getItemPreference.mockResolvedValue({ manualBucket: "top", rankBucket: "low" });
     await renderPage();
     const select = screen.getByLabelText(/placed with/i) as HTMLSelectElement;
-    expect(select.value).toBe("Maybe");
+    expect(select.value).toBe("top");
   });
 
   it("offers 'Remove from collection' to a member (purses-v7gv; true side only — with no viewer tier, any renderer is a member)", async () => {

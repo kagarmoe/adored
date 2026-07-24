@@ -19,6 +19,7 @@ function pref(over: Partial<CollectionPreferenceItem>): CollectionPreferenceItem
     score: 0,
     confidence: 0,
     rankBucket: "low",
+    manualBucket: null,
     comparisonCount: 0,
     orderRank: null,
     lastSeen: new Date(),
@@ -62,6 +63,20 @@ describe("SessionAnalytics", () => {
     // Discovered tiers surface as calm labels, not counts.
     expect(screen.getByText("Love")).toBeInTheDocument();
     expect(screen.getByText("Like")).toBeInTheDocument();
+  });
+
+  it("a hand-set bin overlay lights the effective tier chip, not the computed one (purses-xxo7)", () => {
+    // rankBucket low would light "Onward"; the manual top overlay lights "Love" instead.
+    render(
+      <SessionAnalytics
+        preferences={[pref({ id: "a", rankBucket: "low", manualBucket: "top" })]}
+        decisions={[]}
+        totalItems={1}
+        sessionCreatedAt={new Date("2026-06-22T12:00:00Z")}
+      />
+    );
+    expect(screen.getByText("Love")).toBeInTheDocument();
+    expect(screen.queryByText("Onward")).not.toBeInTheDocument();
   });
 
   it("renders a gentle empty state when nothing is sorted yet", () => {

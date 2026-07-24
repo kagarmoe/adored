@@ -169,6 +169,7 @@ Route-level analytics capture has been removed from the API surface; this does n
 |---|---|---|
 | POST | `/api/items?collectionId=` | member |
 | GET·PATCH·DELETE | `/api/items/[id]` | member |
+| PUT | `/api/items/[id]/bin` | curator (`preferences:write`, scoped to caller) |
 | POST | `/api/items/[id]/restore` | member |
 | POST | `/api/items/[id]/purge` | owner |
 | POST | `/api/items/[id]/remove-from-sorts` | owner |
@@ -243,7 +244,7 @@ Authenticated. **Body** → `createCollection`; also creates the caller's **owne
 `getSession` + `requireApiCollectionAccess` (member-or-owner). `GET` → `Item[]`. `POST` body → `201 Item`. `400` invalid JSON; `401`/`403`/`404`.
 
 ### `PATCH /api/collections/[id]/items/[itemId]`
-`getSession` + `requireApiCapability("items:write")` (**curator** — any member; the old `canEditMetadata` flag is inert), resolved **before** **belongs-to-parent** (`item.collectionId !== id` → `404`) — authz precedes existence (`purses-ct0`). **Body:** `{ name?, brand?, style?, color?, material?, category?, notes? }` (all optional; only `category` also accepts `null` — clearing a bin from the details-page "Placed with" select writes `category: null`, purses-xxo7). Returns updated `Item`. `400` invalid input; `401`/`403`/`404`.
+`getSession` + `requireApiCapability("items:write")` (**curator** — any member; the old `canEditMetadata` flag is inert), resolved **before** **belongs-to-parent** (`item.collectionId !== id` → `404`) — authz precedes existence (`purses-ct0`). **Body:** `{ name?, brand?, style?, color?, material?, category?, notes? }` (all optional; only `category` also accepts `null` so a curator can clear it — `category` is plain metadata, **not** the bin, which now lives on the per-curator preference overlay via `PUT /api/items/[id]/bin`, purses-xxo7). Returns updated `Item`. `400` invalid input; `401`/`403`/`404`.
 
 ## item photos
 
@@ -341,6 +342,9 @@ These routes are now scoped to the item's collection (IDOR closed — pv9 PR1, `
 
 ### `GET·PATCH·DELETE /api/items/[id]`
 `requireAuth` + resolve the item (`404` absent/deleted) + `requireApiCollectionAccess(item.collectionId)` (member-or-owner). `GET` → `Item`; `PATCH` body → updated `Item` (`400` invalid JSON); `DELETE` → `{ message, item }` (soft delete). `401`/`403`/`404`.
+
+### `PUT /api/items/[id]/bin`
+`requireAuth` → resolve the item + `requireApiItemCapability("preferences:write")` (**curator**; `curatorId` is always the session user, never the body, so the overlay is per-curator by construction) → zod `{ bucket: "top"|"high"|"medium"|"low" | null }` (`400` on any other value). In ONE **lock-free** transaction (purses-xxo7): **set** upserts the per-curator `manual_bucket` overlay on `preferences` (a new hand-only row is seeded with the tier score, `rankBucket = bucket`, `comparison_count 0`; an existing sorted row keeps its derived columns and only the overlay changes — `bulkUpsert`'s conflict-SET omits `manual_bucket`, so a recompute never clobbers it) **and clears the item's disposition** (a placement, so disposed⇔untriaged holds); **clear (`null`)** is one writable-CTE statement — a hand-only row (`comparison_count = 0`) is DELETED so its placeholder bucket can't resurface, a sorted row keeps its `rankBucket` and only the overlay is nulled. `effectiveBucket = manualBucket ?? rankBucket` drives the item details "Placed with" select, the live Standing partition, and `SessionAnalytics` chips; finalize freezes the effective composition into the snapshot. Returns `200 { effectiveBucket: RankBucket | null }`. `401`/`403`/`404`.
 
 ### `POST /api/items/[id]/restore`
 `requireAuth` + resolve the item including soft-deleted (`findByIdIncludingDeleted`; `404` absent) + `requireApiCollectionAccess(item.collectionId)` (member-or-owner). Restores a soft-deleted item.

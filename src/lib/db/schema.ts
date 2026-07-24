@@ -275,6 +275,12 @@ export const preferencesTable = pgTable(
     score: numeric("score", { precision: 10, scale: 4 }).notNull(),
     confidence: numeric("confidence", { precision: 10, scale: 4 }).notNull(),
     rankBucket: text("rank_bucket").notNull(),
+    // Per-curator manual bin overlay (purses-xxo7): a hand-set 1-of-4 bin that wins
+    // over the computed rankBucket for display (effectiveBucket = manualBucket ??
+    // rankBucket). Nullable, plain text, no CHECK — mirrors the sort_result_items
+    // manualBucket precedent; the route's zod enum guards writes. NOT in bulkUpsert's
+    // conflict-SET list, so a recompute leaves a live overlay untouched.
+    manualBucket: text("manual_bucket"),
     comparisonCount: integer("comparison_count").notNull(),
     orderRank: integer("order_rank"),
     lastSeen: timestamp("last_seen").notNull(),

@@ -184,6 +184,9 @@ export interface CollectionPreferenceItem {
   score: number;
   confidence: number;
   rankBucket: RankBucket;
+  // Per-curator manual bin overlay (purses-xxo7): wins over rankBucket for display via
+  // effectiveBucket(manualBucket ?? rankBucket). null = no hand override.
+  manualBucket: RankBucket | null;
   comparisonCount: number;
   orderRank: number | null;
   lastSeen: Date;

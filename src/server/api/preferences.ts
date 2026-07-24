@@ -38,9 +38,11 @@ export class PreferenceController {
     return this.preferenceService.getItemPreferences(collectionId, curatorId);
   }
 
-  async getItemPreference(): Promise<CollectionPreferenceItem | null> {
-    // TODO: Implement when preferenceRepo.findByItem available
-    return null;
+  async getItemPreference(
+    itemId: string,
+    curatorId: string,
+  ): Promise<CollectionPreferenceItem | null> {
+    return this.preferenceService.getItemPreference(itemId, curatorId);
   }
 
   async recalculatePreferences(

@@ -11,7 +11,7 @@ import { compareByCreatedAtThenId } from "@/lib/decision-order";
 // Triage seeds each item at the CENTER of its tier band, so triage -> getBucket
 // is an identity round-trip and every item has +/-0.125 of headroom for pairwise
 // refinement to move it within, or across, a tier boundary.
-const TIER_SEED = {
+export const TIER_SEED = {
   top: 0.875,
   high: 0.625,
   medium: 0.375,
@@ -138,6 +138,9 @@ export class ScoringService {
         score: data.score,
         confidence: this.calculateConfidence(data.count),
         rankBucket: this.getBucket(data.score),
+        // Computed prefs carry no hand overlay; a live manual_bucket survives recompute
+        // because bulkUpsert's conflict-SET omits the column (purses-xxo7).
+        manualBucket: null,
         comparisonCount: data.count,
         orderRank: null,
         lastSeen: new Date(),

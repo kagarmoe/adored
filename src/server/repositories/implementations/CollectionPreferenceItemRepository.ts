@@ -145,6 +145,69 @@ export class CollectionPreferenceItemRepository {
       });
   }
 
+  // Set the per-curator manual bin overlay (purses-xxo7) in ONE lock-free upsert.
+  // Conflict target is the (item_id, curator_id) unique index. A NEW hand-only row
+  // gets the tier-seed columns (rankBucket = manualBucket = bucket, score = seedScore,
+  // confidence 0, comparisonCount 0, orderRank null); an EXISTING (possibly sorted)
+  // row keeps every derived column and only manual_bucket changes. bulkUpsert's
+  // conflict-SET omits manual_bucket and this SET touches only manual_bucket, so a
+  // concurrent recompute and a bin write never clobber each other — no advisory lock.
+  async setManualBucket(data: {
+    collectionId: string;
+    curatorId: string;
+    itemId: string;
+    bucket: "top" | "high" | "medium" | "low";
+    seedScore: number;
+  }): Promise<void> {
+    const now = new Date();
+    await this.db
+      .insert(preferencesTable)
+      .values({
+        id: generateId("pref"),
+        collectionId: data.collectionId,
+        curatorId: data.curatorId,
+        itemId: data.itemId,
+        score: data.seedScore.toString(),
+        confidence: "0",
+        rankBucket: data.bucket,
+        manualBucket: data.bucket,
+        comparisonCount: 0,
+        orderRank: null,
+        lastSeen: now,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [preferencesTable.itemId, preferencesTable.curatorId],
+        set: { manualBucket: sql`excluded.manual_bucket`, updatedAt: now },
+      });
+  }
+
+  // Clear the manual bin overlay in ONE statement (writable CTE). A HAND-ONLY row
+  // (comparison_count = 0 — recompute never emits a count-0 row, so this is exactly
+  // "no decision-event evidence for the item") is DELETED, so its placeholder
+  // rankBucket can't resurface as the effective bucket; a SORTED row keeps its derived
+  // rankBucket and only manual_bucket is nulled. Self-healing: a recompute landing
+  // between read and write only moves a row hand-only → sorted, which the UPDATE arm
+  // handles. No-op when no row matches (clear on an unbinned item). Scoped by
+  // (item_id, curator_id) — never touches another curator's row.
+  async clearManualBucket(itemId: string, curatorId: string): Promise<void> {
+    await this.db.execute(sql`
+      WITH deleted AS (
+        DELETE FROM ${preferencesTable}
+        WHERE ${preferencesTable.itemId} = ${itemId}
+          AND ${preferencesTable.curatorId} = ${curatorId}
+          AND ${preferencesTable.comparisonCount} = 0
+        RETURNING ${preferencesTable.id}
+      )
+      UPDATE ${preferencesTable}
+      SET ${sql.raw('manual_bucket')} = NULL, ${sql.raw('updated_at')} = now()
+      WHERE ${preferencesTable.itemId} = ${itemId}
+        AND ${preferencesTable.curatorId} = ${curatorId}
+        AND NOT EXISTS (SELECT 1 FROM deleted)
+    `);
+  }
+
   async clear(collectionId: string, curatorId: string): Promise<void> {
     await this.db
       .delete(preferencesTable)
@@ -204,6 +267,7 @@ export class CollectionPreferenceItemRepository {
       score: parseFloat(row.score),
       confidence: parseFloat(row.confidence),
       rankBucket: row.rankBucket as RankBucket,
+      manualBucket: row.manualBucket as RankBucket | null,
       comparisonCount: row.comparisonCount,
       orderRank: row.orderRank,
       lastSeen: row.lastSeen,

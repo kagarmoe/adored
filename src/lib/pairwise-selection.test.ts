@@ -47,6 +47,7 @@ function pref(itemId: string, rankBucket: RankBucket = "top"): CollectionPrefere
     score: 0.5,
     confidence: 0.5,
     rankBucket,
+    manualBucket: null,
     comparisonCount: 0,
     orderRank: null,
     lastSeen: new Date(),
