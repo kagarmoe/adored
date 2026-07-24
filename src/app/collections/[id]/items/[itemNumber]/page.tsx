@@ -8,6 +8,7 @@ import { MemberController } from "@/server/api/members";
 import { AppLayout } from "@/components/layout";
 import { trail } from "@/components/layout/breadcrumb-trails";
 import { Button, Card } from "@/components/ui";
+import { ItemBinSelect } from "@/features/items/ItemBinSelect";
 import { ItemDeleteControl } from "@/features/items/ItemDeleteControl";
 import { ItemMetadata } from "@/features/items/ItemMetadata";
 import { ItemPhotoCarousel } from "@/features/items/ItemPhotoCarousel";
@@ -130,6 +131,9 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
               )}
             </div>
             <ItemMetadata item={item} editHref={editHref} />
+            {/* Binning as a constrained label on items.category (purses-xxo7) —
+                deliberately not wired into sort preferences; see ItemBinSelect. */}
+            {canModify && <ItemBinSelect itemId={item.id} value={item.category} />}
             {photos.length > 0 && (
               <Link
                 href={photosHref}

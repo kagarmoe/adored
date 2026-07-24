@@ -307,6 +307,18 @@ for (const theme of ["light", "dark"] as const) {
     await page.waitForTimeout(400);
     await shot("results-rerank");
 
+    // purses-xxo7: the details-page "Placed with" bin select, with a value chosen.
+    // Self-restoring (clears back to Not placed yet) so the other theme pass and
+    // later beats see the seed untouched.
+    await page.goto(`/collections/${triageSlug}/items/1`);
+    await page.getByLabel("Placed with").waitFor({ state: "visible", timeout: 10_000 });
+    await page.getByLabel("Placed with").selectOption("Love");
+    await page.getByText("Placed with Love.").waitFor({ state: "visible", timeout: 10_000 });
+    await page.waitForTimeout(400);
+    await shot("item-bin-placed");
+    await page.getByLabel("Placed with").selectOption("");
+    await page.getByText("Placement cleared.").waitFor({ state: "visible", timeout: 10_000 });
+
     // purses-ka23: the /welcome onboarding walkthrough. Unlike the goto+shoot
     // surfaces above, this is ONE client-only route with seven beats advanced by
     // taps — Purpose → Triage (×3) → Usage → Compare → Standing → Refine →

@@ -13,15 +13,21 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, placeholder, className = "", ...props }, ref) => (
+  ({ label, error, options, placeholder, className = "", ...props }, ref) => {
+    // A visible label must be programmatically associated or AT can't name the
+    // control (WCAG 1.3.1/4.1.2); honor a caller-supplied id, else generate one.
+    const autoId = React.useId();
+    const selectId = props.id ?? (label ? autoId : undefined);
+    return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-ink mb-2">
+        <label htmlFor={selectId} className="block text-sm font-medium text-ink mb-2">
           {label}
           {props.required && <span className="text-error">*</span>}
         </label>
       )}
       <select
+        id={selectId}
         className={`
           w-full bg-surface border border-hairline rounded-control px-4 py-3 text-ink
           transition-shadow duration-200 ease-gentle
@@ -47,7 +53,8 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       </select>
       {error && <p className="text-error text-sm mt-2">{error}</p>}
     </div>
-  )
+    );
+  }
 );
 Select.displayName = "Select";
 

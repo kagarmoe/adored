@@ -138,6 +138,13 @@ describe("ItemDetailPage redesign (carousel + info card)", () => {
     expect(screen.getAllByRole("button", { name: /delete this photo/i }).length).toBeGreaterThan(0);
   });
 
+  it("offers the 'Placed with' bin select preloaded with the item's category (purses-xxo7)", async () => {
+    itemRepo.findByCollectionAndNumber.mockResolvedValue({ ...ITEM, category: "Maybe" });
+    await renderPage();
+    const select = screen.getByLabelText(/placed with/i) as HTMLSelectElement;
+    expect(select.value).toBe("Maybe");
+  });
+
   it("offers 'Remove from collection' to a member (purses-v7gv; true side only — with no viewer tier, any renderer is a member)", async () => {
     await renderPage();
     expect(screen.getByRole("button", { name: /remove from collection/i })).toBeInTheDocument();

@@ -24,7 +24,8 @@ const UpdateItemSchema = z.object({
   style: z.string().optional(),
   color: z.string().optional(),
   material: z.string().optional(),
-  category: z.string().optional(),
+  // nullable: clearing a bin ("Not placed yet") writes category: null (purses-xxo7)
+  category: z.string().nullable().optional(),
   status: z.string().optional(),
   notes: z.string().optional(),
   story: z.string().max(2000, "Story is too long").optional(),

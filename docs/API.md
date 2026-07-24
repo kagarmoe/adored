@@ -243,7 +243,7 @@ Authenticated. **Body** → `createCollection`; also creates the caller's **owne
 `getSession` + `requireApiCollectionAccess` (member-or-owner). `GET` → `Item[]`. `POST` body → `201 Item`. `400` invalid JSON; `401`/`403`/`404`.
 
 ### `PATCH /api/collections/[id]/items/[itemId]`
-`getSession` + `requireApiCapability("items:write")` (**curator** — any member; the old `canEditMetadata` flag is inert), resolved **before** **belongs-to-parent** (`item.collectionId !== id` → `404`) — authz precedes existence (`purses-ct0`). **Body:** `{ name?, brand?, style?, color?, material?, category?, notes? }` (all nullable). Returns updated `Item`. `400` invalid input; `401`/`403`/`404`.
+`getSession` + `requireApiCapability("items:write")` (**curator** — any member; the old `canEditMetadata` flag is inert), resolved **before** **belongs-to-parent** (`item.collectionId !== id` → `404`) — authz precedes existence (`purses-ct0`). **Body:** `{ name?, brand?, style?, color?, material?, category?, notes? }` (all optional; only `category` also accepts `null` — clearing a bin from the details-page "Placed with" select writes `category: null`, purses-xxo7). Returns updated `Item`. `400` invalid input; `401`/`403`/`404`.
 
 ## item photos
 
