@@ -257,35 +257,34 @@ important ones execute in CI, and that at least one test crosses the real layers
 
 ## Design Context
 
-Tone is governed by [`TONE.md`](TONE.md) — **first-order**: the app conforms to it, and an exception
-is an amendment to that file, never a local override. Strategic design context lives in
-[`PRODUCT.md`](PRODUCT.md) (register, users, purpose, brand personality, anti-references, design
-principles, accessibility). Read both before any UI work.
+Read [`PRODUCT.md`](PRODUCT.md) and [`TONE.md`](TONE.md) before any UI work (both v2, 2026-10-01;
+the stricter v1 contracts are archived under `docs/archive/`). They are guides, not contracts: good
+design judgement fills the gaps.
 
-**The one thing to internalize:** the purpose is **realizing what you love most** (affirmation), not
-deciding what to discard — prefer "which would you reach for first?" over "keep or let go?"; letting go follows
-naturally and is never the headline. Each object is a story, not a data row. Design is gentle,
-judgement-free, and low-cognitive-load by duty of care, not taste. One decision at a time; never the
-whole pile. No gamification (no confetti/streaks/scores), no shaming metrics ("too many"), no
-catalog/inventory/shopping-site framing. Tablet-first, tap-first, **no swiping** (drag is OK where it
-helps). Target WCAG 2.1 AA.
+**The one thing to internalize:** Adored is **pre-marketplace**. It should feel like the resale
+apps people already know (eBay, Poshmark, Vinted, Vestiaire) with the sales pressure removed and
+some coziness added. Borrow familiar layouts: item cards in a grid, an item page with a photo
+carousel beside editable details, filters, overflow menus. The purpose is **realizing what you love
+most** (affirmation), not culling; prefer "which would you reach for first?" over "keep or toss?".
+Gentle, reversible, photo-first. One decision in focus at a time. Still off the table: gamification
+(confetti/streaks/scores), shaming metrics ("too many"), and shopping language (buy/cart/offer/price).
+Tablet-first, phone-ready; taps primary, swipe fine where native (carousels). WCAG 2.1 AA.
 
 The `/impeccable` skill (and its sub-commands) reads `PRODUCT.md` automatically. The visual system is
-defined in [`DESIGN.md`](DESIGN.md) — a deliberate palette, type,
-elevation, and component system — and is accountable to [`TONE.md`](TONE.md).
+defined in [`DESIGN.md`](DESIGN.md) — palette, type, elevation, components — and follows `TONE.md`.
 
 ## Wireframes (reference, not law)
 
 The wireframes in [`docs/design-system/`](docs/design-system/) (`Adored Tablet Wireframes.dc.html`,
 `Adored Phone Wireframes.dc.html`) are a **starting reference, not a spec to match exactly.**
 Deviate whenever a better flow serves the user — the governing authorities are
-[`PRODUCT.md`](PRODUCT.md) (purpose) and [`TONE.md`](TONE.md) (first-order tone contract),
+[`PRODUCT.md`](PRODUCT.md) (purpose) and [`TONE.md`](TONE.md) (feel),
 **not** the wireframes. When a wireframe and a better flow conflict, choose the better flow.
 
 **Durable interaction principles (these hold regardless of any wireframe):**
 
-- **Tablet-first, tap-first** — taps are the primary affordance; there is **no swiping**. Dragging is
-  permitted where it genuinely helps (reordering, moving items between buckets). Touch targets ≥44px (h-11).
+- **Tablet-first, tap-first** — taps are the primary affordance; swipe where it is native (photo
+  carousels, dismiss); drag where it helps (reordering, moving items between buckets). Touch targets ≥44px (h-11).
 - **Navigation** — top-left back arrow + breadcrumb; top-right user area.
 
 The wireframes per-screen layouts (collections grid, item grid, card-based sorting, bucketed results)
