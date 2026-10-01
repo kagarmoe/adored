@@ -33,3 +33,14 @@ describe("ItemController.updateItem", () => {
     expect(update).not.toHaveBeenCalled();
   });
 });
+
+describe("ItemController.createItem", () => {
+  it("caps text the way an update does (name/text 200, notes 5000)", async () => {
+    const create = vi.fn();
+    const ctl = new ItemController({ create } as unknown as ItemRepository);
+    await expect(ctl.createItem("c1", { name: "x".repeat(201) })).rejects.toBeInstanceOf(ZodError);
+    await expect(ctl.createItem("c1", { name: "Tote", brand: "x".repeat(201) })).rejects.toBeInstanceOf(ZodError);
+    await expect(ctl.createItem("c1", { name: "Tote", notes: "x".repeat(5001) })).rejects.toBeInstanceOf(ZodError);
+    expect(create).not.toHaveBeenCalled();
+  });
+});

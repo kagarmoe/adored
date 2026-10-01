@@ -6,15 +6,16 @@ import {
   type FindByCollectionOptions,
 } from "@/server/repositories/implementations/ItemRepository";
 
+// Same length caps as UpdateItemSchema, so create can't store what an edit would refuse.
 const CreateItemSchema = z.object({
-  name: z.string().min(1),
-  brand: z.string().optional(),
-  style: z.string().optional(),
-  color: z.string().optional(),
-  material: z.string().optional(),
-  category: z.string().optional(),
+  name: z.string().min(1).max(200),
+  brand: z.string().max(200).optional(),
+  style: z.string().max(200).optional(),
+  color: z.string().max(200).optional(),
+  material: z.string().max(200).optional(),
+  category: z.string().max(200).optional(),
   status: z.string().optional(),
-  notes: z.string().optional(),
+  notes: z.string().max(5000).optional(),
   story: z.string().max(2000, "Story is too long").optional(),
 });
 
