@@ -13,11 +13,19 @@ jobs:
           modelIdOrName: adored-alias
           methodName: lookup
       - name: deployment
+        dependsOn:
+          - step: alias
+            condition:
+              type: succeeded
         task:
           type: model_method
           modelIdOrName: adored-deployments
           methodName: get
       - name: deployment-ready
+        dependsOn:
+          - step: deployment
+            condition:
+              type: succeeded
         task:
           type: assert
           expr: >-
@@ -27,11 +35,19 @@ jobs:
           message: >-
             Alias points at a deployment that is not READY/production/main (state ${{ data.latest("adored-deployments", "purseinator-app").attributes.readyState }})
       - name: crawl
+        dependsOn:
+          - step: deployment-ready
+            condition:
+              type: succeeded
         task:
           type: model_method
           modelIdOrName: adored-links
           methodName: crawl
       - name: no-broken-links
+        dependsOn:
+          - step: crawl
+            condition:
+              type: succeeded
         task:
           type: assert
           expr: >-
@@ -46,6 +62,10 @@ jobs:
           modelIdOrName: adored-tests
           methodName: coverage
       - name: coverage-ok
+        dependsOn:
+          - step: coverage
+            condition:
+              type: succeeded
         task:
           type: assert
           expr: >-
@@ -54,11 +74,19 @@ jobs:
           message: >-
             Unit tests failed or line coverage ${{ data.latest("adored-tests", "coverage-total").attributes.lines.pct }}% is under the floor
       - name: e2e
+        dependsOn:
+          - step: coverage-ok
+            condition:
+              type: succeeded
         task:
           type: model_method
           modelIdOrName: adored-tests
           methodName: e2e
       - name: e2e-green
+        dependsOn:
+          - step: e2e
+            condition:
+              type: succeeded
         task:
           type: assert
           expr: >-
