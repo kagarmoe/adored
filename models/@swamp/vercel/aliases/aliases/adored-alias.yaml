@@ -1,0 +1,12 @@
+type: '@swamp/vercel/aliases/aliases'
+typeVersion: 2026.09.16.1
+id: 1815e4d9-ff7d-4747-bb3f-72d43c4488c7
+name: adored-alias
+version: 1
+tags: {}
+globalArguments:
+  token: ${{ vault.get("secrets", "VERCEL_TOKEN") }}
+  teamId: team_SMACO8iOr6wPIGx5as56P468
+  name: adored-alias
+  alias: adored.kimberlygarmoe.com
+methods: {}

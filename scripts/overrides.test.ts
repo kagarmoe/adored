@@ -17,7 +17,7 @@ describe("npm overrides still earn their keep", () => {
     const copies = Object.entries(lock.packages)
       .filter(([path]) => path.endsWith("node_modules/postcss"))
       .map(([, meta]) => (meta as { version: string }).version);
-    expect(copies).toEqual(["8.5.18"]);
+    expect(copies).toEqual(["8.5.28"]);
   });
 
   it("esbuild: the @esbuild-kit override is still needed AND still applied", () => {

@@ -117,6 +117,13 @@ A full-featured web application for managing collections and sorting items throu
 - `npm run seed:load` — Load demo/seed data into the database
 - `npm run bench:recompute` — Benchmark the preference-recompute path
 
+**Health check (swamp)**
+- `swamp workflow run adored-health` — On-demand prod health: confirms `adored.kimberlygarmoe.com`
+  serves a READY production deployment of `main`, crawls the public surface for broken links,
+  then runs unit coverage and the Playwright suite locally (needs Docker). Definitions live in
+  `models/`, `workflows/`, and `extensions/models/`; the Vercel token comes from the local
+  `secrets` vault (`swamp vault put secrets VERCEL_TOKEN`).
+
 ### Testing Features Locally
 
 **Sign In:**

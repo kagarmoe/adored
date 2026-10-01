@@ -1,0 +1,32 @@
+{
+  "@swamp/vercel/deployments": {
+    "version": "2026.09.25.1",
+    "pulledAt": "2026-10-01T05:25:27.994Z",
+    "files": [
+      ".swamp/bundles/624a362c/deployments.js",
+      ".swamp/pulled-extensions/@swamp/vercel/deployments/files/LICENSE.txt",
+      ".swamp/pulled-extensions/@swamp/vercel/deployments/files/README.md",
+      ".swamp/pulled-extensions/@swamp/vercel/deployments/manifest.yaml",
+      ".swamp/pulled-extensions/@swamp/vercel/deployments/models/_lib/vercel.ts",
+      ".swamp/pulled-extensions/@swamp/vercel/deployments/models/deployments.ts"
+    ],
+    "checksum": "1fad498a659f0d9969793724cb2d99682d464e8baadc505990bd9f6f45cdea24",
+    "filesChecksum": "e2ebe07f4c1151e2c3e143c40aff37d877bfe3a7e03b3ea16df039ea510d1be4",
+    "serverUrl": "https://swamp-club.com"
+  },
+  "@swamp/vercel/aliases": {
+    "version": "2026.09.16.1",
+    "pulledAt": "2026-10-01T05:32:09.015Z",
+    "files": [
+      ".swamp/bundles/c27836e8/aliases.js",
+      ".swamp/pulled-extensions/@swamp/vercel/aliases/files/LICENSE.txt",
+      ".swamp/pulled-extensions/@swamp/vercel/aliases/files/README.md",
+      ".swamp/pulled-extensions/@swamp/vercel/aliases/manifest.yaml",
+      ".swamp/pulled-extensions/@swamp/vercel/aliases/models/_lib/vercel.ts",
+      ".swamp/pulled-extensions/@swamp/vercel/aliases/models/aliases.ts"
+    ],
+    "checksum": "0939f9eff540d2a51aae4c8eebdc0a85376c566e4f20dfafc0f8d35fb430a255",
+    "filesChecksum": "b4f78fd1fe8c02c46529365e59cee3f71fae8184d52d0cf1164f34dbd8471322",
+    "serverUrl": "https://swamp-club.com"
+  }
+}
