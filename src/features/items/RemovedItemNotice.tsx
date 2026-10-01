@@ -9,12 +9,12 @@ interface RemovedItemNoticeProps {
   itemId: string;
 }
 
-// The undo half of the remove flow (spec 2026-07-23 rev 2): the details page's
-// ItemDeleteControl lands on the items list with ?removed=<id>; this notice
+// The undo half of the archive flow: the item panel's Archive (ItemOverflowMenu)
+// lands on the items list with ?removed=<id>; this notice
 // offers the existing restore endpoint as an immediate way back. Focus moves to
 // the notice on mount — an aria-live region server-rendered into a freshly
 // navigated page is NOT announced (live regions announce mutations, not initial
-// content), so the focus move is what tells an AT user the removal happened and
+// content), so the focus move is what tells an AT user the archive happened and
 // where the way back is. Dismissing strips only the `removed` param, so any
 // co-present filters (?status=…) survive. A stale/foreign id just 404s into the
 // gentle retry line.
@@ -49,12 +49,12 @@ export function RemovedItemNotice({ itemId }: RemovedItemNoticeProps) {
       className="flex flex-col gap-3 rounded-card bg-surface p-4 ring-1 ring-hairline outline-hidden sm:flex-row sm:items-center sm:justify-between"
     >
       <span className="text-sm text-ink">
-        Removed. It can come back if you change your mind.
+        Archived. It can come back if you change your mind.
       </span>
       <div className="flex items-center gap-2">
         <AsyncActionButton
           action={restore}
-          label="Bring it back"
+          label="Undo"
           busyLabel="Bringing it back…"
         />
         <Button variant="ghost" onClick={() => router.replace(hrefWithoutRemoved())}>

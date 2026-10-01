@@ -23,13 +23,13 @@ describe("RemovedItemNotice", () => {
   it("receives focus on mount — a server-rendered live region is not announced, the focus move is the AT signal", () => {
     render(<RemovedItemNotice itemId="i1" />);
     expect(screen.getByRole("status")).toHaveFocus();
-    expect(screen.getByRole("status")).toHaveTextContent(/removed/i);
+    expect(screen.getByRole("status")).toHaveTextContent(/archived/i);
   });
 
-  it("'Bring it back' restores the item and strips only the removed param", async () => {
+  it("'Undo' restores the item and strips only the removed param", async () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
     render(<RemovedItemNotice itemId="i1" />);
-    fireEvent.click(screen.getByRole("button", { name: /bring it back/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^undo$/i }));
     await waitFor(() =>
       expect(global.fetch).toHaveBeenCalledWith("/api/items/i1/restore", { method: "POST" }),
     );
@@ -51,7 +51,7 @@ describe("RemovedItemNotice", () => {
   it("a failed restore shows the shared gentle retry line and keeps the notice", async () => {
     (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: false });
     render(<RemovedItemNotice itemId="i1" />);
-    fireEvent.click(screen.getByRole("button", { name: /bring it back/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^undo$/i }));
     await waitFor(() => expect(screen.getByText(/didn.t go through/i)).toBeInTheDocument());
     expect(replace).not.toHaveBeenCalled();
   });
