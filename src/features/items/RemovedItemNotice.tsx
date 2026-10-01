@@ -17,7 +17,7 @@ interface RemovedItemNoticeProps {
 // content), so the focus move is what tells an AT user the archive happened and
 // where the way back is. Dismissing strips only the `removed` param, so any
 // co-present filters (?status=…) survive. A stale/foreign id just 404s into the
-// gentle retry line.
+// gentle retry line. The copy points at the Archived pill, one tap away on this list.
 export function RemovedItemNotice({ itemId }: RemovedItemNoticeProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -49,7 +49,7 @@ export function RemovedItemNotice({ itemId }: RemovedItemNoticeProps) {
       className="flex flex-col gap-3 rounded-card bg-surface p-4 ring-1 ring-hairline outline-hidden sm:flex-row sm:items-center sm:justify-between"
     >
       <span className="text-sm text-ink">
-        Archived. It can come back if you change your mind.
+        Archived. You&rsquo;ll find it under Archived.
       </span>
       <div className="flex items-center gap-2">
         <AsyncActionButton

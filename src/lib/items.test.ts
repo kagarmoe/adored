@@ -1,35 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { filterItems, hasName, itemDisplayName, itemInitial, itemSubtitle, itemsEmptyState } from "./items";
 
-const mk = (over: Partial<{ name: string | null; status: string | null }>) =>
+const mk = (over: Partial<{ name: string | null; status: string | null; brand: string | null; color: string | null }>) =>
   ({ id: "i", collectionId: "c", number: 1, name: null, status: "active", ...over }) as any;
 
 describe("filterItems", () => {
-  const items = [
-    mk({ name: "Bag", status: "active" }),
-    mk({ name: null, status: "active" }),
-    mk({ name: null, status: "archived" }),
-  ];
-  it("returns all when status=all and unnamed=false", () => {
-    expect(filterItems(items, { status: "all", unnamed: false })).toHaveLength(3);
+  const items = [mk({ name: "Weekend tote", brand: "Coach" }), mk({ name: null, color: "Tan" }), mk({ name: "Clutch (red)" })];
+  it("matches q case-insensitively across name, brand and the other text fields", () => {
+    expect(filterItems(items, { unnamed: false, q: "coach" }).map((i) => i.name)).toEqual(["Weekend tote"]);
+    expect(filterItems(items, { unnamed: false, q: "TAN" })).toHaveLength(1);
   });
-  it("filters to nameless when unnamed=true", () => {
-    const r = filterItems(items, { status: "all", unnamed: true });
-    expect(r).toHaveLength(2);
-    expect(r.every((i) => !i.name)).toBe(true);
+  it("treats q as plain text, never a pattern", () => {
+    expect(filterItems(items, { unnamed: false, q: "(red" }).map((i) => i.name)).toEqual(["Clutch (red)"]);
+    expect(filterItems(items, { unnamed: false, q: ".*" })).toEqual([]);
   });
-  it("applies status and unnamed together", () => {
-    const r = filterItems(items, { status: "active", unnamed: true });
-    expect(r).toHaveLength(1);
-    expect(r[0]).toMatchObject({ name: null, status: "active" });
-  });
-  it("treats missing status as active", () => {
-    const r = filterItems([mk({ name: "x", status: null })], { status: "active", unnamed: false });
-    expect(r).toHaveLength(1);
-  });
-  it("treats a whitespace-only name as nameless (included when unnamed=true)", () => {
-    const r = filterItems([mk({ name: "   " })], { status: "all", unnamed: true });
-    expect(r).toHaveLength(1);
+  it("Waiting for a name keeps only nameless items (whitespace counts as nameless)", () => {
+    expect(filterItems([...items, mk({ name: "  " })], { unnamed: true, q: "" })).toHaveLength(2);
   });
 });
 
@@ -45,24 +31,10 @@ describe("hasName", () => {
 });
 
 describe("itemsEmptyState", () => {
-  it("no items: prompts to add (existing copy)", () => {
-    expect(itemsEmptyState({ hasAnyItems: false, unnamed: false, status: "all" })).toEqual({
-      heading: "No items yet",
-      message: "Add items to start organizing your collection",
-    });
-  });
-  it("unnamed filter empty: gentle, no-shame copy", () => {
-    const e = itemsEmptyState({ hasAnyItems: true, unnamed: true, status: "all" });
-    expect(e.heading).toBe("Everything has a name");
-    expect(e.message).toBe("Nothing is waiting — name things whenever you like.");
-    expect(`${e.heading} ${e.message}`.toLowerCase()).not.toMatch(
-      /incomplete|missing|need|unfinished|finish/,
-    );
-  });
-  it("status filter empty: names the status", () => {
-    expect(itemsEmptyState({ hasAnyItems: true, unnamed: false, status: "archived" }).heading).toBe(
-      "No archived items",
-    );
+  it("speaks gently per view, never counting what's missing", () => {
+    expect(itemsEmptyState({ hasAnyItems: false, view: "all", q: "" }).heading).toBe("No items yet");
+    expect(itemsEmptyState({ hasAnyItems: true, view: "archived", q: "" }).heading).toBe("Nothing archived");
+    expect(itemsEmptyState({ hasAnyItems: true, view: "all", q: "silk" }).heading).toBe("Nothing matches “silk”");
   });
 });
 

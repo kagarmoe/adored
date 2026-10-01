@@ -69,9 +69,6 @@ export function ItemCard({
           ) : (
             <p className="text-xs text-ink-soft truncate">Add a name</p>
           )}
-          {item.status && item.status !== "active" && (
-            <Badge variant={item.status === "deleted" ? "deleted" : "archived"}>{item.status}</Badge>
-          )}
           {/* Epic S1 usage chip: a quiet, count-free note. Meaning is carried by
               the words (not color), and the neutral "active" variant is AA in
               both themes. No chip when usage is undecided (undefined). */}
