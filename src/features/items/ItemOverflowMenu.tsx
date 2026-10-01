@@ -103,16 +103,18 @@ export function ItemOverflowMenu({ itemId, itemsHref, isOwner }: ItemOverflowMen
   }
 
   return (
-    <div ref={wrapperRef} className="relative shrink-0">
-      <OverflowMenu label="More actions" items={items} />
-      <div className="absolute right-0 z-30 mt-2 w-72 space-y-2">
+    // `contents`: the trigger and the status line are both items of the page's
+    // wrapping header row, so the status line can take a full-width row in flow.
+    <div ref={wrapperRef} className="contents">
+      <div className="relative shrink-0">
+        <OverflowMenu label="More actions" items={items} />
         {step && (
           <div
             role="group"
             aria-label="Delete this item"
             aria-describedby={messageId}
             onKeyDown={(e) => e.key === "Escape" && close()}
-            className="space-y-3 rounded-card bg-surface-raised p-4 shadow-raised ring-1 ring-hairline"
+            className="absolute right-0 z-30 mt-2 w-72 space-y-3 rounded-card bg-surface-raised p-4 shadow-raised ring-1 ring-hairline"
           >
             {step === "confirm" && (
               <p id={messageId} className="text-sm text-ink">
@@ -147,20 +149,20 @@ export function ItemOverflowMenu({ itemId, itemsHref, isOwner }: ItemOverflowMen
             </div>
           </div>
         )}
-        {/* Always mounted so the live region exists before the message arrives; it gets
-            its own surface only while it has something to say, so it never sits bare over
-            the subtitle or carousel. */}
-        <p
-          role="status"
-          className={
-            error
-              ? "rounded-card bg-surface-raised p-3 text-sm text-error-deep shadow-raised ring-1 ring-hairline"
-              : undefined
-          }
-        >
-          {error}
-        </p>
       </div>
+      {/* Always mounted so the live region exists before the message arrives. In flow
+          (a full-width row under the title), never floating, so it can't cover the
+          photo controls or the form; it gets a surface only while it has something to say. */}
+      <p
+        role="status"
+        className={`basis-full text-sm ${
+          error
+            ? "mt-3 rounded-card bg-surface-raised p-3 text-error-deep ring-1 ring-hairline"
+            : ""
+        }`}
+      >
+        {error}
+      </p>
     </div>
   );
 }

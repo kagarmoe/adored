@@ -70,8 +70,8 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   return (
     <AppLayout breadcrumbs={trail.item(collection, item)}>
       <div className="space-y-6">
-        <header className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
+        <header className="flex flex-wrap items-start justify-between gap-x-3">
+          <div className="min-w-0 flex-1">
             <h1 className="text-3xl text-ink sm:text-4xl">{itemDisplayName(item)}</h1>
             <p className="mt-1 text-sm text-ink-soft">{itemSubtitle(item, new Date())}</p>
           </div>

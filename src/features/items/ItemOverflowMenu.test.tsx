@@ -43,8 +43,10 @@ describe("ItemOverflowMenu", () => {
     await openMenu();
     await userEvent.click(screen.getByRole("menuitem", { name: "Archive" }));
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/didn.t go through/i));
-    // It floats over the subtitle/carousel, so it must carry its own surface to stay legible.
-    expect(screen.getByRole("status")).toHaveClass("bg-surface-raised");
+    // In flow under the header (never in the floating panel's container), on its own surface.
+    const status = screen.getByRole("status");
+    expect(status).toHaveClass("bg-surface-raised");
+    expect(status.closest(".absolute")).toBeNull();
     expect(push).not.toHaveBeenCalled();
   });
 
