@@ -42,7 +42,9 @@ describe("ItemOverflowMenu", () => {
     render(<ItemOverflowMenu {...props} isOwner={false} />);
     await openMenu();
     await userEvent.click(screen.getByRole("menuitem", { name: "Archive" }));
-    await waitFor(() => expect(screen.getByText(/didn.t go through/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/didn.t go through/i));
+    // It floats over the subtitle/carousel, so it must carry its own surface to stay legible.
+    expect(screen.getByRole("status")).toHaveClass("bg-surface-raised");
     expect(push).not.toHaveBeenCalled();
   });
 
@@ -66,6 +68,9 @@ describe("ItemOverflowMenu", () => {
     expect(screen.queryByRole("button", { name: "Delete for good" })).not.toBeInTheDocument();
     expect(push).not.toHaveBeenCalled();
 
+    expect(screen.getByRole("group", { name: "Delete this item" })).toHaveAccessibleDescription(
+      expect.stringContaining(IN_RANKING_LINE),
+    );
     await userEvent.click(screen.getByRole("button", { name: "Remove from saved rankings" }));
     expect(global.fetch).toHaveBeenNthCalledWith(2, "/api/items/i1/remove-from-sorts", {
       method: "POST",
@@ -73,6 +78,15 @@ describe("ItemOverflowMenu", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Delete for good" }));
     expect(fetchMock().mock.calls[2][0]).toBe("/api/items/i1/purge");
     await waitFor(() => expect(push).toHaveBeenCalledWith("/collections/bags/items"));
+  });
+
+  it("Keep closes the confirm and hands focus back to the ··· trigger", async () => {
+    render(<ItemOverflowMenu {...props} isOwner />);
+    await openMenu();
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    await userEvent.click(screen.getByRole("button", { name: "Keep" }));
+    expect(screen.queryByRole("group", { name: "Delete this item" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "More actions" })).toHaveFocus();
   });
 
   it("a finished ranking still holding it means Delete is not re-offered", async () => {
