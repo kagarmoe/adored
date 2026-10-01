@@ -48,7 +48,6 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   ]);
   const usage = deriveUsage(curatorEvents, new Set([item.id])).get(item.id);
   const openSession = curatorSessions.find((s) => s.status === "active" || s.status === "paused");
-  const collectionHref = `/collections/${collection.slug ?? collection.id}`;
   // findByItem has no ORDER BY: cover first, then upload order (spec §6).
   const orderedPhotos = [...photos]
     .sort(
@@ -64,6 +63,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
       rotation: p.rotation,
       updatedAt: p.updatedAt,
       alt: itemDisplayName(item),
+      isHero: p.isHero,
     }));
 
   return (
@@ -77,9 +77,8 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
           <ItemPhotoCarousel
             photos={orderedPhotos}
             collectionId={collection.id}
+            itemId={item.id}
             itemName={itemDisplayName(item)}
-            addPhotosHref={`${collectionHref}/items/${item.number}/photos`}
-            canDelete
           />
           <Card variant="card" padding="lg" className="space-y-6">
             <InYourLifeChip

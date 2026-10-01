@@ -5,6 +5,9 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import userEvent from "@testing-library/user-event";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+vi.mock("@/features/pool/PoolUpload", () => ({
+  PoolUpload: ({ attachToItemId }: { attachToItemId?: string }) => <p>uploader for {attachToItemId}</p>,
+}));
 
 import { ItemPhotoCarousel } from "./ItemPhotoCarousel";
 
@@ -15,12 +18,14 @@ const mk = (n: number) =>
     collectionId: "c1",
     rotation: 0,
     updatedAt: new Date(1_700_000_000_000 + i).toISOString(),
+    isHero: i === 0,
   }));
 
-const props = { collectionId: "c1", itemName: "Bag", addPhotosHref: "/add" };
+const props = { collectionId: "c1", itemId: "i1", itemName: "Bag" };
 
+// The stage image is the only one with a non-empty alt (thumbnails are decorative).
 function currentImgSrc() {
-  return (screen.getByRole("img") as HTMLImageElement).getAttribute("src") ?? "";
+  return within(screen.getByTestId("carousel-stage")).getByRole("img").getAttribute("src") ?? "";
 }
 
 function expectCurrentPhoto(photoId: string) {
@@ -28,15 +33,9 @@ function expectCurrentPhoto(photoId: string) {
 }
 
 describe("ItemPhotoCarousel", () => {
-  it("shows an affirming add-photos CTA and no nav when there are no photos", () => {
-    render(<ItemPhotoCarousel photos={[]} {...props} />);
-    expect(screen.getByRole("link", { name: /add photos/i })).toHaveAttribute("href", "/add");
-    expect(screen.queryByRole("button", { name: /next photo/i })).not.toBeInTheDocument();
-  });
-
   it("shows a single photo with no nav chrome", () => {
     render(<ItemPhotoCarousel photos={mk(1)} {...props} />);
-    expect(screen.getByRole("img")).toBeInTheDocument();
+    expectCurrentPhoto("p1");
     expect(screen.queryByRole("button", { name: /next photo/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /go to photo/i })).not.toBeInTheDocument();
   });
@@ -101,43 +100,102 @@ describe("ItemPhotoCarousel", () => {
     expect(screen.getByRole("button", { name: /view photo/i })).toBeInTheDocument();
   });
 
-  it("hides the delete control when the viewer can't delete (no 403-only button)", () => {
-    render(<ItemPhotoCarousel photos={mk(2)} {...props} canDelete={false} />);
-    expect(screen.queryByRole("button", { name: /delete this photo/i })).not.toBeInTheDocument();
-  });
-
-  it("drops the current photo from the carousel after a confirmed delete", async () => {
-    global.fetch = vi.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
-    render(<ItemPhotoCarousel photos={mk(3)} {...props} canDelete />);
-    expectCurrentPhoto("p1");
-    fireEvent.click(screen.getByRole("button", { name: /delete this photo/i }));
-    fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
-    await waitFor(() =>
-      expect(screen.getAllByRole("button", { name: /go to photo/i })).toHaveLength(2),
-    );
-    expectCurrentPhoto("p2"); // p1 gone → p2 slides into view
-  });
-
-  it("deletes a MIDDLE photo — the neighbour after it slides into view", async () => {
-    global.fetch = vi.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
-    render(<ItemPhotoCarousel photos={mk(3)} {...props} canDelete />);
-    fireEvent.click(screen.getByRole("button", { name: /next photo/i })); // → p2 (index 1)
+  it("swipes: a leftward touch moves to the next photo, a rightward one back", () => {
+    render(<ItemPhotoCarousel photos={mk(3)} {...props} />);
+    const stage = screen.getByTestId("carousel-stage");
+    fireEvent.touchStart(stage, { changedTouches: [{ clientX: 200 }] });
+    fireEvent.touchEnd(stage, { changedTouches: [{ clientX: 100 }] });
     expectCurrentPhoto("p2");
-    fireEvent.click(screen.getByRole("button", { name: /delete this photo/i }));
-    fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
-    await waitFor(() =>
-      expect(screen.getAllByRole("button", { name: /go to photo/i })).toHaveLength(2),
-    );
-    expectCurrentPhoto("p3"); // p2 gone → p3 takes index 1
+    fireEvent.touchStart(stage, { changedTouches: [{ clientX: 100 }] });
+    fireEvent.touchEnd(stage, { changedTouches: [{ clientX: 200 }] });
+    expectCurrentPhoto("p1");
   });
 
-  it("returns to the add-photos CTA when the last photo is deleted", async () => {
+  it("a short touch (a tap) does not flip", () => {
+    render(<ItemPhotoCarousel photos={mk(3)} {...props} />);
+    const stage = screen.getByTestId("carousel-stage");
+    fireEvent.touchStart(stage, { changedTouches: [{ clientX: 200 }] });
+    fireEvent.touchEnd(stage, { changedTouches: [{ clientX: 180 }] });
+    expectCurrentPhoto("p1");
+  });
+
+  it("touches inside the open zoom viewer don't flip the photo behind it", async () => {
+    render(<ItemPhotoCarousel photos={mk(3)} {...props} />);
+    await userEvent.click(screen.getByRole("button", { name: /view photo/i }));
+    const dialog = screen.getByRole("dialog");
+    fireEvent.touchStart(dialog, { changedTouches: [{ clientX: 200 }] });
+    fireEvent.touchEnd(dialog, { changedTouches: [{ clientX: 100 }] });
+    expect(screen.getAllByRole("button", { name: /go to photo/i })[0]).toHaveAttribute("aria-current", "true");
+  });
+
+  it("a thumbnail jumps to its photo", async () => {
+    render(<ItemPhotoCarousel photos={mk(3)} {...props} />);
+    await userEvent.click(screen.getByRole("button", { name: "Show photo 3" }));
+    expectCurrentPhoto("p3");
+  });
+
+  it("a single photo still gets its thumbnail strip with + Add photos", () => {
+    render(<ItemPhotoCarousel photos={mk(1)} {...props} />);
+    expect(screen.getByRole("button", { name: "Show photo 1 (cover)" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add photos" })).toBeInTheDocument();
+  });
+
+  it("Make cover calls set-hero and moves that photo first", async () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
-    render(<ItemPhotoCarousel photos={mk(1)} {...props} canDelete />);
-    fireEvent.click(screen.getByRole("button", { name: /delete this photo/i }));
-    fireEvent.click(screen.getByRole("button", { name: /^delete$/i }));
-    await waitFor(() =>
-      expect(screen.getByRole("link", { name: /add photos/i })).toBeInTheDocument(),
-    );
+    render(<ItemPhotoCarousel photos={mk(3)} {...props} />);
+    expect(screen.queryAllByRole("menuitem", { name: "Make cover" })).toHaveLength(0); // menus closed
+    await userEvent.click(screen.getByRole("button", { name: "More for photo 2" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Make cover" }));
+    expect(global.fetch).toHaveBeenCalledWith("/api/collections/c1/items/i1/photos/p2/set-hero", { method: "POST" });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Show photo 1 (cover)" })).toBeInTheDocument());
+    expectCurrentPhoto("p2");
+  });
+
+  it("the cover's menu offers no Make cover; Delete needs one sober confirm", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
+    render(<ItemPhotoCarousel photos={mk(2)} {...props} />);
+    await userEvent.click(screen.getByRole("button", { name: "More for photo 1" }));
+    expect(screen.queryByRole("menuitem", { name: "Make cover" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(screen.getByText(/can.t be undone/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Delete photo" }));
+    await waitFor(() => expect(screen.getAllByRole("button", { name: /^show photo/i })).toHaveLength(1));
+    expect(global.fetch).toHaveBeenCalledWith("/api/collections/c1/items/i1/photos/p1", { method: "DELETE" });
+  });
+
+  it("deleting a photo before the one in view keeps the same photo in view", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
+    render(<ItemPhotoCarousel photos={mk(4)} {...props} />);
+    await userEvent.click(screen.getByRole("button", { name: "Show photo 3" }));
+    await userEvent.click(screen.getByRole("button", { name: "More for photo 1" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    await userEvent.click(screen.getByRole("button", { name: "Delete photo" }));
+    await waitFor(() => expect(screen.getAllByRole("button", { name: /^show photo/i })).toHaveLength(3));
+    expectCurrentPhoto("p3");
+  });
+
+  it("a failed delete keeps the photo and says so", async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false }) as unknown as typeof fetch;
+    render(<ItemPhotoCarousel photos={mk(2)} {...props} />);
+    await userEvent.click(screen.getByRole("button", { name: "More for photo 2" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    await userEvent.click(screen.getByRole("button", { name: "Delete photo" }));
+    expect(await screen.findByText(/didn.t go through/i)).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /^show photo/i })).toHaveLength(2);
+  });
+
+  it("+ Add photos opens the pool uploader attached to this item, even with no photos", async () => {
+    render(<ItemPhotoCarousel photos={[]} {...props} />);
+    await userEvent.click(screen.getByRole("button", { name: "Add photos" }));
+    expect(screen.getByText("uploader for i1")).toBeInTheDocument();
+  });
+
+  it("new photos from a refresh show up without closing the uploader", async () => {
+    const { rerender } = render(<ItemPhotoCarousel photos={mk(1)} {...props} />);
+    await userEvent.click(screen.getByRole("button", { name: "Add photos" }));
+    rerender(<ItemPhotoCarousel photos={mk(2)} {...props} />);
+    expect(screen.getAllByRole("button", { name: /^show photo/i })).toHaveLength(2);
+    expect(screen.getByText("uploader for i1")).toBeInTheDocument();
   });
 });

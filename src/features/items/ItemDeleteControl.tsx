@@ -13,7 +13,7 @@ interface ItemDeleteControlProps {
 // Remove-this-item control for the details page. Two-step (reveal → confirm) so a
 // stray tap can't drop an item; the DELETE is a soft delete, and success lands on
 // the items list where RemovedItemNotice offers the undo (spec: 2026-07-23 rev 2).
-// Deliberate clone of PhotoDeleteControl's state machine, not a shared hook — a
+// Deliberate clone of the old photo delete control's state machine, not a shared hook — a
 // one-consumer hook is premature; revisit at a fourth copy.
 export function ItemDeleteControl({ itemId, itemsHref }: ItemDeleteControlProps) {
   const router = useRouter();

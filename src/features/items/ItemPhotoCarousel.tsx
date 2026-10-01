@@ -1,63 +1,231 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getPhotoAssetUrl } from "@/lib/photos";
-import { PhotoViewControl, type ViewerPhoto } from "@/components/ui";
-import { PhotoDeleteControl } from "./PhotoDeleteControl";
+import { Button, OverflowMenu, PhotoViewControl, type ViewerPhoto } from "@/components/ui";
+import { PoolUpload } from "@/features/pool/PoolUpload";
 
 const MAX_DOTS = 6;
+const SWIPE_MIN_PX = 40;
+
+export type CarouselPhoto = ViewerPhoto & { isHero: boolean };
 
 interface ItemPhotoCarouselProps {
-  /** Already ordered (hero first) by the page. */
-  photos: ViewerPhoto[];
+  /** Already ordered (cover first, then upload order) by the page. */
+  photos: CarouselPhoto[];
   collectionId: string;
+  itemId: string;
   itemName: string;
-  addPhotosHref: string;
-  /** Whether this viewer may delete photos. Under the role model any curator
-   *  (member-or-owner) may delete (photos:write); when false the per-photo
-   *  delete control is hidden — it would only 403. */
-  canDelete?: boolean;
 }
 
-/** Tap-first flip-through of an item's photos. No swipe: navigate with the
- *  Prev/Next arrows, the dots/counter, or ArrowLeft/Right. Rotate + zoom reuse
- *  the shared ImageViewer via PhotoViewControl on the current photo. */
+// What a server refresh can change about the list; a change re-seeds local state.
+const signature = (ps: CarouselPhoto[]) =>
+  ps.map((p) => `${p.id}:${p.isHero ? 1 : 0}:${String(p.updatedAt)}`).join();
+
+/** Flip-through of an item's photos. Navigate with arrows, dots, thumbnails,
+ *  ArrowLeft/Right, or a native swipe. Rotate + zoom reuse the shared ImageViewer
+ *  via PhotoViewControl on the current photo. Each thumbnail's ··· offers Make cover
+ *  and Delete; "+ Add photos" uploads through the pool straight onto this item. */
 export function ItemPhotoCarousel({
-  photos: initialPhotos,
+  photos: incoming,
   collectionId,
+  itemId,
   itemName,
-  addPhotosHref,
-  canDelete = false,
 }: ItemPhotoCarouselProps) {
   const router = useRouter();
   const [index, setIndex] = useState(0);
-  // Local source of truth so a deleted photo drops out immediately (optimistic,
-  // mirroring PhotoGallery). The render clamps `current` to the new length.
-  const [photos, setPhotos] = useState(initialPhotos);
+  // Local copy so Make cover / Delete respond instantly. A refresh that brings a
+  // different list (new uploads, a server-promoted cover) re-seeds it in place —
+  // never a remount, so an open uploader keeps its per-file status.
+  const [photos, setPhotos] = useState(incoming);
+  const [seen, setSeen] = useState(() => signature(incoming));
+  if (signature(incoming) !== seen) {
+    setSeen(signature(incoming));
+    setPhotos(incoming);
+  }
+  const [adding, setAdding] = useState(false);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const touchX = useRef<number | null>(null);
+  const stripRef = useRef<HTMLUListElement>(null);
+  const keepRef = useRef<HTMLButtonElement>(null);
 
-  // Drop the deleted photo locally for an instant response, then refresh so the
-  // page's other photo-derived bits (e.g. a server-promoted hero) re-sync. A
-  // deleted hero is re-promoted server-side and shows on the refreshed render.
-  const handleDeleted = (id: string) => {
-    setPhotos((prev) => prev.filter((p) => p.id !== id));
-    router.refresh();
+  useEffect(() => {
+    if (confirmingId) keepRef.current?.focus();
+  }, [confirmingId]);
+
+  const current = Math.min(index, Math.max(0, photos.length - 1));
+  const go = (i: number) => setIndex(Math.min(photos.length - 1, Math.max(0, i)));
+
+  // The strip's last button is always "+ Add photos", so there is always a focus home.
+  const focusStrip = (i: number) =>
+    requestAnimationFrame(() => {
+      const buttons = stripRef.current?.querySelectorAll<HTMLElement>("[data-strip-focus]");
+      if (buttons?.length) buttons[Math.min(i, buttons.length - 1)].focus();
+    });
+
+  const inFlight = useRef(false);
+  async function send(request: () => Promise<Response>, done: () => void) {
+    if (inFlight.current) return; // a double tap before `busy` renders is a no-op
+    inFlight.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      const res = await request();
+      if (!res.ok) throw new Error(`photo action failed: ${res.status}`);
+      done();
+      router.refresh();
+    } catch {
+      setError("That didn’t go through — your photo is safe; try again.");
+    } finally {
+      inFlight.current = false;
+      setBusy(false);
+    }
+  }
+
+  const makeCover = (p: CarouselPhoto) =>
+    send(
+      () =>
+        fetch(`/api/collections/${collectionId}/items/${p.itemId}/photos/${p.id}/set-hero`, {
+          method: "POST",
+        }),
+      () => {
+        setPhotos((prev) => {
+          const next = prev.map((q) => ({ ...q, isHero: q.id === p.id }));
+          return [...next.filter((q) => q.id === p.id), ...next.filter((q) => q.id !== p.id)];
+        });
+        setIndex(0);
+      },
+    );
+
+  const confirmDelete = (p: CarouselPhoto) => {
+    const i = photos.findIndex((q) => q.id === p.id);
+    return send(
+      () =>
+        fetch(`/api/collections/${collectionId}/items/${p.itemId}/photos/${p.id}`, {
+          method: "DELETE",
+        }),
+      () => {
+        setPhotos((prev) => prev.filter((q) => q.id !== p.id));
+        // An earlier photo going shouldn't change which one is in view.
+        if (i < current) setIndex(current - 1);
+        setConfirmingId(null);
+        focusStrip(i);
+      },
+    );
   };
+
+  const confirming = photos.find((p) => p.id === confirmingId) ?? null;
+  const confirmingPosition = photos.findIndex((p) => p.id === confirmingId) + 1;
+
+  const strip = (
+    <div className="mt-3">
+      <ul ref={stripRef} aria-label="All photos" className="flex gap-2 overflow-x-auto p-1">
+        {photos.map((p, i) => (
+          <li key={p.id} className="relative shrink-0">
+            <button
+              type="button"
+              data-strip-focus
+              onClick={() => go(i)}
+              aria-current={i === current}
+              aria-label={`Show photo ${i + 1}${p.isHero ? " (cover)" : ""}`}
+              className={`block h-20 w-20 overflow-hidden rounded-control ring-2 focus-visible:outline-hidden focus-visible:ring-primary ${i === current ? "ring-primary" : "ring-transparent"}`}
+            >
+              <Image
+                src={getPhotoAssetUrl(collectionId, p.itemId, p.id, {
+                  w: 160,
+                  v: new Date(p.updatedAt).getTime(),
+                })}
+                alt=""
+                width={80}
+                height={80}
+                unoptimized
+                className="h-full w-full object-cover"
+              />
+            </button>
+            <OverflowMenu
+              label={`More for photo ${i + 1}`}
+              className="absolute right-1 top-1"
+              items={[
+                ...(p.isHero
+                  ? []
+                  : [{ label: "Make cover", onSelect: () => makeCover(p), disabled: busy }]),
+                { label: "Delete", onSelect: () => setConfirmingId(p.id), tone: "danger" as const },
+              ]}
+            />
+          </li>
+        ))}
+        <li className="shrink-0">
+          <button
+            type="button"
+            data-strip-focus
+            aria-expanded={adding}
+            aria-controls={adding ? "add-photos-panel" : undefined}
+            onClick={() => setAdding((a) => !a)}
+            className="flex h-20 w-20 flex-col items-center justify-center rounded-control border-2 border-dashed border-hairline text-sm text-ink transition-colors hover:bg-surface focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <span aria-hidden className="text-xl leading-none">
+              +
+            </span>
+            Add photos
+          </button>
+        </li>
+      </ul>
+
+      {confirming && (
+        <div
+          role="group"
+          aria-label={`Delete photo ${confirmingPosition}`}
+          className="mt-3 space-y-3 rounded-card bg-surface-raised p-4 ring-1 ring-hairline"
+        >
+          <p className="text-sm text-ink">Delete this photo? This can&apos;t be undone.</p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              ref={keepRef}
+              variant="secondary"
+              disabled={busy}
+              onClick={() => {
+                setConfirmingId(null);
+                focusStrip(confirmingPosition - 1);
+              }}
+            >
+              Keep
+            </Button>
+            <Button variant="danger" disabled={busy} onClick={() => confirmDelete(confirming)}>
+              Delete photo
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <p role="alert" className="mt-2 text-sm text-error-deep empty:hidden">
+        {error}
+      </p>
+
+      {adding && (
+        <div id="add-photos-panel" className="mt-3">
+          <PoolUpload collectionId={collectionId} attachToItemId={itemId} />
+        </div>
+      )}
+    </div>
+  );
 
   if (photos.length === 0) {
     return (
-      <div className="flex aspect-4/3 flex-col items-center justify-center gap-3 rounded-card bg-surface p-6 text-center ring-1 ring-hairline">
-        <p className="text-ink-soft">Add photos whenever you like — they help you see what you love.</p>
-        <Link href={addPhotosHref} className="text-primary underline underline-offset-2">
-          Add photos
-        </Link>
+      <div>
+        <div className="flex aspect-4/3 items-center justify-center rounded-card bg-card p-6 text-center ring-1 ring-hairline">
+          <p className="text-ink-soft">
+            Add photos whenever you like — they help you see what you love.
+          </p>
+        </div>
+        {strip}
       </div>
     );
   }
 
-  const current = Math.min(index, photos.length - 1);
   const photo = photos[current];
   const src = getPhotoAssetUrl(collectionId, photo.itemId, photo.id, {
     w: 1280,
@@ -65,83 +233,101 @@ export function ItemPhotoCarousel({
   });
   const atStart = current === 0;
   const atEnd = current === photos.length - 1;
-  const go = (i: number) => setIndex(Math.min(photos.length - 1, Math.max(0, i)));
   const multi = photos.length > 1;
 
   return (
-    <div
-      role="group"
-      aria-roledescription="carousel"
-      aria-label={`Photos of ${itemName}`}
-      tabIndex={0}
-      className="rounded-card outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
-      onKeyDown={(e) => {
-        if (e.key === "ArrowLeft") {
-          e.preventDefault();
-          go(current - 1);
-        } else if (e.key === "ArrowRight") {
-          e.preventDefault();
-          go(current + 1);
-        }
-      }}
-    >
-      <div className="relative aspect-4/3 overflow-hidden rounded-card bg-ground">
-        <Image
-          key={photo.id}
-          src={src}
-          alt={photo.alt ?? itemName}
-          fill
-          unoptimized
-          className="object-contain"
-        />
-        <PhotoViewControl photo={photo} className="absolute right-3 top-3 z-20" />
-        {canDelete && (
-          <PhotoDeleteControl
-            collectionId={collectionId}
-            itemId={photo.itemId}
-            photoId={photo.id}
-            onDeleted={() => handleDeleted(photo.id)}
-            className="absolute left-3 top-3 z-20"
+    <div>
+      <div
+        role="group"
+        aria-roledescription="carousel"
+        aria-label={`Photos of ${itemName}`}
+        tabIndex={0}
+        className="rounded-card outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+        onKeyDown={(e) => {
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            go(current - 1);
+          } else if (e.key === "ArrowRight") {
+            e.preventDefault();
+            go(current + 1);
+          }
+        }}
+      >
+        <div
+          data-testid="carousel-stage"
+          className="relative aspect-4/3 touch-pan-y overflow-hidden rounded-card bg-ground"
+          onTouchStart={(e) => {
+            // React bubbles touches from the portalled zoom viewer through here; only
+            // a touch that is really on the stage counts as a swipe.
+            touchX.current = e.currentTarget.contains(e.target as Node) ? e.changedTouches[0].clientX : null;
+          }}
+          onTouchEnd={(e) => {
+            const start = touchX.current;
+            touchX.current = null;
+            if (start === null) return;
+            const dx = e.changedTouches[0].clientX - start;
+            if (Math.abs(dx) >= SWIPE_MIN_PX) go(dx < 0 ? current + 1 : current - 1);
+          }}
+        >
+          <Image
+            key={photo.id}
+            src={src}
+            alt={photo.alt ?? itemName}
+            fill
+            unoptimized
+            className="object-contain"
           />
-        )}
-        {multi && (
-          <>
-            <NavArrow side="left" label="Previous photo" disabled={atStart} onClick={() => go(current - 1)} />
-            <NavArrow side="right" label="Next photo" disabled={atEnd} onClick={() => go(current + 1)} />
-          </>
-        )}
-      </div>
-
-      {multi && (
-        <div className="mt-3 flex items-center justify-center">
-          {photos.length <= MAX_DOTS ? (
-            <div className="flex items-center gap-1">
-              {photos.map((p, i) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  aria-label={`Go to photo ${i + 1}`}
-                  aria-current={i === current}
-                  onClick={() => go(i)}
-                  className="inline-flex h-11 w-11 items-center justify-center focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
-                >
-                  <span
-                    className={`block h-2 w-2 rounded-full ${i === current ? "bg-primary" : "bg-ink-soft/70"}`}
-                  />
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-ink-soft">
-              {current + 1} of {photos.length}
-            </p>
+          <PhotoViewControl photo={photo} className="absolute right-3 top-3 z-20" />
+          {multi && (
+            <>
+              <NavArrow
+                side="left"
+                label="Previous photo"
+                disabled={atStart}
+                onClick={() => go(current - 1)}
+              />
+              <NavArrow
+                side="right"
+                label="Next photo"
+                disabled={atEnd}
+                onClick={() => go(current + 1)}
+              />
+            </>
           )}
         </div>
-      )}
 
-      <p role="status" aria-live="polite" className="sr-only">
-        Photo {current + 1} of {photos.length}
-      </p>
+        {multi && (
+          <div className="mt-3 flex items-center justify-center">
+            {photos.length <= MAX_DOTS ? (
+              <div className="flex items-center gap-1">
+                {photos.map((p, i) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    aria-label={`Go to photo ${i + 1}`}
+                    aria-current={i === current}
+                    onClick={() => go(i)}
+                    className="inline-flex h-11 w-11 items-center justify-center focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    <span
+                      className={`block h-2 w-2 rounded-full ${i === current ? "bg-primary" : "bg-ink-soft/70"}`}
+                    />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-ink-soft">
+                {current + 1} of {photos.length}
+              </p>
+            )}
+          </div>
+        )}
+
+        <p role="status" aria-live="polite" className="sr-only">
+          Photo {current + 1} of {photos.length}
+        </p>
+      </div>
+      {strip}
     </div>
   );
 }

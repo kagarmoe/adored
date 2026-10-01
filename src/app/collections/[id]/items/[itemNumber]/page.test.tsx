@@ -59,12 +59,13 @@ beforeEach(() => {
 const renderPage = async () => render(await ItemDetailPage({ params: Promise.resolve({ id: "summer-bags", itemNumber: "7" }) }));
 
 describe("ItemDetailPage (photos + item panel)", () => {
-  it("shows the photos (by collection ULID, deletable), the subtitle, and the editable panel", async () => {
+  it("shows the photos (by collection ULID, cover first, each with its ··· menu), the subtitle, and the editable panel", async () => {
     await renderPage();
     const src = screen.getByRole("img").getAttribute("src") ?? "";
     expect(src).toContain("coll_01ABCDEF");
     expect(src).not.toContain("summer-bags");
-    expect(screen.getAllByRole("button", { name: /delete this photo/i }).length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Show photo 1 (cover)" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "More for photo 2" })).toBeInTheDocument();
     expect(screen.getByText(/^#7 · added in /)).toBeInTheDocument();
     expect(screen.getByLabelText("Name")).toHaveValue("Bag");
   });
