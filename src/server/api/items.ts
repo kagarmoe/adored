@@ -18,18 +18,30 @@ const CreateItemSchema = z.object({
   story: z.string().max(2000, "Story is too long").optional(),
 });
 
-const UpdateItemSchema = z.object({
-  name: z.string().min(1).optional(),
-  brand: z.string().optional(),
-  style: z.string().optional(),
-  color: z.string().optional(),
-  material: z.string().optional(),
-  category: z.string().optional(),
+// Strict: an unknown key is a 400, never a silent 200 (spec §3). Text clears persist as
+// null; a blank string is a clear. Measures are numbers on the wire, numeric strings in
+// the DB (drizzle `numeric`). zod 4's z.number() already rejects NaN/Infinity.
+const clearableText = (max: number) =>
+  z.string().trim().max(max).transform((s) => (s === "" ? null : s)).nullable().optional();
+const measure = z.number().nonnegative().max(100_000).nullable().optional();
+const UpdateItemSchema = z.strictObject({
+  name: z.string().trim().min(1).max(200).optional(),
+  brand: clearableText(200),
+  style: clearableText(200),
+  color: clearableText(200),
+  material: clearableText(200),
+  category: clearableText(200),
   status: z.string().optional(),
-  notes: z.string().optional(),
-  story: z.string().max(2000, "Story is too long").optional(),
+  notes: clearableText(5000),
+  story: clearableText(2000),
+  height: measure,
+  width: measure,
+  depth: measure,
+  weight: measure,
+  unit: z.enum(["imperial", "metric"]).optional(),
 });
-
+const toNumeric = (n: number | null | undefined) =>
+  n === undefined ? undefined : n === null ? null : String(n);
 
 export class ItemController {
   constructor(private itemRepo: ItemRepository) {}
@@ -74,8 +86,14 @@ export class ItemController {
   }
 
   async updateItem(itemId: string, data: unknown): Promise<Item> {
-    const parsed = UpdateItemSchema.parse(data);
-    return this.itemRepo.update(itemId, parsed);
+    const { height, width, depth, weight, ...rest } = UpdateItemSchema.parse(data);
+    return this.itemRepo.update(itemId, {
+      ...rest,
+      height: toNumeric(height),
+      width: toNumeric(width),
+      depth: toNumeric(depth),
+      weight: toNumeric(weight),
+    });
   }
 
   async deleteItem(itemId: string): Promise<Item> {

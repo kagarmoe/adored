@@ -45,6 +45,7 @@ import {
   PATCH as patchItem,
   DELETE as deleteItem,
 } from "@/app/api/items/[id]/route";
+import { PATCH as patchCollectionItem } from "@/app/api/collections/[id]/items/[itemId]/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -327,6 +328,23 @@ describeDb("item routes (route -> ItemController -> repo -> DB)", () => {
       expect(res.status).toBe(400);
       // The name is unchanged — validation fired before any write.
       expect((await new ItemRepository(db).findById(item.id))!.name).toBe("Original");
+    });
+  });
+
+  describe("PATCH /api/collections/[id]/items/[itemId] (item panel save)", () => {
+    it("persists size, weight, unit and a cleared brand through the real route and DB", async () => {
+      const { db } = getTestDb();
+      const collectionId = await seedBareCollection(ownerId);
+      const item = await new ItemRepository(db).create({ collectionId, name: "Tote", brand: "Coach" });
+      expect((await new ItemRepository(db).findById(item.id))!.brand).toBe("Coach"); // present before
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const res = await patchCollectionItem(
+        jsonReq("PATCH", { height: 30, weight: 1.2, unit: "metric", brand: null }) as any,
+        { params: Promise.resolve({ id: collectionId, itemId: item.id }) } as any,
+      );
+      expect(res.status).toBe(200);
+      const after = await new ItemRepository(db).findById(item.id);
+      expect(after).toMatchObject({ height: "30", weight: "1.2", unit: "metric", brand: null, name: "Tote" });
     });
   });
 

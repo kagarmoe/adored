@@ -243,7 +243,7 @@ Authenticated. **Body** → `createCollection`; also creates the caller's **owne
 `getSession` + `requireApiCollectionAccess` (member-or-owner). `GET` → `Item[]`. `POST` body → `201 Item`. `400` invalid JSON; `401`/`403`/`404`.
 
 ### `PATCH /api/collections/[id]/items/[itemId]`
-`getSession` + `requireApiCapability("items:write")` (**curator** — any member; the old `canEditMetadata` flag is inert), resolved **before** **belongs-to-parent** (`item.collectionId !== id` → `404`) — authz precedes existence (`purses-ct0`). **Body:** `{ name?, brand?, style?, color?, material?, category?, notes? }` (all nullable). Returns updated `Item`. `400` invalid input; `401`/`403`/`404`.
+`getSession` + `requireApiCapability("items:write")` (**curator** — any member; the old `canEditMetadata` flag is inert), resolved **before** **belongs-to-parent** (`item.collectionId !== id` → `404`) — authz precedes existence (`purses-ct0`). **Body (strict — an unknown key is `400`, never a silent `200`):** `{ name?: string; brand|style|color|material|category|notes|story?: string | null; status?: string; height|width|depth|weight?: number | null; unit?: "imperial" | "metric" }`. Text is trimmed and a blank string clears to `null`; `name` must be non-blank. Measures are non-negative finite numbers (≤ 100000) on the wire, stored as `numeric` strings; `unit` relabels, it does not convert. Same schema (`ItemController.updateItem`) backs `PATCH /api/items/[id]`. Returns updated `Item`. `400` invalid input; `401`/`403`/`404`.
 
 ## item photos
 
