@@ -116,7 +116,7 @@ export function ImageViewer({ photo, onClose }: { photo: ViewerPhoto; onClose: (
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 bg-ground" onClick={onClose} aria-hidden />
 
       <div
         ref={panelRef}

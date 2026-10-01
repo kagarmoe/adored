@@ -283,7 +283,7 @@
   --color-glass-strong-on-white: #234e58;
 }
 
-@supports not (backdrop-filter: blur(1px)) {
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :root, [data-theme="dark"] {
     --color-glass: var(--color-surface);
     --color-glass-strong: var(--color-surface-raised);

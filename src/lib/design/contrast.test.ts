@@ -40,7 +40,7 @@ function strict(vars: ThemeTokens): ThemeTokens {
 }
 
 const LIGHT = /:root\s*\{([^}]*)\}/;
-const DARK = /\[data-theme="dark"\]\s*\{([^}]*)\}/;
+const DARK = /^\[data-theme="dark"\]\s*\{([^}]*)\}/m;
 const lightScope = scopeVars(LIGHT);
 const darkScope = scopeVars(DARK);
 
