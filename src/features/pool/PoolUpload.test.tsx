@@ -153,7 +153,7 @@ describe("PoolUpload", () => {
       fireEvent.change(fileInput(container), { target: { files: [png("a.png")] } });
       await act(async () => { await vi.advanceTimersByTimeAsync(1300); });
       expect(fetch.mock.calls.some(([url]) => String(url).endsWith("/photos/reassign"))).toBe(false);
-      expect(screen.getByText(/wait in your photo pool/i)).toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent(/wait in your photo pool/i);
       expect(refresh).toHaveBeenCalledTimes(1);
     } finally {
       vi.useRealTimers();

@@ -49,7 +49,7 @@ export function ItemPhotoCarousel({
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const touchX = useRef<number | null>(null);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
   const stripRef = useRef<HTMLUListElement>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
 
@@ -120,6 +120,10 @@ export function ItemPhotoCarousel({
 
   const confirming = photos.find((p) => p.id === confirmingId) ?? null;
   const confirmingPosition = photos.findIndex((p) => p.id === confirmingId) + 1;
+  const cancelConfirm = () => {
+    setConfirmingId(null);
+    focusStrip(confirmingPosition - 1);
+  };
 
   const strip = (
     <div className="mt-3">
@@ -132,7 +136,7 @@ export function ItemPhotoCarousel({
               onClick={() => go(i)}
               aria-current={i === current}
               aria-label={`Show photo ${i + 1}${p.isHero ? " (cover)" : ""}`}
-              className={`block h-20 w-20 overflow-hidden rounded-control ring-2 focus-visible:outline-hidden focus-visible:ring-primary ${i === current ? "ring-primary" : "ring-transparent"}`}
+              className={`block h-20 w-20 overflow-hidden rounded-control ring-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${i === current ? "ring-primary" : "ring-transparent"}`}
             >
               <Image
                 src={getPhotoAssetUrl(collectionId, p.itemId, p.id, {
@@ -146,6 +150,14 @@ export function ItemPhotoCarousel({
                 className="h-full w-full object-cover"
               />
             </button>
+            {p.isHero && (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute bottom-1 left-1 rounded-pill bg-surface-raised px-2 py-0.5 text-xs text-ink ring-1 ring-rim"
+              >
+                Cover
+              </span>
+            )}
             <OverflowMenu
               label={`More for photo ${i + 1}`}
               className="absolute right-1 top-1"
@@ -179,6 +191,9 @@ export function ItemPhotoCarousel({
         <div
           role="group"
           aria-label={`Delete photo ${confirmingPosition}`}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") cancelConfirm();
+          }}
           className="mt-3 space-y-3 rounded-card bg-surface-raised p-4 ring-1 ring-hairline"
         >
           <p className="text-sm text-ink">Delete this photo? This can&apos;t be undone.</p>
@@ -187,10 +202,7 @@ export function ItemPhotoCarousel({
               ref={keepRef}
               variant="secondary"
               disabled={busy}
-              onClick={() => {
-                setConfirmingId(null);
-                focusStrip(confirmingPosition - 1);
-              }}
+              onClick={cancelConfirm}
             >
               Keep
             </Button>
@@ -259,14 +271,22 @@ export function ItemPhotoCarousel({
           onTouchStart={(e) => {
             // React bubbles touches from the portalled zoom viewer through here; only
             // a touch that is really on the stage counts as a swipe.
-            touchX.current = e.currentTarget.contains(e.target as Node) ? e.changedTouches[0].clientX : null;
+            const t = e.changedTouches[0];
+            touchStart.current = e.currentTarget.contains(e.target as Node)
+              ? { x: t.clientX, y: t.clientY ?? 0 }
+              : null;
           }}
           onTouchEnd={(e) => {
-            const start = touchX.current;
-            touchX.current = null;
+            const start = touchStart.current;
+            touchStart.current = null;
             if (start === null) return;
-            const dx = e.changedTouches[0].clientX - start;
-            if (Math.abs(dx) >= SWIPE_MIN_PX) go(dx < 0 ? current + 1 : current - 1);
+            const t = e.changedTouches[0];
+            const dx = t.clientX - start.x;
+            const dy = (t.clientY ?? 0) - start.y;
+            // A mostly-vertical flick is a page scroll, not a swipe.
+            if (Math.abs(dx) >= SWIPE_MIN_PX && Math.abs(dx) > Math.abs(dy)) {
+              go(dx < 0 ? current + 1 : current - 1);
+            }
           }}
         >
           <Image

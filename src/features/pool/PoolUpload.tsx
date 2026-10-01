@@ -255,14 +255,19 @@ export function PoolUpload({ collectionId, attachToItemId }: PoolUploadProps) {
           </p>
         )}
       </div>
-      {note && <p className="text-sm text-ink-soft">{note}</p>}
+      {/* Spoken via the status region below; this copy is the visible one. */}
+      {note && (
+        <p aria-hidden className="text-sm text-ink-soft">
+          {note}
+        </p>
+      )}
 
       {/* Mounted for the component's whole life, NOT gated on files.length (purses-orsx):
           a live region must already exist when its text changes, or AT never observes the
           mutation. Born-with-content regions are the classic silent-live-region bug — and
           the drop-only-unsupported-files path never mutates again after mount. */}
       <p role="status" className="sr-only">
-        {uploadSummary(files)}
+        {[uploadSummary(files), note].filter(Boolean).join(" ")}
       </p>
 
       {files.length > 0 && (

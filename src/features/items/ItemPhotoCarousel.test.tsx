@@ -119,6 +119,29 @@ describe("ItemPhotoCarousel", () => {
     expectCurrentPhoto("p1");
   });
 
+  it("a mostly-vertical flick (a page scroll) does not flip", () => {
+    render(<ItemPhotoCarousel photos={mk(3)} {...props} />);
+    const stage = screen.getByTestId("carousel-stage");
+    fireEvent.touchStart(stage, { changedTouches: [{ clientX: 200, clientY: 100 }] });
+    fireEvent.touchEnd(stage, { changedTouches: [{ clientX: 140, clientY: 250 }] });
+    expectCurrentPhoto("p1");
+  });
+
+  it("marks the cover thumbnail visibly, not only for screen readers", () => {
+    render(<ItemPhotoCarousel photos={mk(2)} {...props} />);
+    const cover = screen.getByRole("button", { name: "Show photo 1 (cover)" }).closest("li")!;
+    expect(within(cover).getByText("Cover")).toBeVisible();
+  });
+
+  it("Escape closes the delete confirm, like Keep", async () => {
+    render(<ItemPhotoCarousel photos={mk(2)} {...props} />);
+    await userEvent.click(screen.getByRole("button", { name: "More for photo 2" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+    expect(screen.getByText(/can.t be undone/i)).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByText(/can.t be undone/i)).not.toBeInTheDocument();
+  });
+
   it("touches inside the open zoom viewer don't flip the photo behind it", async () => {
     render(<ItemPhotoCarousel photos={mk(3)} {...props} />);
     await userEvent.click(screen.getByRole("button", { name: /view photo/i }));

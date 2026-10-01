@@ -99,7 +99,7 @@ export function OverflowMenu({ label, items, className }: OverflowMenuProps) {
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         onClick={() => (open ? close(false) : setOpen(true))}
-        className={`inline-flex h-11 w-11 items-center justify-center rounded-full border border-rim bg-surface-raised text-ink shadow-lift transition-colors hover:bg-surface focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${className ?? ""}`}
+        className={`inline-flex h-11 w-11 items-center justify-center rounded-full border border-rim bg-surface-raised text-ink transition-colors hover:bg-surface focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${className ?? ""}`}
       >
         <span aria-hidden className="text-lg leading-none">
           ···
