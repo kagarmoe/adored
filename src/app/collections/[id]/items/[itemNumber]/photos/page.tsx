@@ -1,74 +1,22 @@
 import { getSession } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { redirect, permanentRedirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { requireCollectionAccess } from "@/lib/collection-access";
-import { ItemController } from "@/server/api/items";
-import { PhotoController } from "@/server/api/photos";
-import { AppLayout } from "@/components/layout";
-import { trail } from "@/components/layout/breadcrumb-trails";
-import { Card } from "@/components/ui";
-import { PhotoUpload } from "@/features/items/PhotoUpload";
-import { PhotoGallery } from "@/features/items/PhotoGallery";
-import { itemDisplayName } from "@/lib/items";
 
-interface PhotoPageProps {
+interface Props {
   params: Promise<{ id: string; itemNumber: string }>;
 }
 
-export default async function PhotoPage({ params }: PhotoPageProps) {
+// The item panel replaced the photos page (spec 2026-10-01 §3). Kept only to bounce old
+// links. The guard runs FIRST (page-authz-enumeration exact-matches the stranger's
+// redirect); the number is used only when it is all digits, never interpolated raw.
+export default async function ItemPhotosRedirect({ params }: Props) {
   const { id, itemNumber } = await params;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
-
-  const db = getDb();
-  const collection = await requireCollectionAccess(db, id, session.user.id);
-
-  const number = Number(itemNumber);
-  const item =
-    number > 0 && Number.isInteger(number)
-      ? await ItemController.fromDb(db).getByCollectionAndNumber(collection.id, number)
-      : null;
-
-  if (!item) {
-    redirect(`/collections/${collection.slug ?? collection.id}/items`);
-  }
-
-  const photos = await PhotoController.fromDb(db).findByItem(item.id);
-
-  const allItems = await ItemController.fromDb(db).listItems(collection.id);
-  const otherItems = allItems
-    .filter((i) => i.id !== item.id)
-    .map((i) => ({ id: i.id, number: i.number, name: i.name }));
-
-  return (
-    <AppLayout breadcrumbs={trail.itemPhotos(collection, item)}>
-      <div className="space-y-8">
-        <div className="max-w-3xl">
-          <h1 className="text-2xl text-ink sm:text-3xl">{itemDisplayName(item)}</h1>
-          <p className="mt-2 text-ink-soft">Manage photos for this item</p>
-        </div>
-
-        {/* Upload Section */}
-        <Card padding="lg">
-          <h2 className="text-lg text-ink mb-4">Add photos</h2>
-          <PhotoUpload itemId={item.id} collectionId={collection.id} />
-        </Card>
-
-        {/* Gallery Section */}
-        {photos.length > 0 && (
-          <Card padding="lg">
-            <h2 className="text-lg text-ink mb-4">Photos</h2>
-            <PhotoGallery
-              photos={photos}
-              itemId={item.id}
-              collectionId={collection.id}
-              otherItems={otherItems}
-            />
-          </Card>
-        )}
-      </div>
-    </AppLayout>
-  );
+  const collection = await requireCollectionAccess(getDb(), id, session.user.id);
+  const items = `/collections/${collection.slug ?? collection.id}/items`;
+  permanentRedirect(/^\d+$/.test(itemNumber) ? `${items}/${itemNumber}` : items);
 }

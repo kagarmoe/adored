@@ -46,15 +46,19 @@ import { seedUserRow, seedFullCollection } from "../../../e2e/fixtures/seed";
 //
 // redirect() in Next throws to halt rendering; mirror that so the guard
 // short-circuits and we can observe the redirect target.
-const { mockGetSession, mockRedirect } = vi.hoisted(() => ({
+const { mockGetSession, mockRedirect, mockPermanentRedirect } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockRedirect: vi.fn((url: string) => {
     throw new Error(`NEXT_REDIRECT:${url}`);
+  }),
+  mockPermanentRedirect: vi.fn((url: string) => {
+    throw new Error(`NEXT_PERMANENT_REDIRECT:${url}`);
   }),
 }));
 
 vi.mock("next/navigation", () => ({
   redirect: mockRedirect,
+  permanentRedirect: mockPermanentRedirect,
   notFound: () => {
     throw new Error("NEXT_NOTFOUND");
   },
@@ -145,6 +149,8 @@ function buildStrangerPageCases(collectionId: string): StrangerPageCase[] {
     p("collections/[id]/items", { id }),
     p("collections/[id]/items/new", { id }),
     p("collections/[id]/items/[itemNumber]", { id, itemNumber: N }),
+    // Retired pages: guard first, then permanentRedirect to the panel (spec §3) — the
+    // stranger must still be bounced by the guard.
     p("collections/[id]/items/[itemNumber]/edit", { id, itemNumber: N }),
     p("collections/[id]/items/[itemNumber]/photos", { id, itemNumber: N }),
     p("collections/[id]/members", { id }),
@@ -180,14 +186,16 @@ describeDb(
     const COLLECTIONS_DIR = path.join(REPO_ROOT, "src", "app", "collections");
 
     let collectionId: string;
+    let ownerId: string;
+    let strangerId: string;
 
     beforeAll(async () => {
       await resetDb();
       vi.clearAllMocks();
 
       // Owner A owns the collection; stranger S is authenticated but NOT a member.
-      const ownerId = await seedUserRow("page-authz-owner");
-      const strangerId = await seedUserRow("page-authz-stranger");
+      ownerId = await seedUserRow("page-authz-owner");
+      strangerId = await seedUserRow("page-authz-stranger");
       const seeds = await seedFullCollection(ownerId);
       collectionId = seeds.collectionId;
 
@@ -300,6 +308,25 @@ describeDb(
         cases.length,
         "Should exercise at least 18 stranger page cases",
       ).toBeGreaterThanOrEqual(18);
+    });
+
+    it("edit/photos redirect a member to the panel; a non-numeric number goes to the list", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const items = `/collections/slug-${collectionId}/items`;
+      const outcome = async (page: "edit" | "photos", itemNumber: string) => {
+        const mod = (await import(/* @vite-ignore */ `@/app/collections/[id]/items/[itemNumber]/${page}/page`)) as {
+          default: (p: { params: Promise<Record<string, string>> }) => Promise<unknown>;
+        };
+        return mod.default({ params: Promise.resolve({ id: collectionId, itemNumber }) }).catch((e: Error) => e.message);
+      };
+      try {
+        expect(await outcome("edit", "1")).toBe(`NEXT_PERMANENT_REDIRECT:${items}/1`);
+        expect(await outcome("photos", "1")).toBe(`NEXT_PERMANENT_REDIRECT:${items}/1`);
+        expect(await outcome("edit", "../x")).toBe(`NEXT_PERMANENT_REDIRECT:${items}`);
+        expect(await outcome("photos", "1?x")).toBe(`NEXT_PERMANENT_REDIRECT:${items}`);
+      } finally {
+        mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+      }
     });
   },
 );

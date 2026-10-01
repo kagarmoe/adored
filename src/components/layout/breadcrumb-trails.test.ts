@@ -17,8 +17,6 @@ const allTrails: Record<string, { label: string; href?: string }[]> = {
   items: trail.items(c),
   itemNew: trail.itemNew(c),
   item: trail.item(c, item),
-  itemEdit: trail.itemEdit(c, item),
-  itemPhotos: trail.itemPhotos(c, item),
   sort: trail.sort(c),
   sortNew: trail.sortNew(c),
   setAside: trail.setAside(c),
@@ -43,14 +41,6 @@ describe("breadcrumb trails", () => {
         expect(crumb.href, `${name}: "${crumb.label}"`).toBeTruthy();
       }
     }
-  });
-
-  it("drops the item crumb's link (and so the arrow) for a null item number", () => {
-    // The one documented exception to the invariant above: rather than mint a
-    // broken href, a number-less item leaves its crumb unlinked.
-    expect(trail.itemEdit(c, { name: "Red Clutch", number: null }).at(-2)).toEqual({
-      label: "Red Clutch",
-    });
   });
 
   it("uses the chip vocabulary: Sort and Decide", () => {
@@ -81,9 +71,5 @@ describe("breadcrumb trails", () => {
 
   it("labels items via itemDisplayName", () => {
     expect(trail.item(c, item).at(-1)).toEqual({ label: "Red Clutch" });
-    expect(trail.itemEdit(c, { name: null, number: 7 }).at(-2)).toEqual({
-      label: "#7",
-      href: "/collections/spring-bags/items/7",
-    });
   });
 });
