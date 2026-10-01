@@ -1,6 +1,6 @@
 # Adored — Curatorial Collection Sorting App
 
-A full-featured web application for managing collections and sorting items through guided preference sessions. Built with Next.js 14, TypeScript, Drizzle ORM, and Tailwind CSS.
+A full-featured web application for managing collections and sorting items through guided preference sessions. Built with Next.js 16, TypeScript, Drizzle ORM, and Tailwind CSS.
 
 > **Architecture & project history:** see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — current architecture, how the project got here, the decisions log, and the roadmap.
 
@@ -127,9 +127,9 @@ A full-featured web application for managing collections and sorting items throu
 ### Testing Features Locally
 
 **Sign In:**
-- Email + password is the primary sign-in; a passwordless magic-link is also available
+- Sign-in is Google only (better-auth); use the dev sign-in bypass locally
 - Transactional email is sent via Resend (`src/lib/email.ts`) — set `RESEND_API_KEY` to send for real
-- With no key in development, the magic-link / invite URL is logged to the server console so you can click it locally
+- With no key in development, the invite URL is logged to the server console so you can click it locally
 
 **Photos:**
 - Storage is Vercel Blob — set `BLOB_READ_WRITE_TOKEN` to enable uploads
@@ -183,7 +183,7 @@ src/
 
 **Authentication:**
 - [better-auth](https://www.better-auth.com/) with **database sessions** (not JWT) — the whole auth surface is one handler at `/api/auth` (`src/app/api/auth/[...all]`)
-- Three sign-in methods: **email + password**, **magic-link** (sending via Resend — `src/lib/email.ts`, set `RESEND_API_KEY`), and **Google** social
+- One sign-in method: **Google** social login via better-auth (`src/lib/auth-server.ts`); Resend (`src/lib/email.ts`, `RESEND_API_KEY`) is used for invitation emails
 - `src/lib/auth.ts` is a thin read façade returning `{ user: { id, email, name } }`, so the session shape is unchanged for callers; each read is a fresh per-request DB lookup
 - Authorization is enforced at the **DAL capability chokepoint** (`requireApiCapability`), not a client hook — see the Permissions section below
 
@@ -260,7 +260,7 @@ The app is optimized for Vercel with native integrations:
 
 ## Tech Stack
 
-- **Framework:** Next.js 14 (App Router)
+- **Framework:** Next.js 16 (App Router)
 - **Language:** TypeScript 5
 - **Database:** PostgreSQL + Drizzle ORM
 - **Auth:** NextAuth v4

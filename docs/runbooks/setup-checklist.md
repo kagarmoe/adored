@@ -29,7 +29,7 @@ Env vars are set in **Vercel → Settings → Environment Variables** (per envir
 The app uses Better Auth with **database sessions**, Google-only product login, and one handler at `/api/auth` (`src/app/api/auth/[...all]`). Only Google login is supported; email/password, password reset, magic-link login, and auth email verification are intentionally not configured.
 
 - [ ] **`BETTER_AUTH_SECRET` / `BETTER_AUTH_URL`** are **optional** — better-auth falls back to `AUTH_SECRET` / `AUTH_URL` (already set), so one secret serves both. Set the `BETTER_AUTH_*` pair only if you want a distinct secret/base URL per environment (a base-URL mismatch is the classic `redirect_uri_mismatch`).
-- Settled: **reset** path (migration `0015` wipes + recreates the canonical `user`/`account`/`session`/`verification`, no data migration); the one-time everyone-out is moot with no real users. See `docs/superpowers/specs/2026-07-01-better-auth-migration-design.md` + the plan.
+- Settled: **reset** path (migration `0015` wipes + recreates the canonical `user`/`account`/`session`/`verification`, no data migration); the one-time everyone-out is moot with no real users. See `docs/archive/archive/superpowers/specs/2026-07-01-better-auth-migration-design.md` + the plan.
 
 ## 5. Needs no action (ships with the next deploy)
 
