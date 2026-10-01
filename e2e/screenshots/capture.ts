@@ -69,8 +69,8 @@ test.beforeAll(async () => {
     disposition: "deferred",
   });
 
-  // Epic 2: a story on the waiting collection's item 1 so the item-detail shot
-  // shows the soft-violet keepsake card ("Where will it go next?").
+  // A story on the waiting collection's item 1 so the item-detail shot shows the
+  // panel's filled "Where will it go next?" field.
   await new ItemRepository(db).update(waiting.itemIds[0], {
     story:
       "To my niece, who always borrowed it for weekend trips — I hope it carries her somewhere good.",
@@ -131,13 +131,12 @@ for (const theme of ["light", "dark"] as const) {
         /* storage blocked — falls back to light, fine */
       }
     }, theme);
-    await page.route("**/photos/**/file*", (route) =>
+    // Item photos load via /api/photo-files/<id>; unassigned pool photos via
+    // /api/collections/<id>/pool/photos/<id>/file (src/lib/photos.ts).
+    await page.route("**/pool/photos/**/file*", (route) =>
       route.fulfill({ path: FIXTURE, contentType: "image/webp" }),
     );
-    // purses-rthw: item photos now load via /api/photo-files/<id>?collectionId=…
-    // (src/lib/photos.ts getPhotoAssetUrlForPhoto) — a shape the pattern above
-    // never matches, so those surfaces rendered a broken hero image.
-    await page.route("**/photo-files/**", (route) =>
+    await page.route("**/api/photo-files/**", (route) =>
       route.fulfill({ path: FIXTURE, contentType: "image/webp" }),
     );
 
@@ -158,7 +157,7 @@ for (const theme of ["light", "dark"] as const) {
       ["collections", "/collections"],
       ["items-grid", `/collections/${slug}/items`],
       ["item-detail", `/collections/${slug}/items/1`],
-      // Epic 2: item detail LEADING with the keepsake story card.
+      // The item panel with its story field filled.
       ["item-detail-story", `/collections/${waitingSlug}/items/1`],
       // pv9 PR2 (purses-o93): the redesigned results page — most-loved hero +
       // "The full ranking" + the SEPARATE forward-framed Onward section ("Where

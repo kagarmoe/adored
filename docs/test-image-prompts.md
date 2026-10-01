@@ -18,10 +18,8 @@ replacing a file with the same name is the whole swap.
 | `a11y.webp` | A tomato-red rotary telephone |
 | `compare.webp` | Two nesting terracotta bowls, side by side |
 | `decision-recovery.webp` | An amber glass carafe |
-| `delete-photo.webp` | A burnt-orange envelope tray |
 | `image-perf.webp` | A yellow mechanical kitchen timer |
-| `image-rotate.webp` | A rust-colored desk fan |
-| `item-page.webp` | A marigold ceramic table lamp |
+| `item-panel.webp` | A marigold ceramic table lamp |
 | `not-mine-set-aside.webp` | A coral storage basket |
 | `not-yet-defer.webp` | An orange-spined hardcover book |
 | `results.webp` | A red enamel dutch oven |
