@@ -1,0 +1,10 @@
+type: '@kagarmoe/link-audit'
+typeVersion: 2026.10.01.1
+id: f34831df-0493-454b-9f7f-42df4e1dbd35
+name: adored-links
+version: 1
+tags: {}
+globalArguments:
+  baseUrl: https://${{ data.latest("adored-alias", "adored-alias").attributes.alias }}
+  maxPages: 50
+methods: {}

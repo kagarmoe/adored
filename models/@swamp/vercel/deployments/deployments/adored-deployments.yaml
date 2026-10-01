@@ -1,0 +1,15 @@
+type: '@swamp/vercel/deployments/deployments'
+typeVersion: 2026.09.25.1
+id: b22c04e5-76e2-4e96-b42a-8f1d073f48b4
+name: adored-deployments
+version: 1
+tags: {}
+globalArguments:
+  token: ${{ vault.get("secrets", "VERCEL_TOKEN") }}
+  teamId: team_SMACO8iOr6wPIGx5as56P468
+  name: purseinator-app
+  target: production
+methods:
+  get:
+    arguments:
+      id: ${{ data.latest("adored-alias", "adored-alias").attributes.deploymentId }}

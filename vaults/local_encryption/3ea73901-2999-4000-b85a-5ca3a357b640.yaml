@@ -1,0 +1,7 @@
+id: 3ea73901-2999-4000-b85a-5ca3a357b640
+name: secrets
+type: local_encryption
+config:
+  auto_generate: true
+  base_dir: /Users/kimberlygarmoe/repos/purseinator-app
+createdAt: '2026-10-01T05:26:07.758Z'
