@@ -60,6 +60,10 @@ export class ItemController {
     return this.itemRepo.findByCollection(collectionId, options);
   }
 
+  async listArchived(collectionId: string): Promise<Item[]> {
+    return this.itemRepo.findArchivedByCollection(collectionId);
+  }
+
   async createItem(collectionId: string, data: unknown): Promise<Item> {
     const parsed = CreateItemSchema.parse(data);
     return this.itemRepo.create({
