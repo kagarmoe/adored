@@ -169,12 +169,12 @@ Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by 
 - **Do** verify AA in **both** themes; honour `prefers-color-scheme` and the manual toggle.
 - **Do** reserve Playfair for display moments; Inter for everything functional; headings in ink.
 - **Do** honour `prefers-reduced-motion` with a crossfade or instant transition.
-- **Do** support tap-first interaction with ≥44px targets; no swiping.
+- **Do** support tap-first interaction with ≥44px targets; swipe only where native (carousels).
 
 ### Don't
 
 - **Don't** strip the surface to sterile minimalism or drain colour to "look cleaner"; restraint governs noise and load, never beauty.
-- **Don't** make this a catalog, inventory tool, or shopping site — no dense SKU grids, stock counts, or cart affordances.
+- **Don't** add shopping affordances — no prices, carts, or offers. Grids and cards are fine (PRODUCT.md v2).
 - **Don't** gamify letting go: no confetti, streaks, points, or "you have too many."
 - **Don't** let the brand speak danger — never use red/amber/yellow/green decoratively; reds are for true destructive actions only.
 - **Don't** distinguish buckets or states by hue alone; always pair with label, icon, or position.
