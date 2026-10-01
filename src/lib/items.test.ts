@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterItems, hasName, itemDisplayName, itemInitial, itemsEmptyState } from "./items";
+import { filterItems, hasName, itemDisplayName, itemInitial, itemSubtitle, itemsEmptyState } from "./items";
 
 const mk = (over: Partial<{ name: string | null; status: string | null }>) =>
   ({ id: "i", collectionId: "c", number: 1, name: null, status: "active", ...over }) as any;
@@ -95,5 +95,13 @@ describe("itemInitial", () => {
 
   it("returns a neutral glyph when there is nothing", () => {
     expect(itemInitial({ name: null, number: null })).toBe("•");
+  });
+});
+
+describe("itemSubtitle", () => {
+  it("names the month added, adding the year only when it isn't this year", () => {
+    const now = new Date("2026-10-01T12:00:00Z");
+    expect(itemSubtitle({ number: 14, createdAt: new Date("2026-06-03T12:00:00Z") }, now)).toBe("#14 · added in June");
+    expect(itemSubtitle({ number: 2, createdAt: new Date("2025-06-03T12:00:00Z") }, now)).toBe("#2 · added in June 2025");
   });
 });

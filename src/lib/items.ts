@@ -17,6 +17,14 @@ export function itemDisplayName(item: NameableItem): string {
   return item.number != null ? `#${item.number}` : "Untitled";
 }
 
+/** "#14 · added in June" — the year appears only when it isn't the current one. */
+export function itemSubtitle(item: { number: number | null; createdAt: Date }, now: Date): string {
+  const d = new Date(item.createdAt);
+  const month = d.toLocaleString("en-US", { month: "long", timeZone: "UTC" });
+  const when = d.getUTCFullYear() === now.getUTCFullYear() ? month : `${month} ${d.getUTCFullYear()}`;
+  return `${item.number != null ? `#${item.number} · ` : ""}added in ${when}`;
+}
+
 /** Single-glyph avatar for an item with no photo: name initial, else a neutral mark. */
 export function itemInitial(item: NameableItem): string {
   return hasName(item) ? item.name!.trim().charAt(0).toUpperCase() : "•";
