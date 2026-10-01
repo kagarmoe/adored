@@ -44,6 +44,12 @@
   "exclude": [
     "node_modules",
     ".next",
-    "extensions"
+    "extensions",
+    // ponytail: next 16.3 type-checks everything tsconfig includes; test files carry
+    // pre-existing type debt (purses-1hj6) and are run by vitest/playwright, not built.
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "e2e"
   ]
 }
