@@ -6,9 +6,12 @@ import { upload } from "@vercel/blob/client";
 import { Button, Card } from "@/components/ui";
 import { convertHeifToJpeg } from "@/lib/heic";
 import { isHeifFile, partitionPoolFiles } from "@/lib/uploads";
+import { MAX_GROUP_PHOTOS } from "@/lib/pool-limits";
 
 interface PoolUploadProps {
   collectionId: string;
+  /** Item mode (the item page's "+ Add photos"): finished uploads move onto this item. */
+  attachToItemId?: string;
 }
 
 type FileStatus = "pending" | "preparing" | "uploading" | "done" | "error" | "skipped";
@@ -86,12 +89,44 @@ async function waitForPooledRows(
   }
 }
 
-export function PoolUpload({ collectionId }: PoolUploadProps) {
+// Item mode: uploads go through the pool exactly as usual, then the rows we just
+// created — matched by blob pathname, which the Blob callback stores as `filename` —
+// move onto the item via the existing reassign route. Returns how many moved; any
+// that didn't simply stay in the pool.
+export async function attachToItem(
+  collectionId: string,
+  itemId: string,
+  pathnames: string[],
+): Promise<number> {
+  let moved = 0;
+  try {
+    const res = await fetch(`/api/collections/${collectionId}/pool/photos`, { cache: "no-store" });
+    if (!res.ok) return 0;
+    const { photos = [] } = (await res.json()) as { photos?: { id: string; filename: string }[] };
+    const wanted = new Set(pathnames);
+    const ids = photos.filter((p) => wanted.has(p.filename)).map((p) => p.id);
+    for (let i = 0; i < ids.length; i += MAX_GROUP_PHOTOS) {
+      const photoIds = ids.slice(i, i + MAX_GROUP_PHOTOS);
+      const r = await fetch(`/api/collections/${collectionId}/photos/reassign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photoIds, destination: { type: "item", itemId } }),
+      });
+      if (r.ok) moved += photoIds.length;
+    }
+  } catch (err) {
+    console.error("attach to item failed", err);
+  }
+  return moved;
+}
+
+export function PoolUpload({ collectionId, attachToItemId }: PoolUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [files, setFiles] = useState<TrackedFile[]>([]);
+  const [note, setNote] = useState("");
 
   const update = (key: string, patch: Partial<TrackedFile>) =>
     setFiles((prev) => prev.map((f) => (f.key === key ? { ...f, ...patch } : f)));
@@ -125,6 +160,7 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
     setFiles((prev) => [...tracked, ...prev]);
 
     let succeeded = 0;
+    const uploaded: string[] = [];
     // Sequential keeps the UI legible and avoids hammering the token endpoint;
     // switch to a small concurrency pool later if needed.
     for (let i = 0; i < accepted.length; i++) {
@@ -134,13 +170,14 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
         update(t.key, { status: "preparing" });
         const toUpload = isHeifFile(file) ? await convertHeifToJpeg(file) : file;
         update(t.key, { status: "uploading" });
-        await upload(toUpload.name, toUpload, {
+        const blob = await upload(toUpload.name, toUpload, {
           access: "private",
           handleUploadUrl: `/api/collections/${collectionId}/pool/upload`,
           contentType: toUpload.type,
         });
         update(t.key, { status: "done" });
         succeeded += 1;
+        uploaded.push(blob.pathname);
       } catch (err) {
         // The thrown message is machine-register ("Vercel Blob: Failed to retrieve the
         // client token") and is now SPOKEN, not just shown — keep the raw text for the
@@ -154,6 +191,10 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
       // Wait for Blob's async completion callbacks to persist the rows, then
       // refresh so the pool grid reflects what was just added.
       await waitForPooledRows(collectionId, baseline, succeeded);
+      if (attachToItemId) {
+        const moved = await attachToItem(collectionId, attachToItemId, uploaded);
+        setNote(moved < succeeded ? "A few photos are still arriving — they’ll wait in your photo pool." : "");
+      }
       router.refresh();
     }
     setBusy(false);
@@ -208,10 +249,13 @@ export function PoolUpload({ collectionId }: PoolUploadProps) {
         >
           {busy ? "Adding photos…" : "Select photos"}
         </Button>
-        <p className="mt-2 text-sm text-ink-soft">
-          Add as many as you like — you can name and group them later.
-        </p>
+        {!attachToItemId && (
+          <p className="mt-2 text-sm text-ink-soft">
+            Add as many as you like — you can name and group them later.
+          </p>
+        )}
       </div>
+      {note && <p className="text-sm text-ink-soft">{note}</p>}
 
       {/* Mounted for the component's whole life, NOT gated on files.length (purses-orsx):
           a live region must already exist when its text changes, or AT never observes the
