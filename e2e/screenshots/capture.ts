@@ -232,20 +232,23 @@ for (const theme of ["light", "dark"] as const) {
     const shot = (n: string) =>
       page.screenshot({ path: `pr-screenshots/${n}-${theme}-${proj}.png`, fullPage: true });
 
-    // purses-v7gv: the remove-item confirm card and the items-list undo notice.
-    // Self-restoring — the beat ends on "Bring it back", so the collection is
-    // exactly as seeded for every later beat and the other theme pass.
+    // purses-v7gv: the item ··· menu (owner sees Archive + Delete) and the
+    // items-list undo notice. Self-restoring — the beat ends on "Undo", so the
+    // collection is exactly as seeded for every later beat and the other theme pass.
     await page.goto(`/collections/${slug}/items/1`);
     await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
-    await page.getByRole("button", { name: "Remove from collection" }).click();
-    await page.getByText("Remove this item from the collection?").waitFor({ state: "visible", timeout: 10_000 });
+    await page.getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("menuitem", { name: "Delete" }).click();
+    await page.getByText("Delete this item for good?").waitFor({ state: "visible", timeout: 10_000 });
     await page.waitForTimeout(400);
-    await shot("item-remove-confirm");
-    await page.getByRole("button", { name: "Remove", exact: true }).click();
-    await page.getByRole("button", { name: "Bring it back" }).waitFor({ state: "visible", timeout: 10_000 });
+    await shot("item-delete-confirm");
+    await page.getByRole("button", { name: "Keep" }).click();
+    await page.getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("menuitem", { name: "Archive" }).click();
+    await page.getByRole("button", { name: "Undo", exact: true }).waitFor({ state: "visible", timeout: 10_000 });
     await page.waitForTimeout(400);
     await shot("items-removed-undo");
-    await page.getByRole("button", { name: "Bring it back" }).click();
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
     await page.getByRole("link", { name: /view/i }).first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
     await page.waitForTimeout(400);
 

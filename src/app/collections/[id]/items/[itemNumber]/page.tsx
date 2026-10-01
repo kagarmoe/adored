@@ -12,6 +12,7 @@ import { Card } from "@/components/ui";
 import { ItemPhotoCarousel } from "@/features/items/ItemPhotoCarousel";
 import { ItemPanelForm } from "@/features/items/ItemPanelForm";
 import { InYourLifeChip } from "@/features/items/InYourLifeChip";
+import { ItemOverflowMenu } from "@/features/items/ItemOverflowMenu";
 import { deriveUsage } from "@/lib/derive-usage";
 import { itemDisplayName, itemSubtitle } from "@/lib/items";
 
@@ -69,9 +70,16 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   return (
     <AppLayout breadcrumbs={trail.item(collection, item)}>
       <div className="space-y-6">
-        <header className="min-w-0">
-          <h1 className="text-3xl text-ink sm:text-4xl">{itemDisplayName(item)}</h1>
-          <p className="mt-1 text-sm text-ink-soft">{itemSubtitle(item, new Date())}</p>
+        <header className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-3xl text-ink sm:text-4xl">{itemDisplayName(item)}</h1>
+            <p className="mt-1 text-sm text-ink-soft">{itemSubtitle(item, new Date())}</p>
+          </div>
+          <ItemOverflowMenu
+            itemId={item.id}
+            itemsHref={`/collections/${collection.slug ?? collection.id}/items`}
+            isOwner={collection.ownerId === session.user.id}
+          />
         </header>
         <div className="grid gap-6 md:grid-cols-[3fr_2fr] md:items-start">
           <ItemPhotoCarousel
