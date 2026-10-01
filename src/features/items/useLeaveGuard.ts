@@ -40,6 +40,12 @@ export function useLeaveGuard(active: boolean): void {
     window.addEventListener("beforeunload", onUnload);
     window.addEventListener("popstate", onPop);
     document.addEventListener("click", onClick, true);
-    return stop;
+    return () => {
+      stop();
+      // Saved (or unmounted) while still on the guard entry: drop it, so the next Back
+      // isn't spent on a duplicate of this page. After a link navigation the current
+      // entry is the new page's, so this never fires there.
+      if (window.history.state?.[GUARD]) window.history.back();
+    };
   }, [active]);
 }

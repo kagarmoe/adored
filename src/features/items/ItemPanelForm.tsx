@@ -19,8 +19,10 @@ export function ItemPanelForm({ item, collectionId }: { item: Item; collectionId
   const [note, setNote] = useState("");
   const dirty = isDirty(saved, fields);
   useLeaveGuard(dirty);
-  const set = (k: keyof PanelFields) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const set = (k: keyof PanelFields) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFields((f) => ({ ...f, [k]: e.target.value }));
+    setNote(""); // "Saved." / the name line describe the last action, not the next edit
+  };
   const revertName = () => {
     setFields((f) => ({ ...f, name: saved.name }));
     setNote(NAME_NEEDED);
@@ -70,17 +72,17 @@ export function ItemPanelForm({ item, collectionId }: { item: Item; collectionId
           {(["imperial", "metric"] as const).map((u) => (
             <label key={u} className="inline-flex min-h-11 items-center gap-2 text-sm text-ink">
               <input type="radio" name="unit" value={u} checked={fields.unit === u}
-                onChange={() => setFields((f) => ({ ...f, unit: u }))} />
+                onChange={() => { setFields((f) => ({ ...f, unit: u })); setNote(""); }} />
               {u === "metric" ? "cm · kg" : "in · lb"}
             </label>
           ))}
         </fieldset>
         <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {(["height", "width", "depth"] as const).map((k) => (
-            <Input key={k} name={k} type="number" inputMode="decimal" min={0} step="any" value={fields[k]}
+            <Input key={k} name={k} type="number" inputMode="decimal" min={0} max={100000} step="any" value={fields[k]}
               onChange={set(k)} label={`${k[0].toUpperCase()}${k.slice(1)} (${len})`} />
           ))}
-          <Input name="weight" type="number" inputMode="decimal" min={0} step="any" value={fields.weight}
+          <Input name="weight" type="number" inputMode="decimal" min={0} max={100000} step="any" value={fields.weight}
             onChange={set("weight")} label={`Weight (${wt})`} />
         </div>
       </details>

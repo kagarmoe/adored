@@ -43,4 +43,16 @@ describe("useLeaveGuard", () => {
     window.dispatchEvent(new PopStateEvent("popstate"));
     expect(back).toHaveBeenCalledTimes(1);
   });
+  it("once saved, drops its own history entry if it is still the current one — and only then", () => {
+    window.history.replaceState(null, "", "/");
+    const back = vi.spyOn(window.history, "back").mockImplementation(() => {});
+    const { rerender } = render(<Harness active />);
+    rerender(<Harness active={false} />); // guard entry is current
+    expect(back).toHaveBeenCalledTimes(1);
+    window.history.replaceState(null, "", "/elsewhere"); // e.g. after a link navigation
+    rerender(<Harness active />);
+    window.history.replaceState(null, "", "/elsewhere");
+    rerender(<Harness active={false} />);
+    expect(back).toHaveBeenCalledTimes(1);
+  });
 });

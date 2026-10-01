@@ -29,6 +29,17 @@ describe("InYourLifeChip", () => {
     expect(JSON.parse(calls[0][1].body)).toEqual({ collectionId: "c1" });
     await waitFor(() => expect(calls[1][0]).toBe("/api/sessions/s9/decisions"));
   });
+  it("when the session has finished elsewhere (409), the next tap starts a fresh one", async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({ ok: false, status: 409 }).mockResolvedValueOnce(ok({ id: "s9" }))
+      .mockResolvedValue(ok()) as never;
+    render(<InYourLifeChip collectionId="c1" itemId="i1" sessionId="s1" />);
+    await userEvent.click(screen.getByRole("button", { name: "Resting" }));
+    await waitFor(() => expect(screen.getByText(/didn.t save/i)).toBeInTheDocument());
+    await userEvent.click(screen.getByRole("button", { name: "Resting" }));
+    const calls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls[1][0]).toBe("/api/sessions");
+    await waitFor(() => expect(calls[2][0]).toBe("/api/sessions/s9/decisions"));
+  });
   it("a failed write puts the chip back and says so", async () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: false }) as never;
     render(<InYourLifeChip collectionId="c1" itemId="i1" sessionId="s1" initial="uses" />);

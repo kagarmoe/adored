@@ -38,6 +38,15 @@ describe("ItemPanelForm", () => {
     await waitFor(() => expect(screen.getByLabelText("Brand")).toHaveValue("Coach"));
     expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
   });
+  it("clears the status line once editing resumes", async () => {
+    const user = userEvent.setup();
+    render(<ItemPanelForm item={item} collectionId="c1" />);
+    await user.clear(screen.getByLabelText("Name"));
+    await user.tab();
+    expect(screen.getByText("Give it a name to save")).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Brand"), "C");
+    expect(screen.queryByText("Give it a name to save")).not.toBeInTheDocument();
+  });
   it("blank name reverts to the previous name with a gentle line", async () => {
     const user = userEvent.setup();
     render(<ItemPanelForm item={item} collectionId="c1" />);

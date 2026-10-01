@@ -44,6 +44,8 @@ export function InYourLifeChip({ collectionId, itemId, sessionId, initial }: Pro
         headers: JSON_HEADERS,
         body: JSON.stringify({ type: "usage", decision: { itemId, result: next } }),
       });
+      // 409: that session finished elsewhere — forget it so the next tap starts a fresh one.
+      if (res.status === 409) setSid(null);
       if (!res.ok) throw new Error("decision");
     } catch {
       setValue(prev);
