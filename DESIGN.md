@@ -25,6 +25,12 @@ colors:
   tier-like: "#2f6e8c"
   tier-maybe: "#6fa0b8"
   tier-onward: "#b8d4dc"
+  ground-aqua: "#cfe6ec"
+  ground-mint: "#d5ebe1"
+  card: "#fbfcfc"
+  rim: "#ffffff"
+  chip: "#e3eef1"
+  chip-ink: "#16242b"
 typography:
   display:
     fontFamily: "Playfair Display, Georgia, serif"
@@ -45,8 +51,9 @@ typography:
     lineHeight: 1.2
     letterSpacing: "0.01em"
 rounded:
-  control: "10px"
-  card: "16px"
+  control: "10px"  # textareas, menus
+  pill: "999px"  # buttons, inputs, chips
+  card: "20px"
   full: "999px"
 spacing:
   xs: "4px"
@@ -95,6 +102,20 @@ Two **separate** colour systems that never trade places (see the named rule belo
 - **Ink** (`#16242B` light / `#ECF2F4` dark) and **Ink-soft**: text. Headings are ink, never teal.
 - **Ground / surface / hairline**: the room. The sea-glass ground recedes; cards rise to white by shadow + hairline, not tone.
 
+### Glass (Frosted shelf)
+
+**AA comes from each surface's own opacity, never from what sits behind it.** Three surface kinds, nothing else:
+
+- **Glass-strong** (`glass-strong`, ≥ 0.85 opaque — 0.88 light, 0.92 dark) — the only token that carries `backdrop-filter` blur, with a `rim` edge. At most three per screen.
+- **Decorative glass** (`glass`, ~0.5) — no blur, and only over the static ground wash, never over photos or moving content.
+- **Cards** (`card`) — pre-composited opaque hex, no blur.
+
+**Ground wash** (`--ground-wash`): two soft radial stops over `ground` — `ground-aqua` (`#CFE6EC`, top-left) and `ground-mint` (`#D5EBE1`, bottom-right).
+
+**Fallbacks:** without `backdrop-filter` support, or under `prefers-reduced-transparency: reduce`, `glass` falls back to `surface` and `glass-strong` to `surface-raised` (opaque).
+
+**Text on glass is ink or ink-soft; primary on glass marks controls (borders, icons, focus), never text.** Per-component inline tints are banned — use the tokens. Composites are declared in `globals.css` and gated by `contrast.test.ts` (each composite is proven against its token's alpha, over both ground stops and over black/white for glass-strong).
+
 ### Semantic / safety (reserved)
 
 Soft, conventional, reserved for meaning only: **error** `#9B4036`, **warning** `#9C6B22`, **success** `#3F5A34`, **info** `#2E4769` (each with `-soft`/`-deep` variants, theme-tuned for AA). Red appears only on genuinely destructive, irreversible actions, and even then it is sober.
@@ -133,14 +154,16 @@ A high-contrast editorial serif for the tender moments paired with a clean, neut
 
 ## 4. Elevation
 
-Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by a soft, cool shadow + a hairline. In **dark**, surfaces lift by an inset top highlight + a luminous hairline rim + a cool glow — by light, not shadow (elevation by light, never a muddy mid-tone). No warm tint, no hard black drop shadow.
+Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by a soft, cool shadow + a hairline. In **dark**, surfaces lift by an inset top highlight + a luminous hairline rim + a cool glow — by light, not shadow (elevation by light, never a muddy mid-tone). No warm tint, no hard black drop shadow. Glass surfaces lift by translucency + rim (`--color-rim`) instead of shadow alone.
 
 ## 5. Components
 
-- **Buttons:** 10px radius, min height 44px. **Primary:** teal fill, white text (dark: teal fill, dark text). **Secondary/ghost:** transparent or soft-aqua, ink/teal text. **Danger:** the reserved error red — only for truly destructive, irreversible actions; sober, not loud.
+- **Buttons:** pill radius (`rounded-pill`), min height 44px. **Primary:** teal fill, white text (dark: teal fill, dark text). **Secondary/ghost:** transparent or soft-aqua, ink/teal text. **Danger:** the reserved error red — only for truly destructive, irreversible actions; sober, not loud.
 - **Quiet links:** a secondary, non-dominant text link (shared `quiet-link` token, `src/lib/design/quiet-link.ts`): `primary`-token text, underlined, ≥44px tap height (`min-h-11`), visible focus ring. Used for the quieter actions beside a single dominant button (e.g. "View all items", "Add more photos") so each surface keeps exactly **one** dominant action.
-- **Cards:** 16px radius, surface fill, soft shadow + hairline (light) / hairline + glow (dark); the selected card uses a teal border + a check, never colour alone.
-- **Inputs:** surface fill, hairline border, 10px radius, 44px height; focus → teal ring; error → error border + a message, never colour alone.
+- **Cards:** 20px radius, `card` fill (pre-composited), hairline + soft shadow (light) / hairline + glow (dark), no backdrop-filter; the selected card uses a teal border + a check, never colour alone.
+- **Glass panel:** `Card variant="glass"` — glass-strong + blur + rim; the item panel's fields side.
+- **Filter pills / chips:** `rounded-pill`, 44px; selected = `chip` fill + primary border + a check glyph, never colour alone.
+- **Inputs:** surface fill, hairline border, pill radius (textareas keep 10px), 44px height; focus → teal ring; error → error border + a message, never colour alone.
 - **Badges / buckets:** tier badges use the value-ramp tokens + label + icon. Status badges are semantic where meaningful, neutral (hairline) otherwise. A **benign, in-progress** status (e.g. a paused sort) is **not** a warning — it uses a cool-blue benign chip (`content-mid` fill + `ink` text, AA-gated), never a safety/amber hue ("Brand never speaks Danger"). (`content-deep` is the deeper sibling on the ramp — a non-text fill in Sea Glass, too dark to carry AA-legible label text.)
 - **Theme toggle:** top-right of the shell; 44px tap target; honours reduced-motion.
 - **Wayfinding (breadcrumb + back arrow):** every authenticated page carries the breadcrumb

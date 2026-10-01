@@ -73,9 +73,16 @@
   --shadow-card-hover: var(--shadow-card-hover);
 
   --radius-control: 10px;
-  --radius-card: 16px;
+  --radius-card: 20px;
 
   --ease-gentle: var(--ease-gentle);
+  --color-card: var(--color-card);
+  --color-glass: var(--color-glass);
+  --color-glass-strong: var(--color-glass-strong);
+  --color-rim: var(--color-rim);
+  --color-chip: var(--color-chip);
+  --color-chip-ink: var(--color-chip-ink);
+  --radius-pill: 999px;
 }
 
 /*
@@ -168,6 +175,28 @@
   --ease-gentle: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-state: 180ms;
   --duration-reveal: 280ms;
+
+  /* Frosted shelf (spec 2026-10-01 §5). AA comes from each surface's own opacity,
+   * never from what sits behind it. Translucent tokens are rgb()/alpha; each has hex
+   * composites (over both ground stops, and black/white for glass-strong) that
+   * contrast.test.ts asserts text against and proves against the alpha. */
+  --color-ground-aqua: #cfe6ec;
+  --color-ground-mint: #d5ebe1;
+  --ground-wash: radial-gradient(120% 80% at 10% 0%, var(--color-ground-aqua), transparent 60%),
+    radial-gradient(120% 80% at 90% 100%, var(--color-ground-mint), transparent 60%),
+    var(--color-ground);
+  --color-card: #fbfcfc; /* surface-raised @ 0.9 over ground, pre-composited */
+  --color-rim: #ffffff;
+  --color-chip: #e3eef1;
+  --color-chip-ink: #16242b;
+  --color-glass: rgb(255 255 255 / 0.5);
+  --color-glass-strong: rgb(255 255 255 / 0.88);
+  --color-glass-on-aqua: #e7f3f6;
+  --color-glass-on-mint: #eaf5f0;
+  --color-glass-strong-on-aqua: #f9fcfd;
+  --color-glass-strong-on-mint: #fafdfb;
+  --color-glass-strong-on-black: #e0e0e0;
+  --color-glass-strong-on-white: #ffffff;
 }
 
 [data-theme="dark"] {
@@ -236,6 +265,35 @@
   --highlight-top: none;
   --shadow-card: var(--shadow-lift);
   --shadow-card-hover: var(--shadow-raised);
+
+  --color-ground-aqua: #022a33;
+  --color-ground-mint: #03261f;
+  --color-card: #10374a;
+  --color-rim: #3f7fa0;
+  --color-chip: #173f4d;
+  --color-chip-ink: #ecf2f4;
+  /* 0.92, not 0.85: over a white photo 0.85 leaves ink-soft under AA. */
+  --color-glass: rgb(16 63 74 / 0.5);
+  --color-glass-strong: rgb(16 63 74 / 0.92);
+  --color-glass-on-aqua: #09353f;
+  --color-glass-on-mint: #0a3335;
+  --color-glass-strong-on-aqua: #0f3d48;
+  --color-glass-strong-on-mint: #0f3d47;
+  --color-glass-strong-on-black: #0f3a44;
+  --color-glass-strong-on-white: #234e58;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  :root, [data-theme="dark"] {
+    --color-glass: var(--color-surface);
+    --color-glass-strong: var(--color-surface-raised);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root, [data-theme="dark"] {
+    --color-glass: var(--color-surface);
+    --color-glass-strong: var(--color-surface-raised);
+  }
 }
 
 /*
@@ -261,7 +319,7 @@
   body {
     font-family: var(--font-body);
     font-size: 1.0625rem; /* 17px — unhurried, 40+-friendly reading */
-    background: var(--color-ground);
+    background: var(--ground-wash);
     color: var(--color-ink);
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
