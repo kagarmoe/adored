@@ -1,12 +1,11 @@
-// Un-mocked DB-integration proof for the disposed-item exclusion promised in
-// Epic C PR1 spec §8: a `deferred`/`set_aside` item must be absent from BOTH
-//   (a) the pairwise compare candidate path (`selectNextPair`), and
-//   (b) the curator's preference list (it has no decision events → no row).
+// Un-mocked DB-integration proof that a disposed piece stays out of pairs. A
+// `deferred`/`set_aside` piece is never triaged, so it has no preference row and
+// is therefore outside the comparable set (Love + Like) — disposition itself is
+// no longer on the compare path; being untriaged is what keeps it out.
 //
-// This is the negative assertion the spec called for at the REAL data layer:
-// real repos -> ephemeral Postgres, using the exact fetches the compare page
-// runs (ItemController.listItems, PreferenceController.listItemPreferences,
-// DispositionController.listDispositions) wired into the production selector.
+// Real repos -> ephemeral Postgres, using the exact fetches the Sort screen runs
+// (ItemController.listItems, PreferenceController.listItemPreferences,
+// DecisionController.listForCurator) wired into the production selector.
 // Mocks ONLY the two true boundaries: getDb (-> test db) and auth (-> curator).
 // @vitest-environment node
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -38,7 +37,7 @@ function triageReq(sessionId: string, itemId: string, result: string): Request {
   });
 }
 
-describeDb("disposed item is excluded from the REAL compare path and preferences (spec §8)", () => {
+describeDb("a disposed piece is untriaged, so it is outside Love + Like and never pairs", () => {
   let curatorId: string;
 
   beforeEach(async () => {
@@ -78,11 +77,11 @@ describeDb("disposed item is excluded from the REAL compare path and preferences
       expect(res.status).toBe(201);
     }
 
-    // Build the selector inputs from the EXACT fetches the compare page uses.
+    // Build the selector inputs from the EXACT fetches the Sort screen uses.
     const [items, preferences, decisions] = await Promise.all([
       ItemController.fromDb(db).listItems(collectionId),
       PreferenceController.fromDb(db).listItemPreferences(collectionId, curatorId),
-      DecisionController.fromDb(db).listBySession(sortSession.id),
+      DecisionController.fromDb(db).listForCurator(collectionId, curatorId),
     ]);
 
     // Non-vacuous: C is absent from preferences (no events → no row); A and B are present.

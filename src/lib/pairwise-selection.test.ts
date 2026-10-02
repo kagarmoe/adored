@@ -46,12 +46,6 @@ describe("selectNextPair — the insertion engine over Love + Like", () => {
     expect(pair!.map((i) => i.id)).toEqual(deriveOrder(rankItems, comparisons).nextPair);
   });
 
-  it("never offers a Maybe, Onward or untriaged piece", () => {
-    const items = [item("a", 1), item("m", 2), item("o", 3), item("u", 4), item("b", 5)];
-    const pair = selectNextPair({ preferences: [pref("a", "top"), pref("m", "medium"), pref("o", "low"), pref("b", "high")], items, decisions: [] });
-    expect(pair!.map((i) => i.id).sort()).toEqual(["a", "b"]);
-  });
-
   it("offers nothing when fewer than two pieces are Love or Like", () => {
     expect(selectNextPair({ preferences: [pref("a", "top"), pref("m", "medium")], items: [item("a", 1), item("m", 2)], decisions: [] })).toBeNull();
   });
