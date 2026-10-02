@@ -10,6 +10,7 @@ import { DecisionController } from "@/server/api/decisions";
 import { PhotoController } from "@/server/api/photos";
 import { PreferenceController } from "@/server/api/preferences";
 import { RankingController } from "@/server/api/ranking";
+import { SessionController } from "@/server/api/sessions";
 import { buildRanking } from "@/server/services/sortResultMaterialization";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { deriveUsage, type UsageAnswer } from "@/lib/derive-usage";
@@ -25,12 +26,11 @@ import { ItemCard } from "@/features/items/ItemCard";
 import { MostLovedHero } from "@/features/results/MostLovedHero";
 import { RankingList, type RankingRow } from "@/features/results/RankingList";
 import { SaveAndShare } from "@/features/results/SaveAndShare";
+import { BUCKET_LABELS } from "@/features/sorting/roundCopy";
 
 interface RankingPageProps {
   params: Promise<{ id: string }>;
 }
-
-const TIER = { top: "Love", high: "Like", medium: "Maybe" } as const;
 
 /**
  * The live Ranking (spec §4.3). Reads only — viewing creates nothing (regression:
@@ -49,14 +49,16 @@ export default async function RankingPage({ params }: RankingPageProps) {
   const slug = collection.slug ?? collection.id;
   const base = `/collections/${slug}`;
 
-  const [preferences, dispositions, items, curatorEvents, pins] = await Promise.all([
+  const [preferences, dispositions, items, curatorEvents, pins, sessions] = await Promise.all([
     PreferenceController.fromDb(db).listItemPreferences(collection.id, curatorId),
     DispositionController.fromDb(db).listDispositions(collection.id, curatorId),
     ItemController.fromDb(db).listItems(collection.id),
     // Server-side only: folded into a small usage map, never sent to the client (DATA-6).
     DecisionController.fromDb(db).listForCurator(collection.id, curatorId),
     RankingController.fromDb(db).listPins(collection.id, curatorId),
+    SessionController.fromDb(db).listByCollectionAndCurator(collection.id, curatorId),
   ]);
+  const sortOpen = sessions.some((s) => s.status === "active" || s.status === "paused");
   const itemById = new Map(items.map((i) => [i.id, i]));
   const liveIds = new Set(itemById.keys());
   const { loved, onward } = buildRanking(preferences, liveIds, pins);
@@ -86,7 +88,7 @@ export default async function RankingPage({ params }: RankingPageProps) {
       name: itemDisplayName(item),
       coverUrl: coverUrl(item.id),
       initial: itemInitial(item),
-      tier: TIER[entry.bucket],
+      tier: BUCKET_LABELS[entry.bucket],
       pinned: entry.pinned,
       usage: usageByItemId.get(item.id),
     }];
@@ -102,12 +104,14 @@ export default async function RankingPage({ params }: RankingPageProps) {
         <div className="space-y-8">
           <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1 className="font-display text-2xl text-ink sm:text-3xl">Your ranking</h1>
+              <h1 id="ranking-heading" tabIndex={-1} className="font-display text-2xl text-ink focus:outline-hidden sm:text-3xl">
+                Your ranking
+              </h1>
               <p className="mt-2 text-ink-soft">Move any piece by hand and it stays where you put it.</p>
             </div>
             {hasRanking && (
               <div className="flex flex-col items-stretch gap-2 sm:items-end">
-                <SaveAndShare collectionId={collection.id} collectionSlug={slug} defaultName={defaultName} />
+                <SaveAndShare collectionId={collection.id} collectionSlug={slug} curatorId={curatorId} defaultName={defaultName} />
                 <Link href={`${base}/sort`} className={quietLink}>
                   Keep sorting
                 </Link>
@@ -130,7 +134,7 @@ export default async function RankingPage({ params }: RankingPageProps) {
               <h2 className="font-display text-2xl text-ink">Nothing to see yet — and that&rsquo;s fine.</h2>
               <p className="text-ink-soft">Once you&rsquo;ve sat with a few, what you love most will settle here.</p>
               <Link href={`${base}/sort`} className={buttonVariants()}>
-                Start sorting
+                {sortOpen ? "Keep sorting" : "Start sorting"}
               </Link>
             </section>
           )}
@@ -140,8 +144,13 @@ export default async function RankingPage({ params }: RankingPageProps) {
           )}
 
           {setAside.length > 0 && (
-            <details className="rounded-card border border-hairline bg-surface p-4">
-              <summary className="flex min-h-11 cursor-pointer items-center text-ink">Set aside</summary>
+            <details className="group rounded-card border border-hairline bg-surface p-4">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 rounded-control text-ink focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary [&::-webkit-details-marker]:hidden">
+                <span className="flex-1">Set aside</span>
+                <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-5 w-5 shrink-0 text-ink-soft transition-transform group-open:rotate-180 motion-reduce:transition-none">
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </summary>
               <ul className="mt-3 space-y-3">
                 {setAside.map((item) => (
                   <li key={item.id} className="flex items-center gap-3">
@@ -149,7 +158,7 @@ export default async function RankingPage({ params }: RankingPageProps) {
                       <CardImage src={coverUrl(item.id)} alt="" fallback={<span aria-hidden className="text-ink-soft">☾</span>} />
                     </span>
                     <span className="min-w-0 flex-1 truncate text-ink">{itemDisplayName(item)}</span>
-                    <BringBackControl collectionId={collection.id} itemId={item.id} />
+                    <BringBackControl collectionId={collection.id} itemId={item.id} itemName={itemDisplayName(item)} focusAfterLastId="ranking-heading" />
                   </li>
                 ))}
               </ul>

@@ -227,6 +227,28 @@ describe("one dominant action when a session is active (A1)", () => {
     expect(dominant[0]).toBe(keep);
   });
 
+  it("a paused sort is still the current one: Keep sorting, not Start", async () => {
+    itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
+    sessionRepo.findByCollectionAndCurator.mockResolvedValue([{ ...makeSession(5), status: "paused" }]);
+    await renderPage();
+    expect(screen.getByRole("button", { name: "Keep sorting" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Start sorting" })).not.toBeInTheDocument();
+  });
+
+  it("an open sort with nothing placed yet offers no ranking link (there is nothing to see)", async () => {
+    itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
+    sessionRepo.findByCollectionAndCurator.mockResolvedValue([makeSession(5)]);
+    await renderPage();
+    expect(screen.queryByRole("link", { name: "See your ranking" })).not.toBeInTheDocument();
+  });
+
+  it("a finished sort keeps the ranking link even when nothing is placed now", async () => {
+    itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
+    sessionRepo.findByCollectionAndCurator.mockResolvedValue([{ ...makeSession(5), status: "completed" }]);
+    await renderPage();
+    expect(screen.getByRole("link", { name: "See your ranking" })).toBeInTheDocument();
+  });
+
   it("pool-first WITHOUT a session: the lead action stays primary", async () => {
     photoRepo.findPoolByCollection.mockResolvedValue([makePoolPhoto("ph_1")]);
     const { container } = await renderPage();
@@ -357,7 +379,7 @@ describe("workspace mode chips", () => {
 });
 
 describe("navigation links", () => {
-  it("uses slug for nav links and resume; no raw ULIDs in hrefs", async () => {
+  it("uses slug for nav links; no raw ULIDs in hrefs", async () => {
     photoRepo.findPoolByCollection.mockResolvedValue([makePoolPhoto("ph_1")]);
     itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
     sessionRepo.findByCollectionAndCurator.mockResolvedValue([makeSession(5)]);

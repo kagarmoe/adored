@@ -149,13 +149,14 @@ export function RankingList({ collectionId, rows }: { collectionId: string; rows
               if (from !== null) void place(from, i);
             }}
             onDragEnd={() => setDragging(null)}
-            className={`flex items-center gap-3 rounded-card border border-hairline bg-surface p-2${dragging === i ? " opacity-60" : ""}`}
+            className={`flex items-center gap-2 rounded-card border border-hairline bg-surface p-2 sm:gap-3${dragging === i ? " opacity-60" : ""}`}
           >
-            <span aria-hidden className="flex h-11 w-6 shrink-0 cursor-grab items-center justify-center text-lg text-ink-soft">
+            {/* Phone: the grip and number give way so the name stays readable (drag is a tablet nicety). */}
+            <span aria-hidden className="hidden h-11 w-6 shrink-0 cursor-grab items-center justify-center text-lg text-ink-soft sm:flex">
               ⠿
             </span>
-            <span className="w-6 shrink-0 text-center text-sm text-ink-soft">{i + 1}</span>
-            <span className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-control bg-content-soft">
+            <span className="hidden w-6 shrink-0 text-center text-sm text-ink-soft sm:block">{i + 1}</span>
+            <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-control bg-content-soft sm:h-14 sm:w-14">
               <CardImage
                 src={row.coverUrl}
                 alt=""
@@ -180,9 +181,13 @@ export function RankingList({ collectionId, rows }: { collectionId: string; rows
                 type="button"
                 onClick={() => void unpin(row)}
                 aria-label={`Unpin ${row.name}`}
-                className="h-11 shrink-0 rounded-pill px-3 text-sm text-ink-soft hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+                className="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-pill text-sm text-ink-soft hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary sm:px-3"
               >
-                Unpin
+                {/* Phone: the pin glyph alone (the accessible name stays "Unpin …"). */}
+                <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-5 w-5 sm:hidden">
+                  <path d="M9 4h6l-1 6 3 3H7l3-3-1-6zM12 13v7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className="hidden sm:inline">Unpin</span>
               </button>
             )}
             <button

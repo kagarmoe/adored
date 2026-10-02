@@ -3,8 +3,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui";
 
-// Shared shell for the sorting control buttons (Defer / Keep sorting / Take a break /
-// Bring back). Each is a single quiet tap that fires one async action and then
+// Shared shell for the sorting control buttons (Keep sorting / Pause / Bring back). Each is a single quiet tap that fires one async action and then
 // navigates. The double-submit guard, the identical gentle error notice, and the
 // "Just a moment…" busy label all live here so a fix lands in one place.
 //
@@ -21,6 +20,7 @@ export function AsyncActionButton({
   align = "start",
   title,
   ariaLabel,
+  fullWidth = false,
 }: {
   action: () => Promise<void>;
   label: string;
@@ -29,6 +29,8 @@ export function AsyncActionButton({
   align?: "start" | "end";
   title?: string;
   ariaLabel?: string;
+  /** Full width below `sm`, natural width above. */
+  fullWidth?: boolean;
 }): ReactNode {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -49,10 +51,11 @@ export function AsyncActionButton({
   }
 
   return (
-    <div className={`flex flex-col gap-1 ${align === "end" ? "items-end" : "items-start"}`}>
+    <div className={`flex flex-col gap-1 ${align === "end" ? "items-end" : "items-start"}${fullWidth ? " w-full sm:w-auto" : ""}`}>
       <Button
         type="button"
         variant={variant}
+        className={fullWidth ? "w-full sm:w-auto" : undefined}
         onClick={run}
         disabled={busy}
         title={title}

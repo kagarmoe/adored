@@ -10,15 +10,18 @@ interface KeepSortingButtonProps {
   curatorId: string;
   sortHref: string;
   session: { id: string; status: "active" | "paused" } | null;
+  /** Full width on phone, so the one primary action is never the smallest thing there. */
+  fullWidth?: boolean;
 }
 
 // The collection's one sort action (spec §4.1): "Keep sorting" resumes the open
 // sort (reactivating a paused one); otherwise "Start sorting" opens a new one with
 // the server's defaults. A 409 means a sort was opened elsewhere — just join it.
-export function KeepSortingButton({ collectionId, curatorId, sortHref, session }: KeepSortingButtonProps) {
+export function KeepSortingButton({ collectionId, curatorId, sortHref, session, fullWidth }: KeepSortingButtonProps) {
   const router = useRouter();
   return (
     <AsyncActionButton
+      fullWidth={fullWidth}
       label={session ? "Keep sorting" : "Start sorting"}
       variant="primary"
       action={async () => {

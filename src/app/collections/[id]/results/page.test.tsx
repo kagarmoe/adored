@@ -3,7 +3,7 @@ import "@testing-library/jest-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 
-const { mockGetSession, mockRequireAccess, preferences, dispositions, items, photos, decisions, ranking } = vi.hoisted(() => ({
+const { mockGetSession, mockRequireAccess, preferences, dispositions, items, photos, decisions, ranking, sessions } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockRequireAccess: vi.fn(),
   preferences: { listItemPreferences: vi.fn() },
@@ -12,6 +12,7 @@ const { mockGetSession, mockRequireAccess, preferences, dispositions, items, pho
   photos: { findCoverPhotosByItemIds: vi.fn() },
   decisions: { listForCurator: vi.fn() },
   ranking: { listPins: vi.fn() },
+  sessions: { listByCollectionAndCurator: vi.fn() },
 }));
 
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
@@ -29,6 +30,7 @@ vi.mock("@/server/api/items", () => ({ ItemController: { fromDb: () => items } }
 vi.mock("@/server/api/photos", () => ({ PhotoController: { fromDb: () => photos } }));
 vi.mock("@/server/api/decisions", () => ({ DecisionController: { fromDb: () => decisions } }));
 vi.mock("@/server/api/ranking", () => ({ RankingController: { fromDb: () => ranking } }));
+vi.mock("@/server/api/sessions", () => ({ SessionController: { fromDb: () => sessions } }));
 // The gate's own behaviour is covered in its tests; here it just mounts the page.
 vi.mock("@/features/sorting/PendingDecisionsGate", () => ({ PendingDecisionsGate: ({ children }: { children: React.ReactNode }) => children }));
 
@@ -57,6 +59,7 @@ beforeEach(() => {
   decisions.listForCurator.mockResolvedValue([]);
   photos.findCoverPhotosByItemIds.mockResolvedValue(new Map());
   ranking.listPins.mockResolvedValue([]);
+  sessions.listByCollectionAndCurator.mockResolvedValue([]);
 });
 
 describe("the live Ranking page (spec §4.3)", () => {
@@ -75,7 +78,7 @@ describe("the live Ranking page (spec §4.3)", () => {
     const setAside = screen.getByText("Set aside").closest("details")!;
     expect(setAside).not.toHaveAttribute("open");
     expect(within(setAside).getByText("Foxtrot")).toBeInTheDocument();
-    expect(within(setAside).getByRole("button", { name: /bring back/i })).toBeInTheDocument();
+    expect(within(setAside).getByRole("button", { name: "Bring back Foxtrot" })).toBeInTheDocument();
   });
 
   it("keeps the quiet usage note beside the tier on every row", async () => {
@@ -100,6 +103,16 @@ describe("the live Ranking page (spec §4.3)", () => {
     expect(screen.getByText("Nothing to see yet — and that’s fine.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Start sorting" })).toHaveAttribute("href", "/collections/summer-bags/sort");
     expect(screen.queryByRole("button", { name: "Save and share" })).toBeNull();
+  });
+
+  it("with nothing ranked but a sort open: Keep sorting, not Start", async () => {
+    preferences.listItemPreferences.mockResolvedValue([]);
+    dispositions.listDispositions.mockResolvedValue([]);
+    sessions.listByCollectionAndCurator.mockResolvedValue([{ id: "s1", status: "paused" }]);
+    await renderPage();
+    expect(sessions.listByCollectionAndCurator).toHaveBeenCalledWith("coll_01ABC", "u1");
+    expect(screen.getByRole("link", { name: "Keep sorting" })).toHaveAttribute("href", "/collections/summer-bags/sort");
+    expect(screen.queryByRole("link", { name: "Start sorting" })).toBeNull();
   });
 
   it("DATA-6: the raw curator event log is never serialized into the render", async () => {

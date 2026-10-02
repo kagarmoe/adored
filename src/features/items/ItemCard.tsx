@@ -2,6 +2,7 @@ import type { Item } from "@/types";
 import type { UsageAnswer } from "@/lib/derive-usage";
 import { hasName, itemDisplayName, itemInitial } from "@/lib/items";
 import { usageChipLabel } from "@/features/items/usage-chip-copy";
+import { BUCKET_LABELS } from "@/features/sorting/roundCopy";
 import { Badge, Card, CardImage, PhotoViewControl, type ViewerPhoto } from "@/components/ui";
 import Link from "next/link";
 
@@ -27,12 +28,6 @@ const bucketDots = {
   low: "●",
 };
 
-const bucketLabels = {
-  top: "Love",
-  high: "Like",
-  medium: "Maybe",
-  low: "Onward",
-};
 
 export function ItemCard({
   item,
@@ -65,8 +60,8 @@ export function ItemCard({
           <div className="flex flex-wrap items-start justify-between gap-2">
             <h3 className="min-w-0 grow basis-24 text-ink line-clamp-2 break-words">{itemDisplayName(item)}</h3>
             {bucket && (
-              <Badge variant={bucket} title={bucketLabels[bucket]} className="shrink-0">
-                <span role="img" aria-label={bucketLabels[bucket]}>{bucketDots[bucket]}</span>
+              <Badge variant={bucket} title={BUCKET_LABELS[bucket]} className="shrink-0">
+                <span role="img" aria-label={BUCKET_LABELS[bucket]}>{bucketDots[bucket]}</span>
               </Badge>
             )}
           </div>

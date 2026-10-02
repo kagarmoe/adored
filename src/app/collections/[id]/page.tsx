@@ -63,7 +63,8 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   // Sorted before = any past session OR any surviving decision (a curator whose
   // only session was set aside has no session rows, but their answers persist).
   const preferences = await PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id);
-  const hasEverSorted = sessions.length > 0 || preferences.length > 0;
+  // Something to see on the Ranking: a placed piece, or a sort finished before.
+  const hasEverSorted = preferences.length > 0 || sessions.some((s) => s.status === "completed");
   const showSort = itemPreview.length > 0 || currentSession !== undefined;
 
   // A1: at most one dominant (bg-primary) action on the workspace. Keep sorting
@@ -161,6 +162,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
         {showSort && (
           <section aria-label="Sort" className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-4">
             <KeepSortingButton
+              fullWidth
               collectionId={collection.id}
               curatorId={session.user.id}
               sortHref={`${base}/sort`}

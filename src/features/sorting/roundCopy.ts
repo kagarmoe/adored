@@ -16,6 +16,9 @@ export const COMPARE_SUBLINE = "Tap the one you'd reach for. Tie or skip wheneve
 // ROUND_COPY, and one home so both Welcome beats assert against the same string.
 export const WELCOME_ROUND_KICKER = "A sample sort";
 
+// The person's word for each bucket — one home for every surface that names a tier.
+export const BUCKET_LABELS = { top: "Love", high: "Like", medium: "Maybe", low: "Onward" } as const;
+
 // The ScoringService result buckets a triage tap can carry. Narrowed (not
 // `string`) so callers can index RESULT_TO_TIER without a cast, which
 // compile-couples this list to that map's keys.
@@ -26,10 +29,8 @@ export type TriageResult = "top" | "high" | "medium" | "low";
 export function triageDecisions(
   itemId: string,
 ): Array<{ label: string; decision: { itemId: string; result: TriageResult } }> {
-  return [
-    { label: "Love", decision: { itemId, result: "top" } },
-    { label: "Like", decision: { itemId, result: "high" } },
-    { label: "Maybe", decision: { itemId, result: "medium" } },
-    { label: "Onward", decision: { itemId, result: "low" } },
-  ];
+  return (["top", "high", "medium", "low"] as const).map((result) => ({
+    label: BUCKET_LABELS[result],
+    decision: { itemId, result },
+  }));
 }
