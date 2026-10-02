@@ -16,22 +16,31 @@ import { AsyncActionButton } from "./AsyncActionButton";
 export function BringBackControl({
   collectionId,
   itemId,
+  itemName,
+  focusAfterLastId,
 }: {
   collectionId: string;
   itemId: string;
+  itemName: string;
+  /** Where focus goes when this was the last row (its list leaves with it). */
+  focusAfterLastId?: string;
 }) {
   const router = useRouter();
 
   return (
     <AsyncActionButton
       label="Bring back"
-      title="bring this one back"
-      ariaLabel="Bring back — return this one to your decisions"
+      ariaLabel={`Bring back ${itemName}`}
       action={async () => {
+        // Read before the await: the row (and its button) leaves with the refresh.
+        const row = document.activeElement?.closest("li");
         const res = await fetch(`/api/collections/${collectionId}/dispositions/${itemId}`, {
           method: "DELETE",
         });
         if (!res.ok) throw new Error("bring back failed");
+        const neighbour = row?.nextElementSibling ?? row?.previousElementSibling;
+        const target = neighbour?.querySelector("button") ?? (focusAfterLastId ? document.getElementById(focusAfterLastId) : null);
+        target?.focus();
         router.refresh(); // the row leaves the list; the item returns to the queue
       }}
     />

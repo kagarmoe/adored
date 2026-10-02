@@ -7,7 +7,7 @@ import {
 // The first-run walkthrough, driven end-to-end in a real browser. Every other
 // spec DISARMS the /welcome redirect (auth-navigation.spec sets the dismissal
 // cookie); this one is the opposite — a fresh zero-collection user must be
-// carried into /welcome and all the way through the six beats.
+// carried into /welcome and all the way through the five beats.
 //
 // Fixture design (fights the suite defaults on purpose):
 //  - Logged OUT: the project storageState is an authed session; clear it so we
@@ -36,40 +36,20 @@ async function signInFresh(
   await page.waitForURL(/\/welcome/, { timeout: 15_000 });
 }
 
-// Walk purpose → triage(×3) → triage standing → usage(×3) → usage standing →
-// compare → final standing → refine, stopping ON the handoff beat (its CTA
-// visible, not yet clicked). The intermediate assertions are both the spec's
-// teaching-fidelity checks AND the per-beat sync barriers.
+// Walk purpose → feelings (×3) → pairs → ranking, stopping ON the hand-off beat
+// (its CTA visible, not yet clicked). The intermediate assertions are both the
+// spec's teaching-fidelity checks AND the per-beat sync barriers.
 async function walkToHandoff(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Show me how" }).click();
-
   await expect(page.getByRole("heading", { name: "How do you feel about this one?" })).toBeVisible();
-  await page.getByRole("button", { name: "Love" }).click();
-  await page.getByRole("button", { name: "Like" }).click();
+  await page.getByRole("button", { name: "Love", exact: true }).click();
+  await page.getByRole("button", { name: "Like", exact: true }).click();
   await page.getByRole("button", { name: /not mine/i }).click(); // set aside
-
-  await expect(page.getByRole("heading", { name: "After Triage" })).toBeVisible();
-  await page.getByRole("button", { name: "Continue" }).click();
-
-  // Usage beat — "Do you use this?" asks about the whole sample collection.
-  await expect(page.getByRole("heading", { name: "Do you use this?" })).toBeVisible();
-  await page.getByRole("button", { name: "Yes, I use it" }).click();
-  await page.getByRole("button", { name: "Not these days" }).click();
-  await page.getByRole("button", { name: /^Skip for now/ }).click();
-
-  await expect(page.getByRole("heading", { name: "After Usage" })).toBeVisible();
-  await page.getByRole("button", { name: "Continue" }).click();
-
+  await expect(page.getByRole("heading", { name: "Which would you reach for first?" })).toBeVisible();
   await page.getByRole("button", { name: "Tie", exact: true }).click();
-
   await expect(page.getByRole("heading", { name: "Your ranking so far" })).toBeVisible();
-  // The set-aside from item 3 surfaces in its gentle group.
   await expect(page.getByText(/waiting, whenever you want them/i)).toBeVisible();
-  await page.getByRole("button", { name: "Continue" }).click(); // standing → refine
-
-  await expect(page.getByText(/Adjust results/i)).toBeVisible();
-  await page.getByRole("button", { name: "Continue" }).click(); // refine → handoff
-
+  await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByRole("link", { name: "Start a collection" })).toBeVisible();
 }
 

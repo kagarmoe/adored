@@ -1,32 +1,33 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
-import type { MovedDecision } from "@/lib/what-moved";
-import { Button, Card } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
 import { DecisionControls } from "./DecisionControls";
-import { triageDecisions, THIS_ROUND_LABEL, type TriageResult } from "./roundCopy";
+import { triageDecisions, type TriageResult } from "./roundCopy";
 import { DeferControl } from "./DeferControl";
 import { SetAsideButton } from "./SetAsideButton";
 import { useOptionalTriageUndo } from "./TriageUndoProvider";
-import { RoundShell } from "./RoundShell";
-import { RoundTimer } from "./RoundTimer";
-import { RoundLengthDialog } from "./RoundLengthDialog";
-import { WhatMoved } from "./WhatMoved";
-import { setRoundBox, type RoundBoxSeconds } from "@/lib/round-preference";
 import { enqueue, newClientKey } from "./decisionQueue";
-import { triggerFlush } from "./decisionFlusher";
+import { drain, triggerFlush } from "./decisionFlusher";
 import { STUMBLE_LINE, useOptimisticRound } from "./useOptimisticRound";
 import { PendingNotices } from "./pendingNotices";
+import { SortProgress } from "./SortProgress";
 
 export interface TriageRoundQueueEntry {
   item: Item;
   deferred: boolean;
   heroPhotoUrl?: string;
 }
+
+const add = (set: ReadonlySet<string>, id: string): ReadonlySet<string> => new Set(set).add(id);
+const without = (set: ReadonlySet<string>, id: string): ReadonlySet<string> => {
+  const next = new Set(set);
+  next.delete(id);
+  return next;
+};
 
 interface TriageRoundProps {
   curatorId: string;
@@ -35,251 +36,168 @@ interface TriageRoundProps {
   collectionId: string;
   /** collection.slug ?? collection.id — ItemCard's link base. */
   collectionSlugOrId: string;
-  /** Server-selected whole eligible remainder (selectTriageQueue), in round order. */
+  /** chooseSortPhase's feelings queue: active pieces first, then Not yet ones. */
   queue: TriageRoundQueueEntry[];
-  /** Server decision log for the recap merge (pre-round; the window filter excludes it). */
-  decisions: MovedDecision[];
-  /** Server-computed distinct-decided count (today's `preferences.length`). */
-  decidedSeed: number;
-  hubHref: string;
-  /** Where the recap's "See your ranking so far" leads (the collection's results page). */
-  resultsHref: string;
-  setAsideHref: string;
+  /** Live pieces already placed before this visit (the progress seed). */
+  placedSeed: number;
+  /** Where the phase hands off once every piece has passed through (…/sort?phase=pairs). */
+  nextHref: string;
 }
 
 /**
- * The optimistic triage round (spec §3.3): advances through the server-selected
- * queue from LOCAL state, enqueueing each decision into the localStorage queue —
- * the UI advances only after the entry is persisted (persist-before-advance),
- * and round end runs ONE drain and NO `router.refresh()` (F15/purses-hzwj). No
- * refetch at all: the queue/seed/decision-log props are snapshotted at mount, so
- * nothing here would consume a refreshed payload anyway.
+ * The feelings phase (spec §4): "How do you feel about this one?" for every live
+ * piece, once. Answers advance from local state (persist-before-advance); Not yet
+ * sends a piece to the end of the phase, and a second Not yet lets it rest; Not
+ * mine sets it aside (with Bring back). When every piece has passed through, the
+ * answers are landed and the screen hands off to pairs.
  */
-export function TriageRound({
-  curatorId,
-  sessionId,
-  collectionId,
-  collectionSlugOrId,
-  queue,
-  decisions,
-  decidedSeed,
-  hubHref,
-  resultsHref,
-  setAsideHref,
-}: TriageRoundProps) {
+export function TriageRound({ curatorId, sessionId, collectionId, collectionSlugOrId, queue, placedSeed, nextHref }: TriageRoundProps) {
   const router = useRouter();
-
-  // Round-local snapshot: mid-round prop updates (e.g. a legacy affordance's
-  // refresh) never double-count the seed (F20). A never-updated state cell IS the
-  // mount snapshot, and — unlike a ref — the count may read it while rendering.
-  const [seed] = useState(decidedSeed);
+  const [seed] = useState(placedSeed);
+  const [deferredAtMount] = useState(() => new Set(queue.filter((e) => e.deferred).map((e) => e.item.id)));
   const [entries, setEntries] = useState<TriageRoundQueueEntry[]>(queue);
   const [handled, setHandled] = useState<ReadonlySet<string>>(new Set());
-  const [newlyDecided, setNewlyDecided] = useState<ReadonlySet<string>>(new Set());
-  const [lengthDialogOpen, setLengthDialogOpen] = useState(false);
-  // Handed to RoundTimer (renders the adjust button) AND RoundLengthDialog
-  // (refocuses it on close) — the dialog is a portal, so it can't reach the
-  // trigger on its own.
-  const adjustButtonRef = useRef<HTMLButtonElement>(null);
+  const [placed, setPlaced] = useState<ReadonlySet<string>>(new Set());
+  const [escaped, setEscaped] = useState<ReadonlySet<string>>(new Set());
   const undoCtx = useOptionalTriageUndo();
 
-  // The queue fork is triage's own: the head not yet handled. Everything else
-  // about advancing that decision optimistically (flusher wiring, enqueue +
-  // quota fallback, the tap log + frozen recap + drain-only end sequence, the
-  // undo-as-revisit machine, the round clock) rides the shared hook.
   const current = entries.find((e) => !handled.has(e.item.id));
-  const round = useOptimisticRound<{ itemId: string; result: TriageResult }>({
-    curatorId,
-    sessionId,
-    collectionId,
-    decisionType: "triage",
-    serverLog: decisions,
-    initialQueueEmpty: queue.length === 0,
-    queueExhausted: current === undefined,
-    fallbackBody: (decision, clientKey) => ({ type: "triage", decision, clientKey }),
-    labelFor: (itemId, decision) =>
-      triageDecisions(itemId).find((t) => t.decision.result === decision.result)?.label ??
-      decision.result,
-    toMoved: (decision, createdAtMs) => ({ type: "triage", createdAt: createdAtMs, decision }),
-  });
-  const { key, revisit, expired, reopenRound } = round;
+  const round = useOptimisticRound({ curatorId, sessionId, collectionId });
+  const { key, revisit } = round;
+  // Mounted empty so the region exists before its text changes (SC 4.1.3).
+  const [announcement, setAnnouncement] = useState("");
+  const heading = useRef<HTMLHeadingElement>(null);
+  const backControl = useRef<HTMLButtonElement>(null);
+  const focusAfterUndo = useRef(false);
 
-  // Bring-back restore (Epic C's §11 promise, kept under Epic P): when the
-  // provider's undo clears via "Bring back", the item returns to THIS round's
-  // focus — pure client un-advance, no refresh (the clear rides the queue).
-  // A queue-exhausted round un-ends (the recap recedes — the escape must
-  // never be a dead end); a TIMER-expired round stays ended: the time box is
-  // the boundary, and the item simply returns next round.
+  // Bring back (provider's undo cleared) returns the piece to this phase.
   const lastUndoRef = useRef(undoCtx?.undo ?? null);
   const undoNow = undoCtx?.undo ?? null;
   useEffect(() => {
     const prev = lastUndoRef.current;
     lastUndoRef.current = undoNow;
-    if (prev === null || undoNow !== null) return;
-    if (!handled.has(prev.itemId)) return; // not this round's advance — nothing to restore
-    setHandled((handledPrev) => {
-      const next = new Set(handledPrev);
-      next.delete(prev.itemId);
-      return next;
-    });
-    if (!expired) reopenRound();
-  }, [undoNow, handled, expired, reopenRound]);
+    if (prev === null || undoNow !== null || !handled.has(prev.itemId)) return;
+    setHandled((h) => without(h, prev.itemId));
+    setEscaped((e) => without(e, prev.itemId));
+  }, [undoNow, handled]);
 
-  // While revisiting, the standing item is shown instead of the queue head; the
-  // round itself hasn't moved (walking away resumes exactly where it was).
   const revisitEntry = revisit === null ? undefined : entries.find((e) => e.item.id === revisit.itemId);
   const shown = revisitEntry ?? current;
 
-  function advancePast(itemId: string) {
-    setHandled((prev) => new Set(prev).add(itemId));
+  // Undo of the only queued answer takes its control away; land on the question.
+  useEffect(() => {
+    if (!focusAfterUndo.current) return;
+    focusAfterUndo.current = false;
+    if (!backControl.current) heading.current?.focus();
+  });
+
+  // Every piece has passed through: land the answers, then on to pairs (once).
+  const handedOff = useRef(false);
+  useEffect(() => {
+    if (shown !== undefined || handedOff.current) return;
+    handedOff.current = true;
+    void drain([key]).finally(() => router.replace(nextHref));
+  }, [shown, key, nextHref, router]);
+
+  async function handleTriage(target: Item, decision: { itemId: string; result: TriageResult }): Promise<boolean> {
+    if (!(await round.submitDecision(target.id, decision))) return false;
+    setPlaced((p) => add(p, target.id));
+    setEscaped((e) => without(e, target.id));
+    setHandled((h) => add(h, target.id));
+    return true;
   }
 
-  async function handleTriage(target: Item, decision: { itemId: string; result: TriageResult }) {
-    if (!(await round.submitDecision(target.id, decision))) return;
-    setNewlyDecided((prev) => new Set(prev).add(target.id)); // idempotent — a re-answer never double-counts
-    advancePast(target.id);
+  // The piece changes under the person's focus, so say which one is in front of them.
+  function undo() {
+    const back = round.goBack();
+    if (back === null) return;
+    const name = entries.find((e) => e.item.id === back.itemId)?.item.name ?? "";
+    if (!back.fresh) {
+      setAnnouncement(`Back to ${name}. You placed this with ${back.label} — change it?`);
+      return;
+    }
+    setPlaced((p) => without(p, back.itemId));
+    setHandled((h) => without(h, back.itemId));
+    setAnnouncement(`Back to ${name}.`);
+    focusAfterUndo.current = true;
   }
 
-  // The round's back affordance (spec §3.3): the shared machine decides queued
-  // vs standing vs no-op. A queued undo comes back here to un-advance the item
-  // and decrement this round's count (F20) — the two pieces of triage state the
-  // hook never owns.
-  function goBack() {
-    const fresh = round.goBack();
-    if (fresh === null) return;
-    setNewlyDecided((prev) => {
-      const next = new Set(prev);
-      next.delete(fresh.itemId);
-      return next;
-    });
-    setHandled((prev) => {
-      const next = new Set(prev);
-      next.delete(fresh.itemId);
-      return next;
-    });
+  function keepGoing() {
+    round.clearRevisit();
+    if (current) setAnnouncement(`Back to ${current.item.name}.`);
   }
 
-  async function handleDefer(target: Item) {
-    // Dispositions ride the queue (never a bare fetch), so they can never
-    // overtake queued decisions; the flusher sends them alone between runs.
-    const clientKey = newClientKey();
+  async function handleNotYet(target: TriageRoundQueueEntry) {
+    setEscaped((e) => add(e, target.item.id));
+    if (target.deferred) {
+      // Already waited once this visit (or came back waiting): let it rest so the phase can end.
+      setHandled((h) => add(h, target.item.id));
+      return;
+    }
     const persisted = await enqueue(
       key,
-      {
-        kind: "disposition",
-        clientKey,
-        itemId: target.id,
-        disposition: "deferred",
-        enqueuedAt: new Date().toISOString(),
-      },
+      { kind: "disposition", clientKey: newClientKey(), itemId: target.item.id, disposition: "deferred", enqueuedAt: new Date().toISOString() },
       () => triggerFlush(key),
     );
     if (persisted === "needs_fallback") {
-      // Storage unavailable: degrade to today's awaited direct submit (F18).
       try {
         await fetch(`/api/collections/${collectionId}/dispositions`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ itemId: target.id, disposition: "deferred" }),
+          body: JSON.stringify({ itemId: target.item.id, disposition: "deferred" }),
         });
       } catch {
-        // best-effort: the item still rests at the tail and resurfaces next round
+        // best-effort: the piece still waits at the end and returns next visit
       }
     }
-    // Round-local resurface: the item moves to the tail as deferred.
-    setEntries((prev) => {
-      const found = prev.find((e) => e.item.id === target.id);
-      if (!found) return prev;
-      return [...prev.filter((e) => e.item.id !== target.id), { ...found, deferred: true }];
-    });
+    setEntries((prev) => [...prev.filter((e) => e.item.id !== target.item.id), { ...target, deferred: true }]);
   }
 
-  function handleSetAside(target: Item) {
-    // The provider owns the network + the "Bring back" undo state; the round
-    // owns the optimistic advance — the tap never waits.
+  function handleNotMine(target: Item) {
     if (undoCtx) void undoCtx.setAside(target.id, target.name);
-    advancePast(target.id);
+    setEscaped((e) => add(e, target.id));
+    setHandled((h) => add(h, target.id));
   }
 
-  // Ceiling-free cue (F20): seed + this round's tap set. Ticks on the tap,
-  // never on the flush; dispositions don't count.
-  const decided = seed + newlyDecided.size;
-
-  const roundOver = shown === undefined || expired;
-  // Round end closes any open length dialog and discards its uncommitted preview:
-  // a Done landing AFTER end would mutate round.boxMs and retroactively flip
-  // WhatMoved's live-derived `hadTimer` badge for a round that's already over.
-  // A direct render-time clamp (not an effect, which wouldn't run until after
-  // the browser paints the ended UI); idempotent once lengthDialogOpen is
-  // already false, so this never loops.
-  if (roundOver && lengthDialogOpen) setLengthDialogOpen(false);
-  const currentBox: RoundBoxSeconds = round.boxMs === null ? "none" : ((round.boxMs / 1000) as RoundBoxSeconds);
-  const timer = (
-    <div className="flex items-start gap-3">
-      <div className="min-w-0 flex-1">
-        <RoundTimer
-          startedAtMs={round.startedAtMs}
-          boxMs={round.boxMs}
-          onExpire={round.onExpire}
-          roundLabel={THIS_ROUND_LABEL}
-          onAdjust={!roundOver ? () => setLengthDialogOpen(true) : undefined}
-          adjustButtonRef={adjustButtonRef}
-        />
-      </div>
-    </div>
-  );
+  // Placed so far over what this visit can still place: pieces placed before it
+  // (seed), plus this visit's active pieces, plus any piece that came back waiting
+  // and has now been placed (a waiting piece only counts once it is answered, so a
+  // second Not yet never leaves a hole), minus the active pieces that left without a
+  // feeling (Not yet / Not mine) — they are not "to place" any more this visit.
+  const done = seed + placed.size;
+  const total =
+    seed +
+    (queue.length - deferredAtMount.size) +
+    [...placed].filter((id) => deferredAtMount.has(id)).length -
+    [...escaped].filter((id) => !deferredAtMount.has(id)).length;
 
   return (
-    <RoundShell
-      step={1}
-      totalSteps={4}
-      roundLabel={THIS_ROUND_LABEL}
-      timer={timer}
-      onPause={() => router.push(hubHref)}
-    >
-      {/* The flush engine's one quiet voice — OUTSIDE the content swap so a
-          notice raised mid-round is still on screen when the recap (and the
-          round-end revert) lands (F9). */}
-      <div className="mx-auto max-w-xl">
-        <PendingNotices />
-      </div>
-      {shown === undefined || expired ? (
-        <WhatMoved
-          decisions={round.recapDecisions}
-          windowStartMs={round.windowStartMs}
-          nowMs={round.recapNowMs}
-          hubHref={hubHref}
-          resultsHref={resultsHref}
-          hadTimer={round.boxMs !== null}
-        />
+    <div className="space-y-6">
+      <SortProgress done={done} total={total} />
+      <p aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
+      <PendingNotices />
+      {shown === undefined ? (
+        <p role="status" className="text-sm text-ink-soft">
+          Just a moment…
+        </p>
       ) : (
-        <div className="mx-auto max-w-xl space-y-6">
+        <div className="space-y-6">
           <div>
-            <h1 className="text-3xl text-ink">How do you feel about this one?</h1>
-            {decided > 0 && (
-              <p className="mt-2 text-sm text-ink-soft">{decided} decided so far</p>
-            )}
-            {/* A quiet way back to the ones set aside — count-free, low-emphasis, and
-                well below the decision so it never competes with it (TONE.md 4). */}
-            <p className="mt-1 text-sm">
-              <Link
-                href={setAsideHref}
-                className="text-ink-soft underline underline-offset-2 hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-xs"
+            <h1 ref={heading} tabIndex={-1} className="text-2xl text-ink focus:outline-hidden sm:text-3xl">
+              How do you feel about this one?
+            </h1>
+            {/* One button that swaps Undo ↔ Keep going, so focus stays put (SC 2.4.3). */}
+            {(round.canGoBack || revisit !== null) && (
+              <button
+                ref={backControl}
+                type="button"
+                onClick={revisit !== null ? keepGoing : undo}
+                className="mt-1 inline-flex h-11 items-center rounded-control text-sm text-ink-soft transition-colors hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-ground focus-visible:ring-primary"
               >
-                Set aside
-              </Link>
-            </p>
-            {/* Undo-as-revisit: a quiet single step back, never a rewind. */}
-            {round.canGoBack && (
-              <p className="mt-1">
-                <button
-                  type="button"
-                  onClick={goBack}
-                  className="inline-flex h-11 items-center gap-1 rounded-control text-sm text-ink-soft transition-colors hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
-                >
-                  <span aria-hidden>←</span> Back
-                </button>
-              </p>
+                {revisit !== null ? "Keep going" : `Undo: ${round.lastLabel}`}
+              </button>
             )}
           </div>
 
@@ -290,76 +208,41 @@ export function TriageRound({
           )}
 
           {shown.deferred && (
-            <div className="flex items-center gap-2 rounded-control bg-content-mid px-4 py-3 text-ink transition-opacity duration-300 ease-gentle motion-reduce:transition-none">
+            <div className="flex items-center gap-2 rounded-control bg-content-mid px-4 py-3 text-ink">
               <span aria-hidden className="text-lg leading-none">☾</span>
               <p className="text-sm">
-                <span className="font-medium">Ready when you are.</span>{" "}
-                This one was waiting for you — no rush.
+                <span className="font-medium">Ready when you are.</span> This one was waiting for you — no rush.
               </p>
             </div>
           )}
 
-          <ItemCard
-            item={shown.item}
-            collectionId={collectionSlugOrId}
-            heroPhotoUrl={shown.heroPhotoUrl}
-            imageClassName="h-64"
-          />
+          <ItemCard item={shown.item} collectionId={collectionSlugOrId} heroPhotoUrl={shown.heroPhotoUrl} imageClassName="h-64" />
           <Card padding="lg">
             <div className="space-y-4">
               {revisit !== null && (
-                <p className="text-sm text-ink-soft">
-                  You placed this with {revisit.label} — change it?
-                </p>
+                <p className="text-sm text-ink-soft">You placed this with {revisit.label} — change it?</p>
               )}
-              {/* NOT keyed per item: a re-keyed DecisionControls remounts its
-                  sr-only live region with each advance, and a region that appears
-                  with its content is never announced (SC 4.1.3). Its state is
-                  props-derived on this local path, so there is nothing to reset. */}
+              {/* NOT keyed per piece: a re-keyed region is never announced (SC 4.1.3). */}
               <DecisionControls
-                submit={{ kind: "local", onDecision: (d) => void handleTriage(shown.item, d) }}
+                submit={{ kind: "local", onDecision: (d) => handleTriage(shown.item, d) }}
                 type="triage"
                 decisions={triageDecisions(shown.item.id)}
                 priorAnswer={revisit?.label}
               />
-              {revisit === null ? (
-                /* Quiet, demoted escapes below a hairline — both advance
-                   optimistically through the round's own handlers. */
+              {revisit === null && (
                 <div className="flex flex-wrap items-start gap-x-6 gap-y-3 border-t border-hairline pt-3">
-                  <DeferControl
-                    submit={{ kind: "local", onDecision: () => void handleDefer(shown.item) }}
-                    itemId={shown.item.id}
-                  />
+                  <DeferControl submit={{ kind: "local", onDecision: () => void handleNotYet(shown) }} itemId={shown.item.id} />
                   <SetAsideButton
-                    submit={{ kind: "local", onDecision: () => handleSetAside(shown.item) }}
+                    submit={{ kind: "local", onDecision: () => handleNotMine(shown.item) }}
                     itemId={shown.item.id}
                     itemName={shown.item.name}
                   />
-                </div>
-              ) : (
-                /* A flushed answer can't be superseded by a disposition (disposed ⇔
-                   untriaged), so "Not yet"/"Not mine" step back while revisiting —
-                   only a gentle way to resume remains. */
-                <div className="border-t border-hairline pt-3">
-                  <Button type="button" variant="ghost" onClick={round.clearRevisit}>
-                    Keep going
-                  </Button>
                 </div>
               )}
             </div>
           </Card>
         </div>
       )}
-      <RoundLengthDialog
-        open={lengthDialogOpen}
-        initial={currentBox}
-        onCommit={(box) => {
-          setRoundBox(box); // persist for the next round…
-          round.onBoxChange(box); // …and re-arm THIS round against its unchanged start
-        }}
-        onClose={() => setLengthDialogOpen(false)}
-        returnFocusRef={adjustButtonRef}
-      />
-    </RoundShell>
+    </div>
   );
 }

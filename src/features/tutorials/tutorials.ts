@@ -1,4 +1,4 @@
-export type TutorialSlug = "collection" | "sort" | "sharing" | "timers";
+export type TutorialSlug = "collection" | "sort" | "sharing";
 
 export interface TutorialEntry {
   slug: TutorialSlug;
@@ -20,7 +20,7 @@ export const TUTORIALS: readonly TutorialEntry[] = [
     slug: "sort",
     title: "Sort and refine",
     href: "/tutorials/sort",
-    description: "Sort a small sample collection through Triage, Usage, Compare, and result adjustment.",
+    description: "Sort a small sample collection: how you feel about each piece, then which you'd reach for first.",
     scope: "Complete.",
   },
   {
@@ -29,13 +29,6 @@ export const TUTORIALS: readonly TutorialEntry[] = [
     href: "/tutorials/sharing",
     description: "Invite people to a collection and share finalized results.",
     scope: "Covers how to invite people to a collection and share finalized results.",
-  },
-  {
-    slug: "timers",
-    title: "Round timers",
-    href: "/tutorials/timers",
-    description: "Choose a round length, use no timer, handle expiry, and take a break.",
-    scope: "Covers round length, no timer, timer expiry, and taking a break.",
   },
 ] as const;
 

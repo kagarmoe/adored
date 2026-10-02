@@ -6,16 +6,14 @@ import { PhotoController } from "@/server/api/photos";
 import { ItemController } from "@/server/api/items";
 import { SessionController } from "@/server/api/sessions";
 import { PreferenceController } from "@/server/api/preferences";
-import { DispositionController } from "@/server/api/dispositions";
 import { AppLayout } from "@/components/layout";
 import { trail } from "@/components/layout/breadcrumb-trails";
 import { EmptyState, buttonVariants } from "@/components/ui";
-import { ActiveSessionPanel } from "@/features/sessions/ActiveSessionPanel";
+import { KeepSortingButton } from "@/features/sessions/KeepSortingButton";
 import { PhotoPoolPreview } from "@/features/collections/PhotoPoolPreview";
 import { ItemPreviewGrid } from "@/features/collections/ItemPreviewGrid";
 import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { resolveWorkspaceState } from "@/features/collections/workspaceState";
-import { workspaceMeta } from "@/features/sessions/roundProgress";
 import { quietLink } from "@/lib/design/quiet-link";
 import Link from "next/link";
 
@@ -35,8 +33,8 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   // Promise.all below never runs, so pool/item data is unreachable without access.
   const collection = await requireCollectionAccess(db, id, session.user.id);
 
-  // The two bounded previews (and this user's own sessions for the Continue
-  // affordance) in one round-trip. Adaptive state derives from preview row
+  // The two bounded previews (and this user's own sessions for the sort
+  // action) in one round-trip. Adaptive state derives from preview row
   // counts — no separate count/existence query. A failed preview query
   // PROPAGATES (it is never caught into [] and rendered as the empty state).
   const [poolPreview, itemPreview, sessions] = await Promise.all([
@@ -62,43 +60,17 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   const currentSession = sessions.find(
     (s) => s.status === "active" || s.status === "paused",
   );
-  const resumeHref = `${base}/sort/${currentSession?.number}`;
-  // Workspace resume card meta (spec §B last bullet, purses-1xbp.1). Preferences
-  // are fetched UNCONDITIONALLY: they also feed hasEverSorted below (a curator
-  // whose only session was set aside has zero session rows — soft-deleted — but
-  // their decisions persist; purses-1xbp.2). The total MUST be a real count —
-  // never itemPreview.length (bounded to 12) — so this reads the full item
-  // list, not the preview. Decided = preference rows + set-aside dispositions,
-  // mutually exclusive by construction (same rule as the session hub).
-  const preferences = await PreferenceController.fromDb(db).listItemPreferences(
-    collection.id,
-    session.user.id,
-  );
-  const [setAsideDispositions, allItems] = currentSession
-    ? await Promise.all([
-        DispositionController.fromDb(db).listDispositions(collection.id, session.user.id, "set_aside"),
-        ItemController.fromDb(db).listItems(collection.id),
-      ])
-    : [[], []];
+  // Sorted before = any past session OR any surviving decision (a curator whose
+  // only session was set aside has no session rows, but their answers persist).
+  const preferences = await PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id);
+  // Something to see on the Ranking: a placed piece, or a sort finished before.
+  const hasEverSorted = preferences.length > 0 || sessions.some((s) => s.status === "completed");
+  const showSort = itemPreview.length > 0 || currentSession !== undefined;
 
-  // Sorted before = any past session (completed/abandoned) OR any surviving
-  // decision — feeds the start card's progress-keyed copy ("Start" vs "Keep sorting").
-  const hasEverSorted = sessions.length > 0 || preferences.length > 0;
-  const workspaceMetaLine =
-    workspaceMeta(preferences.length + setAsideDispositions.length, allItems.length) ?? undefined;
-
-  // A1: at most one dominant (bg-primary) action on the workspace. Sort wins
-  // once items exist — either a session is already open (Resume/undo IS that
-  // one action) or the Continue section's start card will claim it once items
-  // exist, so the adaptive section's lead action ("Make items" / "Add photos")
-  // is demoted to a non-primary in both cases.
-  //
-  // Deliberate, documented exception: during the set-aside undo window (and the
-  // rare post-409 settled note), ActiveSessionPanel shows only a quiet notice
-  // with no primary action, so the page briefly has ZERO primary actions rather
-  // than two. See docs/superpowers/specs/2026-07-17-collection-home-continue-design.md
-  // §2 — zero-during-undo is TONE-preferable to a shouting CTA beside a
-  // reversible-escape notice, and it self-heals on navigation or undo resolution.
+  // A1: at most one dominant (bg-primary) action on the workspace. Keep sorting
+  // (or Start sorting) is that one action whenever a sort is open or items exist,
+  // so the adaptive section's lead action ("Make items" / "Add photos") is
+  // demoted to a non-primary in both cases.
   const leadActionVariant = currentSession || itemPreview.length > 0 ? "secondary" : "primary";
 
   const itemsPreview = (
@@ -185,32 +157,27 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
           />
         )}
 
-        {/* B2 (spec §11): the empty state offers ONE clear action (add photos);
-            Continue/sorting chrome would only lead to empty pages, so it is
-            withheld until there is something to continue. */}
-        {state.kind !== "empty" && (
-          /* Mounted UNCONDITIONALLY (not inside `{currentSession && …}`) so the
-             persistent set-aside Undo survives the refresh that flips
-             currentSession to null. The panel owns the "Continue" section chrome
-             and renders nothing at all — heading included — when there's neither
-             a session nor a pending undo. */
-          <ActiveSessionPanel
-            curatorId={session.user.id}
-            session={
-              currentSession
-                ? {
-                    id: currentSession.id,
-                    number: currentSession.number,
-                    goal: currentSession.goal,
-                    status: currentSession.status as "active" | "paused",
-                  }
-                : null
-            }
-            resumeHref={resumeHref}
-            startHref={itemPreview.length > 0 ? `${base}/sort/new` : undefined}
-            hasEverSorted={hasEverSorted}
-            meta={workspaceMetaLine}
-          />
+        {/* Spec §4.1: the collection's one sort action — Start sorting, or Keep
+            sorting while a sort is open (paused ones resume). */}
+        {showSort && (
+          <section aria-label="Sort" className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <KeepSortingButton
+              fullWidth
+              collectionId={collection.id}
+              curatorId={session.user.id}
+              sortHref={`${base}/sort`}
+              session={
+                currentSession
+                  ? { id: currentSession.id, status: currentSession.status as "active" | "paused" }
+                  : null
+              }
+            />
+            {hasEverSorted && (
+              <Link href={`${base}/results`} className={quietLink}>
+                See your ranking
+              </Link>
+            )}
+          </section>
         )}
 
         {isOwner && (

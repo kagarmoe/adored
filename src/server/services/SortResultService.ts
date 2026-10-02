@@ -1,11 +1,15 @@
-import type { SortResult, SortResultItem, RankBucket } from "@/types";
+import { randomBytes } from "crypto";
+import type { SortResult, SortResultItem } from "@/types";
 import type { Database } from "@/lib/db";
-import { withTransaction } from "@/lib/transactions";
+import { lockCollectionCurator, lockSaveKey, withTransaction } from "@/lib/transactions";
 import {
   SortResultRepository,
   isResultNumberConflict,
 } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
+import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
+import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { allocateWithRetry } from "@/server/repositories/allocateWithRetry";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
@@ -14,7 +18,12 @@ import { deriveUsage, type UsageAnswer } from "@/lib/derive-usage";
 import {
   rankPreferencesToItems,
   cloneItemsFrom,
+  buildRanking,
+  pinsFromRows,
+  placePin,
+  savedOrderPositions,
   type MaterializedItem,
+  type Pin,
 } from "./sortResultMaterialization";
 
 /** Thrown when supersede targets a result that is not finalized; the route maps it to 409. */
@@ -42,33 +51,6 @@ export class FinalizeStateError extends Error {
 }
 
 /**
- * Thrown when a re-rank or reset targets a result that is no longer a draft.
- * Re-asserted INSIDE the write transaction (after a FOR UPDATE row lock), so a
- * finalize that commits between the route's pre-tx status check and the write
- * (the finalized-immutability TOCTOU) can no longer slip a manual-overlay change
- * onto a finalized keepsake. The route maps it to 409 (same as the pre-tx gate).
- */
-export class ReorderFinalizedError extends Error {
-  constructor() {
-    super("Result is finalized");
-    this.name = "ReorderFinalizedError";
-  }
-}
-
-/**
- * Thrown when a bulk re-rank batch names a rid that is not an item of the target
- * result (a foreign/absent rid). Raised INSIDE the reorder transaction so the
- * whole batch rolls back; the route maps it to 404 (mirrors the per-item route's
- * "result-item belongs to a different result" 404).
- */
-export class ResultItemNotInResultError extends Error {
-  constructor() {
-    super("Result item does not belong to this result");
-    this.name = "ResultItemNotInResultError";
-  }
-}
-
-/**
  * Thrown when the (collection, number) race could not be won within the retry
  * budget. Distinct from a mid-transaction failure so ops can tell "retry storm
  * lost" apart from "DB fell over". The route maps it to 500.
@@ -78,6 +60,41 @@ export class ResultNumberExhaustedError extends Error {
     super("Could not allocate a result number");
     this.name = "ResultNumberExhaustedError";
   }
+}
+
+/** The open draft's name until Save and share names it. */
+const OPEN_DRAFT_NAME = "Still deciding";
+
+/** Pin target is not a Love/Like/Maybe piece of this curator in this collection → 404. */
+export class PinTargetError extends Error {
+  constructor() {
+    super("That piece can't be placed here.");
+    this.name = "PinTargetError";
+  }
+}
+
+/** Nothing is ranked yet → 409 (the button is hidden then; this is the direct-API net). */
+export class NothingToSaveError extends Error {
+  readonly code = "nothing_to_save";
+  constructor() {
+    super("There's nothing to save yet — sort a few first.");
+    this.name = "NothingToSaveError";
+  }
+}
+
+/** A save key reused for another collection, or whose link was revoked → 409. */
+export class SaveKeyConflictError extends Error {
+  readonly code = "save_key_conflict";
+  constructor() {
+    super("That save can't be repeated here.");
+    this.name = "SaveKeyConflictError";
+  }
+}
+
+export interface SavedRanking {
+  result: SortResult;
+  shareToken: string;
+  created: boolean;
 }
 
 export class SortResultService {
@@ -95,28 +112,6 @@ export class SortResultService {
       new CollectionPreferenceItemRepository(db),
       db,
     );
-  }
-
-  async createDraftResult(
-    collectionId: string,
-    curatorId: string,
-    name: string,
-  ): Promise<SortResult> {
-    const preferences = await this.preferenceRepo.findByCollection(
-      collectionId,
-      curatorId,
-    );
-    const items = rankPreferencesToItems(preferences);
-    // Epic S: snapshot the LIVE usage fold at materialization — the same
-    // deriveUsage a revision re-runs (§3.3 fresh-fold), so a draft records usage
-    // as of the moment it was materialized.
-    const usageByItemId = await this.deriveCuratorUsage(collectionId, curatorId, items);
-    // Materialize the NEW draft from CURRENT live prefs FIRST (fresh-at-finalize:
-    // supersede-and-recreate, never reuse-stale), then reap the curator's PRIOR
-    // unfinalized drafts so at most one draft exists per (collection, curator).
-    const result = await this.createResultWithItems(collectionId, curatorId, name, items, usageByItemId);
-    await this.supersedePriorDrafts(collectionId, curatorId, result.id);
-    return result;
   }
 
   /**
@@ -141,86 +136,197 @@ export class SortResultService {
     return deriveUsage(events, new Set(items.map((i) => i.itemId)));
   }
 
-  /**
-   * Delete every UNFINALIZED draft for (collection, curator) EXCEPT the one just
-   * created (purses-p2rj): each abandoned Finalize click POSTs a new draft, so
-   * without this reap orphan "Draft result" rows accumulate. FINALIZED snapshots
-   * are never matched (findDrafts filters status='draft'), keeping the Epic 5b
-   * frozen invariant intact. Each old draft's items are deleted first (the FK has
-   * no ON DELETE CASCADE), row + items atomically per draft.
-   */
-  private async supersedePriorDrafts(
-    collectionId: string,
-    curatorId: string,
-    keepId: string,
-  ): Promise<void> {
-    const drafts = await this.sortResultRepo.findDrafts(collectionId, curatorId);
-    const stale = drafts.filter((d) => d.id !== keepId);
-    for (const draft of stale) {
-      await withTransaction(this.db, async (tx) => {
-        await new SortResultItemRepository(tx).deleteByResult(draft.id);
-        await new SortResultRepository(tx).delete(draft.id);
-      });
-    }
+  async createDraftResult(collectionId: string, curatorId: string, name: string): Promise<SortResult> {
+    const preferences = await this.preferenceRepo.findByCollection(collectionId, curatorId);
+    const items = rankPreferencesToItems(preferences);
+    const usageByItemId = await this.deriveCuratorUsage(collectionId, curatorId, items);
+    // One open draft per (collection, curator) (sort_results_open_draft_unique): the
+    // prior draft is reaped INSIDE the same locked transaction, before the insert,
+    // so the index never sees two and a failure leaves the old draft in place.
+    return this.inCuratorTx(collectionId, curatorId, "materialize_result", async (tx) => {
+      await this.deleteDrafts(tx, collectionId, curatorId);
+      return this.insertResultWithItems(tx, collectionId, curatorId, name, items, usageByItemId);
+    });
   }
 
   /**
-   * The one transactional materialization primitive, reused by create + supersede.
-   * Writes the result row + all item rows ATOMICALLY: a mid-materialization
-   * failure rolls the whole transaction back, leaving no result and no items.
-   *
-   * Invariant: every write inside the transaction goes to tx-bound repos
-   * (`new SortResultRepository(tx)` / `new SortResultItemRepository(tx)`), never
-   * the injected `this.sortResultRepo`/`this.sortResultItemRepo` — a non-tx
-   * write would not roll back.
-   *
-   * The (collection, number) race aborts the whole transaction, so it is retried
-   * at the transaction boundary, recomputing the number each attempt, gated on
-   * the SINGLE `isResultNumberConflict` predicate (shared with the repo wrapper).
-   * Exhaustion after 5 attempts throws ResultNumberExhaustedError.
+   * The ranking writers run here — pin, unpin, save, revision, finalize, delete and
+   * the legacy create: one transaction holding the (collection, curator) advisory
+   * lock, so they serialize and the open-draft index is a backstop, never a 500.
+   * (Still unlocked, tracked in purses-w7ss.6: the result rename and the owner's
+   * purge-prep.) The (collection, number) race — another curator saving in the same
+   * collection — aborts the transaction, so it is retried at this boundary.
    */
-  private async createResultWithItems(
+  private async inCuratorTx<T>(
+    collectionId: string,
+    curatorId: string,
+    op: string,
+    fn: (tx: Database) => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await allocateWithRetry(
+        () =>
+          withTransaction(
+            this.db,
+            async (tx) => {
+              await lockCollectionCurator(tx, collectionId, curatorId);
+              return fn(tx);
+            },
+            { op, ctx: { collectionId, curatorId } },
+          ),
+        isResultNumberConflict,
+      );
+    } catch (error) {
+      throw isResultNumberConflict(error) ? new ResultNumberExhaustedError() : error;
+    }
+  }
+
+  /** Lazily open the one draft (spec §4.3) — an empty row; pins add their own rows. */
+  private async getOrCreateOpenDraft(tx: Database, collectionId: string, curatorId: string): Promise<SortResult> {
+    const repo = new SortResultRepository(tx);
+    const open = await repo.findDraftForUpdate(collectionId, curatorId);
+    if (open) return open;
+    const number = await repo.getNextResultNumber(collectionId);
+    return repo.insertWithNumber({ collectionId, curatorId, name: OPEN_DRAFT_NAME, status: "draft", number });
+  }
+
+  /** Children first: neither the shares nor the items FK has ON DELETE CASCADE. */
+  private async deleteDrafts(tx: Database, collectionId: string, curatorId: string): Promise<void> {
+    const resultRepo = new SortResultRepository(tx);
+    const itemRepo = new SortResultItemRepository(tx);
+    const shareRepo = new SortResultShareRepository(tx);
+    for (const draft of await resultRepo.findDrafts(collectionId, curatorId)) {
+      await shareRepo.deleteByResult(draft.id);
+      await itemRepo.deleteByResult(draft.id);
+      await resultRepo.delete(draft.id);
+    }
+  }
+
+  // Invariant: tx-bound repos only — a write on this.sortResultRepo would not roll back.
+  private async insertResultWithItems(
+    tx: Database,
     collectionId: string,
     curatorId: string,
     name: string,
     items: MaterializedItem[],
     usageByItemId: ReadonlyMap<string, UsageAnswer>,
   ): Promise<SortResult> {
-    for (let attempt = 0; attempt < 5; attempt++) {
-      try {
-        return await withTransaction(this.db, async (tx) => {
-          const resultRepo = new SortResultRepository(tx);
-          const itemRepo = new SortResultItemRepository(tx);
-          const number = await resultRepo.getNextResultNumber(collectionId);
-          const result = await resultRepo.insertWithNumber({
-            collectionId,
-            curatorId,
-            name,
-            status: "draft",
-            number,
-          });
-          for (const item of items) {
-            // Epic S: stamp usage at the materialization step (not the clone), so
-            // the snapshot records the fold passed in by the caller.
-            await itemRepo.create({
-              sortResultId: result.id,
-              ...item,
-              usage: usageByItemId.get(item.itemId) ?? null,
-            });
-          }
-          return result;
-        }, { op: "materialize_result", ctx: { collectionId, curatorId } });
-      } catch (error) {
-        if (isResultNumberConflict(error)) {
-          if (attempt < 4) continue;
-          throw new ResultNumberExhaustedError();
-        }
-        throw error;
-      }
+    const resultRepo = new SortResultRepository(tx);
+    const itemRepo = new SortResultItemRepository(tx);
+    const number = await resultRepo.getNextResultNumber(collectionId);
+    const result = await resultRepo.insertWithNumber({ collectionId, curatorId, name, status: "draft", number });
+    for (const item of items) {
+      await itemRepo.create({ sortResultId: result.id, ...item, usage: usageByItemId.get(item.itemId) ?? null });
     }
-    // Defensive fallback for TS's return-type analysis; unreachable in practice
-    // (the final-attempt conflict throws above; success returns from the try).
-    throw new ResultNumberExhaustedError();
+    return result;
+  }
+
+  /** The open draft's pins (read-only — viewing the ranking creates nothing). */
+  async listPins(collectionId: string, curatorId: string): Promise<Pin[]> {
+    const draft = await this.sortResultRepo.findDraft(collectionId, curatorId);
+    if (!draft) return [];
+    return pinsFromRows(await this.sortResultItemRepo.findByResult(draft.id));
+  }
+
+  /**
+   * Hand-place one piece (spec §4 "Adjusting"); the first pin opens the draft. The
+   * pinned pieces the move passes over shift with it (placePin), so the saved order
+   * is the splice the person saw, even when every piece is pinned.
+   */
+  async pinItem(collectionId: string, curatorId: string, itemId: string, position: number): Promise<void> {
+    await this.inCuratorTx(collectionId, curatorId, "pin_ranking_item", async (tx) => {
+      const prefRepo = new CollectionPreferenceItemRepository(tx);
+      const pref = await prefRepo.findByItem(itemId, curatorId);
+      if (!pref || pref.collectionId !== collectionId || pref.rankBucket === "low") throw new PinTargetError();
+      const draft = await this.getOrCreateOpenDraft(tx, collectionId, curatorId);
+      const itemRepo = new SortResultItemRepository(tx);
+      const rows = await itemRepo.findByResult(draft.id);
+      const pins = pinsFromRows(rows);
+      const liveIds = new Set((await new ItemRepository(tx).findByCollection(collectionId)).map((i) => i.id));
+      const { loved } = buildRanking(await prefRepo.findByCollection(collectionId, curatorId), liveIds, pins);
+      for (const [movedId, slot] of placePin(loved.map((e) => e.itemId), pins, itemId, position)) {
+        const row =
+          rows.find((r) => r.itemId === movedId) ??
+          (await itemRepo.create({ sortResultId: draft.id, itemId: movedId, computedRank: slot - 1, computedBucket: pref.rankBucket }));
+        // manualRank is 0-based (existing convention); a slot is 1-based.
+        await itemRepo.update(row.id, { manualRank: slot - 1, manualBucket: null });
+      }
+    });
+  }
+
+  /** Unpin: the piece returns to its derived place. Idempotent; opens nothing. */
+  async unpinItem(collectionId: string, curatorId: string, itemId: string): Promise<void> {
+    await this.inCuratorTx(collectionId, curatorId, "unpin_ranking_item", async (tx) => {
+      const draft = await new SortResultRepository(tx).findDraftForUpdate(collectionId, curatorId);
+      if (!draft) return;
+      const itemRepo = new SortResultItemRepository(tx);
+      const row = await itemRepo.findByResultAndItem(draft.id, itemId);
+      if (row && row.manualRank !== null) await itemRepo.update(row.id, { manualRank: null, manualBucket: null });
+    });
+  }
+
+  /**
+   * Spec §4.4: ONE transaction — reuse-or-create the open draft, rebuild its rows
+   * from the live ranking (pins applied, usage stamped), finalize it, close the
+   * curator's open session, create the share link, and carry the hand-placed pieces
+   * into a fresh open draft so they stay where the person put them. Idempotent on
+   * `saveKey`: a replay returns the same result and link and writes nothing.
+   */
+  async saveAndShare(collectionId: string, curatorId: string, name: string, saveKey: string): Promise<SavedRanking> {
+    return this.inCuratorTx(collectionId, curatorId, "save_and_share", async (tx) => {
+      // Same key in two collections takes two curator locks; this one serializes them so the loser 409s, not 500s.
+      await lockSaveKey(tx, curatorId, saveKey);
+      const resultRepo = new SortResultRepository(tx);
+      const shareRepo = new SortResultShareRepository(tx);
+
+      const replay = await resultRepo.findBySaveKey(curatorId, saveKey);
+      if (replay) {
+        const share = (await shareRepo.findByResult(replay.id)).find((s) => s.status === "active");
+        if (replay.collectionId !== collectionId || !share) throw new SaveKeyConflictError();
+        return { result: replay, shareToken: share.shareToken, created: false };
+      }
+
+      const liveIds = new Set((await new ItemRepository(tx).findByCollection(collectionId)).map((i) => i.id));
+      const preferences = await new CollectionPreferenceItemRepository(tx).findByCollection(collectionId, curatorId);
+      const draft = await this.getOrCreateOpenDraft(tx, collectionId, curatorId);
+      const itemRepo = new SortResultItemRepository(tx);
+      const pins = pinsFromRows(await itemRepo.findByResult(draft.id));
+      const { loved, onward } = buildRanking(preferences, liveIds, pins);
+      const ordered = [...loved, ...onward];
+      if (ordered.length === 0) throw new NothingToSaveError();
+
+      const events = await loadCuratorDecisionEvents(new SessionRepository(tx), new DecisionEventRepository(tx), collectionId, curatorId);
+      const usage = deriveUsage(events, new Set(ordered.map((e) => e.itemId)));
+      await itemRepo.deleteByResult(draft.id);
+      for (const [index, entry] of ordered.entries()) {
+        await itemRepo.create({
+          sortResultId: draft.id,
+          itemId: entry.itemId,
+          computedRank: index,
+          computedBucket: entry.bucket,
+          usage: usage.get(entry.itemId) ?? null,
+        });
+      }
+      const result = await resultRepo.markSaved(draft.id, name, saveKey);
+      // The saved draft is finalized now, so the open-draft index admits a new one.
+      // Only the explicit pins travel — the rest keep flowing with later answers.
+      const keptPins = loved.flatMap((entry, slot) => (entry.pinned ? [{ entry, slot }] : []));
+      if (keptPins.length > 0) {
+        const next = await this.getOrCreateOpenDraft(tx, collectionId, curatorId);
+        for (const { entry, slot } of keptPins) {
+          const row = await itemRepo.create({ sortResultId: next.id, itemId: entry.itemId, computedRank: slot, computedBucket: entry.bucket });
+          await itemRepo.update(row.id, { manualRank: slot, manualBucket: null });
+        }
+      }
+
+      const sessionRepo = new SessionRepository(tx);
+      const open = await sessionRepo.findInProgress(collectionId, curatorId);
+      if (open) await sessionRepo.update(open.id, { status: "completed" });
+
+      const shareToken = randomBytes(32).toString("hex");
+      await shareRepo.create({ sortResultId: result.id, shareToken });
+      return { result, shareToken, created: true };
+    });
   }
 
   async getDraftResult(collectionId: string, curatorId: string): Promise<SortResult | null> {
@@ -242,92 +348,6 @@ export class SortResultService {
     });
   }
 
-  async setManualOverride(
-    resultItemId: string,
-    rank?: number,
-    bucket?: "top" | "high" | "medium" | "low",
-  ): Promise<SortResultItem> {
-    return this.sortResultItemRepo.update(resultItemId, {
-      manualRank: rank ?? null,
-      manualBucket: bucket ?? null,
-      updatedAt: new Date(),
-    });
-  }
-
-  async resetManualOverride(resultItemId: string): Promise<SortResultItem> {
-    return this.sortResultItemRepo.update(resultItemId, {
-      manualRank: null,
-      manualBucket: null,
-      updatedAt: new Date(),
-    });
-  }
-
-  /**
-   * Epic S S3a: apply a whole ordering — an array of {rid, manualRank} — in ONE
-   * transaction, so a drag-to-position (a dense, gapless rewrite of the affected
-   * block) is a SINGLE atomic call instead of N fragile sequential PATCHes.
-   *
-   * `manualRank` is a dense int sharing numeric space with `computedRank`, so the
-   * caller passes the full new rank sequence for the moved block. EVERY rid is
-   * validated against the result's own items INSIDE the transaction: a bad rid
-   * throws ResultItemNotInResultError, which rolls back any writes already applied
-   * in this batch (the load-bearing atomicity guarantee — no partial reorder).
-   *
-   * Invariant: all writes go to the tx-bound repo, never `this.sortResultItemRepo`.
-   */
-  async reorderResultItems(
-    resultId: string,
-    order: ReadonlyArray<{ rid: string; manualRank: number; manualBucket: RankBucket | null }>,
-  ): Promise<SortResultItem[]> {
-    return withTransaction(
-      this.db,
-      async (tx) => {
-        // Lock the result row and re-assert draft status IN-TX: a finalize that
-        // committed after the route's pre-tx 409 gate now serializes here, so a
-        // re-rank can never land on a finalized keepsake (TOCTOU).
-        const result = await new SortResultRepository(tx).findByIdForUpdate(resultId);
-        if (result && result.status !== "draft") throw new ReorderFinalizedError();
-        const itemRepo = new SortResultItemRepository(tx);
-        const validIds = new Set(
-          (await itemRepo.findByResult(resultId)).map((i) => i.id),
-        );
-        // 9v1f.1 cross-tier: write manualBucket alongside manualRank. `?? null` so
-        // an undefined can never make drizzle skip the column and strand a prior
-        // override — the batch is a FULL overlay describing every row's manual state.
-        for (const { rid, manualRank, manualBucket } of order) {
-          if (!validIds.has(rid)) throw new ResultItemNotInResultError();
-          await itemRepo.update(rid, { manualRank, manualBucket: manualBucket ?? null });
-        }
-        return itemRepo.findByResult(resultId);
-      },
-      { op: "reorder_result_items", ctx: { resultId } },
-    );
-  }
-
-  /**
-   * Epic S S3a: clear the manual overlay for EVERY item of a result — back to the
-   * suggested order. Runs in a transaction that FIRST locks the result row and
-   * re-asserts draft status (the same finalized-immutability TOCTOU guard as
-   * reorderResultItems), so a concurrent finalize serializes with the reset.
-   */
-  async resetManualOverridesForResult(resultId: string): Promise<SortResultItem[]> {
-    return withTransaction(
-      this.db,
-      async (tx) => {
-        const result = await new SortResultRepository(tx).findByIdForUpdate(resultId);
-        if (result && result.status !== "draft") throw new ReorderFinalizedError();
-        const itemRepo = new SortResultItemRepository(tx);
-        await itemRepo.clearManualOverridesByResult(resultId);
-        return itemRepo.findByResult(resultId);
-      },
-      { op: "reset_result_items", ctx: { resultId } },
-    );
-  }
-
-  async deleteResultItem(id: string): Promise<void> {
-    await this.sortResultItemRepo.delete(id);
-  }
-
   /**
    * Finalize a draft into an immutable snapshot AND close the pass it belongs
    * to (spec §E, "sessions as invisible bookkeeping"): both writes commit or
@@ -339,35 +359,32 @@ export class SortResultService {
    *
    * The result row is locked (`findByIdForUpdate`) inside the transaction so a
    * concurrent finalize serializes here instead of racing the state guard
-   * (mirrors `reorderResultItems`' TOCTOU pattern).
+   * (the finalized-immutability TOCTOU guard).
    */
   async finalizeResult(id: string): Promise<SortResult> {
-    return withTransaction(
-      this.db,
-      async (tx) => {
-        const resultRepo = new SortResultRepository(tx);
-        const result = await resultRepo.findByIdForUpdate(id);
-        if (!result) throw new Error("Result not found");
-        if (result.status === "finalized") throw new FinalizeStateError();
+    // The pre-tx read only supplies the lock key (collection and curator never change);
+    // status is re-asserted under the lock, so a concurrent save serializes ahead of us.
+    const owner = await this.sortResultRepo.findById(id);
+    if (!owner) throw new Error("Result not found");
+    return this.inCuratorTx(owner.collectionId, owner.curatorId, "finalize_result", async (tx) => {
+      const resultRepo = new SortResultRepository(tx);
+      const result = await resultRepo.findByIdForUpdate(id);
+      if (!result) throw new Error("Result not found");
+      if (result.status === "finalized") throw new FinalizeStateError();
 
-        const finalized = await resultRepo.update(id, {
-          status: "finalized",
-          finalizedAt: new Date(),
-        });
+      const finalized = await resultRepo.update(id, {
+        status: "finalized",
+        finalizedAt: new Date(),
+      });
 
-        const sessionRepo = new SessionRepository(tx);
-        const openSession = await sessionRepo.findInProgress(
-          result.collectionId,
-          result.curatorId,
-        );
-        if (openSession) {
-          await sessionRepo.update(openSession.id, { status: "completed" });
-        }
+      const sessionRepo = new SessionRepository(tx);
+      const openSession = await sessionRepo.findInProgress(result.collectionId, result.curatorId);
+      if (openSession) {
+        await sessionRepo.update(openSession.id, { status: "completed" });
+      }
 
-        return finalized;
-      },
-      { op: "finalize_result", ctx: { resultId: id } },
-    );
+      return finalized;
+    });
   }
 
   async supersedeResult(id: string): Promise<SortResult | null> {
@@ -378,30 +395,31 @@ export class SortResultService {
     // Source is finalized/immutable, so reading its items pre-tx is benign.
     const sourceItems = await this.sortResultItemRepo.findByResult(id);
     const items = cloneItemsFrom(sourceItems);
-    // Epic S fresh-fold (§3.3): the clone drops manual overrides AND does not
-    // carry usage; usage is RE-DERIVED from the curator's CURRENT decision log
-    // here, so the revision's snapshot describes the revision moment — not the
-    // usage frozen into the original keepsake.
-    const usageByItemId = await this.deriveCuratorUsage(
-      source.collectionId,
-      source.curatorId,
-      items,
-    );
-    return this.createResultWithItems(
-      source.collectionId,
-      source.curatorId,
-      `${source.name} (Revision)`,
-      items,
-      usageByItemId,
-    );
+    const usageByItemId = await this.deriveCuratorUsage(source.collectionId, source.curatorId, items);
+    // Spec §4.4 "Make a revision opens a new copy to adjust": the copy becomes THE open
+    // draft (replacing any other) with the saved loved order pinned, so the live
+    // Ranking shows the saved order until the person moves or unpins something.
+    const slots = savedOrderPositions(sourceItems);
+    return this.inCuratorTx(source.collectionId, source.curatorId, "supersede_result", async (tx) => {
+      await this.deleteDrafts(tx, source.collectionId, source.curatorId);
+      const revision = await this.insertResultWithItems(
+        tx, source.collectionId, source.curatorId, `${source.name} (Revision)`, items, usageByItemId,
+      );
+      const itemRepo = new SortResultItemRepository(tx);
+      for (const row of await itemRepo.findByResult(revision.id)) {
+        const slot = slots.get(row.itemId);
+        if (slot !== undefined) await itemRepo.update(row.id, { manualRank: slot, manualBucket: null });
+      }
+      return revision;
+    });
   }
 
   /**
-   * Hard-delete a DRAFT result and its items, ATOMICALLY via withTransaction:
-   * children first (the sort_result_items -> sort_results FK has no
-   * ON DELETE CASCADE), so the two deletes commit or roll back together and a
-   * mid-delete failure leaves nothing changed (purses-nea established the
-   * transaction pattern; prod runs postgres-js).
+   * Hard-delete a DRAFT result with its shares and items, ATOMICALLY under the
+   * curator lock: children first (neither FK to sort_results has ON DELETE
+   * CASCADE), so the deletes commit or roll back together and a mid-delete
+   * failure leaves nothing changed (purses-nea established the transaction
+   * pattern; prod runs postgres-js).
    *
    * Returns false when the result is absent (route -> 404); throws
    * DeleteResultStateError when the result is not a draft (route -> 409).
@@ -411,11 +429,17 @@ export class SortResultService {
     if (!result) return false;
     if (result.status !== "draft") throw new DeleteResultStateError();
 
-    await withTransaction(this.db, async (tx) => {
+    // Status re-asserted under the lock: a save that finalized this draft meanwhile wins.
+    return this.inCuratorTx(result.collectionId, result.curatorId, "delete_result", async (tx) => {
+      const resultRepo = new SortResultRepository(tx);
+      const locked = await resultRepo.findByIdForUpdate(id);
+      if (!locked) return false;
+      if (locked.status !== "draft") throw new DeleteResultStateError();
+      await new SortResultShareRepository(tx).deleteByResult(id);
       await new SortResultItemRepository(tx).deleteByResult(id);
-      await new SortResultRepository(tx).delete(id);
+      await resultRepo.delete(id);
+      return true;
     });
-    return true;
   }
 
   /**

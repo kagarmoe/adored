@@ -357,7 +357,7 @@ describeDb("decisions route — idempotency on clientKey (route -> repo -> DB)",
     expect((rows[0] as { n: number }).n).toBe(2);
   });
 
-  it("records pairwise-only Compare and assigns dense orderRank without triage", async () => {
+  it("pairwise-only Compare on untriaged pieces assigns NO orderRank (comparable set = Love + Like)", async () => {
     const { db } = getTestDb();
     const collRow = await db.execute(
       sql`select collection_id from sessions where id = ${sessionId}`,
@@ -378,8 +378,8 @@ describeDb("decisions route — idempotency on clientKey (route -> repo -> DB)",
 
     expect(a?.rankBucket).toBe("medium");
     expect(b?.rankBucket).toBe("medium");
-    expect(b?.orderRank).toBe(0);
-    expect(a?.orderRank).toBe(1);
+    expect(a?.orderRank).toBeNull();
+    expect(b?.orderRank).toBeNull();
   });
 
   // Fix 3: a pairwise_compare retried with the SAME clientKey returns the ORIGINAL

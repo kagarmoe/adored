@@ -10,7 +10,9 @@ import { Button } from "@/components/ui";
 // session path, which never reads the decision's fields.
 export type DecisionSubmit<D = Record<string, unknown>> =
   | { kind: "session"; sessionId: string; onDecisionMade?: () => void }
-  | { kind: "local"; onDecision: (decision: D) => void };
+  // A local caller may return false (or a promise of it) when the answer did not
+  // hold; the announcement waits for it, so "saved" is never said too early.
+  | { kind: "local"; onDecision: (decision: D) => void | boolean | Promise<void | boolean> };
 
 interface DecisionControlsProps<D extends Record<string, unknown> = Record<string, unknown>> {
   submit: DecisionSubmit<D>;
@@ -48,8 +50,8 @@ export function DecisionControls<D extends Record<string, unknown> = Record<stri
 
   async function submitDecision(label: string, decision: D) {
     if (submit.kind === "local") {
-      announce(label);
-      submit.onDecision(decision); // synchronous local path: no fetch, no pending, no refresh
+      // Local path: no fetch, no pending, no refresh.
+      if ((await submit.onDecision(decision)) !== false) announce(label);
       return;
     }
 
@@ -106,7 +108,7 @@ export function DecisionControls<D extends Record<string, unknown> = Record<stri
               disabled={pendingLabel !== null}
               onClick={() => submitDecision(item.label, item.decision)}
               aria-pressed={selected || undefined}
-              className={`flex-1 min-w-24${selected ? " ring-2 ring-offset-2 ring-primary" : ""}`}
+              className={`flex-1 min-w-24${selected ? " ring-2 ring-offset-2 ring-offset-ground ring-primary" : ""}`}
             >
               {pendingLabel === item.label ? "Saving..." : item.label}
             </Button>

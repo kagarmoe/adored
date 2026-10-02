@@ -52,6 +52,14 @@ export class SortResultItemRepository {
     return items.map((i) => this.mapToResultItem(i));
   }
 
+  async findByResultAndItem(sortResultId: string, itemId: string): Promise<SortResultItem | null> {
+    const [row] = await this.db
+      .select()
+      .from(sortResultItemsTable)
+      .where(and(eq(sortResultItemsTable.sortResultId, sortResultId), eq(sortResultItemsTable.itemId, itemId)));
+    return row ? this.mapToResultItem(row) : null;
+  }
+
   async update(id: string, data: Partial<SortResultItem>): Promise<SortResultItem> {
     const [item] = await this.db
       .update(sortResultItemsTable)
@@ -66,15 +74,6 @@ export class SortResultItemRepository {
 
   async delete(id: string): Promise<void> {
     await this.db.delete(sortResultItemsTable).where(eq(sortResultItemsTable.id, id));
-  }
-
-  // Epic S S3a: clear the manual overlay (rank + bucket) for every item of a
-  // result in a single UPDATE — the whole-list "back to the computed order" reset.
-  async clearManualOverridesByResult(sortResultId: string): Promise<void> {
-    await this.db
-      .update(sortResultItemsTable)
-      .set({ manualRank: null, manualBucket: null, updatedAt: new Date() })
-      .where(eq(sortResultItemsTable.sortResultId, sortResultId));
   }
 
   async deleteByResult(sortResultId: string): Promise<void> {

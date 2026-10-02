@@ -5,8 +5,9 @@ import {
   DeleteResultStateError,
   SupersedeStateError,
   FinalizeStateError,
-  ReorderFinalizedError,
-  ResultItemNotInResultError,
+  PinTargetError,
+  NothingToSaveError,
+  SaveKeyConflictError,
 } from "@/server/services/SortResultService";
 import { CurrentSessionExistsError } from "@/server/repositories/implementations/SessionRepository";
 import { PreferenceExistsError } from "@/server/api/dispositions";
@@ -41,14 +42,15 @@ export class HttpError extends Error {
  *   DeleteResultStateError
  *   | SupersedeStateError
  *   | FinalizeStateError
- *   | ReorderFinalizedError
  *   | CurrentSessionExistsError → 409 (error.message)
  *   | PreferenceExistsError
- *   | ItemInResultError       → 409 (error.message)
+ *   | ItemInResultError        → 409 (error.message)
+ *   NothingToSaveError
+ *   | SaveKeyConflictError    → 409 (error.message + error.code, so the client can tell them apart)
  *   PoolGroupError            → 409 if code "conflict", else 400 (error.message)
  *   HttpError
  *   | InvitationAcceptError   → error.status (error.message)
- *   ResultItemNotInResultError → 404 (error.message)
+ *   PinTargetError → 404 (error.message)
  *   UnauthorizedError
  *   | Error("Unauthorized")  → 401
  *   anything else            → 500 "Something went wrong. Please try again." + errorId
@@ -69,11 +71,13 @@ export function errorResponse(error: unknown): NextResponse {
       { status: 400 },
     );
   }
+  if (error instanceof NothingToSaveError || error instanceof SaveKeyConflictError) {
+    return NextResponse.json({ error: error.message, code: error.code }, { status: 409 });
+  }
   if (
     error instanceof DeleteResultStateError ||
     error instanceof SupersedeStateError ||
     error instanceof FinalizeStateError ||
-    error instanceof ReorderFinalizedError ||
     error instanceof CurrentSessionExistsError ||
     error instanceof PreferenceExistsError ||
     error instanceof ItemInResultError
@@ -89,7 +93,7 @@ export function errorResponse(error: unknown): NextResponse {
   if (error instanceof HttpError || error instanceof InvitationAcceptError) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
-  if (error instanceof ResultItemNotInResultError) {
+  if (error instanceof PinTargetError) {
     return NextResponse.json({ error: error.message }, { status: 404 });
   }
   if (

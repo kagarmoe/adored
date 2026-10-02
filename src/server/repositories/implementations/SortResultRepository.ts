@@ -1,4 +1,4 @@
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { sortResultsTable } from "@/lib/db/schema";
 import type { SortResult, SortResultStatus } from "@/types";
@@ -118,8 +118,30 @@ export class SortResultRepository {
           eq(sortResultsTable.curatorId, curatorId),
           eq(sortResultsTable.status, "draft"),
         ),
-      );
+      )
+      .orderBy(desc(sortResultsTable.createdAt), desc(sortResultsTable.id))
+      .limit(1);
     return result ? this.mapToResult(result) : null;
+  }
+
+  // The curator's open draft for the collection, row-locked. Callers hold the
+  // (collection, curator) advisory lock, so this is the only draft writer at a time.
+  // Newest first, so the pick is deterministic.
+  async findDraftForUpdate(collectionId: string, curatorId: string): Promise<SortResult | null> {
+    const [row] = await this.db
+      .select()
+      .from(sortResultsTable)
+      .where(
+        and(
+          eq(sortResultsTable.collectionId, collectionId),
+          eq(sortResultsTable.curatorId, curatorId),
+          eq(sortResultsTable.status, "draft"),
+        ),
+      )
+      .orderBy(desc(sortResultsTable.createdAt), desc(sortResultsTable.id))
+      .limit(1)
+      .for("update");
+    return row ? this.mapToResult(row) : null;
   }
 
   async findDrafts(collectionId: string, curatorId: string): Promise<SortResult[]> {
@@ -134,6 +156,25 @@ export class SortResultRepository {
         ),
       );
     return rows.map((r) => this.mapToResult(r));
+  }
+
+  async findBySaveKey(curatorId: string, saveKey: string): Promise<SortResult | null> {
+    const [row] = await this.db
+      .select()
+      .from(sortResultsTable)
+      .where(and(eq(sortResultsTable.curatorId, curatorId), eq(sortResultsTable.saveKey, saveKey)));
+    return row ? this.mapToResult(row) : null;
+  }
+
+  // Save-and-share's finalize: name, status, timestamp and the idempotency key in one write.
+  async markSaved(id: string, name: string, saveKey: string): Promise<SortResult> {
+    const now = new Date();
+    const [row] = await this.db
+      .update(sortResultsTable)
+      .set({ name, saveKey, status: "finalized", finalizedAt: now, updatedAt: now })
+      .where(eq(sortResultsTable.id, id))
+      .returning();
+    return this.mapToResult(row);
   }
 
   async update(id: string, data: Partial<SortResult>): Promise<SortResult> {

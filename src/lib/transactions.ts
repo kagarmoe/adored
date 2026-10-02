@@ -25,6 +25,15 @@ export async function lockCollectionCurator(
   );
 }
 
+// One idempotent save per (curator, saveKey). The single-bigint keyspace is disjoint
+// from lockCollectionCurator's two-int4 one, and a holder already holds its curator
+// lock and takes nothing after this, so it cannot deadlock.
+export async function lockSaveKey(tx: Database, curatorId: string, saveKey: string): Promise<void> {
+  await tx.execute(
+    sql`select pg_advisory_xact_lock(hashtextextended(${curatorId} || ':' || ${saveKey}, 0))`,
+  );
+}
+
 // Optional labeling for the telemetry emitted at this seam. Backward-compatible:
 // callers that omit it still run (timed, but the slow emit is labeled with the
 // default "transaction" op, and the error path stays generic). Hot-path callers

@@ -60,10 +60,10 @@ Path params at the API layer are **always ULIDs**, never slugs (slugs are client
 |---|---|---|
 | `SyntaxError` (malformed JSON) | `400` | `{ error: "Invalid JSON" }` |
 | `ZodError` | `400` | `{ error: "Invalid input", details: <flatten()> }` |
-| `DeleteResultStateError`, `SupersedeStateError`, `FinalizeStateError`, `ReorderFinalizedError`, `CurrentSessionExistsError`, `PreferenceExistsError`, `ItemInResultError` | `409` | `{ error: <error.message> }` |
+| `DeleteResultStateError`, `SupersedeStateError`, `FinalizeStateError`, `CurrentSessionExistsError`, `PreferenceExistsError`, `ItemInResultError`, `NothingToSaveError`, `SaveKeyConflictError` | `409` | `{ error: <error.message> }` |
 | `PoolGroupError` | `409` if `code === "conflict"`, else `400` | `{ error: <error.message> }` |
 | `HttpError`, `InvitationAcceptError` | `error.status` | `{ error: <error.message> }` |
-| `ResultItemNotInResultError` | `404` | `{ error: <error.message> }` |
+| `PinTargetError` | `404` | `{ error: <error.message> }` |
 | `UnauthorizedError` (or `Error("Unauthorized")`) | `401` | `{ error: "Unauthorized" }` |
 | **anything unmapped** | `500` | `{ error: "Something went wrong. Please try again.", errorId }` |
 
@@ -89,7 +89,7 @@ Route-level analytics capture has been removed from the API surface; this does n
 - **Curator-scoped** — `sessions` and `sort-results` (and children) are private to the creating curator, enforced on top of collection membership.
 - **`ownerId`/`curatorId` come from the session, never the body** — create routes force them from the authenticated user.
 - **Belongs-to-parent on child routes** — see Authorization model.
-- **Soft-delete vs purge** — `archive`/`restore` are reversible; `purge` is the permanent path. `POST /api/items/[id]/purge` is now real: an **owner-only** permanent hard-delete cascade (preferences + photos + blobs, then the item) in one transaction, **`409`** if the item is in any sort result (see detail). **`POST /api/collections/[id]/purge` is now real too** — an owner-only whole-collection cascade purge with a type-the-collection-name confirm (see detail). `DELETE /api/sort-results/[id]` and `…/items/[rid]` are hard deletes restricted to **draft** results (see detail).
+- **Soft-delete vs purge** — `archive`/`restore` are reversible; `purge` is the permanent path. `POST /api/items/[id]/purge` is now real: an **owner-only** permanent hard-delete cascade (preferences + photos + blobs, then the item) in one transaction, **`409`** if the item is in any sort result (see detail). **`POST /api/collections/[id]/purge` is now real too** — an owner-only whole-collection cascade purge with a type-the-collection-name confirm (see detail). `DELETE /api/sort-results/[id]` is a hard delete restricted to **draft** results, taking the draft's shares and items with it (see detail).
 
 ## Route index
 
@@ -164,6 +164,12 @@ Route-level analytics capture has been removed from the API surface; this does n
 | GET | `/api/collections/[id]/dispositions` | member (scoped to caller) |
 | DELETE | `/api/collections/[id]/dispositions/[itemId]` | curator (`preferences:write`, scoped to caller) |
 
+### ranking
+| Method | Path | Access |
+|---|---|---|
+| PUT·DELETE | `/api/collections/[id]/ranking/pins/[itemId]` | member (own draft) |
+| POST | `/api/collections/[id]/ranking/save` | member (own ranking) |
+
 ### items (top-level)
 | Method | Path | Access |
 |---|---|---|
@@ -189,9 +195,7 @@ Route-level analytics capture has been removed from the API surface; this does n
 | GET·PATCH·DELETE | `/api/sort-results/[id]` | curator |
 | POST | `/api/sort-results/[id]/finalize` | curator |
 | POST | `/api/sort-results/[id]/supersede` | curator |
-| GET·PATCH·DELETE | `/api/sort-results/[id]/items` | curator |
-| GET·PATCH·DELETE | `/api/sort-results/[id]/items/[rid]` | curator |
-| POST | `/api/sort-results/[id]/items/[rid]/reset` | curator |
+| GET | `/api/sort-results/[id]/items/[rid]` | curator |
 
 ### shares
 | Method | Path | Access |
@@ -332,6 +336,37 @@ Curator-private triage shelving (Epic C PR1). A **disposition** parks an *untria
 ### `DELETE /api/collections/[id]/dispositions/[itemId]`
 "Bring back." Same guard as `POST`: `requireApiItemCapability(itemId, "preferences:write")` + `item.collectionId === params.id` else `404`. Deletes the caller's disposition for the item, keyed `(item_id, curator_id = session)`. **Idempotent** — a no-op when no row exists still returns `200 { message: "Brought back" }`. `401`/`403`/`404`.
 
+## ranking
+
+The live Ranking's writes (UX redesign PR 2, decision 42). Curator is always the caller. Pin, unpin
+and save — like revision, finalize, draft delete and the legacy create — run in one transaction holding
+the `(collection, curator)` advisory lock; the partial unique index `sort_results_open_draft_unique`
+(one `status = 'draft'` row per collection + curator) is the backstop. Still unlocked (tracked in
+`purses-w7ss.6`): the result rename (`PATCH /api/sort-results/[id]`) and the owner's purge-prep
+(`remove-from-sorts`).
+The API position is 1-based; `manualRank` stays 0-based and the service converts at the boundary.
+
+### `PUT·DELETE /api/collections/[id]/ranking/pins/[itemId]`
+`requireAuth` + `requireApiCollectionAccess` (`401`/`403`/`404`) before the body. **PUT body (strict):**
+`{ position: integer 1-10000 }` — pins the piece at that 1-based slot of the loved list (Love, Like,
+Maybe); the first pin lazily creates the open draft (`name: "Still deciding"`), later pins reuse it.
+A move is the splice the list shows: pinned pieces it passes over shift one slot with it, so a fully
+pinned list (after Make a revision) never wraps.
+`404` when the piece is not this curator's Love/Like/Maybe piece in this collection (Onward,
+untriaged, foreign); `400` on a bad body. **DELETE** unpins (idempotent, opens nothing). Both `200 { ok: true }`.
+Reading the Ranking creates nothing.
+
+### `POST /api/collections/[id]/ranking/save`
+`requireAuth` + `requireApiCollectionAccess` before the body. **Body (strict):** `{ name: string
+(trimmed, 1-200), saveKey: ULID (26 lowercase Crockford) }`. One transaction: reuse-or-create the open
+draft → rebuild its rows from the live ranking (pins applied, tier first, usage stamped) → finalize
+(`save_key` stored) → complete the curator's open session → create an active share → carry the
+explicitly pinned pieces (only those) into a fresh open draft at their saved slots, so they stay put on
+the live Ranking. `201 { resultNumber, shareToken }`; a replay of the same key returns `200` and the
+same body, writing nothing. `409 { error, code }`: `code: "nothing_to_save"` when nothing is ranked yet,
+`code: "save_key_conflict"` when the key belongs to another collection (or its share was revoked).
+`400` on a bad body.
+
 ## items (top-level)
 
 These routes are now scoped to the item's collection (IDOR closed — pv9 PR1, `purses-3al`). The collection-scoped `…/collections/[id]/items*` routes remain the primary surface.
@@ -356,10 +391,10 @@ These routes are now scoped to the item's collection (IDOR closed — pv9 PR1, `
 Curator-scoped sorting sessions. `goal` is optional free text.
 
 ### `POST /api/sessions`
-`getSession` + `requireApiCollectionAccess(body.collectionId)`. **Body:** `{ collectionId, goal? }` (`400` missing `collectionId`). `curatorId` forced from session. `201 Session` — **succeeds even after a prior session was completed / abandoned / set-aside**, because migration `0009` made `sessions_active_unique` a **PARTIAL** index (`WHERE deleted_at IS NULL AND status IN ('active','paused')`): terminal and set-aside rows fall out of the predicate and free the slot. **`409`** (`CurrentSessionExistsError` → "You already have a sort in progress for this collection.") only when an **IN-PROGRESS** session (`active` or `paused`) still holds the `(collection_id, curator_id)` slot. The `create` repo retries only the `(collection_id, number)` race; a `sessions_active_unique` 23505 is mapped (via the shared `errorResponse`) to this gentle `409`, **never a `500`**. The sort landing also UI-gates "New Session" while an in-progress session exists, as defense-in-depth. (See ARCHITECTURE decisions log, entry 22 — supersedes entry 21's interim mitigation.)
+`getSession` + `requireApiCollectionAccess(body.collectionId)`. **Body:** `{ collectionId, goal? }` (`400` missing `collectionId`). `curatorId` forced from session. `201 Session` — **succeeds even after a prior session was completed / abandoned / set-aside**, because migration `0009` made `sessions_active_unique` a **PARTIAL** index (`WHERE deleted_at IS NULL AND status IN ('active','paused')`): terminal and set-aside rows fall out of the predicate and free the slot. **`409`** (`CurrentSessionExistsError` → "You already have a sort in progress for this collection.") only when an **IN-PROGRESS** session (`active` or `paused`) still holds the `(collection_id, curator_id)` slot. The `create` repo retries only the `(collection_id, number)` race; a `sessions_active_unique` 23505 is mapped (via the shared `errorResponse`) to this gentle `409`, **never a `500`**. The UI treats this `409` as "joined": Start sorting (`KeepSortingButton`) proceeds into the open sort instead of surfacing an error. (See ARCHITECTURE decisions log, entry 22 — supersedes entry 21's interim mitigation.)
 
 ### `GET·PATCH·DELETE /api/sessions/[id]`
-`getSession` + `authorizeSession` (`404` absent; `403` not a member; `403` not the session's curator — even other members/owners are denied). `GET` → `Session`; `PATCH` body → updated `Session` (`400` invalid JSON); `DELETE` → `{ message }` (**set aside** — a soft-delete; reversible via `…/restore`). **`PATCH` accepted fields** (`UpdateSessionSchema`): `{ status?: "active" | "paused" | "completed" | "abandoned", goal? }` — `status: "paused"` drives **pause** ("Take a break") and `status: "active"` drives **resume**. A status transition that would put a **second in-progress session** in the slot (e.g. reactivating a terminal session to `active`/`paused` while another is already in progress) re-enters the partial `sessions_active_unique` predicate and returns **`409`** (`CurrentSessionExistsError`, via the repo's `update()` 23505 catch + `errorResponse`) — **not a `500`**.
+`getSession` + `authorizeSession` (`404` absent; `403` not a member; `403` not the session's curator — even other members/owners are denied). `GET` → `Session`; `PATCH` body → updated `Session` (`400` invalid JSON); `DELETE` → `{ message }` (**set aside** — a soft-delete; reversible via `…/restore`). **`PATCH` accepted fields** (`UpdateSessionSchema`): `{ status?: "active" | "paused" | "completed" | "abandoned", goal? }` — `status: "paused"` drives **Pause** (`PauseControl`) and `status: "active"` drives **resume** (Keep sorting on a paused sort, and `ResumeOnLoad` when the Sort screen opens on one). A status transition that would put a **second in-progress session** in the slot (e.g. reactivating a terminal session to `active`/`paused` while another is already in progress) re-enters the partial `sessions_active_unique` predicate and returns **`409`** (`CurrentSessionExistsError`, via the repo's `update()` 23505 catch + `errorResponse`) — **not a `500`**.
 
 ### `POST /api/sessions/[id]/restore`
 Undo "set aside" — re-activate a soft-deleted (set-aside) session. `getSession` (`401`) → resolve **including soft-deleted** (`getSessionIncludingDeletedOrNull` / `findByIdIncludingDeleted`, since the `GET·PATCH·DELETE` getters `404` on soft-deleted rows) → **`404`** if truly absent → `requireApiCollectionAccess` (`403`/`404`) → **`403`** if `session.curatorId !== user.id` (**purses-t9l** — only the session's own curator may restore; a *different* curator who is a member of the shared collection passes the collection gate, so this curator check is the only thing that closes the IDOR). On success, `restore` clears `deletedAt` and sets `status: "active"` → `200 Session`. **`409`** (`CurrentSessionExistsError`) when an **in-progress** session already holds the slot — i.e. you set this one aside, then started a new sort: re-activating this row would put two in-progress sessions in the partial `sessions_active_unique` predicate, so the undo **gently declines and the set-aside session stays set aside** (`restoreSession`'s `findInProgress` pre-check returns the `409` before the UPDATE; the repo's `restore()` 23505 catch is the race backstop — never a `500`). A null lookup is `404`; a thrown DB error propagates (`500`), never masked as `404`.
@@ -375,7 +410,7 @@ Epic P's batched decision pipeline — the client queue/flusher's only submit pa
 Curator-private results, gated by `requireApiResultAccess` (member-or-owner **and** owning curator). Children also enforce belongs-to-parent.
 
 ### `POST /api/sort-results`
-`getSession` + `requireApiCollectionAccess(body.collectionId)`. **Body:** `{ collectionId, name }` (`400` if either missing, or invalid JSON). `curatorId` from session, `status: "draft"`. Delegates to `SortResultService.createDraftResult`, which reads the curator's `CollectionPreferenceItem` rows for the collection and **materializes one `SortResultItem` per preference** (ranked by descending score, carrying each row's bucket) before returning. **Materialization is atomic** — the result row + all item rows are written in one `withTransaction`, so a mid-materialization failure commits nothing (`purses-nea`). `201 SortResult` (the created draft; items are fetched via `GET …/[id]/items`).
+`getSession` + `requireApiCollectionAccess(body.collectionId)`. **Body:** `{ collectionId, name }` (`400` if either missing, or invalid JSON). `curatorId` from session, `status: "draft"`. Delegates to `SortResultService.createDraftResult`, which reads the curator's `CollectionPreferenceItem` rows for the collection and **materializes one `SortResultItem` per preference** (ranked tier first, then pair order, carrying each row's bucket) before returning. Any open draft for the curator is deleted in the same locked transaction first (one open draft per collection + curator); no UI calls this route any more. **Materialization is atomic** — the result row + all item rows are written in one `withTransaction`, so a mid-materialization failure commits nothing (`purses-nea`). `201 SortResult` (the created draft; one item is readable via `GET …/[id]/items/[rid]`, and a saved ranking's items render on its results page).
 
 ### `GET·PATCH·DELETE /api/sort-results/[id]`
 `requireAuth` + `requireApiResultAccess` (`401`/`403`/`404`). `GET` → `SortResult`; `PATCH` body → updated `SortResult` (`400` invalid JSON), but rejects a **finalized** result with **`409`** (`"Result is finalized"`) — a finalized result is immutable, name included (infra §11.3; `purses-gmn`, mirroring `purses-526`'s item-level guards). `DELETE` delegates to `SortResultService.deleteResult`, which **hard-deletes a draft result and its child items** (children first — the `sort_result_items → sort_results` FK has no `ON DELETE CASCADE`; **atomic** — both deletes in one `withTransaction`, a `purses-nea` follow-up): `200 { message }` when a draft was deleted; **`409`** (`"Can only delete draft results"`) if the result is finalized; **`404`** if absent.
@@ -384,16 +419,10 @@ Curator-private results, gated by `requireApiResultAccess` (member-or-owner **an
 `requireApiResultAccess`. Finalizes a **draft** result → `200 SortResult`. **`409`** (`FinalizeStateError`, "Can only finalize draft results") if the result is already finalized — finalize is once-only, not idempotent (pv9 PR2, `purses-ydph`). **Sessions as invisible bookkeeping** (spec §E): the same call also closes the pass it belongs to — `SortResultService.finalizeResult` resolves the curator's **open** (`active`|`paused`) session for the result's collection and marks it `completed`, **atomically** with the finalize write (one `withTransaction`; either both land or neither does). `sort_results` carries no `sessionId`, so the open session is resolved by `(collectionId, curatorId)` at finalize time, not pinned to whichever session the draft was created from. No open session → the result still finalizes alone, no error.
 
 ### `POST /api/sort-results/[id]/supersede`
-`requireAuth` + `requireApiResultAccess`. Delegates to `SortResultService.supersedeResult`. When the source is **finalized**, creates a new **draft** result (`name` = `"<source name> (Revision)"`) with the source's items **cloned** (computed rank/bucket carried over) **atomically** (result + items in one transaction — `purses-nea`) → **`201`** the new draft `SortResult`. **`409`** (`"Can only supersede finalized results"`) if the source is not finalized; **`404`** if the source is absent.
+`requireAuth` + `requireApiResultAccess`. Delegates to `SortResultService.supersedeResult`. When the source is **finalized**, creates a new **draft** result (`name` = `"<source name> (Revision)"`) with the source's items **cloned** (computed rank/bucket carried over) **atomically** (result + items in one transaction — `purses-nea`) → **`201`** the new draft `SortResult`. **`409`** (`"Can only supersede finalized results"`) if the source is not finalized; **`404`** if the source is absent. The revision replaces the curator's open draft, and its loved rows are pinned (`manualRank`) at their saved positions, so the live Ranking starts from the saved order.
 
-### `GET·PATCH·DELETE /api/sort-results/[id]/items`
-`requireApiResultAccess`. `GET` → `SortResultItem[]`. **Epic S bulk re-rank** (`purses-mvn5`): `PATCH` body `{ order: [{ rid, manualRank }] }` writes the whole sequence's 1-indexed `manualRank` in **one `withTransaction`** (atomic — a partial reorder is never persisted); `DELETE` clears the manual overlay (NULLs every `manualRank`, back to the suggested order). Both **reject a finalized parent with `409`** (the keepsake is immutable). **9v1f.1 cross-tier:** each order entry also carries a required-nullable `manualBucket` (`"top"|"high"|"medium"|"low"|null`) written alongside `manualRank` in the same transaction, so a hand-move can cross the loved↔onward boundary (`null` = no override, fall back to computed).
-
-### `GET·PATCH·DELETE /api/sort-results/[id]/items/[rid]`
-`requireApiResultAccess` + belongs-to-parent (`item.sortResultId !== id` → `404`). `PATCH`/`DELETE` reject a **finalized** parent result with **`409`** (finalized results are immutable — infra §11.3; `purses-526`). `GET` → `SortResultItem`; `PATCH` body → updated item (`400` invalid JSON); `DELETE` removes the item via `SortResultService.deleteResultItem` → `200 { message }`.
-
-### `POST /api/sort-results/[id]/items/[rid]/reset`
-`requireApiResultAccess` + belongs-to-parent (`404`); rejects a **finalized** parent result with **`409`** (`purses-526`). Resets the item's placement. Returns the `SortResultItem`.
+### `GET /api/sort-results/[id]/items/[rid]`
+`requireApiResultAccess` + belongs-to-parent (`item.sortResultId !== id` → `404`). `GET` → `SortResultItem`. (The per-item `DELETE` — the last unlocked draft writer, with no UI caller — was removed in the PR 2 final fix wave. The legacy hand-order writers — bulk `PATCH·DELETE …/items`, per-item `PATCH …/items/[rid]` and `…/items/[rid]/reset` — were removed in UX redesign PR 2; hand placement is the [ranking](#ranking) pins.)
 
 ## shares
 
@@ -449,4 +478,4 @@ Fixing `GET /file` alone would have been theater — the same bit was readable v
 - **Collection existence** still leaks, by the documented convention above — `requireApiCapability` answers `404` for an absent collection and `403` for one the caller can't touch. So the identical-`403` guarantee holds *given the collection exists*; a caller guessing a collection id still learns whether it does.
 - **Top-level `/api/items/**`** — `requireApiItemCapability` receives a bare `itemId` and *must* resolve it to learn which collection to authorize against, so it cannot use this ordering without changing its response contract. (This is a consequence of the `purses-3al` fix, not a regression of it — `purses-3al` itself is closed and was a different class: those routes were `requireAuth`-only.)
 
-Implemented (formerly no-op stubs): `POST /api/items/[id]/purge` is a real owner-only hard-delete cascade with a `409`-in-result guard, alongside owner-only `POST /api/items/[id]/remove-from-sorts` — **purses-u3p** resolved for item purge. **`POST /api/collections/[id]/purge`** is a real owner-only whole-collection cascade purge (name-confirm + `collection.purge` audit). The former sort-results no-op-success stubs — `DELETE /api/sort-results/[id]`, `DELETE /api/sort-results/[id]/items/[rid]`, and the empty `GET …/shares` listing — are also implemented.
+Implemented (formerly no-op stubs): `POST /api/items/[id]/purge` is a real owner-only hard-delete cascade with a `409`-in-result guard, alongside owner-only `POST /api/items/[id]/remove-from-sorts` — **purses-u3p** resolved for item purge. **`POST /api/collections/[id]/purge`** is a real owner-only whole-collection cascade purge (name-confirm + `collection.purge` audit). The former sort-results no-op-success stubs — `DELETE /api/sort-results/[id]` and the empty `GET …/shares` listing — are also implemented (`DELETE …/items/[rid]` was implemented, then removed in UX redesign PR 2).

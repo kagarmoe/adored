@@ -8,7 +8,7 @@ interface WelcomeHandoffProps {
   onExplore: () => void;
 }
 
-// Beat 7 — hand off to their world. Primary CTA into the real new-collection
+// Beat 5 — hand off to their world. Primary CTA into the real new-collection
 // flow; a quiet way to just look around.
 export function WelcomeHandoff({ onExplore }: WelcomeHandoffProps) {
   return (
@@ -19,7 +19,7 @@ export function WelcomeHandoff({ onExplore }: WelcomeHandoffProps) {
           Begin with photos. They can wait in the pool until you make items.
         </p>
         <p className="text-lg text-ink-soft">
-          Sort whenever you like, one gentle round at a time.
+          Sort whenever you like, a few pieces at a time.
         </p>
       </div>
 

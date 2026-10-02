@@ -13,8 +13,11 @@ const { txResultRepo, txItemRepo, txSessionRepo, isResultNumberConflict } = vi.h
     delete: vi.fn(),
     findByIdForUpdate: vi.fn(),
     update: vi.fn(),
+    findDrafts: vi.fn(),
+    findBySaveKey: vi.fn(),
+    markSaved: vi.fn(),
   },
-  txItemRepo: { create: vi.fn(), deleteByResult: vi.fn() },
+  txItemRepo: { create: vi.fn(), deleteByResult: vi.fn(), findByResult: vi.fn(), update: vi.fn() },
   // finalizeResult resolves the curator's open session via a tx-bound
   // SessionRepository — mocked the same way as the other tx-bound repos above.
   txSessionRepo: { findInProgress: vi.fn(), update: vi.fn() },
@@ -26,6 +29,21 @@ vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
 }));
 vi.mock("@/server/repositories/implementations/SortResultItemRepository", () => ({
   SortResultItemRepository: vi.fn(function () { return txItemRepo; }),
+}));
+const { txShareRepo } = vi.hoisted(() => ({ txShareRepo: { findByResult: vi.fn(), create: vi.fn(), deleteByResult: vi.fn() } }));
+vi.mock("@/server/repositories/implementations/SortResultShareRepository", () => ({
+  SortResultShareRepository: vi.fn(function () { return txShareRepo; }),
+}));
+const { txPrefRepo } = vi.hoisted(() => ({ txPrefRepo: { findByItem: vi.fn() } }));
+vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({
+  CollectionPreferenceItemRepository: vi.fn(function () { return txPrefRepo; }),
+}));
+// Every draft writer takes the (collection, curator) advisory lock; the fake tx
+// can't execute SQL, so stub only the lock (the DB tier proves it for real).
+vi.mock("@/lib/transactions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/transactions")>()),
+  lockCollectionCurator: vi.fn(),
+  lockSaveKey: vi.fn(),
 }));
 vi.mock("@/server/repositories/implementations/SessionRepository", () => ({
   SessionRepository: vi.fn(function () { return txSessionRepo; }),
@@ -44,6 +62,8 @@ import {
   DeleteResultStateError,
   FinalizeStateError,
   ResultNumberExhaustedError,
+  PinTargetError,
+  SaveKeyConflictError,
 } from "./SortResultService";
 import type {
   CollectionPreferenceItem,
@@ -54,6 +74,7 @@ import type { SortResultRepository } from "@/server/repositories/implementations
 import type { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import type { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import type { Database } from "@/lib/db";
+import { lockCollectionCurator } from "@/lib/transactions";
 
 const txDb = fakeTxDb() as unknown as Database;
 
@@ -124,6 +145,8 @@ beforeEach(() => {
   txResultRepo.update.mockResolvedValue(sortResult({ status: "finalized" }));
   txItemRepo.create.mockResolvedValue(sortResultItem());
   txItemRepo.deleteByResult.mockResolvedValue(undefined);
+  txResultRepo.findDrafts.mockResolvedValue([]);
+  txItemRepo.findByResult.mockResolvedValue([]);
   txSessionRepo.findInProgress.mockResolvedValue(null);
   txSessionRepo.update.mockResolvedValue(undefined);
 });
@@ -144,19 +167,16 @@ describe("SortResultService.createDraftResult", () => {
       ],
     } as unknown as CollectionPreferenceItemRepository;
 
-    // findDrafts returns ONLY the just-created draft, so the supersede reap
-    // (purses-p2rj) finds no PRIOR draft and deletes nothing.
-    const findDrafts = vi.fn(async () => [created]);
     const result = await new SortResultService(
-      { findDrafts } as unknown as SortResultRepository,
+      {} as unknown as SortResultRepository,
       {} as unknown as SortResultItemRepository,
       preferenceRepo,
       txDb,
     ).createDraftResult(COLLECTION, CURATOR, "Spring sort");
 
     expect(result).toBe(created);
-    // The reap ran but had no prior draft to delete (the only draft is the new one).
-    expect(findDrafts).toHaveBeenCalledWith(COLLECTION, CURATOR);
+    // The in-tx reap ran but found no prior draft to delete.
+    expect(txResultRepo.findDrafts).toHaveBeenCalledWith(COLLECTION, CURATOR);
     expect(txResultRepo.delete).not.toHaveBeenCalled();
     expect(txResultRepo.insertWithNumber).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -221,7 +241,7 @@ describe("SortResultService.createDraftResult", () => {
     } as unknown as CollectionPreferenceItemRepository;
 
     const result = await new SortResultService(
-      { findDrafts: async () => [created] } as unknown as SortResultRepository,
+      {} as unknown as SortResultRepository,
       {} as unknown as SortResultItemRepository,
       preferenceRepo,
       txDb,
@@ -232,14 +252,39 @@ describe("SortResultService.createDraftResult", () => {
   });
 });
 
+describe("pinItem targets", () => {
+  // Only a Love/Like/Maybe piece of this curator can be pinned; the DB test
+  // carries the foreign-collection 404, these carry the other two refusals.
+  const service = () =>
+    new SortResultService(
+      {} as unknown as SortResultRepository,
+      {} as unknown as SortResultItemRepository,
+      {} as unknown as CollectionPreferenceItemRepository,
+      txDb,
+    );
+
+  it("refuses an untriaged piece and opens nothing", async () => {
+    txPrefRepo.findByItem.mockResolvedValue(null);
+    await expect(service().pinItem(COLLECTION, CURATOR, "item-1", 1)).rejects.toBeInstanceOf(PinTargetError);
+    expect(txResultRepo.insertWithNumber).not.toHaveBeenCalled();
+  });
+
+  it("refuses an Onward piece and opens nothing", async () => {
+    txPrefRepo.findByItem.mockResolvedValue(preference({ collectionId: COLLECTION, rankBucket: "low" }));
+    await expect(service().pinItem(COLLECTION, CURATOR, "item-1", 1)).rejects.toBeInstanceOf(PinTargetError);
+    expect(txResultRepo.insertWithNumber).not.toHaveBeenCalled();
+  });
+});
+
 describe("SortResultService.finalizeResult", () => {
   // The tx-bound wiring is proven here (mirroring the other tx-primitive
   // tests in this file); the AUTHORITATIVE atomicity proof — both rows
   // actually moved together against a real DB — lives in the DB-tier
   // sort-results-pipeline.integration.test.ts.
+  // The injected repo's pre-tx read only supplies the curator-lock key.
   function service() {
     return new SortResultService(
-      {} as unknown as SortResultRepository,
+      { findById: async () => sortResult({ status: "draft" }) } as unknown as SortResultRepository,
       {} as unknown as SortResultItemRepository,
       {} as unknown as CollectionPreferenceItemRepository,
       txDb,
@@ -257,6 +302,7 @@ describe("SortResultService.finalizeResult", () => {
     const result = await service().finalizeResult("res-1");
 
     expect(result).toBe(finalized);
+    expect(lockCollectionCurator).toHaveBeenCalledWith(expect.anything(), COLLECTION, CURATOR);
     expect(txResultRepo.findByIdForUpdate).toHaveBeenCalledWith("res-1");
     expect(txResultRepo.update).toHaveBeenCalledWith(
       "res-1",
@@ -409,8 +455,24 @@ describe("SortResultService deleteResult", () => {
     expect(txResultRepo.delete).not.toHaveBeenCalled();
   });
 
+  it("re-asserts draft status under the curator lock (a save that finalized it meanwhile wins)", async () => {
+    txResultRepo.findByIdForUpdate.mockResolvedValue(sortResult({ status: "finalized" }));
+    await expect(
+      new SortResultService(
+        { findById: async () => sortResult({ status: "draft" }) } as unknown as SortResultRepository,
+        {} as unknown as SortResultItemRepository,
+        {} as unknown as CollectionPreferenceItemRepository,
+        txDb,
+      ).deleteResult("res-1"),
+    ).rejects.toBeInstanceOf(DeleteResultStateError);
+    expect(txItemRepo.deleteByResult).not.toHaveBeenCalled();
+  });
+
   it("deletes children BEFORE the result row (FK-safe order) inside one tx for a draft", async () => {
     const calls: string[] = [];
+    txShareRepo.deleteByResult.mockImplementation(async () => {
+      calls.push("shares");
+    });
     txItemRepo.deleteByResult.mockImplementation(async () => {
       calls.push("children");
     });
@@ -420,6 +482,7 @@ describe("SortResultService deleteResult", () => {
     const sortResultRepo = {
       findById: async () => sortResult({ status: "draft" }),
     } as unknown as SortResultRepository;
+    txResultRepo.findByIdForUpdate.mockResolvedValue(sortResult({ status: "draft" }));
 
     const deleted = await new SortResultService(
       sortResultRepo,
@@ -432,47 +495,27 @@ describe("SortResultService deleteResult", () => {
     // Writes land on the tx-bound repos, not the injected ones.
     expect(txItemRepo.deleteByResult).toHaveBeenCalledWith("res-1");
     expect(txResultRepo.delete).toHaveBeenCalledWith("res-1");
-    // Children-first: the sort_result_items -> sort_results FK has no cascade.
-    expect(calls).toEqual(["children", "result"]);
+    // Children-first: neither FK to sort_results cascades.
+    expect(calls).toEqual(["shares", "children", "result"]);
+    expect(lockCollectionCurator).toHaveBeenCalledWith(expect.anything(), COLLECTION, CURATOR);
   });
 });
 
-describe("SortResultService manual override", () => {
-  it("setManualOverride / resetManualOverride write manual fields", async () => {
-    const setUpdate = vi.fn(async () =>
-      sortResultItem({ manualRank: 3, manualBucket: "top" }),
-    );
-    const setRepo = {
-      update: setUpdate,
-    } as unknown as SortResultItemRepository;
-
-    await new SortResultService(
+describe("SortResultService.saveAndShare replay", () => {
+  it("409s when the key's link is no longer active, and writes nothing", async () => {
+    txResultRepo.findBySaveKey.mockResolvedValue(sortResult({ status: "finalized" }));
+    txShareRepo.findByResult.mockResolvedValue([{ status: "revoked" }]);
+    const service = new SortResultService(
       {} as unknown as SortResultRepository,
-      setRepo,
+      {} as unknown as SortResultItemRepository,
       {} as unknown as CollectionPreferenceItemRepository,
       txDb,
-    ).setManualOverride("item-a", 3, "top");
-
-    expect(setUpdate).toHaveBeenCalledWith(
-      "item-a",
-      expect.objectContaining({ manualRank: 3, manualBucket: "top" }),
     );
 
-    const resetUpdate = vi.fn(async () => sortResultItem());
-    const resetRepo = {
-      update: resetUpdate,
-    } as unknown as SortResultItemRepository;
-
-    await new SortResultService(
-      {} as unknown as SortResultRepository,
-      resetRepo,
-      {} as unknown as CollectionPreferenceItemRepository,
-      txDb,
-    ).resetManualOverride("item-a");
-
-    expect(resetUpdate).toHaveBeenCalledWith(
-      "item-a",
-      expect.objectContaining({ manualRank: null, manualBucket: null }),
+    await expect(service.saveAndShare(COLLECTION, CURATOR, "Again", "01j00000000000000000000000")).rejects.toBeInstanceOf(
+      SaveKeyConflictError,
     );
+    expect(txResultRepo.markSaved).not.toHaveBeenCalled();
+    expect(txShareRepo.create).not.toHaveBeenCalled();
   });
 });

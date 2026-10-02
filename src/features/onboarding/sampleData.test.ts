@@ -3,7 +3,6 @@ import {
   buildStanding,
   buildTriageStanding,
   comparePairsFor,
-  COMPARE_PAIR,
   RESULT_TO_TIER,
   SAMPLE_ITEMS,
   toItem,
@@ -128,12 +127,14 @@ describe("buildTriageStanding", () => {
 });
 
 describe("comparePairsFor", () => {
-  it("compares every ranked item against every other ranked item", () => {
-    const standing = buildTriageStanding(tiers({ cushion: "love", bowl: "love", tote: "love" }));
+  it("pairs only the Love and Like pieces (spec §4 comparable set)", () => {
+    const standing = buildTriageStanding({
+      [TRIAGE_ITEMS[0].id]: { kind: "tier", tier: "love" },
+      [TRIAGE_ITEMS[1].id]: { kind: "tier", tier: "maybe" },
+      [TRIAGE_ITEMS[2].id]: { kind: "tier", tier: "like" },
+    });
     expect(comparePairsFor(standing).map((pair) => pair.map((item) => item.id))).toEqual([
-      ["cushion", "bowl"],
-      ["cushion", "tote"],
-      ["bowl", "tote"],
+      [TRIAGE_ITEMS[0].id, TRIAGE_ITEMS[2].id],
     ]);
   });
 
@@ -217,10 +218,6 @@ describe("sample content", () => {
       "journal",
       "colander",
     ]);
-  });
-
-  it("keeps the compare pair as cushion and bowl", () => {
-    expect(COMPARE_PAIR.map((i) => i.id)).toEqual(["cushion", "bowl"]);
   });
 
   it("triage items are the demonstrated sample collection", () => {

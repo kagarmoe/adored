@@ -405,6 +405,20 @@ function buildStrangerCases(
       `/api/collections/${collectionId}/dispositions/${itemAId}`,
       { id: collectionId, itemId: itemAId }),
 
+    // ── /api/collections/[id]/ranking (UX redesign PR 2) ──────────────────
+    // requireApiCollectionAccess → 403 for a non-member, before any body parse.
+    c("collections/[id]/ranking/pins/[itemId]/route.ts", "PUT",
+      `/api/collections/${collectionId}/ranking/pins/${itemAId}`,
+      { id: collectionId, itemId: itemAId },
+      { position: 1 }),
+    c("collections/[id]/ranking/pins/[itemId]/route.ts", "DELETE",
+      `/api/collections/${collectionId}/ranking/pins/${itemAId}`,
+      { id: collectionId, itemId: itemAId }),
+    c("collections/[id]/ranking/save/route.ts", "POST",
+      `/api/collections/${collectionId}/ranking/save`,
+      { id: collectionId },
+      { name: "Stranger", saveKey: "01j00000000000000000000000" }),
+
     // ── /api/collections/[id]/preferences/items ───────────────────────────
     c("collections/[id]/preferences/items/route.ts", "GET",
       `/api/collections/${collectionId}/preferences/items`,
@@ -539,35 +553,9 @@ function buildStrangerCases(
       `/api/sort-results/${sortResultId}/supersede`,
       { id: sortResultId }),
 
-    // ── /api/sort-results/[id]/items ──────────────────────────────────────
-    c("sort-results/[id]/items/route.ts", "GET",
-      `/api/sort-results/${sortResultId}/items`,
-      { id: sortResultId }),
-    // Bulk re-rank (Epic S): PATCH parses the body then requireApiResultAccess —
-    // give a valid order body so json() succeeds and the authz gate is reached.
-    c("sort-results/[id]/items/route.ts", "PATCH",
-      `/api/sort-results/${sortResultId}/items`,
-      { id: sortResultId },
-      { order: [{ rid: resultItemId, manualRank: 0 }] }),
-    c("sort-results/[id]/items/route.ts", "DELETE",
-      `/api/sort-results/${sortResultId}/items`,
-      { id: sortResultId }),
-
     // ── /api/sort-results/[id]/items/[rid] ────────────────────────────────
     c("sort-results/[id]/items/[rid]/route.ts", "GET",
       `/api/sort-results/${sortResultId}/items/${resultItemId}`,
-      { id: sortResultId, rid: resultItemId }),
-    c("sort-results/[id]/items/[rid]/route.ts", "PATCH",
-      `/api/sort-results/${sortResultId}/items/${resultItemId}`,
-      { id: sortResultId, rid: resultItemId },
-      { manualBucket: "top" }),
-    c("sort-results/[id]/items/[rid]/route.ts", "DELETE",
-      `/api/sort-results/${sortResultId}/items/${resultItemId}`,
-      { id: sortResultId, rid: resultItemId }),
-
-    // ── /api/sort-results/[id]/items/[rid]/reset ──────────────────────────
-    c("sort-results/[id]/items/[rid]/reset/route.ts", "POST",
-      `/api/sort-results/${sortResultId}/items/${resultItemId}/reset`,
       { id: sortResultId, rid: resultItemId }),
 
     // ── /api/sort-results/[id]/shares ─────────────────────────────────────

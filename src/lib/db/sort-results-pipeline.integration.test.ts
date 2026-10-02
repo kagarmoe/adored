@@ -3,7 +3,7 @@
 // Phase-3 Task 7: the HAPPY + ERROR/state-guard branches of the sort-results
 // subtree that sort-results-authz (authz / IDOR / belongs-to-parent) and
 // sort-pipeline (createDraftResult materialization, [id] PATCH/DELETE 409,
-// items/[rid] DELETE, service-level supersede clone) do NOT execute. Real
+// service-level supersede clone) do NOT execute. Real
 // handler -> controller/service -> repo -> ephemeral Postgres; mocks ONLY the
 // two true boundaries (auth + db). No blob — sort-results never touch it.
 //
@@ -11,11 +11,7 @@
 //   - [id] GET happy (returns the result)
 //   - finalize POST happy (draft -> finalized, persisted) + the pinned NO-state-guard
 //     fact (re-finalize is idempotent; there is no 409 — purses-ydph)
-//   - items GET happy (returns the result's items in computed-rank order)
-//   - items/[rid] GET happy; PATCH happy (manual override persists); PATCH 409
-//     finalized; PATCH invalid-JSON 400; PATCH bad-enum -> pinned 500 (purses-ydph)
-//   - items/[rid]/reset POST happy (override present before -> cleared after);
-//     reset 409 finalized
+//   - items/[rid] GET happy
 //   - shares POST happy (creates a row, read back) + invalid-JSON 400
 //   - shares/[sid] GET happy; PATCH happy (revoke persists) + invalid-JSON 400;
 //     DELETE happy (active before -> revoked after)
@@ -36,9 +32,8 @@ import { SortResultItemRepository } from "@/server/repositories/implementations/
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { SortResultService } from "@/server/services/SortResultService";
-import { deriveStanding } from "@/features/results/standing";
+import { buildRanking } from "@/server/services/sortResultMaterialization";
 import { partitionRanked } from "@/lib/results-buckets";
-import type { Item } from "@/types";
 
 const { mockGetSession, UnauthorizedError } = vi.hoisted(() => {
   class UnauthorizedError extends Error {
@@ -61,9 +56,7 @@ vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 import { POST as createResult } from "@/app/api/sort-results/route";
 import { GET as getResult } from "@/app/api/sort-results/[id]/route";
 import { POST as finalizeResult } from "@/app/api/sort-results/[id]/finalize/route";
-import { GET as listItems } from "@/app/api/sort-results/[id]/items/route";
-import { GET as getItem, PATCH as patchItem } from "@/app/api/sort-results/[id]/items/[rid]/route";
-import { POST as resetItem } from "@/app/api/sort-results/[id]/items/[rid]/reset/route";
+import { GET as getItem } from "@/app/api/sort-results/[id]/items/[rid]/route";
 import { POST as createShare } from "@/app/api/sort-results/[id]/shares/route";
 import { GET as getShare, PATCH as patchShare, DELETE as deleteShare } from "@/app/api/sort-results/[id]/shares/[sid]/route";
 import { POST as supersede } from "@/app/api/sort-results/[id]/supersede/route";
@@ -309,24 +302,8 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
     });
   });
 
-  // ── items GET (list) ──────────────────────────────────────────────────────
-  describe("GET /api/sort-results/[id]/items", () => {
-    it("200s for the curator and returns the result's items in computed-rank order", async () => {
-      const { resultId, highItemId, lowItemId } = await seedPopulatedDraft();
-      login(ownerId);
-      const res = await listItems(jsonReq("GET") as any, { params: Promise.resolve({ id: resultId }) } as any);
-      expect(res.status).toBe(200);
-      const items = (await res.json()) as Array<{ itemId: string; computedRank: number }>;
-      expect(items).toHaveLength(2);
-      // orderRank 0 is computedRank 0 (best); ordering proves it is the result's items.
-      const byRank = [...items].sort((a, b) => a.computedRank - b.computedRank);
-      expect(byRank[0].itemId).toBe(highItemId);
-      expect(byRank[1].itemId).toBe(lowItemId);
-    });
-  });
-
-  // ── items/[rid] GET / PATCH ───────────────────────────────────────────────
-  describe("GET·PATCH /api/sort-results/[id]/items/[rid]", () => {
+  // ── items/[rid] GET ───────────────────────────────────────────────────────
+  describe("GET /api/sort-results/[id]/items/[rid]", () => {
     /** The result's highest-ranked SortResultItem id. */
     async function firstResultItem(resultId: string) {
       const items = await new SortResultItemRepository(getTestDb().db).findByResult(resultId);
@@ -340,109 +317,6 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       const res = await getItem(jsonReq("GET") as any, { params: Promise.resolve({ id: resultId, rid: item.id }) } as any);
       expect(res.status).toBe(200);
       expect(await res.json()).toMatchObject({ id: item.id, sortResultId: resultId });
-    });
-
-    it("PATCH 200s and persists a manual bucket/rank override", async () => {
-      const { db } = getTestDb();
-      const { resultId } = await seedPopulatedDraft();
-      const item = await firstResultItem(resultId);
-      // Non-vacuous: no override set BEFORE.
-      expect(item.manualBucket).toBeNull();
-      expect(item.manualRank).toBeNull();
-
-      login(ownerId);
-      const res = await patchItem(
-        jsonReq("PATCH", { manualBucket: "low", manualRank: 9 }) as any,
-        { params: Promise.resolve({ id: resultId, rid: item.id }) } as any,
-      );
-      expect(res.status).toBe(200);
-
-      const after = await new SortResultItemRepository(db).findById(item.id);
-      expect(after!.manualBucket).toBe("low");
-      expect(after!.manualRank).toBe(9);
-    });
-
-    it("PATCH 409s when the parent result is finalized (override not applied)", async () => {
-      const { db } = getTestDb();
-      const { resultId } = await seedPopulatedDraft();
-      const item = await firstResultItem(resultId);
-      await new SortResultService(
-        new SortResultRepository(db), new SortResultItemRepository(db),
-        new CollectionPreferenceItemRepository(db), db,
-      ).finalizeResult(resultId);
-
-      login(ownerId);
-      const res = await patchItem(
-        jsonReq("PATCH", { manualBucket: "low" }) as any,
-        { params: Promise.resolve({ id: resultId, rid: item.id }) } as any,
-      );
-      expect(res.status).toBe(409);
-      // The item on a finalized result must be unchanged.
-      expect((await new SortResultItemRepository(db).findById(item.id))!.manualBucket).toBeNull();
-    });
-
-    it("PATCH 400s on invalid JSON (override not applied)", async () => {
-      const { db } = getTestDb();
-      const { resultId } = await seedPopulatedDraft();
-      const item = await firstResultItem(resultId);
-      login(ownerId);
-      const res = await patchItem(badJsonReq("PATCH") as any, { params: Promise.resolve({ id: resultId, rid: item.id }) } as any);
-      expect(res.status).toBe(400);
-      expect((await new SortResultItemRepository(db).findById(item.id))!.manualBucket).toBeNull();
-    });
-
-    it("PATCH bad manualBucket enum -> 400 (ZodError mapped via errorResponse), no mutation", async () => {
-      const { db } = getTestDb();
-      const { resultId } = await seedPopulatedDraft();
-      const item = await firstResultItem(resultId);
-      login(ownerId);
-      const res = await patchItem(
-        jsonReq("PATCH", { manualBucket: "not-a-bucket" }) as any,
-        { params: Promise.resolve({ id: resultId, rid: item.id }) } as any,
-      );
-      expect(res.status).toBe(400);
-      expect((await new SortResultItemRepository(db).findById(item.id))!.manualBucket).toBeNull();
-    });
-  });
-
-  // ── items/[rid]/reset POST ────────────────────────────────────────────────
-  describe("POST /api/sort-results/[id]/items/[rid]/reset", () => {
-    it("200s and clears a manual override (set before -> null after)", async () => {
-      const { db } = getTestDb();
-      const { resultId } = await seedPopulatedDraft();
-      const itemRepo = new SortResultItemRepository(db);
-      const item = (await itemRepo.findByResult(resultId))[0];
-      // Set an override directly, then assert it is PRESENT before the reset.
-      await itemRepo.update(item.id, { manualBucket: "low", manualRank: 7 });
-      const before = await itemRepo.findById(item.id);
-      expect(before!.manualBucket).toBe("low");
-      expect(before!.manualRank).toBe(7);
-
-      login(ownerId);
-      const res = await resetItem(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId, rid: item.id }) } as any);
-      expect(res.status).toBe(200);
-
-      const after = await itemRepo.findById(item.id);
-      expect(after!.manualBucket).toBeNull();
-      expect(after!.manualRank).toBeNull();
-    });
-
-    it("409s when the parent result is finalized (override preserved)", async () => {
-      const { db } = getTestDb();
-      const { resultId } = await seedPopulatedDraft();
-      const itemRepo = new SortResultItemRepository(db);
-      const item = (await itemRepo.findByResult(resultId))[0];
-      await itemRepo.update(item.id, { manualBucket: "low", manualRank: 7 });
-      await new SortResultService(
-        new SortResultRepository(db), new SortResultItemRepository(db),
-        new CollectionPreferenceItemRepository(db), db,
-      ).finalizeResult(resultId);
-
-      login(ownerId);
-      const res = await resetItem(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId, rid: item.id }) } as any);
-      expect(res.status).toBe(409);
-      // The override on a finalized result must survive the reset attempt.
-      expect((await itemRepo.findById(item.id))!.manualBucket).toBe("low");
     });
   });
 
@@ -631,7 +505,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
   //   2. FRESH-AT-FINALIZE — the Finalize entry POSTs a NEW draft materialized
   //      from CURRENT live prefs, so it reflects the current Standing, never a
   //      stale earlier draft.
-  //   3. SHARED DERIVATION — the live Standing (deriveStanding) and the finalize
+  //   3. SHARED DERIVATION — the live Ranking (buildRanking) and the finalize
   //      snapshot come from the SAME rankPreferencesToItems derivation: the
   //      most-loved item is identical in both.
   describe("Finalize snapshot semantics: live-canonical, snapshot-frozen", () => {
@@ -699,14 +573,10 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       });
 
       // The LIVE Standing now reflects the changes (proves the mutation took).
-      const items = [
-        { id: highItemId } as Item, { id: lowItemId } as Item, { id: inserted.id } as Item,
-      ];
-      const itemById = new Map(items.map((i) => [i.id, i]));
       const livePrefs = await prefRepo.findByCollection(collectionId, ownerId);
-      const standing = deriveStanding(livePrefs, itemById);
-      expect(standing.loved).toHaveLength(3);
-      expect(standing.loved[0].item.id).toBe(inserted.id); // new item is most-loved live
+      const live = buildRanking(livePrefs, new Set([highItemId, lowItemId, inserted.id]), []);
+      expect(live.loved).toHaveLength(3);
+      expect(live.loved[0].itemId).toBe(inserted.id); // new item is most-loved live
 
       // AFTER: the finalized snapshot is byte-for-byte the SAME — no insertion, no
       // reorder leaked in. Frozen.
@@ -892,11 +762,8 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       const sortItemRepo = new SortResultItemRepository(db);
 
       // The LIVE Standing's most-loved item (what the Decide surface renders).
-      const items = [{ id: highItemId } as Item, { id: lowItemId } as Item];
-      const itemById = new Map(items.map((i) => [i.id, i]));
       const livePrefs = await prefRepo.findByCollection(collectionId, ownerId);
-      const standing = deriveStanding(livePrefs, itemById);
-      const standingMostLoved = standing.loved[0].item.id;
+      const standingMostLoved = buildRanking(livePrefs, new Set([highItemId, lowItemId]), []).loved[0].itemId;
 
       // The finalize snapshot's most-loved item (computedRank 0 of the loved
       // partition, mirroring how the snapshot viewer derives it).

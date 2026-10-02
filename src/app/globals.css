@@ -15,6 +15,7 @@
   --color-surface-raised: var(--color-surface-raised);
 
   --color-hairline: var(--color-hairline);
+  --color-track: var(--color-track);
 
   --color-content-soft: var(--color-content-soft);
   --color-content-mid: var(--color-content-mid);
@@ -25,9 +26,6 @@
   --color-spark-ink: var(--color-spark-ink);
 
   --color-decor: var(--color-decor);
-
-  --color-ring-sweep: var(--color-ring-sweep);
-  --color-ring-track: var(--color-ring-track);
 
   --color-info: var(--color-info);
   --color-info-soft: var(--color-info-soft);
@@ -104,6 +102,8 @@
   --color-surface: #e5eef0;
   --color-surface-raised: #ffffff;
   --color-hairline: #c7dade;
+  /* track = the edge of a progress line's empty track: >= 3:1 on ground (SC 1.4.11) */
+  --color-track: #4f7da0;
   --color-ink: #16242b;
   --color-ink-soft: #434f57;
 
@@ -128,11 +128,6 @@
   --color-spark-soft: #f6e1b1;
   --color-decor: #b5aacc;
   --color-decor-soft: #cec6dd;
-
-  /* Round-timer ring: the depleting edge is the sole sighted signal (time text is
-     sr-only), so this pair is pinned at ≥3:1 by contrast.test.ts in BOTH themes. */
-  --color-ring-sweep: #7b6a99;
-  --color-ring-track: #e5eef0;
 
   --color-error: #9b4036;
   --color-error-soft: #f3deda;
@@ -208,6 +203,7 @@
   --color-surface: #103f4a;
   --color-surface-raised: #123a4e;
   --color-hairline: #3f7fa0;
+  --color-track: #3f7fa0;
   --color-ink: #ecf2f4;
   --color-ink-soft: #b0c6cb;
 
@@ -226,9 +222,6 @@
   --color-spark-soft: #b89f55;
   --color-decor: #6d5c9b;
   --color-decor-soft: #8a79b3;
-
-  --color-ring-sweep: #a795c9;
-  --color-ring-track: #173f4d;
 
   /* Semantic — softs lifted clear of the dark surface so chips stay visible */
   --color-error: #c98a82;

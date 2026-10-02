@@ -25,6 +25,8 @@ const APPLIED: Record<string, string> = {
     "aceebe52c3e65fe02b7b1a42964544fb221908ddc854e078dd5f230780d9ecf1",
   "0002_illegal_the_watchers.sql":
     "aaf60879b5a57b8698a9c1075a7f98918c8dbe2d26692198806ca436ba734472",
+  "0003_blushing_shape.sql":
+    "8de9c4fa6b15e011a11c4c6775dac954d5dd88756ac050459dacdb0bfd187201",
 };
 
 function sha256(file: string): string {

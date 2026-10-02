@@ -1,131 +1,154 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
 import { itemDisplayName, itemInitial } from "@/lib/items";
 import { Button, CardImage } from "@/components/ui";
 import { enqueue, newClientKey, readQueue, type QueueKey } from "./decisionQueue";
-import { awaitAck, isInFlight, triggerFlush } from "./decisionFlusher";
+import { awaitAck, isInFlight, subscribeNotices, triggerFlush, type AckOutcome } from "./decisionFlusher";
 
 type Result = "item_a" | "item_b" | "tie" | "skip";
 
-export type CompareSubmit =
-  | { kind: "session"; sessionId: string; curatorId: string; collectionId?: string }
+type CompareSubmit =
+  | { kind: "session"; sessionId: string; curatorId: string; collectionId: string }
   | { kind: "local"; onDecision: (result: Result) => void };
 
-// The compare surface does NOT wait out the flusher's 60 s backoff cap: after
-// this bound it shows the gentle retry state while the queue keeps the entry —
-// a later ack recovers silently (spec §3.3).
+// The pairs screen does NOT wait out the flusher's 60 s backoff cap: after this
+// bound it shows the gentle retry line while the queue keeps the entry.
 export const COMPARE_ACK_BOUND_MS = 5_000;
-// TONE register — person-side, never "error"/"failed" (TONE-review item).
 export const COMPARE_SLOW_SAVE_LINE = "Still saving that one — it's safe, and it's on its way.";
-// The storage-unavailable fallback's stumble (today's copy — F18 degradation).
 const FALLBACK_RETRY_LINE = "That didn't save. Try again.";
 
-interface CompareChoiceProps {
-  submit: CompareSubmit;
+interface Pair {
   itemA: Item;
   itemB: Item;
   heroA?: string;
   heroB?: string;
-  /** Gentle, non-pressuring progress: how many comparisons made so far. */
-  comparisonsMade: number;
+}
+interface Answered extends Pair {
+  result: Result;
 }
 
-export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsMade }: CompareChoiceProps) {
+/** The person's word for a pair answer, as Undo shows it (spec §4). */
+function answerLabel({ itemA, itemB, result }: Answered): string {
+  if (result === "tie") return "Tie";
+  if (result === "skip") return "Skip";
+  return itemDisplayName(result === "item_a" ? itemA : itemB);
+}
+
+interface CompareChoiceProps extends Pair {
+  submit: CompareSubmit;
+}
+
+export function CompareChoice({ submit, itemA, itemB, heroA, heroB }: CompareChoiceProps) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
+  // The tap guard. Controls stay enabled while an answer saves (aria-disabled):
+  // disabling the focused card would drop focus to <body> on every answer.
+  const pendingRef = useRef(false);
+  // A sort closed elsewhere (409): the answer will never land here, so the
+  // "it's safe" line must not stand; PendingNotices says what happened.
+  const [closedElsewhere, setClosedElsewhere] = useState(false);
+  useEffect(
+    () =>
+      subscribeNotices((notice) => {
+        if (notice.kind !== "session_conflict") return;
+        pendingRef.current = false;
+        setPending(null);
+        setClosedElsewhere(true);
+      }),
+    [],
+  );
   const [error, setError] = useState<string | null>(null);
-  // Idempotency key per in-flight decision, keyed by the choice ("a"/"b"/"tie"/
-  // "skip"). Generated ONCE when a tap starts and reused if that same tap is
-  // retried — the queue entry IS the retry, so a timed-out-then-re-tapped save
-  // dedupes server-side instead of inserting a duplicate comparison. Cleared on
-  // ack so a subsequent tap on the same card gets a fresh key.
-  //
-  // Keying by choice slot (not by pair) is safe ONLY because a not-yet-acked
-  // tap does not router.refresh() — the pair never advances before the ack, so
-  // a given slot key can only ever recur as the same-comparison retry, never as
-  // a new pair reusing a stale key. Ack clears the key AND refreshes together.
+  // One idempotency key per in-flight tap, reused if that same tap is retried so the
+  // server dedupes the retry; cleared on ack. The slot names the PAIR as well as the
+  // choice: Undo changes the shown pair without an ack, so a choice-only slot could
+  // hand an unacked key from one pair to another and the server would drop the answer.
   const clientKeys = useRef<Record<string, string>>({});
-  // Mounted (empty) on first render so the region exists BEFORE its text ever
-  // changes — a live region that appears with its content is not announced.
+  // Mounted empty so the region exists before its text changes (SC 4.1.3).
   const [announcement, setAnnouncement] = useState("");
-  // A late ack (after the bound) and a re-tap's ack can both land for one
-  // clientKey — settle exactly once per decision.
   const settled = useRef(new Set<string>());
+  // Undo (spec §4): the last settled answer, and the pair being revisited.
+  const [last, setLast] = useState<Answered | null>(null);
+  const [revisit, setRevisit] = useState<Answered | null>(null);
+  const shown: Pair = revisit ?? { itemA, itemB, heroA, heroB };
+  const mode = revisit ? "revisit" : "pair";
 
-  function settle(clientKey: string, slot: string, result: Result) {
-    if (submit.kind !== "session" || settled.current.has(clientKey)) return;
+  function settle(clientKey: string, keySlot: string, answered: Answered, outcome?: AckOutcome) {
+    if (settled.current.has(clientKey)) return;
     settled.current.add(clientKey);
-    delete clientKeys.current[slot];
-    // A rejected ack still advances — the piece is no longer in the collection,
-    // and the notice slot (PendingNotices) explains; this component stays quiet.
+    delete clientKeys.current[keySlot];
     setError(null);
-    // The pair advances silently under a screen-reader user otherwise (SC 4.1.3).
-    // Naming both pieces is load-bearing, not decoration: a live region does not
-    // re-announce identical text, and the pair always changes.
-    const a = itemDisplayName(itemA);
-    const b = itemDisplayName(itemB);
+    pendingRef.current = false;
+    // A rejected answer never stood: advance, but offer no Undo and claim no choice.
+    if (outcome?.status === "rejected") {
+      setLast(null);
+      setRevisit(null);
+      setPending(null);
+      router.refresh();
+      return;
+    }
+    const a = itemDisplayName(answered.itemA);
+    const b = itemDisplayName(answered.itemB);
     setAnnouncement(
-      result === "tie"
+      answered.result === "tie"
         ? `${a} and ${b} — loved just the same.`
-        : result === "skip"
-          ? `${a} and ${b} — set aside for now.`
-          : `You love ${result === "item_a" ? a : b} more than ${result === "item_a" ? b : a}.`,
+        : answered.result === "skip"
+          ? `${a} and ${b} — skipped for now.`
+          : `You love ${answered.result === "item_a" ? a : b} more than ${answered.result === "item_a" ? b : a}.`,
     );
-    // Clear pending BEFORE refresh: router.refresh() re-renders THIS same
-    // client instance with the next pair, so a still-set `pending` would
-    // soft-lock the next pair (all controls disabled, a card stuck "Saving…").
+    setLast(answered);
+    setRevisit(null);
+    // Clear pending BEFORE refresh: the refresh re-renders THIS instance with the next pair.
     setPending(null);
     router.refresh();
   }
 
-  async function choose(result: Result, slot: string) {
+  // The pair changes under the person's focus, so say which pair is in front of them.
+  function undo(answered: Answered) {
+    setRevisit(answered);
+    setAnnouncement(
+      `Back to ${itemDisplayName(answered.itemA)} and ${itemDisplayName(answered.itemB)}. You chose ${answerLabel(answered)} — change it?`,
+    );
+  }
+
+  function keepGoing() {
+    setRevisit(null);
+    setAnnouncement(`Back to ${itemDisplayName(itemA)} and ${itemDisplayName(itemB)}.`);
+  }
+
+  async function choose(result: Result, tapped: string) {
     if (submit.kind === "local") {
-      submit.onDecision(result); // demo path: no clientKeys, no pending, no refresh
+      submit.onDecision(result); // walkthrough: no keys, no pending, no refresh
       return;
     }
-
+    if (pendingRef.current) return;
+    pendingRef.current = true;
+    const pair = shown;
+    const slot = `${mode}:${tapped}`;
+    const keySlot = `${pair.itemA.id}:${pair.itemB.id}:${tapped}`;
     setPending(slot);
     setError(null);
-    const key: QueueKey = {
-      curatorId: submit.curatorId,
-      sessionId: submit.sessionId,
-      collectionId: submit.collectionId,
-    };
-    const clientKey = (clientKeys.current[slot] ??= newClientKey());
+    const key: QueueKey = { curatorId: submit.curatorId, sessionId: submit.sessionId, collectionId: submit.collectionId };
+    const clientKey = (clientKeys.current[keySlot] ??= newClientKey());
+    const decision = { itemAId: pair.itemA.id, itemBId: pair.itemB.id, result };
 
-    // NEVER a bare fetch (spec §3.3/F11): the decision rides the queue and the
-    // single-flight flusher as a batch-of-1, so it cannot interleave with a
-    // draining triage queue. A re-tap of the same slot finds its entry already
-    // queued/in flight and simply re-awaits the same ack.
+    // NEVER a bare fetch: the answer rides the queue as a batch-of-1.
     const alreadyRiding = readQueue(key).some((e) => e.clientKey === clientKey) || isInFlight(key, clientKey);
     if (!alreadyRiding && !settled.current.has(clientKey)) {
       const persisted = await enqueue(
         key,
-        {
-          kind: "decision",
-          clientKey,
-          type: "pairwise_compare",
-          decision: { itemAId: itemA.id, itemBId: itemB.id, result },
-          enqueuedAt: new Date().toISOString(),
-        },
-        () => triggerFlush(key), // quota → shrink the queue, retry once (F18)
+        { kind: "decision", clientKey, type: "pairwise_compare", decision, enqueuedAt: new Date().toISOString() },
+        () => triggerFlush(key),
       );
       if (persisted === "needs_fallback") {
-        // Storage unavailable even after the flush: degrade to today's awaited
-        // single-route submit and advance on ITS ack (F18).
         let landed = false;
         try {
           const res = await fetch(`/api/sessions/${submit.sessionId}/decisions`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: "pairwise_compare",
-              decision: { itemAId: itemA.id, itemBId: itemB.id, result },
-              clientKey,
-            }),
+            body: JSON.stringify({ type: "pairwise_compare", decision, clientKey }),
           });
           landed = res.ok;
         } catch {
@@ -133,10 +156,11 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsM
         }
         if (!landed) {
           setError(FALLBACK_RETRY_LINE);
+          pendingRef.current = false;
           setPending(null);
-          return; // the pair stays; re-tapping retries with the SAME clientKey
+          return;
         }
-        settle(clientKey, slot, result); // the awaited submit IS the ack
+        settle(clientKey, keySlot, { ...pair, result });
         return;
       }
     }
@@ -150,20 +174,23 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsM
       }),
     ]);
     if (outcome === "slow") {
-      // Gentle retry state: the queue keeps the entry and keeps retrying on the
-      // pinned backoff; a later ack recovers silently (advances then).
+      pendingRef.current = false;
       setPending(null);
       setError(COMPARE_SLOW_SAVE_LINE);
-      void ack.then(() => settle(clientKey, slot, result));
+      void ack.then((late) => settle(clientKey, keySlot, { ...pair, result }, late));
       return;
     }
-    settle(clientKey, slot, result);
+    settle(clientKey, keySlot, { ...pair, result }, outcome);
   }
 
-  const busy = pending !== null;
+  const busy = pending !== null || undefined;
+  const prior = revisit?.result;
+  const pressed = (result: Result) => (prior === undefined ? undefined : prior === result);
+  const ring = (result: Result) => (prior === result ? " ring-2 ring-primary ring-offset-2 ring-offset-ground" : "");
+  const held = " aria-disabled:cursor-not-allowed aria-disabled:opacity-60";
   const choices = [
-    { item: itemA, hero: heroA, result: "item_a" as const, key: "a" },
-    { item: itemB, hero: heroB, result: "item_b" as const, key: "b" },
+    { item: shown.itemA, hero: shown.heroA, result: "item_a" as const, key: "a" },
+    { item: shown.itemB, hero: shown.heroB, result: "item_b" as const, key: "b" },
   ];
 
   return (
@@ -171,16 +198,19 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsM
       <p role="status" aria-live="polite" className="sr-only">
         {announcement}
       </p>
-      {/* Tapping a card IS the choice (tap-first). Always two-up: a comparison. */}
+      {revisit && <p className="text-sm text-ink-soft">You chose {answerLabel(revisit)} — change it?</p>}
+
+      {/* Tapping a card IS the choice (tap-first). Always two-up. */}
       <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2">
         {choices.map(({ item, hero, result, key }) => (
           <button
             key={key}
             type="button"
-            disabled={busy}
+            aria-disabled={busy}
             aria-label={`Choose ${itemDisplayName(item)}`}
+            aria-pressed={pressed(result)}
             onClick={() => choose(result, key)}
-            className="group flex min-h-11 flex-col overflow-hidden rounded-card border border-hairline bg-surface text-left transition-shadow duration-200 ease-gentle hover:shadow-lift focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+            className={`group flex min-h-11 flex-col overflow-hidden rounded-card border border-hairline bg-surface text-left transition-shadow duration-200 ease-gentle hover:shadow-lift focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ground${held}${ring(result)}`}
           >
             <div className="relative flex aspect-4/3 items-center justify-center overflow-hidden bg-content-soft">
               <CardImage
@@ -194,7 +224,7 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsM
               />
             </div>
             <div className="p-4">
-              <h3 className="text-ink">{pending === key ? "Saving…" : itemDisplayName(item)}</h3>
+              <h3 className="text-ink">{pending === `${mode}:${key}` ? "Saving…" : itemDisplayName(item)}</h3>
               {item.brand && <p className="mt-1 text-sm text-ink-soft">{item.brand}</p>}
             </div>
           </button>
@@ -203,23 +233,35 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, comparisonsM
 
       {/* Escape hatches, deliberately quiet. */}
       <div className="flex items-center justify-center gap-2">
-        <Button type="button" variant="ghost" size="sm" className="min-h-11" disabled={busy} onClick={() => choose("tie", "tie")}>
-          {pending === "tie" ? "Saving…" : "Tie"}
+        <Button type="button" variant="ghost" size="sm" className={`min-h-11${held}${ring("tie")}`} aria-disabled={busy} aria-pressed={pressed("tie")} onClick={() => choose("tie", "tie")}>
+          {pending === `${mode}:tie` ? "Saving…" : "Tie"}
         </Button>
         <span className="text-hairline" aria-hidden>
           &middot;
         </span>
-        <Button type="button" variant="ghost" size="sm" className="min-h-11" disabled={busy} onClick={() => choose("skip", "skip")}>
-          {pending === "skip" ? "Saving…" : "Skip"}
+        <Button type="button" variant="ghost" size="sm" className={`min-h-11${held}${ring("skip")}`} aria-disabled={busy} aria-pressed={pressed("skip")} onClick={() => choose("skip", "skip")}>
+          {pending === `${mode}:skip` ? "Saving…" : "Skip"}
         </Button>
       </div>
 
-      {comparisonsMade > 0 && (
-        <p className="text-center text-sm text-ink-soft">
-          {comparisonsMade} {comparisonsMade === 1 ? "comparison" : "comparisons"} made so far
-        </p>
+      {/* One button that swaps Undo ↔ Keep going, so focus stays put (SC 2.4.3). */}
+      {submit.kind === "session" && last && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            aria-disabled={busy}
+            onClick={() => {
+              if (pendingRef.current) return;
+              if (revisit) keepGoing();
+              else undo(last);
+            }}
+            className={`inline-flex h-11 items-center rounded-control px-2 text-sm text-ink-soft transition-colors hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-ground focus-visible:ring-primary${held}`}
+          >
+            {revisit ? "Keep going" : `Undo: ${answerLabel(last)}`}
+          </button>
+        </div>
       )}
-      {error && <p className="text-center text-sm text-ink-soft">{error}</p>}
+      {error && !closedElsewhere && <p className="text-center text-sm text-ink-soft">{error}</p>}
     </div>
   );
 }

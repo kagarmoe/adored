@@ -74,7 +74,7 @@ export class PreferenceStateService {
   }
 
   // Run the pure binary-insertion engine over the curator's pairwise comparisons
-  // for comparable live items, mapping each placed item to its dense slot (0 =
+  // for the comparable set (Love + Like), mapping each placed item to its dense slot (0 =
   // most loved). Items the engine leaves unplaced are absent from the map (=> null).
   // `items` is the collection's LIVE item set, already loaded by the caller (the
   // preference set is already filtered to it), so no second read is needed.
@@ -85,12 +85,13 @@ export class PreferenceStateService {
   ): Map<string, number> {
     if (preferences.length === 0) return new Map();
 
-    // Keep each comparable item's OWN createdAt (drives the engine's deterministic
+    // Only the comparable set (Love + Like) — the same set `chooseSortPhase` reads.
+    // Each item keeps its OWN createdAt (drives the engine's deterministic
     // canonical insertion sequence).
-    const rankItems: RankItem[] = selectComparableItems(items, new Map())
+    const rankItems: RankItem[] = selectComparableItems(items, preferences)
       .map((i) => ({ id: i.id, createdAt: i.createdAt }));
 
-    // Shared mapping with the live selector (selectNextPair) — both entry points
+    // Shared mapping with the live selector (chooseSortPhase) — both entry points
     // build ComparisonEvent[] identically, so they ask the same next question.
     const comparisons: ComparisonEvent[] = toComparisonEvents(events);
     const { order } = deriveOrder(rankItems, comparisons);

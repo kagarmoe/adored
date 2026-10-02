@@ -65,6 +65,10 @@ export class SortResultShareRepository {
     return this.mapToShare(share);
   }
 
+  async deleteByResult(sortResultId: string): Promise<void> {
+    await this.db.delete(sortResultSharesTable).where(eq(sortResultSharesTable.sortResultId, sortResultId));
+  }
+
   // Delete every share of this collection's results (shares have no collection_id —
   // scope via the parent sort_results). Purge-only.
   async deleteByCollection(collectionId: string): Promise<void> {

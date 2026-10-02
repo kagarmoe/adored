@@ -36,21 +36,9 @@ const itemsPrefix = (c: TrailCollection): Crumb[] => [
   ...collectionPrefix(c),
   { label: "Items", href: `${base(c)}/items` },
 ];
-const sortPrefix = (c: TrailCollection): Crumb[] => [
-  ...collectionPrefix(c),
-  { label: "Sort", href: `${base(c)}/sort` },
-];
-const sessionPrefix = (c: TrailCollection, sessionNumber: number): Crumb[] => [
-  ...sortPrefix(c),
-  { label: "Session", href: `${base(c)}/sort/${sessionNumber}` },
-];
 const decidePrefix = (c: TrailCollection): Crumb[] => [
   ...collectionPrefix(c),
   { label: "Decide", href: `${base(c)}/results` },
-];
-const resultPrefix = (c: TrailCollection, result: TrailResult): Crumb[] => [
-  ...decidePrefix(c),
-  { label: result.name, href: `${base(c)}/results/${result.number}` },
 ];
 
 export const trail = {
@@ -67,33 +55,9 @@ export const trail = {
     { label: itemDisplayName(item) },
   ],
   sort: (c: TrailCollection): Crumb[] => [...collectionPrefix(c), { label: "Sort" }],
-  sortNew: (c: TrailCollection): Crumb[] => [...sortPrefix(c), { label: "New session" }],
-  setAside: (c: TrailCollection): Crumb[] => [...decidePrefix(c), { label: "Set aside" }],
-  // _sessionNumber keeps the (c, n) arity of the other session-scoped builders;
-  // the Session leaf itself is the current page, so it carries no href.
-  session: (c: TrailCollection, _sessionNumber: number): Crumb[] => [
-    ...sortPrefix(c),
-    { label: "Session" },
-  ],
-  triage: (c: TrailCollection, sessionNumber: number): Crumb[] => [
-    ...sessionPrefix(c, sessionNumber),
-    { label: "Triage" },
-  ],
-  compare: (c: TrailCollection, sessionNumber: number): Crumb[] => [
-    ...sessionPrefix(c, sessionNumber),
-    { label: "Compare" },
-  ],
-  usage: (c: TrailCollection, sessionNumber: number): Crumb[] => [
-    ...sessionPrefix(c, sessionNumber),
-    { label: "Usage" },
-  ],
   results: (c: TrailCollection): Crumb[] => [...collectionPrefix(c), { label: "Decide" }],
   result: (c: TrailCollection, result: TrailResult): Crumb[] => [
     ...decidePrefix(c),
     { label: result.name },
-  ],
-  finalize: (c: TrailCollection, result: TrailResult): Crumb[] => [
-    ...resultPrefix(c, result),
-    { label: "Finalize" },
   ],
 };

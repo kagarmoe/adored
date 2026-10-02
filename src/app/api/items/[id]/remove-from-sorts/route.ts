@@ -8,8 +8,8 @@ import { errorResponse } from "@/server/api/http-errors";
 // Owner-only bulk-detach: remove an item from all DRAFT sort results in one call,
 // the purge-prep companion to POST /api/items/[id]/purge. A deliberate t9l
 // exception (a collection-owner op crossing the per-curator boundary; draft-only,
-// finalized untouched). No confirm body — consistent with deleteResultItem; the
-// op is re-derivable by regenerating the affected draft. Authz BEFORE any body
+// finalized untouched). No confirm body: the op is re-derivable by regenerating
+// the affected draft. Authz BEFORE any body
 // access: a non-owner never reaches the service.
 export async function POST(
   _request: NextRequest,

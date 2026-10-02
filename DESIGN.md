@@ -6,6 +6,7 @@ colors:
   surface: "#e5eef0"
   surface-raised: "#ffffff"
   hairline: "#c7dade"
+  track: "#4f7da0"
   ink: "#16242b"
   ink-soft: "#434f57"
   primary: "#004a67"
@@ -98,7 +99,6 @@ Two **separate** colour systems that never trade places (see the named rule belo
 - **Cool content** — `content-soft` `#D7DEE4`, `content-mid` `#B0BECA`, `content-deep` `#4F7DA0`, `content-deeper` `#4A5878` (named by **role**, soft→deeper, never by hue): content, soft fills, photo areas, identity badges (curator = `content-soft`, owner = `content-deeper`), and the benign "Not yet" chip (`content-mid`).
 - **Spark — marigold** (`#EFCB77`): the lone affirmation spark. Sparing; dark text on it; never in a caution context.
 - **Decor — soft violet** (`#B5AACC`): non-state decoration, now used freely (fills, backgrounds, framing) — never a state, tier, or action colour.
-- **Ring — timer violet** (`ring-sweep` `#7B6A99` on `ring-track` `#E5EEF0` light; `#A795C9` on `#173F4D` dark): the round timer's depleting ring, the one place violet carries information. Because the remaining-time words are screen-reader-only, this pair is pinned at ≥3:1 non-text contrast in both themes by `contrast.test.ts` — deeper than `decor` on purpose. Expiry settles the ring to `spark` gold with an `ink` ✓ on the disc.
 - **Ink** (`#16242B` light / `#ECF2F4` dark) and **Ink-soft**: text. Headings are ink, never teal.
 - **Ground / surface / hairline**: the room. The sea-glass ground recedes; cards rise to white by shadow + hairline, not tone.
 
@@ -164,6 +164,7 @@ Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by 
 - **Glass panel:** `Card variant="glass"` — glass-strong + blur + rim; reserved for decorative panels. The item panel's fields side uses the pre-composited `card` variant so field contrast stays AA-stable.
 - **Filter pills / chips:** `rounded-pill`, 44px; selected = `chip` fill + primary border + a check glyph, never colour alone.
 - **Inputs:** surface fill, hairline border, pill radius (textareas keep 10px), 44px height; focus → teal ring; error → error border + a message, never colour alone.
+- **Progress line (Sort):** a thin, numberless pill — `primary` fill inside a `content-soft` track with a 1px `track` edge (`#4F7DA0`; dark `#3F7FA0`), so the bar's full extent reads ≥3:1 on ground and the fill ≥3:1 on the track (SC 1.4.11; rows in `contrast.test.ts`). The count is screen-reader text, read on demand, never live.
 - **Badges / buckets:** tier badges use the value-ramp tokens + label + icon. Status badges are semantic where meaningful, neutral (hairline) otherwise. A **benign, in-progress** status (e.g. a paused sort) is **not** a warning — it uses a cool-blue benign chip (`content-mid` fill + `ink` text, AA-gated), never a safety/amber hue ("Brand never speaks Danger"). (`content-deep` is the deeper sibling on the ramp — a non-text fill in Sea Glass, too dark to carry AA-legible label text.)
 - **Theme toggle:** top-right of the shell; 44px tap target; honours reduced-motion.
 - **Wayfinding (breadcrumb + back arrow):** every authenticated page carries the breadcrumb

@@ -30,8 +30,7 @@ import { requireApiResultAccess } from "@/server/dal/collection-access";
 import { POST as createResult } from "@/app/api/sort-results/route";
 import { GET as getResult, PATCH as patchResult, DELETE as deleteResult } from "@/app/api/sort-results/[id]/route";
 import { POST as finalizeResult } from "@/app/api/sort-results/[id]/finalize/route";
-import { GET as getItem, PATCH as patchItem, DELETE as deleteItem } from "@/app/api/sort-results/[id]/items/[rid]/route";
-import { POST as resetItem } from "@/app/api/sort-results/[id]/items/[rid]/reset/route";
+import { GET as getItem } from "@/app/api/sort-results/[id]/items/[rid]/route";
 import { GET as listShares } from "@/app/api/sort-results/[id]/shares/route";
 import { GET as getShare, PATCH as patchShare, DELETE as deleteShare } from "@/app/api/sort-results/[id]/shares/[sid]/route";
 
@@ -155,49 +154,13 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       const { db } = getTestDb();
       const { collectionId, resultId } = await seedResult(ownerId, ownerId);
       const item = await new ItemRepository(db).create({ collectionId }); // real FK parent
-      const other = await new SortResultRepository(db).create({ collectionId, curatorId: ownerId, name: "Other", status: "draft" });
+      const other = await new SortResultRepository(db).create({ collectionId, curatorId: ownerId, name: "Other", status: "finalized" });
       const otherItem = await new SortResultItemRepository(db).create({
         sortResultId: other.id, itemId: item.id, computedRank: 1, computedBucket: "top",
       });
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       // Caller can access resultId, but asks for an item under `other.id`.
       const res = await getItem(new Request("http://localhost/x") as any, { params: Promise.resolve({ id: resultId, rid: otherItem.id }) });
-      expect(res.status).toBe(404);
-    });
-
-    /** A result-item under a DIFFERENT (same-owner) result; the caller can access `resultId`. */
-    async function seedForeignResultItem() {
-      const { db } = getTestDb();
-      const { collectionId, resultId } = await seedResult(ownerId, ownerId);
-      const item = await new ItemRepository(db).create({ collectionId }); // real FK parent
-      const other = await new SortResultRepository(db).create({ collectionId, curatorId: ownerId, name: "Other", status: "draft" });
-      const otherItem = await new SortResultItemRepository(db).create({
-        sortResultId: other.id, itemId: item.id, computedRank: 1, computedBucket: "top",
-      });
-      return { resultId, foreignItemId: otherItem.id };
-    }
-
-    it("items/[rid] PATCH 404s a result-item that belongs to a DIFFERENT result", async () => {
-      const { resultId, foreignItemId } = await seedForeignResultItem();
-      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const req = new Request("http://localhost/x", {
-        method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ manualBucket: "top" }),
-      });
-      const res = await patchItem(req as any, { params: Promise.resolve({ id: resultId, rid: foreignItemId }) });
-      expect(res.status).toBe(404);
-    });
-
-    it("items/[rid] DELETE 404s a result-item that belongs to a DIFFERENT result", async () => {
-      const { resultId, foreignItemId } = await seedForeignResultItem();
-      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await deleteItem(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: Promise.resolve({ id: resultId, rid: foreignItemId }) });
-      expect(res.status).toBe(404);
-    });
-
-    it("items/[rid]/reset POST 404s a result-item that belongs to a DIFFERENT result", async () => {
-      const { resultId, foreignItemId } = await seedForeignResultItem();
-      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await resetItem(new Request("http://localhost/x", { method: "POST" }) as any, { params: Promise.resolve({ id: resultId, rid: foreignItemId }) });
       expect(res.status).toBe(404);
     });
 

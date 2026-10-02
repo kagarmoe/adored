@@ -59,7 +59,7 @@ describe("ProfileForm", () => {
     );
   });
 
-  it("offers the Tutorials section with all four quick refresher links", () => {
+  it("offers the Tutorials section with all three quick refresher links", () => {
     render(<ProfileForm initialName="Tessa" email="tessa@example.com" />);
 
     expect(screen.getByText("Tutorials")).toBeInTheDocument();
@@ -72,7 +72,6 @@ describe("ProfileForm", () => {
       ["Start a collection", "/tutorials/collection"],
       ["Sort and refine", "/tutorials/sort"],
       ["Invite and share", "/tutorials/sharing"],
-      ["Round timers", "/tutorials/timers"],
     ] as const;
 
     for (const [label, href] of links) {

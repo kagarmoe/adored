@@ -1,20 +1,19 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
-import { describe, it, expect, vi, beforeEach, beforeAll, afterEach } from "vitest";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Item } from "@/types";
-import { readQueue, removeEntries, type QueueKey } from "./decisionQueue";
+import { readQueue, type QueueKey } from "./decisionQueue";
 import { TriageRound, type TriageRoundQueueEntry } from "./TriageRound";
 import { TriageUndoProvider } from "./TriageUndoProvider";
 import { TriageUndoNotice } from "./TriageUndoNotice";
 
-const { refresh, push } = vi.hoisted(() => ({ refresh: vi.fn(), push: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push }) }));
+const { refresh, push, replace } = vi.hoisted(() => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push, replace }) }));
 
-// The flusher is mocked wherever the assertion is about call counts / ordering;
-// the queue module stays REAL so persist-before-advance is asserted against
-// actual localStorage writes.
+// The flusher is mocked (call counts / ordering); the queue module stays REAL so
+// persist-before-advance is asserted against actual localStorage writes.
 const flusher = vi.hoisted(() => ({
   triggerFlush: vi.fn<() => Promise<void>>(() => Promise.resolve()),
   drain: vi.fn(() => Promise.resolve()),
@@ -25,8 +24,6 @@ const flusher = vi.hoisted(() => ({
 }));
 vi.mock("./decisionFlusher", () => flusher);
 
-// jsdom in this setup does not expose a working localStorage on file:// URLs —
-// install the house Map-backed Storage (see decisionFlusher.test.ts).
 function installStorage(): Storage {
   const map = new Map<string, string>();
   const store: Storage = {
@@ -45,673 +42,252 @@ function installStorage(): Storage {
 
 const item = (id: string, name: string): Item =>
   ({ id, collectionId: "coll_1", name, brand: null, style: null, color: null, material: null, category: null, number: null, height: null, width: null, depth: null, weight: null, unit: "imperial", status: null, notes: null, createdAt: new Date(0), updatedAt: new Date(0), deletedAt: null }) as Item;
-
-const entry = (id: string, name: string, deferred = false): TriageRoundQueueEntry => ({
-  item: item(id, name),
-  deferred,
-  heroPhotoUrl: `/photos/${id}.jpg`,
-});
+const entry = (id: string, name: string, deferred = false): TriageRoundQueueEntry => ({ item: item(id, name), deferred, heroPhotoUrl: `/photos/${id}.jpg` });
 
 const KEY: QueueKey = { curatorId: "u1", sessionId: "sess_1", collectionId: "coll_1" };
+const NEXT = "/collections/bags/sort?phase=pairs";
 
-function renderRound(over: Partial<Parameters<typeof TriageRound>[0]> = {}) {
-  const props = {
+function props(over: Partial<Parameters<typeof TriageRound>[0]> = {}) {
+  return {
     curatorId: "u1",
     sessionId: "sess_1",
     collectionId: "coll_1",
-    collectionSlugOrId: "summer-bags",
+    collectionSlugOrId: "bags",
     queue: [entry("item_a", "Bag A"), entry("item_b", "Bag B")],
-    decisions: [],
-    decidedSeed: 0,
-    hubHref: "/hub",
-    resultsHref: "/results",
-    setAsideHref: "/set-aside",
+    placedSeed: 0,
+    nextHref: NEXT,
     ...over,
   };
-  return render(<TriageRound {...props} />);
 }
+const renderRound = (over: Partial<Parameters<typeof TriageRound>[0]> = {}) => render(<TriageRound {...props(over)} />);
+const renderWithUndo = (over: Partial<Parameters<typeof TriageRound>[0]> = {}) =>
+  render(
+    <TriageUndoProvider curatorId="u1" sessionId="sess_1" collectionId="coll_1">
+      <TriageUndoNotice />
+      <TriageRound {...props(over)} />
+    </TriageUndoProvider>,
+  );
 
 let store: Storage;
-
-// jsdom does not implement the Pointer Capture API — TimerDial's onPointerDown
-// calls it, so it's stubbed for every test that opens the length dialog.
-beforeAll(() => {
-  Object.defineProperty(HTMLElement.prototype, "setPointerCapture", {
-    value: vi.fn(),
-    writable: true,
-  });
-});
-
 beforeEach(() => {
   vi.clearAllMocks();
   flusher.triggerFlush.mockImplementation(() => Promise.resolve());
+  flusher.drain.mockImplementation(() => Promise.resolve());
   flusher.awaitAck.mockImplementation(() => new Promise(() => {}));
   flusher.isInFlight.mockReturnValue(false);
   store = installStorage();
   global.fetch = vi.fn(async () => ({ ok: true, status: 201, json: async () => ({}) })) as unknown as typeof fetch;
 });
-
 afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("TriageRound round chrome (4-step arc, Epic R)", () => {
-  it("wraps the round in the shell as step 1 of 4 — triage is the arc's first beat", () => {
-    renderRound();
-    expect(
-      screen.getByRole("list", { name: /round progress: step 1 of 4/i }),
-    ).toBeInTheDocument();
-  });
-});
-
-describe("TriageRound decision announcement (SC 4.1.3)", () => {
-  it("announces the saved tier in the SAME live-region node that was mounted before the tap, as the next item swaps in", async () => {
-    // Regression: DecisionControls used to be keyed per item here, so its sr-only
-    // region was torn down and re-created on every advance — a region that appears
-    // together with its content is not announced, and the screen changed silently.
+describe("feelings phase: answers advance optimistically", () => {
+  it("announces the saved tier in the live region that existed before the tap (SC 4.1.3)", async () => {
     const user = userEvent.setup();
-    renderRound({ queue: [entry("item_a", "Bag A"), entry("item_b", "Bag B")] });
-
+    renderRound();
     const region = screen.getByRole("status");
-    expect(region).toBeEmptyDOMElement();
-
-    await user.click(screen.getByRole("button", { name: "Love" }));
-
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
     expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
     expect(screen.getByRole("status")).toBe(region);
     expect(region).toHaveTextContent("Love — saved.");
   });
-});
 
-describe("TriageRound optimistic advance (F15)", () => {
-  it("n taps advance through n items with ZERO refresh; each tap is persisted before the next item renders", async () => {
-    const user = userEvent.setup();
-    renderRound({ queue: [entry("item_a", "Bag A"), entry("item_b", "Bag B"), entry("item_c", "Bag C")] });
-
-    expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Love" }));
-
-    // The next item is up — and by then the decision is ALREADY in localStorage
-    // (enqueue resolves synchronously on the happy path, before the advance).
-    expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
-    let queued = readQueue(KEY);
-    expect(queued).toHaveLength(1);
-    expect(queued[0]).toMatchObject({ kind: "decision", type: "triage", decision: { itemId: "item_a", result: "top" } });
-
-    await user.click(screen.getByRole("button", { name: "Like" }));
-    expect(await screen.findByRole("img", { name: "Bag C" })).toBeInTheDocument();
-    queued = readQueue(KEY);
-    expect(queued).toHaveLength(2);
-    expect(queued[1]).toMatchObject({ decision: { itemId: "item_b", result: "high" } });
-
-    expect(refresh).not.toHaveBeenCalled();
-  });
-
-  it("no direct fetch from a tier tap — the entry rides the queue", async () => {
+  it("persists each answer before the next piece shows, never fetches, never refreshes", async () => {
     const user = userEvent.setup();
     renderRound();
-    await user.click(screen.getByRole("button", { name: "Maybe" }));
-    await screen.findByRole("img", { name: "Bag B" });
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
+    expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
+    expect(readQueue(KEY)).toEqual([expect.objectContaining({ kind: "decision", type: "triage", decision: { itemId: "item_a", result: "top" } })]);
     expect(global.fetch).not.toHaveBeenCalled();
-  });
-});
-
-describe("TriageRound round end (queue exhaustion, F6/F15)", () => {
-  it("exhaustion ends the round into the recap and drains — and NEVER refreshes the route the person is leaving (purses-hzwj)", async () => {
-    let resolveDrain!: () => void;
-    flusher.triggerFlush.mockImplementation(
-      () => new Promise<void>((resolve) => (resolveDrain = resolve)),
-    );
-    const user = userEvent.setup();
-    renderRound({ queue: [entry("item_a", "Bag A")] });
-
-    await user.click(screen.getByRole("button", { name: "Love" }));
-
-    // Recap replaces the round content immediately (client-owned counts)…
-    expect(await screen.findByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-    expect(refresh).not.toHaveBeenCalled();
-    // …and the drain settles behind it. A refresh here would still be committing
-    // when the person taps through to /compare, and the competing navigation back
-    // to /triage can silently eat that tap — nothing on this route consumes the
-    // refreshed payload, so it does not fire at all.
-    await act(async () => {
-      resolveDrain();
-    });
-    await waitFor(() => expect(flusher.triggerFlush).toHaveBeenCalledTimes(1));
     expect(refresh).not.toHaveBeenCalled();
   });
 
-  it("timer expiry ends the round into the recap, drains, and never refreshes", async () => {
-    vi.useFakeTimers();
-    store.setItem("pi-round-box", "5");
-    renderRound({ queue: [entry("item_a", "Bag A")] });
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(5 * 60_000 + 1_500);
-    });
-
-    expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-    expect(flusher.triggerFlush).toHaveBeenCalledTimes(1);
-    expect(refresh).not.toHaveBeenCalled();
-  });
-});
-
-describe("TriageRound frozen recap (F5)", () => {
-  it("counts all N unflushed optimistic decisions; the gentle-pass copy is absent", async () => {
+  it("when every piece has passed through, lands the answers and hands off to pairs once", async () => {
     const user = userEvent.setup();
     renderRound();
-
-    await user.click(screen.getByRole("button", { name: "Love" }));
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
     await screen.findByRole("img", { name: "Bag B" });
-    await user.click(screen.getByRole("button", { name: "Like" }));
-
-    expect(await screen.findByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-    expect(screen.getByText("1 you love")).toBeInTheDocument();
-    expect(screen.getByText("1 you like")).toBeInTheDocument();
-    expect(screen.queryByText(/gentle pass/i)).not.toBeInTheDocument();
-  });
-
-  it("a genuinely empty round still shows the gentle-pass copy — and never refreshes (nothing to flush)", async () => {
-    renderRound({ queue: [] });
-    expect(await screen.findByText(/gentle pass/i)).toBeInTheDocument();
-    await act(async () => {});
+    await user.click(screen.getByRole("button", { name: "Like", exact: true }));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith(NEXT));
+    expect(flusher.drain).toHaveBeenCalledWith([KEY]);
+    expect(replace).toHaveBeenCalledTimes(1);
     expect(refresh).not.toHaveBeenCalled();
-    expect(flusher.triggerFlush).not.toHaveBeenCalled();
-  });
-
-  it("pre-round server decisions do not inflate the recap (window filter)", async () => {
-    const user = userEvent.setup();
-    renderRound({
-      queue: [entry("item_a", "Bag A")],
-      decisions: [
-        { type: "triage", createdAt: new Date(Date.now() - 60_000), decision: { itemId: "item_z", result: "top" } },
-      ],
-    });
-    await user.click(screen.getByRole("button", { name: "Love" }));
-    expect(await screen.findByText("1 you love")).toBeInTheDocument();
-  });
-
-  it("a post-end prune + rerender (the round-end refresh landing) does not change the displayed counts", async () => {
-    const user = userEvent.setup();
-    const { rerender } = renderRound({ queue: [entry("item_a", "Bag A")] });
-
-    await user.click(screen.getByRole("button", { name: "Love" }));
-    expect(await screen.findByText("1 you love")).toBeInTheDocument();
-
-    // Simulate the refresh landing: the queue is pruned AND the server log now
-    // holds the flushed decision — the frozen summary must not double or drop.
-    removeEntries(KEY, readQueue(KEY).map((e) => e.clientKey));
-    rerender(
-      <TriageRound
-        curatorId="u1"
-        sessionId="sess_1"
-        collectionId="coll_1"
-        collectionSlugOrId="summer-bags"
-        queue={[]}
-        decisions={[{ type: "triage", createdAt: new Date(), decision: { itemId: "item_a", result: "top" } }]}
-        decidedSeed={1}
-        hubHref="/hub"
-        resultsHref="/results"
-        setAsideHref="/set-aside"
-      />,
-    );
-    expect(screen.getByText("1 you love")).toBeInTheDocument();
-    expect(screen.queryByText("2 you love")).not.toBeInTheDocument();
   });
 });
 
-describe("TriageRound '{n} decided so far' (F20)", () => {
-  it("seeds from the server count, ticks on the tap, and never shows a zero", async () => {
+describe("feelings phase: Not yet and Not mine", () => {
+  it("Not yet moves the piece to the end of the phase, where it returns with 'Ready when you are.'", async () => {
     const user = userEvent.setup();
-    renderRound({ decidedSeed: 2 });
-    expect(screen.getByText("2 decided so far")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Love" }));
-    expect(await screen.findByText("3 decided so far")).toBeInTheDocument();
-  });
-
-  it("omits the cue entirely at zero and dispositions never count", async () => {
-    const user = userEvent.setup();
-    renderRound({ decidedSeed: 0 });
-    expect(screen.queryByText(/decided so far/i)).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /not yet/i }));
-    await screen.findByRole("img", { name: "Bag B" });
-    expect(screen.queryByText(/decided so far/i)).not.toBeInTheDocument();
-  });
-});
-
-describe("TriageRound per-entry deferred banner", () => {
-  it("shows the 'Ready when you are' block only while the CURRENT entry is deferred", async () => {
-    const user = userEvent.setup();
-    renderRound({ queue: [entry("item_a", "Bag A"), entry("item_b", "Bag B", true)] });
-
-    expect(screen.queryByText(/ready when you are/i)).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Love" }));
+    renderRound();
+    await user.click(screen.getByRole("button", { name: /^not yet/i }));
     expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
-    expect(screen.getByText(/ready when you are/i)).toBeInTheDocument();
-  });
-
-  it("a 'Not yet' tap moves the item to the round's tail as deferred and it resurfaces with the banner", async () => {
-    const user = userEvent.setup();
-    renderRound({ queue: [entry("item_a", "Bag A"), entry("item_b", "Bag B")] });
-
-    await user.click(screen.getByRole("button", { name: /not yet/i }));
-    expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Love" }));
-
-    // Bag A resurfaces at the tail, now wearing the patient-waiting banner.
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
     expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
-    expect(screen.getByText(/ready when you are/i)).toBeInTheDocument();
-    expect(refresh).not.toHaveBeenCalled();
+    expect(screen.getByText("Ready when you are.")).toBeInTheDocument();
   });
-});
 
-describe("TriageRound set-aside stays optimistic and undoable", () => {
-  it("a 'Not mine' tap advances immediately and the provider enqueues the disposition — no fetch", async () => {
+  it("a second Not yet lets a returning piece rest and the phase hands off", async () => {
     const user = userEvent.setup();
-    render(
-      <TriageUndoProvider curatorId="u1" sessionId="sess_1" collectionId="coll_1">
-        <TriageRound
-          curatorId="u1"
-          sessionId="sess_1"
-          collectionId="coll_1"
-          collectionSlugOrId="summer-bags"
-          queue={[entry("item_a", "Bag A"), entry("item_b", "Bag B")]}
-          decisions={[]}
-          decidedSeed={0}
-          hubHref="/hub"
-          resultsHref="/results"
-          setAsideHref="/set-aside"
-        />
-      </TriageUndoProvider>,
-    );
+    renderRound({ queue: [entry("item_a", "Bag A")] });
+    await user.click(screen.getByRole("button", { name: /^not yet/i }));
+    expect(await screen.findByText("Ready when you are.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^not yet/i }));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith(NEXT));
+    expect(readQueue(KEY)).toEqual([expect.objectContaining({ kind: "disposition", itemId: "item_a", disposition: "deferred" })]);
+  });
 
-    await user.click(screen.getByRole("button", { name: /not mine/i }));
+  it("Not mine advances at once and the disposition rides the queue", async () => {
+    const user = userEvent.setup();
+    renderWithUndo();
+    await user.click(screen.getByRole("button", { name: /^not mine/i }));
     expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
-    // Task 13: the disposition rides the queue — the tap path never fetches.
-    await waitFor(() => expect(readQueue(KEY)).toHaveLength(1));
-    expect(readQueue(KEY)[0]).toMatchObject({
-      kind: "disposition",
-      itemId: "item_a",
-      disposition: "set_aside",
-    });
+    await waitFor(() => expect(readQueue(KEY)).toEqual([expect.objectContaining({ kind: "disposition", itemId: "item_a", disposition: "set_aside" })]));
     expect(global.fetch).not.toHaveBeenCalled();
-    expect(flusher.triggerFlush).toHaveBeenCalled();
   });
-});
 
-describe("TriageRound bring-back restores the item to the round (Epic C §11 under Epic P)", () => {
-  function renderWithProvider(queue: TriageRoundQueueEntry[]) {
-    return render(
-      <TriageUndoProvider curatorId="u1" sessionId="sess_1" collectionId="coll_1">
-        <TriageUndoNotice />
-        <TriageRound
-          curatorId="u1"
-          sessionId="sess_1"
-          collectionId="coll_1"
-          collectionSlugOrId="summer-bags"
-          queue={queue}
-          decisions={[]}
-          decidedSeed={0}
-          hubHref="/hub"
-          resultsHref="/results"
-          setAsideHref="/set-aside"
-        />
-      </TriageUndoProvider>,
-    );
-  }
-
-  it("mid-round: 'Bring back' refocuses the brought-back item — pure client, no refresh", async () => {
+  it("Bring back returns the set-aside piece to this phase", async () => {
     const user = userEvent.setup();
-    renderWithProvider([entry("item_a", "Bag A"), entry("item_b", "Bag B")]);
-
-    await user.click(screen.getByRole("button", { name: /not mine/i }));
-    expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
-
+    renderWithUndo();
+    await user.click(screen.getByRole("button", { name: /^not mine/i }));
+    await screen.findByRole("img", { name: "Bag B" });
     await user.click(screen.getByRole("button", { name: /bring back/i }));
-
-    // The item returns to focus in THIS round; the queued disposition was the
-    // undo target, so storage is clean and nothing was fetched or refreshed.
     expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
     await waitFor(() => expect(readQueue(KEY)).toEqual([]));
-    expect(global.fetch).not.toHaveBeenCalled();
-    expect(refresh).not.toHaveBeenCalled();
-  });
-
-  it("after the LAST item ends the round: 'Bring back' un-ends it — the recap recedes and the item refocuses", async () => {
-    const user = userEvent.setup();
-    renderWithProvider([entry("item_a", "Bag A")]);
-
-    await user.click(screen.getByRole("button", { name: /not mine/i }));
-    // The queue emptied: the recap swapped in, but the notice survived it.
-    expect(await screen.findByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-    const bringBack = screen.getByRole("button", { name: /bring back/i });
-
-    await user.click(bringBack);
-
-    // The escape actually brings the item back: recap recedes, card refocuses,
-    // and the disposition affordances are offered again — never a dead end.
-    expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /here.s what moved/i })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /not mine/i })).toBeInTheDocument();
-  });
-
-  it("re-ending the round after a bring-back runs the end sequence again (a second flush, still no refresh)", async () => {
-    const user = userEvent.setup();
-    renderWithProvider([entry("item_a", "Bag A")]);
-
-    await user.click(screen.getByRole("button", { name: /not mine/i }));
-    await screen.findByRole("heading", { name: /here.s what moved/i });
-    // (The set-aside tap triggers its own flush, so count the END-sequence drain
-    // as a delta from whatever the first end left behind.)
-    const drainsAfterFirstEnd = flusher.triggerFlush.mock.calls.length;
-
-    await user.click(screen.getByRole("button", { name: /bring back/i }));
-    await screen.findByRole("img", { name: "Bag A" });
-
-    await user.click(screen.getByRole("button", { name: "Love" }));
-    expect(await screen.findByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-    await waitFor(() =>
-      expect(flusher.triggerFlush.mock.calls.length).toBeGreaterThan(drainsAfterFirstEnd),
-    );
-    expect(refresh).not.toHaveBeenCalled();
-  });
-
-  it("after TIMER expiry the recap stands: 'Bring back' clears the notice but never reopens a time-boxed round", async () => {
-    vi.useFakeTimers();
-    store.setItem("pi-round-box", "5");
-    renderWithProvider([entry("item_a", "Bag A"), entry("item_b", "Bag B")]);
-
-    fireEvent.click(screen.getByRole("button", { name: /not mine/i }));
-    await act(async () => {}); // flush the enqueue microtasks (findBy* polls on the faked timers)
-    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(5 * 60_000 + 1_500);
-    });
-    expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-
-    vi.useRealTimers(); // waitFor polls on real timers
-    fireEvent.click(screen.getByRole("button", { name: /bring back/i }));
-
-    await waitFor(() => expect(screen.queryByRole("button", { name: /bring back/i })).not.toBeInTheDocument());
-    // The time box is the boundary; the item returns next round instead.
-    expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
   });
 });
 
-describe("TriageRound undo-as-revisit (F19/F4)", () => {
-  it("revisit of a queued entry: back → item re-presents fresh, entry gone from storage, counter decremented", async () => {
+describe("feelings phase: Undo (spec §4 — 'Undo: Love')", () => {
+  it("a still-queued answer: Undo names it, removes it and shows the piece fresh", async () => {
     const user = userEvent.setup();
     renderRound();
-
-    await user.click(screen.getByRole("button", { name: "Love" }));
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
     await screen.findByRole("img", { name: "Bag B" });
-    expect(screen.getByText("1 decided so far")).toBeInTheDocument();
-    expect(readQueue(KEY)).toHaveLength(1);
-
-    await user.click(screen.getByRole("button", { name: /^back$/i }));
-
+    await user.click(screen.getByRole("button", { name: "Undo: Love" }));
     expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
     expect(readQueue(KEY)).toEqual([]);
-    expect(screen.queryByText(/decided so far/i)).not.toBeInTheDocument();
-    // Fresh rendering: nothing pressed, both quiet escapes available.
-    expect(screen.getByRole("button", { name: "Love" })).not.toHaveAttribute("aria-pressed");
-    expect(screen.getByRole("button", { name: /not yet/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /not mine/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Love", exact: true })).not.toHaveAttribute("aria-pressed");
+    expect(screen.queryByRole("button", { name: /^undo:/i })).not.toBeInTheDocument();
   });
 
-  it("revisit of an acked entry: standing answer shown selected; a different tap enqueues a superseding entry with a fresh clientKey", async () => {
+  it("an answer already sent: shown selected; a different tap supersedes it with a fresh key", async () => {
     flusher.awaitAck.mockImplementation(() => Promise.resolve({ status: "created" }));
     const user = userEvent.setup();
     renderRound();
-
-    await user.click(screen.getByRole("button", { name: "Love" }));
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
     await screen.findByRole("img", { name: "Bag B" });
     const [first] = readQueue(KEY);
-
-    await user.click(screen.getByRole("button", { name: /^back$/i }));
-
-    expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
-    expect(screen.getByText(/you placed this with love — change it\?/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Love" })).toHaveAttribute("aria-pressed", "true");
-
-    await user.click(screen.getByRole("button", { name: "Maybe" }));
-
+    await user.click(screen.getByRole("button", { name: "Undo: Love" }));
+    expect(await screen.findByText("You placed this with Love — change it?")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Love", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await user.click(screen.getByRole("button", { name: "Maybe", exact: true }));
     expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
     const queued = readQueue(KEY);
-    expect(queued).toHaveLength(2); // the old ack is untouched; latest-wins supersedes
-    expect(queued[0].clientKey).toBe(first.clientKey);
+    expect(queued).toHaveLength(2);
     expect(queued[1].clientKey).not.toBe(first.clientKey);
-    expect(queued[1]).toMatchObject({ kind: "decision", decision: { itemId: "item_a", result: "medium" } });
-    // A re-answer of a counted item never double-counts (F20).
-    expect(screen.getByText("1 decided so far")).toBeInTheDocument();
+    expect(queued[1]).toMatchObject({ decision: { itemId: "item_a", result: "medium" } });
   });
 
-  it("'Keep going' walks away from a standing answer without re-answering — an honest no-op", async () => {
+  it("'Keep going' walks away from a standing answer without re-answering", async () => {
     flusher.awaitAck.mockImplementation(() => Promise.resolve({ status: "created" }));
     const user = userEvent.setup();
     renderRound();
-
-    await user.click(screen.getByRole("button", { name: "Love" }));
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
     await screen.findByRole("img", { name: "Bag B" });
-    await user.click(screen.getByRole("button", { name: /^back$/i }));
-    await screen.findByRole("img", { name: "Bag A" });
-
-    await user.click(screen.getByRole("button", { name: /keep going/i }));
-
+    await user.click(screen.getByRole("button", { name: "Undo: Love" }));
+    await user.click(await screen.findByRole("button", { name: /keep going/i }));
     expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
-    expect(readQueue(KEY)).toHaveLength(1); // queue + answer intact
-    expect(screen.getByText("1 decided so far")).toBeInTheDocument();
+    expect(readQueue(KEY)).toHaveLength(1);
   });
 
-  it("disposition affordances are HIDDEN while the revisited item's triage entry is in flight", async () => {
-    flusher.isInFlight.mockReturnValue(true);
+  it("Undo swaps to Keep going in place: focus stays on the control and the revisit is announced", async () => {
+    flusher.awaitAck.mockImplementation(() => Promise.resolve({ status: "created" }));
     const user = userEvent.setup();
     renderRound();
-
-    await user.click(screen.getByRole("button", { name: "Love" }));
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
     await screen.findByRole("img", { name: "Bag B" });
-    await user.click(screen.getByRole("button", { name: /^back$/i }));
+    await user.click(screen.getByRole("button", { name: "Undo: Love" }));
+    const keep = await screen.findByRole("button", { name: "Keep going" });
+    expect(keep).toHaveFocus();
+    expect(screen.getByText("Back to Bag A. You placed this with Love — change it?")).toBeInTheDocument();
+    await user.click(keep);
+    expect(screen.getByRole("button", { name: "Undo: Love" })).toHaveFocus();
+    expect(screen.getByText("Back to Bag B.")).toBeInTheDocument();
+  });
 
+  it("undoing the only queued answer hands focus to the question, never to the page", async () => {
+    const user = userEvent.setup();
+    renderRound();
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
+    await screen.findByRole("img", { name: "Bag B" });
+    await user.click(screen.getByRole("button", { name: "Undo: Love" }));
     expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Love" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.queryByRole("button", { name: /not yet/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /not mine/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "How do you feel about this one?" })).toHaveFocus();
+    expect(screen.getByText("Back to Bag A.")).toBeInTheDocument();
   });
 
-  it("queued-triage + disposition tap: the queued triage is removed and localStorage holds ONLY the disposition entry", async () => {
-    const user = userEvent.setup();
-    renderRound();
-
-    await user.click(screen.getByRole("button", { name: "Love" }));
-    await screen.findByRole("img", { name: "Bag B" });
-    await user.click(screen.getByRole("button", { name: /^back$/i }));
-    await screen.findByRole("img", { name: "Bag A" });
-
-    await user.click(screen.getByRole("button", { name: /not yet/i }));
-
-    await waitFor(() => {
-      const queued = readQueue(KEY);
-      expect(queued).toHaveLength(1);
-      expect(queued[0]).toMatchObject({ kind: "disposition", itemId: "item_a", disposition: "deferred" });
-    });
-    // Never a bare fetch — the disposition rides the queue.
-    expect(global.fetch).not.toHaveBeenCalled();
-    expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
-  });
-
-  it("revisit of a rejected entry is a no-op", async () => {
+  it("a rejected answer has nothing to undo", async () => {
     flusher.awaitAck.mockImplementation(() => Promise.resolve({ status: "rejected", reason: "unknown_item" }));
     const user = userEvent.setup();
     renderRound();
-
-    await user.click(screen.getByRole("button", { name: "Love" }));
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
     await screen.findByRole("img", { name: "Bag B" });
-
-    await user.click(screen.getByRole("button", { name: /^back$/i }));
-
-    // Nothing stands to revisit — the round stays where it was.
+    await user.click(screen.getByRole("button", { name: "Undo: Love" }));
     expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
-    expect(screen.queryByRole("img", { name: "Bag A" })).not.toBeInTheDocument();
   });
 });
 
-// Opens the mid-round length dialog and commits `box` via the keyboard (Home
-// then ArrowUp `steps` times) — avoids depending on the dial's current value.
-function commitBoxViaDialog(steps: number) {
-  fireEvent.click(screen.getByRole("button", { name: "Change round length" }));
-  const slider = screen.getByRole("slider");
-  fireEvent.keyDown(slider, { key: "Home" }); // "none"
-  for (let i = 0; i < steps; i++) fireEvent.keyDown(slider, { key: "ArrowUp" });
-  fireEvent.click(screen.getByRole("button", { name: "Done" }));
-}
-
-describe("TriageRound round-length dialog (mid-round switch, spec §3.1, Task 6)", () => {
-  it("mid-round switch to 'No timer' removes the countdown and the round no longer expires", async () => {
-    vi.useFakeTimers();
-    store.setItem("pi-round-box", "1"); // start with a 1-minute box
-    renderRound({ queue: [entry("item_a", "Bag A")] });
-
-    // The countdown is live.
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(0);
-    });
-    expect(screen.getByRole("timer")).toBeInTheDocument();
-
-    // Switch to No timer mid-round (Home = "none"): the countdown is gone…
-    commitBoxViaDialog(0);
-    expect(screen.queryByRole("timer")).not.toBeInTheDocument();
-
-    // …and advancing well past the old box never ends the round.
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(2 * 60_000);
-    });
-    expect(screen.queryByRole("heading", { name: /here.s what moved/i })).not.toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
-  });
-
-  it("switching to a box SHORTER than the elapsed time ends the round gently into the recap", async () => {
-    vi.useFakeTimers();
-    store.setItem("pi-round-box", "5"); // start with a 5-minute box
-    renderRound({ queue: [entry("item_a", "Bag A")] });
-
-    // 2 minutes elapse — short of the 5-minute box, the round is still live.
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(2 * 60_000);
-    });
-    expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
-
-    // Commit a 1-minute box (Home then 2 ArrowUp: none→30→60): already past. It
-    // expires (against the unchanged start) and ends the round into the recap —
-    // no error, no shaming.
-    commitBoxViaDialog(2);
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1_500);
-    });
-    expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-    expect(screen.queryByText(/error|failed|too many/i)).not.toBeInTheDocument();
-  });
-
-  it("committing a LARGER box mid-round re-arms against the unchanged start (no reset)", async () => {
-    vi.useFakeTimers();
-    store.setItem("pi-round-box", "1"); // start with a 1-minute box
-    renderRound({ queue: [entry("item_a", "Bag A")] });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(0);
-    });
-
-    // 45s in — still under the 1-minute box.
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(45_000);
-    });
-    expect(screen.getByRole("timer")).toBeInTheDocument();
-
-    // Commit the max 5-minute box (Home then 10 ArrowUp: none→30→…→300) against
-    // the UNCHANGED start (45s already elapsed).
-    commitBoxViaDialog(10);
-
-    // 30s later (75s total elapsed): a re-arm against the unchanged start reads
-    // ~4 minutes left (300-75s → ceil(225s/60s)=4). A reset-to-a-fresh-start bug
-    // would instead read ~5 minutes (300-30s → ceil(270s/60s)=5).
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(30_000);
-    });
-    expect(screen.getByRole("timer")).toBeInTheDocument();
-    expect(screen.getByText(/about 4 minutes left in this round/i)).toBeInTheDocument();
-  });
-
-  it("the round-length adjust button is absent once the recap shows", async () => {
+describe("feelings phase: numberless progress", () => {
+  it("counts placed pieces for screen readers; Not yet leaves the denominator", async () => {
     const user = userEvent.setup();
-    renderRound({ queue: [entry("item_a", "Bag A")] });
-
-    expect(screen.getByRole("button", { name: "Change round length" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Love" }));
-
-    expect(await screen.findByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Change round length" })).not.toBeInTheDocument();
+    renderRound({ placedSeed: 1 });
+    expect(screen.getByText("1 of 3 placed")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
+    expect(await screen.findByText("2 of 3 placed")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^not yet/i }));
+    expect(await screen.findByText("2 of 2 placed")).toBeInTheDocument();
+    expect(screen.queryByText(/decided so far/)).not.toBeInTheDocument();
+    // One voice per tap: the answer is announced, the count is read on demand.
+    expect(screen.getByText("2 of 2 placed")).not.toHaveAttribute("aria-live");
   });
 
-  it("round end closes an open dialog and discards its uncommitted preview (badge race)", async () => {
-    vi.useFakeTimers();
-    store.setItem("pi-round-box", "1"); // start with a 1-minute box — the round HAD a timer
-    const { container } = renderRound({ queue: [entry("item_a", "Bag A")] });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(0);
-    });
-
-    // Open the dialog and preview "no timer" — NEVER committed via Done.
-    fireEvent.click(screen.getByRole("button", { name: "Change round length" }));
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    fireEvent.keyDown(screen.getByRole("slider"), { key: "Home" }); // preview only
-
-    // Let the round expire while the dialog is still open — a Done landing after
-    // this point would be meaningless UX and would retroactively flip the recap's
-    // hadTimer badge for a round that already ran with a timer.
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(60_000 + 1_500);
-    });
-
-    // The dialog is gone (the race is closed at the root)...
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    // ...and the recap shows, with the badge for the box the round actually ran
-    // with — the discarded "no timer" preview never touched it.
-    expect(screen.getByRole("heading", { name: /here.s what moved/i })).toBeInTheDocument();
-    expect(container.querySelector(".bg-spark")).not.toBeNull();
+  it("a piece that came back waiting joins the count once it is placed", async () => {
+    const user = userEvent.setup();
+    renderRound({ queue: [entry("item_a", "Bag A"), entry("item_b", "Bag B", true)] });
+    expect(screen.getByText("0 of 1 placed")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
+    expect(await screen.findByText("1 of 1 placed")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Like", exact: true }));
+    expect(await screen.findByText("2 of 2 placed")).toBeInTheDocument();
   });
 });
 
-describe("TriageRound storage fallback (F18)", () => {
-  it("needs_fallback degrades to ONE awaited single-route POST and advances on its ack", async () => {
+describe("feelings phase: storage fallback (F18)", () => {
+  it("degrades to ONE awaited single-route POST and advances on its ack", async () => {
     store.setItem = () => {
       throw new Error("quota");
     };
     const user = userEvent.setup();
     renderRound();
-
-    await user.click(screen.getByRole("button", { name: "Love" }));
-
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
     expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
     expect(global.fetch).toHaveBeenCalledTimes(1);
     const [url, init] = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(url).toBe("/api/sessions/sess_1/decisions");
-    const body = JSON.parse((init as RequestInit).body as string);
-    expect(body).toMatchObject({ type: "triage", decision: { itemId: "item_a", result: "top" } });
-    expect(body.clientKey).toMatch(/^[0-9a-hjkmnp-tv-z]{26}$/);
-    // The quota path asked the flusher to shrink the queue before giving up.
-    expect(flusher.triggerFlush).toHaveBeenCalled();
+    expect(JSON.parse((init as RequestInit).body as string)).toMatchObject({ type: "triage", decision: { itemId: "item_a", result: "top" } });
   });
 
-  it("a fallback submit that does not land keeps the item in place with a gentle line", async () => {
+  it("a fallback that does not land keeps the piece in place with a gentle line", async () => {
     store.setItem = () => {
       throw new Error("quota");
     };
     global.fetch = vi.fn(async () => ({ ok: false, status: 500, json: async () => ({}) })) as unknown as typeof fetch;
     const user = userEvent.setup();
     renderRound();
-
-    await user.click(screen.getByRole("button", { name: "Love" }));
-
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
     expect(await screen.findByText(/give it another try in a moment/i)).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
-    expect(screen.queryByText(/error|failed|invalid/i)).not.toBeInTheDocument();
+    // Announced only once the answer is safe — this one is not.
+    expect(screen.queryByText("Love — saved.")).not.toBeInTheDocument();
   });
 });

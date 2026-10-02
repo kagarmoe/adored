@@ -32,7 +32,7 @@ describeDb("result number allocation (repo -> DB)", () => {
     const c = await newCollection();
     const repo = new SortResultRepository(db);
     const r1 = await repo.create({ collectionId: c.id, curatorId: "u_r", name: "A", status: "draft" });
-    const r2 = await repo.create({ collectionId: c.id, curatorId: "u_r", name: "B", status: "draft" });
+    const r2 = await repo.create({ collectionId: c.id, curatorId: "u_r", name: "B", status: "finalized" });
     expect([r1.number, r2.number]).toEqual([1, 2]);
     expect((await repo.findByCollectionAndNumber(c.id, 2))?.id).toBe(r2.id);
     expect(await repo.findByCollectionAndNumber(c.id, 3)).toBeNull();

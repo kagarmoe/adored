@@ -343,6 +343,9 @@ export const sortResultsTable = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
     finalizedAt: timestamp("finalized_at"),
+    // Idempotency key of the Save-and-share that finalized this row (spec §4.4).
+    // NULL for drafts and for rankings saved before PR 2.
+    saveKey: text("save_key"),
   },
   (table) => ({
     collectionIdx: index("sort_results_collection_id_idx").on(table.collectionId),
@@ -351,6 +354,16 @@ export const sortResultsTable = pgTable(
       table.collectionId,
       table.number,
     ),
+    // Spec §4.3: one open draft per curator per collection. The ranking writers hold
+    // the (collection, curator) advisory lock (SortResultService.inCuratorTx); this
+    // index is the backstop, never the serializer. Rename and owner purge-prep are
+    // still unlocked (purses-w7ss.6) — neither creates a draft.
+    openDraftUnique: uniqueIndex("sort_results_open_draft_unique")
+      .on(table.collectionId, table.curatorId)
+      .where(sql`${table.status} = 'draft'`),
+    saveKeyUnique: uniqueIndex("sort_results_save_key_unique")
+      .on(table.curatorId, table.saveKey)
+      .where(sql`${table.saveKey} is not null`),
   }),
 );
 

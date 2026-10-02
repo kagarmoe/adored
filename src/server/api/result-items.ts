@@ -1,49 +1,12 @@
-import { z } from "zod";
 import type { SortResultItem } from "@/types";
 import type { Database } from "@/lib/db";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
-import { SortResultService } from "@/server/services/SortResultService";
-
-const UpdateResultItemSchema = z.object({
-  manualRank: z.number().optional(),
-  manualBucket: z.enum(["top", "high", "medium", "low"]).optional(),
-});
-
-// Epic S S3a: the bulk re-rank batch — a full ordering of {rid, manualRank}.
-// manualRank is a dense int (shared numeric space with computedRank), so the
-// client sends the whole recomputed sequence for the moved block.
-const ReorderResultItemsSchema = z.object({
-  order: z.array(
-    z.object({
-      rid: z.string(),
-      manualRank: z.number().int(),
-      // Epic S 9v1f.1 cross-tier: the row's target bucket. Required-nullable (NOT
-      // optional): the batch is a FULL overlay, so every entry carries value-or-null
-      // — an omitted field would let drizzle skip the column and strand a stale
-      // override. `null` = no override (fall back to computed bucket).
-      manualBucket: z.enum(["top", "high", "medium", "low"]).nullable(),
-    }),
-  ),
-  // Validate at the boundary: a batch that names the same rid twice is malformed
-  // (its manualRank is ambiguous). Reject it → 400 rather than let the last write
-  // win non-deterministically.
-}).refine(
-  ({ order }) => new Set(order.map((o) => o.rid)).size === order.length,
-  { message: "Duplicate rid in reorder batch", path: ["order"] },
-);
-
 
 export class ResultItemController {
-  constructor(
-    private resultItemRepo: SortResultItemRepository,
-    private service: SortResultService,
-  ) {}
+  constructor(private resultItemRepo: SortResultItemRepository) {}
 
   static fromDb(db: Database): ResultItemController {
-    return new ResultItemController(
-      new SortResultItemRepository(db),
-      SortResultService.fromDb(db),
-    );
+    return new ResultItemController(new SortResultItemRepository(db));
   }
 
   async getByIdForResult(resultItemId: string, resultId: string): Promise<SortResultItem | null> {
@@ -53,39 +16,5 @@ export class ResultItemController {
 
   async listResultItems(resultId: string): Promise<SortResultItem[]> {
     return this.resultItemRepo.findByResult(resultId);
-  }
-
-  async getResultItem(resultItemId: string): Promise<SortResultItem> {
-    const item = await this.resultItemRepo.findById(resultItemId);
-    if (!item) {
-      throw new Error("Result item not found");
-    }
-    return item;
-  }
-
-  async updateResultItem(resultItemId: string, data: unknown): Promise<SortResultItem> {
-    const parsed = UpdateResultItemSchema.parse(data);
-    return this.resultItemRepo.update(resultItemId, parsed);
-  }
-
-  async resetResultItem(resultItemId: string): Promise<SortResultItem> {
-    // Clear manual overrides, revert to computed rank/bucket
-    return this.resultItemRepo.update(resultItemId, {
-      manualRank: null,
-      manualBucket: null,
-    });
-  }
-
-  // Epic S S3a: validate the batch at the boundary (Zod), then delegate the
-  // atomic write to the service. rid-membership is enforced INSIDE the service
-  // transaction (a bad rid rolls the whole batch back → 404).
-  async reorderResultItems(resultId: string, data: unknown): Promise<SortResultItem[]> {
-    const { order } = ReorderResultItemsSchema.parse(data);
-    return this.service.reorderResultItems(resultId, order);
-  }
-
-  // Epic S S3a: whole-list reset — NULL the manual overlay for every item.
-  async resetResultItems(resultId: string): Promise<SortResultItem[]> {
-    return this.service.resetManualOverridesForResult(resultId);
   }
 }

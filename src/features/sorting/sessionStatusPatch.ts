@@ -15,10 +15,6 @@
 //               (No production caller PATCHes a terminal status today; Epic 5's
 //               Decide surface becomes the first — it inherits the rule.)
 // - active    → plain PATCH, no flush (resuming changes nothing to land).
-// - DELETE    → abandon-with-undo (orchestrator resolution #2): same bounded
-//               best-effort pre-flush, then DELETE — decisions made before
-//               setting a session aside should land now, and a later restore
-//               plus the gate recovers whatever the bound left behind.
 import { drain, triggerFlush } from "./decisionFlusher";
 import { readQueue, type QueueKey } from "./decisionQueue";
 
@@ -51,9 +47,4 @@ export async function patchSessionStatus(key: QueueKey, status: SessionStatus): 
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
   });
-}
-
-export async function deleteSessionWithPreflush(key: QueueKey): Promise<Response> {
-  await preflushBounded(key);
-  return fetch(`/api/sessions/${key.sessionId}`, { method: "DELETE" });
 }

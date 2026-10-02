@@ -18,15 +18,8 @@ const allTrails: Record<string, { label: string; href?: string }[]> = {
   itemNew: trail.itemNew(c),
   item: trail.item(c, item),
   sort: trail.sort(c),
-  sortNew: trail.sortNew(c),
-  setAside: trail.setAside(c),
-  session: trail.session(c, 3),
-  triage: trail.triage(c, 3),
-  compare: trail.compare(c, 3),
-  usage: trail.usage(c, 3),
   results: trail.results(c),
   result: trail.result(c, result),
-  finalize: trail.finalize(c, result),
 };
 
 describe("breadcrumb trails", () => {
@@ -46,23 +39,6 @@ describe("breadcrumb trails", () => {
   it("uses the chip vocabulary: Sort and Decide", () => {
     expect(trail.sort(c).at(-1)).toEqual({ label: "Sort" });
     expect(trail.results(c).at(-1)).toEqual({ label: "Decide" });
-  });
-
-  it("parents Set aside under Decide and Session under Sort", () => {
-    expect(trail.setAside(c).at(-2)).toEqual({
-      label: "Decide",
-      href: "/collections/spring-bags/results",
-    });
-    expect(trail.session(c, 3)).toEqual([
-      { label: "Collections", href: "/collections" },
-      { label: "Spring Bags", href: "/collections/spring-bags" },
-      { label: "Sort", href: "/collections/spring-bags/sort" },
-      { label: "Session" },
-    ]);
-    expect(trail.compare(c, 3).at(-2)).toEqual({
-      label: "Session",
-      href: "/collections/spring-bags/sort/3",
-    });
   });
 
   it("falls back to the collection id when there is no slug", () => {
