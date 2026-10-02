@@ -28,15 +28,14 @@ const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 
 let slug = "";
 let membersSlug = "";
-let resultNumber = 0;
+let finalizedResultNumber = 0;
 let triageSlug = "";
-let triageSessionNumber = 0;
 
 test.beforeAll(async () => {
   const ownerId = await seedBaseline();
-  ({ slug, resultNumber } = await seedSortScenario(ownerId));
+  ({ slug, finalizedResultNumber } = await seedSortScenario(ownerId));
   ({ slug: membersSlug } = await seedMembersScenario(ownerId));
-  ({ slug: triageSlug, sessionNumber: triageSessionNumber } = await seedJourneyScenario(ownerId, 3));
+  ({ slug: triageSlug } = await seedJourneyScenario(ownerId, 3));
 });
 
 interface Finding {
@@ -93,7 +92,7 @@ async function setTheme(page: Page, theme: string): Promise<void> {
 for (const theme of THEMES) {
   test(`a11y: core authed screens — no serious/critical violations (${theme})`, async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "tablet", "a11y is viewport-independent; scanned once on tablet");
-    // Scans 9 screens × an axe pass each. CI is slower than local (the Google
+    // Scans 10 screens × an axe pass each. CI is slower than local (the Google
     // Fonts CDN is unreachable in the e2e box, so page loads drag) — give generous
     // headroom rather than risk the 30s default timeout.
     test.setTimeout(120_000);
@@ -110,10 +109,11 @@ for (const theme of THEMES) {
       ["items", `/collections/${slug}/items`],
       ["items-archived", `/collections/${slug}/items?status=archived`],
       ["item-detail", `/collections/${slug}/items/1`],
-      ["results", `/collections/${slug}/results/${resultNumber}`],
+      ["ranking", `/collections/${slug}/results`],
+      ["saved-ranking", `/collections/${slug}/results/${finalizedResultNumber}`],
       ["members", `/collections/${membersSlug}/members`],
       ["profile", "/profile"],
-      ["triage", `/collections/${triageSlug}/sort/${triageSessionNumber}/triage`],
+      ["sort", `/collections/${triageSlug}/sort`],
     ];
 
     const findings: Finding[] = [];

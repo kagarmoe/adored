@@ -316,21 +316,20 @@ jobs:
               - 'src/app/collections/*/sort/**'
               - 'src/lib/triage-selection.ts'
               - 'src/lib/pairwise-selection.ts'
-              - 'src/lib/usage-selection.ts'
               - 'src/lib/derive-usage.ts'
               - 'src/lib/decision-order.ts'
               - 'src/lib/decision-batch-schema.ts'
-              - 'src/lib/round-preference.ts'
-              - 'src/lib/round-timer.ts'
+              - 'src/lib/sort-phase.ts'
+              - 'src/lib/compare-selection.ts'
               - 'src/lib/insertion-ranking.ts'
             results:
               - 'src/features/results/**'
               - 'src/features/sessions/**'
               - 'src/app/collections/*/results/**'
               - 'src/app/shared-results/**'
-              - 'src/lib/next-round.ts'
+              - 'src/server/services/sortResultMaterialization.ts'
+              - 'src/app/api/collections/*/ranking/**'
               - 'src/lib/results-buckets.ts'
-              - 'src/lib/what-moved.ts'
             onboarding:
               - 'src/features/onboarding/**'
               - 'src/app/welcome/**'
@@ -436,16 +435,16 @@ jobs:
           matched=0
           add() { area_specs="$area_specs $1"; matched=1; }
           if [ "$A_SORT" = "true" ]; then
-            add "e2e/compare.spec.ts e2e/not-mine-set-aside.spec.ts e2e/not-yet-defer.spec.ts e2e/session-create-after-set-aside.spec.ts e2e/session-pause.spec.ts e2e/session-undo.spec.ts e2e/sort-images.spec.ts e2e/sort-session.spec.ts e2e/usage-round.spec.ts e2e/timer-ring.spec.ts e2e/decision-recovery.spec.ts"
+            add "e2e/sort-images.spec.ts e2e/sort-journey.spec.ts"
           fi
           if [ "$A_RESULTS" = "true" ]; then
-            add "e2e/results.spec.ts e2e/results-onward.spec.ts e2e/results-rerank.spec.ts e2e/shared-results.spec.ts"
+            add "e2e/sort-journey.spec.ts"
           fi
           if [ "$A_ONBOARDING" = "true" ]; then
             add "e2e/welcome-walkthrough.spec.ts"
           fi
           if [ "$A_AUTH" = "true" ]; then
-            add "e2e/auth.spec.ts e2e/auth-navigation.spec.ts e2e/shared-results.spec.ts"
+            add "e2e/auth.spec.ts e2e/auth-navigation.spec.ts e2e/sort-journey.spec.ts"
           fi
           if [ "$A_COLLECTION" = "true" ]; then
             add "e2e/adaptive-collection-workspace.spec.ts e2e/delete-collection.spec.ts"

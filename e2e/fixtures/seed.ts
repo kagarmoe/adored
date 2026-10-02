@@ -125,12 +125,11 @@ const SORT_SCENARIO_BUCKETS = ["top", "high", "low"] as const;
 
 /**
  * Seed a fresh, UNTRIAGED journey scenario owned by `ownerId`: a collection
- * (with slug), `count` items each with a hero photo (placeholder blobKey — the
- * e2e intercepts /file), and an active sort session — but NO preferences. This
- * is the live-flow fixture: the journey test drives triage → compare →
- * SeeResultsCard → results entirely through the real UI/API, so the data must
- * start empty (no buckets), unlike seedSortScenario which pre-materializes a
- * result. `count` defaults to 2 so the compare step has a pair to choose from.
+ * (with slug), `count` named items each with a hero photo (placeholder blobKey —
+ * the e2e intercepts /file), and an active sort session — but NO preferences.
+ * This is the live-flow fixture: sort-journey.spec drives feelings → pairs →
+ * ranking → save and share through the real UI/API, so the data must start
+ * empty (no buckets), unlike seedSortScenario which pre-materializes a result.
  * Returns the ids the spec needs.
  */
 export async function seedJourneyScenario(
