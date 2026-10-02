@@ -18,10 +18,8 @@ const allTrails: Record<string, { label: string; href?: string }[]> = {
   itemNew: trail.itemNew(c),
   item: trail.item(c, item),
   sort: trail.sort(c),
-  setAside: trail.setAside(c),
   results: trail.results(c),
   result: trail.result(c, result),
-  finalize: trail.finalize(c, result),
 };
 
 describe("breadcrumb trails", () => {
@@ -41,13 +39,6 @@ describe("breadcrumb trails", () => {
   it("uses the chip vocabulary: Sort and Decide", () => {
     expect(trail.sort(c).at(-1)).toEqual({ label: "Sort" });
     expect(trail.results(c).at(-1)).toEqual({ label: "Decide" });
-  });
-
-  it("parents Set aside under Decide", () => {
-    expect(trail.setAside(c).at(-2)).toEqual({
-      label: "Decide",
-      href: "/collections/spring-bags/results",
-    });
   });
 
   it("falls back to the collection id when there is no slug", () => {

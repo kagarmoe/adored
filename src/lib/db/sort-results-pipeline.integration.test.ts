@@ -36,9 +36,8 @@ import { SortResultItemRepository } from "@/server/repositories/implementations/
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { SortResultService } from "@/server/services/SortResultService";
-import { deriveStanding } from "@/features/results/standing";
+import { buildRanking } from "@/server/services/sortResultMaterialization";
 import { partitionRanked } from "@/lib/results-buckets";
-import type { Item } from "@/types";
 
 const { mockGetSession, UnauthorizedError } = vi.hoisted(() => {
   class UnauthorizedError extends Error {
@@ -631,7 +630,7 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
   //   2. FRESH-AT-FINALIZE — the Finalize entry POSTs a NEW draft materialized
   //      from CURRENT live prefs, so it reflects the current Standing, never a
   //      stale earlier draft.
-  //   3. SHARED DERIVATION — the live Standing (deriveStanding) and the finalize
+  //   3. SHARED DERIVATION — the live Ranking (buildRanking) and the finalize
   //      snapshot come from the SAME rankPreferencesToItems derivation: the
   //      most-loved item is identical in both.
   describe("Finalize snapshot semantics: live-canonical, snapshot-frozen", () => {
@@ -699,14 +698,10 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       });
 
       // The LIVE Standing now reflects the changes (proves the mutation took).
-      const items = [
-        { id: highItemId } as Item, { id: lowItemId } as Item, { id: inserted.id } as Item,
-      ];
-      const itemById = new Map(items.map((i) => [i.id, i]));
       const livePrefs = await prefRepo.findByCollection(collectionId, ownerId);
-      const standing = deriveStanding(livePrefs, itemById);
-      expect(standing.loved).toHaveLength(3);
-      expect(standing.loved[0].item.id).toBe(inserted.id); // new item is most-loved live
+      const live = buildRanking(livePrefs, new Set([highItemId, lowItemId, inserted.id]), []);
+      expect(live.loved).toHaveLength(3);
+      expect(live.loved[0].itemId).toBe(inserted.id); // new item is most-loved live
 
       // AFTER: the finalized snapshot is byte-for-byte the SAME — no insertion, no
       // reorder leaked in. Frozen.
@@ -892,11 +887,8 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       const sortItemRepo = new SortResultItemRepository(db);
 
       // The LIVE Standing's most-loved item (what the Decide surface renders).
-      const items = [{ id: highItemId } as Item, { id: lowItemId } as Item];
-      const itemById = new Map(items.map((i) => [i.id, i]));
       const livePrefs = await prefRepo.findByCollection(collectionId, ownerId);
-      const standing = deriveStanding(livePrefs, itemById);
-      const standingMostLoved = standing.loved[0].item.id;
+      const standingMostLoved = buildRanking(livePrefs, new Set([highItemId, lowItemId]), []).loved[0].itemId;
 
       // The finalize snapshot's most-loved item (computedRank 0 of the loved
       // partition, mirroring how the snapshot viewer derives it).

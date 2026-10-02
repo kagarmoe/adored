@@ -327,7 +327,7 @@ describeDb(
       }
     });
 
-    it("retired sort pages send a member on to the Sort screen (set-aside to the Ranking)", async () => {
+    it("retired sort and results pages send a member on (Sort screen or the Ranking)", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const base = `/collections/slug-${collectionId}`;
       const outcome = async (page: string) => {
@@ -335,7 +335,7 @@ describeDb(
           default: (p: { params: Promise<Record<string, string>> }) => Promise<unknown>;
         };
         return mod
-          .default({ params: Promise.resolve({ id: collectionId, sessionNumber: "1" }) })
+          .default({ params: Promise.resolve({ id: collectionId, sessionNumber: "1", resultNumber: "1" }) })
           .catch((e: Error) => e.message);
       };
       try {
@@ -343,6 +343,8 @@ describeDb(
           expect(await outcome(page), page).toBe(`NEXT_PERMANENT_REDIRECT:${base}/sort`);
         }
         expect(await outcome("sort/set-aside")).toBe(`NEXT_PERMANENT_REDIRECT:${base}/results`);
+        expect(await outcome("results/set-aside")).toBe(`NEXT_PERMANENT_REDIRECT:${base}/results`);
+        expect(await outcome("results/[resultNumber]/finalize")).toBe(`NEXT_PERMANENT_REDIRECT:${base}/results`);
       } finally {
         mockGetSession.mockResolvedValue({ user: { id: strangerId } });
       }

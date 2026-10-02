@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, within, fireEvent } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 
 const { mockGetSession, mockRequireAccess, redirectMock, resultRepo, resultItemRepo, itemRepo, shareRepo, photoRepo } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
@@ -35,7 +35,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockGetSession.mockResolvedValue({ user: { id: "u1" } });
   mockRequireAccess.mockResolvedValue(COLLECTION);
-  resultRepo.findByCollectionAndNumber.mockResolvedValue({ id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "My ranking", status: "draft" });
+  resultRepo.findByCollectionAndNumber.mockResolvedValue({ id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "My ranking", status: "finalized", curatorId: "u1" });
   resultItemRepo.findByResult.mockResolvedValue([
     { id: "ri_1", itemId: "item_hero", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null },
     { id: "ri_2", itemId: "item_rest", computedRank: 2, manualRank: null, computedBucket: "high", manualBucket: null },
@@ -78,14 +78,10 @@ describe("ResultDetailPage hero images (nkp) + resolution", () => {
 });
 
 describe("ResultDetailPage status badge — person-side wording (qrsr)", () => {
-  it("labels a draft 'Still deciding', never the machine word 'draft'", async () => {
-    resultRepo.findByCollectionAndNumber.mockResolvedValue({
-      id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "draft", curatorId: "u1",
-    });
-    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
-    render(ui);
-    expect(screen.getByText("Still deciding")).toBeInTheDocument();
-    expect(screen.queryByText("draft")).toBeNull();
+  it("a draft goes to the live Ranking — drafts are adjusted there now (spec §4)", async () => {
+    resultRepo.findByCollectionAndNumber.mockResolvedValue({ id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "draft", curatorId: "u1" });
+    await expect(ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) })).rejects.toThrow("REDIRECT");
+    expect(redirectMock).toHaveBeenCalledWith("/collections/summer-bags/results");
   });
 
   it("labels a finalized result 'Saved', never the machine word 'finalized'", async () => {
@@ -119,10 +115,9 @@ describe("ResultDetailPage SharePanel curator gate (axn)", () => {
   });
 });
 
-// Epic S S3b: the draft result page mounts the manual re-rank affordance ("Put in
-// order by hand"); a finalized keepsake does NOT (reorder is a draft activity) and
-// instead offers "Make a revision".
-describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () => {
+// A saved keepsake is never reordered in place; its curator may open a revision
+// on the live Ranking (spec §4.4).
+describe("ResultDetailPage Make a revision (curator only)", () => {
   beforeEach(() => {
     resultItemRepo.findByResult.mockResolvedValue([
       { id: "ri_1", itemId: "item_hero", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null },
@@ -132,23 +127,12 @@ describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () =
     photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map());
   });
 
-  it("offers 'Adjust results' on a DRAFT result, not 'Make a revision'", async () => {
-    resultRepo.findByCollectionAndNumber.mockResolvedValue({
-      id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "draft", curatorId: "u1",
-    });
-    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
-    render(ui);
-    expect(screen.getByRole("button", { name: "Adjust results" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Make a revision" })).toBeNull();
-  });
-
-  it("hides the reorder affordance on a FINALIZED result and offers 'Make a revision' to the curator", async () => {
+  it("offers 'Make a revision' to the curator of a FINALIZED result", async () => {
     resultRepo.findByCollectionAndNumber.mockResolvedValue({
       id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "finalized", curatorId: "u1",
     });
     const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
-    expect(screen.queryByRole("button", { name: "Adjust results" })).toBeNull();
     expect(screen.getByRole("button", { name: "Make a revision" })).toBeInTheDocument();
   });
 
@@ -162,31 +146,6 @@ describe("ResultDetailPage manual re-rank affordance (Epic S §4.3/§4.4)", () =
     const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     render(ui);
     expect(screen.queryByRole("button", { name: "Make a revision" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Adjust results" })).toBeNull();
-  });
-
-  // 9v1f.1: the hand-order list now spans BOTH tiers — loved rows, a sentinel
-  // "Onward" divider, then onward (low) rows — so a user can move an item across
-  // the boundary by hand. Each row exposes its zone (loved | onward).
-  it("includes both loved and Onward rows with a sentinel divider (cross-tier hand-order)", async () => {
-    resultRepo.findByCollectionAndNumber.mockResolvedValue({
-      id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "R", status: "draft", curatorId: "u1",
-    });
-    resultItemRepo.findByResult.mockResolvedValue([
-      { id: "ri_hero", itemId: "item_hero", computedRank: 1, manualRank: null, computedBucket: "top", manualBucket: null },
-      { id: "ri_rest", itemId: "item_rest", computedRank: 2, manualRank: null, computedBucket: "low", manualBucket: null },
-    ]);
-    itemRepo.findByCollection.mockResolvedValue([HERO, REST]);
-    const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
-    render(ui);
-    fireEvent.click(screen.getByRole("button", { name: "Adjust results" }));
-    const rows = screen.getAllByTestId("rerank-row");
-    const names = rows.map((li) => within(li).getByText(/Bag/).textContent);
-    expect(names).toEqual(["Hero Bag", "Rest Bag"]); // loved row, then the Onward row
-    // The sentinel divider is present, and the Onward row is marked as such.
-    expect(screen.getByTestId("rerank-onward-divider")).toBeInTheDocument();
-    const restRow = rows.find((li) => within(li).queryByText("Rest Bag"))!;
-    expect(restRow.getAttribute("data-zone")).toBe("onward");
   });
 });
 
@@ -328,6 +287,9 @@ describe("ResultDetailPage tier sections + Onward + most-loved hero", () => {
       { id: "ri_low1", itemId: "i_low", computedRank: 1, manualRank: null, computedBucket: "low", manualBucket: null },
     ]);
     itemRepo.findByCollection.mockResolvedValue([{ id: "i_low", collectionId: "coll_01ABCDEF", number: 4, name: "Low Bag", brand: null, status: "active" }]);
+    // Viewed by a collaborator so the curator-only SharePanel (and its own empty-state
+    // copy) stays out of the ranking framing under test.
+    resultRepo.findByCollectionAndNumber.mockResolvedValue({ id: "res_1", collectionId: "coll_01ABCDEF", number: 1, name: "My ranking", status: "finalized", curatorId: "someone_else" });
     const ui = await ResultDetailPage({ params: Promise.resolve({ id: "summer-bags", resultNumber: "1" }) });
     const { container } = render(ui);
     expect(screen.getByText(/you('ve| have) made your choices|honored|clarity/i)).toBeInTheDocument();
