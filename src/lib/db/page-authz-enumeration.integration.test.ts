@@ -160,11 +160,9 @@ function buildStrangerPageCases(collectionId: string): StrangerPageCase[] {
     p("collections/[id]/results/[resultNumber]/finalize", { id, resultNumber: N }),
     p("collections/[id]/results/set-aside", { id }),
     p("collections/[id]/sort", { id }),
+    // Retired by the one Sort screen (spec §4): guard first, then permanentRedirect —
+    // the stranger is still bounced by the guard.
     p("collections/[id]/sort/new", { id }),
-    // The old shelf path now guard-then-permanentRedirect()s (purses-znkt.4);
-    // it stays enumerated because the stranger must still be bounced by the
-    // requireCollectionAccess guard, which runs BEFORE the redirect to the
-    // new path — this is the exact-first-throw the guard's contract requires.
     p("collections/[id]/sort/set-aside", { id }),
     p("collections/[id]/sort/[sessionNumber]", { id, sessionNumber: N }),
     p("collections/[id]/sort/[sessionNumber]/triage", { id, sessionNumber: N }),
@@ -324,6 +322,27 @@ describeDb(
         expect(await outcome("photos", "1")).toBe(`NEXT_PERMANENT_REDIRECT:${items}/1`);
         expect(await outcome("edit", "../x")).toBe(`NEXT_PERMANENT_REDIRECT:${items}`);
         expect(await outcome("photos", "1?x")).toBe(`NEXT_PERMANENT_REDIRECT:${items}`);
+      } finally {
+        mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+      }
+    });
+
+    it("retired sort pages send a member on to the Sort screen (set-aside to the Ranking)", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const base = `/collections/slug-${collectionId}`;
+      const outcome = async (page: string) => {
+        const mod = (await import(/* @vite-ignore */ `@/app/collections/[id]/${page}/page`)) as {
+          default: (p: { params: Promise<Record<string, string>> }) => Promise<unknown>;
+        };
+        return mod
+          .default({ params: Promise.resolve({ id: collectionId, sessionNumber: "1" }) })
+          .catch((e: Error) => e.message);
+      };
+      try {
+        for (const page of ["sort/new", "sort/[sessionNumber]", "sort/[sessionNumber]/triage", "sort/[sessionNumber]/usage", "sort/[sessionNumber]/compare"]) {
+          expect(await outcome(page), page).toBe(`NEXT_PERMANENT_REDIRECT:${base}/sort`);
+        }
+        expect(await outcome("sort/set-aside")).toBe(`NEXT_PERMANENT_REDIRECT:${base}/results`);
       } finally {
         mockGetSession.mockResolvedValue({ user: { id: strangerId } });
       }

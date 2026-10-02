@@ -19,8 +19,8 @@ import { drain } from "./decisionFlusher";
 import { PendingNotices, QUARANTINE_NOTICE, REJECTED_NOTICE } from "./pendingNotices";
 import { TriageRound } from "./TriageRound";
 
-const { refresh, push } = vi.hoisted(() => ({ refresh: vi.fn(), push: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push }) }));
+const { refresh, push, replace } = vi.hoisted(() => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push, replace }) }));
 
 // jsdom in this setup does not expose a working localStorage on file:// URLs —
 // install the house Map-backed Storage (see decisionFlusher.test.ts).
@@ -136,7 +136,7 @@ describe("PendingNotices — quarantine (F9)", () => {
 });
 
 describe("PendingNotices in the round — rejected acks (F9)", () => {
-  it("a rejected ack renders its notice exactly once, with no refresh, optimistic state retained, and the notice still mounted at round end", async () => {
+  it("a rejected ack renders its notice exactly once, with no refresh, optimistic state retained, and the notice still mounted at the phase hand-off", async () => {
     rejectAllFetch();
     const ids = Array.from({ length: 6 }, () => realItemId());
     const queue = ids.map((id, i) => ({
@@ -152,11 +152,8 @@ describe("PendingNotices in the round — rejected acks (F9)", () => {
         collectionId="coll_1"
         collectionSlugOrId="coll_1"
         queue={queue}
-        decisions={[]}
-        decidedSeed={0}
-        hubHref="/hub"
-        resultsHref="/results"
-        setAsideHref="/set-aside"
+        placedSeed={0}
+        nextHref="/sort?phase=pairs"
       />,
     );
 
@@ -169,15 +166,13 @@ describe("PendingNotices in the round — rejected acks (F9)", () => {
     // F9: no refresh at ack time — the round keeps its optimistic state…
     expect(refresh).not.toHaveBeenCalled();
     expect(screen.getByRole("img", { name: "Bag 6" })).toBeInTheDocument();
-    expect(screen.getByText("5 decided so far")).toBeInTheDocument();
+    expect(screen.getByText("5 of 6 placed")).toBeInTheDocument();
 
-    // …and the round ends into the recap with the notice still on screen. The
-    // round never refreshes — not at ack time, not at round end (purses-hzwj):
+    // …and the phase hands off to pairs with the notice still on screen. The
+    // round never refreshes — not at ack time, not at the hand-off (purses-hzwj):
     // a refresh still committing when the person leaves can eat their next tap.
     await user.click(screen.getByRole("button", { name: "Love" }));
-    expect(
-      await screen.findByRole("heading", { name: /here.s what moved/i }),
-    ).toBeInTheDocument();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/sort?phase=pairs"));
     expect(screen.getAllByText(REJECTED_NOTICE)).toHaveLength(1);
     expect(refresh).not.toHaveBeenCalled();
   });
