@@ -19,3 +19,17 @@ describe("RankingController.pin body", () => {
     expect(pinItem).toHaveBeenCalledWith("c", "u", "i", 3);
   });
 });
+
+const saveAndShare = vi.fn();
+const saver = new RankingController({ saveAndShare } as unknown as SortResultService);
+const KEY = "01j00000000000000000000000";
+
+describe("RankingController.save body", () => {
+  it.each([[{ name: "   ", saveKey: KEY }], [{ name: "x", saveKey: "not-a-ulid" }], [{ name: "x" }], [{ name: "x", saveKey: KEY, extra: 1 }]])(
+    "rejects %j before any write",
+    (body) => {
+      expect(() => saver.save("c", "u", body)).toThrow();
+      expect(saveAndShare).not.toHaveBeenCalled();
+    },
+  );
+});

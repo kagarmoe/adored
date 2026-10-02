@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import type { SortResult, SortResultItem, RankBucket } from "@/types";
 import type { Database } from "@/lib/db";
 import { lockCollectionCurator, withTransaction } from "@/lib/transactions";
@@ -6,6 +7,8 @@ import {
   isResultNumberConflict,
 } from "@/server/repositories/implementations/SortResultRepository";
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
+import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
+import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
@@ -14,6 +17,7 @@ import { deriveUsage, type UsageAnswer } from "@/lib/derive-usage";
 import {
   rankPreferencesToItems,
   cloneItemsFrom,
+  buildRanking,
   pinsFromRows,
   savedOrderPositions,
   type MaterializedItem,
@@ -89,9 +93,31 @@ export const OPEN_DRAFT_NAME = "Still deciding";
 /** Pin target is not a Love/Like/Maybe piece of this curator in this collection → 404. */
 export class PinTargetError extends Error {
   constructor() {
-    super("That piece isn't in your ranking yet.");
+    super("That piece can't be placed here.");
     this.name = "PinTargetError";
   }
+}
+
+/** Nothing is ranked yet → 409 (the button is hidden then; this is the direct-API net). */
+export class NothingToSaveError extends Error {
+  constructor() {
+    super("There's nothing to save yet — sort a few first.");
+    this.name = "NothingToSaveError";
+  }
+}
+
+/** A save key reused for another collection, or whose link was revoked → 409. */
+export class SaveKeyConflictError extends Error {
+  constructor() {
+    super("That save already went through.");
+    this.name = "SaveKeyConflictError";
+  }
+}
+
+export interface SavedRanking {
+  result: SortResult;
+  shareToken: string;
+  created: boolean;
 }
 
 export class SortResultService {
@@ -186,11 +212,13 @@ export class SortResultService {
     return repo.insertWithNumber({ collectionId, curatorId, name: OPEN_DRAFT_NAME, status: "draft", number });
   }
 
-  /** Children first: the sort_result_items FK has no ON DELETE CASCADE. */
+  /** Children first: neither the shares nor the items FK has ON DELETE CASCADE. */
   private async deleteDrafts(tx: Database, collectionId: string, curatorId: string): Promise<void> {
     const resultRepo = new SortResultRepository(tx);
     const itemRepo = new SortResultItemRepository(tx);
+    const shareRepo = new SortResultShareRepository(tx);
     for (const draft of await resultRepo.findDrafts(collectionId, curatorId)) {
+      await shareRepo.deleteByResult(draft.id);
       await itemRepo.deleteByResult(draft.id);
       await resultRepo.delete(draft.id);
     }
@@ -245,6 +273,57 @@ export class SortResultService {
       const itemRepo = new SortResultItemRepository(tx);
       const row = await itemRepo.findByResultAndItem(draft.id, itemId);
       if (row && row.manualRank !== null) await itemRepo.update(row.id, { manualRank: null, manualBucket: null });
+    });
+  }
+
+  /**
+   * Spec §4.4: ONE transaction — reuse-or-create the open draft, rebuild its rows
+   * from the live ranking (pins applied, usage stamped), finalize it, close the
+   * curator's open session, create the share link. Idempotent on `saveKey`: a
+   * replay returns the same result and link and writes nothing.
+   */
+  async saveAndShare(collectionId: string, curatorId: string, name: string, saveKey: string): Promise<SavedRanking> {
+    return this.inCuratorTx(collectionId, curatorId, "save_and_share", async (tx) => {
+      const resultRepo = new SortResultRepository(tx);
+      const shareRepo = new SortResultShareRepository(tx);
+
+      const replay = await resultRepo.findBySaveKey(curatorId, saveKey);
+      if (replay) {
+        const share = (await shareRepo.findByResult(replay.id)).find((s) => s.status === "active");
+        if (replay.collectionId !== collectionId || !share) throw new SaveKeyConflictError();
+        return { result: replay, shareToken: share.shareToken, created: false };
+      }
+
+      const liveIds = new Set((await new ItemRepository(tx).findByCollection(collectionId)).map((i) => i.id));
+      const preferences = await new CollectionPreferenceItemRepository(tx).findByCollection(collectionId, curatorId);
+      const draft = await this.getOrCreateOpenDraft(tx, collectionId, curatorId);
+      const itemRepo = new SortResultItemRepository(tx);
+      const pins = pinsFromRows(await itemRepo.findByResult(draft.id));
+      const { loved, onward } = buildRanking(preferences, liveIds, pins);
+      const ordered = [...loved, ...onward];
+      if (ordered.length === 0) throw new NothingToSaveError();
+
+      const events = await loadCuratorDecisionEvents(new SessionRepository(tx), new DecisionEventRepository(tx), collectionId, curatorId);
+      const usage = deriveUsage(events, new Set(ordered.map((e) => e.itemId)));
+      await itemRepo.deleteByResult(draft.id);
+      for (const [index, entry] of ordered.entries()) {
+        await itemRepo.create({
+          sortResultId: draft.id,
+          itemId: entry.itemId,
+          computedRank: index,
+          computedBucket: entry.bucket,
+          usage: usage.get(entry.itemId) ?? null,
+        });
+      }
+      const result = await resultRepo.markSaved(draft.id, name, saveKey);
+
+      const sessionRepo = new SessionRepository(tx);
+      const open = await sessionRepo.findInProgress(collectionId, curatorId);
+      if (open) await sessionRepo.update(open.id, { status: "completed" });
+
+      const shareToken = randomBytes(32).toString("hex");
+      await shareRepo.create({ sortResultId: result.id, shareToken });
+      return { result, shareToken, created: true };
     });
   }
 
@@ -367,32 +446,29 @@ export class SortResultService {
    * (mirrors `reorderResultItems`' TOCTOU pattern).
    */
   async finalizeResult(id: string): Promise<SortResult> {
-    return withTransaction(
-      this.db,
-      async (tx) => {
-        const resultRepo = new SortResultRepository(tx);
-        const result = await resultRepo.findByIdForUpdate(id);
-        if (!result) throw new Error("Result not found");
-        if (result.status === "finalized") throw new FinalizeStateError();
+    // The pre-tx read only supplies the lock key (collection and curator never change);
+    // status is re-asserted under the lock, so a concurrent save serializes ahead of us.
+    const owner = await this.sortResultRepo.findById(id);
+    if (!owner) throw new Error("Result not found");
+    return this.inCuratorTx(owner.collectionId, owner.curatorId, "finalize_result", async (tx) => {
+      const resultRepo = new SortResultRepository(tx);
+      const result = await resultRepo.findByIdForUpdate(id);
+      if (!result) throw new Error("Result not found");
+      if (result.status === "finalized") throw new FinalizeStateError();
 
-        const finalized = await resultRepo.update(id, {
-          status: "finalized",
-          finalizedAt: new Date(),
-        });
+      const finalized = await resultRepo.update(id, {
+        status: "finalized",
+        finalizedAt: new Date(),
+      });
 
-        const sessionRepo = new SessionRepository(tx);
-        const openSession = await sessionRepo.findInProgress(
-          result.collectionId,
-          result.curatorId,
-        );
-        if (openSession) {
-          await sessionRepo.update(openSession.id, { status: "completed" });
-        }
+      const sessionRepo = new SessionRepository(tx);
+      const openSession = await sessionRepo.findInProgress(result.collectionId, result.curatorId);
+      if (openSession) {
+        await sessionRepo.update(openSession.id, { status: "completed" });
+      }
 
-        return finalized;
-      },
-      { op: "finalize_result", ctx: { resultId: id } },
-    );
+      return finalized;
+    });
   }
 
   async supersedeResult(id: string): Promise<SortResult | null> {
@@ -423,7 +499,7 @@ export class SortResultService {
   }
 
   /**
-   * Hard-delete a DRAFT result and its items, ATOMICALLY via withTransaction:
+   * Hard-delete a DRAFT result and its items, ATOMICALLY under the curator lock:
    * children first (the sort_result_items -> sort_results FK has no
    * ON DELETE CASCADE), so the two deletes commit or roll back together and a
    * mid-delete failure leaves nothing changed (purses-nea established the
@@ -437,11 +513,16 @@ export class SortResultService {
     if (!result) return false;
     if (result.status !== "draft") throw new DeleteResultStateError();
 
-    await withTransaction(this.db, async (tx) => {
+    // Status re-asserted under the lock: a save that finalized this draft meanwhile wins.
+    return this.inCuratorTx(result.collectionId, result.curatorId, "delete_result", async (tx) => {
+      const resultRepo = new SortResultRepository(tx);
+      const locked = await resultRepo.findByIdForUpdate(id);
+      if (!locked) return false;
+      if (locked.status !== "draft") throw new DeleteResultStateError();
       await new SortResultItemRepository(tx).deleteByResult(id);
-      await new SortResultRepository(tx).delete(id);
+      await resultRepo.delete(id);
+      return true;
     });
-    return true;
   }
 
   /**

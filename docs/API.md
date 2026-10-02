@@ -168,6 +168,7 @@ Route-level analytics capture has been removed from the API surface; this does n
 | Method | Path | Access |
 |---|---|---|
 | PUT·DELETE | `/api/collections/[id]/ranking/pins/[itemId]` | member (scoped to caller) |
+| POST | `/api/collections/[id]/ranking/save` | member (scoped to caller) |
 
 ### items (top-level)
 | Method | Path | Access |
@@ -346,6 +347,9 @@ The live Ranking's hand placement (UX redesign PR 2). A **pin** fixes one piece 
 
 ### `DELETE /api/collections/[id]/ranking/pins/[itemId]`
 Same guard. Clears the caller's pin so the piece returns to its derived place. **Idempotent**, and opens no draft. → `200 { ok: true }`. `401`/`403`/`404`.
+
+### `POST /api/collections/[id]/ranking/save`
+Save and share. Same guard, before the body. **Body:** `{ name: string (trimmed, 1..200), saveKey: ULID }` (strict zod; `400` otherwise). In **one transaction** under the curator lock: reuse-or-open the caller's draft, rewrite its rows from the live ranking (pins applied, usage stamped), finalize it with `name` + `save_key`, complete the caller's open session, create an active share link. → `201 { resultNumber, shareToken }`. **Idempotent on `saveKey`** (unique per curator): a replay returns `200` with the same body and writes nothing. `409` (`SaveKeyConflictError`) when the key was used for another collection or its link is no longer active; `409` (`NothingToSaveError`) when nothing is ranked yet. Any failure rolls the whole save back (`500`). `401`/`403`/`404`.
 
 ## items (top-level)
 

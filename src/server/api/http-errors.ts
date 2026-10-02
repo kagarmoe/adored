@@ -8,6 +8,8 @@ import {
   ReorderFinalizedError,
   ResultItemNotInResultError,
   PinTargetError,
+  NothingToSaveError,
+  SaveKeyConflictError,
 } from "@/server/services/SortResultService";
 import { CurrentSessionExistsError } from "@/server/repositories/implementations/SessionRepository";
 import { PreferenceExistsError } from "@/server/api/dispositions";
@@ -45,7 +47,9 @@ export class HttpError extends Error {
  *   | ReorderFinalizedError
  *   | CurrentSessionExistsError → 409 (error.message)
  *   | PreferenceExistsError
- *   | ItemInResultError       → 409 (error.message)
+ *   | ItemInResultError
+ *   | NothingToSaveError
+ *   | SaveKeyConflictError    → 409 (error.message)
  *   PoolGroupError            → 409 if code "conflict", else 400 (error.message)
  *   HttpError
  *   | InvitationAcceptError   → error.status (error.message)
@@ -78,7 +82,9 @@ export function errorResponse(error: unknown): NextResponse {
     error instanceof ReorderFinalizedError ||
     error instanceof CurrentSessionExistsError ||
     error instanceof PreferenceExistsError ||
-    error instanceof ItemInResultError
+    error instanceof ItemInResultError ||
+    error instanceof NothingToSaveError ||
+    error instanceof SaveKeyConflictError
   ) {
     return NextResponse.json({ error: error.message }, { status: 409 });
   }

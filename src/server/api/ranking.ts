@@ -1,9 +1,14 @@
 import { z } from "zod";
 import type { Database } from "@/lib/db";
-import { SortResultService } from "@/server/services/SortResultService";
+import { ClientKey } from "@/lib/decision-batch-schema";
+import { SortResultService, type SavedRanking } from "@/server/services/SortResultService";
 import type { Pin } from "@/server/services/sortResultMaterialization";
 
 const PinSchema = z.strictObject({ position: z.number().int().min(1).max(10_000) });
+const SaveSchema = z.strictObject({
+  name: z.string().trim().min(1).max(200),
+  saveKey: ClientKey,
+});
 
 /** The live Ranking's writes (spec §4). Curator is always the caller, never the body. */
 export class RankingController {
@@ -24,5 +29,10 @@ export class RankingController {
 
   unpin(collectionId: string, curatorId: string, itemId: string): Promise<void> {
     return this.service.unpinItem(collectionId, curatorId, itemId);
+  }
+
+  save(collectionId: string, curatorId: string, body: unknown): Promise<SavedRanking> {
+    const { name, saveKey } = SaveSchema.parse(body);
+    return this.service.saveAndShare(collectionId, curatorId, name, saveKey);
   }
 }

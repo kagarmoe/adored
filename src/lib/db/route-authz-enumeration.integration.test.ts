@@ -414,6 +414,10 @@ function buildStrangerCases(
     c("collections/[id]/ranking/pins/[itemId]/route.ts", "DELETE",
       `/api/collections/${collectionId}/ranking/pins/${itemAId}`,
       { id: collectionId, itemId: itemAId }),
+    c("collections/[id]/ranking/save/route.ts", "POST",
+      `/api/collections/${collectionId}/ranking/save`,
+      { id: collectionId },
+      { name: "Stranger", saveKey: "01j00000000000000000000000" }),
 
     // ── /api/collections/[id]/preferences/items ───────────────────────────
     c("collections/[id]/preferences/items/route.ts", "GET",

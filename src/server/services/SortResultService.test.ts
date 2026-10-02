@@ -66,6 +66,7 @@ import type { SortResultRepository } from "@/server/repositories/implementations
 import type { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import type { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
 import type { Database } from "@/lib/db";
+import { lockCollectionCurator } from "@/lib/transactions";
 
 const txDb = fakeTxDb() as unknown as Database;
 
@@ -272,9 +273,10 @@ describe("SortResultService.finalizeResult", () => {
   // tests in this file); the AUTHORITATIVE atomicity proof — both rows
   // actually moved together against a real DB — lives in the DB-tier
   // sort-results-pipeline.integration.test.ts.
+  // The injected repo's pre-tx read only supplies the curator-lock key.
   function service() {
     return new SortResultService(
-      {} as unknown as SortResultRepository,
+      { findById: async () => sortResult({ status: "draft" }) } as unknown as SortResultRepository,
       {} as unknown as SortResultItemRepository,
       {} as unknown as CollectionPreferenceItemRepository,
       txDb,
@@ -292,6 +294,7 @@ describe("SortResultService.finalizeResult", () => {
     const result = await service().finalizeResult("res-1");
 
     expect(result).toBe(finalized);
+    expect(lockCollectionCurator).toHaveBeenCalledWith(expect.anything(), COLLECTION, CURATOR);
     expect(txResultRepo.findByIdForUpdate).toHaveBeenCalledWith("res-1");
     expect(txResultRepo.update).toHaveBeenCalledWith(
       "res-1",
@@ -444,6 +447,19 @@ describe("SortResultService deleteResult", () => {
     expect(txResultRepo.delete).not.toHaveBeenCalled();
   });
 
+  it("re-asserts draft status under the curator lock (a save that finalized it meanwhile wins)", async () => {
+    txResultRepo.findByIdForUpdate.mockResolvedValue(sortResult({ status: "finalized" }));
+    await expect(
+      new SortResultService(
+        { findById: async () => sortResult({ status: "draft" }) } as unknown as SortResultRepository,
+        {} as unknown as SortResultItemRepository,
+        {} as unknown as CollectionPreferenceItemRepository,
+        txDb,
+      ).deleteResult("res-1"),
+    ).rejects.toBeInstanceOf(DeleteResultStateError);
+    expect(txItemRepo.deleteByResult).not.toHaveBeenCalled();
+  });
+
   it("deletes children BEFORE the result row (FK-safe order) inside one tx for a draft", async () => {
     const calls: string[] = [];
     txItemRepo.deleteByResult.mockImplementation(async () => {
@@ -455,6 +471,7 @@ describe("SortResultService deleteResult", () => {
     const sortResultRepo = {
       findById: async () => sortResult({ status: "draft" }),
     } as unknown as SortResultRepository;
+    txResultRepo.findByIdForUpdate.mockResolvedValue(sortResult({ status: "draft" }));
 
     const deleted = await new SortResultService(
       sortResultRepo,
@@ -469,6 +486,7 @@ describe("SortResultService deleteResult", () => {
     expect(txResultRepo.delete).toHaveBeenCalledWith("res-1");
     // Children-first: the sort_result_items -> sort_results FK has no cascade.
     expect(calls).toEqual(["children", "result"]);
+    expect(lockCollectionCurator).toHaveBeenCalledWith(expect.anything(), COLLECTION, CURATOR);
   });
 });
 
