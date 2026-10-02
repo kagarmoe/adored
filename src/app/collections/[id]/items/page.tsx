@@ -110,7 +110,7 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
               Search
             </Button>
           </form>
-          <ItemFilterPills base={collectionHref} view={view} q={q} />
+          <ItemFilterPills path={`${collectionHref}/items`} view={view} q={q} />
         </div>
 
         {visible.length === 0 ? (

@@ -23,3 +23,5 @@ export type { ViewerPhoto } from "./ImageViewer";
 export { PhotoViewControl } from "./PhotoViewControl";
 
 export { OverflowMenu, type OverflowMenuItem } from "./OverflowMenu";
+
+export { FilterPills, type FilterPill } from "./FilterPills";
