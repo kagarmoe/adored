@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui";
 import { AsyncActionButton } from "@/features/sorting/AsyncActionButton";
+import { isIdShaped } from "@/lib/id";
 
 interface ArchivedNoticeProps {
   kind: "item" | "collection";
@@ -18,9 +19,10 @@ interface ArchivedNoticeProps {
 // content), so the focus move is what tells an AT user the archive happened and
 // where the way back is. Dismissing strips only the `removed` param, so any
 // co-present filters (?status=…) survive. A stale/foreign id just 404s into the
-// gentle retry line. The restore URL is built HERE from kind + an encoded id — never
-// passed in — so a hostile ?removed= (e.g. "../collections/x/archive#") cannot aim Undo
-// at another route. The copy points at the Archived pill, one tap away on this list.
+// gentle retry line. The restore URL is built HERE from kind + an id-shaped, encoded id —
+// never passed in — so a hostile ?removed= (e.g. "../collections/x/archive#") renders
+// nothing and cannot aim Undo at another route.
+// The copy points at the Archived pill, one tap away on this list.
 export function ArchivedNotice({ kind, id }: ArchivedNoticeProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -48,6 +50,9 @@ export function ArchivedNotice({ kind, id }: ArchivedNoticeProps) {
     if (!res.ok) throw new Error("restore failed");
     router.replace(hrefWithoutRemoved());
   }
+
+  // Defense in depth behind each page's own check.
+  if (!isIdShaped(id)) return null;
 
   return (
     <div
