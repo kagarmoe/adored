@@ -294,6 +294,8 @@ describe("access before any query", () => {
     expect(itemRepo.findByCollection).not.toHaveBeenCalled();
     expect(itemRepo.findArchivedByCollection).not.toHaveBeenCalled();
     expect(sessionRepo.findByCollectionAndCurator).not.toHaveBeenCalled();
+    expect(prefRepo.findByCollection).not.toHaveBeenCalled();
+    expect(photoRepo.findCoverPhotosByItemIds).not.toHaveBeenCalled();
   });
 
   it("hrefs use the slug, never a raw ULID, and sessions are this curator's own", async () => {
