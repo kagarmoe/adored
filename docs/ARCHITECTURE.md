@@ -297,6 +297,11 @@ Each entry is **Decision / Rationale / Status**. Where design and shipped code d
 - *Guard added (`purses-mebk.1`):* `scripts/migration-hashes.test.ts` pins the SHA-256 of every committed migration. drizzle's migrator compares only the journal `when` timestamp and **never reads the recorded hash back** (decision 33's trap), so an edited or re-baselined migration replays silently — green CI, red prod deploy. Mutation-proven: one changed byte reds the test.
 - *Status:* **Shipped.**
 
+**41. One item panel; Frosted shelf tokens (UX redesign PR 1, 2026-10-01).**
+- *Decision:* the item page is the only item surface (fields + carousel + chip + overflow); `…/edit` and `…/photos` are guard-then-`permanentRedirect` pages; item PATCH is strict with nullable clears and size/weight/unit; Archived = soft-deleted rows via `findArchivedByCollection`; "+ Add photos" = pool upload then reassign by blob pathname; the usage chip lazily opens a session. Glass tokens carry hex composites gated by `contrast.test.ts`.
+- *Rationale:* spec §1 (four screens to edit one object), §5 (AA by the surface's own opacity).
+- *Status:* Shipped (PR 1); sort/ranking in PR 2.
+
 ### Rename story (PurseInator → Adored)
 
 "PurseInator" was an **explicit placeholder** from the first design doc (2026-05-07). The substantive rename to **Adored** was planned 2026-06-09 and executed 2026-06-10 (#125, commit `26a501b`), scoped across three tiers — display brand (wordmark, footer, titles, copy), technical identifiers (`package.json` name → `adored`, env defaults), and living docs (README/PRODUCT/TONE/DESIGN/CLAUDE). Vercel points `adored.kimberlygarmoe.com` live; email sends from the already-verified apex `noreply@kimberlygarmoe.com` to avoid any Resend/DNS work.
