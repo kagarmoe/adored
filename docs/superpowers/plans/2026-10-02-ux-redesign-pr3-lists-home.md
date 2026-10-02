@@ -48,13 +48,20 @@ reference: `docs/superpowers/plans/2026-10-01-ux-redesign-pr1-item-panel.md` (Ta
   gamification; destructive actions sober and reversible where possible.
 - Retired routes are `page.tsx` files that run the DAL guard **first**, then `permanentRedirect`;
   the page-authz enumeration test is updated in the same PR.
-- Every test runs in CI. DB tier only for real DB crossings (this PR adds none beyond the
-  enumeration backstop). E2E runs on tablet in CI; the phone bottom bar is viewport-sensitive, so
-  its geometry is asserted in CI with `page.setViewportSize({ width: 390, height: 664 })` inside the
-  tablet project (precedent: the wayfinding phone test), and the whole mapped spec also runs locally
-  with `PW_VIEWPORT=phone` before the PR.
+- Every test runs in CI. DB tier only for real DB crossings (this PR adds none beyond **one**
+  member→guard→308 case in the enumeration backstop; the redirect's allow-list permutations are unit
+  tests with `redirectRetired` mocked). E2E runs on tablet in CI; the phone bottom bar is
+  viewport-sensitive, so its geometry is asserted in CI with `page.setViewportSize({ width: 390, height: 664 })`
+  inside the tablet project (precedent: the wayfinding phone test), and the whole mapped spec also
+  runs locally with `PW_VIEWPORT=phone` before the PR — tablet-only tests carry
+  `test.skip(testInfo.project.name !== "tablet", …)` (precedent `e2e/a11y.spec.ts:94`) so that run
+  passes by design.
 - New UI-facing modules live under a CI-mapped path (`src/features/**`, `src/components/**`); a new
   `src/lib/<dir>` would be invisible to the e2e trigger (memory `ci-e2e-path-filters-hand-enumerated`).
+  **Do not add `src/components/layout/**` to any area:** a `ui`-filter change that matches no area
+  runs the FULL e2e suite (`matched=0`, `ci.yml` ~461), which is what a shared layout primitive
+  deserves. `src/lib/collections/**` is not in the `ui` filter at all, so an area entry for it would be
+  inert; the redirect is covered by the DB enumeration test and its unit test.
 - Implementers do **not** run `graphify update .` (memory `sdd-implementers-must-not-run-graphify-update`);
   the controller runs it once at the PR boundary (Task 8).
 - Commits end with the session attribution lines from the current system reminder. Do not push.
@@ -65,39 +72,57 @@ reference: `docs/superpowers/plans/2026-10-01-ux-redesign-pr1-item-panel.md` (Ta
    query over 100 characters, a repeated `?q=` key (arrives as `string[]`): plain-text,
    case-insensitive substring of the trimmed query, sliced to 100, an array ignored. Pinned: Task 2
    `collectionsList.test.ts` "searches name and description as plain text…"; Task 4 page test
-   "ignores a repeated q key"; PR 1's `filterItems` tests (unchanged) for the home.
-2. **A stale or foreign "just archived" id** (`?removed=<id>` bookmarked, already restored, or
-   another user's collection) — no false "Archived." notice and no Undo aimed at something that is
-   not the viewer's archived thing. Pinned: Task 4 "shows Undo only for the viewer's own collection
-   that is archived now"; Task 5 "shows the undo notice only while that item is no longer live".
+   "ignores a repeated q key"; Task 5 home search test (repeated key → empty searchbox, 150 → 100);
+   PR 1's `filterItems` tests (unchanged) for the home's matching.
+2. **A stale, foreign or hostile "just archived" id** (`?removed=<id>` bookmarked, already restored,
+   another user's collection or another collection's item, or a path like `../collections/<id>/archive#`)
+   — no false "Archived." notice and **no Undo aimed at anything but the viewer's own archived thing**.
+   Three layers: (a) `ArchivedNotice({ kind, id })` builds its restore URL itself with
+   `encodeURIComponent(id)` — no caller ever passes a URL; (b) both lists verify `removed` server-side:
+   id-shaped (`isIdShaped`) AND, on `/collections`, one of the viewer's **owned** collections that is
+   archived now; on the home, an archived item **of this collection** (`listArchived(collection.id)`);
+   anything else renders nothing; (c) the retired `/items` redirect copies `removed` only when it is
+   id-shaped. Pinned: Task 3 "builds the restore URL from kind and id, encoded"; Task 4 "shows Undo
+   only for the viewer's own collection that is archived now" (incl. archived-but-shared and a `../`
+   value); Task 5 "shows the undo notice only for an archived item of this collection" (incl. a junk
+   id and a `../` value); Task 6 redirect unit test (a `../` `removed` is dropped).
 3. **A curator (non-owner) on the list or the home** — no `···` on their collection cards (Archive,
    settings and members are `collection:manage`), and the home menu offers only **Add item**.
    Pinned: Task 4 "owner cards get the ··· menu; a curator's card does not"; Task 5 "a curator's menu
    offers Add item only".
 4. **The phone bar over content** — after scrolling to the bottom of a long grid the last card and the
    footer sit above the bar, the bar stays pinned to the viewport bottom, and on tablet the same bar
-   is an inline row above the grid. Pinned: Task 7 e2e "phone: the bar is pinned to the bottom and
-   never hides the last row".
+   is an inline row above the grid; a card row is visible on load at 390×664; the page's scroll
+   padding matches the reserve so a focused bottom-row card is scrolled clear of the bar; on a short
+   viewport (browser zoom) the bar is static, never two fixed bands. Pinned: Task 7 e2e "phone: the
+   bar is pinned to the bottom and never hides the last row"; Task 4 unit "the bar goes static on a
+   short viewport".
 5. **Old links to the retired items list** (`/items?status=archived&q=tote&removed=<id>&utm=x`,
-   `/items?q=a&q=b`) keep their meaning on the home; unknown or malformed params are dropped; a
-   stranger is still bounced by the guard first. Pinned: Task 6 enumeration test "the retired items
-   list sends a member home with its view, query and notice".
+   `/items?q=a&q=b`, `/items?removed=../x`) keep their meaning on the home; unknown, malformed or
+   non-id-shaped params are dropped; a stranger is still bounced by the guard first. Pinned: Task 6
+   unit `items/page.test.tsx` "carries only the allow-listed view, query and an id-shaped notice" and
+   the one DB crossing "the retired items list sends a member home through the guard".
 
 ## Decisions this plan takes where the spec is silent (call them out in review)
 
 - **Collection card content.** Cover photo (4:3, the collection's existing cover), the name in
-  Playfair (two lines max), the description (two lines max), the existing "Photos waiting" cue, the
-  existing status badge in the Archived view. No counts, no dates, no "sorted" progress — the
-  wireframe's "100 items · 38 sorted" is dropped. *Rationale:* TONE never counts; the photo leads.
+  Playfair (two lines max, full card width — the body is laid out for the 2-up phone grid), the
+  description (two lines max), the existing "Photos waiting" cue (`rounded-pill`). **The status badge
+  is dropped** (controller ruling, Graphic G1): the Archived pill already says it, the badge showed the
+  raw enum, squeezed the name at 2-up, and its `archived` variant (`bg-hairline text-ink`) is 3.91:1 in
+  dark — PR 3 would have been its first render. No new token. No counts, no dates, no "sorted"
+  progress — the wireframe's "100 items · 38 sorted" is dropped. *Rationale:* TONE never counts; the
+  photo leads.
 - **Item card content on the home.** PR 1's `ItemCard` unchanged (cover, name or "Add a name", brand,
   one tier chip once sorted); **no overflow menu on item cards**. *Rationale:* Archive and Delete live
   on the item panel (§3); a second home for them would be a second path to the same action.
 - **One grid rhythm.** Both grids are 2 columns on phone, 3 from `md`, 4 from `lg` (the collections
   grid was 1 column on phone). *Rationale:* the resale-app 2-up phone grid; one rhythm across lists.
-- **Collections filter pills: All · Archived.** All = active collections; Archived = archived ones.
-  The old **Active** pill is folded into All, and `?status=active` (or any junk) reads as All.
-  *Rationale:* mirrors the items pills; once Archive is reachable, an "All" that still lists archived
-  collections would bury them back in.
+- **Collections filter pills: All · Archived.** All = every collection that is **not archived**
+  (so a `status: "deleted"` row without `deletedAt`, should one reach the list, is not silently
+  hidden); Archived = archived ones. The old **Active** pill is folded into All, and `?status=active`
+  (or any junk) reads as All. *Rationale:* mirrors the items pills; once Archive is reachable, an
+  "All" that still lists archived collections would bury them back in.
 - **Home filter pills: PR 1's set unchanged** (All, Archived, Waiting for a name), now linking to the
   home instead of `/items`.
 - **Search behaviour (both lists).** A server-side GET form (`?q=`, ≤ 100 characters, a repeated key
@@ -106,60 +131,103 @@ reference: `docs/superpowers/plans/2026-10-01-ux-redesign-pr1-item-panel.md` (Ta
   a pill change and the pill survives a search. *Rationale:* identical to PR 1's items list; works
   without client JS; stays a Server Component.
 - **Collection card `···` (owner only):** **Collection settings**, **Members**, **Archive** (in the
-  Archived view: **Bring back** instead). A curator's card has no `···`. No Delete on the card.
-  *Rationale:* these are exactly the owner's existing `collection:manage` actions; permanent delete
-  stays behind the type-the-name confirm on the settings page.
-- **Archive undo.** Archive → `/collections?removed=<id>` and the same "Archived. You'll find it under
-  Archived." notice with **Undo** that items use; PR 1's `RemovedItemNotice` is generalized to
-  `ArchivedNotice({ restoreUrl })`. The notice renders only when that id is one of the viewer's
-  collections and is archived now. A failed Archive / Bring back keeps the card and shows "That didn't
-  go through. Try again." under the `···`. *Rationale:* §3's undo pattern, reused; Undo is always near.
+  Archived view: **Bring back** instead). A curator's card has no `···`. No Delete on the card. The
+  trigger is `OverflowMenu`'s `compact` variant (a 28px raised chip inside the 44px hit area) because
+  it sits over the cover photo. *Rationale:* these are exactly the owner's existing
+  `collection:manage` actions; permanent delete stays behind the type-the-name confirm on the settings page.
+- **Archive undo.** Archive → `/collections?q=<current q>&removed=<id>` (the search survives; Archive is
+  only offered in the All view, so there is no status to keep) and the same "Archived. You'll find it
+  under Archived." notice with **Undo** that items use; PR 1's `RemovedItemNotice` is generalized to
+  `ArchivedNotice({ kind: "item" | "collection", id })`, which **builds the restore URL itself** with
+  `encodeURIComponent(id)` — never a raw URL prop (Security: an unchecked `?removed=` like
+  `../collections/<id>/archive#` would otherwise turn Undo into a POST to another route). The notice
+  renders only when `removed` is id-shaped and is one of the viewer's **owned** collections that is
+  archived now. A failed Archive / Bring back keeps the card and shows "That didn't go through. Try
+  again." (`rounded-control`) under the `···`. *Rationale:* §3's undo pattern, reused; Undo is always near.
+- **Bring back from a card.** Bring back (Archived view) → `/collections?status=archived&q=<q>&restored=<id>`;
+  the card leaves the list and a focused status line says "Brought back. It's under All."
+  (`BroughtBackNotice`, rendered only for an id-shaped `restored` that is one of the viewer's owned
+  collections and not archived). Never a bare `router.refresh()` — that dropped focus with no feedback.
 - **Home `···` beside the title:** **Add item** (every member), **Collection settings** and
   **Members** (owner). *Rationale:* rarer actions behind an overflow (PRODUCT "Familiar first"), so
   the home keeps one primary and one pill.
-- **Empty states.** Collections: no collections at all → "Nothing here yet" / "Begin a collection
-  whenever you're ready — there's no rush." (no button inside; the bar carries New collection);
-  Archived → "Nothing archived"; a search → "Nothing matches “q”"; All empty but archived exist →
-  "Nothing active right now" / "Your archived collections are under Archived." Home: PR 1's
-  `itemsEmptyState` copy, **without a button** (the bar carries the action); a home with pool photos
-  but no items shows the "Photos waiting" strip instead of an empty state.
+- **Empty states.** Collections: no collections at all → "Nothing here yet" / "Start a new
+  collection whenever you're ready — there's no rush." (the verb matches the bar's **New collection**;
+  no button inside); Archived → "Nothing archived"; a search → "Nothing matches “q”" plus a quiet
+  **Clear search** link (the same view without `q`); All empty but archived exist → "Nothing here right
+  now" / "Your archived collections are under Archived." Home: PR 1's `itemsEmptyState` copy plus one
+  new branch — every item archived → "Everything here is archived" / "Find it under Archived." — **without
+  a button** (the bar carries the action), and the same quiet **Clear search** link after a
+  zero-result search; a home with pool photos but no items shows the "Photos waiting" strip instead
+  of an empty state.
 - **What the bar shows.** `/collections`: **New collection**. Home: **Start sorting** / **Keep
   sorting** (primary) + **Add photos** pill once the collection has a live item or an open sort;
   **Make items** (primary → pool) alone when only pool photos exist; **Add photos** (primary → pool)
   alone when the collection is empty. No other screen gets a bar in PR 3 (panel, Sort, Ranking are
   unchanged). *Rationale:* §5's one primary action; Start sorting needs something to sort.
-- **Phone bar mechanics.** Fixed below `md` (768px: every phone; iPad portrait is 810 and keeps the
-  inline row). `bg-glass-strong backdrop-blur-md border-t border-rim shadow-lift`, safe-area bottom
-  padding, `z-30` (under the header's `z-40` and the overflow menu's `z-50`). `AppLayout
-  reserveActionBar` pads the page bottom (`pb-24 md:pb-0`) so the last row and the footer are never
-  behind it. Glass-strong surfaces per screen: header + bar = 2. **No 3-tab bottom nav** (the phone
-  wireframe's Home/Sort/You): the spec chose an action bar.
+- **Phone bar mechanics.** Fixed below `md` (768px). That is every phone; it is also iPad mini
+  portrait (744) and iPad Split View panes, which get the phone bar — acceptable, since below 768 the
+  inline row would wrap anyway; standard iPads in portrait (810+) keep the inline row.
+  `bg-glass-strong backdrop-blur-md border-t border-rim shadow-lift`, plain `pt-3 pb-3` (no
+  `env(safe-area-inset-bottom)`: the root layout sets no `viewportFit: "cover"`, so the inset is
+  always 0 — no safe-area claim), `z-30` (under the header's `z-40` and the overflow menu's `z-50`).
+  **Short viewports** (`max-height: 500px`, i.e. browser zoom) make the bar static — never two
+  fixed bands eating the screen. `AppLayout reserveActionBar` pads the page bottom (`pb-36 md:pb-0`,
+  9rem: the bar plus a two-line AsyncActionButton error line, so the error never grows the bar past
+  the reserve), and a `globals.css` rule sets `scroll-padding-bottom: 9rem` on `html` while a
+  `[data-action-bar]` is fixed, so a keyboard-focused bottom-row card is scrolled clear of the bar.
+  Inside the bar the primary stretches `w-full md:w-auto` (AsyncActionButton's `fullWidth`
+  breakpoint moves `sm` → `md`; the home's KeepSortingButton is its only caller), so at 640–767 the
+  fixed bar's primary still fills. Glass-strong surfaces per screen: header + bar = 2. **No 3-tab
+  bottom nav** (the phone wireframe's Home/Sort/You): the spec chose an action bar. The bar's top edge
+  over white photos in light mode is accepted as is (controller ruling G2; no upward-shadow token).
 - **Tablet placement of the primary action.** The same `ActionBar` node renders inline: on
   `/collections` at the right of the title row (where New collection is today); on the home as its own
-  left-aligned row directly under the title and the Build/Sort/Decide chips, above search — visible
-  without scrolling, and first in tab order after the chips.
+  left-aligned row after the header group (title, description, `···`, and the chip row — chips plus
+  **See your ranking** — held together at `space-y-2`, then a visual break), above search — visible
+  without scrolling, and first in tab order after the chip row.
+- **Phone home above the fold.** The home stack is `space-y-4 md:space-y-8`, the search label is
+  `max-md:sr-only` (the accessible name "Search your items" stays), and See your ranking rides the chip
+  row, so at 390×664 a card row is visible on load without scrolling.
 - **Pool strip.** `PhotoPoolPreview` stays as a "Photos waiting" strip above the grid (All view, no
   query, ≥ 1 loose photo). Its **Make items** link shows only when sorting holds the primary (so the
-  name is never on screen twice); its "Add more photos" link is dropped (the Add photos pill does it).
+  name is never on screen twice); in the photos-only state (bar primary = Make items) the thumbnail
+  strip is itself **one link to the pool, labelled by the "Photos waiting" heading**, so the visible
+  "Make items" text still appears once. Its "Add more photos" link is dropped (the Add photos pill does it).
 - **The whole collection on the home.** The 12-item preview bound goes; the home lists every live
-  item (covers batch-read for the visible items only; `next/image` lazy-loads). Paging is deferred
-  until a collection is big enough to need it.
+  item in number order (`listItems(collection.id, { orderBy: "number" })` — the repository only sorts
+  when asked). Covers are batch-read for every visible item — an **unbounded fan-out** (one
+  `findCoverPhotosByItemIds` over N ids, all of each item's photos) accepted for PR 3; a follow-up bead
+  (controller files it) narrows it to one hero-first row per item (`DISTINCT ON`). `next/image`
+  lazy-loads. Paging is deferred until a collection is big enough to need it. The now-unused `limit`
+  option (`FindByCollectionOptions.limit`, `ItemController.listItems`'s stale comment) and its DB
+  tests are deleted; `orderBy` and its tie-break DB test stay.
 - **Kept on the home:** the Build/Sort/Decide mode chips (navigation, not an action; removing them is
-  outside §8 item 3) and PR 2's quiet **See your ranking** link, now under the title with the same
-  visibility rule. **Dropped:** the "Created {date}" line (chrome, not the objects).
+  outside §8 item 3) and PR 2's quiet **See your ranking** link, now on the chip row with the same
+  visibility rule. The chips' Sort/Decide overlap with Start sorting / See your ranking is recorded
+  (affordance table) and deferred to a bead (controller ruling F6). **Dropped:** the "Created {date}"
+  line (chrome, not the objects). Item cards carry no `···`, and a single-item curator's home `···`
+  holding only **Add item** is accepted (controller ruling F12).
 - **Collection card zoom dropped.** The "View photo" lightbox control leaves collection cards (the
   `···` takes that corner; a collection cover is not a decision moment; zoom stays on the item panel).
 - **Retired routes and redirects.** `/collections/[id]/items` (the list only) → 308 to
   `/collections/[id]` after the guard, carrying only `status=archived`, `unnamed=1`, `q` (≤ 100) and
-  `removed`; anything else is dropped. Item URLs (`/items/[n]`, `/items/new`) are unchanged. The panel's
+  an id-shaped `removed` (`isIdShaped`: `^[a-z]+_[0-9a-z]{1,40}$`); anything else is dropped. Item URLs (`/items/[n]`, `/items/new`) are unchanged. The panel's
   not-found redirect, the non-numeric `…/edit` and `…/photos` bounces, archive's landing, the pool's
   "see them all" notice and the Ranking's number-less fallback all point at the home. Breadcrumbs lose
   the "Items" level: an item reads Collections / {collection} / {item}.
 - **Deleted modules:** `workspaceState.ts` (+ test) and `ItemPreviewGrid.tsx` — the home no longer has
-  adaptive layouts, only the three primary-action states above, expressed inline.
+  adaptive layouts, only the three primary-action states above, expressed inline. Also deleted: the
+  `limit` path of `findByCollection` / `FindByCollectionOptions.limit` and the two `limit`-only DB tests
+  in `src/lib/db/workspace-preview.integration.test.ts` ("returns only the preview slice…", "resolves
+  covers only for the displayed item ids…").
 - **E2E shape.** One new spec, `e2e/lists-and-home.spec.ts`, replaces
-  `e2e/adaptive-collection-workspace.spec.ts` (its two wayfinding tests move over verbatim). The CI
-  area map adds `src/components/layout/**` and `src/lib/collections/**` to the `collection` area.
+  `e2e/adaptive-collection-workspace.spec.ts` (its two wayfinding tests move over, tablet-only one
+  gaining the project skip). The CI area map only swaps the spec name in the `collection` and `items`
+  selections — **no new area paths** (see Global Constraints: an unmapped `src/components/layout/**`
+  change already runs the full suite).
+- **`FilterPills` check glyph.** `CheckIcon` moves from `src/features/items/InYourLifeChip.tsx` to
+  `src/components/ui/CheckIcon.tsx` and is reused by `FilterPills` and `InYourLifeChip` (one glyph).
 
 ### Owner veto (data-changing or route-retiring — flag in the PR body)
 
@@ -169,6 +237,31 @@ reference: `docs/superpowers/plans/2026-10-01-ux-redesign-pr1-item-panel.md` (Ta
    with no caller). Archiving flips `collections.status`; it is reversible from the Archived pill and
    the Undo notice. With it, **All stops listing archived collections** and the Active pill goes.
 
+### Rulings (controller)
+
+- **G2 accepted:** the phone bar's top edge over white photos in light mode stays as is — no
+  upward-shadow token.
+- **UX F12 accepted:** a curator's home `···` holding only **Add item** is fine; no change.
+- **A4 deferred to a bead:** the home's unbounded cover fan-out (every visible item's photos) ships;
+  a follow-up narrows it to one hero-first row per item (`DISTINCT ON`).
+- **G3 deferred to a bead:** `PoolActionBar` (the pool's bottom bar) diverges from `ActionBar`;
+  aligning them is a follow-up, no change in PR 3.
+- **F6 deferred to a bead:** the Sort/Decide mode chips overlap Start sorting / See your ranking on
+  the home; resolving the duplication is a follow-up (the chip row now sits with the header group).
+- **G1 ruled:** drop the status badge from collection cards; no new token.
+
+### Rejected review findings
+
+- **A5 + Q9 (in part) — delete the "workspace item preview" DB tests L240–275 wholesale:** the
+  tie-break test ("breaks number ties by id ascending", L255) pins `orderBy: "number"`'s SQL ordering
+  of nullable `number` — exactly the SQL-semantics crossing the DB tier exists for, and the home now
+  relies on `orderBy` (A2). It stays, with its `limit: 12` argument removed. The `limit`-only tests
+  (L240 slice, L275 covers-for-displayed) are deleted as asked.
+- **G7 (in part) — `flex-wrap … grow basis-24` on the collection card's name row:** that layout
+  exists in `ItemCard` to share the row with a tier badge; with the status badge dropped (G1) the name
+  is alone on its row, so it takes the full body width (`min-w-0 break-words line-clamp-2`) with no
+  flex wrapper. The `p-3` body and `rounded-full` → `rounded-pill` parts are applied.
+
 ### Affordances on the surfaces that change (PR 1 lesson: rule on each, nothing lost silently)
 
 | Surface → affordance | Ruling |
@@ -176,16 +269,20 @@ reference: `docs/superpowers/plans/2026-10-01-ux-redesign-pr1-item-panel.md` (Ta
 | `/collections` New collection button | **Move** into the `ActionBar` (inline on tablet, bottom bar on phone) |
 | `/collections` All / Active / Archived pills | **Change** to All / Archived (`FilterPills`); Active folds into All |
 | Collection card cover "View photo" lightbox | **Drop** (decision above) |
-| Collection card "Photos waiting" cue, status badge | **Keep** |
-| `/collections` empty-state "Begin a collection" button | **Drop** from the empty state; the bar holds it |
+| Collection card "Photos waiting" cue | **Keep** (`rounded-pill`) |
+| Collection card status badge | **Drop** (ruling G1: the Archived pill says it; dark-mode contrast; raw enum) |
+| `/collections` empty-state "Begin a collection" button | **Drop** from the empty state; the bar holds it (copy: "Start a new collection whenever you're ready…") |
+| Zero-result search (both lists) | **Add** a quiet **Clear search** link (same view, no `q`) |
+| Card Bring back feedback | **Change**: was a silent refresh; now lands on the Archived view with a focused "Brought back. It's under All." |
 | `/collections` first-run `/welcome` redirect | **Keep** (unchanged, before any render) |
 | Home pool preview: Make items, Add more photos | **Change**: strip keeps thumbnails; Make items = bar primary when no items, else the strip's quiet link; Add more photos → the Add photos pill |
 | Home 12-item preview + "View all items" | **Change**: the full grid; the link drops |
 | Home "Add item" quiet link | **Move** into the home `···` |
 | Home Start / Keep sorting | **Move** into the `ActionBar` (primary) |
-| Home "See your ranking" | **Move** under the title (same rule) |
+| Home "See your ranking" | **Move** onto the chip row (same rule) |
 | Home owner nav: Collection settings, Members | **Move** into the home `···` (owner only) |
-| Home Build/Sort/Decide chips, description | **Keep** |
+| Home Build/Sort/Decide chips, description | **Keep** (chip row joins the header group) |
+| Home Sort/Decide chips vs Start sorting vs See your ranking (two paths to Sort and to the Ranking) | **Out of scope** — recorded; follow-up bead (ruling F6) |
 | Home "Created {date}" | **Drop** |
 | Items list: search, pills, grid, tier chip, Archived + Bring back, undo notice | **Move** to the home |
 | Items list "Add photos" / "Add item" buttons | **Move**: Add photos pill in the bar; Add item in the `···` |
@@ -195,20 +292,21 @@ reference: `docs/superpowers/plans/2026-10-01-ux-redesign-pr1-item-panel.md` (Ta
 
 | Area | Create | Modify | Delete |
 |---|---|---|---|
-| Primitives | `src/components/ui/FilterPills.tsx` (+test), `src/components/layout/ActionBar.tsx` | `src/components/ui/index.ts`, `src/components/layout/AppLayout.tsx`, `src/features/items/ItemFilterPills.tsx` (+test) | — |
-| Collections list | `src/features/collections/collectionsList.ts` (+test), `src/features/collections/CollectionCardMenu.tsx` (+test), `src/app/collections/page.test.tsx` | `src/app/collections/page.tsx`, `src/features/collections/CollectionCard.tsx` (+test) | `src/features/collections/CollectionFilters.tsx` |
-| Undo notice | `src/features/items/ArchivedNotice.tsx` (+test, `git mv` from `RemovedItemNotice`) | `src/app/collections/[id]/items/page.tsx` (until Task 6) | `RemovedItemNotice.tsx` (+test) |
-| Home | `src/features/collections/CollectionHomeMenu.tsx` | `src/app/collections/[id]/page.tsx` (+test), `src/features/collections/PhotoPoolPreview.tsx` | `ItemPreviewGrid.tsx`, `workspaceState.ts` (+test) |
-| Retire `/items` | — | `src/app/collections/[id]/items/page.tsx` (→ redirect), `src/lib/collections/retired-redirect.ts`, `…/items/[itemNumber]/{page,edit/page,photos/page}.tsx`, `ItemOverflowMenu.tsx` (+test), `PoolPhotoGrid.tsx` (+test), `src/app/collections/[id]/results/page.tsx`, `breadcrumb-trails.ts` (+test), `page-authz-enumeration.integration.test.ts` | `src/app/collections/[id]/items/page.test.tsx` |
-| E2E / CI | `e2e/lists-and-home.spec.ts` | `e2e/fixtures/seed.ts`, `e2e/item-panel.spec.ts`, `e2e/a11y.spec.ts`, `e2e/image-perf.spec.ts`, `e2e/screenshots/capture.ts`, `.github/workflows/ci.yml` | `e2e/adaptive-collection-workspace.spec.ts` |
+| Primitives | `src/components/ui/FilterPills.tsx` (+test), `src/components/ui/CheckIcon.tsx` (moved), `src/components/layout/ActionBar.tsx` | `src/components/ui/index.ts`, `src/features/items/InYourLifeChip.tsx`, `src/components/layout/AppLayout.tsx`, `src/app/globals.css` (scroll padding), `src/lib/design/contrast.test.ts` (one pair), `src/features/items/ItemFilterPills.tsx` (+test) | — |
+| Collections list | `src/features/collections/collectionsList.ts` (+test), `src/features/collections/CollectionCardMenu.tsx` (+test), `src/features/collections/BroughtBackNotice.tsx`, `src/app/collections/page.test.tsx` | `src/app/collections/page.tsx`, `src/features/collections/CollectionCard.tsx` (+test) | `src/features/collections/CollectionFilters.tsx` |
+| Undo notice | `src/features/items/ArchivedNotice.tsx` (+test, `git mv` from `RemovedItemNotice`) | `src/lib/id.ts` (`isIdShaped`), `src/app/collections/[id]/items/page.tsx` (until Task 6) | `RemovedItemNotice.tsx` (+test) |
+| Home | `src/features/collections/CollectionHomeMenu.tsx` | `src/app/collections/[id]/page.tsx` (+test), `src/features/collections/PhotoPoolPreview.tsx`, `src/lib/items.ts` (+test), `src/features/sorting/AsyncActionButton.tsx` (`fullWidth` → `md`), `src/server/api/items.ts`, `src/server/repositories/implementations/ItemRepository.ts`, `src/lib/db/workspace-preview.integration.test.ts` | `ItemPreviewGrid.tsx`, `workspaceState.ts` (+test), the `limit` option + its two DB tests |
+| Retire `/items` | — | `src/app/collections/[id]/items/page.tsx` (→ redirect) + `page.test.tsx` (rewritten as the redirect's unit test), `src/lib/collections/retired-redirect.ts`, `…/items/[itemNumber]/{page,edit/page,photos/page}.tsx`, `ItemOverflowMenu.tsx` (+test), `PoolPhotoGrid.tsx` (+test), `src/app/collections/[id]/results/page.tsx`, `breadcrumb-trails.ts` (+test), `page-authz-enumeration.integration.test.ts` | — |
+| E2E / CI | `e2e/lists-and-home.spec.ts` | `e2e/fixtures/seed.ts`, `e2e/item-panel.spec.ts`, `e2e/a11y.spec.ts`, `e2e/image-perf.spec.ts`, `e2e/screenshots/capture.ts`, `.github/workflows/ci.yml` (spec names only) | `e2e/adaptive-collection-workspace.spec.ts` |
 | Docs | — | `DESIGN.md` §5, `docs/ARCHITECTURE.md` (decision 23 status, new decision 43) | — |
 
 ---
 
 ## Task 1: `FilterPills` primitive; `ItemFilterPills` delegates and takes a full path
 
-**Files:** Create `src/components/ui/FilterPills.tsx`, `src/components/ui/FilterPills.test.tsx`.
-Modify `src/components/ui/index.ts`, `src/features/items/ItemFilterPills.tsx`,
+**Files:** Create `src/components/ui/FilterPills.tsx`, `src/components/ui/FilterPills.test.tsx`,
+`src/components/ui/CheckIcon.tsx` (moved out of `InYourLifeChip`). Modify `src/components/ui/index.ts`,
+`src/features/items/InYourLifeChip.tsx`, `src/features/items/ItemFilterPills.tsx`,
 `src/features/items/ItemFilterPills.test.tsx`, `src/app/collections/[id]/items/page.tsx` (one prop).
 
 **Interfaces:**
@@ -275,10 +373,17 @@ describe("ItemFilterPills", () => {
 - [ ] **Step 2:** `npx vitest run src/components/ui/FilterPills.test.tsx src/features/items/ItemFilterPills.test.tsx`
   → FAIL (`FilterPills` does not exist; `path` prop unknown, hrefs still carry `/items`).
 
-- [ ] **Step 3: Implement.** `src/components/ui/FilterPills.tsx`:
+- [ ] **Step 3: Implement.** Move the check glyph: create `src/components/ui/CheckIcon.tsx` with the
+`CheckIcon` function cut **verbatim** from `src/features/items/InYourLifeChip.tsx` (export it), and in
+`InYourLifeChip.tsx` delete the local definition and `import { CheckIcon } from "@/components/ui/CheckIcon";`.
+`grep -rn "CheckIcon" src` → only `components/ui/CheckIcon.tsx`, `components/ui/FilterPills.tsx`,
+`features/items/InYourLifeChip.tsx`.
+
+`src/components/ui/FilterPills.tsx`:
 
 ```tsx
 import Link from "next/link";
+import { CheckIcon } from "./CheckIcon";
 
 export interface FilterPill {
   label: string;
@@ -299,11 +404,7 @@ export function FilterPills({ label, pills }: { label: string; pills: FilterPill
               aria-current={pill.current ? "page" : undefined}
               className={`inline-flex h-11 items-center gap-1.5 rounded-pill border px-4 text-sm no-underline ${pill.current ? "border-primary bg-chip font-semibold text-chip-ink" : "border-hairline bg-glass text-ink"}`}
             >
-              {pill.current && (
-                <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-4 w-4">
-                  <path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
+              {pill.current && <CheckIcon />}
               {pill.label}
             </Link>
           </li>
@@ -352,8 +453,8 @@ In `src/app/collections/[id]/items/page.tsx` change
 `<ItemFilterPills base={collectionHref} view={view} q={q} />` to
 `<ItemFilterPills path={`${collectionHref}/items`} view={view} q={q} />` (the page retires in Task 6).
 
-- [ ] **Step 4:** Step 2 command → PASS; `npx vitest run "src/app/collections/[id]/items"` → PASS; `npx tsc --noEmit` → clean.
-- [ ] **Step 5:** `git add src/components/ui/FilterPills.tsx src/components/ui/FilterPills.test.tsx src/components/ui/index.ts src/features/items/ItemFilterPills.tsx src/features/items/ItemFilterPills.test.tsx "src/app/collections/[id]/items/page.tsx" && git commit -m "refactor(ui): FilterPills primitive; item pills take the list path"`
+- [ ] **Step 4:** Step 2 command → PASS; `npx vitest run "src/app/collections/[id]/items" src/features/items` → PASS (InYourLifeChip unchanged in behaviour); `npx tsc --noEmit` → clean.
+- [ ] **Step 5:** `git add src/components/ui/FilterPills.tsx src/components/ui/FilterPills.test.tsx src/components/ui/CheckIcon.tsx src/components/ui/index.ts src/features/items/InYourLifeChip.tsx src/features/items/ItemFilterPills.tsx src/features/items/ItemFilterPills.test.tsx "src/app/collections/[id]/items/page.tsx" && git commit -m "refactor(ui): FilterPills primitive with the shared CheckIcon; item pills take the list path"`
 
 ## Task 2: Collections list rules (pure)
 
@@ -381,11 +482,12 @@ const list = [
   mk({ id: "a", name: "Summer bags", description: "Totes (canvas) and clutches" }),
   mk({ id: "b", name: "Grandma's china", status: "archived" }),
   mk({ id: "c", name: "Books" }),
+  mk({ id: "d", name: "Odd one", status: "deleted" }),
 ];
 
 describe("filterCollections", () => {
-  it("All is the active collections; Archived is the archived ones", () => {
-    expect(ids(filterCollections(list, { view: "all", q: "" }))).toEqual(["a", "c"]);
+  it("All is everything not archived (never silently hides a status); Archived is the archived ones", () => {
+    expect(ids(filterCollections(list, { view: "all", q: "" }))).toEqual(["a", "c", "d"]);
     expect(ids(filterCollections(list, { view: "archived", q: "" }))).toEqual(["b"]);
   });
   it("searches name and description as plain text, case-insensitive, trimmed — never a pattern", () => {
@@ -413,9 +515,12 @@ describe("collectionsEmptyState", () => {
   it("speaks gently per case and never counts", () => {
     expect(collectionsEmptyState({ hasAny: true, view: "all", q: " silk " }).heading).toBe("Nothing matches “silk”");
     expect(collectionsEmptyState({ hasAny: true, view: "archived", q: "" }).heading).toBe("Nothing archived");
-    expect(collectionsEmptyState({ hasAny: false, view: "all", q: "" }).heading).toBe("Nothing here yet");
+    expect(collectionsEmptyState({ hasAny: false, view: "all", q: "" })).toEqual({
+      heading: "Nothing here yet",
+      message: "Start a new collection whenever you’re ready — there’s no rush.",
+    });
     expect(collectionsEmptyState({ hasAny: true, view: "all", q: "" })).toEqual({
-      heading: "Nothing active right now",
+      heading: "Nothing here right now",
       message: "Your archived collections are under Archived.",
     });
   });
@@ -444,16 +549,17 @@ export function collectionsViewHref(view: CollectionsView, q: string): string {
   return `/collections${qs ? `?${qs}` : ""}`;
 }
 
-/** All = active, Archived = archived; plain-text search (never a pattern) over name and description. */
+/** All = not archived (no status is silently hidden), Archived = archived; plain-text
+ *  search (never a pattern) over name and description. */
 export function filterCollections(
   collections: Collection[],
   opts: { view: CollectionsView; q: string },
 ): Collection[] {
-  const status = opts.view === "archived" ? "archived" : "active";
+  const wantArchived = opts.view === "archived";
   const needle = opts.q.trim().toLocaleLowerCase();
   return collections.filter(
     (c) =>
-      c.status === status &&
+      (c.status === "archived") === wantArchived &&
       (!needle || [c.name, c.description].some((text) => text?.toLocaleLowerCase().includes(needle))),
   );
 }
@@ -464,33 +570,40 @@ export function collectionsEmptyState(opts: { hasAny: boolean; view: Collections
   if (opts.view === "archived")
     return { heading: "Nothing archived", message: "Collections you archive rest here, ready to come back whenever you like." };
   if (!opts.hasAny)
-    return { heading: "Nothing here yet", message: "Begin a collection whenever you’re ready — there’s no rush." };
-  return { heading: "Nothing active right now", message: "Your archived collections are under Archived." };
+    return { heading: "Nothing here yet", message: "Start a new collection whenever you’re ready — there’s no rush." };
+  return { heading: "Nothing here right now", message: "Your archived collections are under Archived." };
 }
 ```
 
 - [ ] **Step 4:** Step 2 command → PASS.
-- [ ] **Step 5:** `git add src/features/collections/collectionsList.ts src/features/collections/collectionsList.test.ts && git commit -m "feat(collections): list rules — All/Archived views, plain-text search, gentle empty states"`
+- [ ] **Step 5:** `git add src/features/collections/collectionsList.ts src/features/collections/collectionsList.test.ts && git commit -m "feat(collections): list rules — All (not archived)/Archived views, plain-text search, gentle empty states"`
 
-## Task 3: Collection card `···` (owner) and the shared Archived notice
+## Task 3: Collection card `···` (owner), the shared Archived notice, and the id-shape guard
 
 **Files:** Create `src/features/collections/CollectionCardMenu.tsx`,
-`src/features/collections/CollectionCardMenu.test.tsx`. Modify
-`src/features/collections/CollectionCard.tsx`, `src/features/collections/CollectionCard.test.tsx`.
+`src/features/collections/CollectionCardMenu.test.tsx`, `src/features/collections/BroughtBackNotice.tsx`.
+Modify `src/features/collections/CollectionCard.tsx`, `src/features/collections/CollectionCard.test.tsx`,
+`src/lib/id.ts` (no new test: see Step 1).
 `git mv` `src/features/items/RemovedItemNotice.tsx` → `src/features/items/ArchivedNotice.tsx` and its
 test → `ArchivedNotice.test.tsx`; modify both; modify `src/app/collections/[id]/items/page.tsx` (the
 notice call) and the comment in `src/features/items/ItemOverflowMenu.tsx` that names `RemovedItemNotice`.
 
 **Interfaces:**
+- Produces: `isIdShaped(value: unknown): value is string` in `src/lib/id.ts` — `^[a-z]+_[0-9a-z]{1,40}$`
+  (every `generateId` id, and the short test ids like `item_9`, `col_a`); no `/`, `.`, `#`, `?`, `%`.
 - Produces: `CollectionCard({ collection, coverPhotoUrl?, hasPooledPhotos?, menu? })` — `menu?: React.ReactNode`
-  renders top-right above the stretched link; **`viewerPhoto` is removed**.
-- Produces: `CollectionCardMenu({ collectionId, name, href, archived })` — `collectionId` is the ULID
-  (the API takes the id), `href` is `/collections/{slug ?? id}`; trigger label `More for {name}`;
-  items `Collection settings`, `Members`, then `Archive` or `Bring back`. Archive success →
-  `router.push("/collections?removed={collectionId}")`; Bring back success → `router.refresh()`;
-  failure → `role="alert"` "That didn’t go through. Try again."
-- Produces: `ArchivedNotice({ restoreUrl }: { restoreUrl: string })` — same copy and behaviour as
-  PR 1's `RemovedItemNotice` (focus on mount, Undo → POST `restoreUrl` → strip `removed`, Done → strip `removed`).
+  renders top-right above the stretched link; **`viewerPhoto` is removed**; **no status badge**.
+- Produces: `CollectionCardMenu({ collectionId, name, href, archived, q })` — `collectionId` is the ULID
+  (the API takes the id), `href` is `/collections/{slug ?? id}`, `q` the list's current query; trigger
+  label `More for {name}` (`compact`); items `Collection settings`, `Members`, then `Archive` or
+  `Bring back`. Archive success → `router.push("/collections?q={q}&removed={collectionId}")` (`q` omitted
+  when empty); Bring back success → `router.push("/collections?status=archived&q={q}&restored={collectionId}")`;
+  failure → `role="alert"` "That didn’t go through. Try again." (`rounded-control`).
+- Produces: `ArchivedNotice({ kind, id }: { kind: "item" | "collection"; id: string })` — same copy and
+  behaviour as PR 1's `RemovedItemNotice` (focus on mount, Undo → POST
+  `/api/{items|collections}/{encodeURIComponent(id)}/restore` → strip `removed`, Done → strip `removed`).
+  **No URL prop** — callers can never aim Undo at another route.
+- Produces: `BroughtBackNotice()` — a focused `role="status"` line "Brought back. It’s under All."
 
 - [ ] **Step 1: Failing tests.** `src/features/collections/CollectionCardMenu.test.tsx`:
 
@@ -506,31 +619,32 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh }) }));
 
 import { CollectionCardMenu } from "./CollectionCardMenu";
 
-const props = { collectionId: "col_1", name: "Summer bags", href: "/collections/summer-bags" };
+const props = { collectionId: "col_1", name: "Summer bags", href: "/collections/summer-bags", q: "tote" };
 const open = () => fireEvent.click(screen.getByRole("button", { name: "More for Summer bags" }));
 
 beforeEach(() => vi.clearAllMocks());
 afterEach(() => vi.unstubAllGlobals());
 
 describe("CollectionCardMenu", () => {
-  it("offers settings, members and Archive; Archive lands on the list with the undo notice", async () => {
+  it("offers settings, members and Archive; Archive keeps the search and lands with the undo notice", async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal("fetch", fetchMock);
     render(<CollectionCardMenu {...props} archived={false} />);
     open();
     expect(screen.getAllByRole("menuitem").map((m) => m.textContent)).toEqual(["Collection settings", "Members", "Archive"]);
     fireEvent.click(screen.getByRole("menuitem", { name: "Archive" }));
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/collections?removed=col_1"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/collections?q=tote&removed=col_1"));
     expect(fetchMock).toHaveBeenCalledWith("/api/collections/col_1/archive", { method: "POST" });
   });
 
-  it("in the Archived view offers Bring back, which restores in place", async () => {
+  it("in the Archived view offers Bring back, which lands on the same view with the brought-back line", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
-    render(<CollectionCardMenu {...props} archived />);
+    render(<CollectionCardMenu {...props} q="" archived />);
     open();
     fireEvent.click(screen.getByRole("menuitem", { name: "Bring back" }));
-    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/collections?status=archived&restored=col_1"));
     expect(fetch).toHaveBeenCalledWith("/api/collections/col_1/restore", { method: "POST" });
+    expect(refresh).not.toHaveBeenCalled(); // a bare refresh dropped focus with no feedback
   });
 
   it("a failed archive stays put and says so", async () => {
@@ -555,36 +669,57 @@ In `src/features/collections/CollectionCard.test.tsx` delete the two `viewerPhot
 'View photo' control…" and "renders no 'View photo' control…") and add to `describe("CollectionCard images")`:
 
 ```tsx
-  it("renders the menu slot alongside the single navigating link", () => {
-    render(<CollectionCard collection={collection as any} menu={<button type="button">More</button>} />);
+  it("renders the menu slot alongside the single navigating link, and no status badge", () => {
+    render(
+      <CollectionCard
+        collection={{ ...collection, status: "archived" } as any}
+        menu={<button type="button">More</button>}
+      />,
+    );
     expect(screen.getByRole("button", { name: "More" })).toBeInTheDocument();
     expect(screen.getAllByRole("link")).toHaveLength(1);
     expect(screen.queryByRole("button", { name: /view photo/i })).not.toBeInTheDocument();
+    expect(screen.queryByText("archived")).not.toBeInTheDocument(); // the Archived pill says it
   });
 ```
 
 Rename the notice: `git mv src/features/items/RemovedItemNotice.tsx src/features/items/ArchivedNotice.tsx`
 and `git mv src/features/items/RemovedItemNotice.test.tsx src/features/items/ArchivedNotice.test.tsx`.
 In the test, replace the import with `import { ArchivedNotice } from "./ArchivedNotice";`, every
-`<RemovedItemNotice itemId="…" />` render with `<ArchivedNotice restoreUrl="/api/items/<same id>/restore" />`,
-and add one test:
+`<RemovedItemNotice itemId="…" />` render with `<ArchivedNotice kind="item" id="<same id>" />`
+(the existing tests keep asserting `/api/items/<id>/restore`), and add **one** test:
 
 ```tsx
-  it("posts to the restore URL it is given (collections reuse it)", async () => {
+  it("builds the restore URL from kind and id, encoded — a hostile id cannot aim Undo elsewhere", async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal("fetch", fetchMock);
-    render(<ArchivedNotice restoreUrl="/api/collections/col_9/restore" />);
+    render(<ArchivedNotice kind="collection" id="../col_9/archive#" />);
     fireEvent.click(screen.getByRole("button", { name: "Undo" }));
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/api/collections/col_9/restore", { method: "POST" }));
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith("/api/collections/..%2Fcol_9%2Farchive%23/restore", { method: "POST" }),
+    );
   });
 ```
 
 (Import `fireEvent`/`waitFor`/`vi` if the file does not already; unstub globals in an `afterEach`.)
 
-- [ ] **Step 2:** `npx vitest run src/features/collections src/features/items/ArchivedNotice.test.tsx` → FAIL
-  (`CollectionCardMenu` missing; `menu` slot not rendered; `ArchivedNotice` export missing).
+`isIdShaped` needs no separate test (a one-line regex): it is exercised by the Task 4, 5 and 6 tests
+that feed it a `../` value.
 
-- [ ] **Step 3: Implement.** `src/features/collections/CollectionCardMenu.tsx`:
+- [ ] **Step 2:** `npx vitest run src/features/collections src/features/items/ArchivedNotice.test.tsx` → FAIL
+  (`CollectionCardMenu` missing; `menu` slot not rendered; badge still rendered; `ArchivedNotice` export missing).
+
+- [ ] **Step 3: Implement.** `src/lib/id.ts` — append:
+
+```ts
+/** A value shaped like one of our ids (`prefix_` + lowercase base32). URL params that
+ *  name an id (`?removed=`, `?restored=`) pass this before they are used or copied. */
+export function isIdShaped(value: unknown): value is string {
+  return typeof value === "string" && /^[a-z]+_[0-9a-z]{1,40}$/.test(value);
+}
+```
+
+`src/features/collections/CollectionCardMenu.tsx`:
 
 ```tsx
 "use client";
@@ -600,12 +735,17 @@ interface CollectionCardMenuProps {
   /** `/collections/{slug ?? id}`. */
   href: string;
   archived: boolean;
+  /** The list's current search, kept across the landing. */
+  q: string;
 }
 
 // Rendered for the owner only: every action here is collection:manage server-side.
 // Archive is the existing reversible status flip; its Undo waits on the list
-// (ArchivedNotice, keyed by ?removed=). Permanent delete stays on the settings page.
-export function CollectionCardMenu({ collectionId, name, href, archived }: CollectionCardMenuProps) {
+// (ArchivedNotice, keyed by ?removed=). Bring back lands on the same Archived view with
+// a focused "Brought back" line (BroughtBackNotice, keyed by ?restored=) — the card
+// leaves the list, so a bare refresh would drop focus silently. Permanent delete stays
+// on the settings page.
+export function CollectionCardMenu({ collectionId, name, href, archived, q }: CollectionCardMenuProps) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -616,8 +756,11 @@ export function CollectionCardMenu({ collectionId, name, href, archived }: Colle
     const res = await fetch(`/api/collections/${collectionId}/${action}`, { method: "POST" }).catch(() => null);
     setBusy(false);
     if (!res?.ok) return setFailed(true);
-    if (action === "archive") router.push(`/collections?removed=${collectionId}`);
-    else router.refresh();
+    const p = new URLSearchParams();
+    if (action === "restore") p.set("status", "archived");
+    if (q) p.set("q", q);
+    p.set(action === "archive" ? "removed" : "restored", collectionId);
+    router.push(`/collections?${p}`);
   }
 
   const items: OverflowMenuItem[] = [
@@ -630,9 +773,10 @@ export function CollectionCardMenu({ collectionId, name, href, archived }: Colle
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <OverflowMenu label={`More for ${name}`} items={items} />
+      {/* compact: a raised 28px chip over the cover photo, 44px hit area */}
+      <OverflowMenu label={`More for ${name}`} items={items} compact />
       {failed && (
-        <p role="alert" className="rounded-pill bg-surface-raised px-3 py-1 text-sm text-ink shadow-lift">
+        <p role="alert" className="rounded-control bg-surface-raised px-3 py-1 text-sm text-ink shadow-lift">
           That didn’t go through. Try again.
         </p>
       )}
@@ -641,11 +785,33 @@ export function CollectionCardMenu({ collectionId, name, href, archived }: Colle
 }
 ```
 
-`src/features/collections/CollectionCard.tsx` — replace the props and the two edges of the JSX:
+`src/features/collections/BroughtBackNotice.tsx`:
+
+```tsx
+"use client";
+
+import { useEffect, useRef } from "react";
+
+// After Bring back from a card in the Archived view the card leaves this list, so focus
+// lands here and says where it went (a server-rendered live region is not announced on
+// a fresh navigation; the focus move is). The page renders it only for a verified id.
+export function BroughtBackNotice() {
+  const ref = useRef<HTMLParagraphElement>(null);
+  useEffect(() => ref.current?.focus(), []);
+  return (
+    <p ref={ref} tabIndex={-1} role="status" className="rounded-card bg-surface p-4 text-sm text-ink ring-1 ring-hairline outline-hidden">
+      Brought back. It&rsquo;s under All.
+    </p>
+  );
+}
+```
+
+`src/features/collections/CollectionCard.tsx` — replace the props, drop the `Badge` and
+`PhotoViewControl` imports (keep `Card`), and the two edges of the JSX:
 
 ```tsx
 import type { Collection } from "@/types";
-import { Badge, Card } from "@/components/ui";
+import { Card } from "@/components/ui";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -661,8 +827,16 @@ interface CollectionCardProps {
 export function CollectionCard({ collection, coverPhotoUrl, hasPooledPhotos, menu }: CollectionCardProps) {
 ```
 
-Keep the cover block and the body as they are, except the body padding `p-5` → `p-3` (two columns on
-a phone). Replace the last two lines inside `<Card>` (the `<Link>` stays; the `PhotoViewControl` line goes) with:
+Keep the cover block as it is. The body is laid out for the 2-up phone grid: padding `p-5` → `p-3`,
+and the name row loses its flex wrapper and the status badge (the Archived pill says it):
+
+```tsx
+      <div className="flex flex-1 flex-col gap-2 p-3">
+        <h3 className="min-w-0 break-words font-display text-lg text-ink line-clamp-2">{collection.name}</h3>
+```
+
+(the description and the "Photos waiting" cue stay; on the cue `rounded-full` → `rounded-pill`). Replace
+the last two lines inside `<Card>` (the `<Link>` stays; the `PhotoViewControl` line goes) with:
 
 ```tsx
       <Link
@@ -679,41 +853,44 @@ and update the stretched-link comment to name the menu instead of the view contr
 
 ```tsx
 interface ArchivedNoticeProps {
-  /** POST endpoint that undoes the archive: /api/items/{id}/restore or /api/collections/{id}/restore. */
-  restoreUrl: string;
+  kind: "item" | "collection";
+  id: string;
 }
 
 // The undo half of an archive (an item from its panel, a collection from its card):
 // the archiving surface lands on the list with ?removed=<id>; this notice …(keep the rest of the comment)
-export function ArchivedNotice({ restoreUrl }: ArchivedNoticeProps) {
+// The restore URL is built HERE from kind + an encoded id — never passed in — so a
+// hostile ?removed= (e.g. "../collections/x/archive#") cannot aim Undo at another route.
+export function ArchivedNotice({ kind, id }: ArchivedNoticeProps) {
 ```
 
-and in `restore()` use `const res = await fetch(restoreUrl, { method: "POST" });`.
+and in `restore()` use
+``const res = await fetch(`/api/${kind === "item" ? "items" : "collections"}/${encodeURIComponent(id)}/restore`, { method: "POST" });``.
 In `src/app/collections/[id]/items/page.tsx`: import `ArchivedNotice` from `@/features/items/ArchivedNotice`
-and render `<ArchivedNotice restoreUrl={`/api/items/${searchParams.removed}/restore`} />`. In
+and render `<ArchivedNotice kind="item" id={searchParams.removed} />` (the page retires in Task 6). In
 `ItemOverflowMenu.tsx`'s header comment replace `RemovedItemNotice` with `ArchivedNotice`. Then
-`grep -rn "RemovedItemNotice" src e2e` → prints nothing.
+`grep -rn "RemovedItemNotice\|restoreUrl" src e2e` → prints nothing.
 
 - [ ] **Step 4:** Step 2 command → PASS; `npx tsc --noEmit` → the only errors are in
-  `src/app/collections/page.tsx` (`viewerPhoto`), fixed in Task 4 — note them, do not patch here
-  beyond deleting the `viewerPhoto={…}` prop so the build stays green.
-- [ ] **Step 5:** `git add -A src/features/collections src/features/items "src/app/collections/[id]/items/page.tsx" src/app/collections/page.tsx && git commit -m "feat(collections): owner ··· on cards (settings, members, archive); shared ArchivedNotice"`
+  `src/app/collections/page.tsx` (`viewerPhoto`), fixed in Task 4 — note them, do not patch here beyond deleting the `viewerPhoto={…}` prop so the build stays green.
+- [ ] **Step 5:** `git add -A src/features/collections src/features/items src/lib/id.ts "src/app/collections/[id]/items/page.tsx" src/app/collections/page.tsx && git commit -m "feat(collections): owner ··· on cards (settings, members, archive, bring back); ArchivedNotice builds its own restore URL"`
 
 ## Task 4: `ActionBar`, and `/collections` becomes the searchable cover-card grid
 
 **Files:** Create `src/components/layout/ActionBar.tsx`, `src/app/collections/page.test.tsx`. Modify
-`src/components/layout/AppLayout.tsx`, `src/app/collections/page.tsx`. Delete
-`src/features/collections/CollectionFilters.tsx`.
+`src/components/layout/AppLayout.tsx`, `src/app/globals.css` (one rule), `src/lib/design/contrast.test.ts`
+(one pair), `src/app/collections/page.tsx`. Delete `src/features/collections/CollectionFilters.tsx`.
 
 **Interfaces:**
 - Consumes: Task 1 `FilterPills`; Task 2 `collectionsViewFrom`, `collectionsViewHref`,
   `filterCollections`, `collectionsEmptyState`, `COLLECTION_PILLS`; Task 3 `CollectionCard.menu`,
-  `CollectionCardMenu`, `ArchivedNotice`.
+  `CollectionCardMenu({ …, q })`, `ArchivedNotice({ kind, id })`, `BroughtBackNotice`, `isIdShaped`.
 - Produces: `ActionBar({ label, children }: { label: string; children: React.ReactNode })` — a
-  `<section aria-label={label}>`; pages import it from `@/components/layout/ActionBar` (not the
+  `<section aria-label={label} data-action-bar>`; pages import it from `@/components/layout/ActionBar` (not the
   barrel, so page tests can keep mocking `@/components/layout`). `AppLayout` gains
   `reserveActionBar?: boolean`.
-- URL contract for `/collections`: `?status=archived`, `?q=` (≤ 100), `?removed=<collectionId>`.
+- URL contract for `/collections`: `?status=archived`, `?q=` (≤ 100), `?removed=<collectionId>`,
+  `?restored=<collectionId>`.
 
 - [ ] **Step 1: Failing test** `src/app/collections/page.test.tsx`:
 
@@ -774,6 +951,8 @@ describe("/collections: cover-card grid, search, All / Archived, owner ···", 
     expect(within(bar).getByRole("link", { name: "New collection" })).toHaveAttribute("href", "/collections/new");
     expect(container.querySelectorAll(".bg-primary")).toHaveLength(1);
     expect(screen.getByRole("link", { name: "All" })).toHaveAttribute("aria-current", "page");
+    // Browser zoom shrinks the viewport below md AND short: never two fixed bands.
+    expect(bar.className).toContain("[@media(max-height:500px)]:static");
   });
 
   it("Archived lists archived collections, with Bring back in the owner's menu", async () => {
@@ -798,6 +977,12 @@ describe("/collections: cover-card grid, search, All / Archived, owner ···", 
     expect(screen.getByRole("link", { name: "Archived" })).toHaveAttribute("href", "/collections?status=archived&q=china");
   });
 
+  it("a search with no match offers a quiet Clear search back to the same view", async () => {
+    await renderPage({ status: "archived", q: "zzz" });
+    expect(screen.getByRole("heading", { name: "Nothing matches “zzz”" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Clear search" })).toHaveAttribute("href", "/collections?status=archived");
+  });
+
   it("ignores a repeated q key and caps the query at 100 characters", async () => {
     await renderPage({ q: ["a", "b"] });
     expect(screen.getByRole("searchbox", { name: "Search your collections" })).toHaveValue("");
@@ -806,16 +991,33 @@ describe("/collections: cover-card grid, search, All / Archived, owner ···", 
   });
 
   it("shows Undo only for the viewer's own collection that is archived now", async () => {
+    const SHARED_ARCHIVED = mk({ id: "col_d", ownerId: "someone-else", name: "Their attic", status: "archived" });
+    collectionController.listCollections.mockResolvedValue([MINE, SHARED, ARCHIVED, SHARED_ARCHIVED]);
     await renderPage({ removed: "col_c" });
     expect(screen.getByRole("status")).toHaveTextContent(/^Archived\./);
-    for (const removed of ["col_a" /* restored already */, "col_zzz" /* not theirs */]) {
+    for (const removed of [
+      "col_a" /* restored already */,
+      "col_zzz" /* not in their list */,
+      "col_d" /* archived, but shared — not theirs to restore */,
+      "../col_c/archive#" /* not id-shaped */,
+    ]) {
       document.body.innerHTML = "";
       await renderPage({ removed });
       expect(screen.queryByRole("status")).not.toBeInTheDocument();
     }
   });
 
-  it("reads covers and the pool cue for the visible collections only (the access boundary)", async () => {
+  it("after Bring back, a focused line says where it went — only for the viewer's own, now-active collection", async () => {
+    await renderPage({ status: "archived", restored: "col_a" });
+    expect(screen.getByRole("status")).toHaveTextContent("Brought back. It’s under All.");
+    for (const restored of ["col_c" /* still archived */, "col_b" /* shared */, "../x"]) {
+      document.body.innerHTML = "";
+      await renderPage({ status: "archived", restored });
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    }
+  });
+
+  it("reads covers and the pool cue for the visible collections only", async () => {
     await renderPage();
     expect(photoController.findCoverPhotosByCollectionIds).toHaveBeenCalledWith(["col_a", "col_b"]);
     expect(photoController.findCollectionIdsWithPooledPhotos).toHaveBeenCalledWith(["col_a", "col_b"]);
@@ -824,7 +1026,7 @@ describe("/collections: cover-card grid, search, All / Archived, owner ···", 
   it("gentle empty state with no button inside it (the bar carries New collection)", async () => {
     collectionController.listCollections.mockResolvedValue([ARCHIVED]);
     await renderPage();
-    expect(screen.getByRole("heading", { name: "Nothing active right now" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Nothing here right now" })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /collection/i }).map((l) => l.textContent)).toEqual(["New collection"]);
   });
 });
@@ -832,6 +1034,17 @@ describe("/collections: cover-card grid, search, All / Archived, owner ···", 
 
 (`role="status"` is the `ArchivedNotice` container; the `mockRedirect` only fires for the
 not-signed-in and first-run cases, which keep their existing tests in `src/features/onboarding`.)
+
+`src/lib/design/contrast.test.ts` — in `pairings()`, after the `"primary border on surface"` line, add
+the text guard that `quietLink`'s comment already claims (quiet links inside cards: the strip's Make
+items, Clear search, See your ranking over `surface`):
+
+```ts
+    [t.primary, t.surface, 4.5, "primary link text on surface (quiet links in cards)"],
+```
+
+This is a guard, expected to pass on today's tokens; if it fails, stop and report — no token change
+in PR 3.
 
 - [ ] **Step 2:** `npx vitest run src/app/collections/page.test.tsx` → FAIL.
 
@@ -848,14 +1061,19 @@ interface ActionBarProps {
 
 // The page's one primary action (spec §5). From `md` up it is an inline row where
 // the page places it; below `md` (phones) it is fixed to the bottom on glass-strong,
-// AA from its own ≥0.85 opacity, never from what scrolls behind it. One DOM node for
-// both, so the action is never duplicated. Pages that use it set AppLayout's
-// reserveActionBar so the last row and the footer never sit behind it.
+// AA from its own ≥0.85 opacity, never from what scrolls behind it. On a short
+// viewport (browser zoom) it stays static — never a second fixed band. One DOM node
+// for both, so the action is never duplicated. Pages that use it set AppLayout's
+// reserveActionBar (9rem: the bar plus a two-line error) so the last row and the
+// footer never sit behind it; data-action-bar drives the matching scroll padding
+// (globals.css) so a focused bottom-row card scrolls clear of it. No safe-area
+// padding: the root viewport is not viewportFit "cover", so the inset is always 0.
 export function ActionBar({ label, children }: ActionBarProps) {
   return (
     <section
       aria-label={label}
-      className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-rim bg-glass-strong px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-lift backdrop-blur-md [&>*:first-child]:flex-1 md:static md:z-auto md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none md:[&>*:first-child]:flex-none"
+      data-action-bar
+      className="fixed inset-x-0 bottom-0 z-30 flex items-end gap-3 border-t border-rim bg-glass-strong px-4 py-3 shadow-lift backdrop-blur-md [&>*:first-child]:flex-1 [@media(max-height:500px)]:static md:static md:z-auto md:items-center md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none md:[&>*:first-child]:flex-none"
     >
       {children}
     </section>
@@ -863,12 +1081,30 @@ export function ActionBar({ label, children }: ActionBarProps) {
 }
 ```
 
+(`items-end`: if the primary's AsyncActionButton shows its error line under the button, the pill
+stays aligned to the button row's bottom edge rather than floating mid-column.)
+
 `src/components/layout/AppLayout.tsx`: add `reserveActionBar?: boolean` to `AppLayoutProps`, destructure
 it, and change the root to
 
 ```tsx
-    <div className={`flex min-h-screen flex-col bg-ground ${reserveActionBar ? "pb-24 md:pb-0" : ""}`}>
+    <div className={`flex min-h-screen flex-col bg-ground ${reserveActionBar ? "pb-36 md:pb-0" : ""}`}>
 ```
+
+`src/app/globals.css` — append (plain CSS; the bar is fixed only below `md` and above 500px tall):
+
+```css
+/* ActionBar is fixed on phones: keep keyboard-focused / scrolled-to content above it.
+   9rem matches AppLayout's reserveActionBar (pb-36). */
+@media (max-width: 767.98px) and (min-height: 501px) {
+  html:has([data-action-bar]) {
+    scroll-padding-bottom: 9rem;
+  }
+}
+```
+
+(Asserted for real in Task 7's phone e2e via `getComputedStyle(document.documentElement).scrollPaddingBottom`;
+jsdom does not evaluate `:has()`.)
 
 `src/app/collections/page.tsx` — replace the file:
 
@@ -886,6 +1122,7 @@ import { trail } from "@/components/layout/breadcrumb-trails";
 import { Button, EmptyState, FilterPills, Input, buttonVariants } from "@/components/ui";
 import { CollectionCard } from "@/features/collections/CollectionCard";
 import { CollectionCardMenu } from "@/features/collections/CollectionCardMenu";
+import { BroughtBackNotice } from "@/features/collections/BroughtBackNotice";
 import {
   COLLECTION_PILLS,
   collectionsEmptyState,
@@ -896,12 +1133,14 @@ import {
 import { ArchivedNotice } from "@/features/items/ArchivedNotice";
 import { DISMISS_KEY } from "@/features/onboarding/dismissal";
 import { shouldShowWelcome } from "@/features/onboarding/gate";
+import { isIdShaped } from "@/lib/id";
+import { quietLink } from "@/lib/design/quiet-link";
 import Link from "next/link";
 
 type Param = string | string[] | undefined;
 
 interface CollectionsPageProps {
-  searchParams?: Promise<{ status?: Param; q?: Param; removed?: Param }>;
+  searchParams?: Promise<{ status?: Param; q?: Param; removed?: Param; restored?: Param }>;
 }
 
 export default async function CollectionsPage(props: CollectionsPageProps) {
@@ -935,14 +1174,15 @@ export default async function CollectionsPage(props: CollectionsPageProps) {
     photoController.findCoverPhotosByCollectionIds(visibleIds),
     photoController.findCollectionIdsWithPooledPhotos(visibleIds),
   ]);
-  // The undo notice only for one of the viewer's own collections that is archived
-  // right now — a stale, restored or foreign id renders nothing.
-  const removed = searchParams?.removed;
-  const justArchived =
-    typeof removed === "string" &&
-    collections.some((c) => c.id === removed && c.status === "archived" && c.ownerId === session.user.id)
-      ? removed
+  // The undo / brought-back lines only for one of the viewer's OWN collections in the
+  // matching state right now — a stale, restored, shared, foreign or junk id renders nothing.
+  const ownIn = (param: Param, archived: boolean) =>
+    isIdShaped(param) &&
+    collections.some((c) => c.id === param && c.ownerId === session.user.id && (c.status === "archived") === archived)
+      ? param
       : null;
+  const justArchived = ownIn(searchParams?.removed, true);
+  const broughtBack = ownIn(searchParams?.restored, false);
 
   return (
     <AppLayout breadcrumbs={trail.collections()} reserveActionBar>
@@ -959,7 +1199,8 @@ export default async function CollectionsPage(props: CollectionsPageProps) {
           </ActionBar>
         </div>
 
-        {justArchived && <ArchivedNotice restoreUrl={`/api/collections/${justArchived}/restore`} />}
+        {justArchived && <ArchivedNotice kind="collection" id={justArchived} />}
+        {broughtBack && <BroughtBackNotice />}
 
         <div className="space-y-4">
           <form role="search" action="/collections" className="flex items-end gap-2">
@@ -983,7 +1224,14 @@ export default async function CollectionsPage(props: CollectionsPageProps) {
         </div>
 
         {visible.length === 0 ? (
-          <EmptyState heading={empty.heading} message={empty.message} />
+          <div className="flex flex-col items-center">
+            <EmptyState heading={empty.heading} message={empty.message} />
+            {q && (
+              <Link href={collectionsViewHref(view, "")} className={quietLink}>
+                Clear search
+              </Link>
+            )}
+          </div>
         ) : (
           <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {visible.map((collection) => {
@@ -1002,6 +1250,7 @@ export default async function CollectionsPage(props: CollectionsPageProps) {
                           name={collection.name}
                           href={href}
                           archived={collection.status === "archived"}
+                          q={q}
                         />
                       ) : undefined
                     }
@@ -1019,25 +1268,37 @@ export default async function CollectionsPage(props: CollectionsPageProps) {
 
 `git rm -q src/features/collections/CollectionFilters.tsx`; `grep -rn "CollectionFilters" src` → nothing.
 
-- [ ] **Step 4:** Step 2 command → PASS; `npx vitest run src/features/collections src/components` → PASS;
+- [ ] **Step 4:** Step 2 command → PASS; `npx vitest run src/features/collections src/components src/lib/design/contrast.test.ts` → PASS;
   `npm run build` → PASS.
-- [ ] **Step 5:** `git add -A src/components/layout src/app/collections/page.tsx src/app/collections/page.test.tsx src/features/collections && git commit -m "feat(collections): searchable cover-card grid with All/Archived pills and a phone action bar"`
+- [ ] **Step 5:** `git add -A src/components/layout src/app/globals.css src/lib/design/contrast.test.ts src/app/collections/page.tsx src/app/collections/page.test.tsx src/features/collections && git commit -m "feat(collections): searchable cover-card grid with All/Archived pills and a phone action bar"`
 
 ## Task 5: The collection home becomes the items grid
 
 **Files:** Create `src/features/collections/CollectionHomeMenu.tsx`. Modify
 `src/app/collections/[id]/page.tsx`, `src/app/collections/[id]/page.test.tsx` (rewrite),
-`src/features/collections/PhotoPoolPreview.tsx`. Delete `src/features/collections/ItemPreviewGrid.tsx`,
-`src/features/collections/workspaceState.ts`, `src/features/collections/workspaceState.test.ts`.
+`src/features/collections/PhotoPoolPreview.tsx`, `src/lib/items.ts` + `src/lib/items.test.ts` (one
+empty-state branch), `src/features/sorting/AsyncActionButton.tsx` (`fullWidth` breakpoint),
+`src/server/repositories/implementations/ItemRepository.ts` + `src/server/api/items.ts` (drop `limit`),
+`src/lib/db/workspace-preview.integration.test.ts` (drop two `limit` tests). Delete
+`src/features/collections/ItemPreviewGrid.tsx`, `src/features/collections/workspaceState.ts`,
+`src/features/collections/workspaceState.test.ts`.
 
 **Interfaces:**
-- Consumes: Task 1 `ItemFilterPills({ path, view, q })`; Task 3 `ArchivedNotice({ restoreUrl })`;
-  Task 4 `ActionBar`, `AppLayout reserveActionBar`; PR 1 `filterItems`, `itemsEmptyState`, `ItemCard`,
-  `ArchivedItemCard`, `ItemController.listArchived`; PR 2 `KeepSortingButton`.
+- Consumes: Task 1 `ItemFilterPills({ path, view, q })`, `itemsViewHref`; Task 3 `ArchivedNotice({ kind, id })`,
+  `isIdShaped`; Task 4 `ActionBar`, `AppLayout reserveActionBar`; PR 1 `filterItems`, `itemsEmptyState`,
+  `ItemCard`, `ArchivedItemCard`, `ItemController.listArchived`; PR 2 `KeepSortingButton`.
 - Produces: `CollectionHomeMenu({ href, name, isOwner })` — trigger `More for {name}`; items `Add item`
   (+ owner: `Collection settings`, `Members`). `PhotoPoolPreview({ collectionId, poolHref, photos, showLink })`
-  — region named **Photos waiting**; `actionVariant` removed.
-- Home URL contract (moved from `/items`): `?status=archived`, `?unnamed=1`, `?q=` (≤ 100), `?removed=<itemId>`.
+  — region named **Photos waiting**; `actionVariant` removed; with `showLink` false the thumbnail strip
+  is one link to the pool named by the heading.
+- Produces: `itemsEmptyState({ hasAnyItems, hasArchived?, view, q })` — `hasArchived` adds the "all
+  archived" branch.
+- Produces: `FindByCollectionOptions = { orderBy?: "number" }` (no `limit`).
+- Home URL contract (moved from `/items`): `?status=archived`, `?unnamed=1`, `?q=` (≤ 100), `?removed=<itemId>`
+  (shown only for an archived item of this collection).
+
+> **Size note:** this is the largest task. If the subagent's context runs short, split Step 3e (the
+> `limit` deletion) into its own commit/task — it is independent of the page.
 
 - [ ] **Step 1: Failing test.** Rewrite `src/app/collections/[id]/page.test.tsx`. Keep its imports,
   `COLLECTION_ID`, `makeCollection`, `makePoolPhoto`, `makeItem`, `makeSession` and the arg-sensitive
@@ -1060,7 +1321,9 @@ vi.mock("next/navigation", () => ({
 }));
 ```
 
-(the other `vi.mock` lines stay). In `beforeEach` add `itemRepo.findArchivedByCollection.mockResolvedValue([])`.
+(the other `vi.mock` lines stay). In `beforeEach` add `itemRepo.findArchivedByCollection.mockResolvedValue([])`
+(the home always reads this collection's archived items: they verify `?removed=` and drive the
+"all archived" empty state).
 `renderPage` takes search params:
 
 ```tsx
@@ -1086,8 +1349,11 @@ describe("the home is the items grid", () => {
     expect(screen.getByRole("link", { name: "Tote" })).toHaveAttribute("href", "/collections/summer-bags/items/1");
     expect(screen.getByRole("link", { name: "Clutch" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Love" })).toBeInTheDocument();
-    expect(itemRepo.findByCollection).toHaveBeenCalledWith(COLLECTION_ID, undefined); // no preview bound
+    // Every live item, in number order — the repository only sorts when asked; no preview bound.
+    expect(itemRepo.findByCollection).toHaveBeenCalledWith(COLLECTION_ID, { orderBy: "number" });
     expect(screen.queryByRole("link", { name: "View all items" })).not.toBeInTheDocument();
+    // TONE: the home never counts.
+    expect(screen.queryByText(/\d+ items?\b/)).not.toBeInTheDocument();
   });
 
   it("Archived lists soft-deleted items with Bring back and no panel link", async () => {
@@ -1107,13 +1373,40 @@ describe("the home is the items grid", () => {
     expect(screen.getByRole("link", { name: "Archived" })).toHaveAttribute("href", "/collections/summer-bags?status=archived&q=tote");
   });
 
-  it("shows the undo notice only while that item is no longer live", async () => {
+  it("ignores a repeated q key, caps the query at 100, and a miss offers Clear search", async () => {
     itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
+    await renderPage({ q: ["a", "b"] });
+    expect(screen.getByRole("searchbox", { name: "Search your items" })).toHaveValue("");
+    document.body.innerHTML = "";
+    await renderPage({ q: "x".repeat(150) });
+    expect(screen.getByRole("searchbox", { name: "Search your items" })).toHaveValue("x".repeat(100));
+    document.body.innerHTML = "";
+    await renderPage({ unnamed: "1", q: "zzz" });
+    expect(screen.getByRole("heading", { name: "Nothing matches “zzz”" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Clear search" })).toHaveAttribute("href", "/collections/summer-bags?unnamed=1");
+  });
+
+  it("shows the undo notice only for an archived item of this collection", async () => {
+    itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
+    itemRepo.findArchivedByCollection.mockResolvedValue([makeItem(9, "Old clutch")]);
     await renderPage({ removed: "item_9" });
     expect(screen.getByRole("status")).toHaveTextContent(/^Archived\./);
-    document.body.innerHTML = "";
-    await renderPage({ removed: "item_1" }); // still live: a stale link
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(itemRepo.findArchivedByCollection).toHaveBeenCalledWith(COLLECTION_ID); // scoped to THIS collection
+    for (const removed of [
+      "item_1" /* still live: a stale link */,
+      "item_77" /* not an archived item of this collection */,
+      "../collections/x/archive#" /* not id-shaped */,
+    ]) {
+      document.body.innerHTML = "";
+      await renderPage({ removed });
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    }
+  });
+
+  it("every item archived: the All view points at Archived instead of 'No items yet'", async () => {
+    itemRepo.findArchivedByCollection.mockResolvedValue([makeItem(9, "Old clutch")]);
+    await renderPage();
+    expect(screen.getByRole("heading", { name: "Everything here is archived" })).toBeInTheDocument();
   });
 });
 
@@ -1123,6 +1416,8 @@ describe("one primary action, in the Next step bar", () => {
     const { container } = await renderPage();
     const start = within(bar()).getByRole("button", { name: "Start sorting" });
     expect(start.className).toContain("bg-primary");
+    // The bar is fixed below md, so the primary must fill it up to md (not stop at sm).
+    expect(start.className).toContain("md:w-auto");
     expect(within(bar()).getByRole("link", { name: "Add photos" })).toHaveAttribute("href", "/collections/summer-bags/pool");
     expect(container.querySelectorAll(".bg-primary")).toHaveLength(1);
   });
@@ -1142,7 +1437,9 @@ describe("one primary action, in the Next step bar", () => {
     const { container } = await renderPage();
     expect(within(bar()).getByRole("link", { name: "Make items" })).toHaveAttribute("href", "/collections/summer-bags/pool");
     expect(screen.getAllByRole("link", { name: "Make items" })).toHaveLength(1);
-    expect(screen.getByRole("region", { name: "Photos waiting" })).toBeInTheDocument();
+    const strip = screen.getByRole("region", { name: "Photos waiting" });
+    // The thumbnails are one link to the pool, named by the heading (Make items text stays once).
+    expect(within(strip).getByRole("link", { name: "Photos waiting" })).toHaveAttribute("href", "/collections/summer-bags/pool");
     expect(screen.queryByRole("button", { name: /sorting/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "No items yet" })).not.toBeInTheDocument();
     expect(container.querySelectorAll(".bg-primary")).toHaveLength(1);
@@ -1152,8 +1449,10 @@ describe("one primary action, in the Next step bar", () => {
     photoRepo.findPoolByCollection.mockResolvedValue([makePoolPhoto("ph_1")]);
     itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
     await renderPage();
+    expect(within(bar()).getByRole("button", { name: "Start sorting" })).toBeInTheDocument();
     const strip = screen.getByRole("region", { name: "Photos waiting" });
     expect(within(strip).getByRole("link", { name: "Make items" }).className).not.toContain("bg-primary");
+    expect(within(strip).queryByRole("link", { name: "Photos waiting" })).not.toBeInTheDocument();
     // Decorative thumbnails: the link carries the meaning.
     expect(within(strip).queryAllByRole("img")).toHaveLength(0);
   });
@@ -1200,6 +1499,7 @@ describe("access before any query", () => {
     await expect(CollectionPage({ params: Promise.resolve({ id: "summer-bags" }) })).rejects.toThrow();
     expect(photoRepo.findPoolByCollection).not.toHaveBeenCalled();
     expect(itemRepo.findByCollection).not.toHaveBeenCalled();
+    expect(itemRepo.findArchivedByCollection).not.toHaveBeenCalled();
     expect(sessionRepo.findByCollectionAndCurator).not.toHaveBeenCalled();
   });
 
@@ -1214,9 +1514,39 @@ describe("access before any query", () => {
 });
 ```
 
-- [ ] **Step 2:** `npx vitest run "src/app/collections/[id]/page.test.tsx"` → FAIL.
+`src/lib/items.test.ts` — in the `itemsEmptyState` describe, add:
 
-- [ ] **Step 3: Implement.** `src/features/collections/CollectionHomeMenu.tsx`:
+```ts
+  it("everything archived points at Archived, not 'No items yet'", () => {
+    expect(itemsEmptyState({ hasAnyItems: false, hasArchived: true, view: "all", q: "" })).toEqual({
+      heading: "Everything here is archived",
+      message: "Find it under Archived.",
+    });
+    expect(itemsEmptyState({ hasAnyItems: false, hasArchived: false, view: "all", q: "" }).heading).toBe("No items yet");
+  });
+```
+
+- [ ] **Step 2:** `npx vitest run "src/app/collections/[id]/page.test.tsx" src/lib/items.test.ts` → FAIL.
+
+- [ ] **Step 3: Implement.**
+
+**3a.** `src/lib/items.ts` — `itemsEmptyState` takes `hasArchived?: boolean`; replace the
+`if (!opts.hasAnyItems) …` line with:
+
+```ts
+  if (!opts.hasAnyItems) {
+    return opts.hasArchived
+      ? { heading: "Everything here is archived", message: "Find it under Archived." }
+      : { heading: "No items yet", message: "Add photos to start your collection." };
+  }
+```
+
+**3b.** `src/features/sorting/AsyncActionButton.tsx` — `fullWidth` stretches up to `md`, not `sm` (its
+only caller is the home's KeepSortingButton, inside the ActionBar that is fixed below `md`): in both
+places change `w-full sm:w-auto` → `w-full md:w-auto`, and the prop doc to "Full width below `md`
+(the phone action bar), natural width above."
+
+**3c.** `src/features/collections/CollectionHomeMenu.tsx`:
 
 ```tsx
 "use client";
@@ -1241,7 +1571,7 @@ export function CollectionHomeMenu({ href, name, isOwner }: { href: string; name
 }
 ```
 
-`src/features/collections/PhotoPoolPreview.tsx` — props become
+**3d.** `src/features/collections/PhotoPoolPreview.tsx` — props become
 `{ collectionId: string; poolHref: string; photos: { id: string }[]; showLink: boolean }` (drop
 `actionVariant`, its doc comment and the `buttonVariants` import). Heading text and the labelled
 section:
@@ -1255,7 +1585,15 @@ section:
           </h2>
           <p className="mt-1 text-sm text-ink-soft">These can become items whenever you&rsquo;re ready.</p>
         </div>
-        {/* the existing thumbnail <ul> stays as is */}
+        {showLink ? (
+          thumbnails
+        ) : (
+          // Photos-only: the bar's primary already reads "Make items", so the strip is one
+          // link to the pool named by the heading — the visible name stays on screen once.
+          <Link href={poolHref} aria-labelledby="photo-pool-heading" className="block rounded-control focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary">
+            {thumbnails}
+          </Link>
+        )}
         {showLink && (
           <Link href={poolHref} className={quietLink}>
             Make items
@@ -1265,11 +1603,24 @@ section:
     </section>
 ```
 
+where `const thumbnails = (/* the existing thumbnail <ul>, unchanged */);` is hoisted above the return.
+
 Update the component comment: "Read-only strip of loose pool photos above the home grid. Its Make
 items link shows only when sorting holds the page's primary action; otherwise the bar's primary is
-Make items itself (one name on screen once)."
+Make items itself (one name on screen once) and the thumbnails are a single link to the pool."
 
-`src/app/collections/[id]/page.tsx` — replace the file:
+**3e. Drop the unused `limit` path** (the home was its only caller). In
+`src/server/repositories/implementations/ItemRepository.ts`: `FindByCollectionOptions` becomes
+`{ orderBy?: "number" }`; `findByCollection` returns `(await ordered).map(…)` with no `.limit`; rewrite
+the two comments (above the interface and above the method) to describe `orderBy` only. In
+`src/server/api/items.ts` replace the stale comment on `listItems` with "`options.orderBy: "number"`
+for a stable grid order; omit it for an unordered read." In
+`src/lib/db/workspace-preview.integration.test.ts` delete the tests "returns only the preview slice in
+number ASC order" and "resolves covers only for the displayed item ids via findCoverPhotosByItemIds";
+in "breaks number ties by id ascending…" drop `limit: 12,` from the options (the `orderBy` tie-break
+stays a DB test — it is SQL ordering semantics). `grep -rn "limit: 12" src` → nothing; `grep -rn "FindByCollectionOptions" src` → the repository and `items.ts` only.
+
+**3f.** `src/app/collections/[id]/page.tsx` — replace the file:
 
 ```tsx
 import { getSession } from "@/lib/auth";
@@ -1292,8 +1643,9 @@ import { CollectionHomeMenu } from "@/features/collections/CollectionHomeMenu";
 import { ItemCard } from "@/features/items/ItemCard";
 import { ArchivedItemCard } from "@/features/items/ArchivedItemCard";
 import { ArchivedNotice } from "@/features/items/ArchivedNotice";
-import { ItemFilterPills, type ItemsView } from "@/features/items/ItemFilterPills";
+import { ItemFilterPills, itemsViewHref, type ItemsView } from "@/features/items/ItemFilterPills";
 import { filterItems, itemsEmptyState } from "@/lib/items";
+import { isIdShaped } from "@/lib/id";
 import { quietLink } from "@/lib/design/quiet-link";
 import Link from "next/link";
 
@@ -1322,10 +1674,12 @@ export default async function CollectionPage({ params, searchParams: searchParam
   const q = typeof searchParams?.q === "string" ? searchParams.q.slice(0, 100) : "";
   const itemController = ItemController.fromDb(db);
   // One round-trip. A failed read PROPAGATES (never caught into [] and shown as empty).
+  // Archived items are always read (this collection's only): they verify ?removed= and
+  // tell "nothing yet" from "everything archived".
   const [pool, liveItems, archivedItems, sessions, preferences] = await Promise.all([
     PhotoController.fromDb(db).findPoolByCollection(collection.id, 6),
-    itemController.listItems(collection.id),
-    view === "archived" ? itemController.listArchived(collection.id) : Promise.resolve([]),
+    itemController.listItems(collection.id, { orderBy: "number" }),
+    itemController.listArchived(collection.id),
     SessionController.fromDb(db).listByCollectionAndCurator(collection.id, session.user.id),
     PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id),
   ]);
@@ -1349,30 +1703,36 @@ export default async function CollectionPage({ params, searchParams: searchParam
   const hasEverSorted = preferences.length > 0 || sessions.some((s) => s.status === "completed");
   const canSort = liveItems.length > 0 || currentSession !== undefined;
   const showPool = pool.length > 0 && view === "all" && !q;
-  // The archive undo (purses-v7gv), only while that id is not in the live list.
+  // The archive undo (purses-v7gv): only for an id-shaped value that IS an archived item
+  // of THIS collection — a stale, foreign or hostile ?removed= renders nothing.
   const removed = searchParams?.removed;
   const justArchived =
-    typeof removed === "string" && view !== "archived" && !liveItems.some((i) => i.id === removed) ? removed : null;
-  const empty = itemsEmptyState({ hasAnyItems: items.length > 0, view, q });
+    view !== "archived" && isIdShaped(removed) && archivedItems.some((i) => i.id === removed) ? removed : null;
+  const empty = itemsEmptyState({ hasAnyItems: items.length > 0, hasArchived: archivedItems.length > 0, view, q });
   const poolOnly = showPool && liveItems.length === 0;
 
   return (
     <AppLayout breadcrumbs={trail.collection(collection)} reserveActionBar>
-      <div className="space-y-8">
-        <header className="flex items-start justify-between gap-3">
-          <div className="min-w-0 max-w-3xl">
-            <h1 className="text-2xl text-ink sm:text-3xl">{collection.name}</h1>
-            {collection.description && <p className="mt-2 text-ink-soft">{collection.description}</p>}
+      {/* Tighter on phone so a card row shows above the fold at 390×664. */}
+      <div className="space-y-4 md:space-y-8">
+        {/* The header group: title, ···, and the chip row held together; the action row breaks after it. */}
+        <div className="space-y-2">
+          <header className="flex items-start justify-between gap-3">
+            <div className="min-w-0 max-w-3xl">
+              <h1 className="text-2xl text-ink sm:text-3xl">{collection.name}</h1>
+              {collection.description && <p className="mt-2 text-ink-soft">{collection.description}</p>}
+            </div>
+            <CollectionHomeMenu href={base} name={collection.name} isOwner={collection.ownerId === session.user.id} />
+          </header>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <WorkspaceModeChips base={base} activeMode="build" />
             {hasEverSorted && (
-              <Link href={`${base}/results`} className={`${quietLink} mt-2`}>
+              <Link href={`${base}/results`} className={quietLink}>
                 See your ranking
               </Link>
             )}
           </div>
-          <CollectionHomeMenu href={base} name={collection.name} isOwner={collection.ownerId === session.user.id} />
-        </header>
-
-        <WorkspaceModeChips base={base} activeMode="build" />
+        </div>
 
         {/* Spec §5: the one primary action, Add photos beside it. Start sorting needs
             something to sort; before that the primary is the way to items. */}
@@ -1401,7 +1761,7 @@ export default async function CollectionPage({ params, searchParams: searchParam
           )}
         </ActionBar>
 
-        {justArchived && <ArchivedNotice restoreUrl={`/api/items/${justArchived}/restore`} />}
+        {justArchived && <ArchivedNotice kind="item" id={justArchived} />}
 
         {showPool && (
           <PhotoPoolPreview
@@ -1416,7 +1776,13 @@ export default async function CollectionPage({ params, searchParams: searchParam
           <form role="search" action={base} className="flex items-end gap-2">
             {view === "archived" && <input type="hidden" name="status" value="archived" />}
             {view === "unnamed" && <input type="hidden" name="unnamed" value="1" />}
-            <Input type="search" name="q" defaultValue={q} label="Search your items" placeholder="Name, brand, color…" maxLength={100} />
+            <div className="w-full">
+              {/* Visually hidden below md (above-the-fold room); the accessible name stays. */}
+              <label htmlFor="home-search" className="mb-2 block text-sm font-medium text-ink max-md:sr-only">
+                Search your items
+              </label>
+              <Input id="home-search" type="search" name="q" defaultValue={q} placeholder="Name, brand, color…" maxLength={100} />
+            </div>
             <Button type="submit" variant="secondary" className="h-12">
               Search
             </Button>
@@ -1425,7 +1791,7 @@ export default async function CollectionPage({ params, searchParams: searchParam
         </div>
 
         {visible.length > 0 ? (
-          <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <ul aria-label="Your items" className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {visible.map((item) => (
               <li key={item.id}>
                 {view === "archived" ? (
@@ -1442,7 +1808,16 @@ export default async function CollectionPage({ params, searchParams: searchParam
             ))}
           </ul>
         ) : (
-          !poolOnly && <EmptyState heading={empty.heading} message={empty.message} />
+          !poolOnly && (
+            <div className="flex flex-col items-center">
+              <EmptyState heading={empty.heading} message={empty.message} />
+              {q && (
+                <Link href={itemsViewHref(base, view, "")} className={quietLink}>
+                  Clear search
+                </Link>
+              )}
+            </div>
+          )
         )}
       </div>
     </AppLayout>
@@ -1459,13 +1834,15 @@ grep -rnE "ItemPreviewGrid|workspaceState|resolveWorkspaceState|actionVariant" s
 
 → the grep prints nothing.
 
-- [ ] **Step 4:** Step 2 command → PASS; `npx vitest run src/features/collections src/app/collections` → PASS; `npm run build` → PASS.
-- [ ] **Step 5:** `git add -A src/features/collections "src/app/collections/[id]/page.tsx" "src/app/collections/[id]/page.test.tsx" && git commit -m "feat(home): the collection home is the items grid — Start sorting with Add photos beside it"`
+- [ ] **Step 4:** Step 2 command → PASS; `npx vitest run src/features/collections src/features/sessions src/features/sorting src/app/collections src/lib/items.test.ts src/server` → PASS;
+  `bash e2e/fixtures/test-db.sh up && RUN_DB_TESTS=1 npx vitest run --no-file-parallelism src/lib/db/workspace-preview.integration.test.ts` → PASS;
+  `npm run build` → PASS.
+- [ ] **Step 5:** `git add -A src/features/collections src/features/sorting/AsyncActionButton.tsx src/lib/items.ts src/lib/items.test.ts src/server/repositories/implementations/ItemRepository.ts src/server/api/items.ts src/lib/db/workspace-preview.integration.test.ts "src/app/collections/[id]/page.tsx" "src/app/collections/[id]/page.test.tsx" && git commit -m "feat(home): the collection home is the items grid — Start sorting with Add photos beside it"`
 
 ## Task 6: Retire the items list; every link points home; enumeration test
 
-**Files:** Replace `src/app/collections/[id]/items/page.tsx`. Delete
-`src/app/collections/[id]/items/page.test.tsx`. Modify `src/lib/collections/retired-redirect.ts`;
+**Files:** Replace `src/app/collections/[id]/items/page.tsx` and rewrite its
+`src/app/collections/[id]/items/page.test.tsx` as the redirect's unit test. Modify `src/lib/collections/retired-redirect.ts`;
 `src/app/collections/[id]/items/[itemNumber]/page.tsx` (not-found redirect, `ItemOverflowMenu` prop),
 `…/[itemNumber]/edit/page.tsx`, `…/[itemNumber]/photos/page.tsx`; `src/features/items/ItemOverflowMenu.tsx`
 + test; `src/features/pool/PoolPhotoGrid.tsx` + test; `src/app/collections/[id]/results/page.tsx:80`;
@@ -1493,7 +1870,7 @@ grep -rnE "ItemPreviewGrid|workspaceState|resolveWorkspaceState|actionVariant" s
 (rename the test "…; a non-numeric number goes home"), and add after the retired-sort test:
 
 ```ts
-    it("the retired items list sends a member home with its view, query and notice", async () => {
+    it("the retired items list sends a member home through the guard, with its allow-listed params", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const home = `/collections/slug-${collectionId}`;
       const mod = (await import("@/app/collections/[id]/items/page")) as {
@@ -1502,17 +1879,16 @@ grep -rnE "ItemPreviewGrid|workspaceState|resolveWorkspaceState|actionVariant" s
           searchParams?: Promise<Record<string, string | string[]>>;
         }) => Promise<unknown>;
       };
-      const go = (sp?: Record<string, string | string[]>) =>
-        mod
-          .default({ params: Promise.resolve({ id: collectionId }), searchParams: sp && Promise.resolve(sp) })
-          .catch((e: Error) => e.message);
       try {
-        expect(await go()).toBe(`NEXT_PERMANENT_REDIRECT:${home}`);
-        expect(await go({ status: "archived", q: "tote", removed: "itm_1", utm: "x" })).toBe(
-          `NEXT_PERMANENT_REDIRECT:${home}?status=archived&q=tote&removed=itm_1`,
-        );
-        expect(await go({ q: ["a", "b"], unnamed: "1", status: "nope" })).toBe(`NEXT_PERMANENT_REDIRECT:${home}?unnamed=1`);
-        expect(await go({ q: "y".repeat(150) })).toBe(`NEXT_PERMANENT_REDIRECT:${home}?q=${"y".repeat(100)}`);
+        // ONE un-mocked crossing (real DB, real guard, real slug resolution); the
+        // allow-list permutations are unit-tested in items/page.test.tsx.
+        const out = await mod
+          .default({
+            params: Promise.resolve({ id: collectionId }),
+            searchParams: Promise.resolve({ status: "archived", q: "tote", removed: "itm_1", utm: "x" }),
+          })
+          .catch((e: Error) => e.message);
+        expect(out).toBe(`NEXT_PERMANENT_REDIRECT:${home}?status=archived&q=tote&removed=itm_1`);
       } finally {
         mockGetSession.mockResolvedValue({ user: { id: strangerId } });
       }
@@ -1520,6 +1896,37 @@ grep -rnE "ItemPreviewGrid|workspaceState|resolveWorkspaceState|actionVariant" s
 ```
 
 (The stranger case `p("collections/[id]/items", { id })` stays: the guard still bounces them first.)
+
+Rewrite `src/app/collections/[id]/items/page.test.tsx` (runs in `test:ci`):
+
+```tsx
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { redirectRetired } = vi.hoisted(() => ({ redirectRetired: vi.fn() }));
+vi.mock("@/lib/collections/retired-redirect", () => ({ redirectRetired }));
+
+import ItemsListRedirect from "./page";
+
+beforeEach(() => vi.clearAllMocks());
+
+const go = async (sp?: Record<string, string | string[]>) => {
+  await ItemsListRedirect({ params: Promise.resolve({ id: "bags" }), searchParams: sp && Promise.resolve(sp) });
+  const [id, to, query] = redirectRetired.mock.lastCall as [string, string, URLSearchParams];
+  return [id, to, query.toString()];
+};
+
+describe("retired items list → the collection home", () => {
+  it("carries only the allow-listed view, query and an id-shaped notice", async () => {
+    expect(await go()).toEqual(["bags", "", ""]);
+    expect(await go({ status: "archived", q: "tote", removed: "itm_1", utm: "x" })).toEqual([
+      "bags", "", "status=archived&q=tote&removed=itm_1",
+    ]);
+    expect(await go({ q: ["a", "b"], unnamed: "1", status: "nope" })).toEqual(["bags", "", "unnamed=1"]);
+    expect(await go({ q: "y".repeat(150) })).toEqual(["bags", "", `q=${"y".repeat(100)}`]);
+    expect(await go({ removed: "../collections/c/archive#", unnamed: ["1", "1"], q: "  " })).toEqual(["bags", "", ""]);
+  });
+});
+```
 
 `src/components/layout/breadcrumb-trails.test.ts`: delete the `items: trail.items(c),` line; replace
 the slug-fallback test body with `expect(trail.item(noSlug, item).at(-2)?.href).toBe("/collections/col-2");`
@@ -1536,7 +1943,7 @@ and add:
 and the two `push` expectations become `"/collections/bags?removed=i1"` and `"/collections/bags"`.
 `src/features/pool/PoolPhotoGrid.test.tsx:117`: expect `"/collections/c1"`.
 
-- [ ] **Step 2:** `npx vitest run src/components/layout/breadcrumb-trails.test.ts src/features/items/ItemOverflowMenu.test.tsx src/features/pool/PoolPhotoGrid.test.tsx` → FAIL;
+- [ ] **Step 2:** `npx vitest run "src/app/collections/[id]/items/page.test.tsx" src/components/layout/breadcrumb-trails.test.ts src/features/items/ItemOverflowMenu.test.tsx src/features/pool/PoolPhotoGrid.test.tsx` → FAIL;
   `bash e2e/fixtures/test-db.sh up && RUN_DB_TESTS=1 npx vitest run --no-file-parallelism src/lib/db/page-authz-enumeration.integration.test.ts` → FAIL.
 
 - [ ] **Step 3: Implement.** `src/lib/collections/retired-redirect.ts`:
@@ -1567,6 +1974,7 @@ export async function redirectRetired(
 
 ```tsx
 import { redirectRetired } from "@/lib/collections/retired-redirect";
+import { isIdShaped } from "@/lib/id";
 
 type Param = string | string[] | undefined;
 
@@ -1577,7 +1985,8 @@ interface Props {
 
 // The collection home is the items grid now (spec §5). Old links keep their view,
 // query and undo notice; anything else is dropped. Only allow-listed values are
-// copied, never interpolated raw. The guard runs first, inside redirectRetired.
+// copied (removed only when id-shaped), never interpolated raw. The guard runs
+// first, inside redirectRetired.
 export default async function ItemsListRedirect({ params, searchParams }: Props) {
   const { id } = await params;
   const sp = (await searchParams) ?? {};
@@ -1585,12 +1994,10 @@ export default async function ItemsListRedirect({ params, searchParams }: Props)
   if (sp.status === "archived") keep.set("status", "archived");
   if (sp.unnamed === "1") keep.set("unnamed", "1");
   if (typeof sp.q === "string" && sp.q.trim()) keep.set("q", sp.q.slice(0, 100));
-  if (typeof sp.removed === "string") keep.set("removed", sp.removed);
+  if (isIdShaped(sp.removed)) keep.set("removed", sp.removed);
   return redirectRetired(id, "", keep);
 }
 ```
-
-`git rm -q "src/app/collections/[id]/items/page.test.tsx"`.
 
 `…/[itemNumber]/edit/page.tsx` and `…/photos/page.tsx`: replace
 `const items = \`/collections/${collection.slug ?? collection.id}/items\`;` and the redirect line with
@@ -1627,19 +2034,21 @@ Then `grep -rnE "trail\.items|itemsHref|/items\`\)|/items\"" src` → only API p
 
 **Files:** Create `e2e/lists-and-home.spec.ts`. Modify `e2e/fixtures/seed.ts` (one helper),
 `e2e/item-panel.spec.ts:121`, `e2e/a11y.spec.ts:107-118`, `e2e/image-perf.spec.ts:20-27`,
-`e2e/screenshots/capture.ts`, `.github/workflows/ci.yml` (`collection:` filter ~347-352, the
-`A_COLLECTION`/`A_ITEMS` lines ~449-457). Delete `e2e/adaptive-collection-workspace.spec.ts`.
+`e2e/screenshots/capture.ts`, `.github/workflows/ci.yml` (only the spec names on the
+`A_COLLECTION`/`A_ITEMS` selection lines ~449-457; **no filter paths added**). Delete `e2e/adaptive-collection-workspace.spec.ts`.
 
 **Interfaces:** Consumes the accessible names from Tasks 3-6: region `Next step`; links `New
 collection`, `Add photos`, `Make items`, `All`, `Archived`, `See your ranking`; buttons `Start
 sorting`, `Keep sorting`, `More for {name}`, `Search`, `Undo`; menuitems `Archive`, `Bring back`;
-searchboxes `Search your collections`, `Search your items`; region `Photos waiting`; text
+searchboxes `Search your collections`, `Search your items`; region `Photos waiting`; list `Your items`
+(the home grid); text
 `/^Archived\./`, `Nothing matches “…”`. Produces
 `seedNamedCollection(ownerId, name, status?) → { collectionId, slug }`.
 
 Coverage map for the deletion: the four adaptive-state tests → this spec's home tests (states are now
-the bar's three primaries); the wayfinding back-arrow and phone-collapse tests → copied verbatim; the
-keyboard-order test → rewritten for the new order.
+the bar's three primaries); the wayfinding back-arrow and phone-collapse tests → copied verbatim (the
+tablet-only back-arrow test gains the project skip); the keyboard-order test → rewritten for the new
+order, on its own collection.
 
 - [ ] **Step 1: Seed helper.** Append to `e2e/fixtures/seed.ts`:
 
@@ -1681,6 +2090,7 @@ const PHONE = { width: 390, height: 664 };
 let ownerId: string;
 let poolOnly: SeededCollectionRef;
 let itemsOnly: SeededCollectionRef;
+let startable: SeededCollectionRef;
 let empty: SeededCollectionRef;
 let shelf: { name: string } & SeededCollectionRef;
 let long: { slug: string };
@@ -1688,6 +2098,10 @@ let long: { slug: string };
 test.beforeAll(async () => {
   ownerId = await seedBaseline();
   ({ poolOnly, itemsOnly, empty } = await seedWorkspaceStates(ownerId));
+  // A second items-only collection, used ONLY by the test that clicks Start sorting
+  // (it opens a session, so "Start sorting" never comes back there). Keeps the
+  // keyboard-order test on itemsOnly independent of test order and retries.
+  ({ itemsOnly: startable } = await seedWorkspaceStates(ownerId));
   const name = `E2E Shelf ${Date.now()}`;
   shelf = { name, ...(await seedNamedCollection(ownerId, name)) };
   long = await seedJourneyScenario(ownerId, 8); // enough cards to scroll on a phone
@@ -1744,7 +2158,7 @@ test("collections: search, archive with Undo, Archived, Bring back", async ({ pa
 });
 
 test("home: the items grid with Start sorting and Add photos beside it", async ({ page }) => {
-  const home = `/collections/${itemsOnly.slug}`;
+  const home = `/collections/${startable.slug}`; // this test opens a sort; nothing else uses it
   await page.goto(home);
   await expect(page).toHaveURL((u) => u.pathname === home);
   await expect(card(page, "E2E Workspace Tote")).toHaveAttribute("href", `${home}/items/1`);
@@ -1763,17 +2177,13 @@ test("home: the items grid with Start sorting and Add photos beside it", async (
   await page.waitForURL((u) => u.pathname === `${home}/sort`);
 });
 
-test("home before items: Make items leads when photos wait; Add photos when empty", async ({ page }) => {
+test("home before items: Make items leads when photos wait", async ({ page }) => {
+  // (The empty state's Add photos is pinned by the page unit test; no second e2e for it.)
   await page.goto(`/collections/${poolOnly.slug}`);
   const bar = page.getByRole("region", { name: "Next step" });
   await expect(page.getByRole("region", { name: "Photos waiting" })).toBeVisible();
-  await expect(bar.getByRole("link", { name: "Make items" })).toHaveAttribute("href", `/collections/${poolOnly.slug}/pool`);
-  await expect(page.getByRole("button", { name: /sorting/ })).toHaveCount(0);
-
-  await page.goto(`/collections/${empty.slug}`);
-  await expect(bar.getByRole("link", { name: "Add photos" })).toHaveCount(1);
-  await expect(page.getByRole("link", { name: "Add photos" })).toHaveCount(1);
-  await expect(page.getByRole("button", { name: /sorting/ })).toHaveCount(0);
+  await bar.getByRole("link", { name: "Make items" }).click();
+  await page.waitForURL((u) => u.pathname === `/collections/${poolOnly.slug}/pool`);
 });
 
 test("phone: the bar is pinned to the bottom and never hides the last row", async ({ page }) => {
@@ -1788,11 +2198,17 @@ test("phone: the bar is pinned to the bottom and never hides the last row", asyn
     expect(Math.round(box.y + box.height)).toBe(PHONE.height);
     return box;
   };
-  await pinned();
+  const topBar = await pinned();
+  const cards = page.getByRole("list", { name: "Your items" }).getByRole("listitem");
+
+  // Above the fold: a card row is visible on load, clear of the bar (no scroll).
+  const firstOnLoad = (await cards.first().boundingBox())!;
+  expect(firstOnLoad.y + firstOnLoad.height / 2).toBeLessThan(topBar.y);
+  // Keyboard focus scrolls a bottom-row card clear of the bar: the scroll padding matches the reserve.
+  expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollPaddingBottom)).toBe("144px");
 
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   const barBox = await pinned();
-  const cards = page.locator("main ul.grid > li"); // the grid, not the crumbs or pills
   const lastCard = (await cards.last().boundingBox())!;
   expect(lastCard.y + lastCard.height).toBeLessThanOrEqual(barBox.y);
   const footer = (await page.getByText("Find the things you love").boundingBox())!;
@@ -1804,10 +2220,6 @@ test("phone: the bar is pinned to the bottom and never hides the last row", asyn
   const inline = (await bar.boundingBox())!;
   const firstCard = (await cards.first().boundingBox())!;
   expect(inline.y + inline.height).toBeLessThan(firstCard.y);
-
-  await page.setViewportSize(PHONE);
-  await page.goto("/collections");
-  await expect(page.getByRole("region", { name: "Next step" }).getByRole("link", { name: "New collection" })).toBeInViewport();
 });
 
 // The accessible names of every keyboard-focusable element, in DOM order (= Tab order:
@@ -1828,8 +2240,9 @@ async function focusableNamesInDomOrder(page: Page): Promise<string[]> {
   });
 }
 
-test("keyboard order on the home: trail → menu → chips → primary → pill → search → cards", async ({ page }) => {
-  await page.goto(`/collections/${itemsOnly.slug}`);
+test("keyboard order on the home: trail → menu → chips → primary → pill → search → cards", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "tablet", "DOM order is viewport-independent; the phone trail collapses");
+  await page.goto(`/collections/${itemsOnly.slug}`); // never sorted: no other test opens a sort here
   await expect(card(page, "E2E Workspace Tote")).toBeVisible();
   const order = await focusableNamesInDomOrder(page);
   const seen = JSON.stringify(order);
@@ -1846,7 +2259,10 @@ test("keyboard order on the home: trail → menu → chips → primary → pill 
 
 Then copy the two wayfinding tests ("back arrow on a deep page: the tablet pointer shortcut lands on
 the parent route" and "phone: the trail collapses to a single accessible back link") **verbatim** from
-`e2e/adaptive-collection-workspace.spec.ts` to the end of this file, and
+`e2e/adaptive-collection-workspace.spec.ts` to the end of this file — except that the back-arrow test
+takes `({ page }, testInfo)` and opens with
+`test.skip(testInfo.project.name !== "tablet", "the pointer-only arrow is a tablet affordance");`
+(precedent `e2e/a11y.spec.ts:94`), so the mandated `PW_VIEWPORT=phone` run passes by design — and
 `git rm -q e2e/adaptive-collection-workspace.spec.ts`.
 
 - [ ] **Step 3: Run, expect PASS** (Tasks 3-6 built the surfaces):
@@ -1877,14 +2293,9 @@ the parent route" and "phone: the trail collapses to a single accessible back li
   `await seedNamedCollection(ownerId, "E2E Archived shelf", "archived");` (import it).
   `npx tsc --noEmit -p tsconfig.json` stays clean for `e2e/`.
 
-- [ ] **Step 5: CI map.** In `ci.yml` add to the `collection:` filter
-
-```yaml
-              - 'src/components/layout/**'
-              - 'src/lib/collections/**'
-```
-
-  and change the two selection lines to
+- [ ] **Step 5: CI map.** Add **no** filter paths (Global Constraints: a `src/components/layout/**`
+  change matches no area and so runs the full suite — keep it that way; `src/lib/collections/**` is
+  outside the `ui` filter). Only change the two selection lines to
 
 ```bash
           if [ "$A_COLLECTION" = "true" ]; then
@@ -1901,7 +2312,11 @@ the parent route" and "phone: the trail collapses to a single accessible back li
   `npx vitest run scripts/ci-e2e-map.test.ts` → PASS (every spec on disk listed; every listed spec exists).
 
 - [ ] **Step 6: Run.** `npx playwright test e2e/lists-and-home.spec.ts e2e/item-panel.spec.ts e2e/image-perf.spec.ts e2e/a11y.spec.ts e2e/layout.spec.ts e2e/smoke.spec.ts e2e/delete-collection.spec.ts --project=tablet`
-  → PASS. Local gate (not CI): `PW_VIEWPORT=phone npx playwright test e2e/lists-and-home.spec.ts e2e/layout.spec.ts e2e/item-panel.spec.ts`.
+  → PASS with local retries at 0 (the default) — an order-dependent test fails here instead of
+  hiding behind CI's retries. (Do not use `--repeat-each`: the Start-sorting test intentionally
+  consumes its own `startable` collection once per `beforeAll`.) Local gate (not CI):
+  `PW_VIEWPORT=phone npx playwright test e2e/lists-and-home.spec.ts e2e/layout.spec.ts e2e/item-panel.spec.ts`
+  → PASS (the tablet-only tests report as skipped).
 - [ ] **Step 7:** `git add -A e2e .github/workflows/ci.yml && git commit -m "test(e2e): lists-and-home journey with the phone bar; CI map and screenshot surfaces follow"`
 
 ## Task 8: Docs, full gate, graphify, screenshots
@@ -1915,14 +2330,17 @@ routes already documented).
 ```markdown
 - **Action bar:** the page's one primary action (`ActionBar`, `src/components/layout/ActionBar.tsx`).
   From `md` up an inline row where the page places it; on phone a fixed bottom bar on `glass-strong`
-  + backdrop blur + a `rim` top edge, with safe-area padding, and the page reserves its height
-  (`AppLayout reserveActionBar`) so the last row and the footer never sit behind it. It holds the
-  primary and at most one pill beside it (the home's **Add photos**). One per screen; with the header
-  it is the second of the three glass-strong surfaces a screen may carry.
+  + backdrop blur + a `rim` top edge; static on a short viewport (browser zoom), never a second fixed
+  band. The page reserves 9rem (`AppLayout reserveActionBar`: the bar plus a two-line error) and sets
+  a matching `scroll-padding-bottom`, so the last row, the footer and a keyboard-focused card never
+  sit behind it. The primary fills the bar below `md`. It holds the primary and at most one pill
+  beside it (the home's **Add photos**). One per screen; with the header it is the second of the three
+  glass-strong surfaces a screen may carry.
 ```
 
-  In **Cards** append: "Collection cards carry the owner's `···` (top-right, above the stretched
-  link); item cards carry none — their rarer actions live on the item panel." In **Wayfinding**
+  In **Cards** append: "Collection cards carry the owner's `···` (top-right, the `compact` trigger over
+  the cover, above the stretched link) and no status badge — the Archived pill says it; item cards carry
+  none — their rarer actions live on the item panel." In **Wayfinding**
   replace "Mode chips appear on section **index** pages only (Photos, Items, Sort, Decide)" with
   "Mode chips appear on the collection home and the section index pages (Photos, Sort, Decide)", and
   note that an item's trail is Collections / {collection} / {item}.
@@ -1933,7 +2351,7 @@ routes already documented).
 
 ```markdown
 **43. Lists and home: card grids with search and pills; the home is the items grid; a phone action bar (UX redesign PR 3, 2026-10-02).**
-- *Decision:* `/collections` is a cover-card grid with a server-side `?q=` search (name + description, plain text) and All / Archived pills (`src/features/collections/collectionsList.ts`); owners get a card `···` (Collection settings, Members, Archive / Bring back through the existing `collection:manage` archive/restore routes) with the shared `ArchivedNotice` undo. `/collections/[id]` is the items grid (PR 1's search, pills, `ItemCard`, Archived) with one primary in an `ActionBar` — Start / Keep sorting with an Add photos pill once there is something to sort, else Make items or Add photos — fixed on glass-strong below `md`. `/collections/[id]/items` is a guard-then-308 to the home carrying only `status=archived`, `unnamed=1`, `q`, `removed`; breadcrumbs lose the Items level. `FilterPills` is the shared pill primitive.
+- *Decision:* `/collections` is a cover-card grid with a server-side `?q=` search (name + description, plain text) and All / Archived pills (`src/features/collections/collectionsList.ts`); owners get a card `···` (Collection settings, Members, Archive / Bring back through the existing `collection:manage` archive/restore routes) with the shared `ArchivedNotice` undo. `/collections/[id]` is the items grid (PR 1's search, pills, `ItemCard`, Archived) with one primary in an `ActionBar` — Start / Keep sorting with an Add photos pill once there is something to sort, else Make items or Add photos — fixed on glass-strong below `md`. The home lists every live item in number order and batch-reads covers for all of them (an unbounded fan-out over the visible ids, accepted; a follow-up bead narrows it to one hero-first row per item with `DISTINCT ON`). `?removed=` is honoured only when id-shaped and verified (an archived item of this collection / an owned archived collection), and `ArchivedNotice` builds its restore URL from `{ kind, id }` — never a passed URL. `/collections/[id]/items` is a guard-then-308 to the home carrying only `status=archived`, `unnamed=1`, `q`, an id-shaped `removed`; breadcrumbs lose the Items level. `FilterPills` is the shared pill primitive.
 - *Rationale:* spec §5 (lists and home), §8 item 3; PRODUCT "Familiar first"; one primary action per screen.
 - *Status:* Shipped (PR 3). Owner-veto items in the PR body: the retired items list, and collection Archive in the UI (All no longer lists archived collections).
 ```
@@ -1950,8 +2368,9 @@ routes already documented).
 - [ ] **Step 5: Screenshots** with the `pr-screenshots` skill (`docs/cookbook/add-images-to-pr.md`):
   `SHOTS=collections,collections-archived,home,home-pool-first,home-items-first,home-archived,collection-paused npm run screenshots`
   and the same with `PW_VIEWPORT=phone` — light and dark, tablet and phone. **Look at every PNG before
-  the final review** (PR 1 lesson): the phone bar must not cover the last row, the `···` must not
-  crowd a long collection name, pills must wrap cleanly at 390px. Embed inline in the PR body with the
+  the final review** (PR 1 lesson): the phone bar must not cover the last row, a card row must show
+  above the fold on the phone home, the `···` must not crowd a long collection name, pills must wrap
+  cleanly at 390px, and the bar's top edge over a white photo in light mode is accepted (ruling G2). Embed inline in the PR body with the
   owner-veto list and the affordance table above.
 
 ---
@@ -1975,17 +2394,24 @@ existing `<ul>` stays" notes refer to text that exists verbatim in the named fil
 **Type consistency.** `FilterPill { label, href, current }` (Task 1) is what Task 4 builds from
 `COLLECTION_PILLS` + `collectionsViewHref` (Task 2) and what `ItemFilterPills({ path, view, q })`
 builds (Task 1; Task 4's items page passes `${collectionHref}/items`, Task 5's home passes `base`).
-`CollectionCard.menu` / `CollectionCardMenu({ collectionId, name, href, archived })` (Task 3) match
-Task 4's call. `ArchivedNotice({ restoreUrl })` (Task 3) matches Tasks 4 and 5. `ActionBar({ label,
-children })` + `AppLayout reserveActionBar` (Task 4) match Task 5. `PhotoPoolPreview({ …, showLink })`
-and `CollectionHomeMenu({ href, name, isOwner })` (Task 5). `redirectRetired(id, "" | "sort" |
+`CollectionCard.menu` / `CollectionCardMenu({ collectionId, name, href, archived, q })` (Task 3) match
+Task 4's call. `ArchivedNotice({ kind, id })` and `isIdShaped` (Task 3) match Tasks 4, 5 and 6;
+`BroughtBackNotice` (Task 3) is rendered by Task 4. `ActionBar({ label, children })` (with
+`data-action-bar`) + `AppLayout reserveActionBar` (`pb-36`) + the `globals.css` 9rem scroll padding
+(Task 4) match Task 5 and Task 7's assertions. `PhotoPoolPreview({ …, showLink })`,
+`CollectionHomeMenu({ href, name, isOwner })`, `itemsEmptyState({ …, hasArchived })` and
+`FindByCollectionOptions { orderBy }` (Task 5). `redirectRetired(id, "" | "sort" |
 "results", query?)` (Task 6) keeps PR 2's two-argument callers valid. `ItemOverflowMenu.listHref`
 (Task 6) is set by the panel page in the same task. `seedNamedCollection` (Task 7) returns
 `SeededCollectionRef`.
 
-**Review Focus.** (1) Task 2 plain-text search test + Task 4 "ignores a repeated q key and caps…";
-(2) Task 4 "shows Undo only for the viewer's own collection that is archived now" + Task 5 "shows the
-undo notice only while that item is no longer live"; (3) Task 4 "owner cards get the ··· menu; a
-curator's card does not" + Task 5 "a curator's menu offers Add item only"; (4) Task 7 "phone: the bar
-is pinned to the bottom and never hides the last row"; (5) Task 6 "the retired items list sends a
-member home with its view, query and notice" (stranger still bounced by the existing enumeration case).
+**Review Focus.** (1) Task 2 plain-text search test + Task 4 "ignores a repeated q key and caps…" +
+Task 5 "ignores a repeated q key, caps the query at 100…"; (2) Task 3 "builds the restore URL from
+kind and id, encoded" + Task 4 "shows Undo only for the viewer's own collection that is archived now"
++ Task 5 "shows the undo notice only for an archived item of this collection" + Task 6 unit (a `../`
+`removed` is dropped); (3) Task 4 "owner cards get the ··· menu; a curator's card does not" + Task 5
+"a curator's menu offers Add item only"; (4) Task 7 "phone: the bar is pinned to the bottom and never
+hides the last row" (incl. card row on load, 144px scroll padding) + Task 4's static-on-short
+assertion; (5) Task 6 unit "carries only the allow-listed view, query and an id-shaped notice" + the
+one DB crossing "…through the guard, with its allow-listed params" (stranger still bounced by the
+existing enumeration case).
