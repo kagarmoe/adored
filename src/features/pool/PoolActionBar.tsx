@@ -2,10 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui";
-import { targetLabel, type MoveDestination, type MoveTarget } from "@/features/items/PhotoMoveBar";
 import { MAX_GROUP_PHOTOS, POOL_CAP_MESSAGE } from "@/lib/pool-limits";
 
-export type { MoveDestination, MoveTarget } from "@/features/items/PhotoMoveBar";
+export interface MoveTarget {
+  id: string;
+  number: number | null;
+  name: string | null;
+}
+
+export type MoveDestination =
+  | { type: "item"; itemId: string }
+  | { type: "new" }
+  | { type: "pool" };
+
+/** Label for a move target, mirroring itemDisplayName's fallback: name, else #N. */
+function targetLabel(target: MoveTarget): string {
+  const name = target.name?.trim();
+  if (name) return name;
+  return target.number != null ? `#${target.number}` : "Untitled";
+}
 
 export function PoolActionBar({
   count,
@@ -57,7 +72,7 @@ export function PoolActionBar({
         />
       )}
       <div
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-hairline bg-surface-raised/95 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 backdrop-blur-sm"
+        className="fixed inset-x-0 bottom-0 z-20 border-t border-rim bg-glass-strong px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 backdrop-blur-sm"
         role="region"
         aria-label="Grouping actions"
       >

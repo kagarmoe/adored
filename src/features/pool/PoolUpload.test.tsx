@@ -116,6 +116,50 @@ describe("PoolUpload", () => {
     }
   });
 
+  it("attached to an item: moves exactly the rows it uploaded onto the item", async () => {
+    upload.mockResolvedValueOnce({ url: "u", pathname: "a-x1.png" } as never);
+    const fetch = vi.fn()
+      .mockResolvedValueOnce(countResponse(1)) // baseline (someone else's pooled photo)
+      .mockResolvedValueOnce(countResponse(2)) // poll: our row landed
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ photos: [
+        { id: "ph_other", filename: "other.png" }, { id: "ph_ours", filename: "a-x1.png" },
+      ] }) })
+      .mockResolvedValue({ ok: true, json: async () => ({ number: 4 }) }); // reassign
+    vi.stubGlobal("fetch", fetch);
+    vi.useFakeTimers();
+    try {
+      const { container } = render(<PoolUpload collectionId="coll_9" attachToItemId="item_4" />);
+      fireEvent.change(fileInput(container), { target: { files: [png("a.png")] } });
+      await act(async () => { await vi.advanceTimersByTimeAsync(1300); });
+      const reassign = fetch.mock.calls.find(([url]) => url === "/api/collections/coll_9/photos/reassign")!;
+      expect(JSON.parse(reassign[1].body)).toEqual({ photoIds: ["ph_ours"], destination: { type: "item", itemId: "item_4" } });
+      expect(refresh).toHaveBeenCalledTimes(1);
+      expect(screen.queryByText(/still arriving/i)).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("attached to an item: a row that hasn't landed yet stays in the pool, and says so", async () => {
+    upload.mockResolvedValueOnce({ url: "u", pathname: "a-x1.png" } as never);
+    const fetch = vi.fn()
+      .mockResolvedValueOnce(countResponse(0)) // baseline
+      .mockResolvedValueOnce(countResponse(1)) // poll
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ photos: [] }) }); // not listed yet
+    vi.stubGlobal("fetch", fetch);
+    vi.useFakeTimers();
+    try {
+      const { container } = render(<PoolUpload collectionId="coll_9" attachToItemId="item_4" />);
+      fireEvent.change(fileInput(container), { target: { files: [png("a.png")] } });
+      await act(async () => { await vi.advanceTimersByTimeAsync(1300); });
+      expect(fetch.mock.calls.some(([url]) => String(url).endsWith("/photos/reassign"))).toBe(false);
+      expect(screen.getByRole("status")).toHaveTextContent(/wait in your photo pool/i);
+      expect(refresh).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("pre-flight skip: an unsupported type is skipped (muted), never uploaded, no refresh", async () => {
     const fetch = vi.fn().mockResolvedValue(countResponse(0));
     vi.stubGlobal("fetch", fetch);

@@ -36,6 +36,10 @@ let setAsideSlug = "";
 let pausedSlug = "";
 let workspacePoolFirstSlug = "";
 let workspaceItemsFirstSlug = "";
+let archivedSlug = "";
+// SHOTS=items-grid,item-detail → capture only those surfaces (the full run outlasts
+// a 10-minute tool ceiling). Unset = everything.
+const only = process.env.SHOTS?.split(",");
 
 test.beforeAll(async () => {
   ownerId = await seedBaseline();
@@ -69,8 +73,8 @@ test.beforeAll(async () => {
     disposition: "deferred",
   });
 
-  // Epic 2: a story on the waiting collection's item 1 so the item-detail shot
-  // shows the soft-violet keepsake card ("Where will it go next?").
+  // A story on the waiting collection's item 1 so the item-detail shot shows the
+  // panel's filled "Where will it go next?" field.
   await new ItemRepository(db).update(waiting.itemIds[0], {
     story:
       "To my niece, who always borrowed it for weekend trips — I hope it carries her somewhere good.",
@@ -107,6 +111,11 @@ test.beforeAll(async () => {
   const workspace = await seedWorkspaceStates(ownerId);
   workspacePoolFirstSlug = workspace.poolOnly.slug;
   workspaceItemsFirstSlug = workspace.itemsOnly.slug;
+
+  // UX redesign PR 1: the Archived pill lists soft-deleted items (Bring back, no link).
+  const archived = await seedJourneyScenario(ownerId, 3);
+  archivedSlug = archived.slug;
+  await new ItemRepository(db).softDelete(archived.itemIds[0]);
 });
 
 for (const theme of ["light", "dark"] as const) {
@@ -131,13 +140,12 @@ for (const theme of ["light", "dark"] as const) {
         /* storage blocked — falls back to light, fine */
       }
     }, theme);
-    await page.route("**/photos/**/file*", (route) =>
+    // Item photos load via /api/photo-files/<id>; unassigned pool photos via
+    // /api/collections/<id>/pool/photos/<id>/file (src/lib/photos.ts).
+    await page.route("**/pool/photos/**/file*", (route) =>
       route.fulfill({ path: FIXTURE, contentType: "image/webp" }),
     );
-    // purses-rthw: item photos now load via /api/photo-files/<id>?collectionId=…
-    // (src/lib/photos.ts getPhotoAssetUrlForPhoto) — a shape the pattern above
-    // never matches, so those surfaces rendered a broken hero image.
-    await page.route("**/photo-files/**", (route) =>
+    await page.route("**/api/photo-files/**", (route) =>
       route.fulfill({ path: FIXTURE, contentType: "image/webp" }),
     );
 
@@ -158,7 +166,7 @@ for (const theme of ["light", "dark"] as const) {
       ["collections", "/collections"],
       ["items-grid", `/collections/${slug}/items`],
       ["item-detail", `/collections/${slug}/items/1`],
-      // Epic 2: item detail LEADING with the keepsake story card.
+      // The item panel with its story field filled.
       ["item-detail-story", `/collections/${waitingSlug}/items/1`],
       // pv9 PR2 (purses-o93): the redesigned results page — most-loved hero +
       // "The full ranking" + the SEPARATE forward-framed Onward section ("Where
@@ -213,7 +221,8 @@ for (const theme of ["light", "dark"] as const) {
       // Epic R: the usage round Relaxed surface (photo card, "Yes, I use it" /
       // "Not these days", "Skip for now", the answered cue, RoundLengthChooser + timer).
       ["usage-round", `/collections/${triageSlug}/sort/${triageSessionNumber}/usage`],
-    ];
+      ["items-archived", `/collections/${archivedSlug}/items?status=archived`],
+    ].filter(([n]) => !only || only.includes(n)) as [string, string][];
     for (const [name, url] of surfaces) {
       await page.goto(url);
       // Best-effort wait for the first image to paint, then a brief settle.
@@ -232,22 +241,28 @@ for (const theme of ["light", "dark"] as const) {
     const shot = (n: string) =>
       page.screenshot({ path: `pr-screenshots/${n}-${theme}-${proj}.png`, fullPage: true });
 
-    // purses-v7gv: the remove-item confirm card and the items-list undo notice.
-    // Self-restoring — the beat ends on "Bring it back", so the collection is
-    // exactly as seeded for every later beat and the other theme pass.
+    if (only && !only.includes("item-delete-confirm")) return;
+
+    // purses-v7gv: the item ··· menu (owner sees Archive + Delete) and the
+    // items-list undo notice. Self-restoring — the beat ends on "Undo", so the
+    // collection is exactly as seeded for every later beat and the other theme pass.
     await page.goto(`/collections/${slug}/items/1`);
     await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
-    await page.getByRole("button", { name: "Remove from collection" }).click();
-    await page.getByText("Remove this item from the collection?").waitFor({ state: "visible", timeout: 10_000 });
+    await page.getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("menuitem", { name: "Delete" }).click();
+    await page.getByText("Delete this item for good?").waitFor({ state: "visible", timeout: 10_000 });
     await page.waitForTimeout(400);
-    await shot("item-remove-confirm");
-    await page.getByRole("button", { name: "Remove", exact: true }).click();
-    await page.getByRole("button", { name: "Bring it back" }).waitFor({ state: "visible", timeout: 10_000 });
+    await shot("item-delete-confirm");
+    await page.getByRole("button", { name: "Keep" }).click();
+    await page.getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("menuitem", { name: "Archive" }).click();
+    await page.getByRole("button", { name: "Undo", exact: true }).waitFor({ state: "visible", timeout: 10_000 });
     await page.waitForTimeout(400);
     await shot("items-removed-undo");
-    await page.getByRole("button", { name: "Bring it back" }).click();
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
     await page.getByRole("link", { name: /view/i }).first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
     await page.waitForTimeout(400);
+    if (only) return;
 
     // Epic R: usage-round scripted-tap surfaces. Like the /welcome beats below,
     // these are driven by role/accessible-name (never CSS), with the same img-wait

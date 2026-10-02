@@ -10,7 +10,7 @@ export function Header() {
   const router = useRouter();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-surface/85 backdrop-blur-md border-b border-hairline shadow-lift">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-glass-strong backdrop-blur-md border-b border-rim shadow-lift">
       <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/collections" className="flex items-center" aria-label="Adored home">
           <span className="font-display text-xl text-ink">Adored</span>

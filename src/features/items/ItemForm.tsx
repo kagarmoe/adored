@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
 import { Button, Input, Textarea, ErrorMessage } from "@/components/ui";
-import { apiPost, apiPatch } from "@/lib/api-client";
+import { apiPost } from "@/lib/api-client";
 import { z } from "zod";
 
 const itemSchema = z.object({
@@ -17,24 +17,18 @@ const itemSchema = z.object({
   notes: z.string().optional(),
 });
 
-interface ItemFormProps {
-  item?: Item;
-  collectionId: string;
-  mode: "create" | "edit";
-}
-
-export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
+export function ItemForm({ collectionId }: { collectionId: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    name: item?.name || "",
-    brand: item?.brand || "",
-    style: item?.style || "",
-    color: item?.color || "",
-    material: item?.material || "",
-    category: item?.category || "",
-    notes: item?.notes || "",
+    name: "",
+    brand: "",
+    style: "",
+    color: "",
+    material: "",
+    category: "",
+    notes: "",
   });
 
   async function handleSubmit(e: React.FormEvent) {
@@ -45,15 +39,9 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
     try {
       const validated = itemSchema.parse(formData);
 
-      if (mode === "create") {
-        const result = await apiPost<Item>(`/api/collections/${collectionId}/items`, validated);
-        // The server assigns a catalog number; the page URL uses that human-readable number.
-        router.push(`/collections/${collectionId}/items/${result.number}`);
-      } else if (item) {
-        // PATCH targets the stable ULID; the page URL uses the human-readable catalog number.
-        await apiPatch(`/api/collections/${collectionId}/items/${item.id}`, validated);
-        router.push(`/collections/${collectionId}/items/${item.number}`);
-      }
+      const result = await apiPost<Item>(`/api/collections/${collectionId}/items`, validated);
+      // The server assigns a catalog number; the page URL uses that human-readable number.
+      router.push(`/collections/${collectionId}/items/${result.number}`);
     } catch (err: any) {
       if (err instanceof z.ZodError) {
         setError(err.issues[0].message);
@@ -122,7 +110,7 @@ export function ItemForm({ item, collectionId, mode }: ItemFormProps) {
 
       <div className="grid grid-cols-2 gap-3 sm:flex">
         <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-          {loading ? "Saving..." : mode === "create" ? "Add item" : "Save changes"}
+          {loading ? "Saving..." : "Add item"}
         </Button>
         <Button
           variant="secondary"

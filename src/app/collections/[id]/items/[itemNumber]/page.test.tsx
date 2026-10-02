@@ -2,16 +2,16 @@
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
-const { mockGetSession, mockRequireAccess, itemRepo, photoRepo, membershipRepo } = vi.hoisted(
-  () => ({
-    mockGetSession: vi.fn(),
-    mockRequireAccess: vi.fn(),
-    itemRepo: { findByCollectionAndNumber: vi.fn() },
-    photoRepo: { findByItem: vi.fn() },
-    membershipRepo: { findByUser: vi.fn() },
-  }),
-);
+const { mockGetSession, mockRequireAccess, itemRepo, photoRepo, decisions, sessions } = vi.hoisted(() => ({
+  mockGetSession: vi.fn(),
+  mockRequireAccess: vi.fn(),
+  itemRepo: { findByCollectionAndNumber: vi.fn() },
+  photoRepo: { findByItem: vi.fn() },
+  decisions: { listForCurator: vi.fn() },
+  sessions: { listByCollectionAndCurator: vi.fn() },
+}));
 
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
@@ -25,33 +25,24 @@ vi.mock("@/components/layout", () => ({ AppLayout: ({ children }: any) => <div>{
 vi.mock("@/lib/collection-access", () => ({ requireCollectionAccess: mockRequireAccess }));
 vi.mock("@/server/repositories/implementations/ItemRepository", () => ({ ItemRepository: vi.fn(function () { return itemRepo; }) }));
 vi.mock("@/server/repositories/implementations/PhotoRepository", () => ({ PhotoRepository: vi.fn(function () { return photoRepo; }) }));
-vi.mock("@/server/repositories/implementations/MembershipRepository", () => ({ MembershipRepository: vi.fn(function () { return membershipRepo; }) }));
+vi.mock("@/server/api/decisions", () => ({ DecisionController: { fromDb: () => decisions } }));
+vi.mock("@/server/api/sessions", () => ({ SessionController: { fromDb: () => sessions } }));
 
 import ItemDetailPage from "./page";
 
 const COLLECTION = { id: "coll_01ABCDEF", slug: "summer-bags", name: "Summer Bags", ownerId: "u1" };
 const ITEM = {
-  id: "item_1",
-  collectionId: "coll_01ABCDEF",
-  number: 7,
-  name: "Bag",
-  brand: "Acme",
-  style: null,
-  color: null,
-  material: null,
-  category: null,
-  notes: null,
-  story: null,
-  status: "active",
+  id: "item_1", collectionId: "coll_01ABCDEF", number: 7, name: "Bag", brand: "Acme", style: null,
+  color: null, material: null, category: null, notes: null, story: null, status: "active",
+  height: null, width: null, depth: null, weight: null, unit: "imperial",
+  createdAt: new Date(), updatedAt: new Date(), deletedAt: null,
 };
 const photo = (id: string, isHero = false) => ({
-  id,
-  itemId: "item_1",
-  collectionId: "coll_01ABCDEF",
-  rotation: 0,
-  isHero,
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  id, itemId: "item_1", collectionId: "coll_01ABCDEF", rotation: 0, isHero,
+  createdAt: new Date(), updatedAt: new Date(),
+});
+const usage = (id: string, itemId: string, result: string, at: string) => ({
+  id, type: "usage", decision: { itemId, result }, createdAt: new Date(at),
 });
 
 beforeEach(() => {
@@ -60,86 +51,45 @@ beforeEach(() => {
   mockRequireAccess.mockResolvedValue(COLLECTION);
   itemRepo.findByCollectionAndNumber.mockResolvedValue(ITEM);
   photoRepo.findByItem.mockResolvedValue([photo("p1", true), photo("p2")]);
-  membershipRepo.findByUser.mockResolvedValue(null); // owner by default (COLLECTION.ownerId === u1)
+  decisions.listForCurator.mockResolvedValue([]);
+  sessions.listByCollectionAndCurator.mockResolvedValue([]);
+  global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }) as never;
 });
 
 const renderPage = async () => render(await ItemDetailPage({ params: Promise.resolve({ id: "summer-bags", itemNumber: "7" }) }));
 
-describe("ItemDetailPage redesign (carousel + info card)", () => {
-  it("renders the photo carousel and the Details card with a contextual edit link", async () => {
+describe("ItemDetailPage (photos + item panel)", () => {
+  it("shows the photos (by collection ULID, cover first, each with its ··· menu), the subtitle, and the editable panel", async () => {
     await renderPage();
-    expect(screen.getByRole("group", { name: /photos of/i })).toBeInTheDocument();
-    expect(screen.getByText("Details")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /edit details/i })).toHaveAttribute(
-      "href",
-      "/collections/summer-bags/items/7/edit",
-    );
-  });
-
-  it("drops the old Hero-centric layout (no h-96 hero box, no 'No hero photo' copy)", async () => {
-    const { container } = await renderPage();
-    expect(container.querySelector(".h-96")).toBeNull();
-    expect(screen.queryByText(/no hero photo/i)).not.toBeInTheDocument();
-  });
-
-  it("requests the carousel image via the collection ULID (not the slug)", async () => {
-    await renderPage();
-    const src = (screen.getByRole("img") as HTMLImageElement).getAttribute("src") ?? "";
+    const src = screen.getByRole("img").getAttribute("src") ?? "";
     expect(src).toContain("coll_01ABCDEF");
     expect(src).not.toContain("summer-bags");
+    expect(screen.getByRole("button", { name: "Show photo 1 (cover)" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "More for photo 2" })).toBeInTheDocument();
+    expect(screen.getByText(/^#7 · added in /)).toBeInTheDocument();
+    expect(screen.getByLabelText("Name")).toHaveValue("Bag");
   });
 
-  it("shows the per-photo delete control to the owner", async () => {
-    await renderPage();
-    expect(screen.getAllByRole("button", { name: /delete this photo/i }).length).toBeGreaterThan(0);
-  });
-
-  it("leads with the keepsake card when a story is present, escaping HTML as literal text (Epic 2)", async () => {
-    // XSS guard: a story containing an <img onerror> must render as TEXT, never as
-    // an injected element — React auto-escapes the child, no dangerouslySetInnerHTML.
-    const payload = '<img src=x onerror=alert(1)>';
-    itemRepo.findByCollectionAndNumber.mockResolvedValue({ ...ITEM, story: payload });
-    const { container } = await renderPage();
-
-    expect(screen.getByRole("heading", { name: /where will it go next\?/i })).toBeInTheDocument();
-    expect(screen.getByText(/a keepsake, kept after the choice/i)).toBeInTheDocument();
-    // The payload appears verbatim as text…
-    expect(screen.getByText(payload)).toBeInTheDocument();
-    // …and NO img[onerror] / script was injected from it.
-    expect(container.querySelector("img[onerror]")).toBeNull();
-    expect(container.querySelector("script")).toBeNull();
-  });
-
-  it("shows no keepsake card and no forward-framed heading when the story is empty (Epic 2)", async () => {
-    itemRepo.findByCollectionAndNumber.mockResolvedValue({ ...ITEM, story: "   " });
-    await renderPage();
-    expect(screen.queryByText(/where will it go next\?/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/a keepsake, kept after the choice/i)).not.toBeInTheDocument();
-  });
-
-  it("invites naming a nameless item — no 'Incomplete'/percentage framing (Epic 2 tone)", async () => {
+  it("names a nameless item by its number, with no 'incomplete' framing", async () => {
     itemRepo.findByCollectionAndNumber.mockResolvedValue({ ...ITEM, name: null });
     await renderPage();
-    expect(screen.getByRole("link", { name: /add a name/i })).toBeInTheDocument();
-    expect(screen.queryByText(/incomplete/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/%/)).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("#7");
+    expect(screen.queryByText(/incomplete|missing|%/i)).not.toBeInTheDocument();
   });
 
-  it("shows the delete control to a curator member (any member may delete — role model, not flags)", async () => {
-    // This assertion is NOT stricter than the API — it matches it exactly. The photos
-    // DELETE route gates on requireApiCapability("photos:write"), and CAPABILITIES
-    // ["photos:write"] = "curator", which resolveEffectiveRole grants to the owner or
-    // any membership row. The page's canDeletePhotos (ownerId === user || membership)
-    // mirrors that boundary, so the control is visible to exactly the set the API lets
-    // delete: owner-or-curator. Flags are gone; role is the sole model.
-    mockRequireAccess.mockResolvedValue({ ...COLLECTION, ownerId: "someone_else" });
-    membershipRepo.findByUser.mockResolvedValue({ id: "m1", role: "curator" });
+  it("feeds the chip this item's latest answer and the curator's in-progress session", async () => {
+    decisions.listForCurator.mockResolvedValue([
+      usage("e1", "item_1", "not_uses", "2026-01-01"),
+      usage("e2", "item_1", "uses", "2026-02-01"),
+      usage("e3", "other", "not_uses", "2026-03-01"),
+    ]);
+    sessions.listByCollectionAndCurator.mockResolvedValue([
+      { id: "s_done", status: "completed" },
+      { id: "s_open", status: "paused" },
+    ]);
     await renderPage();
-    expect(screen.getAllByRole("button", { name: /delete this photo/i }).length).toBeGreaterThan(0);
-  });
-
-  it("offers 'Remove from collection' to a member (purses-v7gv; true side only — with no viewer tier, any renderer is a member)", async () => {
-    await renderPage();
-    expect(screen.getByRole("button", { name: /remove from collection/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "I use this" })).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(screen.getByRole("button", { name: "Resting" }));
+    expect((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe("/api/sessions/s_open/decisions");
   });
 });

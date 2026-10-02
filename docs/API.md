@@ -243,7 +243,7 @@ Authenticated. **Body** → `createCollection`; also creates the caller's **owne
 `getSession` + `requireApiCollectionAccess` (member-or-owner). `GET` → `Item[]`. `POST` body → `201 Item`. `400` invalid JSON; `401`/`403`/`404`.
 
 ### `PATCH /api/collections/[id]/items/[itemId]`
-`getSession` + `requireApiCapability("items:write")` (**curator** — any member; the old `canEditMetadata` flag is inert), resolved **before** **belongs-to-parent** (`item.collectionId !== id` → `404`) — authz precedes existence (`purses-ct0`). **Body:** `{ name?, brand?, style?, color?, material?, category?, notes? }` (all nullable). Returns updated `Item`. `400` invalid input; `401`/`403`/`404`.
+`getSession` + `requireApiCapability("items:write")` (**curator** — any member; the old `canEditMetadata` flag is inert), resolved **before** **belongs-to-parent** (`item.collectionId !== id` → `404`) — authz precedes existence (`purses-ct0`). **Body (strict — `UpdateItemSchema`):** `{ name?: string (trimmed, 1-200), brand?|style?|color?|material?|category?: string|null (≤200), notes?: string|null (≤5000), story?: string|null (≤2000), status?: string, height?|width?|depth?|weight?: number|null (0-100000, finite), unit?: "imperial"|"metric" }`. `null` or a blank string clears a field; an unknown key, a negative/non-finite/string measure, a whitespace-only name or an out-of-set unit is `400` with nothing written. Numbers are stored as Postgres `numeric` and read back as strings. The unit only relabels; stored numbers are never converted. Same schema (`ItemController.updateItem`) backs `PATCH /api/items/[id]`. Returns updated `Item`. `400` invalid input; `401`/`403`/`404`.
 
 ## item photos
 
@@ -340,7 +340,7 @@ These routes are now scoped to the item's collection (IDOR closed — pv9 PR1, `
 `requireAuth` + `requireApiCollectionAccess(collectionId)` (member-or-owner). `collectionId` is a **query param** (`400` if missing); body → `createItem(collectionId, body)`. `201 Item`. `401`/`403`/`404`.
 
 ### `GET·PATCH·DELETE /api/items/[id]`
-`requireAuth` + resolve the item (`404` absent/deleted) + `requireApiCollectionAccess(item.collectionId)` (member-or-owner). `GET` → `Item`; `PATCH` body → updated `Item` (`400` invalid JSON); `DELETE` → `{ message, item }` (soft delete). `401`/`403`/`404`.
+`requireAuth` + resolve the item (`404` absent/deleted) + `requireApiCollectionAccess(item.collectionId)` (member-or-owner). `GET` → `Item`; `PATCH` body → updated `Item` (same `UpdateItemSchema` contract as the collection-item PATCH; `400` invalid JSON or input); `DELETE` → `{ message, item }` (soft delete). `401`/`403`/`404`.
 
 ### `POST /api/items/[id]/restore`
 `requireAuth` + resolve the item including soft-deleted (`findByIdIncludingDeleted`; `404` absent) + `requireApiCollectionAccess(item.collectionId)` (member-or-owner). Restores a soft-deleted item.

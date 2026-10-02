@@ -5,8 +5,9 @@ import { getTestDb, closeDb } from "./fixtures/db";
 import { seedRemovalScenario } from "./fixtures/seed";
 import { apiContextFor } from "./fixtures/api-auth";
 
-// API-level e2e for the ENTIRE item-removal workflow (purses-u3p). There is no
-// UI for purge / remove-from-sorts, so these drive the REAL routes against the
+// API-level e2e for the ENTIRE item-removal workflow (purses-u3p). The item panel's
+// ··· menu is the UI for archive / purge / remove-from-sorts (its jsdom tests cover the
+// branches); these stay API-level and drive the REAL routes against the
 // prod build + ephemeral Postgres through authenticated APIRequestContexts —
 // one for the owner, one for a non-owner (the harness ships a single shared
 // storageState; the non-owner context is net-new, required for the authz case).

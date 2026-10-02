@@ -21,3 +21,5 @@ export { CardImage } from "./CardImage";
 export type { ViewerPhoto } from "./ImageViewer";
 
 export { PhotoViewControl } from "./PhotoViewControl";
+
+export { OverflowMenu, type OverflowMenuItem } from "./OverflowMenu";

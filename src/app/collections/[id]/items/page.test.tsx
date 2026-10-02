@@ -4,19 +4,26 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import type { Collection, Item } from "@/types";
 
-const { mockGetSession, mockRequireAccess, itemController, photoController } = vi.hoisted(() => ({
+const { mockGetSession, mockRequireAccess, itemController, photoController, preferenceController } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockRequireAccess: vi.fn(),
-  itemController: { listItems: vi.fn() },
+  itemController: { listItems: vi.fn(), listArchived: vi.fn() },
   photoController: { findCoverPhotosByItemIds: vi.fn() },
+  preferenceController: { listItemPreferences: vi.fn() },
 }));
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
-vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn(),
+  useRouter: () => ({ refresh: vi.fn() }),
+  usePathname: () => "/",
+  useSearchParams: () => new URLSearchParams(),
+}));
 vi.mock("@/components/layout", () => ({ AppLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
 vi.mock("@/lib/collection-access", () => ({ requireCollectionAccess: mockRequireAccess }));
 vi.mock("@/server/api/items", () => ({ ItemController: { fromDb: () => itemController } }));
 vi.mock("@/server/api/photos", () => ({ PhotoController: { fromDb: () => photoController } }));
+vi.mock("@/server/api/preferences", () => ({ PreferenceController: { fromDb: () => preferenceController } }));
 
 import ItemsPage from "./page";
 
@@ -61,20 +68,22 @@ function makeItem(number: number, name: string | null, status = "active"): Item 
   };
 }
 
-// A named active item, an unnamed active item (#2), and an archived named item.
+// A named live item, an unnamed live item (#2), and a soft-deleted (archived) item.
 const NAMED = makeItem(1, "Tote");
 const UNNAMED = makeItem(2, null);
-const ARCHIVED = makeItem(3, "Old clutch", "archived");
+const ARCHIVED = makeItem(3, "Old clutch");
 
 beforeEach(() => {
   vi.clearAllMocks();
   mockGetSession.mockResolvedValue({ user: { id: "u1" } });
   mockRequireAccess.mockResolvedValue(makeCollection());
-  itemController.listItems.mockResolvedValue([NAMED, UNNAMED, ARCHIVED]);
+  itemController.listItems.mockResolvedValue([NAMED, UNNAMED]);
+  itemController.listArchived.mockResolvedValue([ARCHIVED]);
+  preferenceController.listItemPreferences.mockResolvedValue([{ itemId: "item_1", rankBucket: "top" }]);
   photoController.findCoverPhotosByItemIds.mockResolvedValue(new Map());
 });
 
-async function renderPage(searchParams?: { status?: string; unnamed?: string }) {
+async function renderPage(searchParams?: { status?: string; unnamed?: string; q?: string }) {
   const ui = await ItemsPage({
     params: Promise.resolve({ id: "summer-bags" }),
     searchParams: searchParams ? Promise.resolve(searchParams) : undefined,
@@ -82,79 +91,45 @@ async function renderPage(searchParams?: { status?: string; unnamed?: string }) 
   return render(ui);
 }
 
-describe("/collections/[id]/items owns its status/unnamed query state", () => {
-  it("no query: shows the full grid (every status, named + unnamed)", async () => {
+describe("/collections/[id]/items: card grid, search, and the All / Archived / Waiting for a name pills", () => {
+  it("All: live items as cards linking to the panel, with a tier chip once sorted", async () => {
     await renderPage();
-    expect(screen.getByRole("link", { name: "Tote" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "#2" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Old clutch" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Tote" })).toHaveAttribute("href", "/collections/summer-bags/items/1");
+    // The dots are named by the tier, not read out as "black circle" ×4.
+    expect(screen.getByRole("img", { name: "Love" })).toHaveTextContent("●●●●");
+    expect(screen.queryByText("Old clutch")).not.toBeInTheDocument();
+    expect(itemController.listArchived).not.toHaveBeenCalled();
   });
 
-  it("?status=archived filters the grid to archived items", async () => {
+  it("Archived: lists soft-deleted items with Bring back and no panel link", async () => {
     await renderPage({ status: "archived" });
-    expect(screen.getByRole("link", { name: "Old clutch" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Tote" })).not.toBeInTheDocument();
+    expect(screen.getByText("Old clutch")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Bring back" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Old clutch" })).not.toBeInTheDocument();
+    expect(preferenceController.listItemPreferences).not.toHaveBeenCalled();
+  });
+
+  it("search narrows the grid and keeps the query in the field", async () => {
+    await renderPage({ q: "tote" });
+    expect(screen.getByRole("link", { name: "Tote" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "#2" })).not.toBeInTheDocument();
-    // the Archived filter is the selected (primary) control, and its link keeps status=archived
-    const archived = screen.getByRole("link", { name: "Archived" });
-    expect(archived.querySelector("button")?.className).toContain("bg-primary");
-    expect(archived).toHaveAttribute("href", "/collections/summer-bags/items?status=archived");
+    expect(screen.getByRole("searchbox", { name: "Search your items" })).toHaveValue("tote");
   });
 
-  it("?unnamed=1 filters the grid to items waiting for a name", async () => {
-    await renderPage({ unnamed: "1" });
-    expect(screen.getByRole("link", { name: "#2" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Tote" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Old clutch" })).not.toBeInTheDocument();
-    // the toggle is selected (primary) and, when on, links back to dropping the flag
-    const toggle = screen.getByRole("link", { name: "Unnamed, waiting for a name" });
-    expect(toggle.querySelector("button")?.className).toContain("bg-primary");
-    expect(toggle).toHaveAttribute("href", "/collections/summer-bags/items");
-  });
-
-  it("status + unnamed compose (archived AND waiting for a name → empty grid, gentle state)", async () => {
-    await renderPage({ status: "archived", unnamed: "1" });
-    // ARCHIVED has a name, so nothing matches; the calm empty state shows, not a card.
-    expect(screen.queryByRole("link", { name: "Old clutch" })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Everything has a name" })).toBeInTheDocument();
+  it("names the collection and never counts the items", async () => {
+    await renderPage();
+    expect(screen.getByRole("heading", { level: 1, name: "Summer Bags" })).toBeInTheDocument();
+    expect(screen.queryByText(/\d+ items?\b/)).not.toBeInTheDocument();
   });
 });
 
 describe("/items is a section index: lateral mode chips (wayfinding invariant 3)", () => {
   it("renders the Build/Sort/Decide chips with Build current-section (aria-current=\"true\", not \"page\")", async () => {
     await renderPage();
-    // Page-owned facts only: chips wired with the right mode + non-exact
-    // aria-current. Chip internals are pinned by WorkspaceModeChips.test.tsx.
     const nav = screen.getByRole("navigation", { name: "Workspace mode" });
     expect(within(nav).getByRole("link", { name: "Build" })).toHaveAttribute(
       "aria-current",
       "true",
     );
-  });
-});
-
-describe("durable /items labels are sentence case (governed allowlist, asserted once)", () => {
-  it("renders the governed labels by role + accessible name and no legacy casing", async () => {
-    await renderPage();
-    // sentence-case action + the gentle person-side filter state
-    expect(screen.getByRole("link", { name: "Add item" })).toHaveAttribute(
-      "href",
-      "/collections/summer-bags/items/new",
-    );
-    expect(screen.getByRole("link", { name: "Unnamed, waiting for a name" })).toBeInTheDocument();
-    // legacy Title Case is gone
-    expect(screen.queryByRole("link", { name: "Add Item" })).not.toBeInTheDocument();
-  });
-
-  it("empty collection's add action is also sentence case", async () => {
-    itemController.listItems.mockResolvedValue([]);
-    await renderPage();
-    // header button + empty-state action both render; both must be sentence case.
-    const adds = screen.getAllByRole("link", { name: "Add item" });
-    expect(adds.length).toBeGreaterThan(0);
-    adds.forEach((a) =>
-      expect(a).toHaveAttribute("href", "/collections/summer-bags/items/new"),
-    );
-    expect(screen.queryByRole("link", { name: "Add Item" })).not.toBeInTheDocument();
   });
 });

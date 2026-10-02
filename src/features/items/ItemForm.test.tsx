@@ -14,7 +14,6 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { ItemForm } from "./ItemForm";
-import type { Item } from "@/types";
 
 // Inputs in ItemForm carry no id/name/htmlFor, so getByLabelText cannot link
 // them. The wrapper renders <label>{text}</label> followed by the control as
@@ -43,7 +42,7 @@ describe("ItemForm", () => {
       json: async () => ({ id: "itm_01ULID", number: 42 }),
     });
 
-    render(<ItemForm collectionId="coll_01ULID" mode="create" />);
+    render(<ItemForm collectionId="coll_01ULID" />);
 
     type("Item name", "Hobo Bag");
     type("Brand", "Coach");
@@ -75,7 +74,7 @@ describe("ItemForm", () => {
     // redundant backstop that is unreachable via normal UI submission.)
     (fetch as any).mockResolvedValue({ ok: true, json: async () => ({}) });
 
-    render(<ItemForm collectionId="coll_01ULID" mode="create" />);
+    render(<ItemForm collectionId="coll_01ULID" />);
     // Leave Item name empty; submit.
     fireEvent.click(screen.getByRole("button", { name: "Add item" }));
 
@@ -92,7 +91,7 @@ describe("ItemForm", () => {
       json: async () => ({ error: "Item already exists" }),
     });
 
-    render(<ItemForm collectionId="coll_01ULID" mode="create" />);
+    render(<ItemForm collectionId="coll_01ULID" />);
     type("Item name", "Hobo Bag");
     fireEvent.click(screen.getByRole("button", { name: "Add item" }));
 
@@ -100,35 +99,5 @@ describe("ItemForm", () => {
       expect(screen.getByText("Item already exists")).toBeInTheDocument(),
     );
     expect(push).not.toHaveBeenCalled();
-  });
-
-  it("edit: PATCHes the stable ULID with the changed fields, then redirects to the catalog number", async () => {
-    (fetch as any).mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({}),
-    });
-
-    const item = {
-      id: "itm_01ULID",
-      number: 7,
-      name: "Old Name",
-      brand: "Coach",
-    } as Item;
-
-    render(<ItemForm item={item} collectionId="coll_01ULID" mode="edit" />);
-
-    type("Item name", "New Name");
-    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
-
-    await waitFor(() =>
-      expect(push).toHaveBeenCalledWith("/collections/coll_01ULID/items/7"),
-    );
-
-    const [url, init] = (fetch as any).mock.calls[0];
-    // PATCH targets the ULID, not the catalog number.
-    expect(url).toBe("/api/collections/coll_01ULID/items/itm_01ULID");
-    expect(init.method).toBe("PATCH");
-    expect(JSON.parse(init.body).name).toBe("New Name");
   });
 });

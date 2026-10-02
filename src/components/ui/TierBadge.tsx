@@ -8,8 +8,8 @@ const tierBadgeVariants = cva(
       tier: {
         love: "bg-tier-love text-tier-love-ink",
         like: "bg-tier-like text-tier-like-ink",
-        maybe: "bg-tier-maybe text-tier-maybe-ink",
-        onward: "bg-tier-onward text-tier-onward-ink",
+        maybe: "bg-tier-maybe text-tier-maybe-ink ring-1 ring-ink-soft",
+        onward: "bg-tier-onward text-tier-onward-ink ring-1 ring-ink-soft",
       },
     },
     defaultVariants: { tier: "love" },

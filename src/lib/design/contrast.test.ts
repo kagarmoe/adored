@@ -39,8 +39,10 @@ function strict(vars: ThemeTokens): ThemeTokens {
   });
 }
 
-const lightScope = scopeVars(/:root\s*\{([^}]*)\}/);
-const darkScope = scopeVars(/\[data-theme="dark"\]\s*\{([^}]*)\}/);
+const LIGHT = /:root\s*\{([^}]*)\}/;
+const DARK = /^\[data-theme="dark"\]\s*\{([^}]*)\}/m;
+const lightScope = scopeVars(LIGHT);
+const darkScope = scopeVars(DARK);
 
 const light = strict(lightScope);
 // Dark inherits the way CSS does: a var undeclared in [data-theme="dark"]
@@ -58,6 +60,11 @@ it("dark scope redeclares every light token (parser-honesty guard)", () => {
   const darkKeys = Object.keys(darkScope).sort();
   expect(darkKeys).toEqual(lightKeys);
 });
+
+const GLASS_COMPOSITES = [
+  "glassOnAqua", "glassOnMint",
+  "glassStrongOnAqua", "glassStrongOnMint", "glassStrongOnBlack", "glassStrongOnWhite",
+] as const;
 
 // [foreground, background, minRatio, label]
 function pairings(t: ThemeTokens): [string, string, number, string][] {
@@ -93,6 +100,23 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     [t.primaryInk, t.error, 4.5, "text on error (destructive button)"],
     [t.ringSweep, t.ringTrack, 3.0, "ring sweep on ring track (round timer, sole sighted signal)"],
     [t.ink, t.surfaceRaised, 4.5, "expired ring ✓ (ink) on the recap badge disc (surface-raised)"],
+    [t.ink, t.groundAqua, 4.5, "ink on ground wash (aqua stop)"],
+    [t.ink, t.groundMint, 4.5, "ink on ground wash (mint stop)"],
+    [t.inkSoft, t.groundAqua, 4.5, "ink-soft on aqua stop"],
+    [t.inkSoft, t.groundMint, 4.5, "ink-soft on mint stop"],
+    [t.primary, t.groundAqua, 4.5, "primary link on aqua stop"],
+    [t.primary, t.groundMint, 4.5, "primary link on mint stop"],
+    [t.ink, t.card, 4.5, "ink on card"],
+    [t.inkSoft, t.card, 4.5, "ink-soft on card"],
+    [t.primary, t.card, 4.5, "primary link on card"],
+    [t.chipInk, t.chip, 4.5, "chip ink on chip (selected pill / chip)"],
+    [t.primary, t.chip, 3.0, "selected border (primary) on chip"],
+    ...GLASS_COMPOSITES.flatMap((k): [string, string, number, string][] => [
+      [t.ink, t[k], 4.5, `ink on ${k}`],
+      [t.inkSoft, t[k], 4.5, `ink-soft on ${k}`],
+      // Text on glass is ink/ink-soft; primary on glass marks controls only (DESIGN §2).
+      [t.primary, t[k], 3.0, `primary control edge on ${k}`],
+    ]),
   ];
 }
 
@@ -104,6 +128,42 @@ describe("design tokens meet WCAG AA", () => {
     for (const [fg, bg, min, label] of pairings(tokens)) {
       it(`${theme}: ${label} >= ${min}:1`, () => {
         expect(wcagContrast(fg, bg)).toBeGreaterThanOrEqual(min);
+      });
+    }
+  }
+});
+
+// Translucent tokens are `rgb(R G B / A)` — the hex parser skips them, so read them here and
+// prove each declared composite really is that token over that backdrop (±1 per channel).
+const RGBA = /--color-(glass(?:-strong)?)\s*:\s*rgb\((\d+) (\d+) (\d+) \/ ([\d.]+)\)\s*;/g;
+function translucent(selector: RegExp): Record<string, { rgb: number[]; a: number }> {
+  const out: Record<string, { rgb: number[]; a: number }> = {};
+  for (const m of css.match(selector)![1].matchAll(RGBA)) {
+    out[m[1]] = { rgb: [+m[2], +m[3], +m[4]], a: +m[5] };
+  }
+  return out;
+}
+const rgbOf = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+describe("glass composites match their translucent tokens (drift guard)", () => {
+  for (const [theme, selector, t] of [["light", LIGHT, light], ["dark", DARK, dark]] as const) {
+    const g = translucent(selector);
+    it(`${theme}: declares glass + glass-strong, glass-strong >= 0.85 opaque`, () => {
+      expect(Object.keys(g).sort()).toEqual(["glass", "glass-strong"]);
+      expect(g["glass-strong"].a).toBeGreaterThanOrEqual(0.85);
+    });
+    const cases: [keyof typeof g, string, (typeof GLASS_COMPOSITES)[number]][] = [
+      ["glass", t.groundAqua, "glassOnAqua"],
+      ["glass", t.groundMint, "glassOnMint"],
+      ["glass-strong", t.groundAqua, "glassStrongOnAqua"],
+      ["glass-strong", t.groundMint, "glassStrongOnMint"],
+      ["glass-strong", "#000000", "glassStrongOnBlack"],
+      ["glass-strong", "#ffffff", "glassStrongOnWhite"],
+    ];
+    for (const [token, backdrop, composite] of cases) {
+      it(`${theme}: ${composite} is ${token} over ${backdrop}`, () => {
+        const { rgb, a } = g[token];
+        const expected = rgbOf(backdrop).map((b, i) => a * rgb[i] + (1 - a) * b);
+        rgbOf(t[composite]).forEach((c, i) => expect(Math.abs(c - expected[i])).toBeLessThanOrEqual(1));
       });
     }
   }

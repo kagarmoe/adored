@@ -19,3 +19,10 @@ it("associates the error text and marks the control invalid", () => {
   expect(ta.getAttribute("aria-describedby")).toBeTruthy();
   expect(screen.getByText("Too long").id).toBe(ta.getAttribute("aria-describedby"));
 });
+
+it("grows to fit a filled value instead of clipping it", () => {
+  const spy = vi.spyOn(HTMLTextAreaElement.prototype, "scrollHeight", "get").mockReturnValue(132);
+  render(<Textarea label="Story" value={"a long story\n".repeat(6)} onChange={() => {}} />);
+  expect((screen.getByLabelText("Story") as HTMLTextAreaElement).style.height).toBe("132px");
+  spy.mockRestore();
+});

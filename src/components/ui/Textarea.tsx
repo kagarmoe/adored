@@ -6,9 +6,18 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, className = "", id, ...props }, ref) => {
+  ({ label, error, className = "", id, rows = 3, ...props }, ref) => {
     const generatedId = React.useId();
     const textareaId = id ?? generatedId;
+    const inner = React.useRef<HTMLTextAreaElement>(null);
+    React.useImperativeHandle(ref, () => inner.current!);
+    // Grow to the content so a filled story never clips mid-line; `rows` is the floor.
+    React.useLayoutEffect(() => {
+      const el = inner.current;
+      if (!el) return;
+      el.style.height = "auto";
+      el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`;
+    }, [props.value]);
     return (
       <div className="w-full">
         {label && (
@@ -30,7 +39,8 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
             ${error ? "border-error focus-visible:ring-error" : ""}
             ${className}
           `}
-          ref={ref}
+          ref={inner}
+          rows={rows}
           {...props}
         />
         {error && (

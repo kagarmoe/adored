@@ -1,4 +1,4 @@
-import { eq, isNull, and, sql, asc } from "drizzle-orm";
+import { eq, isNull, isNotNull, and, sql, asc, desc } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { itemsTable } from "@/lib/db/schema";
 import type { Item } from "@/types";
@@ -109,6 +109,16 @@ export class ItemRepository {
     const items =
       options?.limit === undefined ? await ordered : await ordered.limit(options.limit);
     return items.map((i) => this.mapToItem(i));
+  }
+
+  // Soft-deleted ("archived") items of a collection, most recently archived first.
+  async findArchivedByCollection(collectionId: string): Promise<Item[]> {
+    const rows = await this.db
+      .select()
+      .from(itemsTable)
+      .where(and(eq(itemsTable.collectionId, collectionId), isNotNull(itemsTable.deletedAt)))
+      .orderBy(desc(itemsTable.deletedAt), asc(itemsTable.id));
+    return rows.map((r) => this.mapToItem(r));
   }
 
   async findByCollectionAndNumber(

@@ -26,8 +26,7 @@ export default async function PoolPage({ params }: PoolPageProps) {
   const collection = await requireCollectionAccess(db, id, session.user.id);
   const pool = await PhotoController.fromDb(db).findPoolByCollection(collection.id);
 
-  // Existing items feed the "Move to…" chooser's destination list, mirroring the
-  // item-side move flow (PhotoGallery -> PhotoMoveBar).
+  // Existing items feed the pool's "Move to…" chooser destination list.
   const items = await ItemController.fromDb(db).listItems(collection.id);
   const targets = items.map((i) => ({ id: i.id, number: i.number, name: i.name }));
 

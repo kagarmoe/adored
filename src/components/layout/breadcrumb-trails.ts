@@ -13,9 +13,7 @@ export interface TrailCollection {
 
 export interface TrailItem {
   name: string | null;
-  // Nullable to match the domain model; item routes fetch by number, so it is
-  // present in practice. A null number just drops the crumb's link (and with
-  // it the back arrow) instead of minting a broken href.
+  // Nullable to match the domain model; only feeds itemDisplayName's "#n" label.
   number: number | null;
 }
 
@@ -28,9 +26,7 @@ const base = (c: TrailCollection) => `/collections/${c.slug ?? c.id}`;
 
 // Linked-crumb constructors: every non-leaf level goes through one of these,
 // so the back-arrow invariant (non-last crumbs always have an href) holds by
-// construction — with one documented exception: a null item number leaves the
-// item crumb unlinked (see itemPrefix). Each trail below is a parent prefix +
-// an unlinked leaf.
+// construction. Each trail below is a parent prefix + an unlinked leaf.
 const collectionsCrumb: Crumb = { label: "Collections", href: "/collections" };
 const collectionPrefix = (c: TrailCollection): Crumb[] => [
   collectionsCrumb,
@@ -39,13 +35,6 @@ const collectionPrefix = (c: TrailCollection): Crumb[] => [
 const itemsPrefix = (c: TrailCollection): Crumb[] => [
   ...collectionPrefix(c),
   { label: "Items", href: `${base(c)}/items` },
-];
-const itemPrefix = (c: TrailCollection, item: TrailItem): Crumb[] => [
-  ...itemsPrefix(c),
-  {
-    label: itemDisplayName(item),
-    ...(item.number != null ? { href: `${base(c)}/items/${item.number}` } : {}),
-  },
 ];
 const sortPrefix = (c: TrailCollection): Crumb[] => [
   ...collectionPrefix(c),
@@ -76,14 +65,6 @@ export const trail = {
   item: (c: TrailCollection, item: TrailItem): Crumb[] => [
     ...itemsPrefix(c),
     { label: itemDisplayName(item) },
-  ],
-  itemEdit: (c: TrailCollection, item: TrailItem): Crumb[] => [
-    ...itemPrefix(c, item),
-    { label: "Edit" },
-  ],
-  itemPhotos: (c: TrailCollection, item: TrailItem): Crumb[] => [
-    ...itemPrefix(c, item),
-    { label: "Photos" },
   ],
   sort: (c: TrailCollection): Crumb[] => [...collectionPrefix(c), { label: "Sort" }],
   sortNew: (c: TrailCollection): Crumb[] => [...sortPrefix(c), { label: "New session" }],
