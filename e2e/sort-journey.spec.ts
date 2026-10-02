@@ -100,6 +100,8 @@ test.describe("sort journey", () => {
     await page.reload();
     await expect(rows.first().getByRole("link")).toHaveText(second);
     await expect(page.getByRole("button", { name: `Unpin ${second}` })).toBeVisible();
+    // A pinned row keeps its name readable at this width (phone included): it wraps, never clips.
+    expect(await rows.first().getByRole("link").evaluate((el) => el.scrollHeight <= el.clientHeight && el.clientWidth > 80)).toBe(true);
 
     // ── Save and share ───────────────────────────────────────────────────────
     await page.getByRole("button", { name: "Save and share" }).click();
@@ -110,10 +112,15 @@ test.describe("sort journey", () => {
     await saved;
     const link = await page.getByLabel("Link to share").inputValue();
     expect(link).toMatch(/\/shared-results\/[0-9a-f]{64}$/);
+    const token = link.split("/").pop() as string;
+
+    // The hand-placed piece stays where it was put after saving (a fresh draft holds it).
+    await expect(page.getByRole("button", { name: `Unpin ${second}` })).toBeVisible();
+    await expect(rows.first().getByRole("link")).toHaveText(second);
 
     const { db } = getTestDb();
     const results = await db.select().from(sortResultsTable).where(eq(sortResultsTable.collectionId, collectionId));
-    expect(results.map((r) => r.status)).toEqual(["finalized"]);
+    expect(results.map((r) => r.status).sort()).toEqual(["draft", "finalized"]);
     const sessions = await db.select().from(sessionsTable).where(eq(sessionsTable.collectionId, collectionId));
     expect(sessions.map((s) => s.status)).toEqual(["completed"]);
 
@@ -123,11 +130,13 @@ test.describe("sort journey", () => {
     const anon = await stranger.newPage();
     await anon.route("**/api/shared-results/*/photos/**", (route) => route.fulfill({ path: FIXTURE, contentType: "image/webp" }));
     const path = new URL(link).pathname;
-    const photo = anon.waitForResponse((r) => /\/api\/shared-results\/[^/]+\/photos\//.test(new URL(r.url()).pathname));
+    const photo = anon.waitForRequest((r) => new URL(r.url()).pathname.startsWith(`/api/shared-results/${token}/photos/`));
     await anon.goto(path);
     await expect(anon).toHaveURL((u) => u.pathname === path);
     await expect(anon.getByRole("heading", { name: "My journey keepers" })).toBeVisible();
-    expect((await photo).status()).toBe(200);
+    await photo;
+    // The order shown is the order saved: the piece moved to the top leads the shared page.
+    await expect(anon.locator("main h3").first()).toHaveText(second);
     await stranger.close();
   });
 });

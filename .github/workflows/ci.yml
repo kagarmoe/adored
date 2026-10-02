@@ -435,7 +435,7 @@ jobs:
           matched=0
           add() { area_specs="$area_specs $1"; matched=1; }
           if [ "$A_SORT" = "true" ]; then
-            add "e2e/sort-images.spec.ts e2e/sort-journey.spec.ts"
+            add "e2e/sort-images.spec.ts e2e/sort-journey.spec.ts e2e/decision-recovery.spec.ts"
           fi
           if [ "$A_RESULTS" = "true" ]; then
             add "e2e/sort-journey.spec.ts"

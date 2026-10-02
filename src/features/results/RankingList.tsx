@@ -168,7 +168,7 @@ export function RankingList({ collectionId, rows }: { collectionId: string; rows
               />
             </span>
             <span className="min-w-0 flex-1">
-              <Link href={row.href} className="block truncate text-ink underline-offset-2 hover:underline">
+              <Link href={row.href} className="line-clamp-2 break-words text-ink underline-offset-2 hover:underline">
                 {row.name}
               </Link>
               <span className="block text-xs text-ink-soft">
