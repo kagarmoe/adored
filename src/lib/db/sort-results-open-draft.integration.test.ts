@@ -8,7 +8,7 @@ import { seedBaseline, seedBareCollection, seedUserRow } from "../../../e2e/fixt
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { eq, sql } from "drizzle-orm";
-import { sortResultItemsTable, sortResultsTable } from "@/lib/db/schema";
+import { sortResultItemsTable, sortResultSharesTable, sortResultsTable } from "@/lib/db/schema";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { isUniqueViolation } from "@/server/repositories/pg-conflict";
@@ -95,6 +95,10 @@ describeDb("sort_results: one open draft per (collection, curator)", () => {
           id: `sri-${sortResultId}`, sortResultId, itemId: item.id, computedRank: 0, computedBucket: "top",
         })),
       );
+      // A share on a doomed draft would otherwise block its DELETE (no cascade) and the deploy.
+      await db.insert(sortResultSharesTable).values(
+        ["d2", "d3"].map((sortResultId) => ({ id: `share-${sortResultId}`, sortResultId, shareToken: `tok-${sortResultId}` })),
+      );
 
       for (const q of dedupe) await db.execute(sql.raw(q));
       await db.execute(sql.raw(index)); // building is the real assertion
@@ -104,6 +108,8 @@ describeDb("sort_results: one open draft per (collection, curator)", () => {
       const kept = await db.select().from(sortResultItemsTable).where(eq(sortResultItemsTable.sortResultId, "d3"));
       expect(kept).toHaveLength(1); // the newest draft keeps its rows
       expect(await db.select().from(sortResultItemsTable)).toHaveLength(2); // d1's row went with d1; saved's stays
+      const shares = (await db.select({ id: sortResultSharesTable.id }).from(sortResultSharesTable)).map((r) => r.id);
+      expect(shares).toEqual(["share-d3"]); // d2's share went with d2; the survivor's stays
     } finally {
       await resetDb();
       await db.execute(sql.raw(index.replace("CREATE UNIQUE INDEX", "CREATE UNIQUE INDEX IF NOT EXISTS")));
