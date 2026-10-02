@@ -34,6 +34,8 @@ export function KeepSortingButton({ collectionId, curatorId, sortHref, session }
           if (!res.ok && res.status !== 409) throw new Error("start");
         }
         router.push(sortHref); // stays busy through the navigation
+        // Start sorting sits on the sort URL itself; a same-URL push may not re-render it.
+        router.refresh();
       }}
     />
   );

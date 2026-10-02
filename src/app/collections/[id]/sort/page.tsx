@@ -22,6 +22,7 @@ import { TriageRound } from "@/features/sorting/TriageRound";
 import { CompareChoice } from "@/features/sorting/CompareChoice";
 import { SortProgress } from "@/features/sorting/SortProgress";
 import { PauseControl } from "@/features/sorting/PauseControl";
+import { ResumeOnLoad } from "@/features/sorting/ResumeOnLoad";
 import { COMPARE_SUBLINE } from "@/features/sorting/roundCopy";
 import { KeepSortingButton } from "@/features/sessions/KeepSortingButton";
 
@@ -96,6 +97,7 @@ export default async function SortPage({ params, searchParams }: SortPageProps) 
       breadcrumbs={trail.sort(collection)}
       actions={<PauseControl curatorId={curatorId} sessionId={open.id} collectionHref={base} />}
     >
+      {open.status === "paused" && <ResumeOnLoad curatorId={curatorId} sessionId={open.id} />}
       {/* Recovery gate: queued answers land before this screen trusts the server's view. */}
       <PendingDecisionsGate curatorId={curatorId}>
         {/* The provider and notice sit ABOVE the phase switch so "Bring back" survives the hand-off. */}
@@ -104,6 +106,9 @@ export default async function SortPage({ params, searchParams }: SortPageProps) 
             <TriageUndoNotice />
             {sortPhase.kind === "feelings" && (
               <TriageRound
+                // TriageRound seeds its state once; a new server queue (e.g. after the
+                // hand-off, a piece still needs a feeling) must remount it.
+                key={sortPhase.queue.map((e) => e.item.id).join(",")}
                 curatorId={curatorId}
                 sessionId={open.id}
                 collectionId={collection.id}

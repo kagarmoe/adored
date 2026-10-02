@@ -2,7 +2,7 @@
 import "@testing-library/jest-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import type { CollectionPreferenceItem, Item } from "@/types";
 
 // The page's own wiring (open-session resolution, ?phase=pairs, the phase switch)
@@ -39,12 +39,20 @@ vi.mock("@/features/sorting/PendingDecisionsGate", () => ({ PendingDecisionsGate
 vi.mock("@/features/sorting/TriageUndoProvider", () => ({ TriageUndoProvider: ({ children }: { children: ReactNode }) => children }));
 vi.mock("@/features/sorting/TriageUndoNotice", () => ({ TriageUndoNotice: () => null }));
 vi.mock("@/features/sorting/PauseControl", () => ({ PauseControl: () => <button type="button">Pause</button> }));
+vi.mock("@/features/sorting/ResumeOnLoad", () => ({
+  ResumeOnLoad: (p: { sessionId: string }) => <div data-testid="resume" data-session={p.sessionId} />,
+}));
+// Like the real TriageRound, the stub holds its queue in useState initialised once
+// from props — so only a remount (the page's key) shows a new server queue.
 vi.mock("@/features/sorting/TriageRound", () => ({
-  TriageRound: (p: { queue: Array<{ item: Item }>; placedSeed: number; nextHref: string }) => (
-    <div data-testid="feelings" data-next={p.nextHref} data-seed={p.placedSeed}>
-      {p.queue.map((e) => e.item.name).join(",")}
-    </div>
-  ),
+  TriageRound: function Stub(p: { queue: Array<{ item: Item }>; placedSeed: number; nextHref: string }) {
+    const [queue] = useState(p.queue);
+    return (
+      <div data-testid="feelings" data-next={p.nextHref} data-seed={p.placedSeed}>
+        {queue.map((e) => e.item.name).join(",")}
+      </div>
+    );
+  },
 }));
 vi.mock("@/features/sorting/CompareChoice", () => ({
   CompareChoice: (p: { itemA: Item; itemB: Item }) => <div data-testid="pair">{`${p.itemA.name}|${p.itemB.name}`}</div>,
@@ -60,8 +68,8 @@ const item = (id: string, createdAt = 0): Item =>
 const pref = (itemId: string, rankBucket: CollectionPreferenceItem["rankBucket"]): CollectionPreferenceItem =>
   ({ id: `p_${itemId}`, collectionId: "coll_1", curatorId: "u1", itemId, score: 0, confidence: 0, rankBucket, comparisonCount: 0 }) as CollectionPreferenceItem;
 
-const visit = async (phase?: string) =>
-  render(await SortPage({ params: Promise.resolve({ id: "bags" }), searchParams: Promise.resolve({ phase }) }));
+const page = (phase?: string) => SortPage({ params: Promise.resolve({ id: "bags" }), searchParams: Promise.resolve({ phase }) });
+const visit = async (phase?: string) => render(await page(phase));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -107,5 +115,27 @@ describe("the one Sort screen", () => {
     expect(screen.getByRole("heading", { name: "That’s everything for now" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "See your ranking" })).toHaveAttribute("href", "/collections/bags/results");
     expect(screen.queryByTestId("pair")).not.toBeInTheDocument();
+  });
+
+  it("a paused sort opened by URL is resumed by a client island, not during render", async () => {
+    h.sessions.mockResolvedValue([{ id: "sess_1", status: "paused" }]);
+    await visit();
+    expect(screen.getByTestId("resume")).toHaveAttribute("data-session", "sess_1");
+    expect(screen.getByTestId("feelings")).toBeInTheDocument();
+  });
+
+  it("an active sort mounts no resume island", async () => {
+    await visit();
+    expect(screen.queryByTestId("resume")).not.toBeInTheDocument();
+  });
+
+  it("a new feelings queue from the server remounts the round (no stale hand-off state)", async () => {
+    const { rerender } = await visit();
+    expect(screen.getByTestId("feelings")).toHaveTextContent("a,b,c");
+    // The hand-off replaced to ?phase=pairs, but a new piece (d) still needs a feeling.
+    h.items.mockResolvedValue([item("a", 1), item("b", 2), item("c", 3), item("d", 4)]);
+    h.prefs.mockResolvedValue([pref("a", "top"), pref("b", "high"), pref("c", "medium")]);
+    rerender(await page("pairs"));
+    expect(screen.getByTestId("feelings")).toHaveTextContent(/^d$/);
   });
 });

@@ -5,7 +5,8 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const push = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }));
+const refresh = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh }) }));
 vi.mock("@/features/sorting/decisionFlusher", () => ({
   drain: vi.fn().mockResolvedValue(undefined),
   triggerFlush: vi.fn().mockResolvedValue(undefined),
@@ -28,6 +29,8 @@ describe("KeepSortingButton (spec §4.1)", () => {
     renderButton(null);
     await userEvent.click(screen.getByRole("button", { name: "Start sorting" }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/collections/bags/sort"));
+    // Start sorting lives on the sort URL itself; a same-URL push alone may not re-render it.
+    expect(refresh).toHaveBeenCalled();
     expect(fetchMock).toHaveBeenCalledWith("/api/sessions", expect.objectContaining({ method: "POST", body: JSON.stringify({ collectionId: "coll_1" }) }));
   });
 
