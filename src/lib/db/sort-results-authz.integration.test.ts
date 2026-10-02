@@ -155,7 +155,7 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       const { db } = getTestDb();
       const { collectionId, resultId } = await seedResult(ownerId, ownerId);
       const item = await new ItemRepository(db).create({ collectionId }); // real FK parent
-      const other = await new SortResultRepository(db).create({ collectionId, curatorId: ownerId, name: "Other", status: "draft" });
+      const other = await new SortResultRepository(db).create({ collectionId, curatorId: ownerId, name: "Other", status: "finalized" });
       const otherItem = await new SortResultItemRepository(db).create({
         sortResultId: other.id, itemId: item.id, computedRank: 1, computedBucket: "top",
       });
@@ -170,7 +170,7 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       const { db } = getTestDb();
       const { collectionId, resultId } = await seedResult(ownerId, ownerId);
       const item = await new ItemRepository(db).create({ collectionId }); // real FK parent
-      const other = await new SortResultRepository(db).create({ collectionId, curatorId: ownerId, name: "Other", status: "draft" });
+      const other = await new SortResultRepository(db).create({ collectionId, curatorId: ownerId, name: "Other", status: "finalized" });
       const otherItem = await new SortResultItemRepository(db).create({
         sortResultId: other.id, itemId: item.id, computedRank: 1, computedBucket: "top",
       });

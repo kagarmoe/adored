@@ -72,10 +72,11 @@ describeDb("POST /api/items/[id]/remove-from-sorts (route -> service -> DB) — 
   async function placeInResult(
     itemId: string,
     status: "draft" | "finalized",
+    curatorId = ownerId,
   ): Promise<string> {
     const { db } = getTestDb();
     const result = await new SortResultRepository(db).create({
-      collectionId, curatorId: ownerId, name: `R-${status}`, status,
+      collectionId, curatorId, name: `R-${status}`, status,
     });
     const ri = await new SortResultItemRepository(db).create({
       sortResultId: result.id, itemId, computedRank: 1, computedBucket: "top",
@@ -131,7 +132,8 @@ describeDb("POST /api/items/[id]/remove-from-sorts (route -> service -> DB) — 
   it("(b) item in draft-only results: removed>=1, remainingInFinalized 0", async () => {
     const itemId = await seedItemWithPreference();
     const draftRi1 = await placeInResult(itemId, "draft");
-    const draftRi2 = await placeInResult(itemId, "draft");
+    // One open draft per (collection, curator) since 0003, so the second is a member's.
+    const draftRi2 = await placeInResult(itemId, "draft", await addMember());
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
     const res = await removeFromSorts(removeReq() as any, { params: Promise.resolve({ id: itemId }) });

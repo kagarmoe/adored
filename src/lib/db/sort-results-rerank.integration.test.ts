@@ -225,7 +225,7 @@ describeDb("bulk re-rank PATCH/DELETE /api/sort-results/[id]/items — Epic S S3
     const { collectionId, resultId, items } = await seedResultWithItems(ownerId, ownerId);
     // A sibling result under the same collection with its own item.
     const other = await new SortResultRepository(db).create({
-      collectionId, curatorId: ownerId, name: "Other", status: "draft",
+      collectionId, curatorId: ownerId, name: "Other", status: "finalized",
     });
     const foreignSource = await new ItemRepository(db).create({ collectionId });
     const foreign = await new SortResultItemRepository(db).create({

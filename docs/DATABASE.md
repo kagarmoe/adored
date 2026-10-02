@@ -164,6 +164,8 @@ npm run db:migrate     # tsx scripts/migrate.ts: apply pending migrations to DAT
 Migrations are **append-only**: to change the schema, add a new `.sql`; never edit an applied one.
 
 `drizzle/` currently holds `0000_init.sql`, `0001_clumsy_ser_duncan.sql`, `0002_illegal_the_watchers.sql`,
+`0003_blushing_shape.sql` (`sort_results.save_key` + partial uniques `sort_results_open_draft_unique` and
+`sort_results_save_key_unique`, after a data step that keeps only the newest open draft per (collection, curator)),
 plus `meta/_journal.json`. Code comments elsewhere may cite migration numbers that are not files on disk —
 `drizzle/` is the truth.
 
