@@ -126,7 +126,7 @@ export class SortResultRepository {
 
   // The curator's open draft for the collection, row-locked. Callers hold the
   // (collection, curator) advisory lock, so this is the only draft writer at a time.
-  // Newest first: a legacy pair of drafts (pre-0003) resolves to the newer one.
+  // Newest first, so the pick is deterministic.
   async findDraftForUpdate(collectionId: string, curatorId: string): Promise<SortResult | null> {
     const [row] = await this.db
       .select()

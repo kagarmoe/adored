@@ -85,13 +85,13 @@ export class PreferenceStateService {
   ): Map<string, number> {
     if (preferences.length === 0) return new Map();
 
-    // Only the comparable set (Love + Like) — the same set `selectNextPair` reads.
+    // Only the comparable set (Love + Like) — the same set `chooseSortPhase` reads.
     // Each item keeps its OWN createdAt (drives the engine's deterministic
     // canonical insertion sequence).
     const rankItems: RankItem[] = selectComparableItems(items, preferences)
       .map((i) => ({ id: i.id, createdAt: i.createdAt }));
 
-    // Shared mapping with the live selector (selectNextPair) — both entry points
+    // Shared mapping with the live selector (chooseSortPhase) — both entry points
     // build ComparisonEvent[] identically, so they ask the same next question.
     const comparisons: ComparisonEvent[] = toComparisonEvents(events);
     const { order } = deriveOrder(rankItems, comparisons);

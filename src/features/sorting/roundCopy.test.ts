@@ -1,15 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import {
-  COMPARE_SUBLINE,
-  ROUND_COPY,
-  triageDecisions,
-} from "./roundCopy";
+import { ROUND_COPY, triageDecisions } from "./roundCopy";
 
 describe("roundCopy", () => {
-  it("names both rounds with person-side arc names + explainers", () => {
-    expect(ROUND_COPY.triage.name).toBe("Get acquainted");
-    expect(ROUND_COPY.compare.name).toBe("Which would you reach for first?");
+  it("explains both phases person-side", () => {
     // TONE litmus: no inventory verbs, no pace words (spec: rewritten person-side).
     for (const round of Object.values(ROUND_COPY)) {
       expect(round.explainer.toLowerCase()).not.toMatch(/bucket|quickly|refine ranking/);
@@ -23,14 +17,6 @@ describe("roundCopy", () => {
       { label: "Maybe", decision: { itemId: "item-1", result: "medium" } },
       { label: "Onward", decision: { itemId: "item-1", result: "low" } },
     ]);
-  });
-
-  it("carries the compare sub-line", () => {
-    expect(COMPARE_SUBLINE).toBe("Tap the one you'd reach for. Tie or skip whenever you like.");
-  });
-
-  it("carries the compare explainer verbatim", () => {
-    expect(ROUND_COPY.compare.explainer).toBe("Two side by side — which would you reach for first?");
   });
 
   it("stays server-importable (no 'use client')", () => {

@@ -1,6 +1,5 @@
 import type { CollectionPreferenceItem, DecisionEvent, Disposition, Item } from "@/types";
 import { selectTriageQueue, type TriageQueueEntry } from "@/lib/triage-selection";
-import { selectNextPair } from "@/lib/pairwise-selection";
 import { selectComparableItems } from "@/lib/compare-selection";
 import { deriveOrder, toComparisonEvents } from "@/lib/insertion-ranking";
 
@@ -40,13 +39,17 @@ export function chooseSortPhase(input: SortPhaseInput): SortPhase {
     return { kind: "feelings", queue, progress: { done: placed.size, total: placed.size + active } };
   }
 
+  // The same insertion engine and comparable set (Love + Like) the recompute
+  // runs, so the screen asks the question the stored order is waiting on.
   const comparable = selectComparableItems(items, preferences);
-  const { order } = deriveOrder(
+  const byId = new Map(comparable.map((i) => [i.id, i]));
+  const { order, nextPair } = deriveOrder(
     comparable.map((i) => ({ id: i.id, createdAt: i.createdAt })),
     toComparisonEvents(curatorDecisions),
   );
-  const pair = selectNextPair({ preferences, items, decisions: curatorDecisions });
-  return pair
-    ? { kind: "pairs", pair, progress: { done: order.length, total: comparable.length } }
+  const x = nextPair && byId.get(nextPair[0]);
+  const pivot = nextPair && byId.get(nextPair[1]);
+  return x && pivot
+    ? { kind: "pairs", pair: [x, pivot], progress: { done: order.length, total: comparable.length } }
     : { kind: "done", progress: { done: comparable.length, total: comparable.length } };
 }

@@ -3,7 +3,6 @@ import {
   buildStanding,
   buildTriageStanding,
   comparePairsFor,
-  COMPARE_PAIR,
   RESULT_TO_TIER,
   SAMPLE_ITEMS,
   toItem,
@@ -219,10 +218,6 @@ describe("sample content", () => {
       "journal",
       "colander",
     ]);
-  });
-
-  it("keeps the compare pair as cushion and bowl", () => {
-    expect(COMPARE_PAIR.map((i) => i.id)).toEqual(["cushion", "bowl"]);
   });
 
   it("triage items are the demonstrated sample collection", () => {

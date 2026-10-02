@@ -116,7 +116,7 @@ export default async function ResultDetailPage({ params }: ResultDetailPageProps
           </div>
         )}
 
-        {result.status === "finalized" && isCurator && (
+        {isCurator && (
           <SharePanel
             resultId={result.id}
             initialShares={shares}

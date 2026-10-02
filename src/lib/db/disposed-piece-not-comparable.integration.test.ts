@@ -25,7 +25,8 @@ import { POST as postDecision } from "@/app/api/sessions/[id]/decisions/route";
 import { ItemController } from "@/server/api/items";
 import { PreferenceController } from "@/server/api/preferences";
 import { DecisionController } from "@/server/api/decisions";
-import { selectNextPair } from "@/lib/pairwise-selection";
+import { DispositionController } from "@/server/api/dispositions";
+import { chooseSortPhase } from "@/lib/sort-phase";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -78,10 +79,11 @@ describeDb("a disposed piece is untriaged, so it is outside Love + Like and neve
     }
 
     // Build the selector inputs from the EXACT fetches the Sort screen uses.
-    const [items, preferences, decisions] = await Promise.all([
+    const [items, preferences, decisions, dispositions] = await Promise.all([
       ItemController.fromDb(db).listItems(collectionId),
       PreferenceController.fromDb(db).listItemPreferences(collectionId, curatorId),
       DecisionController.fromDb(db).listForCurator(collectionId, curatorId),
+      DispositionController.fromDb(db).listDispositions(collectionId, curatorId),
     ]);
 
     // Non-vacuous: C is absent from preferences (no events → no row); A and B are present.
@@ -90,15 +92,19 @@ describeDb("a disposed piece is untriaged, so it is outside Love + Like and neve
     expect(prefItemIds.has(itemA.id)).toBe(true);
     expect(prefItemIds.has(itemB.id)).toBe(true);
 
-    const pair = selectNextPair({
-      preferences,
+    // This visit already walked the Not yet tail, so the screen moves on to pairs.
+    const phase = chooseSortPhase({
       items,
-      decisions,
+      preferences,
+      dispositionByItemId: new Map(dispositions.map((d) => [d.itemId, d.disposition])),
+      curatorDecisions: decisions,
+      deferredOffered: true,
     });
 
-    // Non-vacuous: a real pair IS offered, and it is exactly {A, B} — not null.
-    expect(pair).not.toBeNull();
-    const pairedIds = new Set([pair![0].id, pair![1].id]);
+    // Non-vacuous: a real pair IS offered, and it is exactly {A, B}.
+    expect(phase.kind).toBe("pairs");
+    if (phase.kind !== "pairs") return;
+    const pairedIds = new Set([phase.pair[0].id, phase.pair[1].id]);
     expect(pairedIds.has(itemA.id)).toBe(true);
     expect(pairedIds.has(itemB.id)).toBe(true);
     // The disposed item C is NEVER offered: disposed <=> untriaged, so it has no

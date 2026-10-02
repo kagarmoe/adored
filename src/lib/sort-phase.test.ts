@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CollectionPreferenceItem, DecisionEvent, Disposition, Item, RankBucket } from "@/types";
 import { chooseSortPhase } from "./sort-phase";
+import { deriveOrder } from "./insertion-ranking";
 
 const item = (id: string, at = 0) => ({ id, createdAt: new Date(at), deletedAt: null }) as Item;
 const pref = (itemId: string, rankBucket: RankBucket) => ({ itemId, rankBucket }) as CollectionPreferenceItem;
@@ -47,6 +48,22 @@ describe("chooseSortPhase (spec §4: feelings, then pairs, never interleaved)", 
     const phase = run({ items: [item("a", 1), item("b", 2), item("m", 3)], preferences: [pref("a", "top"), pref("b", "high"), pref("m", "medium")] });
     expect(phase.kind).toBe("pairs");
     expect(phase.progress).toEqual({ done: 1, total: 2 });
+  });
+
+  it("asks the engine's next question mid-insertion (three pieces, one answer)", () => {
+    const items = [item("a", 1), item("b", 2), item("c", 3)];
+    const phase = run({ items, preferences: items.map((i) => pref(i.id, "top")), curatorDecisions: [compare("d1", "a", "b", "item_a", 10)] });
+    const { nextPair } = deriveOrder(
+      items.map((i) => ({ id: i.id, createdAt: i.createdAt })),
+      [{ aId: "a", bId: "b", result: "item_a", createdAt: new Date(10), id: "d1" }],
+    );
+    expect(phase.kind === "pairs" && phase.pair.map((i) => i.id)).toEqual(nextPair);
+  });
+
+  it("usage-only decisions do not block a pair", () => {
+    const usage = { id: "u1", sessionId: "s", type: "usage", decision: { itemId: "a", result: "uses" }, createdAt: new Date(10) } as DecisionEvent;
+    const phase = run({ items: [item("a", 1), item("b", 2)], preferences: [pref("a", "top"), pref("b", "top")], curatorDecisions: [usage] });
+    expect(phase.kind === "pairs" && phase.pair.map((i) => i.id)).toEqual(["b", "a"]);
   });
 
   it("is done when the comparable set is fully ordered", () => {

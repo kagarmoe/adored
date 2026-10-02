@@ -8,7 +8,7 @@ interface WelcomeHandoffProps {
   onExplore: () => void;
 }
 
-// Beat 7 — hand off to their world. Primary CTA into the real new-collection
+// Beat 5 — hand off to their world. Primary CTA into the real new-collection
 // flow; a quiet way to just look around.
 export function WelcomeHandoff({ onExplore }: WelcomeHandoffProps) {
   return (

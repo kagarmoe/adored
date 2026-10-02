@@ -1,19 +1,16 @@
-// Teaching copy displayed in BOTH the session hub and the /welcome walkthrough.
-// One home so the two surfaces cannot fork (the walkthrough drifted once already).
-// NOTE: this module carries no client directive — it is imported by the server hub page.
+// Sorting copy shared by the Sort screen and the /welcome walkthrough. One home
+// so the two surfaces cannot fork (the walkthrough drifted once already).
+// NOTE: this module carries no client directive — the server Sort page imports it.
 
 export const ROUND_COPY = {
-  triage: { name: "Get acquainted", explainer: "One at a time — how do you feel about each?" },
-  compare: {
-    name: "Which would you reach for first?",
-    explainer: "Two side by side — which would you reach for first?",
-  },
+  triage: { explainer: "One at a time — how do you feel about each?" },
+  compare: { explainer: "Two side by side — which would you reach for first?" },
 } as const;
 
 export const COMPARE_SUBLINE = "Tap the one you'd reach for. Tie or skip whenever you like.";
 
-// The walkthrough's neutral kicker: distinct from the person-side arc names in
-// ROUND_COPY, and one home so both Welcome beats assert against the same string.
+// The walkthrough's neutral kicker: one home so both Welcome beats assert against
+// the same string.
 export const WELCOME_ROUND_KICKER = "A sample sort";
 
 // The person's word for each bucket — one home for every surface that names a tier.

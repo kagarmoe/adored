@@ -15,9 +15,8 @@ interface WelcomeTriageProps {
 }
 
 // Beat 2 — one thing at a time, taught with the REAL sorting controls in their
-// synchronous local mode: no fetch, no router, no TriageUndoProvider. The kicker
-// uses a NEUTRAL kicker (WELCOME_ROUND_KICKER) distinct from the person-side
-// arc names in ROUND_COPY (user decision); the explainer still comes from ROUND_COPY.
+// synchronous local mode: no fetch, no router, no TriageUndoProvider. A neutral
+// kicker (WELCOME_ROUND_KICKER) over the shared explainer from ROUND_COPY.
 export function WelcomeTriage({ index, onOutcome }: WelcomeTriageProps) {
   const item = TRIAGE_ITEMS[index];
 

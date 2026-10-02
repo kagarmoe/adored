@@ -1,7 +1,7 @@
 // Usage is DERIVED at read time (parent D3 — no projection table): the latest
 // usage event per item wins, resolved by the ONE shared (createdAt, id)
-// comparator the scorer already uses (parent ARCH-6), so the round queue, the
-// hub ladder, and (Epic S) Standing can never disagree about "known".
+// comparator the scorer already uses (parent ARCH-6), so every reader of usage
+// (the Ranking's usage notes, saved rankings' stamps) agrees about "known".
 import { compareByCreatedAtThenId } from "@/lib/decision-order";
 import type { DecisionEvent, UsageDecision } from "@/types";
 
