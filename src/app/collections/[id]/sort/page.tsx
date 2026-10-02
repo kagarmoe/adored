@@ -131,7 +131,7 @@ export default async function SortPage({ params, searchParams }: SortPageProps) 
                   itemB={sortPhase.pair[1]}
                   heroA={coverUrl(sortPhase.pair[0].id)}
                   heroB={coverUrl(sortPhase.pair[1].id)}
-                  comparisonsMade={0}
+                  intro={phase === "pairs" ? "Now, between these two…" : undefined}
                 />
               </div>
             )}

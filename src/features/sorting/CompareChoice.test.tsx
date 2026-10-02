@@ -91,7 +91,6 @@ function renderChoice(overrides: Partial<Parameters<typeof CompareChoice>[0]> = 
       submit={{ kind: "session", sessionId, curatorId: "u1", collectionId: "c" }}
       itemA={item(ITEM_A, "Bag A") as any}
       itemB={item(ITEM_B, "Bag B") as any}
-      comparisonsMade={0}
       {...overrides}
     />,
   );
@@ -193,7 +192,6 @@ describe("CompareChoice submits through the queue as a batch-of-1 (Epic P Task 1
         submit={{ kind: "session", sessionId, curatorId: "u1", collectionId: "c" }}
         itemA={item(ITEM_A, "Bag C") as any}
         itemB={item(ITEM_B, "Bag D") as any}
-        comparisonsMade={1}
       />,
     );
 
@@ -339,7 +337,6 @@ describe("CompareChoice submits through the queue as a batch-of-1 (Epic P Task 1
         submit={{ kind: "session", sessionId, curatorId: "u1", collectionId: "c" }}
         itemA={item(ITEM_A, "Bag C") as any}
         itemB={item(ITEM_B, "Bag D") as any}
-        comparisonsMade={1}
       />,
     );
     await user.click(screen.getByRole("button", { name: "Choose Bag C" }));
@@ -349,6 +346,57 @@ describe("CompareChoice submits through the queue as a batch-of-1 (Epic P Task 1
     expect(batchBody(fetchMock, 1).decisions[0].clientKey).not.toBe(
       batchBody(fetchMock, 0).decisions[0].clientKey,
     );
+  });
+
+  it("Undo names the last answer and re-presents that pair with it selected; a new choice supersedes it", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderChoice();
+    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    rerender(
+      <CompareChoice
+        submit={{ kind: "session", sessionId, curatorId: "u1", collectionId: "c" }}
+        itemA={item(ITEM_A, "Bag C") as any}
+        itemB={item(ITEM_B, "Bag D") as any}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Undo: Bag A" }));
+    expect(screen.getByText("You chose Bag A — change it?")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Choose Bag A" })).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(screen.getByRole("button", { name: "Choose Bag B" }));
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(2));
+    expect(batchBody(fetchMock, 1).decisions[0].decision).toEqual({ itemAId: ITEM_A, itemBId: ITEM_B, result: "item_b" });
+    expect(batchBody(fetchMock, 1).decisions[0].clientKey).not.toBe(batchBody(fetchMock, 0).decisions[0].clientKey);
+    expect(screen.getByRole("button", { name: "Undo: Bag B" })).toBeInTheDocument();
+  });
+
+  it("Keep going leaves the standing answer alone", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderChoice();
+    await user.click(screen.getByRole("button", { name: "Tie" }));
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    rerender(
+      <CompareChoice
+        submit={{ kind: "session", sessionId, curatorId: "u1", collectionId: "c" }}
+        itemA={item(ITEM_A, "Bag C") as any}
+        itemB={item(ITEM_B, "Bag D") as any}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Undo: Tie" }));
+    expect(screen.getByRole("button", { name: "Tie" })).toHaveAttribute("aria-pressed", "true");
+    await user.click(screen.getByRole("button", { name: "Keep going" }));
+    expect(screen.getByRole("button", { name: "Choose Bag C" })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the transition line until the first answer lands", async () => {
+    const user = userEvent.setup();
+    renderChoice({ intro: "Now, between these two…" });
+    expect(screen.getByText("Now, between these two…")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
+    await waitFor(() => expect(screen.queryByText("Now, between these two…")).not.toBeInTheDocument());
   });
 });
 
@@ -368,7 +416,7 @@ describe("CompareChoice local mode (walkthrough demo)", () => {
   it("local mode: tap A calls onDecision('item_a') — no fetch, no enqueue, cards re-enabled", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     const onDecision = vi.fn();
-    render(<CompareChoice submit={{ kind: "local", onDecision }} itemA={itemA} itemB={itemB} comparisonsMade={0} />);
+    render(<CompareChoice submit={{ kind: "local", onDecision }} itemA={itemA} itemB={itemB} />);
     await userEvent.click(screen.getByRole("button", { name: new RegExp(itemA.name!, "i") }));
     expect(onDecision).toHaveBeenCalledWith("item_a");
     expect(fetchSpy).not.toHaveBeenCalled();
@@ -380,7 +428,7 @@ describe("CompareChoice local mode (walkthrough demo)", () => {
 
   it("local mode: Tie and Skip report their results", async () => {
     const onDecision = vi.fn();
-    render(<CompareChoice submit={{ kind: "local", onDecision }} itemA={itemA} itemB={itemB} comparisonsMade={0} />);
+    render(<CompareChoice submit={{ kind: "local", onDecision }} itemA={itemA} itemB={itemB} />);
     await userEvent.click(screen.getByRole("button", { name: /tie/i }));
     expect(onDecision).toHaveBeenCalledWith("tie");
     await userEvent.click(screen.getByRole("button", { name: /skip/i }));

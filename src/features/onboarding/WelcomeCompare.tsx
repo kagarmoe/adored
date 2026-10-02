@@ -49,7 +49,6 @@ export function WelcomeCompare({
           itemB={toItem(right)}
           heroA={left.imageSrc}
           heroB={right.imageSrc}
-          comparisonsMade={0}
         />
       </div>
     </section>
