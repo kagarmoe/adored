@@ -20,7 +20,7 @@ export function ActionBar({ label, children }: ActionBarProps) {
     <section
       aria-label={label}
       data-action-bar
-      className="fixed inset-x-0 bottom-0 z-30 flex items-end gap-3 border-t border-rim bg-glass-strong px-4 py-3 shadow-lift backdrop-blur-md [&>*:first-child]:flex-1 [@media(max-height:500px)]:static md:static md:z-auto md:items-center md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none md:[&>*:first-child]:flex-none"
+      className="fixed inset-x-0 bottom-0 z-30 max-md:mb-0 flex items-end gap-3 border-t border-rim bg-glass-strong px-4 py-3 shadow-lift backdrop-blur-md [&>*:first-child]:flex-1 [@media(max-height:500px)]:static md:static md:z-auto md:items-center md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none md:[&>*:first-child]:flex-none"
     >
       {children}
     </section>
