@@ -59,9 +59,9 @@ export function itemsEmptyState(opts: {
   if (opts.view === "archived") {
     return { heading: "Nothing archived", message: "Archived items rest here, ready to come back whenever you like." };
   }
+  if (!opts.hasAnyItems) return { heading: "No items yet", message: "Add photos to start your collection." };
   if (opts.view === "unnamed") {
     return { heading: "Everything has a name", message: "Nothing is waiting — name things whenever you like." };
   }
-  if (!opts.hasAnyItems) return { heading: "No items yet", message: "Add photos to start your collection." };
   return { heading: "No items here", message: "Try a different filter." };
 }

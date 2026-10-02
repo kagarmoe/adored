@@ -7,7 +7,7 @@ import { buildItemPatch, fieldsFromItem, isDirty, NAME_NEEDED, type PanelFields 
 import { useLeaveGuard } from "./useLeaveGuard";
 
 const TEXT_INPUTS = [
-  ["brand", "Brand", "Add a brand"], ["style", "Style", "Add a style"], ["color", "Colour", "Add a colour"],
+  ["brand", "Brand", "Add a brand"], ["style", "Style", "Add a style"], ["color", "Color", "Add a color"],
   ["material", "Material", "Add a material"], ["category", "Category", "Add a category"],
 ] as const;
 

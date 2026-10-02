@@ -35,6 +35,7 @@ describe("itemsEmptyState", () => {
     expect(itemsEmptyState({ hasAnyItems: false, view: "all", q: "" }).heading).toBe("No items yet");
     expect(itemsEmptyState({ hasAnyItems: true, view: "archived", q: "" }).heading).toBe("Nothing archived");
     expect(itemsEmptyState({ hasAnyItems: true, view: "all", q: "silk" }).heading).toBe("Nothing matches “silk”");
+    expect(itemsEmptyState({ hasAnyItems: false, view: "unnamed", q: "" }).heading).toBe("No items yet");
   });
 });
 

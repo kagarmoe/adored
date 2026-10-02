@@ -95,7 +95,8 @@ describe("/collections/[id]/items: card grid, search, and the All / Archived / W
   it("All: live items as cards linking to the panel, with a tier chip once sorted", async () => {
     await renderPage();
     expect(screen.getByRole("link", { name: "Tote" })).toHaveAttribute("href", "/collections/summer-bags/items/1");
-    expect(screen.getByTitle("Love")).toBeInTheDocument();
+    // The dots are named by the tier, not read out as "black circle" ×4.
+    expect(screen.getByRole("img", { name: "Love" })).toHaveTextContent("●●●●");
     expect(screen.queryByText("Old clutch")).not.toBeInTheDocument();
     expect(itemController.listArchived).not.toHaveBeenCalled();
   });
@@ -105,6 +106,7 @@ describe("/collections/[id]/items: card grid, search, and the All / Archived / W
     expect(screen.getByText("Old clutch")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Bring back" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Old clutch" })).not.toBeInTheDocument();
+    expect(preferenceController.listItemPreferences).not.toHaveBeenCalled();
   });
 
   it("search narrows the grid and keeps the query in the field", async () => {

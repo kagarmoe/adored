@@ -48,7 +48,7 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
   const controller = ItemController.fromDb(db);
   const [items, preferences] = await Promise.all([
     view === "archived" ? controller.listArchived(collection.id) : controller.listItems(collection.id),
-    PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id),
+    view === "archived" ? [] : PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id),
   ]);
   const covers = await PhotoController.fromDb(db).findCoverPhotosByItemIds(items.map((i) => i.id));
   const tierByItem = new Map(preferences.map((p) => [p.itemId, p.rankBucket]));
@@ -103,7 +103,7 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
               name="q"
               defaultValue={q}
               label="Search your items"
-              placeholder="Name, brand, colour…"
+              placeholder="Name, brand, color…"
               maxLength={100}
             />
             <Button type="submit" variant="secondary" className="h-12">
@@ -118,7 +118,7 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
             heading={empty.heading}
             message={empty.message}
             action={
-              items.length === 0 && view === "all"
+              items.length === 0 && view !== "archived"
                 ? { label: "Add photos", href: `${collectionHref}/pool` }
                 : undefined
             }

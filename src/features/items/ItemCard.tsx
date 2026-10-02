@@ -62,7 +62,11 @@ export function ItemCard({
         <div className="space-y-2">
           <div className="flex items-start justify-between gap-2">
             <h3 className="text-ink truncate">{itemDisplayName(item)}</h3>
-            {bucket && <Badge variant={bucket} title={bucketLabels[bucket]}>{bucketDots[bucket]}</Badge>}
+            {bucket && (
+              <Badge variant={bucket} title={bucketLabels[bucket]}>
+                <span role="img" aria-label={bucketLabels[bucket]}>{bucketDots[bucket]}</span>
+              </Badge>
+            )}
           </div>
           {hasName(item) ? (
             item.brand && <p className="text-xs text-ink-soft truncate">{item.brand}</p>
