@@ -52,6 +52,14 @@ export class SortResultItemRepository {
     return items.map((i) => this.mapToResultItem(i));
   }
 
+  async findByResultAndItem(sortResultId: string, itemId: string): Promise<SortResultItem | null> {
+    const [row] = await this.db
+      .select()
+      .from(sortResultItemsTable)
+      .where(and(eq(sortResultItemsTable.sortResultId, sortResultId), eq(sortResultItemsTable.itemId, itemId)));
+    return row ? this.mapToResultItem(row) : null;
+  }
+
   async update(id: string, data: Partial<SortResultItem>): Promise<SortResultItem> {
     const [item] = await this.db
       .update(sortResultItemsTable)

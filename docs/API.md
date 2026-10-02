@@ -164,6 +164,11 @@ Route-level analytics capture has been removed from the API surface; this does n
 | GET | `/api/collections/[id]/dispositions` | member (scoped to caller) |
 | DELETE | `/api/collections/[id]/dispositions/[itemId]` | curator (`preferences:write`, scoped to caller) |
 
+### ranking
+| Method | Path | Access |
+|---|---|---|
+| PUT·DELETE | `/api/collections/[id]/ranking/pins/[itemId]` | member (scoped to caller) |
+
 ### items (top-level)
 | Method | Path | Access |
 |---|---|---|
@@ -331,6 +336,16 @@ Curator-private triage shelving (Epic C PR1). A **disposition** parks an *untria
 
 ### `DELETE /api/collections/[id]/dispositions/[itemId]`
 "Bring back." Same guard as `POST`: `requireApiItemCapability(itemId, "preferences:write")` + `item.collectionId === params.id` else `404`. Deletes the caller's disposition for the item, keyed `(item_id, curator_id = session)`. **Idempotent** — a no-op when no row exists still returns `200 { message: "Brought back" }`. `401`/`403`/`404`.
+
+## ranking
+
+The live Ranking's hand placement (UX redesign PR 2). A **pin** fixes one piece at a 1-based slot in the caller's loved list (Love/Like/Maybe). Pins live in the caller's **one open draft** (`sort_results.status = 'draft'`, named "Still deciding"), opened lazily by the first pin. Every draft writer (pin, unpin, legacy `POST /api/sort-results`, supersede) runs in one transaction holding the `(collection, curator)` advisory lock. `curatorId` is always the session user.
+
+### `PUT /api/collections/[id]/ranking/pins/[itemId]`
+`requireAuth` + `requireApiCollectionAccess` (`404` absent / `403` non-member) **before** the body is parsed. **Body:** `{ position: int 1..10000 }` (strict zod; `400` invalid JSON / extra key / out of range). `404` (`PinTargetError`) when the item is not a Love/Like/Maybe piece of the caller in this collection (untriaged, Onward, or another collection); nothing is opened. → `200 { ok: true }`. `401`/`500`.
+
+### `DELETE /api/collections/[id]/ranking/pins/[itemId]`
+Same guard. Clears the caller's pin so the piece returns to its derived place. **Idempotent**, and opens no draft. → `200 { ok: true }`. `401`/`403`/`404`.
 
 ## items (top-level)
 

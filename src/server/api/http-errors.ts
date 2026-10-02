@@ -7,6 +7,7 @@ import {
   FinalizeStateError,
   ReorderFinalizedError,
   ResultItemNotInResultError,
+  PinTargetError,
 } from "@/server/services/SortResultService";
 import { CurrentSessionExistsError } from "@/server/repositories/implementations/SessionRepository";
 import { PreferenceExistsError } from "@/server/api/dispositions";
@@ -49,6 +50,7 @@ export class HttpError extends Error {
  *   HttpError
  *   | InvitationAcceptError   → error.status (error.message)
  *   ResultItemNotInResultError → 404 (error.message)
+ *   PinTargetError → 404 (error.message)
  *   UnauthorizedError
  *   | Error("Unauthorized")  → 401
  *   anything else            → 500 "Something went wrong. Please try again." + errorId
@@ -89,7 +91,7 @@ export function errorResponse(error: unknown): NextResponse {
   if (error instanceof HttpError || error instanceof InvitationAcceptError) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
-  if (error instanceof ResultItemNotInResultError) {
+  if (error instanceof ResultItemNotInResultError || error instanceof PinTargetError) {
     return NextResponse.json({ error: error.message }, { status: 404 });
   }
   if (

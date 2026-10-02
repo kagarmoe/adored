@@ -1,4 +1,4 @@
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { sortResultsTable } from "@/lib/db/schema";
 import type { SortResult, SortResultStatus } from "@/types";
@@ -120,6 +120,26 @@ export class SortResultRepository {
         ),
       );
     return result ? this.mapToResult(result) : null;
+  }
+
+  // The curator's open draft for the collection, row-locked. Callers hold the
+  // (collection, curator) advisory lock, so this is the only draft writer at a time.
+  // Newest first: a legacy pair of drafts (pre-0003) resolves to the newer one.
+  async findDraftForUpdate(collectionId: string, curatorId: string): Promise<SortResult | null> {
+    const [row] = await this.db
+      .select()
+      .from(sortResultsTable)
+      .where(
+        and(
+          eq(sortResultsTable.collectionId, collectionId),
+          eq(sortResultsTable.curatorId, curatorId),
+          eq(sortResultsTable.status, "draft"),
+        ),
+      )
+      .orderBy(desc(sortResultsTable.createdAt))
+      .limit(1)
+      .for("update");
+    return row ? this.mapToResult(row) : null;
   }
 
   async findDrafts(collectionId: string, curatorId: string): Promise<SortResult[]> {

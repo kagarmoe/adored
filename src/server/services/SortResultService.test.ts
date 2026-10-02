@@ -13,8 +13,9 @@ const { txResultRepo, txItemRepo, txSessionRepo, isResultNumberConflict } = vi.h
     delete: vi.fn(),
     findByIdForUpdate: vi.fn(),
     update: vi.fn(),
+    findDrafts: vi.fn(),
   },
-  txItemRepo: { create: vi.fn(), deleteByResult: vi.fn() },
+  txItemRepo: { create: vi.fn(), deleteByResult: vi.fn(), findByResult: vi.fn(), update: vi.fn() },
   // finalizeResult resolves the curator's open session via a tx-bound
   // SessionRepository — mocked the same way as the other tx-bound repos above.
   txSessionRepo: { findInProgress: vi.fn(), update: vi.fn() },
@@ -26,6 +27,16 @@ vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
 }));
 vi.mock("@/server/repositories/implementations/SortResultItemRepository", () => ({
   SortResultItemRepository: vi.fn(function () { return txItemRepo; }),
+}));
+const { txPrefRepo } = vi.hoisted(() => ({ txPrefRepo: { findByItem: vi.fn() } }));
+vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({
+  CollectionPreferenceItemRepository: vi.fn(function () { return txPrefRepo; }),
+}));
+// Every draft writer takes the (collection, curator) advisory lock; the fake tx
+// can't execute SQL, so stub only the lock (the DB tier proves it for real).
+vi.mock("@/lib/transactions", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/transactions")>()),
+  lockCollectionCurator: vi.fn(),
 }));
 vi.mock("@/server/repositories/implementations/SessionRepository", () => ({
   SessionRepository: vi.fn(function () { return txSessionRepo; }),
@@ -44,6 +55,7 @@ import {
   DeleteResultStateError,
   FinalizeStateError,
   ResultNumberExhaustedError,
+  PinTargetError,
 } from "./SortResultService";
 import type {
   CollectionPreferenceItem,
@@ -124,6 +136,8 @@ beforeEach(() => {
   txResultRepo.update.mockResolvedValue(sortResult({ status: "finalized" }));
   txItemRepo.create.mockResolvedValue(sortResultItem());
   txItemRepo.deleteByResult.mockResolvedValue(undefined);
+  txResultRepo.findDrafts.mockResolvedValue([]);
+  txItemRepo.findByResult.mockResolvedValue([]);
   txSessionRepo.findInProgress.mockResolvedValue(null);
   txSessionRepo.update.mockResolvedValue(undefined);
 });
@@ -144,19 +158,16 @@ describe("SortResultService.createDraftResult", () => {
       ],
     } as unknown as CollectionPreferenceItemRepository;
 
-    // findDrafts returns ONLY the just-created draft, so the supersede reap
-    // (purses-p2rj) finds no PRIOR draft and deletes nothing.
-    const findDrafts = vi.fn(async () => [created]);
     const result = await new SortResultService(
-      { findDrafts } as unknown as SortResultRepository,
+      {} as unknown as SortResultRepository,
       {} as unknown as SortResultItemRepository,
       preferenceRepo,
       txDb,
     ).createDraftResult(COLLECTION, CURATOR, "Spring sort");
 
     expect(result).toBe(created);
-    // The reap ran but had no prior draft to delete (the only draft is the new one).
-    expect(findDrafts).toHaveBeenCalledWith(COLLECTION, CURATOR);
+    // The in-tx reap ran but found no prior draft to delete.
+    expect(txResultRepo.findDrafts).toHaveBeenCalledWith(COLLECTION, CURATOR);
     expect(txResultRepo.delete).not.toHaveBeenCalled();
     expect(txResultRepo.insertWithNumber).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -221,7 +232,7 @@ describe("SortResultService.createDraftResult", () => {
     } as unknown as CollectionPreferenceItemRepository;
 
     const result = await new SortResultService(
-      { findDrafts: async () => [created] } as unknown as SortResultRepository,
+      {} as unknown as SortResultRepository,
       {} as unknown as SortResultItemRepository,
       preferenceRepo,
       txDb,
@@ -229,6 +240,30 @@ describe("SortResultService.createDraftResult", () => {
 
     expect(result).toBe(created);
     expect(txItemRepo.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("pinItem targets", () => {
+  // Only a Love/Like/Maybe piece of this curator can be pinned; the DB test
+  // carries the foreign-collection 404, these carry the other two refusals.
+  const service = () =>
+    new SortResultService(
+      {} as unknown as SortResultRepository,
+      {} as unknown as SortResultItemRepository,
+      {} as unknown as CollectionPreferenceItemRepository,
+      txDb,
+    );
+
+  it("refuses an untriaged piece and opens nothing", async () => {
+    txPrefRepo.findByItem.mockResolvedValue(null);
+    await expect(service().pinItem(COLLECTION, CURATOR, "item-1", 1)).rejects.toBeInstanceOf(PinTargetError);
+    expect(txResultRepo.insertWithNumber).not.toHaveBeenCalled();
+  });
+
+  it("refuses an Onward piece and opens nothing", async () => {
+    txPrefRepo.findByItem.mockResolvedValue(preference({ collectionId: COLLECTION, rankBucket: "low" }));
+    await expect(service().pinItem(COLLECTION, CURATOR, "item-1", 1)).rejects.toBeInstanceOf(PinTargetError);
+    expect(txResultRepo.insertWithNumber).not.toHaveBeenCalled();
   });
 });
 

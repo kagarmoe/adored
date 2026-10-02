@@ -405,6 +405,16 @@ function buildStrangerCases(
       `/api/collections/${collectionId}/dispositions/${itemAId}`,
       { id: collectionId, itemId: itemAId }),
 
+    // ── /api/collections/[id]/ranking (UX redesign PR 2) ──────────────────
+    // requireApiCollectionAccess → 403 for a non-member, before any body parse.
+    c("collections/[id]/ranking/pins/[itemId]/route.ts", "PUT",
+      `/api/collections/${collectionId}/ranking/pins/${itemAId}`,
+      { id: collectionId, itemId: itemAId },
+      { position: 1 }),
+    c("collections/[id]/ranking/pins/[itemId]/route.ts", "DELETE",
+      `/api/collections/${collectionId}/ranking/pins/${itemAId}`,
+      { id: collectionId, itemId: itemAId }),
+
     // ── /api/collections/[id]/preferences/items ───────────────────────────
     c("collections/[id]/preferences/items/route.ts", "GET",
       `/api/collections/${collectionId}/preferences/items`,
