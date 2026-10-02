@@ -12,7 +12,7 @@ import { PreferenceController } from "@/server/api/preferences";
 import { RankingController } from "@/server/api/ranking";
 import { buildRanking } from "@/server/services/sortResultMaterialization";
 import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
-import { deriveUsage } from "@/lib/derive-usage";
+import { deriveUsage, type UsageAnswer } from "@/lib/derive-usage";
 import { itemDisplayName, itemInitial } from "@/lib/items";
 import { quietLink } from "@/lib/design/quiet-link";
 import { AppLayout } from "@/components/layout";
@@ -122,7 +122,7 @@ export default async function RankingPage({ params }: RankingPageProps) {
               {hero && <MostLovedHero item={hero} collectionId={slug} heroPhotoUrl={coverUrl(hero.id)} />}
               {rows.length > 0 && <RankingList collectionId={collection.id} rows={rows} />}
               {onwardItems.length > 0 && (
-                <ItemRow id="ranking-onward" heading="Onward" caption="Where these go next." items={onwardItems} slug={slug} coverUrl={coverUrl} />
+                <ItemRow id="ranking-onward" heading="Onward" caption="Where these go next." items={onwardItems} slug={slug} coverUrl={coverUrl} usageOf={(itemId) => usageByItemId.get(itemId)} />
               )}
             </>
           ) : (
@@ -136,7 +136,7 @@ export default async function RankingPage({ params }: RankingPageProps) {
           )}
 
           {stillDeciding.length > 0 && (
-            <ItemRow id="ranking-still-deciding" heading="Still deciding" caption="Ready when you are." items={stillDeciding} slug={slug} coverUrl={coverUrl} />
+            <ItemRow id="ranking-still-deciding" heading="Still deciding" caption="Ready when you are." items={stillDeciding} slug={slug} coverUrl={coverUrl} usageOf={(itemId) => usageByItemId.get(itemId)} />
           )}
 
           {setAside.length > 0 && (
@@ -168,6 +168,7 @@ function ItemRow({
   items,
   slug,
   coverUrl,
+  usageOf,
 }: {
   id: string;
   heading: string;
@@ -175,6 +176,7 @@ function ItemRow({
   items: Item[];
   slug: string;
   coverUrl: (itemId: string) => string | undefined;
+  usageOf: (itemId: string) => UsageAnswer | undefined;
 }) {
   return (
     <section aria-labelledby={id} className="space-y-3">
@@ -187,7 +189,7 @@ function ItemRow({
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {items.map((item) => (
           <li key={item.id}>
-            <ItemCard item={item} collectionId={slug} heroPhotoUrl={coverUrl(item.id)} />
+            <ItemCard item={item} collectionId={slug} heroPhotoUrl={coverUrl(item.id)} usage={usageOf(item.id)} />
           </li>
         ))}
       </ul>

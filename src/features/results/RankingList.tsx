@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CardImage } from "@/components/ui";
@@ -21,6 +21,8 @@ export interface RankingRow {
 const GENTLE_FAIL = "That didn't hold just now — nothing was lost. Try again whenever you like.";
 const control =
   "flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-ink hover:bg-content-soft focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40";
+
+type Direction = "up" | "down";
 
 function move<T>(list: readonly T[], from: number, to: number): T[] {
   const next = [...list];
@@ -47,13 +49,36 @@ export function RankingList({ collectionId, rows }: { collectionId: string; rows
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState<number | null>(null);
   const [announce, setAnnounce] = useState("");
+  // Shown on screen as well as spoken: a list that silently snaps back reads as a glitch.
+  const [notice, setNotice] = useState("");
+  // The move buttons stay enabled while a request is out (disabling the focused
+  // button drops focus to <body>); this ref is the double-tap guard instead.
+  const inFlight = useRef(false);
+  const buttons = useRef(new Map<string, HTMLButtonElement>());
+  const refocus = useRef<{ itemId: string; dir: Direction } | null>(null);
 
-  async function place(from: number, to: number) {
-    if (busy || from === to || to < 0 || to >= order.length) return;
+  // Reordering moves <li> nodes, which drops focus; put it back on the same
+  // piece's button (or its other one, once it has reached an end).
+  useEffect(() => {
+    const target = refocus.current;
+    if (!target) return;
+    refocus.current = null;
+    const other: Direction = target.dir === "up" ? "down" : "up";
+    [target.dir, other]
+      .map((dir) => buttons.current.get(`${target.itemId}:${dir}`))
+      .find((button) => button && !button.disabled)
+      ?.focus();
+  }, [order]);
+
+  async function place(from: number, to: number, focusDir?: Direction) {
+    if (inFlight.current || from === to || to < 0 || to >= order.length) return;
+    inFlight.current = true;
     const previous = order;
     const next = move(order, from, to).map((r, i) => (i === to ? { ...r, pinned: true } : r));
+    if (focusDir) refocus.current = { itemId: next[to].itemId, dir: focusDir };
     setOrder(next);
     setBusy(true);
+    setNotice("");
     setAnnounce(`Moved ${next[to].name} to position ${to + 1} of ${next.length}.`);
     try {
       const res = await fetch(`/api/collections/${collectionId}/ranking/pins/${next[to].itemId}`, {
@@ -64,26 +89,37 @@ export function RankingList({ collectionId, rows }: { collectionId: string; rows
       if (!res.ok) throw new Error("pin");
       router.refresh();
     } catch {
+      if (focusDir) refocus.current = { itemId: next[to].itemId, dir: focusDir };
       setOrder(previous);
-      setAnnounce(GENTLE_FAIL);
+      setAnnounce("");
+      setNotice(GENTLE_FAIL);
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   }
 
   async function unpin(row: RankingRow) {
-    if (busy) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
     setBusy(true);
+    setNotice("");
     try {
       const res = await fetch(`/api/collections/${collectionId}/ranking/pins/${row.itemId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("unpin");
       setAnnounce(`${row.name} is back in its suggested place.`);
       router.refresh();
     } catch {
-      setAnnounce(GENTLE_FAIL);
+      setNotice(GENTLE_FAIL);
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
+  }
+
+  function track(key: string, el: HTMLButtonElement | null) {
+    if (el) buttons.current.set(key, el);
+    else buttons.current.delete(key);
   }
 
   return (
@@ -94,6 +130,11 @@ export function RankingList({ collectionId, rows }: { collectionId: string; rows
       <p role="status" aria-live="polite" className="sr-only">
         {announce}
       </p>
+      {notice && (
+        <p role="status" className="text-sm text-ink-soft">
+          {notice}
+        </p>
+      )}
       <ol className="space-y-2">
         {order.map((row, i) => (
           <li
@@ -139,15 +180,29 @@ export function RankingList({ collectionId, rows }: { collectionId: string; rows
                 onClick={() => void unpin(row)}
                 disabled={busy}
                 aria-label={`Unpin ${row.name}`}
-                className="h-11 shrink-0 rounded-pill px-3 text-sm text-ink-soft hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+                className="h-11 shrink-0 rounded-pill px-3 text-sm text-ink-soft hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Unpin
               </button>
             )}
-            <button type="button" aria-label={`Move ${row.name} up`} disabled={busy || i === 0} onClick={() => void place(i, i - 1)} className={control}>
+            <button
+              type="button"
+              ref={(el) => track(`${row.itemId}:up`, el)}
+              aria-label={`Move ${row.name} up`}
+              disabled={i === 0}
+              onClick={() => void place(i, i - 1, "up")}
+              className={control}
+            >
               <span aria-hidden>↑</span>
             </button>
-            <button type="button" aria-label={`Move ${row.name} down`} disabled={busy || i === order.length - 1} onClick={() => void place(i, i + 1)} className={control}>
+            <button
+              type="button"
+              ref={(el) => track(`${row.itemId}:down`, el)}
+              aria-label={`Move ${row.name} down`}
+              disabled={i === order.length - 1}
+              onClick={() => void place(i, i + 1, "down")}
+              className={control}
+            >
               <span aria-hidden>↓</span>
             </button>
           </li>

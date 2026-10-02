@@ -15,16 +15,19 @@ interface SaveAndShareProps {
 }
 
 const STUMBLE = "That didn't save just now — nothing was lost. Try again whenever you like.";
+// 409: this save's link was turned off since. Retrying the same key can never succeed.
+const LINK_GONE = "The link from that save is no longer active — save again for a fresh one.";
 
 /**
  * Spec §4.4: one quiet button → name it → one server transaction that saves and
  * returns the share link. The key is minted once per mount and reused on retry,
- * so a double tap or a retried request returns the same link, never a second save.
+ * so a double tap or a retried request returns the same link, never a second save
+ * (a 409 means that key's link is gone, so only then is a fresh key minted).
  */
 export function SaveAndShare({ collectionId, collectionSlug, defaultName }: SaveAndShareProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(defaultName);
-  const [saveKey] = useState(newClientKey);
+  const [saveKey, setSaveKey] = useState(newClientKey);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState<{ url: string; resultNumber: number } | null>(null);
@@ -41,6 +44,11 @@ export function SaveAndShare({ collectionId, collectionSlug, defaultName }: Save
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: name.trim(), saveKey }),
       });
+      if (res.status === 409) {
+        setSaveKey(newClientKey());
+        setError(LINK_GONE);
+        return;
+      }
       if (!res.ok) throw new Error("save");
       const body = (await res.json()) as { resultNumber: number; shareToken: string };
       setSaved({ url: `${window.location.origin}/shared-results/${body.shareToken}`, resultNumber: body.resultNumber });

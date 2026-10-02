@@ -41,6 +41,19 @@ describe("SaveAndShare (spec §4.4)", () => {
     expect(keys[0]).toBe(keys[1]);
   });
 
+  it("a 409 (that save's link is no longer active) says so, and the next try is a fresh save", async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 409, json: async () => ({}) });
+    renderSave();
+    await userEvent.click(screen.getByRole("button", { name: "Save and share" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByText(/no longer active/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    await screen.findByLabelText("Link to share");
+    const keys = fetchMock.mock.calls.map(([, init]) => JSON.parse(init.body).saveKey);
+    expect(keys[1]).not.toBe(keys[0]);
+    expect(ClientKey.safeParse(keys[1]).success).toBe(true);
+  });
+
   it("a blank name cannot be saved", async () => {
     renderSave();
     await userEvent.click(screen.getByRole("button", { name: "Save and share" }));

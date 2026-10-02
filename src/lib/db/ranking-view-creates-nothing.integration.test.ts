@@ -1,6 +1,7 @@
 // @vitest-environment node
 // Regression for spec §1: every "See results" tap used to create a draft. The live
-// Ranking page now only reads — rendering it (with pins in play) writes no row.
+// Ranking page now only reads — rendering it, pins lookup included, writes no row
+// (no draft exists, and viewing must not open one).
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { sql } from "drizzle-orm";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";

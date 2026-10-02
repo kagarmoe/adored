@@ -40,7 +40,8 @@ describe("RankingList (spec §4 'Adjusting')", () => {
     render(<RankingList collectionId="coll_1" rows={ROWS} />);
     await userEvent.click(screen.getByRole("button", { name: "Move Bag A down" }));
     await waitFor(() => expect(names()).toEqual(["Bag A", "Bag B", "Bag C"]));
-    expect(screen.getByText(/nothing was lost/i)).toBeInTheDocument();
+    // Shown on screen, not only spoken: no ancestor is visually hidden.
+    expect(screen.getByText(/nothing was lost/i).closest(".sr-only")).toBeNull();
     expect(refresh).not.toHaveBeenCalled();
   });
 
@@ -50,6 +51,20 @@ describe("RankingList (spec §4 'Adjusting')", () => {
     await userEvent.click(screen.getByRole("button", { name: "Unpin Bag C" }));
     expect(fetchMock).toHaveBeenCalledWith("/api/collections/coll_1/ranking/pins/c", expect.objectContaining({ method: "DELETE" }));
     await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("keyboard focus stays on the moved piece's button", async () => {
+    render(<RankingList collectionId="coll_1" rows={ROWS} />);
+    await userEvent.click(screen.getByRole("button", { name: "Move Bag A down" }));
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Move Bag A down" }));
+  });
+
+  it("a move that reaches an end keeps focus on the piece's other button", async () => {
+    render(<RankingList collectionId="coll_1" rows={ROWS} />);
+    await userEvent.click(screen.getByRole("button", { name: "Move Bag B up" }));
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Move Bag B down" }));
   });
 
   it("the ends cannot move further", () => {
