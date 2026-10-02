@@ -95,9 +95,22 @@ describe("ItemPhotoCarousel", () => {
     expect(dots[0]).toHaveAttribute("aria-current", "false");
   });
 
-  it("offers the rotate/zoom view control on the current photo", () => {
-    render(<ItemPhotoCarousel photos={mk(2)} {...props} />);
-    expect(screen.getByRole("button", { name: /view photo/i })).toBeInTheDocument();
+  it("tapping the photo opens the viewer, whose arrow keys leave the carousel alone", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<ItemPhotoCarousel photos={mk(2)} {...props} />);
+    await user.click(screen.getByRole("button", { name: /view photo/i }));
+    const dialog = screen.getByRole("dialog");
+    fireEvent.keyDown(dialog, { key: "ArrowRight" });
+    expect(within(container).getByRole("status")).toHaveTextContent("Photo 1 of 2");
+  });
+
+  it("a swipe does not also open the viewer", () => {
+    render(<ItemPhotoCarousel photos={mk(3)} {...props} />);
+    const stage = screen.getByTestId("carousel-stage");
+    fireEvent.touchStart(stage, { changedTouches: [{ clientX: 200 }] });
+    fireEvent.touchEnd(stage, { changedTouches: [{ clientX: 100 }] });
+    fireEvent.click(screen.getByRole("button", { name: /view photo/i }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("swipes: a leftward touch moves to the next photo, a rightward one back", () => {

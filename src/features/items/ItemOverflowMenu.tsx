@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, OverflowMenu, type OverflowMenuItem } from "@/components/ui";
+import { confirmLeave } from "./useLeaveGuard";
 
 export const IN_RANKING_LINE = "This one is part of a saved ranking.";
 
@@ -53,6 +54,7 @@ export function ItemOverflowMenu({ itemId, itemsHref, isOwner }: ItemOverflowMen
   }
 
   async function archive() {
+    if (!confirmLeave()) return;
     const res = await send(() => fetch(`/api/items/${itemId}`, { method: "DELETE" }));
     if (res?.ok) router.push(`${itemsHref}?removed=${itemId}`);
   }

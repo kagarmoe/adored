@@ -3,6 +3,8 @@ import "@testing-library/jest-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+const refresh = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
 import { InYourLifeChip } from "./InYourLifeChip";
 const ok = (body: unknown = {}) => ({ ok: true, json: async () => body });
 beforeEach(() => { global.fetch = vi.fn().mockResolvedValue(ok()) as never; });
@@ -28,6 +30,17 @@ describe("InYourLifeChip", () => {
     expect(calls[0][0]).toBe("/api/sessions");
     expect(JSON.parse(calls[0][1].body)).toEqual({ collectionId: "c1" });
     await waitFor(() => expect(calls[1][0]).toBe("/api/sessions/s9/decisions"));
+  });
+  it("when a session opened elsewhere holds the slot (409), re-reads the page and uses that session next", async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({ ok: false, status: 409 }).mockResolvedValue(ok()) as never;
+    const { rerender } = render(<InYourLifeChip collectionId="c1" itemId="i1" sessionId={null} />);
+    await userEvent.click(screen.getByRole("button", { name: "I use this" }));
+    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    rerender(<InYourLifeChip collectionId="c1" itemId="i1" sessionId="s7" />);
+    await userEvent.click(screen.getByRole("button", { name: "I use this" }));
+    await waitFor(() =>
+      expect((global.fetch as ReturnType<typeof vi.fn>).mock.calls[1][0]).toBe("/api/sessions/s7/decisions"),
+    );
   });
   it("when the session has finished elsewhere (409), the next tap starts a fresh one", async () => {
     global.fetch = vi.fn().mockResolvedValueOnce({ ok: false, status: 409 }).mockResolvedValueOnce(ok({ id: "s9" }))

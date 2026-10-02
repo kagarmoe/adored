@@ -1,5 +1,6 @@
 "use client";
 import { useId, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { UsageAnswer } from "@/lib/derive-usage";
 import { IN_LIFE_CHIP, RESTING_CHIP } from "./usage-chip-copy";
 
@@ -21,8 +22,15 @@ interface Props { collectionId: string; itemId: string; sessionId: string | null
 // in-progress session — with none open, the first tap starts one.
 export function InYourLifeChip({ collectionId, itemId, sessionId, initial }: Props) {
   const labelId = useId();
+  const router = useRouter();
   const [value, setValue] = useState(initial);
   const [sid, setSid] = useState(sessionId);
+  // A refresh that brings a different open session re-seeds the local id.
+  const [seenSessionId, setSeenSessionId] = useState(sessionId);
+  if (sessionId !== seenSessionId) {
+    setSeenSessionId(sessionId);
+    setSid(sessionId);
+  }
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   async function choose(next: UsageAnswer) {
@@ -35,6 +43,8 @@ export function InYourLifeChip({ collectionId, itemId, sessionId, initial }: Pro
       let id = sid;
       if (!id) {
         const res = await fetch("/api/sessions", { method: "POST", headers: JSON_HEADERS, body: JSON.stringify({ collectionId }) });
+        // 409: a session opened elsewhere holds the slot — re-read it so the next tap uses it.
+        if (res.status === 409) router.refresh();
         if (!res.ok) throw new Error("session");
         id = ((await res.json()) as { id: string }).id;
         setSid(id);

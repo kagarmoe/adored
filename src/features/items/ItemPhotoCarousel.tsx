@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { getPhotoAssetUrl } from "@/lib/photos";
-import { Button, OverflowMenu, PhotoViewControl, type ViewerPhoto } from "@/components/ui";
+import { Button, OverflowMenu, type ViewerPhoto } from "@/components/ui";
+import { ImageViewer } from "@/components/ui/ImageViewer";
 import { PoolUpload } from "@/features/pool/PoolUpload";
 
 const MAX_DOTS = 6;
@@ -25,8 +26,8 @@ const signature = (ps: CarouselPhoto[]) =>
   ps.map((p) => `${p.id}:${p.isHero ? 1 : 0}:${String(p.updatedAt)}`).join();
 
 /** Flip-through of an item's photos. Navigate with arrows, dots, thumbnails,
- *  ArrowLeft/Right, or a native swipe. Rotate + zoom reuse the shared ImageViewer
- *  via PhotoViewControl on the current photo. Each thumbnail's ··· offers Make cover
+ *  ArrowLeft/Right, or a native swipe. Tapping the photo opens the shared ImageViewer
+ *  (rotate + zoom) on the current photo. Each thumbnail's ··· offers Make cover
  *  and Delete; "+ Add photos" uploads through the pool straight onto this item. */
 export function ItemPhotoCarousel({
   photos: incoming,
@@ -50,6 +51,10 @@ export function ItemPhotoCarousel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const touchStart = useRef<{ x: number; y: number } | null>(null);
+  // A swipe must not also count as the tap that opens the viewer.
+  const swiped = useRef(false);
+  const [viewing, setViewing] = useState(false);
+  const viewButtonRef = useRef<HTMLButtonElement>(null);
   const stripRef = useRef<HTMLUListElement>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
 
@@ -257,6 +262,8 @@ export function ItemPhotoCarousel({
         tabIndex={0}
         className="rounded-card outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
         onKeyDown={(e) => {
+          // React bubbles keys from the portalled zoom viewer through here.
+          if (!e.currentTarget.contains(e.target as Node)) return;
           if (e.key === "ArrowLeft") {
             e.preventDefault();
             go(current - 1);
@@ -273,6 +280,7 @@ export function ItemPhotoCarousel({
             // React bubbles touches from the portalled zoom viewer through here; only
             // a touch that is really on the stage counts as a swipe.
             const t = e.changedTouches[0];
+            swiped.current = false;
             touchStart.current = e.currentTarget.contains(e.target as Node)
               ? { x: t.clientX, y: t.clientY ?? 0 }
               : null;
@@ -286,6 +294,7 @@ export function ItemPhotoCarousel({
             const dy = (t.clientY ?? 0) - start.y;
             // A mostly-vertical flick is a page scroll, not a swipe.
             if (Math.abs(dx) >= SWIPE_MIN_PX && Math.abs(dx) > Math.abs(dy)) {
+              swiped.current = true;
               go(dx < 0 ? current + 1 : current - 1);
             }
           }}
@@ -298,7 +307,35 @@ export function ItemPhotoCarousel({
             unoptimized
             className="object-contain"
           />
-          <PhotoViewControl photo={photo} className="absolute right-3 top-3 z-20" />
+          <button
+            ref={viewButtonRef}
+            type="button"
+            aria-label="View photo"
+            aria-haspopup="dialog"
+            onClick={() => {
+              if (swiped.current) {
+                swiped.current = false;
+                return;
+              }
+              setViewing(true);
+            }}
+            className="absolute inset-0 z-10 cursor-zoom-in rounded-card focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+          >
+            <span
+              aria-hidden
+              className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink ring-1 ring-ink/10 shadow-lift"
+            >
+              <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+                <path
+                  d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          </button>
           {multi && (
             <>
               <NavArrow
@@ -348,6 +385,15 @@ export function ItemPhotoCarousel({
           Photo {current + 1} of {photos.length}
         </p>
       </div>
+      {viewing && (
+        <ImageViewer
+          photo={photo}
+          onClose={() => {
+            setViewing(false);
+            viewButtonRef.current?.focus();
+          }}
+        />
+      )}
       {strip}
     </div>
   );

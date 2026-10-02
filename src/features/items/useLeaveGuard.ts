@@ -3,6 +3,11 @@ import { useEffect } from "react";
 
 export const LEAVE_PROMPT = "You have changes that aren't saved yet. Leave anyway?";
 const GUARD = "__adoredLeaveGuard";
+let activeGuards = 0;
+
+/** For in-app exits the guard can't see (a router.push after an action): true when
+ *  nothing is unsaved, or the curator chooses to leave anyway. */
+export const confirmLeave = () => activeGuards === 0 || window.confirm(LEAVE_PROMPT);
 
 // App Router has no route-change event, so guard the ways out directly: a full unload,
 // a same-origin link click (capture phase, before Next's <Link> handler), and — best
@@ -10,6 +15,7 @@ const GUARD = "__adoredLeaveGuard";
 export function useLeaveGuard(active: boolean): void {
   useEffect(() => {
     if (!active) return;
+    activeGuards++;
     // Spread the existing state so Next's router keys survive on the duplicate entry.
     const arm = () =>
       window.history.pushState({ ...window.history.state, [GUARD]: true }, "", window.location.href);
@@ -41,6 +47,7 @@ export function useLeaveGuard(active: boolean): void {
     window.addEventListener("popstate", onPop);
     document.addEventListener("click", onClick, true);
     return () => {
+      activeGuards--;
       stop();
       // Saved (or unmounted) while still on the guard entry: drop it, so the next Back
       // isn't spent on a duplicate of this page. After a link navigation the current

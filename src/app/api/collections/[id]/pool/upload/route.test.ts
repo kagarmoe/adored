@@ -7,12 +7,13 @@ import { NextResponse } from "next/server";
 // test — NOT a RUN_DB_TESTS integration test. It covers only what lives here:
 // token-generation + the authorize gate (requireApiCapability). The DB-backed pool
 // routes are covered by src/lib/db/pool-routes.integration.test.ts.
-const { mockGetSession, mockGetDb, mockRequireApiCapability, mockHandleUpload } =
+const { mockGetSession, mockGetDb, mockRequireApiCapability, mockHandleUpload, mockRecordPooled } =
   vi.hoisted(() => ({
     mockGetSession: vi.fn(),
     mockGetDb: vi.fn(),
     mockRequireApiCapability: vi.fn(),
     mockHandleUpload: vi.fn(),
+    mockRecordPooled: vi.fn(),
   }));
 
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
@@ -24,6 +25,9 @@ vi.mock("@/server/repositories/implementations/PhotoRepository", () => ({
   PhotoRepository: vi.fn().mockImplementation(function () { return ({ create: vi.fn() }); }),
 }));
 vi.mock("@vercel/blob/client", () => ({ handleUpload: mockHandleUpload }));
+vi.mock("@/server/api/photos", () => ({
+  PhotoController: { fromDb: () => ({ recordPooled: mockRecordPooled }) },
+}));
 
 import { POST } from "./route";
 
@@ -98,5 +102,21 @@ describe("POST /api/collections/[id]/pool/upload", () => {
     expect(mockHandleUpload).toHaveBeenCalledOnce();
     const body = (await res.json()) as { token: any };
     expect(JSON.parse(body.token.tokenPayload)).toEqual({ collectionId: "c1", uploadedBy: "u1" });
+  });
+
+  // PoolUpload's item mode finds the rows it just uploaded by `filename === blob.pathname`.
+  it("the Blob callback records the pooled row with the blob pathname as its filename", async () => {
+    mockHandleUpload.mockImplementation(async (opts: any) => {
+      await opts.onUploadCompleted({
+        blob: { url: "https://blob/photos/x-abc.jpg", pathname: "photos/x-abc.jpg", contentType: "image/jpeg" },
+        tokenPayload: JSON.stringify({ collectionId: "c1", uploadedBy: "u1" }),
+      });
+      return {};
+    });
+    const res = await POST(makeReq(), { params: Promise.resolve({ id: "c1" }) });
+    expect(res.status).toBe(200);
+    expect(mockRecordPooled).toHaveBeenCalledWith(
+      expect.objectContaining({ filename: "photos/x-abc.jpg", blobKey: "https://blob/photos/x-abc.jpg" }),
+    );
   });
 });

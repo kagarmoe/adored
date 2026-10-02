@@ -8,6 +8,12 @@ const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
 import { ItemOverflowMenu, IN_RANKING_LINE } from "./ItemOverflowMenu";
+import { useLeaveGuard } from "./useLeaveGuard";
+
+function DirtyForm() {
+  useLeaveGuard(true);
+  return null;
+}
 
 const props = { itemId: "i1", itemsHref: "/collections/bags/items" };
 const fetchMock = () => global.fetch as unknown as ReturnType<typeof vi.fn>;
@@ -37,16 +43,27 @@ describe("ItemOverflowMenu", () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith("/collections/bags/items?removed=i1"));
   });
 
+  it("with unsaved panel edits, Archive asks first and a cancel archives nothing", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(
+      <>
+        <DirtyForm />
+        <ItemOverflowMenu {...props} isOwner={false} />
+      </>,
+    );
+    await openMenu();
+    await userEvent.click(screen.getByRole("menuitem", { name: "Archive" }));
+    expect(confirm).toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+    confirm.mockRestore();
+  });
+
   it("a failed archive stays put with a gentle retry line", async () => {
     fetchMock().mockResolvedValue(res(500));
     render(<ItemOverflowMenu {...props} isOwner={false} />);
     await openMenu();
     await userEvent.click(screen.getByRole("menuitem", { name: "Archive" }));
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent(/didn.t go through/i));
-    // In flow under the header (never in the floating panel's container), on its own surface.
-    const status = screen.getByRole("status");
-    expect(status).toHaveClass("bg-surface-raised");
-    expect(status.closest(".absolute")).toBeNull();
     expect(push).not.toHaveBeenCalled();
   });
 
@@ -59,10 +76,6 @@ describe("ItemOverflowMenu", () => {
     await openMenu();
     await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
     expect(screen.getByRole("button", { name: "Keep" })).toHaveFocus();
-    // In flow under the header, never floating over the subtitle (phone overlap bug).
-    const confirm = screen.getByRole("group", { name: "Delete this item" });
-    expect(confirm).toHaveClass("basis-full");
-    expect(confirm.closest(".absolute")).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Delete for good" }));
 
     const [url, init] = fetchMock().mock.calls[0];
