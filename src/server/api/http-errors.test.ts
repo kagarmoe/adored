@@ -33,7 +33,7 @@ import {
   DeleteResultStateError,
   SupersedeStateError,
   FinalizeStateError,
-  ResultItemNotInResultError,
+  PinTargetError,
 } from "@/server/services/SortResultService";
 import { PreferenceExistsError } from "@/server/api/dispositions";
 import { PoolGroupError } from "@/server/services/ItemService";
@@ -112,10 +112,10 @@ describe("errorResponse", () => {
     expect(await body(res)).toEqual({ error: "Unauthorized" });
   });
 
-  it("maps ResultItemNotInResultError → 404 with the error message", async () => {
-    const res = errorResponse(new ResultItemNotInResultError());
+  it("maps PinTargetError → 404 with the error message", async () => {
+    const res = errorResponse(new PinTargetError());
     expect(res.status).toBe(404);
-    expect(await body(res)).toEqual({ error: "Result item does not belong to this result" });
+    expect(await body(res)).toEqual({ error: "That piece can't be placed here." });
   });
 
   // These five mappings are what let every route's catch delegate here unconditionally.

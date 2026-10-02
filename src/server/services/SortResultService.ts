@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import type { SortResult, SortResultItem, RankBucket } from "@/types";
+import type { SortResult, SortResultItem } from "@/types";
 import type { Database } from "@/lib/db";
 import { lockCollectionCurator, lockSaveKey, withTransaction } from "@/lib/transactions";
 import {
@@ -45,33 +45,6 @@ export class FinalizeStateError extends Error {
   constructor() {
     super("Can only finalize draft results");
     this.name = "FinalizeStateError";
-  }
-}
-
-/**
- * Thrown when a re-rank or reset targets a result that is no longer a draft.
- * Re-asserted INSIDE the write transaction (after a FOR UPDATE row lock), so a
- * finalize that commits between the route's pre-tx status check and the write
- * (the finalized-immutability TOCTOU) can no longer slip a manual-overlay change
- * onto a finalized keepsake. The route maps it to 409 (same as the pre-tx gate).
- */
-export class ReorderFinalizedError extends Error {
-  constructor() {
-    super("Result is finalized");
-    this.name = "ReorderFinalizedError";
-  }
-}
-
-/**
- * Thrown when a bulk re-rank batch names a rid that is not an item of the target
- * result (a foreign/absent rid). Raised INSIDE the reorder transaction so the
- * whole batch rolls back; the route maps it to 404 (mirrors the per-item route's
- * "result-item belongs to a different result" 404).
- */
-export class ResultItemNotInResultError extends Error {
-  constructor() {
-    super("Result item does not belong to this result");
-    this.name = "ResultItemNotInResultError";
   }
 }
 
@@ -348,88 +321,6 @@ export class SortResultService {
     });
   }
 
-  async setManualOverride(
-    resultItemId: string,
-    rank?: number,
-    bucket?: "top" | "high" | "medium" | "low",
-  ): Promise<SortResultItem> {
-    return this.sortResultItemRepo.update(resultItemId, {
-      manualRank: rank ?? null,
-      manualBucket: bucket ?? null,
-      updatedAt: new Date(),
-    });
-  }
-
-  async resetManualOverride(resultItemId: string): Promise<SortResultItem> {
-    return this.sortResultItemRepo.update(resultItemId, {
-      manualRank: null,
-      manualBucket: null,
-      updatedAt: new Date(),
-    });
-  }
-
-  /**
-   * Epic S S3a: apply a whole ordering — an array of {rid, manualRank} — in ONE
-   * transaction, so a drag-to-position (a dense, gapless rewrite of the affected
-   * block) is a SINGLE atomic call instead of N fragile sequential PATCHes.
-   *
-   * `manualRank` is a dense int sharing numeric space with `computedRank`, so the
-   * caller passes the full new rank sequence for the moved block. EVERY rid is
-   * validated against the result's own items INSIDE the transaction: a bad rid
-   * throws ResultItemNotInResultError, which rolls back any writes already applied
-   * in this batch (the load-bearing atomicity guarantee — no partial reorder).
-   *
-   * Invariant: all writes go to the tx-bound repo, never `this.sortResultItemRepo`.
-   */
-  async reorderResultItems(
-    resultId: string,
-    order: ReadonlyArray<{ rid: string; manualRank: number; manualBucket: RankBucket | null }>,
-  ): Promise<SortResultItem[]> {
-    return withTransaction(
-      this.db,
-      async (tx) => {
-        // Lock the result row and re-assert draft status IN-TX: a finalize that
-        // committed after the route's pre-tx 409 gate now serializes here, so a
-        // re-rank can never land on a finalized keepsake (TOCTOU).
-        const result = await new SortResultRepository(tx).findByIdForUpdate(resultId);
-        if (result && result.status !== "draft") throw new ReorderFinalizedError();
-        const itemRepo = new SortResultItemRepository(tx);
-        const validIds = new Set(
-          (await itemRepo.findByResult(resultId)).map((i) => i.id),
-        );
-        // 9v1f.1 cross-tier: write manualBucket alongside manualRank. `?? null` so
-        // an undefined can never make drizzle skip the column and strand a prior
-        // override — the batch is a FULL overlay describing every row's manual state.
-        for (const { rid, manualRank, manualBucket } of order) {
-          if (!validIds.has(rid)) throw new ResultItemNotInResultError();
-          await itemRepo.update(rid, { manualRank, manualBucket: manualBucket ?? null });
-        }
-        return itemRepo.findByResult(resultId);
-      },
-      { op: "reorder_result_items", ctx: { resultId } },
-    );
-  }
-
-  /**
-   * Epic S S3a: clear the manual overlay for EVERY item of a result — back to the
-   * suggested order. Runs in a transaction that FIRST locks the result row and
-   * re-asserts draft status (the same finalized-immutability TOCTOU guard as
-   * reorderResultItems), so a concurrent finalize serializes with the reset.
-   */
-  async resetManualOverridesForResult(resultId: string): Promise<SortResultItem[]> {
-    return withTransaction(
-      this.db,
-      async (tx) => {
-        const result = await new SortResultRepository(tx).findByIdForUpdate(resultId);
-        if (result && result.status !== "draft") throw new ReorderFinalizedError();
-        const itemRepo = new SortResultItemRepository(tx);
-        await itemRepo.clearManualOverridesByResult(resultId);
-        return itemRepo.findByResult(resultId);
-      },
-      { op: "reset_result_items", ctx: { resultId } },
-    );
-  }
-
   async deleteResultItem(id: string): Promise<void> {
     await this.sortResultItemRepo.delete(id);
   }
@@ -445,7 +336,7 @@ export class SortResultService {
    *
    * The result row is locked (`findByIdForUpdate`) inside the transaction so a
    * concurrent finalize serializes here instead of racing the state guard
-   * (mirrors `reorderResultItems`' TOCTOU pattern).
+   * (the finalized-immutability TOCTOU guard).
    */
   async finalizeResult(id: string): Promise<SortResult> {
     // The pre-tx read only supplies the lock key (collection and curator never change);

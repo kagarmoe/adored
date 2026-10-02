@@ -5,8 +5,6 @@ import {
   DeleteResultStateError,
   SupersedeStateError,
   FinalizeStateError,
-  ReorderFinalizedError,
-  ResultItemNotInResultError,
   PinTargetError,
   NothingToSaveError,
   SaveKeyConflictError,
@@ -44,7 +42,6 @@ export class HttpError extends Error {
  *   DeleteResultStateError
  *   | SupersedeStateError
  *   | FinalizeStateError
- *   | ReorderFinalizedError
  *   | CurrentSessionExistsError → 409 (error.message)
  *   | PreferenceExistsError
  *   | ItemInResultError
@@ -53,7 +50,6 @@ export class HttpError extends Error {
  *   PoolGroupError            → 409 if code "conflict", else 400 (error.message)
  *   HttpError
  *   | InvitationAcceptError   → error.status (error.message)
- *   ResultItemNotInResultError → 404 (error.message)
  *   PinTargetError → 404 (error.message)
  *   UnauthorizedError
  *   | Error("Unauthorized")  → 401
@@ -79,7 +75,6 @@ export function errorResponse(error: unknown): NextResponse {
     error instanceof DeleteResultStateError ||
     error instanceof SupersedeStateError ||
     error instanceof FinalizeStateError ||
-    error instanceof ReorderFinalizedError ||
     error instanceof CurrentSessionExistsError ||
     error instanceof PreferenceExistsError ||
     error instanceof ItemInResultError ||
@@ -97,7 +92,7 @@ export function errorResponse(error: unknown): NextResponse {
   if (error instanceof HttpError || error instanceof InvitationAcceptError) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
-  if (error instanceof ResultItemNotInResultError || error instanceof PinTargetError) {
+  if (error instanceof PinTargetError) {
     return NextResponse.json({ error: error.message }, { status: 404 });
   }
   if (

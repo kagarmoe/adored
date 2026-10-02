@@ -11,11 +11,7 @@
 //   - [id] GET happy (returns the result)
 //   - finalize POST happy (draft -> finalized, persisted) + the pinned NO-state-guard
 //     fact (re-finalize is idempotent; there is no 409 — purses-ydph)
-//   - items GET happy (returns the result's items in computed-rank order)
-//   - items/[rid] GET happy; PATCH happy (manual override persists); PATCH 409
-//     finalized; PATCH invalid-JSON 400; PATCH bad-enum -> pinned 500 (purses-ydph)
-//   - items/[rid]/reset POST happy (override present before -> cleared after);
-//     reset 409 finalized
+//   - items/[rid] GET happy
 //   - shares POST happy (creates a row, read back) + invalid-JSON 400
 //   - shares/[sid] GET happy; PATCH happy (revoke persists) + invalid-JSON 400;
 //     DELETE happy (active before -> revoked after)
@@ -60,9 +56,7 @@ vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 import { POST as createResult } from "@/app/api/sort-results/route";
 import { GET as getResult } from "@/app/api/sort-results/[id]/route";
 import { POST as finalizeResult } from "@/app/api/sort-results/[id]/finalize/route";
-import { GET as listItems } from "@/app/api/sort-results/[id]/items/route";
-import { GET as getItem, PATCH as patchItem } from "@/app/api/sort-results/[id]/items/[rid]/route";
-import { POST as resetItem } from "@/app/api/sort-results/[id]/items/[rid]/reset/route";
+import { GET as getItem } from "@/app/api/sort-results/[id]/items/[rid]/route";
 import { POST as createShare } from "@/app/api/sort-results/[id]/shares/route";
 import { GET as getShare, PATCH as patchShare, DELETE as deleteShare } from "@/app/api/sort-results/[id]/shares/[sid]/route";
 import { POST as supersede } from "@/app/api/sort-results/[id]/supersede/route";
@@ -308,24 +302,8 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
     });
   });
 
-  // ── items GET (list) ──────────────────────────────────────────────────────
-  describe("GET /api/sort-results/[id]/items", () => {
-    it("200s for the curator and returns the result's items in computed-rank order", async () => {
-      const { resultId, highItemId, lowItemId } = await seedPopulatedDraft();
-      login(ownerId);
-      const res = await listItems(jsonReq("GET") as any, { params: Promise.resolve({ id: resultId }) } as any);
-      expect(res.status).toBe(200);
-      const items = (await res.json()) as Array<{ itemId: string; computedRank: number }>;
-      expect(items).toHaveLength(2);
-      // orderRank 0 is computedRank 0 (best); ordering proves it is the result's items.
-      const byRank = [...items].sort((a, b) => a.computedRank - b.computedRank);
-      expect(byRank[0].itemId).toBe(highItemId);
-      expect(byRank[1].itemId).toBe(lowItemId);
-    });
-  });
-
-  // ── items/[rid] GET / PATCH ───────────────────────────────────────────────
-  describe("GET·PATCH /api/sort-results/[id]/items/[rid]", () => {
+  // ── items/[rid] GET ───────────────────────────────────────────────────────
+  describe("GET /api/sort-results/[id]/items/[rid]", () => {
     /** The result's highest-ranked SortResultItem id. */
     async function firstResultItem(resultId: string) {
       const items = await new SortResultItemRepository(getTestDb().db).findByResult(resultId);
@@ -339,109 +317,6 @@ describeDb("sort-results pipeline: happy + error branches (route -> repo -> DB)"
       const res = await getItem(jsonReq("GET") as any, { params: Promise.resolve({ id: resultId, rid: item.id }) } as any);
       expect(res.status).toBe(200);
       expect(await res.json()).toMatchObject({ id: item.id, sortResultId: resultId });
-    });
-
-    it("PATCH 200s and persists a manual bucket/rank override", async () => {
-      const { db } = getTestDb();
-      const { resultId } = await seedPopulatedDraft();
-      const item = await firstResultItem(resultId);
-      // Non-vacuous: no override set BEFORE.
-      expect(item.manualBucket).toBeNull();
-      expect(item.manualRank).toBeNull();
-
-      login(ownerId);
-      const res = await patchItem(
-        jsonReq("PATCH", { manualBucket: "low", manualRank: 9 }) as any,
-        { params: Promise.resolve({ id: resultId, rid: item.id }) } as any,
-      );
-      expect(res.status).toBe(200);
-
-      const after = await new SortResultItemRepository(db).findById(item.id);
-      expect(after!.manualBucket).toBe("low");
-      expect(after!.manualRank).toBe(9);
-    });
-
-    it("PATCH 409s when the parent result is finalized (override not applied)", async () => {
-      const { db } = getTestDb();
-      const { resultId } = await seedPopulatedDraft();
-      const item = await firstResultItem(resultId);
-      await new SortResultService(
-        new SortResultRepository(db), new SortResultItemRepository(db),
-        new CollectionPreferenceItemRepository(db), db,
-      ).finalizeResult(resultId);
-
-      login(ownerId);
-      const res = await patchItem(
-        jsonReq("PATCH", { manualBucket: "low" }) as any,
-        { params: Promise.resolve({ id: resultId, rid: item.id }) } as any,
-      );
-      expect(res.status).toBe(409);
-      // The item on a finalized result must be unchanged.
-      expect((await new SortResultItemRepository(db).findById(item.id))!.manualBucket).toBeNull();
-    });
-
-    it("PATCH 400s on invalid JSON (override not applied)", async () => {
-      const { db } = getTestDb();
-      const { resultId } = await seedPopulatedDraft();
-      const item = await firstResultItem(resultId);
-      login(ownerId);
-      const res = await patchItem(badJsonReq("PATCH") as any, { params: Promise.resolve({ id: resultId, rid: item.id }) } as any);
-      expect(res.status).toBe(400);
-      expect((await new SortResultItemRepository(db).findById(item.id))!.manualBucket).toBeNull();
-    });
-
-    it("PATCH bad manualBucket enum -> 400 (ZodError mapped via errorResponse), no mutation", async () => {
-      const { db } = getTestDb();
-      const { resultId } = await seedPopulatedDraft();
-      const item = await firstResultItem(resultId);
-      login(ownerId);
-      const res = await patchItem(
-        jsonReq("PATCH", { manualBucket: "not-a-bucket" }) as any,
-        { params: Promise.resolve({ id: resultId, rid: item.id }) } as any,
-      );
-      expect(res.status).toBe(400);
-      expect((await new SortResultItemRepository(db).findById(item.id))!.manualBucket).toBeNull();
-    });
-  });
-
-  // ── items/[rid]/reset POST ────────────────────────────────────────────────
-  describe("POST /api/sort-results/[id]/items/[rid]/reset", () => {
-    it("200s and clears a manual override (set before -> null after)", async () => {
-      const { db } = getTestDb();
-      const { resultId } = await seedPopulatedDraft();
-      const itemRepo = new SortResultItemRepository(db);
-      const item = (await itemRepo.findByResult(resultId))[0];
-      // Set an override directly, then assert it is PRESENT before the reset.
-      await itemRepo.update(item.id, { manualBucket: "low", manualRank: 7 });
-      const before = await itemRepo.findById(item.id);
-      expect(before!.manualBucket).toBe("low");
-      expect(before!.manualRank).toBe(7);
-
-      login(ownerId);
-      const res = await resetItem(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId, rid: item.id }) } as any);
-      expect(res.status).toBe(200);
-
-      const after = await itemRepo.findById(item.id);
-      expect(after!.manualBucket).toBeNull();
-      expect(after!.manualRank).toBeNull();
-    });
-
-    it("409s when the parent result is finalized (override preserved)", async () => {
-      const { db } = getTestDb();
-      const { resultId } = await seedPopulatedDraft();
-      const itemRepo = new SortResultItemRepository(db);
-      const item = (await itemRepo.findByResult(resultId))[0];
-      await itemRepo.update(item.id, { manualBucket: "low", manualRank: 7 });
-      await new SortResultService(
-        new SortResultRepository(db), new SortResultItemRepository(db),
-        new CollectionPreferenceItemRepository(db), db,
-      ).finalizeResult(resultId);
-
-      login(ownerId);
-      const res = await resetItem(jsonReq("POST") as any, { params: Promise.resolve({ id: resultId, rid: item.id }) } as any);
-      expect(res.status).toBe(409);
-      // The override on a finalized result must survive the reset attempt.
-      expect((await itemRepo.findById(item.id))!.manualBucket).toBe("low");
     });
   });
 

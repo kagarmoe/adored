@@ -498,46 +498,6 @@ describe("SortResultService deleteResult", () => {
   });
 });
 
-describe("SortResultService manual override", () => {
-  it("setManualOverride / resetManualOverride write manual fields", async () => {
-    const setUpdate = vi.fn(async () =>
-      sortResultItem({ manualRank: 3, manualBucket: "top" }),
-    );
-    const setRepo = {
-      update: setUpdate,
-    } as unknown as SortResultItemRepository;
-
-    await new SortResultService(
-      {} as unknown as SortResultRepository,
-      setRepo,
-      {} as unknown as CollectionPreferenceItemRepository,
-      txDb,
-    ).setManualOverride("item-a", 3, "top");
-
-    expect(setUpdate).toHaveBeenCalledWith(
-      "item-a",
-      expect.objectContaining({ manualRank: 3, manualBucket: "top" }),
-    );
-
-    const resetUpdate = vi.fn(async () => sortResultItem());
-    const resetRepo = {
-      update: resetUpdate,
-    } as unknown as SortResultItemRepository;
-
-    await new SortResultService(
-      {} as unknown as SortResultRepository,
-      resetRepo,
-      {} as unknown as CollectionPreferenceItemRepository,
-      txDb,
-    ).resetManualOverride("item-a");
-
-    expect(resetUpdate).toHaveBeenCalledWith(
-      "item-a",
-      expect.objectContaining({ manualRank: null, manualBucket: null }),
-    );
-  });
-});
-
 describe("SortResultService.saveAndShare replay", () => {
   it("409s when the key's link is no longer active, and writes nothing", async () => {
     txResultRepo.findBySaveKey.mockResolvedValue(sortResult({ status: "finalized" }));

@@ -30,8 +30,7 @@ import { requireApiResultAccess } from "@/server/dal/collection-access";
 import { POST as createResult } from "@/app/api/sort-results/route";
 import { GET as getResult, PATCH as patchResult, DELETE as deleteResult } from "@/app/api/sort-results/[id]/route";
 import { POST as finalizeResult } from "@/app/api/sort-results/[id]/finalize/route";
-import { GET as getItem, PATCH as patchItem, DELETE as deleteItem } from "@/app/api/sort-results/[id]/items/[rid]/route";
-import { POST as resetItem } from "@/app/api/sort-results/[id]/items/[rid]/reset/route";
+import { GET as getItem, DELETE as deleteItem } from "@/app/api/sort-results/[id]/items/[rid]/route";
 import { GET as listShares } from "@/app/api/sort-results/[id]/shares/route";
 import { GET as getShare, PATCH as patchShare, DELETE as deleteShare } from "@/app/api/sort-results/[id]/shares/[sid]/route";
 
@@ -177,27 +176,10 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
       return { resultId, foreignItemId: otherItem.id };
     }
 
-    it("items/[rid] PATCH 404s a result-item that belongs to a DIFFERENT result", async () => {
-      const { resultId, foreignItemId } = await seedForeignResultItem();
-      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const req = new Request("http://localhost/x", {
-        method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ manualBucket: "top" }),
-      });
-      const res = await patchItem(req as any, { params: Promise.resolve({ id: resultId, rid: foreignItemId }) });
-      expect(res.status).toBe(404);
-    });
-
     it("items/[rid] DELETE 404s a result-item that belongs to a DIFFERENT result", async () => {
       const { resultId, foreignItemId } = await seedForeignResultItem();
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
       const res = await deleteItem(new Request("http://localhost/x", { method: "DELETE" }) as any, { params: Promise.resolve({ id: resultId, rid: foreignItemId }) });
-      expect(res.status).toBe(404);
-    });
-
-    it("items/[rid]/reset POST 404s a result-item that belongs to a DIFFERENT result", async () => {
-      const { resultId, foreignItemId } = await seedForeignResultItem();
-      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await resetItem(new Request("http://localhost/x", { method: "POST" }) as any, { params: Promise.resolve({ id: resultId, rid: foreignItemId }) });
       expect(res.status).toBe(404);
     });
 

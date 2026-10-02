@@ -26,35 +26,6 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string; rid: string }> }
-) {
-  try {
-    const { id, rid } = await params;
-    const user = await requireAuth();
-    const body = await request.json();
-    const db = getDb();
-    const access = await requireApiResultAccess(db, id, user.id);
-    if (access instanceof NextResponse) return access;
-    if (access.status === "finalized") {
-      return NextResponse.json(
-        { error: "Result is finalized" },
-        { status: 409 },
-      );
-    }
-    const ctrl = ResultItemController.fromDb(db);
-    const existing = await ctrl.getByIdForResult(rid, id);
-    if (!existing) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-    const item = await ctrl.updateResultItem(rid, body);
-    return NextResponse.json(item);
-  } catch (error) {
-    return errorResponse(error);
-  }
-}
-
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string; rid: string }> }

@@ -76,15 +76,6 @@ export class SortResultItemRepository {
     await this.db.delete(sortResultItemsTable).where(eq(sortResultItemsTable.id, id));
   }
 
-  // Epic S S3a: clear the manual overlay (rank + bucket) for every item of a
-  // result in a single UPDATE — the whole-list "back to the computed order" reset.
-  async clearManualOverridesByResult(sortResultId: string): Promise<void> {
-    await this.db
-      .update(sortResultItemsTable)
-      .set({ manualRank: null, manualBucket: null, updatedAt: new Date() })
-      .where(eq(sortResultItemsTable.sortResultId, sortResultId));
-  }
-
   async deleteByResult(sortResultId: string): Promise<void> {
     await this.db
       .delete(sortResultItemsTable)
