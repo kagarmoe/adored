@@ -749,3 +749,16 @@ if (require.main === module) {
     await closeDb();
   })();
 }
+
+/** A uniquely named, slugged collection — for specs that act on one card in the shared list. */
+export async function seedNamedCollection(
+  ownerId: string,
+  name: string,
+  status: "active" | "archived" = "active",
+): Promise<SeededCollectionRef> {
+  const { db } = getTestDb();
+  const collectionId = generateId("col");
+  const slug = `e2e-named-${collectionId}`;
+  await db.insert(collectionsTable).values({ id: collectionId, ownerId, name, slug, status });
+  return { collectionId, slug };
+}
