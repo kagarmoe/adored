@@ -3,6 +3,7 @@ import type {
   RankBucket,
   SortResultItem,
 } from "@/types";
+import { effectiveBucket } from "@/lib/results-buckets";
 
 /** The computed-only item shape that SortResultItemRepository.create consumes. */
 export interface MaterializedItem {
@@ -59,4 +60,94 @@ export function cloneItemsFrom(items: SortResultItem[]): MaterializedItem[] {
     computedRank: item.computedRank,
     computedBucket: item.computedBucket,
   }));
+}
+
+/** A hand-placed piece in the open draft: its 1-based slot in the loved list. */
+export interface Pin {
+  itemId: string;
+  position: number;
+  pinnedAt: Date;
+}
+
+export interface RankingEntry {
+  itemId: string;
+  bucket: RankBucket;
+  pinned: boolean;
+}
+
+/**
+ * Pure: lay pinned pieces into their slots and fill the rest in derived order
+ * (spec §4: later pair answers never move a pinned piece). A pin past either end
+ * clamps; two pins on one slot keep the newer there and move the older to the
+ * next free slot. Pins for pieces not in `derived` are ignored — nothing is ever
+ * added or lost.
+ */
+export function applyPins(derived: readonly string[], pins: readonly Pin[]): string[] {
+  const present = new Set(derived);
+  const ordered = pins
+    .filter((p) => present.has(p.itemId))
+    .sort(
+      (a, b) =>
+        a.position - b.position ||
+        b.pinnedAt.getTime() - a.pinnedAt.getTime() ||
+        compareItemId(a.itemId, b.itemId),
+    );
+  const slots: (string | null)[] = derived.map(() => null);
+  const pinned = new Set<string>();
+  for (const pin of ordered) {
+    if (pinned.has(pin.itemId)) continue;
+    let i = Math.min(Math.max(pin.position, 1), slots.length) - 1;
+    while (i < slots.length && slots[i] !== null) i++;
+    if (i === slots.length) i = slots.lastIndexOf(null);
+    slots[i] = pin.itemId;
+    pinned.add(pin.itemId);
+  }
+  const rest = derived.filter((id) => !pinned.has(id));
+  let next = 0;
+  return slots.map((slot) => slot ?? rest[next++]);
+}
+
+/**
+ * Pure: the live ranking (spec §4) — tier-first derived order for live pieces,
+ * pins applied inside the loved list (Love, Like, Maybe), Onward as its own row.
+ * Shared by the Ranking page and Save-and-share, so what you see is what is saved.
+ */
+export function buildRanking(
+  preferences: readonly CollectionPreferenceItem[],
+  liveItemIds: ReadonlySet<string>,
+  pins: readonly Pin[],
+): { loved: RankingEntry[]; onward: RankingEntry[] } {
+  const ranked = rankPreferencesToItems(preferences.filter((p) => liveItemIds.has(p.itemId)));
+  const byId = new Map(ranked.map((m) => [m.itemId, m]));
+  const pinnedIds = new Set(pins.map((p) => p.itemId));
+  const lovedIds = ranked.filter((m) => m.computedBucket !== "low").map((m) => m.itemId);
+  const loved = applyPins(lovedIds, pins).flatMap((itemId) => {
+    const m = byId.get(itemId);
+    return m ? [{ itemId, bucket: m.computedBucket, pinned: pinnedIds.has(itemId) }] : [];
+  });
+  const onward = ranked
+    .filter((m) => m.computedBucket === "low")
+    .map((m) => ({ itemId: m.itemId, bucket: m.computedBucket, pinned: false }));
+  return { loved, onward };
+}
+
+/**
+ * Pure: the open draft's pins. `manualRank` keeps its existing 0-based convention
+ * (the legacy "Adjust results" rank space); a Pin is the 1-based slot, so this is
+ * the one place the +1 happens. Used by both listPins and saveAndShare.
+ */
+export function pinsFromRows(rows: readonly SortResultItem[]): Pin[] {
+  return rows.flatMap((r) =>
+    r.manualRank === null ? [] : [{ itemId: r.itemId, position: r.manualRank + 1, pinnedAt: r.updatedAt }],
+  );
+}
+
+/** Pure: a saved ranking's loved order as 1-based positions (Onward excluded). */
+export function savedOrderPositions(rows: readonly SortResultItem[]): Map<string, number> {
+  const ordered = [...rows].sort(
+    (a, b) => (a.manualRank ?? a.computedRank) - (b.manualRank ?? b.computedRank),
+  );
+  return new Map(
+    ordered.filter((r) => effectiveBucket(r) !== "low").map((r, i) => [r.itemId, i + 1]),
+  );
 }
