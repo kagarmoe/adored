@@ -51,6 +51,7 @@ export function filterItems(items: Item[], opts: { unnamed: boolean; q: string }
  *  missing, no "incomplete"/"need" framing). */
 export function itemsEmptyState(opts: {
   hasAnyItems: boolean;
+  hasArchived?: boolean;
   view: "all" | "archived" | "unnamed";
   q: string;
 }): { heading: string; message: string } {
@@ -59,7 +60,11 @@ export function itemsEmptyState(opts: {
   if (opts.view === "archived") {
     return { heading: "Nothing archived", message: "Archived items rest here, ready to come back whenever you like." };
   }
-  if (!opts.hasAnyItems) return { heading: "No items yet", message: "Add photos to start your collection." };
+  if (!opts.hasAnyItems) {
+    return opts.hasArchived
+      ? { heading: "Everything here is archived", message: "Find it under Archived." }
+      : { heading: "No items yet", message: "Add photos to start your collection." };
+  }
   if (opts.view === "unnamed") {
     return { heading: "Everything has a name", message: "Nothing is waiting — name things whenever you like." };
   }

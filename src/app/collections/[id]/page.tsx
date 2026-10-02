@@ -6,161 +6,114 @@ import { PhotoController } from "@/server/api/photos";
 import { ItemController } from "@/server/api/items";
 import { SessionController } from "@/server/api/sessions";
 import { PreferenceController } from "@/server/api/preferences";
+import { getPhotoAssetUrlForPhoto, PHOTO_WIDTH } from "@/lib/photos";
 import { AppLayout } from "@/components/layout";
+import { ActionBar } from "@/components/layout/ActionBar";
 import { trail } from "@/components/layout/breadcrumb-trails";
-import { EmptyState, buttonVariants } from "@/components/ui";
+import { Button, EmptyState, Input, buttonVariants } from "@/components/ui";
+import { viewHref } from "@/components/ui/viewHref";
 import { KeepSortingButton } from "@/features/sessions/KeepSortingButton";
 import { PhotoPoolPreview } from "@/features/collections/PhotoPoolPreview";
-import { ItemPreviewGrid } from "@/features/collections/ItemPreviewGrid";
 import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
-import { resolveWorkspaceState } from "@/features/collections/workspaceState";
+import { CollectionHomeMenu } from "@/features/collections/CollectionHomeMenu";
+import { ItemCard } from "@/features/items/ItemCard";
+import { ArchivedItemCard } from "@/features/items/ArchivedItemCard";
+import { ArchivedNotice } from "@/features/items/ArchivedNotice";
+import { ItemFilterPills, type ItemsView } from "@/features/items/ItemFilterPills";
+import { filterItems, itemsEmptyState } from "@/lib/items";
+import { isIdShaped } from "@/lib/id";
 import { quietLink } from "@/lib/design/quiet-link";
 import Link from "next/link";
 
+type Param = string | string[] | undefined;
+
 interface CollectionPageProps {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ status?: Param; unnamed?: Param; removed?: Param; q?: Param }>;
 }
 
-export default async function CollectionPage({ params }: CollectionPageProps) {
+export default async function CollectionPage({ params, searchParams: searchParamsPromise }: CollectionPageProps) {
   const { id } = await params;
+  const searchParams = await searchParamsPromise;
   const session = await getSession();
   if (!session?.user) {
     redirect("/login");
   }
 
   const db = getDb();
-  // Access is enforced BEFORE any preview query — a thrown redirect here means the
-  // Promise.all below never runs, so pool/item data is unreachable without access.
+  // Access is enforced BEFORE any read — a thrown redirect here means nothing below runs.
   const collection = await requireCollectionAccess(db, id, session.user.id);
 
-  // The two bounded previews (and this user's own sessions for the sort
-  // action) in one round-trip. Adaptive state derives from preview row
-  // counts — no separate count/existence query. A failed preview query
-  // PROPAGATES (it is never caught into [] and rendered as the empty state).
-  const [poolPreview, itemPreview, sessions] = await Promise.all([
+  const view: ItemsView =
+    searchParams?.status === "archived" ? "archived" : searchParams?.unnamed === "1" ? "unnamed" : "all";
+  // typeof: a repeated ?q= key arrives as string[] — ignore it.
+  const q = typeof searchParams?.q === "string" ? searchParams.q.slice(0, 100) : "";
+  const itemController = ItemController.fromDb(db);
+  // One round-trip. A failed read PROPAGATES (never caught into [] and shown as empty).
+  // Archived items are always read (this collection's only): they verify ?removed= and
+  // tell "nothing yet" from "everything archived".
+  const [pool, liveItems, archivedItems, sessions, preferences] = await Promise.all([
     PhotoController.fromDb(db).findPoolByCollection(collection.id, 6),
-    ItemController.fromDb(db).listItems(collection.id, { limit: 12, orderBy: "number" }),
+    itemController.listItems(collection.id, { orderBy: "number" }),
+    itemController.listArchived(collection.id),
     SessionController.fromDb(db).listByCollectionAndCurator(collection.id, session.user.id),
+    PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id),
   ]);
-
+  const items = view === "archived" ? archivedItems : liveItems;
+  const visible = filterItems(items, { unnamed: view === "unnamed", q });
   const covers =
-    itemPreview.length > 0
-      ? await PhotoController.fromDb(db).findCoverPhotosByItemIds(itemPreview.map((i) => i.id))
+    visible.length > 0
+      ? await PhotoController.fromDb(db).findCoverPhotosByItemIds(visible.map((i) => i.id))
       : new Map();
-
-  const state = resolveWorkspaceState(poolPreview.length, itemPreview.length);
-  const isOwner = collection.ownerId === session.user.id;
+  const coverUrl = (itemId: string) => {
+    const c = covers.get(itemId);
+    return c ? getPhotoAssetUrlForPhoto(c, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
+  };
+  const tierByItem = new Map(preferences.map((p) => [p.itemId, p.rankBucket]));
 
   const base = `/collections/${collection.slug ?? collection.id}`;
   const poolHref = `${base}/pool`;
-  const itemsHref = `${base}/items`;
-
-  // purses-t9l: each user sorts independently — this reflects only the current
-  // user's sessions. A paused sort is still the current one (resume, not start).
-  const currentSession = sessions.find(
-    (s) => s.status === "active" || s.status === "paused",
-  );
-  // Sorted before = any past session OR any surviving decision (a curator whose
-  // only session was set aside has no session rows, but their answers persist).
-  const preferences = await PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id);
+  // purses-t9l: each user sorts independently. A paused sort is still the current one.
+  const currentSession = sessions.find((s) => s.status === "active" || s.status === "paused");
   // Something to see on the Ranking: a placed piece, or a sort finished before.
   const hasEverSorted = preferences.length > 0 || sessions.some((s) => s.status === "completed");
-  const showSort = itemPreview.length > 0 || currentSession !== undefined;
-
-  // A1: at most one dominant (bg-primary) action on the workspace. Keep sorting
-  // (or Start sorting) is that one action whenever a sort is open or items exist,
-  // so the adaptive section's lead action ("Make items" / "Add photos") is
-  // demoted to a non-primary in both cases.
-  const leadActionVariant = currentSession || itemPreview.length > 0 ? "secondary" : "primary";
-
-  const itemsPreview = (
-    <ItemPreviewGrid
-      items={itemPreview}
-      covers={covers}
-      collectionId={collection.id}
-      collectionSlugOrId={collection.slug ?? collection.id}
-    />
-  );
+  const canSort = liveItems.length > 0 || currentSession !== undefined;
+  const showPool = pool.length > 0 && view === "all" && !q;
+  // The archive undo (purses-v7gv): only for an id-shaped value that IS an archived item
+  // of THIS collection — a stale, foreign or hostile ?removed= renders nothing.
+  const removed = searchParams?.removed;
+  const justArchived =
+    view !== "archived" && isIdShaped(removed) && archivedItems.some((i) => i.id === removed) ? removed : null;
+  const empty = itemsEmptyState({ hasAnyItems: items.length > 0, hasArchived: archivedItems.length > 0, view, q });
+  const poolOnly = showPool && liveItems.length === 0;
 
   return (
-    <AppLayout breadcrumbs={trail.collection(collection)}>
-      <div className="space-y-10">
-        <header className="max-w-3xl">
-          <h1 className="text-2xl text-ink sm:text-3xl">{collection.name}</h1>
-          {collection.description && <p className="mt-2 text-ink-soft">{collection.description}</p>}
-          <p className="mt-4 text-sm text-ink-soft">
-            Created {new Date(collection.createdAt).toLocaleDateString()}
-          </p>
-        </header>
-
-        <WorkspaceModeChips base={base} activeMode="build" />
-
-        {state.kind === "pool-first" && (
-          <>
-            <PhotoPoolPreview
-              collectionId={collection.id}
-              poolHref={poolHref}
-              photos={poolPreview.map((p) => ({ id: p.id }))}
-              actionVariant={leadActionVariant}
-            />
-            {itemPreview.length > 0 && (
-              <section aria-labelledby="items-heading" className="space-y-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h2 id="items-heading" className="text-xl text-ink">
-                      Items
-                    </h2>
-                    <p className="mt-1 text-ink-soft">Things gathered here</p>
-                  </div>
-                  <Link href={itemsHref} className={quietLink}>
-                    View all items
-                  </Link>
-                </div>
-                {itemsPreview}
-              </section>
-            )}
-          </>
-        )}
-
-        {state.kind === "items-first" && (
-          <section aria-labelledby="items-heading" className="space-y-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <h2 id="items-heading" className="text-xl text-ink">
-                  Items
-                </h2>
-                <p className="mt-1 text-ink-soft">Things gathered here</p>
-              </div>
-              <div className="flex flex-col items-stretch gap-2 sm:items-end">
-                <Link href={poolHref} className={`${buttonVariants({ variant: leadActionVariant })} w-full sm:w-auto`}>
-                  Add photos
-                </Link>
-                <div className="flex flex-wrap gap-3">
-                  <Link href={`${base}/items/new`} className={quietLink}>
-                    Add item
-                  </Link>
-                  <Link href={itemsHref} className={quietLink}>
-                    View all items
-                  </Link>
-                </div>
-              </div>
+    <AppLayout breadcrumbs={trail.collection(collection)} reserveActionBar>
+      {/* Tighter on phone so a card row shows above the fold at 390×664. */}
+      <div className="space-y-4 md:space-y-8">
+        {/* The header group: title, ···, and the chip row held together; the action row breaks after it. */}
+        <div className="space-y-2">
+          <header className="flex items-start justify-between gap-3">
+            <div className="min-w-0 max-w-3xl">
+              <h1 className="text-2xl text-ink sm:text-3xl">{collection.name}</h1>
+              {collection.description && <p className="mt-2 text-ink-soft">{collection.description}</p>}
             </div>
-            {itemsPreview}
-          </section>
-        )}
+            <CollectionHomeMenu href={base} name={collection.name} isOwner={collection.ownerId === session.user.id} />
+          </header>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <WorkspaceModeChips base={base} activeMode="build" />
+            {hasEverSorted && (
+              <Link href={`${base}/results`} className={quietLink}>
+                See your ranking
+              </Link>
+            )}
+          </div>
+        </div>
 
-        {state.kind === "empty" && (
-          <EmptyState
-            heading="Add photos when you're ready"
-            message="Photos can wait here until you are ready to name or group them."
-            action={{ label: "Add photos", href: poolHref }}
-          />
-        )}
-
-        {/* Spec §4.1: the collection's one sort action — Start sorting, or Keep
-            sorting while a sort is open (paused ones resume). */}
-        {showSort && (
-          <section aria-label="Sort" className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-4">
+        {/* Spec §5: the one primary action, Add photos beside it. Start sorting needs
+            something to sort; before that the primary is the way to items. */}
+        <ActionBar label="Next step">
+          {canSort ? (
             <KeepSortingButton
               fullWidth
               collectionId={collection.id}
@@ -172,23 +125,82 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
                   : null
               }
             />
-            {hasEverSorted && (
-              <Link href={`${base}/results`} className={quietLink}>
-                See your ranking
-              </Link>
-            )}
-          </section>
+          ) : (
+            <Link href={poolHref} className={buttonVariants()}>
+              {pool.length > 0 ? "Make items" : "Add photos"}
+            </Link>
+          )}
+          {canSort && (
+            <Link href={poolHref} className={buttonVariants({ variant: "secondary" })}>
+              Add photos
+            </Link>
+          )}
+        </ActionBar>
+
+        {justArchived && <ArchivedNotice kind="item" id={justArchived} />}
+
+        {showPool && (
+          <PhotoPoolPreview
+            collectionId={collection.id}
+            poolHref={poolHref}
+            photos={pool.map((p) => ({ id: p.id }))}
+            showLink={canSort}
+          />
         )}
 
-        {isOwner && (
-          <nav aria-label="Owner utilities" className="flex flex-col gap-3 border-t border-hairline pt-6 sm:flex-row sm:flex-wrap">
-            <Link href={`${base}/edit`} className={quietLink}>
-              Collection settings
-            </Link>
-            <Link href={`${base}/members`} className={quietLink}>
-              Members
-            </Link>
-          </nav>
+        <div className="space-y-4">
+          <form role="search" action={base} className="flex items-end gap-2">
+            {view === "archived" && <input type="hidden" name="status" value="archived" />}
+            {view === "unnamed" && <input type="hidden" name="unnamed" value="1" />}
+            <div className="w-full">
+              {/* Visually hidden below md (above-the-fold room); the accessible name stays. */}
+              <label htmlFor="home-search" className="mb-2 block text-sm font-medium text-ink max-md:sr-only">
+                Search your items
+              </label>
+              <Input
+                id="home-search"
+                type="search"
+                name="q"
+                defaultValue={q}
+                placeholder="Name, brand, color…"
+                maxLength={100}
+              />
+            </div>
+            <Button type="submit" variant="secondary" className="h-12">
+              Search
+            </Button>
+          </form>
+          <ItemFilterPills path={base} view={view} q={q} />
+        </div>
+
+        {visible.length > 0 ? (
+          <ul aria-label="Your items" className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {visible.map((item) => (
+              <li key={item.id}>
+                {view === "archived" ? (
+                  <ArchivedItemCard item={item} coverUrl={coverUrl(item.id)} />
+                ) : (
+                  <ItemCard
+                    item={item}
+                    collectionId={collection.slug ?? collection.id}
+                    heroPhotoUrl={coverUrl(item.id)}
+                    bucket={tierByItem.get(item.id)}
+                  />
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          !poolOnly && (
+            <div className="flex flex-col items-center">
+              <EmptyState heading={empty.heading} message={empty.message} />
+              {q && (
+                <Link href={viewHref(base, view, "")} className={quietLink}>
+                  Clear search
+                </Link>
+              )}
+            </div>
+          )
         )}
       </div>
     </AppLayout>
