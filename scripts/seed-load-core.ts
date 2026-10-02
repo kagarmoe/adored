@@ -269,6 +269,9 @@ export async function driveSort(
   const preferMoreLoved = (aId: string, bId: string): "item_a" | "item_b" =>
     aId < bId ? "item_a" : "item_b";
 
+  // Triage is done, so the comparable set's buckets are fixed for the loop.
+  const preferences = await PreferenceController.fromDb(db).listItemPreferences(c.collectionId, curatorId);
+
   // Guard against an unexpected non-terminating loop; O(N log N) answers expected.
   const maxSteps = c.itemIds.length * 32 + 16;
   for (let step = 0; step < maxSteps; step++) {
@@ -276,7 +279,7 @@ export async function driveSort(
       itemRepo.findByCollection(c.collectionId),
       decisionRepo.findBySession(c.sessionId),
     ]);
-    const comparableItems = selectComparableItems(items, new Map());
+    const comparableItems = selectComparableItems(items, preferences);
     const rankItems: RankItem[] = comparableItems
       .map((i) => ({ id: i.id, createdAt: i.createdAt }));
     const { nextPair } = deriveOrder(rankItems, toComparisonEvents(decisions));

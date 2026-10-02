@@ -132,7 +132,7 @@ describe("recommendNextRound — ladder", () => {
     expect(whenUsageDemoted).toBeUndefined();
   });
 
-  it("recommends compare without requiring top/high buckets once the ladder reaches compare", () => {
+  it("recommends decide, not compare, when no two pieces are Love or Like", () => {
     const items = [item("a", 1), item("b", 2)];
     const preferences = [pref("a", "medium"), pref("b", "low")];
     const curatorDecisions = [usageEvent("u-a", "a"), usageEvent("u-b", "b")];
@@ -143,7 +143,7 @@ describe("recommendNextRound — ladder", () => {
       curatorDecisions,
     });
 
-    expect(primary.kind).toBe("compare");
+    expect(primary.kind).toBe("decide");
   });
 
   it("recommends decide when triage + usage are known and the comparable set is fully ordered (no whenUsageDemoted)", () => {

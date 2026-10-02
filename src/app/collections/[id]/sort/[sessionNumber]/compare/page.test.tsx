@@ -3,7 +3,7 @@ import "@testing-library/jest-dom";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-const { mockGetSession, mockRequireAccess, itemRepo, sessionRepo, prefRepo, decisionRepo, photoRepo, dispRepo } = vi.hoisted(() => ({
+const { mockGetSession, mockRequireAccess, itemRepo, sessionRepo, prefRepo, decisionRepo, photoRepo } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockRequireAccess: vi.fn(),
   itemRepo: { findByCollection: vi.fn() },
@@ -11,7 +11,6 @@ const { mockGetSession, mockRequireAccess, itemRepo, sessionRepo, prefRepo, deci
   prefRepo: { findByCollection: vi.fn() },
   decisionRepo: { findBySession: vi.fn() },
   photoRepo: { findCoverPhotosByItemIds: vi.fn() },
-  dispRepo: { findByCollectionAndCurator: vi.fn() },
 }));
 
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
@@ -30,7 +29,6 @@ vi.mock("@/server/repositories/implementations/SessionRepository", () => ({ Sess
 vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({ CollectionPreferenceItemRepository: vi.fn(function () { return prefRepo; }) }));
 vi.mock("@/server/repositories/implementations/DecisionEventRepository", () => ({ DecisionEventRepository: vi.fn(function () { return decisionRepo; }) }));
 vi.mock("@/server/repositories/implementations/PhotoRepository", () => ({ PhotoRepository: vi.fn(function () { return photoRepo; }) }));
-vi.mock("@/server/repositories/implementations/ItemDispositionRepository", () => ({ ItemDispositionRepository: vi.fn(function () { return dispRepo; }) }));
 
 import ComparePage from "./page";
 
@@ -47,14 +45,13 @@ beforeEach(() => {
   sessionRepo.findByCollectionAndNumber.mockResolvedValue({ id: "sess_1", collectionId: "coll_01ABCDEF", number: 1, status: "active", curatorId: "u1" });
   // listForCurator = findByCollectionAndCurator + one findBySession per curator session.
   sessionRepo.findByCollectionAndCurator.mockResolvedValue([{ id: "sess_1" }]);
-  // With no comparison recorded yet, selectNextPair asks about this pair. Compare
-  // no longer requires Love/Like preferences.
+  // With no comparison recorded yet, selectNextPair asks about this pair (both are
+  // Love/Like — the comparable set).
   prefRepo.findByCollection.mockResolvedValue([
     { itemId: "item_a", rankBucket: "top" },
     { itemId: "item_b", rankBucket: "high" },
   ]);
   decisionRepo.findBySession.mockResolvedValue([]);
-  dispRepo.findByCollectionAndCurator.mockResolvedValue([]);
   photoRepo.findCoverPhotosByItemIds.mockResolvedValue(
     new Map([
       ["item_a", { id: "pa", itemId: "item_a" }],
@@ -64,17 +61,6 @@ beforeEach(() => {
 });
 
 describe("ComparePage hero images", () => {
-  it("renders a pair even when no triage preferences exist", async () => {
-    prefRepo.findByCollection.mockResolvedValue([]);
-
-    const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
-    render(ui);
-
-    expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "Bag B" })).toBeInTheDocument();
-    expect(screen.queryByText("All comparisons complete")).not.toBeInTheDocument();
-  });
-
   it("renders both items' hero images using collection.id, batch-loaded once", async () => {
     const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
@@ -85,24 +71,6 @@ describe("ComparePage hero images", () => {
     expect(b.getAttribute("src")).toContain("coll_01ABCDEF");
     expect(b.getAttribute("src")).not.toContain("summer-bags");
     expect(photoRepo.findCoverPhotosByItemIds).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe("ComparePage disposition exclusion (Epic C PR1)", () => {
-  it("excludes a disposed item from the pair — only one eligible item leaves no comparison", async () => {
-    // B is deferred → only A remains comparable → no pair → the
-    // "all comparisons complete" empty state, and
-    // neither hero renders.
-    dispRepo.findByCollectionAndCurator.mockResolvedValue([
-      { itemId: "item_b", disposition: "deferred", collectionId: "coll_01ABCDEF", curatorId: "u1" },
-    ]);
-
-    const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
-    render(ui);
-
-    expect(screen.getByText("All comparisons complete")).toBeInTheDocument();
-    expect(screen.queryByRole("img", { name: "Bag B" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("img", { name: "Bag A" })).not.toBeInTheDocument();
   });
 });
 
@@ -131,32 +99,6 @@ describe("ComparePage gentle progress text (Epic 0 Task 8 regression)", () => {
     const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
     render(ui);
 
-    expect(screen.getByText(/comparison(s)? made so far/)).toBeInTheDocument();
-    expect(screen.getByText(/1 comparison made so far/)).toBeInTheDocument();
-  });
-
-  it("keeps low-bucket items comparable after one recorded comparison", async () => {
-    itemRepo.findByCollection.mockResolvedValue([A, B, C]);
-    prefRepo.findByCollection.mockResolvedValue([
-      { itemId: "item_a", rankBucket: "top" },
-      { itemId: "item_b", rankBucket: "high" },
-      { itemId: "item_c", rankBucket: "low" },
-    ]);
-    photoRepo.findCoverPhotosByItemIds.mockResolvedValue(new Map());
-    decisionRepo.findBySession.mockResolvedValue([
-      {
-        id: "dec_1",
-        sessionId: "sess_1",
-        type: "pairwise_compare",
-        createdAt: new Date(10),
-        decision: { itemAId: "item_a", itemBId: "item_b", result: "item_a" },
-      },
-    ]);
-
-    const ui = await ComparePage({ params: Promise.resolve({ id: "summer-bags", sessionNumber: "1" }) });
-    render(ui);
-
-    expect(screen.queryByText("All comparisons complete")).not.toBeInTheDocument();
     expect(screen.getByText(/comparison(s)? made so far/)).toBeInTheDocument();
     expect(screen.getByText(/1 comparison made so far/)).toBeInTheDocument();
   });
@@ -285,10 +227,13 @@ describe("ComparePage canonical trail (all render branches)", () => {
   });
 
   it("'all comparisons complete' keeps the same trail", async () => {
-    dispRepo.findByCollectionAndCurator.mockResolvedValue([
-      { itemId: "item_b", disposition: "deferred", collectionId: "coll_01ABCDEF", curatorId: "u1" },
+    // B is a Maybe → only A is comparable → no pair.
+    prefRepo.findByCollection.mockResolvedValue([
+      { itemId: "item_a", rankBucket: "top" },
+      { itemId: "item_b", rankBucket: "medium" },
     ]);
     await renderPage();
+    expect(screen.getByText("All comparisons complete")).toBeInTheDocument();
     expect(layoutProps.breadcrumbs.map((b: any) => b.label)).toEqual(CANONICAL);
   });
 

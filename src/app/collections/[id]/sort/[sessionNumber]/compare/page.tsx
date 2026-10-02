@@ -6,7 +6,6 @@ import { ItemController } from "@/server/api/items";
 import { SessionController } from "@/server/api/sessions";
 import { PreferenceController } from "@/server/api/preferences";
 import { DecisionController } from "@/server/api/decisions";
-import { DispositionController } from "@/server/api/dispositions";
 import { AppLayout } from "@/components/layout";
 import { trail } from "@/components/layout/breadcrumb-trails";
 import { EmptyState } from "@/components/ui";
@@ -70,22 +69,18 @@ export default async function ComparePage({ params }: ComparePageProps) {
     />
   );
 
-  const [items, preferences, curatorDecisions, dispositions] = await Promise.all([
+  const [items, preferences, curatorDecisions] = await Promise.all([
     ItemController.fromDb(db).listItems(collection.id),
     PreferenceController.fromDb(db).listItemPreferences(collection.id, session.user.id),
     // ONE curator-wide read (§2.6/§7.3, Task-21 pattern): compare selection reads the
     // same cross-session log the recompute does, so a pair ordered in a prior session
     // isn't re-asked. The session-scoped subset below drives the recap + gentle count.
     DecisionController.fromDb(db).listForCurator(collection.id, sortSession.curatorId),
-    DispositionController.fromDb(db).listDispositions(collection.id, session.user.id),
   ]);
 
   // Session-scoped subset for the recap + comparison count. The curator guard above
   // makes the curator log a strict superset, so this equals the retired listBySession.
   const decisions = curatorDecisions.filter((e) => e.sessionId === sortSession.id);
-
-  // A disposed item (set_aside / deferred) is never offered for pairwise compare.
-  const dispositionByItemId = new Map(dispositions.map((d) => [d.itemId, d.disposition]));
 
   if (items.length < 2) {
     return (
@@ -110,7 +105,6 @@ export default async function ComparePage({ params }: ComparePageProps) {
     preferences,
     items,
     decisions: curatorDecisions,
-    dispositionByItemId,
   });
 
   if (!pair) {

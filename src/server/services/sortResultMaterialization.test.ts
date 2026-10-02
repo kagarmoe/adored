@@ -72,24 +72,16 @@ describe("rankPreferencesToItems", () => {
     ]);
   });
 
-  it("orders globally by orderRank when compare evidence exists, then falls back to bucket order", () => {
+  it("orders by tier first, then orderRank (nulls last) within the tier, then itemId", () => {
     const out = rankPreferencesToItems([
-      preference({ itemId: "top-unranked", rankBucket: "top", orderRank: null, score: 0.875 }),
-      preference({ itemId: "medium-first", rankBucket: "medium", orderRank: 0, score: 0.375 }),
-      preference({ itemId: "low-second", rankBucket: "low", orderRank: 1, score: 0.125 }),
-      preference({ itemId: "high-unranked", rankBucket: "high", orderRank: null, score: 0.625 }),
+      preference({ itemId: "like-0", rankBucket: "high", orderRank: 0 }),
+      preference({ itemId: "love-2", rankBucket: "top", orderRank: 2 }),
+      preference({ itemId: "love-null", rankBucket: "top", orderRank: null }),
+      preference({ itemId: "love-1", rankBucket: "top", orderRank: 1 }),
+      preference({ itemId: "onward", rankBucket: "low", orderRank: 3 }),
     ]);
-
-    expect(out.map((o) => o.itemId)).toEqual([
-      "medium-first",
-      "low-second",
-      "top-unranked",
-      "high-unranked",
-    ]);
-    expect(out.map((o) => o.computedRank)).toEqual([0, 1, 2, 3]);
-    // Bucket stays as annotation/partition context; Compare order does not
-    // relabel an Onward item as loved.
-    expect(out.map((o) => o.computedBucket)).toEqual(["medium", "low", "top", "high"]);
+    expect(out.map((o) => o.itemId)).toEqual(["love-1", "love-2", "love-null", "like-0", "onward"]);
+    expect(out.map((o) => o.computedRank)).toEqual([0, 1, 2, 3, 4]);
   });
 
   it("breaks ties on itemId when bucket and orderRank match", () => {

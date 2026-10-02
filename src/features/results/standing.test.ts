@@ -25,7 +25,7 @@ function item(id: string, name: string): Item {
 }
 
 describe("deriveStanding — live-preference → loved/onward", () => {
-  it("uses global compare order inside loved when orderRank is present", () => {
+  it("orders loved by tier, then compare order within the tier", () => {
     const prefs = [
       pref({ itemId: "b", rankBucket: "top", orderRank: 2 }),
       pref({ itemId: "a", rankBucket: "top", orderRank: 1 }),
@@ -37,8 +37,7 @@ describe("deriveStanding — live-preference → loved/onward", () => {
       ["c", item("c", "Charlie")],
     ]);
     const { loved } = deriveStanding(prefs, itemById);
-    expect(loved[0].item.id).toBe("a"); // orderRank 1, tie-broken by item id
-    expect(loved.map((r) => r.item.id)).toEqual(["a", "c", "b"]);
+    expect(loved.map((r) => r.item.id)).toEqual(["a", "b", "c"]);
   });
 
   it("partitions the low bucket into onward, loved keeps top/high/medium", () => {

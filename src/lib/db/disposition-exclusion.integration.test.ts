@@ -25,7 +25,6 @@ vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 import { POST as postDecision } from "@/app/api/sessions/[id]/decisions/route";
 import { ItemController } from "@/server/api/items";
 import { PreferenceController } from "@/server/api/preferences";
-import { DispositionController } from "@/server/api/dispositions";
 import { DecisionController } from "@/server/api/decisions";
 import { selectNextPair } from "@/lib/pairwise-selection";
 
@@ -80,13 +79,11 @@ describeDb("disposed item is excluded from the REAL compare path and preferences
     }
 
     // Build the selector inputs from the EXACT fetches the compare page uses.
-    const [items, preferences, decisions, dispositions] = await Promise.all([
+    const [items, preferences, decisions] = await Promise.all([
       ItemController.fromDb(db).listItems(collectionId),
       PreferenceController.fromDb(db).listItemPreferences(collectionId, curatorId),
       DecisionController.fromDb(db).listBySession(sortSession.id),
-      DispositionController.fromDb(db).listDispositions(collectionId, curatorId),
     ]);
-    const dispositionByItemId = new Map(dispositions.map((d) => [d.itemId, d.disposition]));
 
     // Non-vacuous: C is absent from preferences (no events → no row); A and B are present.
     const prefItemIds = new Set(preferences.map((p) => p.itemId));
@@ -98,7 +95,6 @@ describeDb("disposed item is excluded from the REAL compare path and preferences
       preferences,
       items,
       decisions,
-      dispositionByItemId,
     });
 
     // Non-vacuous: a real pair IS offered, and it is exactly {A, B} — not null.
@@ -106,7 +102,8 @@ describeDb("disposed item is excluded from the REAL compare path and preferences
     const pairedIds = new Set([pair![0].id, pair![1].id]);
     expect(pairedIds.has(itemA.id)).toBe(true);
     expect(pairedIds.has(itemB.id)).toBe(true);
-    // The disposed item C is NEVER offered as itemA or itemB.
+    // The disposed item C is NEVER offered: disposed <=> untriaged, so it has no
+    // preference and is outside the comparable set (Love + Like).
     expect(pairedIds.has(itemC.id)).toBe(false);
   });
 });

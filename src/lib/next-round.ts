@@ -92,7 +92,7 @@ function runLadder(input: NextRoundInput, includeUsage: boolean): NextRound {
   // reads — so this recommendation (and whenUsageDemoted's re-run, which shares this
   // ladder) can never disagree with what the recompute would need next. A pair already
   // ordered in a prior session is not re-recommended as "compare".
-  const pair = selectNextPair({ preferences, items, decisions: curatorDecisions, dispositionByItemId });
+  const pair = selectNextPair({ preferences, items, decisions: curatorDecisions });
   if (pair) return COMPARE_ROUND;
 
   return DECIDE_ROUND;

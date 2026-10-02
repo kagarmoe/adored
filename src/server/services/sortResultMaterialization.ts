@@ -19,34 +19,22 @@ const BUCKET_PRIORITY: Record<RankBucket, number> = {
 };
 
 /**
- * Pure: rank a curator's preferences into computed items. Triage-only results
- * keep the historical bucket-first order. Once Compare has produced any
- * orderRank, ranked rows sort globally by orderRank so the pairwise order is
- * visible; unranked rows follow by bucket priority and itemId. No DB. (Does not
- * mutate the input array.)
+ * Pure: rank a curator's preferences into computed items — tier first (spec §4),
+ * then the pair-derived orderRank within the tier (unordered rows last), then
+ * itemId. orderRank only exists for Love + Like, so it never lifts a lower tier.
  */
 export function rankPreferencesToItems(
   preferences: CollectionPreferenceItem[],
 ): MaterializedItem[] {
-  const hasCompareOrder = preferences.some((pref) => pref.orderRank !== null);
-
   return [...preferences]
     .sort((a, b) => {
-      if (hasCompareOrder) {
-        const aRank = a.orderRank;
-        const bRank = b.orderRank;
-        const aRanked = aRank !== null;
-        const bRanked = bRank !== null;
-        if (aRanked && bRanked) {
-          if (aRank !== bRank) return aRank - bRank;
-          return compareItemId(a.itemId, b.itemId);
-        }
-        if (aRanked !== bRanked) return aRanked ? -1 : 1;
+      const byTier = BUCKET_PRIORITY[a.rankBucket] - BUCKET_PRIORITY[b.rankBucket];
+      if (byTier !== 0) return byTier;
+      if (a.orderRank !== b.orderRank) {
+        if (a.orderRank === null) return 1;
+        if (b.orderRank === null) return -1;
+        return a.orderRank - b.orderRank;
       }
-
-      const pa = BUCKET_PRIORITY[a.rankBucket];
-      const pb = BUCKET_PRIORITY[b.rankBucket];
-      if (pa !== pb) return pa - pb;
       return compareItemId(a.itemId, b.itemId);
     })
     .map((pref, index) => ({
