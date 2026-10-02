@@ -51,7 +51,7 @@ export function RankingList({ collectionId, rows }: { collectionId: string; rows
   const [announce, setAnnounce] = useState("");
   // Shown on screen as well as spoken: a list that silently snaps back reads as a glitch.
   const [notice, setNotice] = useState("");
-  // The move buttons stay enabled while a request is out (disabling the focused
+  // The move and Unpin buttons stay enabled while a request is out (disabling the focused
   // button drops focus to <body>); this ref is the double-tap guard instead.
   const inFlight = useRef(false);
   const buttons = useRef(new Map<string, HTMLButtonElement>());
@@ -108,6 +108,8 @@ export function RankingList({ collectionId, rows }: { collectionId: string; rows
       const res = await fetch(`/api/collections/${collectionId}/ranking/pins/${row.itemId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("unpin");
       setAnnounce(`${row.name} is back in its suggested place.`);
+      // The Unpin button leaves with the refresh; land on the piece's move button.
+      refocus.current = { itemId: row.itemId, dir: "up" };
       router.refresh();
     } catch {
       setNotice(GENTLE_FAIL);
@@ -130,11 +132,10 @@ export function RankingList({ collectionId, rows }: { collectionId: string; rows
       <p role="status" aria-live="polite" className="sr-only">
         {announce}
       </p>
-      {notice && (
-        <p role="status" className="text-sm text-ink-soft">
-          {notice}
-        </p>
-      )}
+      {/* Always mounted (empty when idle) so the text is announced when it lands. */}
+      <p role="status" aria-live="polite" className="text-sm text-ink-soft">
+        {notice}
+      </p>
       <ol className="space-y-2">
         {order.map((row, i) => (
           <li
@@ -178,9 +179,8 @@ export function RankingList({ collectionId, rows }: { collectionId: string; rows
               <button
                 type="button"
                 onClick={() => void unpin(row)}
-                disabled={busy}
                 aria-label={`Unpin ${row.name}`}
-                className="h-11 shrink-0 rounded-pill px-3 text-sm text-ink-soft hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40"
+                className="h-11 shrink-0 rounded-pill px-3 text-sm text-ink-soft hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
               >
                 Unpin
               </button>

@@ -35,13 +35,15 @@ describe("RankingList (spec §4 'Adjusting')", () => {
     expect(screen.getByText("Moved Bag B to position 1 of 3.")).toBeInTheDocument();
   });
 
-  it("a failed move puts the list back and says so gently", async () => {
+  it("a failed move puts the list back and says so gently, on screen and in a live region", async () => {
     fetchMock.mockResolvedValue({ ok: false });
     render(<RankingList collectionId="coll_1" rows={ROWS} />);
+    // Mounted (empty) before anything fails, so screen readers announce the text when it lands.
+    const notice = screen.getAllByRole("status").find((el) => el.closest(".sr-only") === null)!;
+    expect(notice).toBeEmptyDOMElement();
     await userEvent.click(screen.getByRole("button", { name: "Move Bag A down" }));
     await waitFor(() => expect(names()).toEqual(["Bag A", "Bag B", "Bag C"]));
-    // Shown on screen, not only spoken: no ancestor is visually hidden.
-    expect(screen.getByText(/nothing was lost/i).closest(".sr-only")).toBeNull();
+    expect(notice).toHaveTextContent(/nothing was lost/i);
     expect(refresh).not.toHaveBeenCalled();
   });
 
@@ -51,6 +53,14 @@ describe("RankingList (spec §4 'Adjusting')", () => {
     await userEvent.click(screen.getByRole("button", { name: "Unpin Bag C" }));
     expect(fetchMock).toHaveBeenCalledWith("/api/collections/coll_1/ranking/pins/c", expect.objectContaining({ method: "DELETE" }));
     await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it("after Unpin and the refresh, keyboard focus lands on that piece's move button", async () => {
+    const { rerender } = render(<RankingList collectionId="coll_1" rows={ROWS} />);
+    await userEvent.click(screen.getByRole("button", { name: "Unpin Bag C" }));
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    rerender(<RankingList collectionId="coll_1" rows={[row("a", "Bag A"), row("b", "Bag B"), row("c", "Bag C")]} />);
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Move Bag C up" }));
   });
 
   it("keyboard focus stays on the moved piece's button", async () => {
