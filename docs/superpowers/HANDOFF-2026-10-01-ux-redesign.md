@@ -15,13 +15,14 @@ handoff kept current.
 ## Beads
 
 - Epic `purses-w7ss` (in progress)
-  - `purses-w7ss.1` PR 1 — tokens, card, item panel, item schema, items list, redirects, e2e map check
+  - `purses-w7ss.1` PR 1 — **merged #369** (tokens, card, item panel, item schema, items list, redirects, e2e map check)
   - `purses-w7ss.2` PR 2 — sort screen, ranking + lazy draft + pins, atomic save, unique index, sort redirects, onboarding rewrite
   - `purses-w7ss.3` PR 3 — collections grid, home-as-grid, phone bottom bar
 - Related open: `purses-1hj6` (test-file type errors; tests excluded from build tsconfig)
 
 ## Status log (newest first)
 
+- 2026-10-02: **PR 1 merged** (#369 → c67cc4fc8), purses-w7ss.1 closed, scratch deleted, lessons in `bd memories ux-redesign-pr1-lessons`. Branch `feat/ux-redesign-pr2` cut from main; PR 2 plan being written to `docs/superpowers/plans/2026-10-01-ux-redesign-pr2-sort.md` (then pre-flight + SDD). Open follow-ups in the epic: purses-w7ss.4 (inline tints), purses-pxp1 (owner call: photo Move to…), purses-x7rs (items.status column), purses-zs88 (per-item usage read), purses-g478 (broad photo stub).
 - 2026-10-01 (PR 1): visual polish landed (f74d531bf). Final whole-branch review → CONCERNS: photo Move UI dropped with /photos (ruled: delete dead PhotoGallery/PhotoMoveBar, keep reassign route, bead purses-pxp1 for the owner), plus cheap minors (zoom on tap, viewer arrow keys, chip 409 refresh, Archive respects leave guard, DESIGN.md card/glass line, dead ItemForm edit mode). Fix wave running → scoped re-review → push (subagent) → PR → CI → merge → close-out. Beads: purses-x7rs (status column), purses-zs88 (per-item usage read), purses-g478.
 - 2026-10-01 (PR 1): Tasks 1–10 complete; all gates green at af86fbef5 (lint, test:ci 1577, build, auth:verify, test:db 639, e2e 67/67, axe 0). Screenshots exposed 8 visual defects (··· over cover thumb, story textarea clips, Size reads as input, faint Add-photos rim, dark Onward chip, hero/strip alignment, phone name truncation, phone confirm overlap) → visual-polish round running. Then final whole-branch review (Opus), PR, CI, merge, close-out purses-w7ss.1. Follow-up beads: purses-g478 (broad photo stub), items.status column (see bd).
 - 2026-10-01 (PR 1): Tasks 1–8 complete and reviewed; Task 9 fix round 1 landed (3ce2d6cc1, rotate/save response waits + empty-photos unit test), scoped re-review running. Next: T10 (API.md, decision 41, full gates, screenshots, spelling sweep, T7 minors), final whole-branch review, PR, merge, close-out purses-w7ss.1.
