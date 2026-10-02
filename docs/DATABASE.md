@@ -72,7 +72,7 @@ Constraint-name matching goes through `isUniqueViolation(error, name)`
 so reading `error.code` off the top-level throw yields `undefined` and the conflict degrades into a 500
 instead of a gentle 409. Never read `.code` directly — use the helper.
 
-### Partial unique indexes (three)
+### Partial unique indexes (five)
 
 A partial unique index encodes "unique *among the rows that count*". Each predicate here carries meaning:
 
@@ -81,6 +81,8 @@ A partial unique index encodes "unique *among the rows that count*". Each predic
 | `sessions_active_unique` on `(collection_id, curator_id)` (`schema.ts:206`) | `deleted_at is null and status in ('active','paused')` | **One in-progress session per (collection, curator).** Terminal or soft-deleted rows free the slot. |
 | `preferences_order_rank_unique` on `(collection_id, curator_id, order_rank)` (`schema.ts:297`) | `order_rank is not null` | Manual ordering is unique per curator *where set*; unranked rows (NULL) don't collide. |
 | `decision_events_client_key_unique` on `(session_id, client_key)` (`schema.ts:233`) | `client_key is not null` | Idempotency key, only for requests that supply one. |
+| `sort_results_open_draft_unique` on `(collection_id, curator_id)` (`schema.ts:360`) | `status = 'draft'` | **One open draft per (collection, curator)** (migration 0003). Every draft writer runs under the `(collection, curator)` advisory lock (`SortResultService.inCuratorTx`), so the index is a backstop, never a 500. |
+| `sort_results_save_key_unique` on `(curator_id, save_key)` (`schema.ts:363`) | `save_key is not null` | Save-and-share idempotency key (migration 0003); a retried save returns the same link. |
 
 **The rule a partial unique index imposes on every writer** (memory:
 `partial-index-every-writer-must-respect-slot`): the predicate means collisions are possible on **every
