@@ -15,6 +15,8 @@ interface OverflowMenuProps {
   label: string;
   items: OverflowMenuItem[];
   className?: string;
+  /** A 28px visible chip inside the 44px hit area, for small surfaces (a thumbnail). */
+  compact?: boolean;
 }
 
 const MENU_WIDTH = 192; // w-48
@@ -25,7 +27,7 @@ const EDGE = 8;
  *  fixed positioning, so a scrolling or clipping ancestor (a thumbnail strip) never
  *  cuts it off. Keyboard: opens on the first item, ArrowUp/Down/Home/End move,
  *  Escape closes back to the trigger; Tab or a tap outside closes. */
-export function OverflowMenu({ label, items, className }: OverflowMenuProps) {
+export function OverflowMenu({ label, items, className, compact = false }: OverflowMenuProps) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -99,9 +101,16 @@ export function OverflowMenu({ label, items, className }: OverflowMenuProps) {
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         onClick={() => (open ? close(false) : setOpen(true))}
-        className={`inline-flex h-11 w-11 items-center justify-center rounded-full border border-rim bg-surface-raised text-ink transition-colors hover:bg-surface focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${className ?? ""}`}
+        className={`group inline-flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${compact ? "" : "border border-rim bg-surface-raised hover:bg-surface"} ${className ?? ""}`}
       >
-        <span aria-hidden className="text-lg leading-none">
+        <span
+          aria-hidden
+          className={
+            compact
+              ? "inline-flex h-7 w-7 items-center justify-center rounded-full border border-ink-soft bg-surface-raised text-sm leading-none shadow-lift transition-colors group-hover:bg-surface"
+              : "text-lg leading-none"
+          }
+        >
           ···
         </span>
       </button>

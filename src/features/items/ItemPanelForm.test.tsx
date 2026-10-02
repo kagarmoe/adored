@@ -38,6 +38,13 @@ describe("ItemPanelForm", () => {
     await waitFor(() => expect(screen.getByLabelText("Brand")).toHaveValue("Coach"));
     expect(screen.queryByRole("button", { name: "Save" })).not.toBeInTheDocument();
   });
+  it("the closed Size row summarizes what's filled, or invites measurements", () => {
+    const { unmount } = render(<ItemPanelForm item={item} collectionId="c1" />);
+    expect(screen.getByText("Add measurements")).toBeInTheDocument();
+    unmount();
+    render(<ItemPanelForm item={{ ...item, height: "12", width: "8", depth: "4", weight: "1.2" }} collectionId="c1" />);
+    expect(screen.getByText("12 × 8 × 4 in · 1.2 lb")).toBeInTheDocument();
+  });
   it("clears the status line once editing resumes", async () => {
     const user = userEvent.setup();
     render(<ItemPanelForm item={item} collectionId="c1" />);

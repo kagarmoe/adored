@@ -59,6 +59,10 @@ describe("ItemOverflowMenu", () => {
     await openMenu();
     await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
     expect(screen.getByRole("button", { name: "Keep" })).toHaveFocus();
+    // In flow under the header, never floating over the subtitle (phone overlap bug).
+    const confirm = screen.getByRole("group", { name: "Delete this item" });
+    expect(confirm).toHaveClass("basis-full");
+    expect(confirm.closest(".absolute")).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "Delete for good" }));
 
     const [url, init] = fetchMock().mock.calls[0];

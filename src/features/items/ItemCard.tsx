@@ -60,10 +60,12 @@ export function ItemCard({
       </div>
       <div className="flex flex-1 flex-col justify-between p-3">
         <div className="space-y-2">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="text-ink truncate">{itemDisplayName(item)}</h3>
+          {/* Wraps the chip under the name when the tile is too narrow (phone) rather
+              than squeezing the name to a few letters. */}
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <h3 className="min-w-0 grow basis-24 text-ink line-clamp-2 break-words">{itemDisplayName(item)}</h3>
             {bucket && (
-              <Badge variant={bucket} title={bucketLabels[bucket]}>
+              <Badge variant={bucket} title={bucketLabels[bucket]} className="shrink-0">
                 <span role="img" aria-label={bucketLabels[bucket]}>{bucketDots[bucket]}</span>
               </Badge>
             )}

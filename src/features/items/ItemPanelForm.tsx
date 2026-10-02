@@ -29,6 +29,9 @@ export function ItemPanelForm({ item, collectionId }: { item: Item; collectionId
   };
   const len = fields.unit === "metric" ? "cm" : "in";
   const wt = fields.unit === "metric" ? "kg" : "lb";
+  const dims = [fields.height, fields.width, fields.depth].filter((v) => v.trim()).join(" × ");
+  const sizeHint = [dims && `${dims} ${len}`, fields.weight.trim() && `${fields.weight} ${wt}`]
+    .filter(Boolean).join(" · ") || "Add measurements";
   async function save(e: React.FormEvent) {
     e.preventDefault();
     const result = buildItemPatch(saved, fields);
@@ -65,8 +68,14 @@ export function ItemPanelForm({ item, collectionId }: { item: Item; collectionId
       {TEXT_INPUTS.map(([k, label, prompt]) => (
         <Input key={k} name={k} label={label} value={fields[k]} onChange={set(k)} placeholder={prompt} maxLength={200} />
       ))}
-      <details className="rounded-card border border-hairline px-4 py-2">
-        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-ink">Size</summary>
+      <details className="group">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 rounded-control text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary [&::-webkit-details-marker]:hidden">
+          <span className="font-medium text-ink">Size</span>
+          <span className="min-w-0 flex-1 truncate text-ink-soft">{sizeHint}</span>
+          <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-5 w-5 shrink-0 text-ink-soft transition-transform group-open:rotate-180">
+            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </summary>
         <fieldset className="mt-2 flex gap-4">
           <legend className="sr-only">Units</legend>
           {(["imperial", "metric"] as const).map((u) => (

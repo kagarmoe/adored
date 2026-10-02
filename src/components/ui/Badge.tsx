@@ -5,10 +5,11 @@ const badgeVariants = cva("inline-flex items-center justify-center font-semibold
   variants: {
     variant: {
       // Tiers — the cool value-ramp; each pairs hue with a label + position too.
+      // Maybe/Onward fills sit under 3:1 against the card, so they carry an ink-soft rim.
       top: "bg-tier-love text-tier-love-ink",
       high: "bg-tier-like text-tier-like-ink",
-      medium: "bg-tier-maybe text-tier-maybe-ink",
-      low: "bg-tier-onward text-tier-onward-ink",
+      medium: "bg-tier-maybe text-tier-maybe-ink ring-1 ring-ink-soft",
+      low: "bg-tier-onward text-tier-onward-ink ring-1 ring-ink-soft",
       // Status — semantic where it carries meaning, neutral otherwise.
       draft: "bg-content-soft text-ink",
       finalized: "bg-success-soft text-success-deep",

@@ -103,53 +103,55 @@ export function ItemOverflowMenu({ itemId, itemsHref, isOwner }: ItemOverflowMen
   }
 
   return (
-    // `contents`: the trigger and the status line are both items of the page's
-    // wrapping header row, so the status line can take a full-width row in flow.
+    // `contents`: the trigger, the confirm, and the status line are all items of the page's
+    // wrapping header row, so the confirm and status line take full-width rows in flow.
     <div ref={wrapperRef} className="contents">
-      <div className="relative shrink-0">
+      <div className="shrink-0">
         <OverflowMenu label="More actions" items={items} />
-        {step && (
-          <div
-            role="group"
-            aria-label="Delete this item"
-            aria-describedby={messageId}
-            onKeyDown={(e) => e.key === "Escape" && close()}
-            className="absolute right-0 z-30 mt-2 w-72 space-y-3 rounded-card bg-surface-raised p-4 shadow-raised ring-1 ring-hairline"
-          >
+      </div>
+      {/* In flow as a full-width row under the header, like the status line, so it
+          never covers the subtitle or the photo. */}
+      {step && (
+        <div
+          role="group"
+          aria-label="Delete this item"
+          aria-describedby={messageId}
+          onKeyDown={(e) => e.key === "Escape" && close()}
+          className="mt-3 basis-full space-y-3 rounded-card bg-surface-raised p-4 shadow-lift ring-1 ring-hairline"
+        >
+          {step === "confirm" && (
+            <p id={messageId} className="text-sm text-ink">
+              Delete this item for good? Its photos go with it, and this can’t be undone.
+            </p>
+          )}
+          {step === "in-ranking" && (
+            <p id={messageId} className="text-sm text-ink">
+              {IN_RANKING_LINE} Take it out of saved rankings first, or archive it instead.
+            </p>
+          )}
+          {step === "finished-ranking" && (
+            <p id={messageId} className="text-sm text-ink">
+              It’s also part of a finished ranking, so it stays there. Archiving keeps it out of
+              your way.
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <Button ref={keepRef} variant="secondary" disabled={busy} onClick={close}>
+              Keep
+            </Button>
             {step === "confirm" && (
-              <p id={messageId} className="text-sm text-ink">
-                Delete this item for good? Its photos go with it, and this can’t be undone.
-              </p>
+              <Button variant="danger" disabled={busy} onClick={purge}>
+                {busy ? "Deleting…" : "Delete for good"}
+              </Button>
             )}
             {step === "in-ranking" && (
-              <p id={messageId} className="text-sm text-ink">
-                {IN_RANKING_LINE} Take it out of saved rankings first, or archive it instead.
-              </p>
-            )}
-            {step === "finished-ranking" && (
-              <p id={messageId} className="text-sm text-ink">
-                It’s also part of a finished ranking, so it stays there. Archiving keeps it out of
-                your way.
-              </p>
-            )}
-            <div className="flex flex-wrap gap-2">
-              <Button ref={keepRef} variant="secondary" disabled={busy} onClick={close}>
-                Keep
+              <Button variant="secondary" disabled={busy} onClick={clearRankings}>
+                Remove from saved rankings
               </Button>
-              {step === "confirm" && (
-                <Button variant="danger" disabled={busy} onClick={purge}>
-                  {busy ? "Deleting…" : "Delete for good"}
-                </Button>
-              )}
-              {step === "in-ranking" && (
-                <Button variant="secondary" disabled={busy} onClick={clearRankings}>
-                  Remove from saved rankings
-                </Button>
-              )}
-            </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
       {/* Always mounted so the live region exists before the message arrives. In flow
           (a full-width row under the title), never floating, so it can't cover the
           photo controls or the form; it gets a surface only while it has something to say. */}

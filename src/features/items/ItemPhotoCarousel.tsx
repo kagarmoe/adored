@@ -127,7 +127,7 @@ export function ItemPhotoCarousel({
 
   const strip = (
     <div className="mt-3">
-      <ul ref={stripRef} aria-label="All photos" className="flex gap-2 overflow-x-auto p-1">
+      <ul ref={stripRef} aria-label="All photos" className="mx-auto flex w-fit max-w-full gap-2 overflow-x-auto p-1">
         {photos.map((p, i) => (
           <li key={p.id} className="relative shrink-0">
             <button
@@ -160,7 +160,8 @@ export function ItemPhotoCarousel({
             )}
             <OverflowMenu
               label={`More for photo ${i + 1}`}
-              className="absolute right-1 top-1"
+              compact
+              className="absolute -right-1 -top-1"
               items={[
                 ...(p.isHero
                   ? []
@@ -177,7 +178,7 @@ export function ItemPhotoCarousel({
             aria-expanded={adding}
             aria-controls={adding ? "add-photos-panel" : undefined}
             onClick={() => setAdding((a) => !a)}
-            className="flex h-20 w-20 flex-col items-center justify-center rounded-control border-2 border-dashed border-hairline text-sm text-ink transition-colors hover:bg-surface focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+            className="flex h-20 w-20 flex-col items-center justify-center rounded-control border-2 border-dashed border-ink-soft text-sm text-ink transition-colors hover:bg-surface focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
           >
             <span aria-hidden className="text-xl leading-none">
               +
