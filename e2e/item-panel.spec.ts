@@ -50,10 +50,13 @@ test.describe("item panel journey", () => {
     await expect(photo).not.toHaveAttribute("src", firstSrc ?? "");
     await page.getByRole("button", { name: /view photo/i }).click();
     const dialog = page.getByRole("dialog");
-    const patch = page.waitForRequest((r) => r.method() === "PATCH" && /\/photos\/[^/]+$/.test(r.url()));
+    const before = await dialog.getByRole("img").getAttribute("src");
+    const rotated = landed(page, "PATCH", /\/photos\/[^/]+$/);
     await dialog.getByRole("button", { name: /rotate photo/i }).click();
-    expect((await patch).postDataJSON()).toEqual({ rotation: 90 });
+    expect((await rotated).request().postDataJSON()).toEqual({ rotation: 90 });
     await expect(dialog.getByRole("status")).toHaveText(/rotated to 90 degrees/i);
+    // Persisted: the PATCH returned a new updatedAt, so the image URL's v= changed.
+    await expect(dialog.getByRole("img")).not.toHaveAttribute("src", before ?? "");
     await page.keyboard.press("Escape");
     await expect(dialog).toHaveCount(0);
 
@@ -88,7 +91,9 @@ test.describe("item panel journey", () => {
     await page.getByText("Size", { exact: true }).click();
     await page.getByLabel("cm · kg").check();
     await page.getByLabel("Height (cm)").fill("30");
+    const saved = landed(page, "PATCH", /\/items\/[^/]+$/);
     await page.getByRole("button", { name: "Save" }).click();
+    await saved;
     await expect(page.getByText("Saved.")).toBeVisible();
     await page.reload();
     await expect(page.getByLabel("Name", { exact: true })).toHaveValue("Weekend tote");

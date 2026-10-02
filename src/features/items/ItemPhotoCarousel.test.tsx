@@ -208,8 +208,11 @@ describe("ItemPhotoCarousel", () => {
     expect(screen.getAllByRole("button", { name: /^show photo/i })).toHaveLength(2);
   });
 
-  it("+ Add photos opens the pool uploader attached to this item, even with no photos", async () => {
+  it("no photos: a gentle empty line, no stage, and + Add photos still opens the uploader", async () => {
     render(<ItemPhotoCarousel photos={[]} {...props} />);
+    expect(screen.getByText(/add photos whenever you like/i)).toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(screen.queryByRole("group", { name: /photos of/i })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Add photos" }));
     expect(screen.getByText("uploader for i1")).toBeInTheDocument();
   });
