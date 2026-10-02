@@ -24,7 +24,7 @@ export default async function AddItemPage({ params }: AddItemPageProps) {
     <AppLayout breadcrumbs={trail.itemNew(collection)}>
       <div className="mx-auto w-full max-w-2xl">
         <h1 className="mb-6 text-2xl text-ink sm:mb-8 sm:text-3xl">Add item</h1>
-        <ItemForm collectionId={collection.id} mode="create" />
+        <ItemForm collectionId={collection.id} />
       </div>
     </AppLayout>
   );

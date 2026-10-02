@@ -298,7 +298,7 @@ Each entry is **Decision / Rationale / Status**. Where design and shipped code d
 - *Status:* **Shipped.**
 
 **41. One item panel; Frosted shelf tokens (UX redesign PR 1, 2026-10-01).**
-- *Decision:* the item page is the only item surface (fields + carousel + chip + overflow); `…/edit` and `…/photos` are guard-then-`permanentRedirect` pages; item PATCH is strict with nullable clears and size/weight/unit; Archived = soft-deleted rows via `findArchivedByCollection`; "+ Add photos" = pool upload then reassign by blob pathname; the usage chip lazily opens a session. Glass tokens carry hex composites gated by `contrast.test.ts`.
+- *Decision:* the item page is the only item surface (fields + carousel + chip + overflow); `…/edit` and `…/photos` are guard-then-`permanentRedirect` pages; item PATCH is strict with nullable clears and size/weight/unit; Archived = soft-deleted rows via `findArchivedByCollection`; "+ Add photos" = pool upload then reassign by blob pathname; the usage chip lazily opens a session. Glass tokens carry hex composites gated by `contrast.test.ts`. The multi-select photo "Move to…" UI retired with the `/photos` page; the `/photos/reassign` route stays, and restoring Move in the thumbnail menu is bead purses-pxp1.
 - *Rationale:* spec §1 (four screens to edit one object), §5 (AA by the surface's own opacity).
 - *Status:* Shipped (PR 1); sort/ranking in PR 2.
 

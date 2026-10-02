@@ -2,10 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui";
-import { targetLabel, type MoveDestination, type MoveTarget } from "@/features/items/PhotoMoveBar";
 import { MAX_GROUP_PHOTOS, POOL_CAP_MESSAGE } from "@/lib/pool-limits";
 
-export type { MoveDestination, MoveTarget } from "@/features/items/PhotoMoveBar";
+export interface MoveTarget {
+  id: string;
+  number: number | null;
+  name: string | null;
+}
+
+export type MoveDestination =
+  | { type: "item"; itemId: string }
+  | { type: "new" }
+  | { type: "pool" };
+
+/** Label for a move target, mirroring itemDisplayName's fallback: name, else #N. */
+function targetLabel(target: MoveTarget): string {
+  const name = target.name?.trim();
+  if (name) return name;
+  return target.number != null ? `#${target.number}` : "Untitled";
+}
 
 export function PoolActionBar({
   count,

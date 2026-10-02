@@ -93,7 +93,7 @@ async function waitForPooledRows(
 // created — matched by blob pathname, which the Blob callback stores as `filename` —
 // move onto the item via the existing reassign route. Returns how many moved; any
 // that didn't simply stay in the pool.
-export async function attachToItem(
+async function attachToItem(
   collectionId: string,
   itemId: string,
   pathnames: string[],
