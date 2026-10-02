@@ -415,6 +415,67 @@ describe("CompareChoice submits through the queue as a batch-of-1 (Epic P Task 1
     expect(screen.getByRole("status")).toHaveTextContent("Back to Bag C and Bag D.");
   });
 
+  it("a revisit never reuses another pair's unacked clientKey (the new answer still reaches the server)", async () => {
+    vi.useFakeTimers();
+    let hold = false;
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => {
+      release = r;
+    });
+    const posts = vi.fn(async (url: string, init: RequestInit) => {
+      if (!url.endsWith("/batch")) return { ok: true, status: 201, json: async () => ({}) }; // direct fallback POST
+      if (hold) await gate;
+      const body = JSON.parse(init.body as string) as { decisions: Array<{ clientKey: string }> };
+      return {
+        ok: true,
+        status: 201,
+        json: async () => ({ results: body.decisions.map((d) => ({ clientKey: d.clientKey, status: "created" })) }),
+      };
+    });
+    vi.stubGlobal("fetch", posts);
+    const tap = async (name: string, ms = 0) => {
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name }));
+        await vi.advanceTimersByTimeAsync(ms);
+      });
+    };
+    const nextPair = (
+      <CompareChoice
+        submit={{ kind: "session", sessionId, curatorId: "u1", collectionId: "c" }}
+        itemA={item(ITEM_C, "Bag C") as any}
+        itemB={item(ITEM_D, "Bag D") as any}
+      />
+    );
+    const { rerender } = renderChoice();
+
+    // Pair X answered, then revisited and re-answered with a slow ack: its key stays unacked.
+    await tap("Choose Bag A");
+    rerender(nextPair);
+    await tap("Undo: Bag A");
+    hold = true;
+    await tap("Choose Bag A", COMPARE_ACK_BOUND_MS);
+    expect(screen.getByText(COMPARE_SLOW_SAVE_LINE)).toBeInTheDocument();
+    const pairXKey = batchBody(posts, 1).decisions[0].clientKey;
+
+    // Pair Y answered through the not-persisted fallback POST, then revisited with the same choice.
+    await tap("Keep going");
+    vi.mocked(queue.enqueue).mockResolvedValueOnce("needs_fallback");
+    await tap("Choose Bag C");
+    await tap("Undo: Bag C");
+    await tap("Choose Bag C");
+    release();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    const sent = posts.mock.calls
+      .filter(([url]) => (url as string).endsWith("/batch"))
+      .flatMap(([, init]) => (JSON.parse((init as RequestInit).body as string) as ReturnType<typeof batchBody>).decisions);
+    const revisitY = sent.find((d) => d.decision.itemAId === ITEM_C);
+    expect(revisitY?.decision).toEqual({ itemAId: ITEM_C, itemBId: ITEM_D, result: "item_a" });
+    expect(revisitY?.clientKey).not.toBe(pairXKey);
+  });
+
   it("shows the transition line until the first answer lands", async () => {
     const user = userEvent.setup();
     renderChoice({ intro: "Now, between these two…" });
