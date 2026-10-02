@@ -16,12 +16,13 @@ handoff kept current.
 
 - Epic `purses-w7ss` (in progress)
   - `purses-w7ss.1` PR 1 — **merged #369** (tokens, card, item panel, item schema, items list, redirects, e2e map check)
-  - `purses-w7ss.2` PR 2 — sort screen, ranking + lazy draft + pins, atomic save, unique index, sort redirects, onboarding rewrite
+  - `purses-w7ss.2` PR 2 — **merged #370** (sort screen, ranking + lazy draft + pins, atomic save-and-share, migration 0003, sort redirects, onboarding rewrite)
   - `purses-w7ss.3` PR 3 — collections grid, home-as-grid, phone bottom bar
 - Related open: `purses-1hj6` (test-file type errors; tests excluded from build tsconfig)
 
 ## Status log (newest first)
 
+- 2026-10-02: **PR 2 merged** (#370 → 2e015fc97, prod deploy succeeded, migration 0003 ran). purses-w7ss.2 closed, scratch deleted, lessons in `bd memories` (sdd-never-overlap-implementers, dense-pins-splice, pr2-merge-runs-data-step). Branch `feat/ux-redesign-pr3` cut from main; PR 3 plan being written to `docs/superpowers/plans/2026-10-02-ux-redesign-pr3-lists-home.md`. Prod health check: the vault's VERCEL_TOKEN was a stale copy of the Vercel CLI login; the owner re-stores it with a 30 m `--refresh-from` hook reading the CLI's auth.json (classifier blocks secret writes from the agent).
 - 2026-10-02 (PR 2): **CI green on #370, mergeable; merge left to the owner** because it auto-deploys migration 0003 with the duplicate-draft data step (owner-veto item). After merge: `/close-out` purses-w7ss.2 (beads + lessons already harvested; delete `.git/sdd/feat-ux-redesign-pr2` scratch and `.superpowers/sdd/2026-10-01-ux-redesign-pr2-sort/`), then PR 3.
 - 2026-10-02 (PR 2, session 3, end): all 14 tasks complete and reviewed; whole-branch adversarial review (7 personas) → one fix wave (5 commits) → scoped re-review clean; full gate green; **PR #370 open and ready** with light/dark tablet+phone screenshots. Next: CI → squash-merge → `/close-out` purses-w7ss.2 → PR 3 (purses-w7ss.3). Follow-up beads filed in the epic: purses-w7ss.5 (P2), .6, .7, .8, .9, .10, .11 (residual minors); purses-mimb closed. Rulings for the owner are listed in PR #370's body.
 - 2026-10-02 (PR 2, session 3): Tasks 7–12 complete and reviewed (T7 c18d95a92; T8 eb742fcd6; T9 48f9225b6; T10 d38aa7928; T11 b10d929b3; T12 16a8bfaa6). Task 13 (sort-journey e2e, deletes 14 specs, CI map) implementing; then T14 (docs, full gates, screenshots), final whole-branch review, PR. Follow-up beads filed: purses-w7ss.5 (revision drops open-draft pins), purses-w7ss.6 (items/[rid] DELETE unlocked/TOCTOU). Incident + rule: two overlapped implementers shared the index and one commit swept the other's deletions (re-partitioned to b793ebc99/41dd4985d); never overlap implementers. Ledger: `.superpowers/sdd/2026-10-01-ux-redesign-pr2-sort/progress.md`.
